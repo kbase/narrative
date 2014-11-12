@@ -23,106 +23,171 @@
         isOutputName: false,
         required: true,
         validDataObjectList: null,
-        //listLimit:20, // limit the number of dropdown items, not used...
-        rowDivs: null,
+        allow_multiple:false,
+        
+        $rowsContainer: null,
+        $addRowController: null,
+        
+        rowInfo: null,
+        
+        // set the widths of the columns
+        nameColClass  : "col-md-2",
+        inputColClass : "col-md-5",
+        hintColClass  : "col-md-5",
         
         render: function() {
             var self = this;
-            //console.log(this.spec);
             var spec = self.spec;
             
             // check if we need to allow multiple values
-            var allow_multiple = false;
+            self.allow_multiple = false;
             if (spec.allow_multiple) {
                 if (spec.allow_multiple===true || spec.allow_multiple===1) {
-                    allow_multiple = true;
+                    self.allow_multiple = true;
+                }
+            }
+            // check if this is a required field
+            self.required= true;
+            if (spec.optional) {
+                self.required=false;
+            }
+            
+            // check if this is an output name
+            if (spec.text_options) {
+                if (spec.text_options.is_output_name) {
+                    self.isOutputName = true;
                 }
             }
             
-            self.rowDivs = [];
-            if (!allow_multiple) {
-                // just one field, phew, this one should be easy    
-                var d = spec.default_values;
-                var placeholder = '';
-                self.required= true;
-                if(spec.text_options) {
-                    if(spec.text_options.placeholder) {
-                        placeholder = spec.text_options.placeholder;
-                        placeholder = placeholder.replace(/(\r\n|\n|\r)/gm,"");
-                    }
-                    if (spec.optional) {
-                        self.required=false;
-                    }
-                }
-                
-                var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] : "";
-                var form_id = spec.id;
-                var $input= $('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
-                        ' value="'+defaultValue+'" type="text" style="width:100%"/>').addClass("form-control")
-                        .on("input",function() { self.isValid() });
-                
-                if(spec.text_options) {
-                    if (spec.text_options.valid_ws_types) {
-                        if (spec.text_options.valid_ws_types.length>0) {
-                            self.isUsingSelect2 = true;
-                            $input =$('<input id="' + form_id + '" type="text" style="width:100%" />')
-                                .on("change",function() { self.isValid() });
-                            this.validDataObjectList = [];
-                            if (spec.text_options.is_output_name) {
-                                this.isOutputName = true;
-                            }
-                        }
-                    }
-                }
-                
-                var $feedbackTip = $("<span>").removeClass();
-                if (self.required) {
-                    $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
-                }
-                
-                // set the widths of the columns
-                var nameColClass  = "col-md-2";
-                var inputColClass = "col-md-5";
-                var hintColClass  = "col-md-5";
-                
-                var $row = $('<div>').addClass("row kb-method-parameter-row")
-                                .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
-                var $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
-                                    .append(spec.ui_name);
-                var $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
-                                .append($('<div>').css({"width":"100%","display":"inline-block"}).append($input))
-                                .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
-                var $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
-                                .append(spec.short_hint);
-                $row.append($nameCol).append($inputCol).append($hintCol);
-                
-                var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
-                var $errorRow = $('<div>').addClass('row')
-                                    .append($('<div>').addClass(nameColClass))
-                                    .append($errorPanel.addClass(inputColClass));
-                
-                self.$mainPanel.append($row);
-                self.$mainPanel.append($errorRow);
-                self.rowDivs.push({$row:$row, $error:$errorPanel, $feedback:$feedbackTip});
-                
-                /* for some reason, we need to actually have the input added to the main panel before this will work */
-                if (this.isUsingSelect2) {
-                    if (placeholder === '') {
-                        placeholder = ' '; // this allows us to cancel selections in select2
-                    }
-                    this.setupSelect2($input, placeholder);
-                }
-                // if a default value is set, validate it.
-                if (defaultValue) {
-                    this.isValid();
-                }
-                
+            //self.$mainPanel.addClass("kb-method-parameter-panel")
+            //        .hover(function(){$(this).toggleClass('kb-method-parameter-panel-hover');});;
+            
+            self.rowInfo = [];
+            self.$rowsContainer=$("<div>");
+            self.$mainPanel.append(self.$rowsContainer);
+            self.$addRowController = $('<div>');
+            
+            var d = spec.default_values;
+            
+            // based on whether we have one or allow multiple, render the output rows...
+            if (!self.allow_multiple) {
+                var defaultValue = '';
+                if (spec.default_values) { if (spec.default_values.length >= 1) {
+                        var d = spec.default_values; defaultValue = (d[0] !== '' && d[0] !== undefined) ? d[0] : '';
+                }}
+                self.addRow(defaultValue,true); 
             } else {
-                // need to handle multiple fields- do something better!
-                self.$mainPanel.append("<div>multiple input fields not yet supported</div>");
+                var defaultValue = '';
+                if (spec.default_values) { if (spec.default_values.length >= 1) {
+                        var d = spec.default_values; defaultValue = (d[0] !== '' && d[0] !== undefined) ? d[0] : '';
+                }}
+                self.addRow(defaultValue,true);
+                if (spec.default_values) {
+                    for(var i=0; i<d.length; d++) {
+                        defaultValue = (d[i] !== '' && d[i] !== undefined) ? d[i] : '';
+                        self.addRow(defaultValue,false); 
+                    }
+                }
+                self.addTheAddRowController();
+            }
+            self.refresh();
+        },
+        
+        addTheAddRowController: function () {
+            var self = this;
+            var $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
+            var $buttonCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input").append(
+                                $('<button>').addClass("btn btn-default btn-sm")
+                                .append($('<span class="kb-parameter-data-row-add">').addClass("glyphicon glyphicon-plus"))
+                                .append(" add another "+self.spec.ui_name)
+                                .on("click",function() { self.addRow() }) );
+            self.$addRowController = $('<div>').addClass("row kb-method-parameter-row").append($nameCol).append($buttonCol);
+            self.$mainPanel.append(self.$addRowController)
+        },
+        
+        
+        removeRow : function(uuid) {
+            var self = this;
+            for(var i=0; i<self.rowInfo.length; i++) {
+                if (self.rowInfo[i].uuid === uuid) {
+                    self.rowInfo[i].$all.remove();
+                    self.rowInfo.splice(i,1);
+                    break;
+                }
             }
         },
         
+        /* row number should only be set when first creating this row */
+        addRow : function(defaultValue, showHint) {
+            var self = this;
+            var spec = self.spec;
+            
+            var placeholder = '';
+            if(spec.text_options) {
+                if(spec.text_options.placeholder) {
+                    placeholder = spec.text_options.placeholder;
+                    placeholder = placeholder.replace(/(\r\n|\n|\r)/gm,"");
+                }
+            }
+            if (!defaultValue) { defaultValue = ""; }
+            
+            var form_id = spec.id;
+            var $input= $('<input id="' + form_id + '" placeholder="' + placeholder + '"' +
+                            ' value="'+defaultValue+'" type="text" style="width:100%"/>').addClass("form-control")
+                            .on("input",function() { self.isValid() });
+                            
+            if(spec.text_options) {
+                if (spec.text_options.valid_ws_types) {
+                    if (spec.text_options.valid_ws_types.length>0) {
+                        self.isUsingSelect2 = true;
+                        $input =$('<input id="' + form_id + '" type="text" style="width:100%" />')
+                                    .on("change",function() { self.isValid() });
+                        this.validDataObjectList = [];
+                    }
+                }
+            }
+                
+            var $feedbackTip = $("<span>").removeClass();
+            if (self.required && showHint) {  // it must be required, and it must be the first element (showHint is only added on first row)
+                $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
+            }
+                
+            var $row = $('<div>').addClass("row kb-method-parameter-row")
+                            .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
+            var $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
+            if (showHint) { $nameCol.append(spec.ui_name); }
+            var $inputCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input")
+                                .append($('<div>').css({"width":"100%","display":"inline-block"}).append($input))
+                                .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
+            var $hintCol  = $('<div>').addClass(self.hintColClass).addClass("kb-method-parameter-hint");
+            var uuidForRemoval = self.genUUID(); var $removalButton=null;
+            if(showHint) { $hintCol.append(spec.short_hint); }
+            else {
+                $removalButton = $('<button>').addClass("btn btn-default btn-sm")
+                                .append($('<span class="kb-parameter-data-row-remove">').addClass("glyphicon glyphicon-remove"))
+                                .on("click",function() { self.removeRow(uuidForRemoval); })
+                $hintCol.append($removalButton);
+            }
+            $row.append($nameCol).append($inputCol).append($hintCol);
+            var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
+            var $errorRow = $('<div>').addClass('row')
+                                .append($('<div>').addClass(self.nameColClass))
+                                .append($errorPanel.addClass(self.inputColClass));
+            
+            var $allRowComponents = $('<div>').append($row).append($errorRow);
+            self.$rowsContainer.append($allRowComponents);
+            self.rowInfo.push({uuid: uuidForRemoval, $row:$row, $input:$input, $error:$errorPanel, $feedback:$feedbackTip, $all:$allRowComponents, $removalButton:$removalButton});
+                
+            /* for some reason, we need to actually have the input added to the main panel before this will work */
+            if (self.isUsingSelect2) {
+                if (placeholder === '') { placeholder = ' '; } // this allows us to cancel selections in select2
+                this.setupSelect2($input, placeholder);
+            }
+            // if a default value is set, validate it.
+            if (defaultValue) {
+                this.isValid();
+            }
+        },
         
         refresh: function() {
             var self = this;
@@ -282,16 +347,17 @@
             var errorDetected = false;
             var errorMessages = [];
             if(p instanceof Array) {
-                // todo: handle this case when there are multiple fields
-            } else {
-                p = p.trim();
-                // if it is a required field and not empty, keep the required icon around but we have an error
-                if (p==='' && self.required) {
-                    self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
-                    self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
-                    self.rowDivs[0].$feedback.show();
-                    self.rowDivs[0].$error.hide();
-                    errorDetected = true;
+            } else { p = [p]; }
+            for(var i=0; i<p.length; i++) {
+                var errorDetectedHere = false;
+                pVal = p[i].trim();
+                // if it is a required field and not empty, keep the required icon around but we have an error (only for the first element)
+                if (pVal==='' && self.required && i===0) {
+                    self.rowInfo[i].$row.removeClass("kb-method-parameter-row-error");
+                    self.rowInfo[i].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
+                    self.rowInfo[i].$feedback.show();
+                    self.rowInfo[i].$error.hide();
+                    errorDetectedHere = true;
                     errorMessages.push("required field "+self.spec.ui_name+" missing.");
                 } else {
                     if(self.spec.text_options) {
@@ -299,22 +365,24 @@
                             var fieldtype = self.spec.text_options.validate_as;
                             // int | float | nonnumeric | nospaces | none
                             if ("int" === fieldtype.toLowerCase()) {
-                                var n = ~~Number(p);
-                                if(String(n) !== p) {
-                                    self.rowDivs[0].$row.addClass("kb-method-parameter-row-error");
-                                    self.rowDivs[0].$error.html("value must be an integer");
-                                    self.rowDivs[0].$error.show();
-                                    self.rowDivs[0].$feedback.removeClass();
-                                    errorDetected = true;
-                                    errorMessages.push("value must be an integer in field "+self.spec.ui_name);
+                                if (pVal!=='') {
+                                    var n = ~~Number(pVal);
+                                    if(String(n) !== pVal) {
+                                        self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
+                                        self.rowInfo[i].$error.html("value must be an integer");
+                                        self.rowInfo[i].$error.show();
+                                        self.rowInfo[i].$feedback.removeClass();
+                                        errorDetectedHere = true;
+                                        errorMessages.push("value must be an integer in field "+self.spec.ui_name);
+                                    }
                                 }
                             } else if ("float" === fieldtype.toLowerCase()) {
-                                if(isNaN(p)) {
-                                    self.rowDivs[0].$row.addClass("kb-method-parameter-row-error");
-                                    self.rowDivs[0].$error.html("value must be numeric");
-                                    self.rowDivs[0].$error.show();
-                                    self.rowDivs[0].$feedback.removeClass();
-                                    errorDetected = true;
+                                if(isNaN(pVal)) {
+                                    self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
+                                    self.rowInfo[i].$error.html("value must be numeric");
+                                    self.rowInfo[i].$error.show();
+                                    self.rowInfo[i].$feedback.removeClass();
+                                    errorDetectedHere = true;
                                     errorMessages.push("value must be a number in field "+self.spec.ui_name);
                                 }
                             }
@@ -322,14 +390,14 @@
                         
                         if (self.validDataObjectList) {
                             if(self.validDataObjectList.length>0) {
-                                if (/\s/.test(p)) {
-                                    if (self.rowDivs[0]) {
-                                        self.rowDivs[0].$row.addClass("kb-method-parameter-row-error");
-                                        self.rowDivs[0].$error.html("spaces are not allowed in data object names");
-                                        self.rowDivs[0].$error.show();
-                                        self.rowDivs[0].$feedback.removeClass();
+                                if (/\s/.test(pVal)) {
+                                    if (self.rowInfo[i]) {
+                                        self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
+                                        self.rowInfo[i].$error.html("spaces are not allowed in data object names");
+                                        self.rowInfo[i].$error.show();
+                                        self.rowInfo[i].$feedback.removeClass();
                                     }
-                                    errorDetected = true;
+                                    errorDetectedHere = true;
                                     errorMessages.push("spaces are not allowed in data object names, in field "+self.spec.ui_name);
                                 }
                             }
@@ -338,22 +406,23 @@
                 }
                 
                 // no error, so we hide the error if any, and show the "accepted" icon if it is not empty
-                if (!errorDetected || !self.enabled) {
-                    if (self.rowDivs[0]) {
-                        self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
-                        self.rowDivs[0].$error.hide();
-                        self.rowDivs[0].$feedback.removeClass();
-                        if (p!=='') {
-                            self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
+                if (!errorDetectedHere || !self.enabled) {
+                    if (self.rowInfo[i]) {
+                        self.rowInfo[i].$row.removeClass("kb-method-parameter-row-error");
+                        self.rowInfo[i].$error.hide();
+                        self.rowInfo[i].$feedback.removeClass();
+                        if (pVal!=='') {
+                            self.rowInfo[i].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
                         }
                     }
                 } else {
-                    if (p==='' && self.required) {
+                    if (pVal==='' && self.required && i===0) {
                         //code
                     } else {
-                        self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left');
+                        self.rowInfo[i].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left');
                     }
                 }
+                if (errorDetectedHere) { errorDetected = true; }
             }
             return { isValid: !errorDetected, errormssgs:errorMessages};
         },
@@ -365,15 +434,17 @@
         disableParameterEditing: function() {
             // disable the input
             this.enabled = false;
-            if(this.isUsingSelect2) {
-                this.$elem.find("#"+this.spec.id).select2('disable',true);
-            } else {
-                this.$elem.find("#"+this.spec.id).prop('disabled',true);
+            for(var i=0; i<this.rowInfo.length; i++) {
+                if(this.isUsingSelect2) {
+                    this.rowInfo[i].$input.select2('disable',true);
+                } else {
+                    this.rowInfo[i].$input.prop('disabled',true);
+                }
+                // stylize the row div
+                this.rowInfo[i].$feedback.removeClass();
+                if (this.rowInfo[i].$removalButton) { this.rowInfo[i].$removalButton.hide(); }
             }
-            // stylize the row div
-            if (this.rowDivs) {
-                this.rowDivs[0].$feedback.removeClass();
-            }
+            this.$addRowController.hide();
         },
         
         /*
@@ -382,36 +453,47 @@
         enableParameterEditing: function() {
             // enable the input
             this.enabled = true;
-            if(this.isUsingSelect2) {
-                this.$elem.find("#"+this.spec.id).select2('enable',true);
-            } else {
-                this.$elem.find("#"+this.spec.id).prop('disabled', false);
+            for(var i=0; i<this.rowInfo.length; i++) {
+                if(this.isUsingSelect2) {
+                    this.rowInfo[i].$input.select2('enable',true);
+                } else {
+                    this.rowInfo[i].$input.prop('disabled', false);
+                }
+                if (this.rowInfo[i].$removalButton) { this.rowInfo[i].$removalButton.show(); }
             }
+            this.$addRowController.show();
             this.isValid();
         },
         
         
         lockInputs: function() {
             if (this.enabled) {
-                if(this.isUsingSelect2) {
-                    this.$elem.find("#"+this.spec.id).select2('disable',true);
-                } else {
-                    this.$elem.find("#"+this.spec.id).prop('disabled',true);
+                for(var i=0; i<this.rowInfo.length; i++) {
+                    if(this.isUsingSelect2) {
+                        this.rowInfo[i].$input.select2('disable',true);
+                    } else {
+                        this.rowInfo[i].$input.prop('disabled',true);
+                    }
                 }
             }
-            // stylize the row div
-            if (this.rowDivs) {
-                this.rowDivs[0].$feedback.removeClass();
+            for(var i=0; i<this.rowInfo.length; i++) {
+                this.rowInfo[i].$feedback.removeClass();
+                if (this.rowInfo[i].$removalButton) { this.rowInfo[i].$removalButton.hide(); }
             }
+            this.$addRowController.hide();
         },
         unlockInputs: function() {
             if (this.enabled) {
-                if(this.isUsingSelect2) {
-                    this.$elem.find("#"+this.spec.id).select2('enable',true);
-                } else {
-                    this.$elem.find("#"+this.spec.id).prop('disabled', false);
+                for(var i=0; i<this.rowInfo.length; i++) {
+                    if(this.isUsingSelect2) {
+                       this.rowInfo[i].$input.select2('enable',true);
+                    } else {
+                        this.rowInfo[i].$input.prop('disabled', false);
+                    }
+                    if (this.rowInfo[i].$removalButton) { this.rowInfo[i].$removalButton.show(); }
                 }
             }
+            this.$addRowController.show();
             this.isValid();
         },
         
@@ -430,21 +512,34 @@
          * specific parameter values based on the App spec, so we need a way to do this.
          */
         setParameterValue: function(value) {
+            if(value instanceof Array) {
+            } else { value = [value]; }
             
-            // todo: handle case where this is a multiple, we need to check if value array matches number of elements,
-            // and if not we must do something special   ...
-            if(this.isUsingSelect2) {
-                if (this.enabled) {
-                    this.$elem.find("#"+this.spec.id).select2("data",{id:value, text:value});
+            for(var i=0; i<value.length; i++) {
+                var v = value[i].trim();
+                if (i<this.rowInfo.length) {
+                    if(v) { this.setSpecificRowValue(i,v) };
                 } else {
-                    this.$elem.find("#"+this.spec.id).select2('disable',false);
-                    this.$elem.find("#"+this.spec.id).select2("data",{id:value, text:value});
-                    this.$elem.find("#"+this.spec.id).select2('disable',true);
+                    this.addRow();
+                    if(v) { this.setSpecificRowValue(i,value[i]) };
                 }
-            } else {
-                this.$elem.find("#"+this.spec.id).val(value);
             }
             this.isValid();
+        },
+        
+        setSpecificRowValue: function(i,value) {
+            if(this.isUsingSelect2) {
+                if (this.enabled) {
+                    this.rowInfo[i].$input.select2("data",{id:value, text:value});
+                } else {
+                    this.rowInfo[i].$input.select2('disable',false);
+                    this.rowInfo[i].$input.select2("data",{id:value, text:value});
+                    this.rowInfo[i].$input.select2('disable',true);
+                }
+            } else {
+                this.rowInfo[i].$input.val(value);
+            }
+            
         },
         
         /*
@@ -453,12 +548,15 @@
          * in the method spec.
          */
         getParameterValue: function() {
-            var value = this.$elem.find("#"+this.spec.id).val();
+            if (this.rowInfo.length===1) {
+                return this.rowInfo[0].$input.val();
+            }
+            var value = [];
+            for(var i=0; i<this.rowInfo.length; i++) {
+                value.push(this.rowInfo[i].$input.val());
+            }
             return value;
         },
-        
-        
-        
         
         
         
@@ -494,8 +592,15 @@
             return Math.floor(seconds) + " seconds ago";
         },
         
-        monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"]
+        monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"],
         
+        genUUID: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);
+            });
+        },
     });
+    
 
 })( jQuery );

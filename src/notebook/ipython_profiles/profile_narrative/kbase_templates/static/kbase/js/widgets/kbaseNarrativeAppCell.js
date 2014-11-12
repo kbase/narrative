@@ -38,7 +38,6 @@
         $errorModal: null,
         $errorModalContent:null,
         
-        
         state: null,
         
         /**
@@ -193,8 +192,8 @@
 
             
             //We cannot stop a method from running, so this button for now is gone.
-            this.$stopButton = $('<button>');
-            /*                  .attr('type', 'button')
+            this.$stopButton = $('<button>')
+                              .attr('type', 'button')
                               .attr('value', 'Stop')
                               .addClass('btn btn-warning btn-sm')
                               .append('Stop')
@@ -204,7 +203,7 @@
                                   }, this)
                               )
                               .hide();
-            */
+            
             this.$submitted = $('<span>').addClass("pull-right kb-func-timestamp").hide();
 
             var $appInfo = this.appSpec.info.name;
@@ -505,8 +504,8 @@
             if (!state) {
                 return;
             }
-            console.log("setting app state:");
-            console.log(state);
+            //console.log("setting app state:");
+            //console.log(state);
             // set the step states
             if (this.inputSteps && state.step) {
                 for(var i=0; i<this.inputSteps.length; i++) {

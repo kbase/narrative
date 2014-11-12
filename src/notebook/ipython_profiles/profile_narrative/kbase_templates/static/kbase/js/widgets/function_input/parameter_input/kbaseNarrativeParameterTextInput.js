@@ -75,17 +75,24 @@
                 if (spec.default_values) { if (spec.default_values.length >= 1) {
                         var d = spec.default_values; defaultValue = (d[0] !== '' && d[0] !== undefined) ? d[0] : '';
                 }}
-                self.addRow(defaultValue,true); 
+                self.addRow(defaultValue,true,true); 
             } else {
+                // for multiple elements, hover on entire panel
+                self.$mainPanel
+                        .addClass("kb-method-parameter-row")
+                        .mouseenter(function(){$(this).addClass('kb-method-parameter-row-hover');})
+                        .mouseleave(function(){$(this).removeClass('kb-method-parameter-row-hover');});
+                
                 var defaultValue = '';
                 if (spec.default_values) { if (spec.default_values.length >= 1) {
                         var d = spec.default_values; defaultValue = (d[0] !== '' && d[0] !== undefined) ? d[0] : '';
                 }}
-                self.addRow(defaultValue,true);
+                self.addRow(defaultValue,true,false);
                 if (spec.default_values) {
-                    for(var i=0; i<d.length; d++) {
+                    var d = spec.default_values;
+                    for(var i=1; i<d.length; d++) {
                         defaultValue = (d[i] !== '' && d[i] !== undefined) ? d[i] : '';
-                        self.addRow(defaultValue,false); 
+                        self.addRow(defaultValue,false,false); 
                     }
                 }
                 self.addTheAddRowController();
@@ -118,7 +125,7 @@
         },
         
         /* row number should only be set when first creating this row */
-        addRow : function(defaultValue, showHint) {
+        addRow : function(defaultValue, showHint, useRowHighlight) {
             var self = this;
             var spec = self.spec;
             
@@ -152,8 +159,11 @@
                 $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
             }
                 
-            var $row = $('<div>').addClass("row kb-method-parameter-row")
-                            .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
+            var $row = $('<div>').addClass("row kb-method-parameter-row");
+            if (useRowHighlight) {
+               $row.hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
+            }
+                            
             var $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
             if (showHint) { $nameCol.append(spec.ui_name); }
             var $inputCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input")
@@ -165,6 +175,7 @@
             else {
                 $removalButton = $('<button>').addClass("btn btn-default btn-sm")
                                 .append($('<span class="kb-parameter-data-row-remove">').addClass("glyphicon glyphicon-remove"))
+                                .append(" remove "+spec.ui_name)
                                 .on("click",function() { self.removeRow(uuidForRemoval); })
                 $hintCol.append($removalButton);
             }

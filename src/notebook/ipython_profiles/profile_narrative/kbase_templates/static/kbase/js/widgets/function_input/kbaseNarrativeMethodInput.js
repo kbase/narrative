@@ -65,7 +65,11 @@
                     var checkboxInputWidget = $stepDiv["kbaseNarrativeParameterCheckboxInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
                     this.parameters.push({id:paramSpec.id, widget:checkboxInputWidget});
                     this.parameterIdLookup[paramSpec.id] = checkboxInputWidget;
-                }else {
+                }else if (paramSpec.field_type === "textarea") {
+                    var textareaInputWidget = $stepDiv["kbaseNarrativeParameterTextareaInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
+                    this.parameters.push({id:paramSpec.id, widget:textareaInputWidget});
+                    this.parameterIdLookup[paramSpec.id] = textareaInputWidget;
+                } else {
                     // this is what we should do:  this.getErrorDiv()
                     $stepDiv.append('<span class="label label-danger">Parameter '+paramSpec.id+
                                     ' not displaying properly, invalid parameter type: "'+paramSpec.field_type+'"</span>');
@@ -113,6 +117,7 @@
             }
             
             this.$elem.append($inputParameterContainer);
+            this.$elem.css({"margin-bottom":"5px"});
             
         },
 

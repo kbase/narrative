@@ -6,6 +6,38 @@
  */
 "use strict";
 
+var EndpointTester = function(url, target) {
+    this.loadingImage = 'static/kbase/images/ajax-loader.gif';
+    this.okayText = 'ok';
+    this.downText = 'down';
+    this.url = url;
+    this.$target = target;
+};
+
+EndpointTester.prototype.test = function(url) {
+    this.$target.html('<img src="' + this.loadingImage + '">');
+    var postTestParams = {
+        type: 'POST',
+        data: '{"params":{}, "version":"1.1", "method":"", "id":"' + Math.random() + '"}',
+        url: this.url,
+        success: $.proxy(function() { this.$target.html(this.okayText); }, this),
+        error: $.proxy(function(error) { 
+            console.log('error!');
+            console.log(error);
+            this.$target.html(this.downText); 
+        }, this),
+    };
+    var getTestParams = {
+        type: 'GET',
+        url: this.url,
+        success: $.proxy(function() { this.$target.html(this.okayText); }, this),
+        error: $.proxy(function(error) { 
+            $.ajax(postTestParams);
+            this.$target.html(this.downText); 
+        }, this),        
+    }
+    $.ajax(getTestParams);
+};
 
 var narrative = {};
 narrative.init = function() {
@@ -14,13 +46,14 @@ narrative.init = function() {
     var readonly = false; /* whether whole narrative is read-only */
 
     var versionHtml = 'KBase Narrative<br>Alpha version';
+    var endpointTesters = [];
     if (window.kbconfig && 
         window.kbconfig.name && 
         window.kbconfig.version) {
         var $versionDiv = $('<div>')
-                          .append('Version: ' + window.kbconfig.version);
+                          .append('<b>Version:</b> ' + window.kbconfig.version);
         if (window.kbconfig.git_commit_hash && window.kbconfig.git_commit_time)
-            $versionDiv.append('<br>Git Commit: ' + window.kbconfig.git_commit_hash + ' -- ' + window.kbconfig.git_commit_time);
+            $versionDiv.append('<br><b>Git Commit:</b> ' + window.kbconfig.git_commit_hash + ' -- ' + window.kbconfig.git_commit_time);
 
         // not used, but left in as legacy if we go back to it.
         // $versionInfo = window.kbconfig.name + '<br>' + window.kbconfig.version;
@@ -31,9 +64,16 @@ narrative.init = function() {
                                 .addClass('table table-striped table-bordered');
             $.each(urlList, 
                 function(idx, val) {
-                    $versionTable.append($('<tr>')
-                                         .append($('<td>').append(val))
-                                         .append($('<td>').append(window.kbconfig.urls[val])));
+                    var url = window.kbconfig.urls[val].toString();
+                    // if url looks like a url (starts with http), include it.
+                    if (url && url.toLowerCase().indexOf('http') == 0) {
+                        var $testTarget = $('<td>');
+                        $versionTable.append($('<tr>')
+                                             .append($('<td>').append(val))
+                                             .append($('<td>').append(url)));
+                        //                      .append($testTarget));
+                        // endpointTesters.push(new EndpointTester(url, $testTarget));
+                    }
                 }
             );
             $versionDiv.append($versionTable);
@@ -67,13 +107,10 @@ narrative.init = function() {
                           event.preventDefault();
                           event.stopPropagation();
                           $versionModal.modal('show');
+                          for (var i=0; i<endpointTesters.length; i++) {
+                              endpointTesters[i].test();
+                          }
                       });
-    // var $versionBtn = $('<button>')
-    //                   .addClass('btn btn-default btn-sm')
-    //                   .append('About')
-    //                   .click(function(event) { 
-    //                       $versionModal.modal('show');
-    //                   });
 
     $('#kb-version-stamp').empty().append($versionBtn);
     $('#notebook').append($versionModal);

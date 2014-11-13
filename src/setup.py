@@ -10,13 +10,7 @@ from setuptools import setup, find_packages
 # added command classes
 from biokbase.narrative.common.util import BuildDocumentation
 
-# Parse "long" description from the README
-readme_text = open("README.md").read()
-m = re.search("##\s*Description\s*([^#]+)", readme_text, flags=re.M)
-if not m:
-    print("Error getting description from README.md")
-    sys.exit(1)
-long_desc = m.groups()[0].strip()
+long_desc = "This Python package contains all the KBase Python libraries to support the Python narrative UI, which is built on the IPython notebook."
 
 # Do the setup
 setup(

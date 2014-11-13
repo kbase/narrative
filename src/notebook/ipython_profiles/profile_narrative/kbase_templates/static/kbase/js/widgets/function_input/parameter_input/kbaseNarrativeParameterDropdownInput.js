@@ -55,8 +55,8 @@
                             if (opt.id && opt.ui_name) {
                                 $dropdown.append($('<option value="'+opt.id+'">').append(opt.ui_name));
                                 foundOptions = true;
-                            } else if (opt.value && opt.ui_name) {  // id was misnamed, should have been value
-                                $dropdown.append($('<option value="'+opt.value+'">').append(opt.ui_name));
+                            } else if (opt.value && opt.display) {  // id was misnamed, should have been value
+                                $dropdown.append($('<option value="'+opt.value+'">').append(opt.display));
                                 foundOptions = true;
                             }
                         }
@@ -171,27 +171,31 @@
             if(p instanceof Array) {
                 // todo: handle this case when there are multiple fields
             } else {
-                p = p.trim();
-                // if it is a required selection and is empty, keep the required icon around but we have an error
-                if (p==='' && self.required) {
-                    self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
-                    self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
-                    self.rowDivs[0].$feedback.show();
-                    self.rowDivs[0].$error.hide();
-                    errorDetected = true;
-                    errorMessages.push("required field "+self.spec.ui_name+" missing.");
-                }
-                
-                // no error, so we hide the error if any, and show the "accepted" icon if it is not empty
-                if (!errorDetected) {
-                    if (self.rowDivs[0]) {
+                if (p) {
+                    p = p.trim();
+                    // if it is a required selection and is empty, keep the required icon around but we have an error
+                    if (p==='' && self.required) {
                         self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
+                        self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
+                        self.rowDivs[0].$feedback.show();
                         self.rowDivs[0].$error.hide();
-                        self.rowDivs[0].$feedback.removeClass();
-                        if (p!=='') {
-                            self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
+                        errorDetected = true;
+                        errorMessages.push("required field "+self.spec.ui_name+" missing.");
+                    }
+                    
+                    // no error, so we hide the error if any, and show the "accepted" icon if it is not empty
+                    if (!errorDetected) {
+                        if (self.rowDivs[0]) {
+                            self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
+                            self.rowDivs[0].$error.hide();
+                            self.rowDivs[0].$feedback.removeClass();
+                            if (p!=='') {
+                                self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
+                            }
                         }
                     }
+                } else {
+                    // something went wrong...  possibly no options set in the spec?
                 }
             }
             return { isValid: !errorDetected, errormssgs:errorMessages};

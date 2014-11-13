@@ -13,28 +13,18 @@ narrative.init = function() {
     var narr_ws = null;
     var readonly = false; /* whether whole narrative is read-only */
 
-            // self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true">').addClass("modal fade");
-            // self.$errorModal.append(
-            //     $('<div>').addClass('modal-dialog').append(
-            //         $('<div>').addClass('modal-content').append(
-            //             $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" id="'+modalLabel+'">Problems exist in your parameter settings.</h4>')
-            //         ).append(
-            //            $('<div>').addClass('modal-body').append(self.$errorModalContent)
-            //         ).append(
-            //             $('<div>').addClass('modal-footer').append(
-            //                 $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
-            //         )
-            //     ));
-
     var versionHtml = 'KBase Narrative<br>Alpha version';
     if (window.kbconfig && 
         window.kbconfig.name && 
         window.kbconfig.version) {
-//        versionText = window.kbconfig.name + '<br>' + window.kbconfig.version;
         var $versionDiv = $('<div>')
                           .append('Version: ' + window.kbconfig.version);
+        if (window.kbconfig.git_commit_hash && window.kbconfig.git_commit_time)
+            $versionDiv.append('<br>Git Commit: ' + window.kbconfig.git_commit_hash + ' -- ' + window.kbconfig.git_commit_time);
+
         // not used, but left in as legacy if we go back to it.
         // $versionInfo = window.kbconfig.name + '<br>' + window.kbconfig.version;
+
         if (window.kbconfig.urls) {
             var urlList = Object.keys(window.kbconfig.urls).sort();
             var $versionTable = $('<table>')

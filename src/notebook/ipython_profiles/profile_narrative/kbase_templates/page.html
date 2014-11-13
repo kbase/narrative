@@ -323,7 +323,9 @@
         );
         window.kbconfig = { urls : configJSON[configJSON['config']],
                             version: configJSON['version'],
-                            name: configJSON['name'] };
+                            name: configJSON['name'],
+                            git_commit_hash: configJSON['git_commit_hash'],
+                            git_commit_time: configJSON['git_commit_time'] };
     </script>
     <script src="{{ static_url("kbase/js/api/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("kbase/js/api/fbaModelServices.js") }}" type="text/javascript" charset="utf-8"></script>

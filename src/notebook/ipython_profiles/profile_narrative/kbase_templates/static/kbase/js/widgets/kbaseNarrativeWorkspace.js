@@ -200,7 +200,7 @@
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                              "$('#" + cellId + "').kbaseNarrativeCell({'method' : '" + this.safeJSONStringify(method) + "'});" +
+                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(method) + "'});" +
                               "</script>";
 
             cell.set_text(cellContent);
@@ -506,7 +506,7 @@
                             }
                         }
                         else {
-                            $(cell.element).find("div[id^=kb-cell-]").kbaseNarrativeCell('refresh');
+                            $(cell.element).find("div[id^=kb-cell-]").kbaseNarrativeMethodCell('refresh');
                         }
                     }
                     else if (this.isAppCell(cell)) {
@@ -864,7 +864,7 @@
         getMethodCellDependencies: function(cell, paramValues) {
             if (!this.isFunctionCell(cell))
                 return;
-            paramValues = $(cell.element).find('div[id^=kb-cell-]').kbaseNarrativeCell('getParameters') || [];
+            paramValues = $(cell.element).find('div[id^=kb-cell-]').kbaseNarrativeMethodCell('getParameters') || [];
             var params = cell.metadata[this.KB_CELL].method.parameters;
 
             var data = [];
@@ -1050,7 +1050,7 @@
                     target = '#inputs';
                 }
                 else {
-                    widget = 'kbaseNarrativeCell';
+                    widget = 'kbaseNarrativeMethodCell';
                     target = 'div[id^=kb-cell-]';
                 }
             }
@@ -1105,7 +1105,7 @@
                         target = '#inputs';
                     }
                     else {
-                        widget = 'kbaseNarrativeCell';
+                        widget = 'kbaseNarrativeMethodCell';
                         target = 'div[id^=kb-cell-]';
                     }
                 }
@@ -2015,6 +2015,29 @@
             return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         },
 
+        /**
+         * @method
+         * Scans through all cells and performs a version updating, if necessary.
+         * Updates performed:
+         * 1. kbaseNarrativeCell -> kbaseNarrativeMethodCell
+         * 2. More to come!
+         */
+        scanAndUpdateCells: function() {
+            var cells = IPython.notebook.get_cells();
+            for (var i=0; i<cells.length; i++) {
+                var cell = cells[i];
+                if (this.isFunctionCell(cell)) {
+                    var cellText = cell.get_text();
+                    var matchArr = cellText.match(/(<script>\s*\$\(['"]\#(.+)['"]\)\.)kbaseNarrativeCell/);
+                    if (matchArr && matchArr.length >= 2) {
+                        cellText = cellText.replace(matchArr[0], matchArr[1] + 'kbaseNarrativeMethodCell');
+                    }
+                    cell.set_text(cellText);
+                    cell.rendered = false;
+                    cell.render();
+                }
+            }
+        },
 
     });
 

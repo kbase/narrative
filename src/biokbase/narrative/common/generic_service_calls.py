@@ -91,6 +91,8 @@ def prepare_generic_method_output(token, workspace, methodSpec, input, output):
         if paramValue is None:
             raise ValueError("Value is not defined in input mapping: " + mapping)
         build_args(paramValue, mapping, workspace, outArgs)
+    if len(outArgs) < 1:
+        return {}
     return outArgs[0]
 
 def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_specs_json, param_values_json, app_job_id):

@@ -6,43 +6,28 @@ configuration files.
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 __date__ = '8/22/14'
 
-import argparse
 import asyncore
 from datetime import datetime
 from dateutil.tz import tzlocal
 import logging
-import os
 import pymongo
 import pickle
 import re
-import signal
 import socket
 import struct
-import sys
-import time
 import yaml
 # Local
+from biokbase import narrative
 from biokbase.narrative.common.util import parse_kvp
 from biokbase.narrative.common.url_config import URLS
 
 g_log = None #  global logger
+LOGGER_NAME = "log_proxy"  # use this name for logger
+
+m_fwd = None  # global forwarder object
 
 # Constants
 EVENT_MSG_SEP = ';'  # separates event name from msg in log
-
-# Handle ^C and other signals
-m_fwd = None
-CATCH_SIGNALS = (signal.SIGHUP, signal.SIGINT, signal.SIGUSR1,
-                 signal.SIGUSR2)
-
-def on_signal(signo, frame):
-    g_log.warn("Caught signal {:d}".format(signo))
-    if signo in CATCH_SIGNALS:
-        g_log.warn("Stop on signal {:d}".format(signo))
-        m_fwd.close()
-        time.sleep(2)
-        sys.exit(1)
-
 
 class DBAuthError(Exception):
     def __init__(self, host, port, db):
@@ -221,20 +206,39 @@ class DBConfiguration(Configuration):
         return '\n'.join(fields)
 
 class LogForwarder(asyncore.dispatcher):
-    def __init__(self, config, pconfig):
+    __host, __ip = None, None
+
+    def __init__(self, config, pconfig, meta):
         asyncore.dispatcher.__init__(self)
+        self._meta = meta
         self._coll = self.connect_mongo(config)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((pconfig.host, pconfig.port))
         self.listen(5)
 
+        # only do this once; it takes ~5 sec
+        if self.__host is None:
+            g_log.info(
+                "Getting fully qualified domain name (may take a few seconds)")
+            self.__host = socket.getfqdn()
+            try:
+                self.__ip = socket.gethostbyname(self.__host)
+            except socket.gaierror:
+                self.__ip = '0.0.0.0'
+            g_log.info(
+                "Done getting fully qualified domain name: {}".format(self.__host))
+        ver = narrative.version()
+        self._meta.update({'host': {'name': self.__host, 'ip': self.__ip},
+                           'ver': {'str': str(ver), 'major': ver.major,
+                                   'minor': ver.minor, 'patch': ver.patch}})
+
     def handle_accept(self):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
             g_log.info('Accepted connection from {}'.format(addr))
-            LogStreamForwarder(sock, self._coll)
+            LogStreamForwarder(sock, self._coll, self._meta)
 
     @staticmethod
     def connect_mongo(config):
@@ -257,10 +261,16 @@ class LogForwarder(asyncore.dispatcher):
 
 
 class LogStreamForwarder(asyncore.dispatcher):
-    def __init__(self, sock, collection):
+
+    def __init__(self, sock, collection, meta):
+        """Forward logs coming in on socket `sock` to pymongo.Collection
+        `collection`, augmenting each record with dict of values in `meta`.
+        """
         asyncore.dispatcher.__init__(self, sock)
+
         self._coll = collection
         self._hdr = ''
+        self._meta = meta
 
     def handle_read(self):
         # Read header
@@ -289,6 +299,13 @@ class LogStreamForwarder(asyncore.dispatcher):
         except ValueError as err:
             g_log.error("Bad input to 'handle_read': {}".format(err))
             return
+
+        # Augment with metadata, if any
+        if self._meta:
+            kbrec.record.update(self._meta)
+
+        if g_log.isEnabledFor(logging.DEBUG):
+            g_log.debug("Inserting record: {}".format(kbrec.record))
 
         # Add dict to DB
         self._coll.insert(kbrec.record)
@@ -320,9 +337,11 @@ class KBaseLogRecord(object):
         embedded key-value pairs.
         """
         rec = self.record  # alias
-        message = rec.get('message', None)
+        message = rec.get('message', rec.get('msg', None))
         if message is None:
-            return  # Stop!
+            g_log.error("No 'message' or 'msg' field found in record: {}"
+                        .format(rec))
+            message = "unknown;Message field not found"
         # Split out event name
         try:
             event, msg = message.split(EVENT_MSG_SEP, 1)
@@ -334,16 +353,19 @@ class KBaseLogRecord(object):
         # Break into key=value pairs
         text = parse_kvp(msg, rec)
         # Anything not parsed goes back into message
-        rec['message'] = text
+        rec['msg'] = text
         # Event gets its own field, too
         rec['event'] = event
+        # Levelname is too long
+        rec['level'] = rec['levelname']
+        del rec['levelname']
 
     def _strip_logging_junk(self):
         """Get rid of unneeded fields from logging library."""
         rec = self.record  # alias
         # not needed at all
-        for k in ('msg', 'threadName', 'thread', 'pathname',
-                  'levelno', 'asctime', 'relativeCreated',
+        for k in ('msg', 'threadName', 'thread', 'pathname', 'msecs', 'name',
+                  'levelno', 'asctime', 'relativeCreated', 'filename',
                   'processName', 'process', 'module', 'lineno', 'funcName'):
             if k in rec:
                 del rec[k]
@@ -366,73 +388,58 @@ class KBaseLogRecord(object):
         if 'dur' in rec:
             rec['dur'] = float(rec['dur'])
         # convert created to datetime type (converted on insert by pymongo)
-        dt = datetime.fromtimestamp(rec.get('created', 0), tzlocal())
-        rec['created_date'] = dt
-        rec['created_tz'] = dt.tzname()
+        if 'created' in rec:
+            ts = rec.get('created')
+            del rec['created']
+        else:
+            ts = 0
+        date = datetime.fromtimestamp(ts, tzlocal())
+        rec['ts'] = {'sec': ts, 'date': date, 'tz': date.tzname()}
 
-def parse_args():
-    program_name = os.path.basename(sys.argv[0])
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--config", dest="conf", metavar="FILE",
-                        default='',
-                        help="Config file. To create a new config file,"
-                             "try running: {} -S > my_file.conf"
-                             .format(program_name))
-    parser.add_argument("-S", "--sample-config", dest="smpcfg",
-                        action="store_true",
-                        help="Print a sample config file and exit")
-    parser.add_argument("-v", "--verbose", dest="vb", action="count",
-                        default=0, help="Increase verbosity")
-    args = parser.parse_args()
-    return args
+def run(args):
+    """
+    Run the proxy
+    :param args: Object with the following attributes
+       conf - Configuration filename
 
-
-def main(args):
+    :return:
+    """
     global m_fwd, g_log
 
-    if args.smpcfg:
-        print(DBConfiguration.get_sample())
-        return 0
+    g_log = logging.getLogger(LOGGER_NAME)
 
-    for signo in CATCH_SIGNALS:
-        signal.signal(signo, on_signal)
-
-    g_log = logging.getLogger("log_proxy")
-    _hnd = logging.StreamHandler()
-    _hnd.setFormatter(logging.Formatter(
-        "%(levelname)-8s  %(asctime)s %(message)s"))
-    g_log.addHandler(_hnd)
-    level = (logging.WARN, logging.INFO, logging.DEBUG)[min(args.vb, 2)]
-    g_log.setLevel(level)
-
+    # Read configuration for DB connection
     try:
         config = DBConfiguration(args.conf)
     except (IOError, ValueError, KeyError) as err:
         g_log.critical("Database configuration failed: {}".format(err))
         return 1
 
+    # Read configuration for proxy
     try:
-       pconfig = ProxyConfiguration(args.conf)
+        pconfig = ProxyConfiguration(args.conf)
     except (IOError, ValueError, KeyError) as err:
-       g_log.critical("Proxy configuration failed: {}".format(err))
-       return 2
+        g_log.critical("Proxy configuration failed: {}".format(err))
+        return 2
 
+    # Create LogForwarder
     try:
-        m_fwd = LogForwarder(config, pconfig)
+        metadata = dict(args.meta) if args.meta else {}
+        m_fwd = LogForwarder(config, pconfig, meta=metadata)
     except pymongo.errors.ConnectionFailure as err:
         g_log.fatal("Could not connect to MongoDB server at '{}:{:d}': {}"
-                   .format(config.db_host, config.db_port, err))
+                    .format(config.db_host, config.db_port, err))
         return 3
 
+    # Let user know what's up
     g_log.info("Listening on {}:{:d}".format(pconfig.host, pconfig.port))
     g_log.info("Connected to MongoDB server at {}:{:d}"
-              .format(config.db_host, config.db_port))
+               .format(config.db_host, config.db_port))
 
+    # Main loop
     g_log.debug("Start main loop")
     asyncore.loop()
     g_log.debug("Stop main loop")
 
     return 0
 
-if __name__ == '__main__':
-    sys.exit(main(parse_args()))

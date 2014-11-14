@@ -14,62 +14,37 @@ import signal
 import sys
 import time
 # Local imports
-from biokbase.narrative.common.kblogging import get_logger, reset_handlers
-from biokbase.narrative.common import log_proxy as proxy
+from biokbase.narrative.common import kblogging, log_proxy
 
-logging.basicConfig()
-g_log = logging.getLogger()
+_log = logging.getLogger("kb-log-client")
+_ = logging.StreamHandler()
+_.setFormatter(logging.Formatter(
+    "[%(levelname)s] %(asctime)s %(name)s: %(message)s"))
+_log.addHandler(_)
 
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("event", type=str, default="test",
                    help="Name of event (default=%(default)s")
-    p.add_argument("message", type=str, default="",
+    p.add_argument("message", type=str, default="", nargs="*",
                    help="Text and/or <key>=<value> pairs for the message")
-    p.add_argument("-p", "--proxy", default=False, dest="start_proxy",
-                   action="store_true",
-                   help="Start log proxy before sending message")
     p.add_argument("-v", "--verbose", dest="vb", action="count",
                    default=0, help="Increase verbosity")
     args = p.parse_args()
     return args
 
-class ProxyArgs:
-    conf = "/tmp/kbase_logforward.conf"
-    vb = 0
 
 def send_message(event, message):
-    g_log.info("Sending log message")
-    kblog = get_logger("test")
-    kblog.info("{}{}{}".format(event, proxy.EVENT_MSG_SEP, message))
+    _log.info("Sending log message")
+    kblog = kblogging.get_logger("test")
+    kblog.info("{}{}{}".format(event, log_proxy.EVENT_MSG_SEP, message))
 
 def main(args):
     level = (logging.WARN, logging.INFO, logging.DEBUG)[min(args.vb, 2)]
-    g_log.setLevel(level)
-
-    g_log.info("init.start")
-
-    if args.start_proxy:
-        cfg = 'db: test\ncollection: kblog\n'
-        with open(ProxyArgs.conf, "w") as f:
-            f.write(cfg)
-        g_log.info("Starting log proxy with config:\n{}".format(cfg))
-        pid = os.fork()
-        if pid == 0:
-            ProxyArgs.vb = args.vb
-            proxy.main(ProxyArgs)
-        else:
-            time.sleep(2)
-            reset_handlers()
-            send_message(args.event, args.message)
-            time.sleep(1)
-            g_log.debug("Killing {:d}".format(pid))
-            os.kill(pid, signal.SIGKILL)
-            g_log.info("Waiting for {:d} to stop".format(pid))
-            os.waitpid(pid, 0)
-    else:
-        send_message(args.event, args.message)
-
+    _log.setLevel(level)
+    _log.info("init.start")
+    message = ' '.join(args.message)
+    send_message(args.event, message)
     # Wait for message to get sent from buffer
     time.sleep(1)
 

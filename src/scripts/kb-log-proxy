@@ -1,5 +1,81 @@
 #!/usr/bin/env python
+"""
+Proxy logs coming in over TCP from a narrative IPython container,
+sending them to MongoDB.
+"""
+import argparse
+import logging
+import os
+import re
+import signal
 import sys
+import time
+# Local
 from biokbase.narrative.common import log_proxy as lp
 
-sys.exit(lp.main(lp.parse_args()))
+g_log = None  # Global logger (because of signal handling)
+
+# Handle ^C and other signals
+m_fwd = None
+CATCH_SIGNALS = (signal.SIGHUP, signal.SIGINT, signal.SIGUSR1,
+                 signal.SIGUSR2)
+
+def on_signal(signo, frame):
+    g_log.warn("Caught signal {:d}".format(signo))
+    if signo in CATCH_SIGNALS:
+        g_log.warn("Stop on signal {:d}".format(signo))
+        lp.m_fwd.close()
+        time.sleep(2)
+        sys.exit(1)
+
+def key_value(s):
+    """Parse 'key:value' into a pair (key, value)."""
+    m = re.match(r'([^:]+):(.+)', s)
+    if m is None:
+        raise argparse.ArgumentTypeError("Expected 'key:value', got '{}'"
+                                         .format(s))
+    return m.groups()
+
+def parse_args():
+    global g_log
+
+    program_name = os.path.basename(sys.argv[0])
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--config", dest="conf", metavar="FILE",
+                        default='',
+                        help="Config file. To create a new config file,"
+                             "try running: {} -S > my_file.conf"
+                        .format(program_name))
+    parser.add_argument("-m", "--meta", dest="meta", metavar="KEY:VALUE",
+                        type=key_value, action="append",
+                        default=[], help="Add key:value metadata to every "
+                                         "log message.")
+    parser.add_argument("-S", "--sample-config", dest="smpcfg",
+                        action="store_true",
+                        help="Print a sample config file and exit")
+    parser.add_argument("-v", "--verbose", dest="vb", action="count",
+                        default=0, help="Increase verbosity")
+    args = parser.parse_args()
+    
+    # If the user just wants a sample, print it and exit
+    if args.smpcfg:
+        print(lp.DBConfiguration.get_sample())
+        sys.exit(0)
+
+    # Configure logging
+    g_log = logging.getLogger(lp.LOGGER_NAME)
+    _hnd = logging.StreamHandler()
+    _hnd.setFormatter(logging.Formatter(
+        "%(levelname)-8s  %(asctime)s %(message)s"))
+    g_log.addHandler(_hnd)
+    level = (logging.WARN, logging.INFO, logging.DEBUG)[min(args.vb, 2)]
+    g_log.setLevel(level)
+
+    # Handle signals
+    for signo in CATCH_SIGNALS:
+        signal.signal(signo, on_signal)
+
+    return args
+
+if __name__ == '__main__':
+    sys.exit(lp.run(parse_args()))

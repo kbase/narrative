@@ -25,7 +25,6 @@ import logging
 from logging import handlers
 import os
 import re
-import socket
 import threading
 import time
 # Local
@@ -229,6 +228,8 @@ def init_handlers():
 
     if not g_log.socket_handler:
         cfg = get_proxy_config()
+        g_log.debug("Opening socket to proxy at {}:{}".format(
+            cfg.host, cfg.port))
         sock_handler = BufferedSocketHandler(cfg.host, cfg.port)
         g_log.addHandler(sock_handler)
 
@@ -237,7 +238,7 @@ def get_proxy_config():
     if config_file:
         _log.info("Configuring KBase logging from file '{}'".format(config_file))
     else:
-        _log.info("Configuring KBase logging from defaults ({} is empty, or not found)"
+        _log.warn("Configuring KBase logging from defaults ({} is empty, or not found)"
                   .format(KBASE_PROXY_ENV))
 #    return log_proxy.ProxyConfiguration(config_file)
     return log_proxy.ProxyConfigurationWrapper(config_file)

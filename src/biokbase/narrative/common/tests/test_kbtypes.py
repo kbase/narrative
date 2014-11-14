@@ -5,32 +5,38 @@ __author__ = "Dan Gunter <dkgunter@lbl.gov>"
 __date__ = "2013-12-09"
 
 import unittest
-from IPython.utils.traitlets import HasTraits
 import argparse
-import logging
-import re
 import StringIO
-from ..kbtypes import *
+import os
+from biokbase.narrative.common import kbtypes
+from IPython.utils.traitlets import HasTraits
 
-## helper values
+class HasVersion(HasTraits):
+    ver = kbtypes.VersionNumber('0.0.0')
 
-
-class VersionedThing(HasTraits):
-    version = VersionNumber
-
+def skipUnlessCreds(fn):
+    def wrapper(*a, **k):
+        if 'KBASE_CREDS' in os.environ:
+            return fn(*a, **k)
+        else:
+            raise unittest.SkipTest("Environment doesn't have KBASE_CREDS=<user>:<pass>")
+    return wrapper
 
 class TestKbaseTypes(unittest.TestCase):
     """Test basic behavior of KBase types.
     """
+    user, password = None, None
+
     def setUp(self):
-        # Set args.
-        # XXX: for now, hardcode a user (very bad!)
-        self.args = argparse.Namespace(url=None, user="kbasetest", password="@Suite525",
-                                  vb=0, bfile=None)
+        self.args = argparse.Namespace(url=None, vb=0, bfile=None)
+        self.args.user = self.user
+        setattr(self.args, 'pass', self.password)
 
     @classmethod
     def setUpClass(cls):
         cls._types = None
+        if 'KBASE_CREDS' in os.environ:
+            cls.user, cls.password = os.environ['KBASE_CREDS'].split(':')
 
     @classmethod
     def tearDownClass(cls):
@@ -49,21 +55,22 @@ class TestKbaseTypes(unittest.TestCase):
     def test_name(self):
         """Test type name.
         """
-        g = KBaseGenome1()
+        g = kbtypes.KBaseGenome1()
         self.assertEqual(str(g), 'KBaseGenomes.Genome-1.0')
-        g = KBaseGenome3()
+        g = kbtypes.KBaseGenome3()
         self.assertEqual(str(g), 'KBaseGenomes.Genome-3.0')
 
-    def test_version(self):
-        """Test Version type.
-        """
-        v = VersionNumber()
-        self.failUnlessEqual(v.get_default_value(), (0, 0, 0))
+    def test_version_bad(self):
         for bad_input in ("Mr. Robinson", "a.b.c", "1-2-3", "0.1.-1", (0, 1, -1)):
             msg = "bad input {} passed validation".format(bad_input)
-            self.shouldRaise(KBTypeError, msg, lambda x: VersionedThing(version=x), bad_input)
-        for good_input, value in (("0.1.1", (0, 1, '1')), ("13.14.97", (13, 14, '97')),):
-            self.assertEqual(value, VersionedThing(version=good_input).version)
+            self.shouldRaise(kbtypes.KBTypeError, msg,
+                             HasVersion, ver=bad_input)
+
+    def test_version_good(self):
+        for good_input, value in (("0.1.1", ('0', '1', '1')),
+                                  ("13.14.97", ('13', '14', '97')),
+                                  ("2.7.7-a+foo", ('2', '7', '7-a+foo'))):
+            self.assertEqual(value, HasVersion(ver=good_input).ver)
 
     def shouldRaise(self, exc, msg, fn, *arg, **kwargs):
         try:
@@ -74,17 +81,19 @@ class TestKbaseTypes(unittest.TestCase):
         except exc:
             pass
 
+    @skipUnlessCreds
     def test_get_types(self):
         """Regenerator.get_types
         """
-        r = Regenerator(self.args)
+        r = kbtypes.Regenerator(self.args)
         t = self._get_types(r)
         self.assert_(t)
 
+    @skipUnlessCreds
     def test_multiple_versions(self):
         """Test multiple versions of the same type.
         """
-        r = Regenerator(self.args)
+        r = kbtypes.Regenerator(self.args)
         t = self._get_types(r)
 
         # Insert extra version.

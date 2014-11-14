@@ -1,0 +1,152 @@
+#!/usr/bin/env python
+"""
+Load a log file into the database
+"""
+__author__ = 'Dan Gunter <dkgunter@lbl.gov>'
+__date__ = '10/24/14'
+
+# System
+import argparse
+import json
+import logging
+import os
+import random
+import sys
+import time
+# Third-party
+import pymongo
+# App
+from biokbase.narrative.common import log_proxy
+
+_log = logging.getLogger("kb-load-logs")
+_ = logging.StreamHandler()
+_.setFormatter(logging.Formatter("[%(levelname)s] %(asctime)s: %(message)s"))
+_log.addHandler(_)
+
+def parse_args():
+    program_name = os.path.basename(sys.argv[0])
+    parser = argparse.ArgumentParser(__doc__.strip())
+    parser.add_argument('infiles', type=str, nargs='*',
+                        help="Input log files (default=standard input)")
+    parser.add_argument("-g", "--generate", metavar="N", dest="gen", type=int, default=0,
+                        help="Instead of reading log files, generate <N> records")
+    parser.add_argument("-f", "--config", dest="conf", metavar="FILE",
+                        type=argparse.FileType('r'), required=True,
+                        help="DB config file, in JSON format.")
+    parser.add_argument("-v", "--verbose", dest="vb", action="count",
+                        default=0, help="Increase verbosity")
+    args = parser.parse_args()
+
+    level = (logging.DEBUG, logging.INFO, logging.WARN)[max(0, 2 - args.vb)]
+    _log.setLevel(level)
+
+    return args
+
+def main(args):
+    # parse config
+    try:
+        d = json.load(args.conf)
+    except Exception as err:
+        _log.error("Error parsing JSON in '{}': {}".format(args.conf.name, err))
+        return 1
+    try:
+        host, port, db, coll = (d['host'], d.get('port', 27017),
+                                d['database'], d['collection'])
+        if 'user' in d:
+            user, passwd = d['user'], d['password']
+        else:
+            user, passwd = None, None
+    except KeyError as err:
+        _log.error("Missing key in '{}': {}".format(args.conf.name, err))
+        return 2
+
+    # connect to mongodb
+    desc = "{}:{}/{}".format(host, port, db)
+    _log.info("Connecting to MongoDB '{}'".format(desc))
+    conn = pymongo.MongoClient(host, port)
+    db = conn[db]
+    if user is not None:
+        if not db.authenticate(user, passwd):
+            _log.error("Could not authenticate as '{}' to '{}'"
+                       .format(user, desc))
+            return 3
+    mc = db[coll]
+
+    if args.gen > 0:
+        generate(mc, args.gen)
+    else:
+        load_files(mc, args.infiles)
+        
+    return 0
+    
+def load_files(mc, infiles):
+    files = ['-'] if not infiles else infiles
+    n = 0
+    for f in files:
+        if f == '-':
+            f = sys.stdin
+        else:
+            f = open(f, 'rb')
+        _log.info("Process file '{}'".format(f.name))
+        for line in f:
+            # this is based on the format in kblogging.MetaFormatter
+            fields = line.split(' ', 4)
+            if len(fields) != 5:
+                rec = {'message': line.strip()}
+            else:
+                ts = fields[1] + ' ' + fields[2]
+                sec = time.strptime(ts[:ts.rfind(',')], "%Y-%m-%d %H:%M:%S")
+                sec = time.mktime(sec)
+                ms = int(ts[ts.rfind(',') + 1:]) / 1000.0
+                rec = {'levelname': fields[0],
+                       'created': sec + ms,
+                       'name': fields[3],
+                       'message': fields[4]}
+            kbrec = log_proxy.KBaseLogRecord(rec)
+            mc.insert(kbrec.record)
+            n += 1
+
+    _log.info("Loaded {:d} records".format(n))
+
+def generate(mc, num):
+    """Generate & load 'num' random records."""
+    m_pre = 'biokbase.narrative'
+    t = time.time()
+    methods = ['strike_the_grains', 'lauter_the_wort', 'pitch_the_yeast']
+    funcs, func_i = ["func.begin", "func.stage", "func.end"], -1
+    sess = str(random.random())[2:]
+    user, narr = 'dang', 'ws.123.obj.456'
+    m = random.choice(methods)
+    for i in range(num):
+        t += random.random() * 5.0
+        dur = random.random()
+        # choose method or narrative open
+        if func_i >=0 and random.random() > 0.1:
+            name = m_pre + '.' + m
+            e = funcs[func_i]
+            # move to next stage in method, pick new method if at end
+            func_i += 1
+            if func_i == len(funcs):
+                m = random.choice(methods)
+                func_i = 0
+        else:
+            t += 3600 + random.random() * 3600
+            e = 'open'
+            name = m_pre
+            func_i = 0 # reset to first func
+        # make raw rec
+        rec = {'levelname': 'INFO',
+               'created': t,
+               'session_id': sess,
+               'message': "{};hello".format(e),
+               'dur': dur,
+               'name': name,
+               'user': user, 'narr': narr}
+        # process rec
+        kbrec = log_proxy.KBaseLogRecord(rec)
+        mc.insert(kbrec.record)
+        
+    _log.info("Loaded {:d} (generated) records".format(num))
+        
+if __name__ == '__main__':
+    sys.exit(main(parse_args()))

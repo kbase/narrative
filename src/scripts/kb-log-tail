@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+"""
+Show final item(s) in logs on MongoDB
+"""
+import argparse
+import json
+import logging
+import os
+import sys
+#
+from bson import json_util
+import pymongo
+import yaml
+
+logging.basicConfig()
+_log = logging.getLogger("kb-log-tail")
+
+def error(msg):
+    _log.error(msg)
+    
+def print_rec(rec):
+    print(json.dumps(rec, indent=2, default=json_util.default))
+
+def main(args):
+    conf = args.conf
+    try:
+        info = yaml.load(open(conf))
+        for key in 'db_host', 'db_port', 'db', 'user', 'password':
+            if not key in info:
+                error("Configuration file is missing value for '{}'".format(key))
+                return -1
+    except IOError as err:
+        error("Cannot open configuration file '{}': {}".format(conf, err))
+        return -1
+    except yaml.error.YAMLError as err:
+        error("Cannot parse configuration file as YAML")
+        return -1
+
+    try:
+        db = pymongo.MongoClient(info["db_host"], info["db_port"])[info["db"]]
+    except pymongo.errors.PyMongoError as err:
+        error("Cannot connect to MongoDB '{}' at {}:{}".format(
+            info["db"], info["db_host"], info["db_port"]))
+    if not db.authenticate(info["user"], info["password"]):
+        error("Could not authenticate to MongoDB '{}' at {}:{}".format(
+            info["db"], info["db_host"], info["db_port"]))
+    c = db[info["collection"]]
+    recs = c.find({}, sort=[("created", -1)], limit=args.num)
+    first = True
+    separator = '-' * 40
+    for rec in recs:
+        if not first:
+            print(separator)
+        print_rec(rec)
+        first = False
+    if first:
+        print("No records found")
+    return 0
+
+def parse_args():
+    conf = os.environ.get("KBASE_PROXY_CONFIG", "narrative-log-proxy.conf")
+    p = argparse.ArgumentParser(description=__doc__.strip())
+    p.add_argument("-c", "--conf", dest='conf', default=conf,
+                   help="Configuration file (default=%(default)s)")
+    p.add_argument("num", nargs='?', default=1, type=int, help="Number of records (default=1)")
+    args = p.parse_args()
+    return args
+
+if __name__ == '__main__':
+    sys.exit(main(parse_args()))

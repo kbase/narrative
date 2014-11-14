@@ -781,3 +781,8 @@ border-left: 1px solid #f2f2f2;
 	margin-bottom: 0px;
 }
 
+/* For connecting lines */
+.kb-line {
+    background-color: lightgrey;
+    position: absolute;
+}

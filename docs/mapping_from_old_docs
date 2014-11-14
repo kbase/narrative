@@ -1,0 +1,9 @@
+./docs/docker.md ./docker/readme
+./docs/deployment.md ./Readme-deployment.md
+./docs/developer.md ./Readme-developer.md
+./docs/intro.md ./Readme.md
+./docs/biokbase.md ./src/biokbase/README.md
+./docs/logging.md ./src/README-log-proxy.md
+./docs/src.md ./src/README.md
+./docs/src2.md ./src/README.txt
+

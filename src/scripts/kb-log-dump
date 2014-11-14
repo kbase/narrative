@@ -1,0 +1,271 @@
+#!/usr/bin/env python
+"""
+Dump log info from MongoDB into an SQLite database and, optionally,
+print out the results of aggregating that data.
+"""
+import argparse
+import csv
+import logging
+import os
+import sqlite3
+import sys
+import time
+#
+import pymongo
+import yaml
+
+_log = logging.getLogger("kb-log-dump")
+_ = logging.StreamHandler()
+_.setFormatter(logging.Formatter("[%(levelname)s] %(asctime)s "
+                                 "kb-log-dump: %(message)s"))
+_log.addHandler(_)
+
+def error(msg):
+    _log.error(msg)
+
+class MongoConnectError(Exception):
+    def __init__(self, msg):
+        error(msg)
+        Exception.__init__(self, msg)
+
+def connect_mongo(conf):
+    try:
+        info = yaml.load(open(conf))
+        for key in 'db_host', 'db_port', 'db':
+            if not key in info:
+                raise MongoConnectError(
+                    "Configuration file is missing value for '{}'".format(key))
+    except IOError as err:
+        raise MongoConnectError("Cannot open configuration file '{}': {}".format(conf, err))
+    except yaml.error.YAMLError as err:
+        raise MongoConnectError("Cannot parse configuration file as YAML")
+
+    try:
+        db = pymongo.MongoClient(info["db_host"], info["db_port"])[info["db"]]
+    except pymongo.errors.PyMongoError as err:
+        raise MongoConnectError("Cannot connect to MongoDB '{}' at {}:{}".format(
+            info["db"], info["db_host"], info["db_port"]))
+    if 'user' in info:
+        if not db.authenticate(info["user"], info["password"]):
+            raise MongoConnectError("Could not authenticate to MongoDB '{}' at {}:{}".format(
+                info["db"], info["db_host"], info["db_port"]))
+    c = db[info["collection"]]
+    _log.info("connect.end db={d} collection={c} user={u}".format(c=c.name,
+              d=c.database.name, u=info.get('user', '<anonymous>')))
+    return c
+
+class DB(object):
+    DUPLICATES_MAX = 10
+    COLUMNS = ['date', 'ts', 'event', 'narr', 'user', 'name', 'dur']
+
+    def __init__(self, fname, table_name):
+        # sync this with 'fields' in main()
+        self._table = table_name
+        self._is_mem = fname == ':memory:'
+        try:
+            sq = sqlite3.connect(fname)
+        except sqlite3.OperationalError:
+            raise ValueError("Bad DB filename '{}'".format(fname))
+        sq.execute(self._create_table_stmt())
+        self._sq = sq
+        self._insert_stmt = 'INSERT INTO {table_name} ({columns}) ' \
+                            'VALUES ({{values}})'.format(
+            table_name=self._table, columns=','.join(self.COLUMNS))
+        self._rkeys, self._duplicates, self._disable_insert = set(), 0, False
+
+    def _create_table_stmt(self):
+        stmt = "CREATE TABLE IF NOT EXISTS {table_name} ({columns})"
+        if self._is_mem:
+            constraints = []
+        else:
+            constraints = ['CONSTRAINT c1 UNIQUE (ts, narr, user, event)']
+        return stmt.format(table_name=self._table,
+                           columns=','.join(self.COLUMNS + constraints))
+
+    def add(self, rec):
+        """Add record to sqlite3 db.
+        """
+        #print("ADD REC={}".format(rec))
+        if self._disable_insert:
+            return
+        if self._is_mem:
+            key = '#'.join([rec['ts'], rec['user'], rec['narr']])
+            if key in self._rkeys:
+                self._add_duplicate()
+            self._rkeys.add(key)
+        cursor = self._sq.cursor()
+        rec['name'] = rec['name'][19:]  # strip 'biokbase.narrative.'
+        values = [rec[c] for c in self.COLUMNS]
+        ivalues = []
+        for v in values:
+            if isinstance(v, float):
+                ivalues.append('{:f}'.format(v))
+            else:
+                ivalues.append('"' + v + '"')
+        stmt = self._insert_stmt.format(values=','.join(ivalues))
+        # add record
+        try:
+            cursor.execute(stmt)
+        except sqlite3.IntegrityError:
+            self._add_duplicate()
+        cursor.close()
+
+    def _add_duplicate(self):
+        self._duplicates += 1
+        if self._duplicates > self.DUPLICATES_MAX:
+            _log.error("Duplicate record limit ({:d}) reached."
+                       " All further inserts will be ignored."
+                       .format(self.DUPLICATES_MAX))
+            self._disable_insert = True
+
+    def query(self, q):
+        cursor = self._sq.cursor()
+        result = cursor.execute(q)
+        return result
+
+    def close(self):
+        self._sq.commit()
+        self._sq.close()
+
+    def aggregate(self, groups, agg=0, out=sys.stdout, fmt='csv'):
+        """Aggregate
+
+        :param db: Sqlite3 database
+        :param table: Name of table in db
+        :param groups: List of grouping columns
+        :param agg: Index of aggregation function in AGG_FUNC
+        :param out: Output stream
+        :param fmt: Name of output format
+        :return:
+        """
+        group_expr = ','.join(groups)
+        if agg == 0: # sum
+            sql_agg = "SUM(dur)"
+            agg_name = "total_sec"
+        elif agg == 1: # count
+            sql_agg = "COUNT(*)"
+            agg_name = "count"
+        stmt = 'SELECT {g},{a} FROM {t} GROUP BY {g}'.format(
+            a=sql_agg, t=self._table, g=group_expr)
+        _log.debug('query="{}"'.format(stmt))
+        try:
+            rows = self.query(stmt)
+        except sqlite3.OperationalError as err:
+            raise ValueError("bad query: {}".format(err))
+        if fmt == 'csv':
+            writer = csv.writer(out)
+            writer.writerow(list(groups) + [agg_name])
+            for row in rows:
+                writer.writerow(row)
+        else:
+            raise ValueError("bad output format for aggregate(): {}".format(fmt))
+
+def main(args):
+    # verbosity
+    level = (logging.WARN, logging.INFO, logging.DEBUG)[min(args.vb, 2)]
+    _log.setLevel(level)
+
+    try:
+        c = connect_mongo(args.conf)
+    except MongoConnectError:
+        return -1
+    sq = DB(args.sq_file, args.sq_table)
+
+    spec = {'created': {'$gte': args.daterange[0],
+                        '$lte': args.daterange[1]}}
+    fields = DB.COLUMNS[2:] + ['created']
+    _log.debug("mongodb.find spec='{}' fields='{}'".format(spec, fields))
+    recs, first = c.find(spec=spec, fields=fields), True
+    for rec in recs:
+        e = rec['event']
+        if e not in ('open', 'func.end'):
+            continue
+        first = False
+        # split `created` field into `ts` and `date`
+        ts = rec['created']
+        localdate = time.strftime('%Y-%m-%d', time.localtime(ts))
+        rec.update({'date': localdate, 'ts': '{:f}'.format(ts)})
+        # set event type
+        if e == 'open':
+            rec['event'] = 'O'
+            rec['dur'] = 0.0  # for aggregating durations
+        else:
+            rec['event'] = 'F'
+        sq.add(rec)
+    if first:
+        print("No records found")
+    else:
+        # If 'groups' are given, perform an aggregation
+        if len(args.groups) > 0:
+            try:
+                sq.aggregate(args.groups, agg=args.agg)
+            except ValueError as err:
+                _log.error("aggregation_error={}".format(err))
+                return -1
+        sq.close()
+    return 0
+
+# argument type parsers
+
+AGG_FUNC = ['sec', 'count']
+AGG_FUNC_STR = ', '.join(AGG_FUNC)
+
+def agg_fn(s):
+    s = s.lower()
+    i = AGG_FUNC.index(s)
+    if i >= 0:
+        return i
+    raise ValueError("Bad aggregation funcion: '{}' not in ({})"
+                     .format(s, AGG_FUNC_STR))
+
+def csv_list(s):
+    return s.split(',')
+
+def date_range(s):
+    """Parse a string with a date range and return a tuple of
+    floating-point seconds since the epoch.
+
+    :raises: ValueError, for bad input formats
+    """
+    dates = s.split(':')
+    if len(dates) != 2:
+        raise ValueError("Date range not in format '<date1>:<date2>'")
+    result = []
+    for date in dates:
+        try:
+            epoch_sec = time.mktime(time.strptime(date, '%Y-%m-%d'))
+        except ValueError:
+            raise ValueError("Date '{}' not in format 'YYYY-MM-DD'".format(date))
+        result.append(epoch_sec)
+    return tuple(result)
+
+# main
+
+def parse_args():
+    conf = os.environ.get("KBASE_PROXY_CONFIG", "narrative-log-proxy.conf")
+    p = argparse.ArgumentParser(description=__doc__.strip())
+    p.add_argument("-a", "--agg", dest='agg', type=agg_fn, default=AGG_FUNC[0],
+                   help="Aggregation function. Options: {}. "
+                        "(default=%(default)s). "
+                        "Ignored if no -g/--group option is given"
+                   .format(AGG_FUNC_STR))
+    p.add_argument("-c", "--conf", dest='conf', default=conf,
+                   help="Configuration file (default=%(default)s)")
+    p.add_argument("-d", "--dates", dest='daterange', type=date_range,
+                   default='1970-01-01:2099-12-31',
+                   help="Date range, in format YYYY-MM-DD:YYYY-MM-DD"
+                        " (default=%(default)s). Uses local timezones")
+    p.add_argument("-f", "--sqlite-file", dest='sq_file',
+                   default=":memory:", help="sqlite3 file (default=%(default)s)")
+    p.add_argument("-g", "--group", dest='groups', type=csv_list, default=[],
+                   help='Group and aggregate by these comma-separated fields '
+                        '(default=no grouping)')
+    p.add_argument("-t", "--sqlite-table", dest='sq_table', default="narrative",
+                   help="sqlite3 table (default=%(default)s")
+    p.add_argument("-v", "--verbose", dest="vb", action="count",
+                   default=0, help="Increase verbosity")
+    args = p.parse_args()
+    return args
+
+if __name__ == '__main__':
+    sys.exit(main(parse_args()))

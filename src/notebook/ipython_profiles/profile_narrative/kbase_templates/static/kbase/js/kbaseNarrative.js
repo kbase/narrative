@@ -118,17 +118,19 @@ narrative.init = function() {
     /*
      * Before we get everything loading, just grey out the whole %^! page
      */
-     $('#main-container').hide();
-    var $dataWidget = $('#kb-ws').kbaseNarrativeDataPanel();
-    $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
+    $('#main-container').hide();
+    var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
 
-    var $functionWidget = $('#kb-function-panel').kbaseNarrativeMethodPanel({ autopopulate: false });
-    $functionWidget.refreshFromService();
+    // var $dataWidget = $('#kb-ws').kbaseNarrativeDataPanel();
+    // $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
 
-    var $jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });
-    $jobsWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
+    // var $functionWidget = $('#kb-function-panel').kbaseNarrativeMethodPanel({ autopopulate: false });
+    // $functionWidget.refreshFromService();
+
+    // var $jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });
+    // $jobsWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
     
-    var $appsWidget = $('#kb-apps-panel').kbaseNarrativeAppsPanel({ autopopulate: true });
+    // var $appsWidget = $('#kb-apps-panel').kbaseNarrativeAppsPanel({ autopopulate: true });
     /*
      * Once everything else is loaded and the Kernel is idle,
      * Go ahead and fill in the rest of the Javascript stuff.
@@ -152,9 +154,11 @@ narrative.init = function() {
                 loadingImage: "/static/kbase/images/ajax-loader.gif",
                 ws_id: IPython.notebook.metadata.ws_name
             });
-            $dataWidget.setNarrWs(narr_ws); //as a callback
-            $dataWidget.setWorkspace(ws_name);
-            setTimeout(function() { $jobsWidget.refresh(); }, 750);
+            $sidePanel.render();
+            $('#main-container').show();
+            // $dataWidget.setNarrWs(narr_ws); //as a callback
+            // $dataWidget.setWorkspace(ws_name);
+            // setTimeout(function() { $jobsWidget.refresh(); }, 750);
         }
         else {
             /* ??? */

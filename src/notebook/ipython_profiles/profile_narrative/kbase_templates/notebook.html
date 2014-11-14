@@ -2,25 +2,15 @@
 
 {% block stylesheet %}
 
-<!--    <script type="text/javascript" src="{{ static_url("components/mathjax/mathjax.js") }}" charset="utf-8"></script> -->
-
-{% if mathjax_url %}
-<script type="text/javascript" src="{{mathjax_url}}&delayStartupUntil=configured" charset="utf-8"></script>
-{% endif %}
-<script type="text/javascript">
-// MathJax disabled, set as null to distingish from *missing* MathJax,
-// where it will be undefined, and should prompt a dialog later.
-window.mathjax_url = "{{mathjax_url}}";
-</script>
-
-
-<!--    <script type="text/javascript">
+    {% if mathjax_url %}
+    <script type="text/javascript" src="{{mathjax_url}}&delayStartupUntil=configured" charset="utf-8"></script>
+    {% endif %}
+    <script type="text/javascript">
         // MathJax disabled, set as null to distingish from *missing* MathJax,
         // where it will be undefined, and should prompt a dialog later.
-//        window.mathjax_url = "mathjax.js"; //{{ static_url("components/mathjax/mathjax.js") }}"; //"{{mathjax_url}}";
         window.mathjax_url = "{{mathjax_url}}";
     </script>
--->
+
 
     <link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}">
 
@@ -60,10 +50,12 @@ class="notebook_app"
 <div id="main-container">
 
     <div id="left-column">
-        <div id="kb-ws"></div>
+        <div id="kb-side-panel"></div>
+
+<!--        <div id="kb-ws"></div>
         <div id="kb-function-panel"></div>
         <div id="kb-apps-panel"></div>
-        <div id="kb-jobs-panel"></div>
+        <div id="kb-jobs-panel"></div> -->
     </div>
 
     <div id="content-column">
@@ -259,7 +251,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/genomes/kbaseContigBrowserButtons.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/genomes/kbasePhenotypeSet.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/d3/d3.v3.min.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/UserAndJobStateClient.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/api/UserAndJobStateClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/jquery.svg.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script>
 
@@ -271,16 +263,17 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCheckboxInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextareaInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseJobWatcher.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeMethodCell.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeAppCell.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeOutputCell.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeControlPanel.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeMethodPanel.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeDataTable.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeDataPanel.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeAppPanel.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeJobsPanel.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeAppCell.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeControlPanel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeMethodPanel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeDataTable.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeDataPanel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeJobsPanel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbaseNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <!-- function input JS widgets -->

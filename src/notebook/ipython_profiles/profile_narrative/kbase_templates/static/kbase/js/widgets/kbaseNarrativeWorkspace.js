@@ -1039,7 +1039,7 @@
             if (!this.isFunctionCell(cell) && !this.isOutputCell(cell) && !this.isAppCell(cell))
                 return;
 
-            var target;
+            var target = 'div[id^=kb-cell-]';
             var widget;
 
             if (this.isFunctionCell(cell)) {
@@ -1051,17 +1051,14 @@
                 }
                 else {
                     widget = 'kbaseNarrativeMethodCell';
-                    target = 'div[id^=kb-cell-]';
                 }
             }
             else if (this.isOutputCell(cell)) {
                 // do output widget stuff.
-                widget = cell.metadata[this.KB_CELL].widget;
-                target = '#output';
+                widget = 'kbaseNarrativeOutputCell';
             }
             else if (this.isAppCell(cell)) {
                 widget = 'kbaseNarrativeAppCell';
-                target = 'div[id^=kb-cell-]';
             }
 
             try {
@@ -1093,7 +1090,7 @@
         loadRecentCellState: function(cell) {
             var state = this.getRecentState(cell);
             if (state) {
-                var target;
+                var target = 'div[id^=kb-cell-]';
                 var widget;
 
                 // if it's labeled as a function cell do that.
@@ -1106,18 +1103,15 @@
                     }
                     else {
                         widget = 'kbaseNarrativeMethodCell';
-                        target = 'div[id^=kb-cell-]';
                     }
                 }
                 // if it's labeled as an output cell do that.
                 else if (this.isOutputCell(cell)) {
                     // do output widget stuff.
-                    widget = cell.metadata[this.KB_CELL].widget;
-                    target = "#output";
+                    widget = 'kbaseNarrativeOutputCell';
                 }
                 else if (this.isAppCell(cell)) {
                     widget = 'kbaseNarrativeAppCell';
-                    target = 'div[id^=kb-cell-]';
                 }
                 // it might not be either! if we don't have both a target and widget, don't do anything!
                 if (target && widget) {
@@ -1563,10 +1557,11 @@
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
                 if (result.length > 0) {
-                    if (cell.metadata[this.KB_CELL].method)
-                        this.createOutputCell(cell, result);
-                    else
-                        this.createAppOutputCell(cell, result);
+                    this.createOutputCell(cell, result);
+                    // if (cell.metadata[this.KB_CELL].method)
+                    //     this.createOutputCell(cell, result);
+                    // else
+                    //     this.createAppOutputCell(cell, result);
                 }
             }
         },
@@ -1652,46 +1647,6 @@
             this.trigger('updateData.Narrative');
         },
 
-        createAppOutputCell: function(cell, result) {
-            if (typeof result === 'string')
-                result = JSON.parse(result);
-
-            if (!result.embed || result.data === null || result.data === undefined) {
-                return;
-            }
-
-            var app = cell.metadata[this.KB_CELL].app;
-            var appName = app.info.name || 'KBase App';
-            var widget = this.defaultOutputWidget;
-
-            var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell), widget);
-            var uuid = this.uuidgen();
-            var outCellId = 'kb-cell-out-' + uuid;
-
-            // set up the widget line
-            var widgetInvoker = widget + "({'data' : " + result.data + "});";
-            var header = '<span class="kb-out-desc"><b>' + 
-                            (appName ? appName : 'Unknown method') + 
-                            '</b> - Output</span><span class="pull-right kb-func-timestamp">' + 
-                            this.readableTimestamp(this.getTimestamp()) +
-                            '</span>' + 
-                         '';
-
-            var cellText = '<div class="kb-cell-output" id="' + outCellId + '">' +
-                                '<div class="panel panel-default">' + 
-                                    '<div class="panel-heading">' + header + '</div>' +
-                                    '<div class="panel-body"><div id="output"></div></div>' +
-                                '</div>' +
-                           '</div>\n' +
-                           '<script>' +
-                           '$("#' + outCellId + ' > div > div > div#output").' + widgetInvoker +
-                           '</script>';
-
-            outputCell.set_text(cellText);
-            outputCell.rendered = false; // force a render
-            outputCell.render();            
-        },
-
         /**
          * Result is an object with this structure:
          * cell = the invoking function cell.
@@ -1715,24 +1670,36 @@
                 return;
             }
 
-            /**
-             * 2 cases here:
-             * cell.metadata['kb-cell'].method exists:
-             * it either has widgets.output (new cell)
-             * or it doesn't, and that comes from result.widget (old cell)
-             *
-             * cell.metadata[kb-cell].app exists:
-             * use default output for now
-             */
-            var method = cell.metadata[this.KB_CELL].method;
-            var widget = result.widget;
-            if (!widget) {
-                if (method.widgets && method.widgets.output) {
-                    widget = method.widgets.output;
+            var widget = this.defaultOutputWidget;
+            var outputTitle = '';
+
+            if (this.isFunctionCell(cell)) {
+                /**
+                 * 2 cases here:
+                 * cell.metadata['kb-cell'].method exists:
+                 * it either has widgets.output (new cell)
+                 * or it doesn't, and that comes from result.widget (old cell)
+                 *
+                 * cell.metadata[kb-cell].app exists:
+                 * use default output for now
+                 */
+                var method = cell.metadata[this.KB_CELL].method;
+                widget = result.widget;
+                if (!widget) {
+                    if (method.widgets && method.widgets.output) {
+                        widget = method.widgets.output;
+                    }
+                    else {
+                        widget = this.defaultOutputWidget;
+                    }
                 }
-                else {
-                    widget = this.defaultOutputWidget;
-                }
+                outputTitle = method.title;
+                if (!outputTitle && method.info && method.info.name)
+                    outputTitle = method.info.name;
+            }
+            else if (this.isAppCell(cell)) {
+                var app = cell.metadata[this.KB_CELL].app;
+                outputTitle = app.info.name || 'KBase App';
             }
 
             var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell), widget);
@@ -1740,38 +1707,20 @@
             // kinda ugly, but concise. grab the method. if it's not falsy, fetch the title from it.
             // worst case, it'll still be falsy, and we can deal with it in the header line.
             // look for either 'title' or 'name' to be backward compatible.
-            var methodName = method.title;
-            if (!method.title && method.info && method.info.name)
-                methodName = method.info.name;
 
             var uuid = this.uuidgen();
             var outCellId = 'kb-cell-out-' + uuid;
+            var outputData = '{"data":' + result.data + ', ' + 
+                               '"type":"method", ' +
+                               '"widget":"' + widget + '", ' +
+                               '"cellId":"' + outCellId + '", ' +
+                               '"title":"' + outputTitle + '", ' +
+                               '"time":' + this.getTimestamp() + '}'; 
 
-            // set up the widget line
-            var widgetInvoker = widget;
-            if (widget !== this.defaultOutputWidget)
-                widgetInvoker += '(' + result.data + ');';
-            else
-                widgetInvoker += "({'data' : " + result.data + "});";
-
-            var header = '<span class="label label-info">Output</span>' +
-                            '<span class="kb-out-desc"><b>' + 
-                            (methodName ? methodName : 'Unknown method') + 
-                            '</b></span><span class="pull-right kb-func-timestamp">' + 
-                            this.readableTimestamp(this.getTimestamp()) +
-                            '</span>' + 
-                         '';
-
-            var cellText = '<div class="kb-cell-output" id="' + outCellId + '">' +
-                                '<div class="panel panel-default">' + 
-                                    '<div class="panel-heading">' + header + '</div>' +
-                                    '<div class="panel-body"><div id="output"></div></div>' +
-                                '</div>' +
-                           '</div>\n' +
-                           '<script>' +
-                           '$("#' + outCellId + ' > div > div > div#output").' + widgetInvoker +
-                           '</script>';
-
+            cellText = '<div id="' + outCellId + '"></div>\n' +
+                       '<script>' +
+                       '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
+                       '</script>';
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
             outputCell.render();

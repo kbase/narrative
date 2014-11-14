@@ -52,18 +52,8 @@
          * @private
          */
         init: function(options) {
-            /*
-             * This should be the first line of your init function.
-             * It registers the new widget, overriding existing options.
-             *
-             * The members of the options structure will become members of 
-             * this.options, overriding any existing members.
-             */
             this._super(options);
 
-            /*
-             * It is required to return this.
-             */
             return this.render();
         },
 

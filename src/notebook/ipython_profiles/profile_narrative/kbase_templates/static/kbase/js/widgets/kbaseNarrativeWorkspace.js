@@ -1514,7 +1514,8 @@
                                     case 'E': // Error while running
                                         var errorJson = matches[2];
                                         errorJson = errorJson.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\$/g, "&#36;");
-                                        self.createErrorCell(cell, errorJson);
+                                        self.createOutputCell(cell, '{"error" :' + errorJson + '}', true);
+//                                        self.createErrorCell(cell, errorJson);
                                         break;
 
                                     case 'G': // debuG message
@@ -1655,9 +1656,20 @@
          * data - the object to be passed in to the widget
          * embed - if true, then embed the widget and render it.
          */
-        createOutputCell: function(cell, result) {
-            if (typeof result === 'string')
-                result = JSON.parse(result);
+        createOutputCell: function(cell, result, isError) {
+            if (typeof result === 'string' && !isError) {
+                // try to parse it as JSON.
+                // if we fail, then it's not something we can deal with and shouldn't
+                // make an output cell from it.
+                try {
+                    result = JSON.parse(result);
+                    if (!result || typeof result !== 'object' || result === null)
+                        return;
+                }
+                catch (err) {
+                    return;
+                }
+            }
 
             // If result.embed is false,
             // or if the result doesn't have any data to put into a widget,
@@ -1665,13 +1677,15 @@
             // along the way.
             //
             // Note that an empty object is not null! So if result.data = {}, it'll still do something.
-            if (!result.embed || result.data === null || result.data === undefined) {
+            if (!isError && (!result.embed || result.data === null || result.data === undefined)) {
                 //do something.
                 return;
             }
 
             var widget = this.defaultOutputWidget;
             var outputTitle = '';
+            var outputType = 'method';
+            var data = isError ? result : result.data;
 
             if (this.isFunctionCell(cell)) {
                 /**
@@ -1700,18 +1714,20 @@
             else if (this.isAppCell(cell)) {
                 var app = cell.metadata[this.KB_CELL].app;
                 outputTitle = app.info.name || 'KBase App';
+                outputType = 'app';
+            }
+            if (isError) {
+                widget = this.errorWidget;
+                outputType = 'error';
             }
 
-            var outputCell = this.addOutputCell(IPython.notebook.find_cell_index(cell), widget);
-
-            // kinda ugly, but concise. grab the method. if it's not falsy, fetch the title from it.
-            // worst case, it'll still be falsy, and we can deal with it in the header line.
-            // look for either 'title' or 'name' to be backward compatible.
+            var outputCell = isError ? this.addErrorCell(IPython.notebook.find_cell_index(cell), widget) :
+                                       this.addOutputCell(IPython.notebook.find_cell_index(cell), widget);
 
             var uuid = this.uuidgen();
             var outCellId = 'kb-cell-out-' + uuid;
-            var outputData = '{"data":' + result.data + ', ' + 
-                               '"type":"method", ' +
+            var outputData = '{"data":' + data + ', ' + 
+                               '"type":"' + outputType + '", ' +
                                '"widget":"' + widget + '", ' +
                                '"cellId":"' + outCellId + '", ' +
                                '"title":"' + outputTitle + '", ' +

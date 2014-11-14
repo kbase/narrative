@@ -1515,7 +1515,6 @@
                                         var errorJson = matches[2];
                                         errorJson = errorJson.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\$/g, "&#36;");
                                         self.createOutputCell(cell, '{"error" :' + errorJson + '}', true);
-//                                        self.createErrorCell(cell, errorJson);
                                         break;
 
                                     case 'G': // debuG message
@@ -1559,10 +1558,6 @@
                 }
                 if (result.length > 0) {
                     this.createOutputCell(cell, result);
-                    // if (cell.metadata[this.KB_CELL].method)
-                    //     this.createOutputCell(cell, result);
-                    // else
-                    //     this.createAppOutputCell(cell, result);
                 }
             }
         },
@@ -1596,56 +1591,6 @@
                 this.trigger('registerApp.Narrative', jobInfo);
             else
                 this.trigger('registerMethod.Narrative', jobInfo);
-        },
-
-        /**
-         * Creates an error cell and populates it with the JSON error object.
-         */
-        createErrorCell: function(cell, errorJson) {
-            var error = {
-                'widget': this.errorWidget,
-                'data': '{"error": ' + errorJson + "}",
-                'embed': true
-            };
-
-            var widget = this.errorWidget;
-
-            var errorCell = this.addErrorCell(IPython.notebook.find_cell_index(cell), widget);
-
-            // kinda ugly, but concise. grab the method. if it's not falsy, fetch the title from it.
-            // worst case, it'll still be falsy, and we can deal with it in the header line.
-            var methodName = cell.metadata[this.KB_CELL].method;
-            if (methodName)
-                methodName = methodName.title;
-
-            var uuid = this.uuidgen();
-            var errCellId = 'kb-cell-err-' + uuid;
-
-            var widgetInvoker = this.errorWidget + "({ \"error\" : " + errorJson + "});";
-
-            var header = '<span class="kb-err-desc"><b>' + 
-                            (methodName ? methodName : 'Unknown method') + 
-                            '</b> - Error</span><span class="pull-right kb-func-timestamp">' + 
-                            this.readableTimestamp(this.getTimestamp()) +
-                            '</span>' + 
-                         '';
-
-            var cellText = '<div class="kb-cell-error" id="' + errCellId + '">' +
-                                '<div class="panel panel-danger">' + 
-                                    '<div class="panel-heading">' + header + '</div>' +
-                                    '<div class="panel-body"><div id="error"></div></div>' +
-                                '</div>' +
-                           '</div>\n' +
-                           '<script>' +
-                           '$("#' + errCellId + ' > div > div > div#error").' + widgetInvoker +
-                           '</script>';
-
-            errorCell.set_text(cellText);
-            errorCell.rendered = false; // force a render
-            errorCell.render();
-
-            this.resetProgress(cell);
-            this.trigger('updateData.Narrative');
         },
 
         /**

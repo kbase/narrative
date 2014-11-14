@@ -18,6 +18,7 @@ $.KBWidget({
     //uploadUrl: "http://dev06.berkeley.kbase.us:8283/uploader",
     //uploadUrl: "http://localhost:18888/uploader",
     wsUrl: "https://kbase.us/services/ws",
+    shockUrl: "https://kbase.us/services/shock-api/",
 
     init: function(options) {
         this._super(options);
@@ -36,7 +37,17 @@ $.KBWidget({
         	return;
         }
     	var pref = this.uuid();
-        var kbws = new Workspace(this.wsUrl, {'token': self.token});
+    	container.append('Genome ID: ' + self.genome_id + '<br><br>');
+    	container.append('<input type="file" id="'+pref+'_file"/><br>');
+    	container.append('<input type="button" id="'+pref+'_btn" value="Upload">');
+    	$('#'+pref+'_btn').click(function() {
+    		console.log("Before upload");
+            SHOCK.init({ token: self.token, url: self.shockUrl });
+            SHOCK.create_node(pref+'_file', null, function(info) {
+            	console.log(info);
+            });
+    	});
+        /*var kbws = new Workspace(this.wsUrl, {'token': self.token});
     	var panel = $('<div>'+
     			'Genome Target ID: ' + self.genome_id + '<br><br>' +
     			'<form id="'+pref+'form" action="' + self.uploadUrl + '" enctype="multipart/form-data" method="post" target="'+pref+'hidden-iframe">'+
@@ -57,7 +68,7 @@ $.KBWidget({
     	ifrm.document.close();
     	$('#'+pref+'form').submit(function( event ) {
     		$('#'+pref+'frm').show();
-    	});
+    	});*/
         return this;
     },
 

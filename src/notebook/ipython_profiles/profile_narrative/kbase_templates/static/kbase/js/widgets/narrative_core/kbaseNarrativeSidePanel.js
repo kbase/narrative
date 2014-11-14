@@ -53,7 +53,7 @@
          */
         buildPanelSet: function() {
             var panelSet = $('<div>')
-                           .css({'height' : '100%'})
+                           .css({'height' : '80vh', 'min-height' : '500px'})
                            .append($('<div>')
                                    .css({'height' : '50%','border' : 'solid 1px #555'}))
                            .append($('<div>')

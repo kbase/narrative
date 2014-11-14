@@ -51,9 +51,10 @@
         },
 
         renderErrorOutputCell: function() {
-            var title = this.options.title ? this.options.title + ' - Error' : 'Narrative Error';
-            this.options.title = title;
-            this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $('<span>'));
+            if (!this.options.title)
+                this.options.title = 'Narrative Error';
+            var $label = $('<span>').addClass('label label-danger').append('Error');
+            this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $label);
         },
 
         renderCell: function(baseClass, panelClass, headerClass, $label) {

@@ -154,8 +154,8 @@ narrative.init = function() {
                 loadingImage: "/static/kbase/images/ajax-loader.gif",
                 ws_id: IPython.notebook.metadata.ws_name
             });
-            $sidePanel.render();
             $('#main-container').show();
+            $sidePanel.render();
             // $dataWidget.setNarrWs(narr_ws); //as a callback
             // $dataWidget.setWorkspace(ws_name);
             // setTimeout(function() { $jobsWidget.refresh(); }, 750);

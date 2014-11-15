@@ -4,12 +4,12 @@
         parent: 'kbaseWidget',
         options: {
             loadingImage: "static/kbase/images/ajax-loader.gif",
-            autorender: true
+            autorender: true,
         },
-        dataPanel: null,
-        methodsPanel: null,
-        narrativesPanel: null,
-        jobsPanel: null,
+        $dataWidget: null,
+        $methodsWidget: null,
+        $narrativesWidget: null,
+        $jobsWidget: null,
 
         /**
          * Does the initial panel layout - tabs and spots for each widget
@@ -17,7 +17,6 @@
          */
         init: function(options) {
             this._super(options);
-
 
     // var $dataWidget = $('#kb-ws').kbaseNarrativeDataPanel();
     // $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
@@ -30,27 +29,35 @@
     
     // var $appsWidget = $('#kb-apps-panel').kbaseNarrativeAppsPanel({ autopopulate: true });
 
-
-            var $analysisPanel = this.buildPanelSet([
+            var analysisWidgets = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeDataPanel',
                     params : {}
                 },
                 {
                     name : 'kbaseNarrativeMethodPanel',
-                    params : {autopopulate: false}
+                    params : { autopopulate: false }
                 }
             ]);
-            var $managePanel = this.buildPanelSet([
+            this.$dataWidget = analysisWidgets['kbaseNarrativeDataPanel'];
+            this.$methodsWidget = analysisWidgets['kbaseNarrativeMethodPanel'];
+            var $analysisPanel = analysisWidgets['panelSet'];
+
+            var manageWidgets = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeAppsPanel',
-                    params : {autopopulate: false}
+                    params : { autopopulate: true }
                 },
                 {
                     name : 'kbaseNarrativeJobsPanel',
-                    params : {autopopulate: false}
+                    params : { autopopulate: false }
                 }
             ]);
+
+            this.$narrativesWidget = manageWidgets['kbaseNarrativeAppsPanel'];
+            this.$jobsWidget = manageWidgets['kbaseNarrativeJobsPanel'];
+            var $managePanel = manageWidgets['panelSet'];
+
 
             // set up tabs
             this.$elem.kbaseTabs({
@@ -102,19 +109,23 @@
             var minHeight = 200;
 
             $panelSet.css({'height': '90vh', 'min-height' : (minHeight * widgets.length) + 'px'});
-
+            var retObj = {};
             for (var i=0; i<widgets.length; i++) {
+                var widgetInfo = widgets[i];
                 var $widgetDiv = $('<div>')
                                  .css({'height' : height + '%', 'border' : 'solid 1px #555'});
-                var $widget = $widgetDiv[widgets[i].name](widgets[i].params);
+
+                retObj[widgetInfo.name] = $widgetDiv[widgetInfo.name](widgetInfo.params);
                 $panelSet.append($widgetDiv);
             }
-
-            return $panelSet;
+            retObj['panelSet'] = $panelSet;
+            return retObj;
         },
 
         render: function() {
-
+//            this.$dataPanel.refresh();
+            this.$methodsWidget.refreshFromService();
+            this.$jobsWidget.refresh();
         }
     })
 })( jQuery );

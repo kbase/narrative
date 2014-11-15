@@ -71,41 +71,44 @@
     };
 
     SHOCK.get_node = function (node, ret) {
-	var url = SHOCK.url+'/node/'+node
-	var promise = jQuery.Deferred();
-        jQuery.getJSON(url, { 
-	    success: function(data) {
-		var retval = null;
-		if (data != null && data.hasOwnProperty('data')) {
-		    if (data.error != null) {
-			retval = null;
-			console.log("error: "+data.error);
-		    } else {
-			retval = data.data;
-		    }
-		} else {
-		    retval = null;
-		    console.log("error: invalid return structure from SHOCK server");
-		    console.log(data);
-		}
-		
-		if (typeof ret == "function") {
-		    ret(retval);
-		} else {
-		    ret = retval;
-		}
-		
-		promise.resolve();
-	    },
-	    error: function(jqXHR, error) {
-		console.log( "error: unable to connect to SHOCK server" );
-		console.log(error);
-		promise.resolve();
-	    },
-	    headers: SHOCK.auth_header
-	});
-
-	return promise;
+    	var url = SHOCK.url+'/node/'+node
+    	var promise = jQuery.Deferred();
+    	
+    	jQuery.ajax(url, {
+    		success: function (data) {
+    			console.log(data);
+    			var retval = null;
+    			if (data != null && data.hasOwnProperty('data')) {
+    			    if (data.error != null) {
+    			    	retval = null;
+    			    	console.log("error: "+data.error);
+    			    } else {
+    			    	retval = data.data;
+    			    }
+    			} else {
+    			    retval = null;
+    			    console.log("error: invalid return structure from SHOCK server");
+    			    console.log(data);
+    			}
+    			
+    			if (typeof ret == "function") {
+    			    ret(retval);
+    			} else {
+    			    ret = retval;
+    			}
+    			
+    			promise.resolve();
+    		},
+    		error: function(jqXHR, error){
+    			console.log( "error: unable to connect to SHOCK server" );
+    			console.log(error);
+    			promise.resolve();
+    		},
+    		headers: SHOCK.auth_header,
+    		type: "GET"
+    	});
+    	
+    	return promise;
     };
 
     SHOCK.get_all_nodes = function (ret) {
@@ -180,10 +183,42 @@
 	return SHOCK.upload(null, node, attr, ret);
     };
     
+    SHOCK.search_incomplete = function(input) {
+    	var url = SHOCK.url+'/node';
+    	var promise = jQuery.Deferred();
+
+		input = document.getElementById(input);
+	    var files = input.files;
+	    var file = files[0];
+	    var fsize = file.size;
+	    var ftime = file.lastModifiedDate.getTime();
+    	jQuery.ajax(url+"?query&incomplete=1&incomplete_size="+fsize, {
+			success: function (data) {
+				console.log(data);
+				for (i=0;i<data.data.length;i++) {
+					console.log(data.data[i]["id"]);
+				    console.log(data.data[i]["attributes"]);
+				}
+			},
+			error: function(jqXHR, error){
+			    if (typeof ret == "function") {
+			    	ret(null);
+			    }
+			    console.log( "error: unable inquire SHOCK server" );
+			    console.log(error);
+			    
+			    promise.resolve();
+			},
+			headers: SHOCK.auth_header,
+			type: "GET"
+		});
+    };
+    
     SHOCK.upload = function (input, node, attr, ret) {
 	var url = SHOCK.url+'/node';
 	var promise = jQuery.Deferred();
-
+	var incompleteId = null;
+	
 	// check if a file is uploaded
 	if (input != null) {
 	    if (typeof input == "string") {
@@ -215,7 +250,7 @@
 	    
 	    // if this is a chunked upload, check if it needs to be resumed
 	    var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
-	    jQuery.ajax(url+"?query&incomplete=1", {
+	    jQuery.ajax(url+"?query&incomplete=1&incomplete_size="+file.size, {
 		success: function (data) {
 		    incompleteShocks(data);
 		},
@@ -235,8 +270,10 @@
 	    var incompleteShocks = function (data) {
 		var incomplete = null;
 		for (i=0;i<data.data.length;i++) {
-		    if ((file.size == data.data[i]["attributes"]["incomplete_size"]) && (file.name == data.data[i]["attributes"]["incomplete_name"])) {
-			incomplete = data.data[i];
+		    if ((("" + file.size) == data.data[i]["attributes"]["incomplete_size"]) && 
+		    		(file.name == data.data[i]["attributes"]["incomplete_name"]) &&
+		    		(("" + file.lastModifiedDate.getTime()) == data.data[i]["attributes"]["incomplete_time"])) {
+		    	incomplete = data.data[i];
 		    }
 		}
 		
@@ -245,6 +282,12 @@
 		    var fd = new FormData();
 		    var oMyBlob = new Blob([e.target.result], { "type" : file.type });
 		    fd.append(SHOCK.currentChunk+1, oMyBlob);
+		    incomplete_attr = { "incomplete": "1", "incomplete_size": "" + file.size, "incomplete_name": file.name,
+		    		"incomplete_time": "" + file.lastModifiedDate.getTime(), "incomplete_chunks": SHOCK.currentChunk+1};
+		    var aFileParts = [ JSON.stringify(incomplete_attr) ];
+		    var oMyBlob2 = new Blob(aFileParts, { "type" : "text\/json" });
+		    fd.append('attributes', oMyBlob2);
+
 		    jQuery.ajax(url, {
 			contentType: false,
 			processData: false,
@@ -252,7 +295,8 @@
 			success: function(data) {
 			    SHOCK.currentChunk++;
 				if (typeof ret == "function") {
-				    ret({file_size: file.size, uploaded_size: SHOCK.currentChunk * chunkSize});
+					var uploaded_size = Math.min(file.size, SHOCK.currentChunk * chunkSize);
+				    ret({file_size: file.size, uploaded_size: uploaded_size, incomplete_id: incompleteId});
 				}
 			    if ((SHOCK.currentChunk * chunkSize) >= file.size) {
 				if (typeof ret == "function") {
@@ -270,12 +314,12 @@
 			},
 			error: function(jqXHR, error){
 			    if (typeof ret == "function") {
-				ret(null);
+				ret(error);
 			    } else {
 				ret = null;
 			    }
-			    console.log( "error: unable inquire SHOCK server" );
-			    console.log(error);
+			    //console.log( "error: unable inquire SHOCK server" );
+			    //console.log(error);
 
 			    promise.resolve();
 			},
@@ -303,11 +347,18 @@
 		
 		var incomplete_attr = {};
 		if (incomplete != null) {
+			incompleteId = incomplete.id;
 		    url += "/" + incomplete.id;
 		    SHOCK.currentChunk = incomplete.attributes.incomplete_chunks || 0;
+		    console.log("SHOCK.currentChunk=" + SHOCK.currentChunk);
+			if (typeof ret == "function") {
+				var uploaded_size = Math.min(file.size, SHOCK.currentChunk * chunkSize);
+			    ret({file_size: file.size, uploaded_size: uploaded_size, incomplete_id: incompleteId});
+			}
 		    loadNext();
 		} else {
-		    incomplete_attr = { "incomplete": "1", "incomplete_size": file.size, "incomplete_name": file.name };
+		    incomplete_attr = { "incomplete": "1", "incomplete_size": "" + file.size, "incomplete_name": file.name,
+		    		"incomplete_time": "" + file.lastModifiedDate.getTime()};
 		    var aFileParts = [ JSON.stringify(incomplete_attr) ];
 		    var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
 		    var fd = new FormData();
@@ -318,6 +369,11 @@
 			processData: false,
 			data: fd,
 			success: function(data) {
+				incompleteId = data.data.id;
+				if (typeof ret == "function") {
+					var uploaded_size = 0;
+				    ret({file_size: file.size, uploaded_size: uploaded_size, incomplete_id: incompleteId});
+				}
 			    url += "/" + data.data.id;
 			    loadNext();
 			},

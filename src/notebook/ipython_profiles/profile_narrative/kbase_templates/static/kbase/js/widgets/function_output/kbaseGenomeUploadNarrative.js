@@ -43,9 +43,26 @@ $.KBWidget({
     	$('#'+pref+'_btn').click(function() {
     		console.log("Before upload");
             SHOCK.init({ token: self.token, url: self.shockUrl });
-            SHOCK.create_node(pref+'_file', null, function(info) {
+            /*SHOCK.get_node("6798d02f-852e-48a6-b833-57011c9dfda5", function(info) {
             	console.log(info);
+            });*/
+            SHOCK.create_node(pref+'_file', null, function(info) {
+            	if (info.uploaded_size) {
+            		console.log(info);
+            	} else if (info.id) {
+            		console.log("Finish");
+            		console.log(info);
+            		/*var shockNodeId = info.id;
+            		var fileName = info.attributes.incomplete_name;
+            		SHOCK.update_node(shockNodeId, {file_name: fileName}, function(info2) {
+                    	console.log(info2);
+            		});*/
+            	} else {
+            		console.log("Shock error:");
+            		console.log(info);
+            	}
             });
+            //SHOCK.search_incomplete(pref+'_file');
     	});
         /*var kbws = new Workspace(this.wsUrl, {'token': self.token});
     	var panel = $('<div>'+

@@ -10,6 +10,7 @@
         $methodsWidget: null,
         $narrativesWidget: null,
         $jobsWidget: null,
+        $overlay: null,
 
         /**
          * Does the initial panel layout - tabs and spots for each widget
@@ -17,17 +18,6 @@
          */
         init: function(options) {
             this._super(options);
-
-    // var $dataWidget = $('#kb-ws').kbaseNarrativeDataPanel();
-    // $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
-
-    // var $functionWidget = $('#kb-function-panel').kbaseNarrativeMethodPanel({ autopopulate: false });
-    // $functionWidget.refreshFromService();
-
-    // var $jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });
-    // $jobsWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
-    
-    // var $appsWidget = $('#kb-apps-panel').kbaseNarrativeAppsPanel({ autopopulate: true });
 
             var analysisWidgets = this.buildPanelSet([
                 {
@@ -60,6 +50,13 @@
 
 
             // set up tabs
+            this.$elem.append($('<button>')
+                              .addClass('btn btn-default btn-sm')
+                              .append('click me!')
+                              .click($.proxy(function(event) {
+                                this.toggleOverlay();
+                              }, this)));
+
             this.$elem.kbaseTabs({
                 tabPosition: 'top',
                 canDelete: false,
@@ -84,6 +81,48 @@
             // add the stuff to the tabs
 
             return this;
+        },
+
+        initOverlay: function() {
+            var $overlayHeader = $('<div>')
+                                 .addClass('pull-right')
+                                 .append($('<span>')
+                                         .addClass('glyphicon glyphicon-remove kb-function-help'))
+                                 .click($.proxy(function(event) {
+                                    this.toggleOverlay();
+                                 }, this));
+
+            var $overlayBody = $('<div>empty</div>');
+
+            this.$overlay = $('<div>')
+                            .css({
+                                'width' : '50vw', 
+                                'height' : '80vh', 
+                                'border' : '1px dashed black',
+                                'z-index' : 10000,
+                                'background' : 'white',
+                                'position' : 'fixed'
+                            })
+                            .append($overlayHeader)
+                            .append($overlayBody);
+            $('body').append(this.$overlay);
+            this.$overlay.hide();
+            this.$overlay.position({my: 'left top', at: 'right top', of: this.$elem});
+        },
+
+        toggleOverlay: function() {
+            if (this.$overlay)
+                this.$overlay.toggle('slide', 'fast');
+        },
+
+        showOverlay: function() {
+            if (this.$overlay)
+                this.$overlay.show('slide', 'fast');
+        },
+
+        hideOverlay: function() {
+            if (this.$overlay)
+                this.$overlay.hide('slide', 'fast');
         },
 
         /**
@@ -123,9 +162,11 @@
         },
 
         render: function() {
-//            this.$dataPanel.refresh();
+            this.initOverlay();
+
             this.$methodsWidget.refreshFromService();
-            this.$jobsWidget.refresh();
+            setTimeout($.proxy(function() { this.$jobsWidget.refresh(); }, this), 750);
+
         }
     })
 })( jQuery );

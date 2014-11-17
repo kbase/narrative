@@ -57,20 +57,33 @@
                                 this.toggleOverlay();
                               }, this)));
 
-            this.$elem.kbaseTabs({
-                tabPosition: 'top',
-                canDelete: false,
-                tabs: [
-                    {
-                        tab: 'Analyze',
-                        content : $analysisPanel,
-                    },
-                    {
-                        tab: 'Manage',
-                        content : $managePanel,
-                    },
-                ],
-            });
+            var $tabs = this.buildTabs([
+                {
+                    tab : 'Analyze',
+                    content : $analysisPanel
+                },
+                {
+                    tab : 'Manage',
+                    content: $managePanel
+                }
+            ]);
+
+            this.$elem.append($tabs);
+
+            // this.$elem.kbaseTabs({
+            //     tabPosition: 'top',
+            //     canDelete: false,
+            //     tabs: [
+            //         {
+            //             tab: 'Analyze',
+            //             content : $analysisPanel,
+            //         },
+            //         {
+            //             tab: 'Manage',
+            //             content : $managePanel,
+            //         },
+            //     ],
+            // });
 
             if (this.autorender) {
                 this.render();
@@ -81,6 +94,21 @@
             // add the stuff to the tabs
 
             return this;
+        },
+
+        buildTabs: function(tabs) {
+            var $header = $('<div>')
+                          .addClass('')
+                          .append($('<div>')
+                                  .css({'width' : '50%', 'display' : 'inline-block', 'text-align' : 'center'})
+                                  .append('Analyze'))
+                          .append($('<div>')
+                                  .css({'width' : '50%', 'display' : 'inline-block', 'text-align' : 'center'})
+                                  .append('Manage'));
+
+            var $tabPanel = $('<div>')
+                            .append($header);
+            return $tabPanel;
         },
 
         initOverlay: function() {
@@ -98,7 +126,7 @@
                             .css({
                                 'width' : '50vw', 
                                 'height' : '80vh', 
-                                'border' : '1px dashed black',
+                                'border' : '1px solid black',
                                 'z-index' : 10000,
                                 'background' : 'white',
                                 'position' : 'fixed'
@@ -147,7 +175,7 @@
             var height = 100 / widgets.length;
             var minHeight = 200;
 
-            $panelSet.css({'height': '90vh', 'min-height' : (minHeight * widgets.length) + 'px'});
+            $panelSet.css({'height': '85vh', 'min-height' : (minHeight * widgets.length) + 'px'});
             var retObj = {};
             for (var i=0; i<widgets.length; i++) {
                 var widgetInfo = widgets[i];

@@ -116,6 +116,14 @@
                 this)
             );
 
+            $(document).on(
+                'setWorkspaceName.Narrative', $.proxy(function(e, info) {
+                    this.wsId = info.wsId;
+                    this.narrWs = info.narrController;
+                    this.refreshWorkspaceTab();
+                }, this)
+            );
+
             /**
              * Get the landing page map.
              * First, try getting it from /functional-site/landing_page_map.json.

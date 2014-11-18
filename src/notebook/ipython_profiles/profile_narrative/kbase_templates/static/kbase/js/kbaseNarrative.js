@@ -150,12 +150,12 @@ narrative.init = function() {
             $('a#workspace-link').attr('href',
                     $('a#workspace-link').attr('href') +
                     'objects/' + ws_name);
-            narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
+            var narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
                 loadingImage: "/static/kbase/images/ajax-loader.gif",
                 ws_id: IPython.notebook.metadata.ws_name
             });
-//            $('#main-container').show();
             $sidePanel.render();
+            $(document).trigger('setWorkspaceName.Narrative', {'wsId' : ws_name, 'narrController': narr_ws});
             // $dataWidget.setNarrWs(narr_ws); //as a callback
             // $dataWidget.setWorkspace(ws_name);
             // setTimeout(function() { $jobsWidget.refresh(); }, 750);

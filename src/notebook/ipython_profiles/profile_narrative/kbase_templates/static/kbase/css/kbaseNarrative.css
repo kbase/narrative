@@ -1710,5 +1710,33 @@ div[class="tooltip-inner"] {
 .sorting_desc_disabled { background: url('../images/sort_desc_disabled.png') no-repeat center right; }
 
 /* end: data table */
+
+/* data list */
+.kb-data-list-obj-row {
+    width:100%;
+    border-top-style: solid;
+    border-top-width: thin;
+    border-top-color: #999;
+    margin:2px;
+    padding:4px;
+}
+
+.kb-data-list-search input {
+    padding-right: 30px;    
+}
+.kb-data-list-search i {
+    position: absolute;
+    right: 0px;
+    padding: 10px 12px;
+    pointer-events: none;
+}
+
+
+/* end data list*/
+
+
+
+
+
 /* End kbaseData.css */
 

@@ -49,6 +49,9 @@
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
 
+        
+        dataListWidget: null,
+        
         init: function(options) {
             this._super(options);
 
@@ -62,6 +65,26 @@
                 this.options.landingPageURL = window.kbconfig.urls.landing_pages;
             }
 
+            /* temporary hack to work on data list */
+            
+            var $dataList = $('<div>');
+            this.body().append($dataList);
+            this.dataListWidget = $dataList["kbaseNarrativeDataList"]({ws_name: this.wsId});
+            
+            $(document).on(
+                'setWorkspaceName.Narrative', $.proxy(function(e, info) {
+                    console.log('data panel -- setting ws to ' + info.wsId);
+                    this.wsId = info.wsId;
+                    this.narrWs = info.narrController;
+                    this.dataListWidget.setWorkspace(this.wsId);
+                    //this.refreshWorkspaceTab();
+                }, this)
+            );
+            
+            return this;
+            
+            
+            
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
              */
@@ -191,6 +214,7 @@
 
         setWorkspace: function(wsId) {
             this.wsId = wsId;
+            alert('setting to '+wsId);
             this.refresh();
         },
 
@@ -499,6 +523,7 @@
          * @public
          */
         refresh: function() {
+            return;
             console.debug("kbWS.refresh.start");
             if (this.wsClient && this.wsId) {
                 console.debug("kbWS.refresh.test-for-readonly");

@@ -61,6 +61,10 @@
 
             this.$elem.append($tabs);
 
+            $(document).on('toggleSidePanelOverlay.Narrative', $.proxy(function(event) {
+                this.toggleOverlay();
+            }, this));
+
             if (this.autorender) {
                 this.render();
             }
@@ -112,44 +116,56 @@
 
         initOverlay: function() {
             var $overlayHeader = $('<div>')
-                                 .addClass('pull-right')
-                                 .append($('<span>')
-                                         .addClass('glyphicon glyphicon-remove kb-function-help'))
-                                 .click($.proxy(function(event) {
-                                    this.toggleOverlay();
-                                 }, this));
+                                 .addClass('kb-side-overlay-header')
+                                 .append('Header!')
+                                 .append($('<div>')
+                                        .addClass('pull-right')
+                                        .append($('<span>')
+                                                .addClass('kb-side-overlay-close glyphicon glyphicon-remove')
+                                        .click($.proxy(function(event) {
+                                           this.toggleOverlay();
+                                        }, this))));
 
             var $overlayBody = $('<div>empty</div>');
 
             this.$overlay = $('<div>')
-                            .css({
-                                'width' : '50vw', 
-                                'height' : '80vh', 
-                                'border' : '1px solid black',
-                                'z-index' : 10000,
-                                'background' : 'white',
-                                'position' : 'fixed'
-                            })
+                            .addClass('kb-side-overlay-container')
                             .append($overlayHeader)
                             .append($overlayBody);
             $('body').append(this.$overlay);
             this.$overlay.hide();
             this.$overlay.position({my: 'left top', at: 'right top', of: this.$elem});
+
+            this.$narrativeDimmer = $('<div>')
+                                    .addClass('kb-overlay-dimmer');
+            $('body').append(this.$narrativeDimmer);
+            this.$narrativeDimmer.hide();
+            this.$narrativeDimmer.position({my: 'left top', at: 'right top', of: this.$elem});
         },
 
         toggleOverlay: function() {
-            if (this.$overlay)
-                this.$overlay.toggle('slide', 'fast');
+            if (this.$overlay.is(':visible'))
+                this.hideOverlay();
+            else
+                this.showOverlay();
         },
 
         showOverlay: function() {
-            if (this.$overlay)
-                this.$overlay.show('slide', 'fast');
+            if (this.$overlay) {
+                this.$narrativeDimmer.show();
+                this.$elem.find('.kb-side-header').addClass('overlay-active');
+                this.$overlay.show('slide', 'fast', $.proxy(function() {
+                }, this));
+            }
         },
 
         hideOverlay: function() {
-            if (this.$overlay)
-                this.$overlay.hide('slide', 'fast');
+            if (this.$overlay) {
+                this.$narrativeDimmer.hide();
+                this.$elem.find('.kb-side-header').removeClass('overlay-active');
+                this.$overlay.hide('slide', 'fast', $.proxy(function() {
+                }, this));
+            }
         },
 
         /**

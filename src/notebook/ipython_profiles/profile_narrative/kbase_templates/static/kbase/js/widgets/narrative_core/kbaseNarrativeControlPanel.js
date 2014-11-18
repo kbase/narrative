@@ -42,6 +42,12 @@
             this._super(options);
 
             this.render();
+            this.addButton($('<button>')
+                           .addClass('btn btn-xs btn-default')
+                           .append('<span class="glyphicon glyphicon-play"></span>')
+                           .click($.proxy(function(event) {
+                               this.trigger('toggleSidePanelOverlay.Narrative');
+                           }, this)));
             return this;
         },
 

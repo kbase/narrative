@@ -346,6 +346,34 @@ nav ul li.selected {
 	overflow-y: auto;
 }
 
+.kb-side-overlay-container {
+	width : 50vw;
+	height : 80vh; 
+	border : 1px solid #ababab;
+	z-index : 10000;
+	background : white;
+	position : fixed;
+}
+
+.kb-side-overlay-header {
+	width: 100%;
+	background-color: #428bca;
+	color: #fff;
+	padding: 6px;
+	font-size: 12pt;
+}
+
+.kb-side-overlay-close {
+    cursor: pointer;
+    color: #fff;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+.kb-side-overlay-close:hover {
+	color: orange;
+}
+
 .kb-side-panel {
 	height: 100%;
 	overflow: none;
@@ -367,6 +395,11 @@ nav ul li.selected {
 	cursor: pointer;
 }
 
+.kb-side-header.overlay-active {
+	background-color: gray;
+	border: 6px solid gray;
+}
+
 .kb-side-header:hover {
 	border-bottom: 6px solid orange;
 }
@@ -383,6 +416,15 @@ nav ul li.selected {
 
 .kb-side-tab.active {
 	display: inherit;
+}
+
+.kb-overlay-dimmer {
+	position: fixed;
+	z-index: 1030;
+	right: 0;
+	bottom: 0;
+	opacity: 0.5;
+	background-color: #000;
 }
 
 #data-header {

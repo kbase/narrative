@@ -118,7 +118,7 @@ narrative.init = function() {
     /*
      * Before we get everything loading, just grey out the whole %^! page
      */
-    $('#main-container').hide();
+//    $('#main-container').hide();
     var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
 
     // var $dataWidget = $('#kb-ws').kbaseNarrativeDataPanel();
@@ -154,7 +154,7 @@ narrative.init = function() {
                 loadingImage: "/static/kbase/images/ajax-loader.gif",
                 ws_id: IPython.notebook.metadata.ws_name
             });
-            $('#main-container').show();
+//            $('#main-container').show();
             $sidePanel.render();
             // $dataWidget.setNarrWs(narr_ws); //as a callback
             // $dataWidget.setWorkspace(ws_name);

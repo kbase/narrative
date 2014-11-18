@@ -38,32 +38,30 @@ $.KBWidget({
         }
     	var pref = this.uuid();
     	container.append('Genome ID: ' + self.genome_id + '<br><br>');
-    	container.append('<input type="file" id="'+pref+'_file"/><br>');
+    	var fileDiv = $('<div width="500"/>');
+    	container.append(fileDiv);
+    	fileDiv.kbaseShockFileUploader({});
+    	/*container.append('<input type="file" id="'+pref+'_file"/><br>');
     	container.append('<input type="button" id="'+pref+'_btn" value="Upload">');
     	$('#'+pref+'_btn').click(function() {
     		console.log("Before upload");
-            SHOCK.init({ token: self.token, url: self.shockUrl });
-            /*SHOCK.get_node("6798d02f-852e-48a6-b833-57011c9dfda5", function(info) {
-            	console.log(info);
-            });*/
-            SHOCK.create_node(pref+'_file', null, function(info) {
+            var SHOCK = new ShockClient({ token: self.token, url: self.shockUrl });
+    		var input = document.getElementById(pref+'_file');
+    	    var file = input.files[0];
+
+            SHOCK.upload_node(file, function(info) {
             	if (info.uploaded_size) {
             		console.log(info);
             	} else if (info.id) {
             		console.log("Finish");
             		console.log(info);
-            		/*var shockNodeId = info.id;
-            		var fileName = info.attributes.incomplete_name;
-            		SHOCK.update_node(shockNodeId, {file_name: fileName}, function(info2) {
-                    	console.log(info2);
-            		});*/
-            	} else {
-            		console.log("Shock error:");
-            		console.log(info);
             	}
+            }, function(error) {
+            	console.log("Shock error:");
+            	console.log(error);
             });
             //SHOCK.search_incomplete(pref+'_file');
-    	});
+    	});*/
         /*var kbws = new Workspace(this.wsUrl, {'token': self.token});
     	var panel = $('<div>'+
     			'Genome Target ID: ' + self.genome_id + '<br><br>' +

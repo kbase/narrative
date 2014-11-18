@@ -43,34 +43,24 @@
   Please send feedback, bug-reports and questions to Tobias Paczian (paczian@mcs.anl.gov)
 
 */
-(function () {
+function ShockClient(params) {
     
-    var root = this;
-    var SHOCK = root.SHOCK = {};
+    var SHOCK = this;
 
-    SHOCK.url = null;
+    SHOCK.url = "https://kbase.us/services/shock-api/";
     SHOCK.auth_header = {};
-    SHOCK.currentChunk = 0;
+    SHOCK.chunkSize = 2097152;
     
-    SHOCK.init = function (params) {
-	if (params.url !== null) {
+	if (params.url)
 	    SHOCK.url = params.url;
-	}
 
-	if (params.token !== null) {
-	    SHOCK.set_auth(params.token);
-	}
-    };
+	if (params.token)
+		SHOCK.auth_header = {'Authorization': 'OAuth '+params.token};
 
-    SHOCK.set_auth = function (token) {
-	if (token != null) {
-	    SHOCK.auth_header = {'Authorization': 'OAuth '+token};
-	} else {
-	    console.log("error: no token passed to set_auth method");
-	}
-    };
-
-    SHOCK.get_node = function (node, ret) {
+	if (params.chunkSize)
+		SHOCK.chunkSize = params.chunkSize;
+	
+    SHOCK.get_node = function (node, ret, errorCallback) {
     	var url = SHOCK.url+'/node/'+node
     	var promise = jQuery.Deferred();
     	
@@ -81,27 +71,21 @@
     			if (data != null && data.hasOwnProperty('data')) {
     			    if (data.error != null) {
     			    	retval = null;
-    			    	console.log("error: "+data.error);
+    			    	if (errorCallback)
+        					errorCallback(data.error);
     			    } else {
     			    	retval = data.data;
     			    }
     			} else {
-    			    retval = null;
-    			    console.log("error: invalid return structure from SHOCK server");
-    			    console.log(data);
+    				if (errorCallback)
+    					errorCallback("error: invalid return structure from SHOCK server");
     			}
-    			
-    			if (typeof ret == "function") {
-    			    ret(retval);
-    			} else {
-    			    ret = retval;
-    			}
-    			
+    			ret(retval);
     			promise.resolve();
     		},
     		error: function(jqXHR, error){
-    			console.log( "error: unable to connect to SHOCK server" );
-    			console.log(error);
+    			if (errorCallback)
+					errorCallback(error);
     			promise.resolve();
     		},
     		headers: SHOCK.auth_header,
@@ -111,102 +95,118 @@
     	return promise;
     };
 
-    SHOCK.get_all_nodes = function (ret) {
-	var url = SHOCK.url+'/node';
-	var promise = jQuery.Deferred();
-        jQuery.getJSON(url, { 
-	    success: function(data) {
-		var retval = null;
-		if (data != null && data.hasOwnProperty('data')) {
-		    if (data.error != null) {
-			retval = null;
-			console.log("error: "+data.error);
-		    } else {
-			retval = data.data;
-		    }
-		} else {
-		    retval = null;
-		    console.log("error: invalid return structure from SHOCK server");
-		    console.log(data);
-		}
-		
-		if (typeof ret == "function") {
-		    ret(retval);
-		} else {
-		    ret = retval;
-		}
-		
-		promise.resolve();
-	    },
-	    error: function(jqXHR, error) {
-		console.log( "error: unable to connect to SHOCK server" );
-		console.log(error);
-		promise.resolve();
-	    },
-	    headers: SHOCK.auth_header
-	});
+    SHOCK.get_nodes = function (filters, ret, errorCallback) {
+    	var url = SHOCK.url+'/node';
+    	if (filters) {
+    		url += "?query";
+    		for (var key in filters) {
+    			utl += "&" + encodeURIComponent(key) + "=" + encodeURIComponent(filters[key]);
+    		}
+    	}
+    	var promise = jQuery.Deferred();
+    	jQuery.ajax(url, {
+    		success: function(data) {
+    			var retval = null;
+    			if (data != null && data.hasOwnProperty('data')) {
+    				if (data.error != null) {
+        				if (errorCallback)
+        					errorCallback(data.error);
+    				} else {
+    	    			ret(data.data);
+    				}
+    			} else {
+    				if (errorCallback)
+    					errorCallback(data);
+    			}
+    			promise.resolve();
+    		},
+    		error: function(jqXHR, error) {
+				if (errorCallback)
+					errorCallback(error);
+    			promise.resolve();
+    		},
+    		headers: SHOCK.auth_header
+    	});
 
-	return promise;
+    	return promise;
     };
 
-    SHOCK.delete_node = function (id) {
-	var promise = jQuery.Deferred();
-	jQuery.ajax(url+"/" + id, {
-	    success: function (data) {
-		if (typeof ret == "function") {
-		    ret(true);
-		} else {
-		    ret = true;
-		}
-		promise.resolve();
-	    },
-	    error: function(jqXHR, error){
-		if (typeof ret == "function") {
-		    ret(null);
-		}
-		console.log( "error: unable inquire SHOCK server" );
-		console.log(error);
-		promise.resolve();
-	    },
-	    headers: SHOCK.auth_header,
-	    type: "DELETE"
-	});
-	
-	return promise;
+    SHOCK.delete_node = function (id, ret, errorCallback) {
+    	var promise = jQuery.Deferred();
+    	jQuery.ajax(url+"/" + id, {
+    		success: function (data) {
+    			ret(true);
+    			promise.resolve();
+    		},
+    		error: function(jqXHR, error){
+    			if (errorCallback)
+					errorCallback(error);
+    			promise.resolve();
+    		},
+    		headers: SHOCK.auth_header,
+    		type: "DELETE"
+    	});
+    	return promise;
     };
 
-    SHOCK.create_node = function (input, attr, ret) {
-	return SHOCK.upload(input, null, attr, ret);
-    };
-
-    SHOCK.update_node = function (node, attr, ret) {
-	return SHOCK.upload(null, node, attr, ret);
+    SHOCK.update_node = function (node, attr, ret, errorCallback) {
+    	var url = SHOCK.url+'/node';
+    	var promise = jQuery.Deferred();
+	    var aFileParts = [ JSON.stringify(attr) ];
+	    var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
+	    var fd = new FormData();
+	    fd.append('attributes', oMyBlob);
+	    jQuery.ajax(url +  "/" + node, {
+	    	contentType: false,
+	    	processData: false,
+	    	data: fd,
+	    	success: function(data){
+		    	ret(data.data);
+		    	promise.resolve();
+	    	},
+	    	error: function(jqXHR, error){
+	    		if (errorCallback)
+					errorCallback(error);
+		    	promise.resolve();
+	    	},
+	    	headers: SHOCK.auth_header,
+	    	type: "PUT"
+	    });
+		return promise;
     };
     
-    SHOCK.search_incomplete = function(input) {
+    SHOCK.check_incomplete = function(file, ret, errorCallback) {
     	var url = SHOCK.url+'/node';
     	var promise = jQuery.Deferred();
 
-		input = document.getElementById(input);
-	    var files = input.files;
-	    var file = files[0];
+		//input = document.getElementById(input);
+	    //var files = input.files;
+	    //var file = files[0];
 	    var fsize = file.size;
 	    var ftime = file.lastModifiedDate.getTime();
-    	jQuery.ajax(url+"?query&incomplete=1&incomplete_size="+fsize, {
+    	jQuery.ajax(url+"?query&incomplete=1&file_size="+fsize, {
 			success: function (data) {
-				console.log(data);
+				//console.log(data);
 				for (i=0;i<data.data.length;i++) {
-					console.log(data.data[i]["id"]);
-				    console.log(data.data[i]["attributes"]);
+				    if ((("" + file.size) == data.data[i]["attributes"]["file_size"]) && 
+				    		(file.name == data.data[i]["attributes"]["file_name"]) &&
+				    		(("" + file.lastModifiedDate.getTime()) == data.data[i]["attributes"]["file_time"])) {
+				    	var incomplete = data.data[i];
+			    		var incompleteId = incomplete["id"];
+			    		var currentChunk = 0;
+			    		if (incomplete["attributes"]["incomplete_chunks"])
+			    			currentChunk = parseInt(incomplete["attributes"]["incomplete_chunks"]);
+			    		var chunkSize = SHOCK.chunkSize;
+			    		if (incomplete["attributes"]["chunk_size"])
+			    			chunkSize = parseInt(incomplete["attributes"]["chunk_size"]);
+						var uploadedSize = Math.min(file.size, currentChunk * chunkSize);
+						ret({file_size: file.size, uploaded_size: uploadedSize, incomplete_id: incompleteId});
+				    }
 				}
 			},
-			error: function(jqXHR, error){
-			    if (typeof ret == "function") {
-			    	ret(null);
-			    }
-			    console.log( "error: unable inquire SHOCK server" );
-			    console.log(error);
-			    
+			error: function(jqXHR, error) {
+				if (errorCallback)
+					errorCallback(error);
 			    promise.resolve();
 			},
 			headers: SHOCK.auth_header,
@@ -214,223 +214,126 @@
 		});
     };
     
-    SHOCK.upload = function (input, node, attr, ret) {
-	var url = SHOCK.url+'/node';
-	var promise = jQuery.Deferred();
-	var incompleteId = null;
-	
-	// check if a file is uploaded
-	if (input != null) {
-	    if (typeof input == "string") {
-		input = document.getElementById(input);
-		if (input == null) {
-		    console.log("error: file element not found in DOM");
-		    return;
-		}
-	    }
-	    if ((typeof input != "object") || (! input.files)) {
-		console.log("error: input argument must be an input type file element or its id");
-		return;
-	    }
-	    
-	    var files = input.files;
-	    if (files.length > 1) {
-		console.log("error: you can only submit one file at a time");
-		return;
-	    }
-	    if (files.length == 0) {
-		console.log("error: no file selected");
-		return;
-	    }
-	    
-	    // upload the file
-	    var chunkSize = 2097152;
-	    var file = files[0];
-	    var chunks = Math.ceil(file.size / chunkSize);
-	    
-	    // if this is a chunked upload, check if it needs to be resumed
-	    var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
-	    jQuery.ajax(url+"?query&incomplete=1&incomplete_size="+file.size, {
-		success: function (data) {
-		    incompleteShocks(data);
-		},
-		error: function(jqXHR, error){
-		    if (typeof ret == "function") {
-			ret(null);
-		    }
-		    console.log( "error: unable inquire SHOCK server" );
-		    console.log(error);
-		    
-		    promise.resolve();
-		},
-		headers: SHOCK.auth_header,
-		type: "GET"
-	    });
-	    
-	    var incompleteShocks = function (data) {
-		var incomplete = null;
-		for (i=0;i<data.data.length;i++) {
-		    if ((("" + file.size) == data.data[i]["attributes"]["incomplete_size"]) && 
-		    		(file.name == data.data[i]["attributes"]["incomplete_name"]) &&
-		    		(("" + file.lastModifiedDate.getTime()) == data.data[i]["attributes"]["incomplete_time"])) {
-		    	incomplete = data.data[i];
-		    }
-		}
-		
-		SHOCK.currentChunk = 0;
-		var frOnload = function(e) {
+    SHOCK.loadNext = function (file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback) {
+	    var fileReader = new FileReader();
+	    fileReader.onload = function(e) {
 		    var fd = new FormData();
 		    var oMyBlob = new Blob([e.target.result], { "type" : file.type });
-		    fd.append(SHOCK.currentChunk+1, oMyBlob);
-		    incomplete_attr = { "incomplete": "1", "incomplete_size": "" + file.size, "incomplete_name": file.name,
-		    		"incomplete_time": "" + file.lastModifiedDate.getTime(), "incomplete_chunks": SHOCK.currentChunk+1};
+		    fd.append(currentChunk+1, oMyBlob);
+		    var incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
+		    		"file_time": "" + file.lastModifiedDate.getTime(), "incomplete_chunks": "" + (currentChunk+1),
+		    		"chunk_size": "" + chunkSize};
 		    var aFileParts = [ JSON.stringify(incomplete_attr) ];
 		    var oMyBlob2 = new Blob(aFileParts, { "type" : "text\/json" });
 		    fd.append('attributes', oMyBlob2);
-
 		    jQuery.ajax(url, {
-			contentType: false,
-			processData: false,
-			data: fd,
-			success: function(data) {
-			    SHOCK.currentChunk++;
-				if (typeof ret == "function") {
-					var uploaded_size = Math.min(file.size, SHOCK.currentChunk * chunkSize);
+		    	contentType: false,
+		    	processData: false,
+		    	data: fd,
+		    	success: function(data) {
+		    		currentChunk++;
+					var uploaded_size = Math.min(file.size, currentChunk * chunkSize);
 				    ret({file_size: file.size, uploaded_size: uploaded_size, incomplete_id: incompleteId});
-				}
-			    if ((SHOCK.currentChunk * chunkSize) >= file.size) {
-				if (typeof ret == "function") {
-				    ret(data.data);
-				} else {
-				    ret = data.data;
-				}
-				
-				if (attr == null) {
-				    promise.resolve();
-				}
-			    } else {
-				loadNext();
-			    }
-			},
-			error: function(jqXHR, error){
-			    if (typeof ret == "function") {
-				ret(error);
-			    } else {
-				ret = null;
-			    }
-			    //console.log( "error: unable inquire SHOCK server" );
-			    //console.log(error);
-
-			    promise.resolve();
-			},
-			headers: SHOCK.auth_header,
-			type: "PUT"
+				    if ((currentChunk * chunkSize) >= file.size) {
+			    		promise.resolve();
+				    } else {
+				    	SHOCK.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback);
+				    }
+		    	},
+		    	error: function(jqXHR, error) {
+		    		if (errorCallback)
+		    			errorCallback(error);
+		    		promise.resolve();
+		    	},
+		    	headers: SHOCK.auth_header,
+		    	type: "PUT"
 		    });
 		};
-		
-		var frOnerror = function () {
-		    console.warn("error during upload at chunk "+SHOCK.currentChunk+".");
-
+	    fileReader.onerror = function () {
+    		if (errorCallback)
+    			errorCallback("error during upload at chunk "+currentChunk+".");
 		    promise.resolve();
 		};
-		
-		function loadNext() {
-		    var fileReader = new FileReader();
-		    fileReader.onload = frOnload;
-		    fileReader.onerror = frOnerror;
-		    
-		    var start = SHOCK.currentChunk * chunkSize,
-		    end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize;
-		    
-		    fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
-		};
-		
-		var incomplete_attr = {};
-		if (incomplete != null) {
-			incompleteId = incomplete.id;
-		    url += "/" + incomplete.id;
-		    SHOCK.currentChunk = incomplete.attributes.incomplete_chunks || 0;
-		    console.log("SHOCK.currentChunk=" + SHOCK.currentChunk);
-			if (typeof ret == "function") {
-				var uploaded_size = Math.min(file.size, SHOCK.currentChunk * chunkSize);
-			    ret({file_size: file.size, uploaded_size: uploaded_size, incomplete_id: incompleteId});
-			}
-		    loadNext();
-		} else {
-		    incomplete_attr = { "incomplete": "1", "incomplete_size": "" + file.size, "incomplete_name": file.name,
-		    		"incomplete_time": "" + file.lastModifiedDate.getTime()};
-		    var aFileParts = [ JSON.stringify(incomplete_attr) ];
-		    var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
-		    var fd = new FormData();
-		    fd.append('attributes', oMyBlob);
-		    fd.append('parts', chunks);
-		    jQuery.ajax(url, {
-			contentType: false,
-			processData: false,
-			data: fd,
-			success: function(data) {
-				incompleteId = data.data.id;
-				if (typeof ret == "function") {
-					var uploaded_size = 0;
-				    ret({file_size: file.size, uploaded_size: uploaded_size, incomplete_id: incompleteId});
-				}
-			    url += "/" + data.data.id;
-			    loadNext();
-			},
-			error: function(jqXHR, error){
-			    if (typeof ret == "function") {
-				ret(null);
-			    } else {
-				ret = null;
-			    }
-			    console.log( "error: unable inquire SHOCK server" );
-			    console.log(error);
-
-			    promise.resolve();
-			},
-			headers: SHOCK.auth_header,
-			type: "POST"
-		    });
-		}
+	    var start = currentChunk * chunkSize;
+	    if (start < file.size) {
+	    	var end = (start + chunkSize >= file.size) ? file.size : start + chunkSize;
+	    	var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
+	    	fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
+	    } else {
+		    ret({file_size: file.size, uploaded_size: file.size, incomplete_id: incompleteId});
 	    }
-	}
-
-	// update the attributes
-	if ((attr != null) && (node != null)) {
-	    var aFileParts = [ JSON.stringify(attr) ];
-	    var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
-	    var fd = new FormData();
-	    fd.append('attributes', oMyBlob);
-	    jQuery.ajax(url +  "/" + node, {
-		contentType: false,
-		processData: false,
-		data: fd,
-		success: function(data){
-		    if (typeof ret == "function") {
-			ret(data.data);
-		    } else {
-			ret = data.data;
-		    }
-		    
-		    promise.resolve();
-		},
-		error: function(jqXHR, error){
-		    if (typeof ret == "function") {
-			ret(null);
-		    } else {
-			ret = null;
-		    }
-		    console.log( "error: unable to submit to SHOCK server" );
-		    console.log(error);
-
-		    promise.resolve();
-		},
-		headers: SHOCK.auth_header,
-		type: "PUT"
-	    });
-    	}
-
-	return promise;
-    }
+    };
     
-}).call(this);
+    SHOCK.upload_node = function (file, ret, errorCallback) {
+    	var url = SHOCK.url+'/node';
+    	var promise = jQuery.Deferred();
+	    // if this is a chunked upload, check if it needs to be resumed
+	    jQuery.ajax(url+"?query&incomplete=1&file_size="+file.size, {
+	    	success: function (data) {
+		    	var incomplete = null;
+		    	for (i=0;i<data.data.length;i++) {
+		    		if ((("" + file.size) == data.data[i]["attributes"]["file_size"]) && 
+		    				(file.name == data.data[i]["attributes"]["file_name"]) &&
+		    				(("" + file.lastModifiedDate.getTime()) == data.data[i]["attributes"]["file_time"])) {
+		    			incomplete = data.data[i];
+		    			break;
+		    		}
+		    	}
+
+		    	var incomplete_attr = {};
+		    	if (incomplete != null) {
+		    		var incompleteId = incomplete["id"];
+		    		url += "/" + incomplete["id"];
+		    		var currentChunk = 0;
+		    		if (incomplete["attributes"]["incomplete_chunks"])
+		    			currentChunk = parseInt(incomplete["attributes"]["incomplete_chunks"]);
+		    		console.log("ShockClient.currentChunk=" + currentChunk);
+		    		var chunkSize = SHOCK.chunkSize;
+		    		if (incomplete["attributes"]["chunk_size"])
+		    			chunkSize = parseInt(incomplete["attributes"]["chunk_size"]);
+		    		var uploadedSize = Math.min(file.size, currentChunk * chunkSize);
+		    		ret({file_size: file.size, uploaded_size: uploadedSize, incomplete_id: incompleteId});
+		    		SHOCK.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback);
+		    	} else {
+		    		var chunkSize = SHOCK.chunkSize;
+		    	    var chunks = Math.ceil(file.size / chunkSize);
+		    		incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
+		    				"file_time": "" + file.lastModifiedDate.getTime(), "chunk_size": "" + chunkSize};
+		    		var aFileParts = [ JSON.stringify(incomplete_attr) ];
+		    		var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
+		    		var fd = new FormData();
+		    		fd.append('attributes', oMyBlob);
+		    		fd.append('parts', chunks);
+		    		jQuery.ajax(url, {
+		    			contentType: false,
+		    			processData: false,
+		    			data: fd,
+		    			success: function(data) {
+		    				var incompleteId = data.data.id;
+		    				var uploaded_size = 0;
+		    				ret({file_size: file.size, uploaded_size: uploaded_size, incomplete_id: incompleteId});
+		    				url += "/" + data.data.id;
+		    				SHOCK.loadNext(file, url, promise, 0, chunks, incompleteId, chunkSize, ret, errorCallback);
+		    			},
+		    			error: function(jqXHR, error){
+		    	    		if (errorCallback)
+		    	    			errorCallback(error);
+		    				promise.resolve();
+		    			},
+		    			headers: SHOCK.auth_header,
+		    			type: "POST"
+		    		});
+		    	}
+	    	},
+	    	error: function(jqXHR, error){
+	    		if (errorCallback)
+	    			errorCallback(error);
+	    		promise.resolve();
+	    	},
+	    	headers: SHOCK.auth_header,
+	    	type: "GET"
+	    });
+	    return promise;
+    };
+    
+}

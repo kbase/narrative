@@ -104,6 +104,17 @@
                     
                     self.renderList();
                     
+                    // if we have more than 2k objects, make them hit enter to search...
+                    if (self.$searchInput) {
+                        if (infoList.length>2000) {
+                            self.$searchInput.off("input change blur");
+                            self.$searchInput.on("change blur",function() { self.search(); });
+                        } else {
+                            self.$searchInput.off("input change blur");
+                            self.$searchInput.on("input change blur",function() { self.search(); });
+                        }
+                    }
+                    
                 }, 
                 function(error) {
                     console.log(error);
@@ -169,6 +180,12 @@
             if (self.objectList.length>0) {
                 for(var i=0; i<self.objectList.length; i++) {
                     self.$mainListDiv.append(self.objectList[i].$div);
+                    
+                    // if more than a certain number, don't show them all
+                    if (i>2000) {
+                        self.$mainListDiv.append($('<div>').append((self.objectList.length-2000)+' more...'));
+                        break;
+                    }
                 }
             } else {
                 
@@ -267,6 +284,9 @@
             }
             
             if (term.trim().length>0) {
+                
+                // todo: should show searching indicator (could take several seconds if there is a lot of data)
+                
                 term = term.replace('.','\\.');  // dots are common in names, so don't match anything!! escape them
                 var regex = new RegExp(term, 'i');
                 

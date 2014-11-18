@@ -346,6 +346,45 @@ nav ul li.selected {
 	overflow-y: auto;
 }
 
+.kb-side-panel {
+	height: 100%;
+	overflow: none;
+}
+
+.kb-side-header {
+	width: 50%;
+	font-size: 12pt;
+	display: inline-block;
+	text-align: center;
+	border: 6px solid #428bca;
+	background-color: #428bca;
+	padding: 6px;
+	color: #b3d1ea;
+	font-weight: bold;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	cursor: pointer;
+}
+
+.kb-side-header:hover {
+	border-bottom: 6px solid orange;
+}
+
+.kb-side-header.active {
+	border-bottom: 6px solid orange;
+	color: #fff;
+	cursor: auto;
+}
+
+.kb-side-tab {
+	display: none;
+}
+
+.kb-side-tab.active {
+	display: inherit;
+}
+
 #data-header {
 	padding: 10px 0;
 	color: #fff;
@@ -442,20 +481,10 @@ nav ul li.selected {
 	overflow: auto;
 }
 
-/*.left-pane {
-    font-size: 14px;
-    position: relative;
-}
-*/
 .left-pane {
 	font-size: 14px;
 	position: relative;
-/*	width: 289px;
-	top: 428px;
-	bottom: 20px;
-	overflow: auto;
-*/}
-
+}
 
 #kb-function-panel .kb-function-body {
 	height: 100% ;
@@ -1640,6 +1669,4 @@ div[class="tooltip-inner"] {
 
 /* end: data table */
 /* End kbaseData.css */
-
-
 

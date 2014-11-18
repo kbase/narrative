@@ -48,42 +48,18 @@
             this.$jobsWidget = manageWidgets['kbaseNarrativeJobsPanel'];
             var $managePanel = manageWidgets['panelSet'];
 
-
-            // set up tabs
-            this.$elem.append($('<button>')
-                              .addClass('btn btn-default btn-sm')
-                              .append('click me!')
-                              .click($.proxy(function(event) {
-                                this.toggleOverlay();
-                              }, this)));
-
             var $tabs = this.buildTabs([
                 {
-                    tab : 'Analyze',
+                    tabName : 'Analyze',
                     content : $analysisPanel
                 },
                 {
-                    tab : 'Manage',
+                    tabName : 'Manage',
                     content: $managePanel
                 }
             ]);
 
             this.$elem.append($tabs);
-
-            // this.$elem.kbaseTabs({
-            //     tabPosition: 'top',
-            //     canDelete: false,
-            //     tabs: [
-            //         {
-            //             tab: 'Analyze',
-            //             content : $analysisPanel,
-            //         },
-            //         {
-            //             tab: 'Manage',
-            //             content : $managePanel,
-            //         },
-            //     ],
-            // });
 
             if (this.autorender) {
                 this.render();
@@ -97,17 +73,40 @@
         },
 
         buildTabs: function(tabs) {
-            var $header = $('<div>')
-                          .addClass('')
-                          .append($('<div>')
-                                  .css({'width' : '50%', 'display' : 'inline-block', 'text-align' : 'center'})
-                                  .append('Analyze'))
-                          .append($('<div>')
-                                  .css({'width' : '50%', 'display' : 'inline-block', 'text-align' : 'center'})
-                                  .append('Manage'));
+            var $header = $('<div>');
+            var $body = $('<div>');
+
+            for (var i=0; i<tabs.length; i++) {
+                var tab = tabs[i];
+                $header.append($('<div>')
+                               .addClass('kb-side-header')
+                               .append(tab.tabName));
+                $body.append($('<div>')
+                             .addClass('kb-side-tab')
+                             .append(tab.content));
+            }
+
+            $header.find('div').click(function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                var $headerDiv = $(event.currentTarget);
+
+                if (!$headerDiv.hasClass('active')) {
+                    var idx = $headerDiv.index();
+                    $header.find('div').removeClass('active');
+                    $headerDiv.addClass('active');
+                    $body.find('div').removeClass('active');
+                    $body.find('div:nth-child(' + (idx+1) + ')').addClass('active');
+                }
+            });
+
+            $header.find('div:first-child').addClass('active');
+            $body.find('div:first-child').addClass('active');
 
             var $tabPanel = $('<div>')
-                            .append($header);
+                            .addClass('kb-side-panel')
+                            .append($header)
+                            .append($body);
             return $tabPanel;
         },
 

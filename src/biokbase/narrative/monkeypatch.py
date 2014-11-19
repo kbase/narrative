@@ -16,6 +16,7 @@ import urllib
 import re
 import IPython.html.notebook.handlers
 import IPython.html.services.notebooks.handlers
+from IPython.html.notebook.handlers import web  # get Tornado hook
 import IPython
 import biokbase.auth
 from biokbase.narrative.common.kblogging import get_logger, log_event
@@ -107,6 +108,9 @@ def do_patching(c):
         old_get = IPython.html.notebook.handlers.NamedNotebookHandler.get
         @monkeypatch_method(IPython.html.notebook.handlers.NamedNotebookHandler)
         def get(self, notebook_id):
+            client_ip = self.request.remote_ip
+            # save client ip in environ for later logging
+            kbase_env.client_ip = client_ip
             app_log.debug("notebook_id = " + notebook_id)
             found_cookies = [self.cookies[c] for c in all_cookies
                              if c in self.cookies]
@@ -120,7 +124,8 @@ def do_patching(c):
                 session = cookie_obj.get('kbase_sessionid', '')
                 log_event(g_log, 'open', {'narr': notebook_id,
                                           'user': user,
-                                          'session_id': session})
+                                          'session_id': session,
+                                          'client_ip': client_ip})
             return old_get(self, notebook_id)
 
         app_log.debug("Monkeypatching IPython.html.services.notebooks.handlers.NotebookRootHandler.get() in process {}".format(os.getpid()))

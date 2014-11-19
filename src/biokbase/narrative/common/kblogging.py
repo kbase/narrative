@@ -133,6 +133,9 @@ def _get_meta():
     if kbase_env.narrative:
         meta['narr'] = kbase_env.narrative
 
+    # Client IP
+    meta['client_ip'] = kbase_env.client_ip or "0.0.0.0"
+
     return meta
 
 
@@ -146,9 +149,11 @@ class MetaFormatter(logging.Formatter):
     def format(self, record):
         """Add KB_* environment values at format time."""
         s = logging.Formatter.format(self, record)
-        return "{} [{}]".format(s, ' '.join(["{}={}".format(k, v)
-                                             for k, v in os.environ.items()
-                                             if k.startswith('KB_')]))
+        return s
+        # XXX: This version adds env crap
+        # return "{} {}".format(s, ' '.join(["env.{}={}".format(k, v)
+        #                                    for k, v in os.environ.items()
+        #                                    if k.startswith('KB_')]))
 
 class BufferedSocketHandler(handlers.SocketHandler):
     """Proxy for another handler that always returns immediately

@@ -14,7 +14,9 @@
         parent: 'kbaseAuthenticatedWidget',
         version: '1.0.0',
         options: {
-            ws_name: null
+            ws_name: null,
+            ws_url:"https://kbase.us/services/ws",
+            loadingImage: 'static/kbase/images/ajax-loader.gif'
         },
 
         ws_name: null,
@@ -25,6 +27,7 @@
         $addDataButton:null,
         $controllerDiv: null,
         $mainListDiv:null,
+        $loadingDiv:null,
         
         /**
          * @method init
@@ -43,11 +46,15 @@
             this.$controllerDiv = $('<div>');
             this.$elem.append(this.$controllerDiv);
             this.renderController();
+            this.$loadingDiv = $('<div>').addClass('kb-data-loading')
+                                 .append('<img src="' + this.options.loadingImage + '">');
+            this.$elem.append(this.$loadingDiv);
             this.$mainListDiv = $('<div>').css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':'290px'});
             this.$elem.append(this.$mainListDiv);
             
+            
             if (this._attributes.auth) {
-                this.ws = new Workspace("https://kbase.us/services/ws", this._attributes.auth);
+                this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
             if(options.ws_name) { this.ws_name = "wstester1:home"; }
             this.reloadWsData();
@@ -176,6 +183,7 @@
         
         renderList: function() {
             var self = this;
+            self.$loadingDiv.show();
             self.$mainListDiv.empty();
             if (self.objectList.length>0) {
                 for(var i=0; i<self.objectList.length; i++) {
@@ -190,6 +198,7 @@
             } else {
                 
             }
+            self.$loadingDiv.hide();
         },
         
         renderController: function() {
@@ -269,7 +278,7 @@
             var self = this;
             if (!self.objectList) { return; }
             //should add spinning wait bar ....
-            
+            self.$loadingDiv.show();
             self.objectList.sort(sortfunction);
             self.renderList();
             

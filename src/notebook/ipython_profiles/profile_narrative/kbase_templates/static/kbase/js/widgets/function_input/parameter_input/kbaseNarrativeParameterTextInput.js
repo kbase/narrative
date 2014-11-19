@@ -161,7 +161,8 @@
                 
             var $row = $('<div>').addClass("row kb-method-parameter-row");
             if (useRowHighlight) {
-               $row.hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
+                $row.mouseenter(function(){$(this).addClass('kb-method-parameter-row-hover');})
+                    .mouseleave(function(){$(this).removeClass('kb-method-parameter-row-hover');});
             }
                             
             var $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");

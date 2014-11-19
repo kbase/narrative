@@ -14,7 +14,8 @@
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             max_objs_to_render:2000,
             max_objs_to_prevent_filter_as_you_type_in_search:2000,
-            max_objs_to_prevent_initial_sort:2000
+            max_objs_to_prevent_initial_sort:2000,
+            max_name_length:22,
         },
 
         ws_name: null,
@@ -132,29 +133,71 @@
             // [9] : int size // [10] : usermeta meta
             var type = object_info[2].split('.')[1].split('-')[0];
             var logo = $('<div>')
-                            .css({
-                                'width':'30pt',
-                                'height':'30pt',
-                                'color':'#fff',
-                                'background-color':this.logoColorLookup(type),
-                                'border-radius': '50%',
-                                'border-style' : 'solid',
-                                'border-width' : '1px',
-                                'border-color' : '#555',
-                                'text-align':'center',
-                                'display':'inline-block',
-                                'padding-top':'6pt',
-                                'font-size':'18pt',
-                                'font-weight':'bold',
-                                'text-shadow': '-1px 0 #777, 0 1px #777, 1px 0 #777, 0 -1px #777'
-                            })
+                            .addClass("kb-data-list-logo")
+                            .css({'background-color':this.logoColorLookup(type)})
                             .append(type.substring(0,1));
+            var shortName = object_info[1]; var isShortened=false;
+            if (shortName.length>this.options.max_name_length) {
+                shortName = shortName.substring(0,this.options.max_name_length-3)+'...';
+                isShortened=true;
+            }
+            var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
+            if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom'}); }
+                            
+            var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
+            var $type = $('<span>').addClass("kb-data-list-type").append(type);
+            var $date = $('<span>').addClass("kb-data-list-type").append(this.getTimeStampStr(object_info[3]));
+            var $logoDiv  = $('<div>').addClass('col-md-2').css({padding:'0px',margin:'0px'}).append(logo)
+            var metadata = object_info[10];
+            var metadataText = '';
+            for(var key in metadata) {
+                if (metadata.hasOwnProperty(key)) {
+                    metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
+                }
+            }
             
-            var text = '&nbsp<b>'+object_info[1]+'</b>&nbspv'+ object_info[4]+'<br>&nbsp&nbsp&nbsp' +type+'<br>&nbsp&nbsp&nbsp'+this.getTimeStampStr(object_info[3]);
+            var typeLink = '<a href="http://google.com" target="_blank">' + object_info[2] + '</a>';
+            var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
+                                .append(
+                                    "<table>"
+                                    +"<tr><th>Permament Id</th><td>" +object_info[6]+ "/" +object_info[0]+ "/" +object_info[4] + '</td></tr>'
+                                    +"<tr><th>Full Type</th><td>"+typeLink+'</td></tr>'
+                                    +"<tr><th>Saved by</th><td>"+object_info[5]+'</td></tr>'
+                                    +metadataText
+                                    +"</table>"
+                                    );
+            
+            var $toggleAdvancedViewBtn = $('<span>').addClass('btn-xs')
+                                            .html('<span class="glyphicon glyphicon-plus" style="color:#999" aria-hidden="true"/>')
+                                            .mouseenter(function(){$(this).addClass('btn btn-default');})
+                                            .mouseleave(function(){$(this).removeClass('btn btn-default');})
+                                            .on('click',function() {
+                                                var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
+                                                if ($more.is(':visible')) {
+                                                    $more.hide();
+                                                    $(this).html('<span class="glyphicon glyphicon-plus" style="color:#999" aria-hidden="true" />');
+                                                } else {
+                                                    $more.show();
+                                                    $(this).html('<span class="glyphicon glyphicon-minus" style="color:#999" aria-hidden="true" />');
+                                                    
+                                                }
+                                            });
+            
+            var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info').css({padding:'0px',margin:'0px'})
+                                .append($('<div>').append($('<table>').css({'width':'100%'})
+                                        .append($('<tr>')
+                                                .append($('<td>')
+                                                    .append($name).append($version).append('<br>')
+                                                    .append($type).append('<br>').append($date))
+                                                .append($('<td>').css({'vertical-align':'bottom','text-align':'right'})
+                                                    .append($toggleAdvancedViewBtn)))));
+        
             var $row = $('<div>').addClass('row kb-data-list-obj-row')
-                            .append($('<div>').addClass('col-md-2').css({padding:'0px',margin:'0px'}).append(logo))
-                            .append($('<div>').addClass('col-md-10').css({padding:'0px',margin:'0px'}).append(text))
-                            .hover(function(){$(this).toggleClass('kb-data-list-obj-row-hover');});
+                            .append($logoDiv)
+                            .append($mainDiv)
+                            .append($moreRow)
+                            .mouseenter(function(){$(this).addClass('kb-data-list-obj-row-hover');})
+                            .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
             
             return $row;
         },
@@ -357,16 +400,6 @@
         
         
         logoColorLookup:function(type) {
-            /*var colors = [
-                            '#d73027',
-                            '#f46d43',
-                            '#fdae61',
-                            '#fee090',
-                            '#e0f3f8',
-                            '#abd9e9',
-                            '#74add1',
-                            '#4575b4'
-                         ];*/
             var colors = [
                             '#F44336', //red
                             '#E91E63', //pink
@@ -380,8 +413,8 @@
                             '#4CAF50', //green
                             '#8BC34A', //lime green
                             '#CDDC39', //lime
-                            '#FFEB3B',  //yellow
-                            '#FFC107',  //amber
+                            '#FFEB3B', //yellow
+                            '#FFC107', //amber
                             '#FF9800', //orange
                             '#FF5722', //deep orange
                             '#795548', //brown
@@ -406,7 +439,7 @@
             }
             
             if (type.length>0) {
-                // pick one based
+                // pick one based on the first character
                 return colors[ (type.charCodeAt(0)%colors.length) ];
             } else {
                 return colors[0];
@@ -427,7 +460,7 @@
             interval = Math.floor(seconds / 2592000);
             if (interval > 1) {
                 if (interval<4) {
-                    return interval + " months";
+                    return interval + " months ago";
                 } else {
                     return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
                 }

@@ -46,12 +46,9 @@
             
             this.parameters = [];
             this.parameterIdLookup = {};
-            var hasAdvancedOption = false;
-            var firstParam = true;
             for (var i=0; i<params.length; i++) {
                 var paramSpec = params[i];
                 var $stepDiv = $('<div>');
-                
                 // check what kind of parameter here.
                 if (paramSpec.field_type === "text") {
                     var textInputWidget = $stepDiv["kbaseNarrativeParameterTextInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
@@ -69,6 +66,10 @@
                     var textareaInputWidget = $stepDiv["kbaseNarrativeParameterTextareaInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
                     this.parameters.push({id:paramSpec.id, widget:textareaInputWidget});
                     this.parameterIdLookup[paramSpec.id] = textareaInputWidget;
+                }else if (paramSpec.field_type === "file") {
+                    var fileInputWidget = $stepDiv["kbaseNarrativeParameterFileInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
+                    this.parameters.push({id:paramSpec.id, widget:fileInputWidget});
+                    this.parameterIdLookup[paramSpec.id] = fileInputWidget;
                 } else {
                     // this is what we should do:  this.getErrorDiv()
                     $stepDiv.append('<span class="label label-danger">Parameter '+paramSpec.id+
@@ -82,19 +83,10 @@
                         isAdvanced = true;
                     }
                 }
-                if (isAdvanced) {
-                    this.$advancedOptionsDiv.append($stepDiv);
-                    hasAdvancedOption = true;
-                } else {
-                    if (firstParam) {
-                        $stepDiv.css({"margin-top":"5px"});
-                        firstParam = false;
-                    }
-                    $optionsDiv.append($stepDiv);
-                }
+                this.addParameterDiv(i, paramSpec, $stepDiv, $optionsDiv, this.$advancedOptionsDiv, isAdvanced);
             }
             $inputParameterContainer.append($optionsDiv);
-            
+            var hasAdvancedOption = this.$advancedOptionsDiv.children().length > 0;
             var $advancedOptionsControllerRow = $("<div>").addClass("row").css({"margin":"5px"});
             if (hasAdvancedOption) {
                 $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12 kb-method-advanced-options-controller")
@@ -121,6 +113,16 @@
             
         },
 
+        addParameterDiv: function(paramPos, paramSpec, $stepDiv, $optionsDiv, $advancedOptionsDiv, isAdvanced) {
+            if (isAdvanced) {
+                $advancedOptionsDiv.append($stepDiv);
+            } else {
+                if ($optionsDiv.children().length == 0)
+                    $stepDiv.css({"margin-top":"5px"});
+                $optionsDiv.append($stepDiv);
+            }
+        },
+        
         /**
          *OLD STYLE: we keep this for compatibility, but you should use new get parameter values!!!
          * Returns a list of parameters in the order in which the given method

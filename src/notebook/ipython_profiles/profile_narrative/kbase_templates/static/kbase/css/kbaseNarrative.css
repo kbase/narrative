@@ -1691,7 +1691,7 @@ div[class="tooltip-inner"] {
 }
 
 .kb-data-loading {
-    height: 100%
+    height: 100%;
     vertical-align: middle;
     text-align: center
 }
@@ -1717,18 +1717,19 @@ div[class="tooltip-inner"] {
     border-top-style: solid;
     border-top-width: thin;
     border-top-color: #999;
+    border-left-style: solid;
+    border-left-width: 5px;
+    border-left-color: #fff;
+    color:#333;
     margin:2px;
     padding:4px;
 }
-
-.kb-data-list-search input {
-    padding-right: 30px;    
-}
-.kb-data-list-search i {
-    position: absolute;
-    right: 0px;
-    padding: 10px 12px;
-    pointer-events: none;
+/* again the css hover over div inherits strangly, so we use js */
+.kb-data-list-obj-row-hover {
+    /*background-color: #eee;*/
+    border-left-style: solid;
+    border-left-width: 5px;
+    border-left-color: #FFC107;
 }
 
 

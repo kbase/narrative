@@ -1,11 +1,6 @@
 /**
- * A decompartmentalized data table widget, factored out of the kbaseNarrativeDataPanel widget.
- * This is just a fancy datatables object that shows a single column (data id), with clickable buttons
- * that will trigger a dataInfoClicked.Narrative event.
- * It also has a Select element that allows the user to filter on object type, similar to the 
- * Workspace browser.
  * 
- * @author Bill Riehl <wjriehl@lbl.gov>
+ * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
 (function( $, undefined ) {
@@ -16,7 +11,10 @@
         options: {
             ws_name: null,
             ws_url:"https://kbase.us/services/ws",
-            loadingImage: 'static/kbase/images/ajax-loader.gif'
+            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            max_objs_to_render:2000,
+            max_objs_to_prevent_filter_as_you_type_in_search:2000,
+            max_objs_to_prevent_initial_sort:2000
         },
 
         ws_name: null,
@@ -40,8 +38,7 @@
          */
         init: function(options) {
             this._super(options);
-
-            //console.log(this);
+            
             
             this.$controllerDiv = $('<div>');
             this.$elem.append(this.$controllerDiv);
@@ -65,6 +62,7 @@
         obj_list : [],
         
         setWorkspace : function(ws_name) {
+            //this.ws_name = "KBasePublicOntologies"; // for testing a bigish workspace
             this.ws_name = ws_name;
             this.reloadWsData();
         },
@@ -78,17 +76,10 @@
                 },
                 function(infoList) {
                     // object_info:
-                    // [0] : obj_id objid
-                    // [1] : obj_name name
-                    // [2] : type_string type
-                    // [3] : timestamp save_date
-                    // [4] : int version
-                    // [5] : username saved_by
-                    // [6] : ws_id wsid
-                    // [7] : ws_name workspace
-                    // [8] : string chsum
-                    // [9] : int size
-                    // [10] : usermeta meta
+                    // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+                    // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+                    // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+                    // [9] : int size // [10] : usermeta meta
                     
                     // empty the existing object list first
                     self.objectList = [];
@@ -103,23 +94,25 @@
                             }
                         );
                     }
-                    self.objectList.sort(function(a,b) {
-                            if (a.info[3] > b.info[3]) return -1; // sort by date
-                            if (a.info[3] < b.info[3]) return 1;  // sort by date
-                            return 0;
-                        });
+                    if (infoList.length<=self.options.max_objs_to_prevent_initial_sort) {
+                        self.objectList.sort(function(a,b) {
+                                if (a.info[3] > b.info[3]) return -1; // sort by date
+                                if (a.info[3] < b.info[3]) return 1;  // sort by date
+                                return 0;
+                            });
+                        self.$elem.find('#nar-data-list-default-sort-label').addClass('active');
+                        self.$elem.find('#nar-data-list-default-sort-option').attr('checked');
+                    }
                     
                     self.renderList();
                     
                     // if we have more than 2k objects, make them hit enter to search...
-                    if (self.$searchInput) {
-                        if (infoList.length>2000) {
-                            self.$searchInput.off("input change blur");
-                            self.$searchInput.on("change blur",function() { self.search(); });
-                        } else {
-                            self.$searchInput.off("input change blur");
-                            self.$searchInput.on("input change blur",function() { self.search(); });
-                        }
+                    if (infoList.length>self.options.max_objs_to_prevent_filter_as_you_type_in_search) {
+                        self.$searchInput.off("input change blur");
+                        self.$searchInput.on("change blur",function() { self.search(); });
+                    } else {
+                        self.$searchInput.off("input change blur");
+                        self.$searchInput.on("input change blur",function() { self.search(); });
                     }
                     
                 }, 
@@ -133,17 +126,10 @@
         renderObjectRowDiv: function(object_info) {
             
             // object_info:
-            // [0] : obj_id objid
-            // [1] : obj_name name
-            // [2] : type_string type
-            // [3] : timestamp save_date
-            // [4] : int version
-            // [5] : username saved_by
-            // [6] : ws_id wsid
-            // [7] : ws_name workspace
-            // [8] : string chsum
-            // [9] : int size
-            // [10] : usermeta meta
+            // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+            // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+            // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+            // [9] : int size // [10] : usermeta meta
             var type = object_info[2].split('.')[1].split('-')[0];
             var logo = $('<div>')
                             .css({
@@ -161,21 +147,14 @@
                                 'font-size':'18pt',
                                 'font-weight':'bold',
                                 'text-shadow': '-1px 0 #777, 0 1px #777, 1px 0 #777, 0 -1px #777'
-                                /*padding:'5px',
-                                margin:'5px',
-                                'background-color':'red',
-                                'border-radius': '6px',
-                                'font-weight': 'bold',
-                                'font-size': '14pt',
-                                'line-height': '15px',
-                                'color': '#fff'*/
                             })
                             .append(type.substring(0,1));
             
             var text = '&nbsp<b>'+object_info[1]+'</b>&nbspv'+ object_info[4]+'<br>&nbsp&nbsp&nbsp' +type+'<br>&nbsp&nbsp&nbsp'+this.getTimeStampStr(object_info[3]);
             var $row = $('<div>').addClass('row kb-data-list-obj-row')
                             .append($('<div>').addClass('col-md-2').css({padding:'0px',margin:'0px'}).append(logo))
-                            .append($('<div>').addClass('col-md-10').css({padding:'0px',margin:'0px'}).append(text));
+                            .append($('<div>').addClass('col-md-10').css({padding:'0px',margin:'0px'}).append(text))
+                            .hover(function(){$(this).toggleClass('kb-data-list-obj-row-hover');});
             
             return $row;
         },
@@ -184,19 +163,18 @@
         renderList: function() {
             var self = this;
             self.$loadingDiv.show();
-            self.$mainListDiv.empty();
+            self.$mainListDiv.children().detach();
             if (self.objectList.length>0) {
                 for(var i=0; i<self.objectList.length; i++) {
                     self.$mainListDiv.append(self.objectList[i].$div);
-                    
                     // if more than a certain number, don't show them all
-                    if (i>2000) {
-                        self.$mainListDiv.append($('<div>').append((self.objectList.length-2000)+' more...'));
+                    if (i>self.options.max_objs_to_render) {
+                        self.$mainListDiv.append($('<div>').append(' '+(self.objectList.length-self.options.max_objs_to_render)+' more...'));
                         break;
                     }
                 }
             } else {
-                
+                // todo: show an upload button or some other message
             }
             self.$loadingDiv.hide();
         },
@@ -204,8 +182,8 @@
         renderController: function() {
             var self = this;
             
-            var $byDate = $('<label class="btn btn-default active">').addClass('btn btn-default active')
-                                .append($('<input type="radio" name="options" id="option1" autocomplete="off" checked>'))
+            var $byDate = $('<label id="nar-data-list-default-sort-label" class="btn btn-default">').addClass('btn btn-default')
+                                .append($('<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'))
                                 .append("date")
                                 .on('click',function() {
                                     self.sortData(function(a,b) {
@@ -236,10 +214,15 @@
                                         return 0;
                                     });
                                 });
+            var $upOrDown = $('<button class="btn btn-default btn-xs" type="button">').css({'margin-left':'5px'})
+                                .append('<span class="glyphicon glyphicon-sort"aria-hidden="true" />')
+                                .on('click',function() {
+                                    self.reverseData();
+                                });
             
             var $sortByGroup = $('<div data-toggle="buttons">')
                                     .addClass("btn-group btn-group-xs")
-                                    .css({"margin":"3px"})
+                                    .css({"margin":"2px"})
                                     .append($byDate)
                                     .append($byName)
                                     .append($byType);
@@ -253,10 +236,11 @@
             
             self.$controllerDiv.append(
                 $('<div>').addClass('row').css({'margin':'5px'})
-                    .append($('<div>').addClass('col-xs-6').css({'margin':'0px','padding':'0px'})
-                        .append("<small>sort by: </small>")
-                        .append($sortByGroup))
-                    .append($('<div>').addClass('col-xs-6').css({'margin':'0px','padding':'0px','text-align':'right'})
+                    .append($('<div>').addClass('col-xs-7').css({'margin':'0px','padding':'0px'})
+                        .append("<div><small>sort by: </small></div>")
+                        .append($sortByGroup)
+                        .append($upOrDown))
+                    .append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'})
                         .append($addDataBtn)));           
             
             self.$searchInput = $('<input type="text">')
@@ -274,14 +258,30 @@
             self.$controllerDiv.append($searchDiv);
         },
         
+        reverseData: function() {
+            var self = this;
+            if (!self.objectList) { return; }
+            self.objectList.reverse();
+            self.renderList();
+            if(self.$searchInput.val().trim().length>0) {
+                self.search();  // always refilter on the search term search if there is something there
+            }
+        },
+        
         sortData: function(sortfunction) {
             var self = this;
             if (!self.objectList) { return; }
-            //should add spinning wait bar ....
-            self.$loadingDiv.show();
-            self.objectList.sort(sortfunction);
-            self.renderList();
+            //should add spinning wait bar .... doesn't really work because js is single threaded...
+            //self.$loadingDiv.show();
             
+            // start it off separately so we don't block
+            //setTimeout(function() {
+                self.objectList.sort(sortfunction);
+                self.renderList();
+                if(self.$searchInput.val().trim().length>0) {
+                    self.search();  // always refilter on the search term search if there is something there
+                }
+            //}, 0);
         },
         
         search: function(term) {
@@ -299,31 +299,65 @@
                 term = term.replace('.','\\.');  // dots are common in names, so don't match anything!! escape them
                 var regex = new RegExp(term, 'i');
                 
-                for(var k=0; k<self.objectList.length; k++) {
-                    // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                    // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                    // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                    // [9] : int size // [10] : usermeta meta
-                    var match = false;
-                    var info = self.objectList[k].info;
-                    if (regex.test(info[1])) { match = true; }
-                    else if (regex.test(info[2])) { match = true; }
-                    
-                    if (match) { self.objectList[k].$div.show(); }
-                    else { self.objectList[k].$div.hide(); }
-                }
+                
+                if (self.objectList.length<self.options.max_objs_to_render) {
+                    for(var k=0; k<self.objectList.length; k++) {
+                        // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+                        // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+                        // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+                        // [9] : int size // [10] : usermeta meta
+                        var match = false;
+                        var info = self.objectList[k].info;
+                        if (regex.test(info[1])) { match = true; }
+                        else if (regex.test(info[2])) { match = true; }
+                        
+                        if (match) { self.objectList[k].$div.show(); }
+                        else { self.objectList[k].$div.hide(); }
+                    }
+                } else {
+                    // then we do something stupid and remove them all and readd them - should refactor for performance later
+                    self.$loadingDiv.show();
+                    self.$mainListDiv.empty();
+                    var n_matches = 0;
+                    for(var k=0; k<self.objectList.length; k++) {
+                        // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+                        // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+                        // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+                        // [9] : int size // [10] : usermeta meta
+                        var match = false;
+                        var info = self.objectList[k].info;
+                        if (regex.test(info[1])) { match = true; }
+                        else if (regex.test(info[2])) { match = true; }
+                        
+                        if (match) {
+                            self.$mainListDiv.append(self.objectList[k].$div);
+                            self.objectList[k].$div.show();
+                            n_matches++;
+                        }
+                        if (n_matches > self.options.max_objs_to_render) {
+                            self.$mainListDiv.append($('<div>').append(' '+(n_matches-self.options.max_objs_to_render)+' more...'));
+                            break;
+                        }
+                        
+                    }
+                    self.$loadingDiv.hide();
+                } 
             } else {
                 // no search, so show all
-                for(var k=0; k<self.objectList.length; k++) {
-                    self.objectList[k].$div.show();
+                if (self.objectList.length<self.options.max_objs_to_render) {
+                    for(var k=0; k<self.objectList.length; k++) {
+                        self.objectList[k].$div.show();
+                    }
+                } else {
+                    self.renderList();
                 }
             }
         },
         
         
         
-        logoColorLookup:function(character) {
-            var colors = [
+        logoColorLookup:function(type) {
+            /*var colors = [
                             '#d73027',
                             '#f46d43',
                             '#fdae61',
@@ -332,9 +366,48 @@
                             '#abd9e9',
                             '#74add1',
                             '#4575b4'
+                         ];*/
+            var colors = [
+                            '#F44336', //red
+                            '#E91E63', //pink
+                            '#9C27B0', //purple
+                            '#673AB7', //deep purple
+                            '#3F51B5', //indigo
+                            '#2196F3', //blue
+                            '#03A9F4', //light blue
+                            '#00BCD4', //cyan
+                            '#009688', //teal
+                            '#4CAF50', //green
+                            '#8BC34A', //lime green
+                            '#CDDC39', //lime
+                            '#FFEB3B',  //yellow
+                            '#FFC107',  //amber
+                            '#FF9800', //orange
+                            '#FF5722', //deep orange
+                            '#795548', //brown
+                            '#9E9E9E', //grey
+                            '#607D8B'  //blue grey
                          ];
-            if (character.length>0) {
-                return colors[ (character.charCodeAt(0)%colors.length) ];
+            
+            // first, if there are some colors we want to catch...
+            switch (type) {
+                case "Genome":
+                    return '#2196F3'; //blue
+                case "FBAModel":
+                    return '#4CAF50'; //green
+                case "FBA":
+                    return '#F44336'; //red
+                case "ContigSet":
+                    return '#FF9800'; //orange
+                case "ProteomeComparison":
+                    return '#3F51B5'; //indigo
+                case "Tree":
+                    return '#795548'; //brown
+            }
+            
+            if (type.length>0) {
+                // pick one based
+                return colors[ (type.charCodeAt(0)%colors.length) ];
             } else {
                 return colors[0];
             }
@@ -423,45 +496,9 @@
          * @private
          */
         setData: function(data) {
-            this.$dataSelect.empty();
-            if (!data || data.length === 0)
-                return;
-
-            // Add an 'all types' filter option that just shows everything.
-            this.$dataSelect.append('<option value="">All Types</option>');
-
-            var dataList = [];
-            var dataKeys = Object.keys(data);
-            // The types to be filtered should be alphabetically sorted
-            dataKeys.sort();
-            $.each(dataKeys, $.proxy(function(idx, key) {
-                this.$dataSelect.append($('<option>')
-                                          .attr('value', key)
-                                          .append(key + ' (' + data[key].length + ')'));
-                // Just grab everything from each type and throw it into the dataList array
-                dataList = dataList.concat(data[key]);
-            }, this));
-
-            this.$dataTable.fnClearTable();
-            this.$dataTable.fnAddData(dataList);
-            // Once the table's rendered, we can bind the click events.
-            // This would be trickier if we were paginating the table. But we're not!
-            this.$dataTable.find('.kb-function-help').click(
-                $.proxy(function(event) {
-                    var ws = $(event.target).attr('data-ws');
-                    var id = $(event.target).attr('data-id');
-                    this.trigger('dataInfoClicked.Narrative', [ws, id]);
-                }, 
-                this)
-            );
-            this.$dataTable.find('[data-toggle="tooltip"]').tooltip({'placement':'right', container: 'body'});
-        },
-
-        // quick fix to adjust column header width on refresh.
-        // should be called after it's rendered in the browser.
-        poke: function() {
-            this.$dataTable.fnAdjustColumnSizing();
+            
         }
+
     })
 
 })(jQuery);

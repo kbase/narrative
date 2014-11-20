@@ -21,7 +21,7 @@
             // WS chunking doesn't really work well, so this option is not used
             //ws_chunk_size:10000,  // this is the limit
             
-            max_objs_to_render:2000,
+            max_objs_to_render:1000,
             max_objs_to_prevent_filter_as_you_type_in_search:2000,
             max_objs_to_prevent_initial_sort:2000,
             max_name_length:22,
@@ -155,7 +155,7 @@
                         if (infoList[i][2].indexOf('KBaseNarrative') == 0) { continue; }
                         self.objectList.push(
                             {
-                                $div:null,
+                                $div:null, //self.renderObjectRowDiv(infoList[i]),
                                 info:infoList[i]
                             }
                         );
@@ -320,23 +320,24 @@
             self.$loadingDiv.show();
             self.$mainListDiv.children().detach();
             if (self.objectList.length>0) {
-                console.log("rendering: "+self.objectList.length)
                 for(var i=0; i<self.objectList.length; i++) {
+                    // if more than a certain number, don't show any more
+                    if (i>=self.options.max_objs_to_render) {
+                        self.$mainListDiv.append($('<div>').append(''+(self.objectList.length-self.options.max_objs_to_render)+' more...'));
+                        break;
+                    }
                     if (self.objectList[i].$div) {
                         self.$mainListDiv.append(self.objectList[i].$div);
                     } else {
-                        self.objectList[i].$div = self.renderObjectRowDiv(self.objectList[i].info)
+                        self.objectList[i].$div = self.renderObjectRowDiv(self.objectList[i].info);
                         self.$mainListDiv.append(self.objectList[i].$div);
-                    }
-                    // if more than a certain number, don't show them all
-                    if (i>self.options.max_objs_to_render) {
-                        self.$mainListDiv.append($('<div>').append(' '+(self.objectList.length-self.options.max_objs_to_render)+' more...'));
-                        break;
                     }
                 }
             } else {
                 // todo: show an upload button or some other message
             }
+            
+            
             self.$loadingDiv.hide();
         },
         
@@ -421,6 +422,7 @@
         reverseData: function() {
             var self = this;
             if (!self.objectList) { return; }
+            
             self.objectList.reverse();
             self.renderList();
             if(self.$searchInput.val().trim().length>0) {
@@ -438,20 +440,12 @@
             // start it off separately so we don't block
             //setTimeout(function() {
             
-                //var start = new Date().getTime();
                 self.objectList.sort(sortfunction);
-                //var mid = new Date().getTime();
                 self.renderList();
-                var mid2 = new Date().getTime();
                 if(self.$searchInput.val().trim().length>0) {
                     self.search();  // always refilter on the search term search if there is something there
                 }
-                //var end= new Date().getTime();
-                
-                //var sort_time = mid - start;
-                //var render_time = mid2 - mid;
-                //var search_time = end - mid2;
-                //alert('Execution time: ' + sort_time + ' ' + render_time + ' ' + search_time);
+                var end= new Date().getTime();
                 
                 //self.$loadingDiv.hide();
             //}, 0);
@@ -514,7 +508,7 @@
                 } else {
                     // then we do something stupid and remove them all and readd them - should refactor for performance later
                    // self.$loadingDiv.show();
-                    self.$mainListDiv.children.detach();
+                    self.$mainListDiv.children().detach();
                     var n_matches = 0;
                     for(var k=0; k<self.currentMatch.length; k++) {
                         // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
@@ -529,15 +523,22 @@
                         //else if (info[2].toUpperCase().indexOf(term.toUpperCase())) { match = true; }
                         
                         if (match) {
-                            self.$mainListDiv.append(self.currentMatch[k].$div);
+                            if (n_matches<self.options.max_objs_to_render) {
+                                if (self.currentMatch[k].$div) {
+                                    self.$mainListDiv.append(self.currentMatch[k].$div);
+                                } else {
+                                    self.currentMatch[k].$div = self.renderObjectRowDiv(self.currentMatch[k].info);
+                                    self.$mainListDiv.append(self.currentMatch[k].$div);
+                                }
+                            }
                             self.objectList[k].$div.show();
                             newMatch.push(self.currentMatch[k]);
                             n_matches++;
                         }
-                        if (n_matches > self.options.max_objs_to_render) {
-                            self.$mainListDiv.append($('<div>').append(' '+(n_matches-self.options.max_objs_to_render)+' more...'));
-                            break;
-                        }
+                    }
+                    
+                    if (n_matches >= self.options.max_objs_to_render) {
+                        self.$mainListDiv.append($('<div>').append(' '+(n_matches-self.options.max_objs_to_render)+' more...'));
                     }
                 }
                 self.currentMatch = newMatch; // update the current match

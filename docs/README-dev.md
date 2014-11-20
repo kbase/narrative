@@ -265,7 +265,8 @@ This includes a few instructions, but some more details are available here:
 
 ## Upgrade Linux kernel
 
-Docker currently uses (at minimum) the 3.8 Linux kernel, so you’ll need to install that and restart.
+Docker currently uses (at minimum) the 3.8 Linux kernel, so if your host is running an older
+kernel (e.g., Ubuntu 12.04), you’ll need to install the new kernel and restart.
 
     sudo su - root
     apt-get update
@@ -288,41 +289,20 @@ First setup APT to use the proper repository, then refresh the package cache and
 
 Set up groups so docker and www-data can play nice with each other (so we can get proxied external access to the deployed containers that’ll be running the Narrative).  
 
-    # start editor for /etc/groups
-    vigr
+    usermod -G docker www-data
 
-When you are done, you will have 2 lines in the file like this:
-
-    www-data:x:33:docker
-    docker:x:998:www-data
-
-Save and exit, then stop and restart docker and Nginx.
+Then stop and restart docker and Nginx.
 
     service docker stop
     service nginx stop
     service docker start
     service nginx start
 
-The containers that run Narratives are also based on the Ubuntu 12.04 LTS image, so we need to pull that with Docker to make it available. This will take a couple of minutes, 
 
-    docker pull ubuntu:12.04
-    exit # finally done as root
+Next, run buildNarrativeContainer.sh to build the base Docker container for narrative instances.
 
-If you get a message like `2014/09/18 20:53:25 unexpected EOF` during the previous step, just try it again.
-
-The Dockerfile that builds the Narrative can be found in (relative to `~/kb_narr`) `narrative/docker/Dockerfile`. This is essentially a build script that constructs the Docker container image. To do so, it needs to be placed on directory above the narrative, along with a couple other dependency files (also in `narrative/docker`):
-
-    cd ~/kb_narr  # if not already there 
-    cp narrative/docker/Dockerfile narrative/docker/r-packages.R narrative/docker/sources.list .
-
-## Build the Narrative Docker container
-
-Now we can build our Docker container. The Lua provisioning library (currently) looks for containers named kbase/narrative:latest, so that’s the name we’ll give it.
-
-Eventually, it might be nice to have an external container repository that manages this, and every night or so, we just pull the most recent container and deploy it.
-
-    cd ~/kb_narr  # if not already there
-    sudo docker build -q -t kbase/narrative .
+    cd ~/kb_narr/narrative
+    ./buildNarrativeContainer.sh
 
 This will take around half an hour to pull, compile, and deploy the various components. So go get a cup of coffee or take a nap at this point.
 
@@ -439,7 +419,7 @@ Contents
 The narrative instances perform their logging through a 2-step process, where the data passes from the Docker container out to a "log proxy" on the host, and then from there to other sinks (currently MongoDB).
 
     +----------------------+
-    |Narrative UI in Docker|
+    |Narrative UI in Docker   | -- logging --> /tmp/kbase-narrative.log 
     +----------------------+
            |        
            | logging
@@ -459,6 +439,22 @@ The narrative logging proxy was created to deal with security and networking iss
 So, what the logging proxy really does is run a simple server that listens on a socket for Python logging messages (in the format sent by the standard logging module's SocketHandler class), and forward them to the remote destination of choice.
 
 The rest of this README describes the configuration and various tasks with the proxy.
+
+### Log format
+
+The narrative will log to both socket and a local file `/tmp/kbase-narrative.log`. This is useful for debugging in stand-alone versions of the notebook.
+
+The log format in this file is the same as the format that will be sent to syslog by the narrative log proxy. An example log entry is shown below. It will all be in a single line, the backslashes are added for legibility.
+
+    INFO 2014-11-20 02:05:44,386 biokbase.narrative open;client_ip=127.0.0.1 \
+    user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.111 Safari/537.36" \
+    user=dangunter \
+    session_id=3265e4f5b7557afa2ad62018cdc6af6f66679a0290e89ffbcdb53016dd9e40e1 \
+    narr=ws.2632.obj.3
+
+The format is:
+
+    <Level> <Date> <Time> <log-module> <event>;<key1>=<value1> <key2>=<value2> ...
 
 ### Code
 

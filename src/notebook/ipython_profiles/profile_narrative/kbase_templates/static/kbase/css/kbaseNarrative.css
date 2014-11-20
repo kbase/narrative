@@ -1724,6 +1724,12 @@ div[class="tooltip-inner"] {
     margin:2px;
     padding:4px;
 }
+.kb-data-list-obj-row-main {
+    width:100%;
+    margin:0px;
+    padding:0px;
+}
+
 /* again the css hover over div inherits strangly, so we use js */
 .kb-data-list-obj-row-hover {
     /*background-color: #eee;*/

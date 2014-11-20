@@ -42,9 +42,9 @@
             uploaderURL: "//kbase.us/services/docs/uploader/uploader.html",
             defaultLandingPage: "/functional-site/#/ws/json/", // ws_name/obj_name
             container: null,
-            wsId: null,
+            ws_name: null,
         },
-        wsId: null,
+        ws_name: null,
         // Constants
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
@@ -55,8 +55,13 @@
         init: function(options) {
             this._super(options);
 
-            if (this.options.wsId)
-                this.wsId = options.wsId;
+            if (this.options.wsId) {
+                this.ws_name = options.wsId;
+                this.options.ws_name = options.wsId;
+            }
+            if (this.options.ws_name) {
+                this.ws_name = options.ws_name;
+            }
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.uploaderURL = window.kbconfig.urls.uploader;
@@ -64,89 +69,63 @@
                 this.options.wsBrowserURL = window.kbconfig.urls.ws_browser;
                 this.options.landingPageURL = window.kbconfig.urls.landing_pages;
             }
-
-            /* temporary hack to work on data list */
             
             var $dataList = $('<div>');
             this.body().append($dataList);
-            this.dataListWidget = $dataList["kbaseNarrativeDataList"]({ws_name: this.wsId});
+            this.dataListWidget = $dataList["kbaseNarrativeDataList"](
+                                    {
+                                        ws_name: this.ws_name,
+                                        ws_url: this.options.workspaceURL,
+                                        loadingImage: this.options.loadingImage
+                                    });
             
             $(document).on(
                 'setWorkspaceName.Narrative', $.proxy(function(e, info) {
                     console.log('data panel -- setting ws to ' + info.wsId);
-                    this.wsId = info.wsId;
+                    this.ws_name = info.wsId;
                     this.narrWs = info.narrController;
-                    this.dataListWidget.setWorkspace(this.wsId);
-                    //this.refreshWorkspaceTab();
+                    this.dataListWidget.setWorkspace(this.ws_name);
                 }, this)
             );
-            
-            return this;
-            
-            
             
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
              */
             $(document).on(
                 'dataLoadedQuery.Narrative', $.proxy(function(e, params, ignoreVersion, callback) {
-                    var objList = this.getLoadedData(params, ignoreVersion);
+                    var obj_data = this.dataListWidget.getObjData(params,ignoreVersion);
                     if (callback) {
-                        callback(objList);
+                        callback(obj_data);
                     }
                 },
                 this)
             );
-
+            
+            
             /**
              * This should be triggered when something updates the available data in either the narrative or
              * in the workspace.
              */
             $(document).on(
                 'updateData.Narrative', $.proxy(function(e) {
-                    this.refresh();
+                    //this.refresh();
+                    this.dataListWidget.refresh();
                 },
                 this )
             );
-
+            
             /**
              * This should be triggered when something wants to know what workspace this widget is currently linked to.
              */
             $(document).on(
                 'workspaceQuery.Narrative', $.proxy(function(e, callback) {
                     if (callback) {
-                        callback(this.wsId);
+                        callback(this.ws_name);
                     }
                 }, 
                 this)
             );
-
-            /**
-             * This should be triggered whenever something clicks on a data info button (or just
-             * wants the info modal to appear).
-             */
-            $(document).on(
-                'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
-                    this.showInfoModal(workspace, id);
-                }, 
-                this)
-            );
-
-            $(document).on(
-                'updateNarrativeDataTab.Narrative', $.proxy(function(e) {
-                    this.refreshNarrativeTab();
-                },
-                this)
-            );
-
-            $(document).on(
-                'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-                    this.wsId = info.wsId;
-                    this.narrWs = info.narrController;
-                    this.refreshWorkspaceTab();
-                }, this)
-            );
-
+            
             /**
              * Get the landing page map.
              * First, try getting it from /functional-site/landing_page_map.json.
@@ -175,12 +154,36 @@
                     })
                 }, this)
             });
+            
+            if (this.ws_name)
+                this.trigger('workspaceUpdated.Narrative', this.ws_name);
+            
+            return this;
+            
+            
+            
+            /**
+             * This should be triggered whenever something clicks on a data info button (or just
+             * wants the info modal to appear).
+             */
+            $(document).on(
+                'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
+                    this.showInfoModal(workspace, id);
+                }, 
+                this)
+            );
+
+            $(document).on(
+                'updateNarrativeDataTab.Narrative', $.proxy(function(e) {
+                    this.refreshNarrativeTab();
+                },
+                this)
+            );
+
 
             this.createStructure()
                 .createMessages();
 
-            if (this.wsId)
-                this.trigger('workspaceUpdated.Narrative', this.wsId);
 
             return this;
         },
@@ -212,9 +215,8 @@
             return this;
         },
 
-        setWorkspace: function(wsId) {
-            this.wsId = wsId;
-            alert('setting to '+wsId);
+        setWorkspace: function(ws_name) {
+            this.ws_name = ws_name;
             this.refresh();
         },
 
@@ -524,6 +526,9 @@
          * @public
          */
         refresh: function() {
+            
+            this.dataListWidget.refresh();
+            
             return;
             console.debug("kbWS.refresh.start");
             if (this.wsClient && this.wsId) {
@@ -883,47 +888,12 @@
          * @returns a list of data objects
          */
         getLoadedData: function(type, ignoreVersion) {
-            if (!type || type.length === 0)
-                return this.loadedData;
-
-            var dataSet = {};
-            if (typeof type === 'string') {
-                type = [type];
+            if (this.dataListWidget) {
+                return this.dataListWidget.getObjData(params,ignoreVersion);
+            } else {
+                return {};
             }
-            if (Object.prototype.toString.call(type) === '[object Array]') {
-                for (var i=0; i<type.length; i++) {
-                    var dataType = type[i];
-
-                    // If we're ignoring the version, strip the version off
-                    // the end of the query data type
-                    if (ignoreVersion) {
-                        var unversionType = /(\S+)-\d+\.\d+/.exec(dataType);
-
-                        if (unversionType && unversionType[1])
-                            dataType = unversionType[1];
-
-                        // turn the dataType's . into \.
-                        // then build the regex /^datatype/
-                        // so it'll look like /^KBaseGenomes\.Genome/ for example
-                        var typeRegex = new RegExp("^" + dataType.replace(/\./g, '\\.') + "(-\d+\.\d+)?$");
-
-                        for (var typeName in this.loadedData) {
-                            if (typeRegex.test(typeName)) {
-                                if (!dataSet[dataType])
-                                    dataSet[dataType] = [];
-                                dataSet[dataType] = dataSet[dataType].concat(this.loadedData[typeName]);
-                            }
-                        }
-                    }
-                    // Otherwise, just look for the match.
-                    else {
-                        if (this.loadedData[dataType])
-                            dataSet[dataType] = this.loadedData[dataType];
-                    }
-                }
-            }
-
-            return dataSet;
+            
         },
 
         /**

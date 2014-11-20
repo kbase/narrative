@@ -11,14 +11,18 @@
         options: {
             ws_name: null,
             ws_url:"https://kbase.us/services/ws",
+            landing_page_url: "/functional-site/#/",
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             max_objs_to_render:2000,
             max_objs_to_prevent_filter_as_you_type_in_search:2000,
-            max_objs_to_prevent_initial_sort:2000
+            max_objs_to_prevent_initial_sort:2000,
+            max_name_length:22,
+            refresh_interval:15000
         },
 
         ws_name: null,
         ws: null,
+        ws_last_update_timestamp: null,
         
         
         $searchInput: null,
@@ -26,6 +30,10 @@
         $controllerDiv: null,
         $mainListDiv:null,
         $loadingDiv:null,
+        
+        
+        obj_list : [],
+        obj_data : {}, // old style - type_name : info
         
         /**
          * @method init
@@ -53,18 +61,56 @@
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
-            if(options.ws_name) { this.ws_name = "wstester1:home"; }
-            this.reloadWsData();
+            var self = this;
+            setInterval(function(){self.refresh()}, this.options.refresh_interval); // check if there is new data every 15 sec
             
             return this;
         },
         
-        obj_list : [],
-        
         setWorkspace : function(ws_name) {
             //this.ws_name = "KBasePublicOntologies"; // for testing a bigish workspace
             this.ws_name = ws_name;
-            this.reloadWsData();
+            this.refresh();
+        },
+        
+        refresh: function() {
+            var self = this;
+            if (self.ws_name && self.ws) {
+                self.ws.get_workspace_info({
+                        workspace: this.ws_name
+                    },
+                    function(workspace_info) {
+                        //[0] ws_id id, [1] ws_name workspace, [2] username owner, [3] timestamp moddate,
+                        //[4] int object, [5] permission user_permission, [6] permission globalread,
+                        //[7] lock_status lockstat, [8] usermeta metadata
+                        //console.log('I have: '+self.ws_last_update_timestamp+ " remote has: "+workspace_info[3]);
+                        if (self.ws_last_update_timestamp) {
+                            if (self.ws_last_update_timestamp !== workspace_info[3]) {
+                                self.reloadWsData();
+                            } else {
+                                self.refreshTimeStrings();
+                            }
+                        } else {
+                            self.ws_last_update_timestamp = workspace_info[3];
+                            self.reloadWsData();
+                        }
+                    },
+                    function(error) {
+                        // don't worry about it, just do nothing...
+                    });
+            } // else { we should probably do something if the user is not logged in or if the ws isn't set yet }
+        },
+        
+        refreshTimeStrings: function() {
+            var self = this;
+            if (self.objectList.length>0) {
+                if (self.objectList.length<self.options.max_objs_to_prevent_filter_as_you_type_in_search) {
+                    for(var i=0; i<self.objectList.length; i++) {
+                        self.objectList[i].$div.find('.kb-data-list-date')
+                            .html(self.getTimeStampStr(self.objectList[i].info[3]));
+                    }
+                }
+            }
         },
         
         reloadWsData: function () {
@@ -83,6 +129,7 @@
                     
                     // empty the existing object list first
                     self.objectList = [];
+                    self.obj_data = {};
                     
                     for (var i=0; i<infoList.length; i++) {
                         // skip narrative objects
@@ -93,6 +140,10 @@
                                 info:infoList[i]
                             }
                         );
+                        var typeKey = infoList[i][2].split("-")[0];
+                        if (!(typeKey in self.obj_data)) { self.obj_data[typeKey]=[] }
+                        self.obj_data[typeKey].push(infoList[i]);
+                        
                     }
                     if (infoList.length<=self.options.max_objs_to_prevent_initial_sort) {
                         self.objectList.sort(function(a,b) {
@@ -115,6 +166,8 @@
                         self.$searchInput.on("input change blur",function() { self.search(); });
                     }
                     
+                    self.trigger('dataUpdated.Narrative');
+                    
                 }, 
                 function(error) {
                     console.log(error);
@@ -122,6 +175,22 @@
             }
         },
         
+        getObjData: function(type, ignoreVersion) {
+            
+            if (type) {
+                var dataSet = {};
+                if (typeof type === 'string') {
+                    type = [type];
+                }
+                for (var i=0; i<type.length; i++) {
+                    if (this.obj_data[type[i]]) {
+                        dataSet[type[i]]=this.obj_data[type[i]];
+                    }
+                }
+                return dataSet;
+            }
+            return this.obj_data;  
+        },
         
         renderObjectRowDiv: function(object_info) {
             
@@ -130,31 +199,79 @@
             // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
             // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
             // [9] : int size // [10] : usermeta meta
-            var type = object_info[2].split('.')[1].split('-')[0];
+            var type_tokens = object_info[2].split('.')
+            var type_module = type_tokens[0];
+            var type = type_tokens[1].split('-')[0];
             var logo = $('<div>')
-                            .css({
-                                'width':'30pt',
-                                'height':'30pt',
-                                'color':'#fff',
-                                'background-color':this.logoColorLookup(type),
-                                'border-radius': '50%',
-                                'border-style' : 'solid',
-                                'border-width' : '1px',
-                                'border-color' : '#555',
-                                'text-align':'center',
-                                'display':'inline-block',
-                                'padding-top':'6pt',
-                                'font-size':'18pt',
-                                'font-weight':'bold',
-                                'text-shadow': '-1px 0 #777, 0 1px #777, 1px 0 #777, 0 -1px #777'
-                            })
+                            .addClass("kb-data-list-logo")
+                            .css({'background-color':this.logoColorLookup(type)})
                             .append(type.substring(0,1));
+            var shortName = object_info[1]; var isShortened=false;
+            if (shortName.length>this.options.max_name_length) {
+                shortName = shortName.substring(0,this.options.max_name_length-3)+'...';
+                isShortened=true;
+            }
+            var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
+            if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom'}); }
+                            
+            var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
+            var $type = $('<span>').addClass("kb-data-list-type").append(type);
+            var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]));
+            var $logoDiv  = $('<div>').addClass('col-md-2').css({padding:'0px',margin:'0px'}).append(logo)
+            var metadata = object_info[10];
+            var metadataText = '';
+            for(var key in metadata) {
+                if (metadata.hasOwnProperty(key)) {
+                    metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
+                }
+            }
             
-            var text = '&nbsp<b>'+object_info[1]+'</b>&nbspv'+ object_info[4]+'<br>&nbsp&nbsp&nbsp' +type+'<br>&nbsp&nbsp&nbsp'+this.getTimeStampStr(object_info[3]);
+            
+            var typeLink = '<a href="'+this.options.landing_page_url+'spec/module/'+type_module+'" target="_blank">' +type_module+"</a>.<wbr>" +
+                           '<a href="'+this.options.landing_page_url+'spec/type/'+object_info[2]+'" target="_blank">' +(type_tokens[1].replace('-','&#8209;')) + '.' + type_tokens[2] + '</a>';
+            var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
+                                .append('<center><a href="'+this.options.landing_page_url+'objgraphview/'+object_info[7] +'/'+object_info[1] +'" target="_blank">'+
+                                            'view provenance</a></center><br>')
+                                .append(
+                                    "<table>"
+                                    +"<tr><th>Permament Id</th><td>" +object_info[6]+ "/" +object_info[0]+ "/" +object_info[4] + '</td></tr>'
+                                    +"<tr><th>Full Type</th><td>"+typeLink+'</td></tr>'
+                                    +"<tr><th>Saved by</th><td>"+object_info[5]+'</td></tr>'
+                                    +metadataText
+                                    +"</table>"
+                                    );
+            
+            var $toggleAdvancedViewBtn = $('<span>').addClass('btn-xs')
+                                            .html('<span class="glyphicon glyphicon-plus" style="color:#999" aria-hidden="true"/>')
+                                            .mouseenter(function(){$(this).addClass('btn btn-default');})
+                                            .mouseleave(function(){$(this).removeClass('btn btn-default');})
+                                            .on('click',function() {
+                                                var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
+                                                if ($more.is(':visible')) {
+                                                    $more.hide();
+                                                    $(this).html('<span class="glyphicon glyphicon-plus" style="color:#999" aria-hidden="true" />');
+                                                } else {
+                                                    $more.show();
+                                                    $(this).html('<span class="glyphicon glyphicon-minus" style="color:#999" aria-hidden="true" />');
+                                                    
+                                                }
+                                            });
+            
+            var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info').css({padding:'0px',margin:'0px'})
+                                .append($('<div>').append($('<table>').css({'width':'100%'})
+                                        .append($('<tr>')
+                                                .append($('<td>')
+                                                    .append($name).append($version).append('<br>')
+                                                    .append($type).append('<br>').append($date))
+                                                .append($('<td>').css({'vertical-align':'bottom','text-align':'right'})
+                                                    .append($toggleAdvancedViewBtn)))));
+        
             var $row = $('<div>').addClass('row kb-data-list-obj-row')
-                            .append($('<div>').addClass('col-md-2').css({padding:'0px',margin:'0px'}).append(logo))
-                            .append($('<div>').addClass('col-md-10').css({padding:'0px',margin:'0px'}).append(text))
-                            .hover(function(){$(this).toggleClass('kb-data-list-obj-row-hover');});
+                            .append($logoDiv)
+                            .append($mainDiv)
+                            .append($moreRow)
+                            .mouseenter(function(){$(this).addClass('kb-data-list-obj-row-hover');})
+                            .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
             
             return $row;
         },
@@ -357,16 +474,6 @@
         
         
         logoColorLookup:function(type) {
-            /*var colors = [
-                            '#d73027',
-                            '#f46d43',
-                            '#fdae61',
-                            '#fee090',
-                            '#e0f3f8',
-                            '#abd9e9',
-                            '#74add1',
-                            '#4575b4'
-                         ];*/
             var colors = [
                             '#F44336', //red
                             '#E91E63', //pink
@@ -380,8 +487,8 @@
                             '#4CAF50', //green
                             '#8BC34A', //lime green
                             '#CDDC39', //lime
-                            '#FFEB3B',  //yellow
-                            '#FFC107',  //amber
+                            '#FFEB3B', //yellow
+                            '#FFC107', //amber
                             '#FF9800', //orange
                             '#FF5722', //deep orange
                             '#795548', //brown
@@ -406,7 +513,7 @@
             }
             
             if (type.length>0) {
-                // pick one based
+                // pick one based on the first character
                 return colors[ (type.charCodeAt(0)%colors.length) ];
             } else {
                 return colors[0];
@@ -427,7 +534,7 @@
             interval = Math.floor(seconds / 2592000);
             if (interval > 1) {
                 if (interval<4) {
-                    return interval + " months";
+                    return interval + " months ago";
                 } else {
                     return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
                 }
@@ -438,7 +545,7 @@
             }
             interval = Math.floor(seconds / 3600);
             if (interval > 1) {
-                return interval + " hours ago";
+                return "hours ago";
             }
             interval = Math.floor(seconds / 60);
             if (interval > 1) {
@@ -458,46 +565,33 @@
         
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-
         /**
-         * Sets the data to be shown in this widget.
-         * @param {Object} data - this is expected to be a mapping from data type to array of data.
-         * e.g.:
-         * {
-         *   'data_type' : [
-         *                   [ 'workspace', 'object name', 'data_type' ],
-         *                   [ 'workspace', 'object name', 'data_type' ],
-         *                 ],
-         *   'data_type2' : [
-         *                    [ 'workspace', 'object name', 'data_type' ],
-         *                    [ 'workspace', 'object name', 'data_type' ],
-         *                  ]
-         * }
-         *
-         * The extra 'data_type' in the elements is a little redundant, but it speeds up pre-processing
-         * by allowing this widget to just dump everything in the table, and is necessary to be in the 
-         * table's row for filtering (though it's currently invisible).
+         * @method loggedInCallback
+         * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
+         * is triggered when a login event occurs.
+         * It associates the new auth token with this widget and refreshes the data panel.
          * @private
          */
-        setData: function(data) {
-            
+        loggedInCallback: function(event, auth) {
+            this.ws = new Workspace(this.options.workspaceURL, auth);
+            this.isLoggedIn = true;
+            this.refresh();
+            return this;
+        },
+
+        /**
+         * @method loggedOutCallback
+         * Like the loggedInCallback, this is triggered during a logout event (through the login widget).
+         * It throws away the auth token and workspace client, and refreshes the widget
+         * @private
+         */
+        loggedOutCallback: function(event, auth) {
+            this.ws = null;
+            this.isLoggedIn = false;
+            this.refresh();
+            return this;
         }
+        
 
     })
 

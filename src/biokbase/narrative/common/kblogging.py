@@ -77,8 +77,13 @@ def _kbase_log_name(name):
 
 def log_event(log, event, mapping):
     """Log an event and a mapping."""
-    kvp = " ".join(["{}={}".format(k, v) for k, v in mapping.iteritems()])
-    log.info("{}{}{}".format(event, log_proxy.EVENT_MSG_SEP, kvp))
+    kvp_list = []
+    for k, v in mapping.iteritems():
+        if ' ' in v:
+            v = '"' + v.replace('"', '\\"') + '"'
+        kvp_list.append("{}={}".format(k, v))
+    kvps = " ".join(kvp_list)
+    log.info("{}{}{}".format(event, log_proxy.EVENT_MSG_SEP, kvps))
 
 class LogAdapter(logging.LoggerAdapter):
     """Add some extra methods to the stock LoggerAdapter."""
@@ -147,7 +152,6 @@ class MetaFormatter(logging.Formatter):
             "%(levelname)s %(asctime)s %(name)s %(message)s")
 
     def format(self, record):
-        """Add KB_* environment values at format time."""
         s = logging.Formatter.format(self, record)
         return s
         # XXX: This version adds env crap

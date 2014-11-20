@@ -67,6 +67,11 @@ For the most part, the logging proxy is configured from a single YAML file.
         password: "put-password-here"
         db: mongoDBName
         collection: mongoCollectionName
+        # syslog destination
+        syslog_facility: user
+        syslog_host: localhost
+        syslog_port: 514
+        syslog_proto: udp
 
 In addition, some environment variables have special meaning:
 

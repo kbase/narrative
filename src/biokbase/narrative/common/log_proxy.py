@@ -16,6 +16,7 @@ import pickle
 import re
 import socket
 import struct
+import time
 import yaml
 # Local
 from biokbase import narrative
@@ -364,6 +365,7 @@ class MongoDBHandler(Handler):
 class SyslogHandler(Handler):
     def __init__(self, log_handler):
         f = logging.Formatter("%(levelname)s %(asctime)s %(name)s %(message)s")
+        f.converter = time.gmtime
         log_handler.setFormatter(f)
         log_handler.setLevel(logging.DEBUG - 1)  # everything!
         self._hnd = log_handler

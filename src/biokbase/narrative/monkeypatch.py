@@ -14,7 +14,6 @@ sychan@lbl.gov
 import os
 import urllib
 import re
-import IPython.html.notebook.handlers
 import IPython.html.services.notebooks.handlers
 from IPython.html.notebook.handlers import web  # get Tornado hook
 import IPython
@@ -70,21 +69,18 @@ def do_patching(c):
     backup_cookie = "kbase_session"
     all_cookies = (auth_cookie_name, backup_cookie)
 
+    app_log = IPython.html.base.handlers.app_log  # alias
+
     if c.NotebookApp.get('kbase_auth', False):
-        IPython.html.base.handlers.app_log.debug("Monkeypatching IPython.html."
-                                                 "notebook.handlers."
-                                                 "NamedNotebookHandler.get() "
-                                                 "in process {}"
-                                                 .format(os.getpid()))
+        app_log.debug("Monkeypatching IPython.html."
+                      "notebook.handlers.NamedNotebookHandler.get() "
+                      "in process {}".format(os.getpid()))
 
         cookierx = re.compile('([^ =|]+)=([^\|]*)')
 
         parse_cookie = lambda cookie: {
             k: v.replace('EQUALSSIGN', '=').replace('PIPESIGN', '|')
             for k, v in cookierx.findall(cookie)}
-
-        app_log = IPython.html.base.handlers.app_log  # alias
-
 
         def cookie_pusher(cookie, handler):
             """
@@ -109,6 +105,9 @@ def do_patching(c):
         @monkeypatch_method(IPython.html.notebook.handlers.NamedNotebookHandler)
         def get(self, notebook_id):
             client_ip = self.request.remote_ip
+            http_headers = self.request.headers
+            user_agent = http_headers.get('User-Agent', 'unknown')
+            app_log.warn("Http-Headers={}".format(list(self.request.headers.get_all())))
             # save client ip in environ for later logging
             kbase_env.client_ip = client_ip
             app_log.debug("notebook_id = " + notebook_id)
@@ -125,7 +124,8 @@ def do_patching(c):
                 log_event(g_log, 'open', {'narr': notebook_id,
                                           'user': user,
                                           'session_id': session,
-                                          'client_ip': client_ip})
+                                          'client_ip': client_ip,
+                                          'user_agent': user_agent})
             return old_get(self, notebook_id)
 
         app_log.debug("Monkeypatching IPython.html.services.notebooks.handlers.NotebookRootHandler.get() in process {}".format(os.getpid()))

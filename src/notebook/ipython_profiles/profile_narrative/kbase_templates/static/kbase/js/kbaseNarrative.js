@@ -6,6 +6,20 @@
  */
 "use strict";
 
+// TODO: Move this to setup code!
+$('#kb-save-btn').click(function(e) {
+    if (IPython && IPython.notebook)
+        IPython.notebook.save_checkpoint();
+});
+
+$('#kb-narr-name #name').click(function(e) {
+    if (IPython && IPython.save_widget) {
+        IPython.save_widget.rename_notebook();
+        var narrName = IPython.notebook.notebook_name;
+        $('#kb-narr-name #name').text(narrName);
+    }
+});
+
 var EndpointTester = function(url, target) {
     this.loadingImage = 'static/kbase/images/ajax-loader.gif';
     this.okayText = 'ok';
@@ -144,6 +158,11 @@ narrative.init = function() {
         var ws_name = null;
         if (IPython && IPython.notebook && IPython.notebook.metadata) {
             ws_name = IPython.notebook.metadata.ws_name;
+            var narrName = IPython.notebook.notebook_name;
+            var userName = IPython.notebook.metadata.creator;
+            $('#kb-narr-name #name').text(narrName);
+            $('#kb-narr-creator').text(userName);
+            $('.kb-narr-namestamp').css({'display':'block'});
         }
         if (ws_name) {
             /* It's ON like DONKEY KONG! */

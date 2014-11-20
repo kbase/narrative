@@ -25,9 +25,7 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrative.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/js/ui-common/ext/font-awesome/4.1.0/css/font-awesome.min.css") }}" type="text/css" />
-
-<!--     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
- -->    <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
+    <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
 
     <script src="{{ static_url("components/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -260,7 +258,7 @@
         </div>
     </noscript>
 
-    <div class="nav navbar-kbase navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
+<!--     <div class="nav navbar-kbase navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
         <a href="http://www.kbase.us" class="pull-left">
             <img id="logo" src="static/kbase/images/kbase_logo.png" width="46">
         </a>
@@ -285,6 +283,40 @@
             </ul>
         </div>
     </div>
+ -->
+    <nav class="navbar-kbase navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button class="btn btn-default navbar-btn kb-nav-btn">
+                    <span class="glyphicon glyphicon-align-justify"></span>
+                </button>
+                <a href="http://www.kbase.us">
+                    <img id="logo" src="static/kbase/images/kbase_logo.png" width="46">
+                </a>
+            </div>
+            <div class="navbar-text kb-narr-namestamp">
+                <div id="kb-narr-name">
+                    <span id="name">Narrative Name</span>
+                    &nbsp;&nbsp;
+                    <span id="save_widget">
+                        <span id="checkpoint_status"></span>
+                        <span id="autosave_status"></span>
+                    </span>
+                </div>
+                <div>Created by: <span id="kb-narr-creator">Bill Riehl</span></div>
+            </div>
+
+            <div class="navbar-right">
+                <button id="kb-save-btn" class="btn btn-default navbar-btn kb-nav-btn">
+                    <span class="fa fa-save"></span>
+                </button>
+                <button id="kb-share-btn" class="btn btn-default navbar-btn kb-nav-btn">
+                    <span class="fa fa-share-alt"></span>
+                </button>
+                <span id="signin-button"></span>
+            </div>
+        </div>
+    </nav>
 
     {% block login_widget %}
 
@@ -321,7 +353,7 @@
                 dataType: 'json'
             }).responseText
         );
-        window.kbconfig = { urls : configJSON[configJSON['config']],
+        window.kbconfig = { urls: configJSON[configJSON['config']],
                             version: configJSON['version'],
                             name: configJSON['name'],
                             git_commit_hash: configJSON['git_commit_hash'],

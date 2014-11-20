@@ -255,7 +255,8 @@
                 $.proxy(function(obj) {
                     console.debug("isReadonlyWorkspace: error!", obj);
                     callback(false);
-                }, this));
+                }, this)
+            );
         },
 
         /**

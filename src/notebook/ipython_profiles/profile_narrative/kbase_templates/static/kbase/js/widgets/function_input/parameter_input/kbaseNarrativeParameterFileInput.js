@@ -230,11 +230,12 @@
         },
         
         getParameterValue: function() {
-            return this.uploadIsReady ? this.shockNodeId : null;
+            var ret = this.uploadIsReady ? this.shockNodeId : null;
+            return ret ? ret : "";
         },
 
         getState: function() {
-            return [[this.shockNodeId, this.fileName.val(), this.uploadIsReady, this.percentText.val()]];
+            return [[this.shockNodeId ? this.shockNodeId : "", this.fileName.val(), this.uploadIsReady, this.percentText.val()]];
         },
 
         loadState: function(state) {
@@ -243,6 +244,8 @@
             if (!$.isArray(state))
             	return;
             this.shockNodeId = state[0][0];
+            if (this.shockNodeId === "")
+            	this.shockNodeId = null;
             this.fileName.val(state[0][1]);
             this.uploadIsReady = state[0][2];
             this.percentText.val(state[0][3]);

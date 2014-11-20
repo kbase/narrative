@@ -87,6 +87,8 @@
                         if (self.ws_last_update_timestamp) {
                             if (self.ws_last_update_timestamp !== workspace_info[3]) {
                                 self.reloadWsData();
+                            } else {
+                                self.refreshTimeStrings();
                             }
                         } else {
                             self.ws_last_update_timestamp = workspace_info[3];
@@ -97,6 +99,18 @@
                         // don't worry about it, just do nothing...
                     });
             } // else { we should probably do something if the user is not logged in or if the ws isn't set yet }
+        },
+        
+        refreshTimeStrings: function() {
+            var self = this;
+            if (self.objectList.length>0) {
+                if (self.objectList.length<self.options.max_objs_to_prevent_filter_as_you_type_in_search) {
+                    for(var i=0; i<self.objectList.length; i++) {
+                        self.objectList[i].$div.find('.kb-data-list-date')
+                            .html(self.getTimeStampStr(self.objectList[i].info[3]));
+                    }
+                }
+            }
         },
         
         reloadWsData: function () {
@@ -202,7 +216,7 @@
                             
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
-            var $date = $('<span>').addClass("kb-data-list-type").append(this.getTimeStampStr(object_info[3]));
+            var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]));
             var $logoDiv  = $('<div>').addClass('col-md-2').css({padding:'0px',margin:'0px'}).append(logo)
             var metadata = object_info[10];
             var metadataText = '';
@@ -531,7 +545,7 @@
             }
             interval = Math.floor(seconds / 3600);
             if (interval > 1) {
-                return interval + " hours ago";
+                return "hours ago";
             }
             interval = Math.floor(seconds / 60);
             if (interval > 1) {

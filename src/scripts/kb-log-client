@@ -14,7 +14,8 @@ import signal
 import sys
 import time
 # Local imports
-from biokbase.narrative.common import kblogging, log_proxy
+from biokbase.narrative.common import kblogging
+from biokbase.narrative.common import log_common
 
 _log = logging.getLogger("kb-log-client")
 _ = logging.StreamHandler()
@@ -37,7 +38,7 @@ def parse_args():
 def send_message(event, message):
     _log.info("Sending log message")
     kblog = kblogging.get_logger("test")
-    kblog.info("{}{}{}".format(event, log_proxy.EVENT_MSG_SEP, message))
+    kblog.info("{}{}{}".format(event, log_common.EVENT_MSG_SEP, message))
 
 def main(args):
     level = (logging.WARN, logging.INFO, logging.DEBUG)[min(args.vb, 2)]

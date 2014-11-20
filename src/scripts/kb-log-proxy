@@ -59,7 +59,7 @@ def parse_args():
     
     # If the user just wants a sample, print it and exit
     if args.smpcfg:
-        print(lp.DBConfiguration.get_sample())
+        print(lp.get_sample_config())
         sys.exit(0)
 
     # Configure logging

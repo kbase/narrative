@@ -30,6 +30,7 @@ import time
 # Local
 from .util import kbase_env
 from . import log_proxy
+from .log_common import format_event
 
 ## Constants
 
@@ -77,13 +78,7 @@ def _kbase_log_name(name):
 
 def log_event(log, event, mapping):
     """Log an event and a mapping."""
-    kvp_list = []
-    for k, v in mapping.iteritems():
-        if ' ' in v:
-            v = '"' + v.replace('"', '\\"') + '"'
-        kvp_list.append("{}={}".format(k, v))
-    kvps = " ".join(kvp_list)
-    log.info("{}{}{}".format(event, log_proxy.EVENT_MSG_SEP, kvps))
+    log.info(format_event(event, mapping))
 
 class LogAdapter(logging.LoggerAdapter):
     """Add some extra methods to the stock LoggerAdapter."""

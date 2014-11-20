@@ -1,72 +1,59 @@
 /*
-
   Shock javascript client library
 
   This library allows the interaction with the Shock via javascript methods. The normal usage would be to first initialize the library with an authentication token and Shock url. It can then be used to retrieve, delete, update and create nodes in Shock. Refer to the function section below for details on the provided function calls. The upload of files uses chunking and automatically resumes failed uploads when the same file is uploaded again by the same user.
 
   FUNCTIONS
 
-  init (params)
-    initialize the Data Store client with: SHOCK.init({ token: "myTokenString", url: "urlToShock" })
-
-  set_auth
-    set the authorization token with: SHOCK.set_auth("myTokenString")
+  constructor (params)
+    initialize the Data Store client with: new ShockClient({ token: "myTokenString", url: "urlToShock", chunkSize: 2097152 })
 
   get_node
-    retrieve a node from SHOCK with SHOCK.get_node("myNodeId", callback)
-    The node-id parameter is mandatory. This function returns a promise that is fulfilled once the node is retrieved. The callback parameter can either be a variable or a function. A variable will be set to the data value of the node, a function will receive the data as the first parameter.
+    retrieve a node from SHOCK with shockClient.get_node("myNodeId", retCallback, )
+    The node-id parameter is mandatory. This function returns a promise that is fulfilled once the node is retrieved. The callback parameters in case they're defined should be functions.
 
-  get_all_nodes
-    retrieve all nodes for the current authentication setting with: SHOCK.get_all_nodes(callback)
-    This function returns a promise that is fulfilled once the nodes are retrieved. The callback parameter can either be a variable or a function. A variable will be set to the array of data values of the nodes, a function will receive the array as the first parameter.
+  get_nodes
+    retrieve all nodes for the current authentication setting with: shockClient.get_all_nodes({"my_prop": "my_value"}, retCallback, errorCallback)
+    This function returns a promise that is fulfilled once the nodes are retrieved. The callback parameters in case they're defined should be functions.
 
   delete_node
-    delete a node from SHOCK with SHOCK.get_node("myNodeId")
-    The node-id parameter is mandatory. This function returns a promise that is fulfilled once the node is deleted.
+    delete a node from SHOCK with shockClient.get_node("myNodeId", retCallback, errorCallback)
+    The node-id parameter is mandatory. This function returns a promise that is fulfilled once the node is deleted. The callback parameters in case they're defined should be functions.
 
-  create_node
-    create a new node with: SHOCK.create_node(input, attributes, callback)
-    The input parameter can either be a file-type form field or its id. If no file is to be added to the node, this parameter must be null. The optional attributes parameter must be a JSON structure of metadata that is to be added to the node. If no metadata is to be added, this parameter must be null. The callback parameter can either be a variable or a function. A variable will be set to the data value of the created node, a function will receive node data as the first parameter. The create_node function returns a promise that is fulfilled once the node is created. 
+  upload_node
+    create a new node with: shockClient.upload_node(file, retCallback, errorCallback, cancelCallback)
+    The input parameter is a file from input form field. If no file is to be added to the node, this parameter must be null. The callback parameters in case they're defined should be functions.
 
   update_node
-    update the attributes of an existing node with: SHOCK.update_node("myNodeId", attributes, callback)
-    The attributes parameter must be a JSON structure of metadata that is to be added to the node. Existing values will be replaced. This function returns a promise that is fulfilled once the node is updated. The callback parameter can either be a variable or a function. A variable will be set to the data value of the node, a function will receive the data as the first parameter.
+    update the attributes of an existing node with: shockClient.update_node("myNodeId", attributes, retCallback, errorCallback)
+    The attributes parameter must be a JSON structure of metadata that is to be added to the node. Existing values will be replaced. This function returns a promise that is fulfilled once the node is updated. The callback parameters in case they're defined should be functions.
 
-  PLANNED FEATURES
-
-    * support for queries in node retrieval
-    * upload progress feedback
-    * deletion of attributes (currently not implemented in SHOCK)
-    * variable chunk size
-    * parallel chunk-upload support (feedback that allows resuming of failed chunk upload not yet implemented in SHOCK)
-
-  Please send feedback, bug-reports and questions to Tobias Paczian (paczian@mcs.anl.gov)
-
+  This code was built based on https://github.com/MG-RAST/Shock/blob/master/libs/shock.js .
+  Authors: Tobias Paczian <paczian@mcs.anl.gov>, Roman Sutormin <rsutormin@lbl.gov> .
 */
 function ShockClient(params) {
     
-    var SHOCK = this;
+    var self = this;
 
-    SHOCK.url = "https://kbase.us/services/shock-api/";
-    SHOCK.auth_header = {};
-    SHOCK.chunkSize = 2097152;
+    self.url = "https://kbase.us/services/shock-api/";
+    self.auth_header = {};
+    self.chunkSize = 2097152;
     
 	if (params.url)
-	    SHOCK.url = params.url;
+	    self.url = params.url;
 
 	if (params.token)
-		SHOCK.auth_header = {'Authorization': 'OAuth '+params.token};
+		self.auth_header = {'Authorization': 'OAuth '+params.token};
 
 	if (params.chunkSize)
-		SHOCK.chunkSize = params.chunkSize;
+		self.chunkSize = params.chunkSize;
 	
-    SHOCK.get_node = function (node, ret, errorCallback) {
-    	var url = SHOCK.url+'/node/'+node
+    self.get_node = function (node, ret, errorCallback) {
+    	var url = self.url+'/node/'+node
     	var promise = jQuery.Deferred();
     	
     	jQuery.ajax(url, {
     		success: function (data) {
-    			console.log(data);
     			var retval = null;
     			if (data != null && data.hasOwnProperty('data')) {
     			    if (data.error != null) {
@@ -88,19 +75,19 @@ function ShockClient(params) {
 					errorCallback(error);
     			promise.resolve();
     		},
-    		headers: SHOCK.auth_header,
+    		headers: self.auth_header,
     		type: "GET"
     	});
     	
     	return promise;
     };
 
-    SHOCK.get_nodes = function (filters, ret, errorCallback) {
-    	var url = SHOCK.url+'/node';
+    self.get_nodes = function (filters, ret, errorCallback) {
+    	var url = self.url+'/node';
     	if (filters) {
     		url += "?query";
     		for (var key in filters) {
-    			utl += "&" + encodeURIComponent(key) + "=" + encodeURIComponent(filters[key]);
+    			url += "&" + encodeURIComponent(key) + "=" + encodeURIComponent(filters[key]);
     		}
     	}
     	var promise = jQuery.Deferred();
@@ -125,13 +112,13 @@ function ShockClient(params) {
 					errorCallback(error);
     			promise.resolve();
     		},
-    		headers: SHOCK.auth_header
+    		headers: self.auth_header
     	});
 
     	return promise;
     };
 
-    SHOCK.delete_node = function (id, ret, errorCallback) {
+    self.delete_node = function (id, ret, errorCallback) {
     	var promise = jQuery.Deferred();
     	jQuery.ajax(url+"/" + id, {
     		success: function (data) {
@@ -143,14 +130,14 @@ function ShockClient(params) {
 					errorCallback(error);
     			promise.resolve();
     		},
-    		headers: SHOCK.auth_header,
+    		headers: self.auth_header,
     		type: "DELETE"
     	});
     	return promise;
     };
 
-    SHOCK.update_node = function (node, attr, ret, errorCallback) {
-    	var url = SHOCK.url+'/node';
+    self.update_node = function (node, attr, ret, errorCallback) {
+    	var url = self.url+'/node';
     	var promise = jQuery.Deferred();
 	    var aFileParts = [ JSON.stringify(attr) ];
 	    var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
@@ -169,59 +156,45 @@ function ShockClient(params) {
 					errorCallback(error);
 		    	promise.resolve();
 	    	},
-	    	headers: SHOCK.auth_header,
+	    	headers: self.auth_header,
 	    	type: "PUT"
 	    });
 		return promise;
     };
     
-    SHOCK.check_incomplete = function(file, ret, errorCallback) {
-    	var url = SHOCK.url+'/node';
+    self.check_file = function(file, ret, errorCallback) {
     	var promise = jQuery.Deferred();
-
-		//input = document.getElementById(input);
-	    //var files = input.files;
-	    //var file = files[0];
 	    var fsize = file.size;
 	    var ftime = file.lastModifiedDate.getTime();
-    	jQuery.ajax(url+"?query&incomplete=1&file_size="+fsize, {
-			success: function (data) {
-				//console.log(data);
-				for (i=0;i<data.data.length;i++) {
-				    if ((("" + file.size) == data.data[i]["attributes"]["file_size"]) && 
-				    		(file.name == data.data[i]["attributes"]["file_name"]) &&
-				    		(("" + file.lastModifiedDate.getTime()) == data.data[i]["attributes"]["file_time"])) {
-				    	var incomplete = data.data[i];
-			    		var incompleteId = incomplete["id"];
-			    		var currentChunk = 0;
-			    		if (incomplete["attributes"]["incomplete_chunks"])
-			    			currentChunk = parseInt(incomplete["attributes"]["incomplete_chunks"]);
-			    		var chunkSize = SHOCK.chunkSize;
-			    		if (incomplete["attributes"]["chunk_size"])
-			    			chunkSize = parseInt(incomplete["attributes"]["chunk_size"]);
-						var uploadedSize = Math.min(file.size, currentChunk * chunkSize);
-						ret({file_size: file.size, uploaded_size: uploadedSize, incomplete_id: incompleteId});
-				    }
-				}
-			},
-			error: function(jqXHR, error) {
-				if (errorCallback)
-					errorCallback(error);
-			    promise.resolve();
-			},
-			headers: SHOCK.auth_header,
-			type: "GET"
-		});
+	    var filters = {'file_size': fsize, 'file_time': ftime, 'file_name': file.name, 'limit': 1};
+	    self.get_nodes(filters, function (data) {
+	    	ret(data.length == 0 ? null : data[0]);
+	    	promise.resolve();
+	    }, function(error) {
+	    	if (errorCallback)
+	    		errorCallback(error);
+	    	promise.resolve();
+	    });
+	    return promise;
     };
     
-    SHOCK.loadNext = function (file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback) {
+    self.loadNext = function (file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback) {
+		if (cancelCallback && cancelCallback())
+			return;
 	    var fileReader = new FileReader();
 	    fileReader.onload = function(e) {
+    		if (cancelCallback && cancelCallback())
+    			return;
 		    var fd = new FormData();
 		    var oMyBlob = new Blob([e.target.result], { "type" : file.type });
 		    fd.append(currentChunk+1, oMyBlob);
-		    var incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
-		    		"file_time": "" + file.lastModifiedDate.getTime(), "incomplete_chunks": "" + (currentChunk+1),
+		    var lastChunk = (currentChunk + 1) * chunkSize >= file.size;
+		    var incomplete_attr = { 
+		    		"incomplete": (lastChunk ? "0" : "1"), 
+		    		"file_size": "" + file.size, 
+		    		"file_name": file.name,
+		    		"file_time": "" + file.lastModifiedDate.getTime(), 
+		    		"chunks": "" + (currentChunk+1),
 		    		"chunk_size": "" + chunkSize};
 		    var aFileParts = [ JSON.stringify(incomplete_attr) ];
 		    var oMyBlob2 = new Blob(aFileParts, { "type" : "text\/json" });
@@ -231,13 +204,15 @@ function ShockClient(params) {
 		    	processData: false,
 		    	data: fd,
 		    	success: function(data) {
+		    		if (cancelCallback && cancelCallback())
+		    			return;
 		    		currentChunk++;
 					var uploaded_size = Math.min(file.size, currentChunk * chunkSize);
-				    ret({file_size: file.size, uploaded_size: uploaded_size, incomplete_id: incompleteId});
+				    ret({file_size: file.size, uploaded_size: uploaded_size, node_id: incompleteId});
 				    if ((currentChunk * chunkSize) >= file.size) {
 			    		promise.resolve();
 				    } else {
-				    	SHOCK.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback);
+				    	self.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
 				    }
 		    	},
 		    	error: function(jqXHR, error) {
@@ -245,7 +220,7 @@ function ShockClient(params) {
 		    			errorCallback(error);
 		    		promise.resolve();
 		    	},
-		    	headers: SHOCK.auth_header,
+		    	headers: self.auth_header,
 		    	type: "PUT"
 		    });
 		};
@@ -260,79 +235,73 @@ function ShockClient(params) {
 	    	var blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
 	    	fileReader.readAsArrayBuffer(blobSlice.call(file, start, end));
 	    } else {
-		    ret({file_size: file.size, uploaded_size: file.size, incomplete_id: incompleteId});
+		    ret({file_size: file.size, uploaded_size: file.size, node_id: incompleteId});
 	    }
     };
     
-    SHOCK.upload_node = function (file, ret, errorCallback) {
-    	var url = SHOCK.url+'/node';
+    /**
+     * Sends to ret function callback objects like {file_size: ..., uploaded_size: ..., node_id: ...}
+     * for showing progress info in UI.
+     */
+    self.upload_node = function (file, ret, errorCallback, cancelCallback) {
+    	var url = self.url+'/node';
     	var promise = jQuery.Deferred();
 	    // if this is a chunked upload, check if it needs to be resumed
-	    jQuery.ajax(url+"?query&incomplete=1&file_size="+file.size, {
-	    	success: function (data) {
-		    	var incomplete = null;
-		    	for (i=0;i<data.data.length;i++) {
-		    		if ((("" + file.size) == data.data[i]["attributes"]["file_size"]) && 
-		    				(file.name == data.data[i]["attributes"]["file_name"]) &&
-		    				(("" + file.lastModifiedDate.getTime()) == data.data[i]["attributes"]["file_time"])) {
-		    			incomplete = data.data[i];
-		    			break;
-		    		}
-		    	}
-
-		    	var incomplete_attr = {};
-		    	if (incomplete != null) {
-		    		var incompleteId = incomplete["id"];
-		    		url += "/" + incomplete["id"];
-		    		var currentChunk = 0;
-		    		if (incomplete["attributes"]["incomplete_chunks"])
-		    			currentChunk = parseInt(incomplete["attributes"]["incomplete_chunks"]);
-		    		console.log("ShockClient.currentChunk=" + currentChunk);
-		    		var chunkSize = SHOCK.chunkSize;
-		    		if (incomplete["attributes"]["chunk_size"])
-		    			chunkSize = parseInt(incomplete["attributes"]["chunk_size"]);
-		    		var uploadedSize = Math.min(file.size, currentChunk * chunkSize);
-		    		ret({file_size: file.size, uploaded_size: uploadedSize, incomplete_id: incompleteId});
-		    		SHOCK.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback);
-		    	} else {
-		    		var chunkSize = SHOCK.chunkSize;
-		    	    var chunks = Math.ceil(file.size / chunkSize);
-		    		incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
-		    				"file_time": "" + file.lastModifiedDate.getTime(), "chunk_size": "" + chunkSize};
-		    		var aFileParts = [ JSON.stringify(incomplete_attr) ];
-		    		var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
-		    		var fd = new FormData();
-		    		fd.append('attributes', oMyBlob);
-		    		fd.append('parts', chunks);
-		    		jQuery.ajax(url, {
-		    			contentType: false,
-		    			processData: false,
-		    			data: fd,
-		    			success: function(data) {
-		    				var incompleteId = data.data.id;
-		    				var uploaded_size = 0;
-		    				ret({file_size: file.size, uploaded_size: uploaded_size, incomplete_id: incompleteId});
-		    				url += "/" + data.data.id;
-		    				SHOCK.loadNext(file, url, promise, 0, chunks, incompleteId, chunkSize, ret, errorCallback);
-		    			},
-		    			error: function(jqXHR, error){
-		    	    		if (errorCallback)
-		    	    			errorCallback(error);
-		    				promise.resolve();
-		    			},
-		    			headers: SHOCK.auth_header,
-		    			type: "POST"
-		    		});
-		    	}
-	    	},
-	    	error: function(jqXHR, error){
-	    		if (errorCallback)
-	    			errorCallback(error);
-	    		promise.resolve();
-	    	},
-	    	headers: SHOCK.auth_header,
-	    	type: "GET"
-	    });
+    	self.check_file(file, function (incomplete) {
+    		if (cancelCallback && cancelCallback())
+    			return;
+    		if (incomplete != null) {
+    			var incompleteId = incomplete["id"];
+    			url += "/" + incomplete["id"];
+    			var currentChunk = 0;
+    			if (incomplete["attributes"]["incomplete_chunks"]) {
+    				currentChunk = parseInt(incomplete["attributes"]["incomplete_chunks"]);
+    			} else if (incomplete["attributes"]["chunks"]) {
+    				currentChunk = parseInt(incomplete["attributes"]["chunks"]);
+    			}
+    			var chunkSize = self.chunkSize;
+    			if (incomplete["attributes"]["chunk_size"])
+    				chunkSize = parseInt(incomplete["attributes"]["chunk_size"]);
+    			var uploadedSize = Math.min(file.size, currentChunk * chunkSize);
+    			ret({file_size: file.size, uploaded_size: uploadedSize, node_id: incompleteId});
+    			self.loadNext(file, url, promise, currentChunk, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
+    		} else {
+    			var chunkSize = self.chunkSize;
+    			var chunks = Math.ceil(file.size / chunkSize);
+    			var incomplete_attr = { "incomplete": "1", "file_size": "" + file.size, "file_name": file.name,
+    					"file_time": "" + file.lastModifiedDate.getTime(), "chunk_size": "" + chunkSize};
+    			var aFileParts = [ JSON.stringify(incomplete_attr) ];
+    			var oMyBlob = new Blob(aFileParts, { "type" : "text\/json" });
+    			var fd = new FormData();
+    			fd.append('attributes', oMyBlob);
+    			fd.append('parts', chunks);
+    			jQuery.ajax(url, {
+    				contentType: false,
+    				processData: false,
+    				data: fd,
+    				success: function(data) {
+    		    		if (cancelCallback && cancelCallback())
+    		    			return;
+    					var incompleteId = data.data.id;
+    					var uploaded_size = 0;
+    					ret({file_size: file.size, uploaded_size: uploaded_size, node_id: incompleteId});
+    					url += "/" + data.data.id;
+    					self.loadNext(file, url, promise, 0, chunks, incompleteId, chunkSize, ret, errorCallback, cancelCallback);
+    				},
+    				error: function(jqXHR, error){
+    					if (errorCallback)
+    						errorCallback(error);
+    					promise.resolve();
+    				},
+    				headers: self.auth_header,
+    				type: "POST"
+    			});
+    		}
+    	}, function(error){
+    		if (errorCallback)
+    			errorCallback(error);
+    		promise.resolve();
+    	});
 	    return promise;
     };
     

@@ -12,10 +12,16 @@
         wrongToken: false,
         token: null,
         shockNodeId: null,
+        fileName: null,
+        percentText: null,
         uploadIsReady: false,
         enabled: true,
+        locked: false,
         required: true,
         rowDivs: null,
+        fakeButton: null,
+        inSelectFileMode: true,
+        cancelUpload: false,
 
         render: function() {
         	if (!this.token) {
@@ -41,14 +47,14 @@
             tr.css(cellCss);
             tbl.append(tr);
             			
-            var nameText = $('<input>')
+            this.fileName = $('<input readonly>')
             	.addClass('form-control')
             	.css({'width' : '100%'})
             	.attr('type', 'text');
 
-            var prcText = $('<input readonly>')
+            this.percentText = $('<input readonly>')
             	.addClass('form-control')
-            	.css({'width' : '45px', 'padding': '2px'})
+            	.css({'width' : '50px', 'padding': '0px', 'text-align': 'center'})
             	.attr('type', 'text');
 
             // create a file upload button and hide it and store it
@@ -56,7 +62,9 @@
             realButton.setAttribute('type', 'file');
             realButton.setAttribute('style', 'display: none;');
             realButton.addEventListener('change', function() { 
-            	self.fileSelected(nameText, prcText, realButton); 
+            	var fileName = $(realButton).val();
+            	if (fileName && fileName.length > 0)
+            		self.fileSelected(self.fileName, self.percentText, realButton);
             });
             realButton.uploader = this;
             //this.fileBrowse = realButton;
@@ -66,29 +74,38 @@
             td.css(cellCss);
             td.css({'width' : '70%', 'padding' : '0px'});
             tr.append(td);
-            td.append(nameText);
+            td.append(this.fileName);
             
             // create the visible upload button
-            var fakeButton = document.createElement('button');
-            fakeButton.setAttribute('class', 'btn btn-primary');
-            fakeButton.innerHTML = "Select file";
-            fakeButton.fb = realButton;
-            fakeButton.addEventListener('click', function () {
-            	this.fb.click();
+            this.fakeButton = document.createElement('button');
+            this.fakeButton.setAttribute('class', 'btn btn-primary');
+            this.selectFileMode(true);
+            this.fakeButton.fb = realButton;
+            this.fakeButton.addEventListener('click', function() {
+            	if (self.locked || !self.enabled)
+            		return;
+            	if (self.inSelectFileMode) {
+            		$(this.fb).val("");
+            		this.fb.click();
+            	} else {
+            		self.cancelUpload = true;
+                    self.selectFileMode(true);
+            	}
             });
+            $(this.fakeButton).css({"width": "90px"});
             var td2 = $('<td/>');
             td2.css(cellCss);
-            td2.css({'width' : '60px', 'padding' : '0px'});
+            td2.css({'width' : '90px', 'padding' : '0px'});
             tr.append(td2);
-            td2.append(fakeButton);
+            td2.append(this.fakeButton);
 
             var td3 = $('<td/>');
             td3.css(cellCss);
-            td3.css({'width' : '45px', 'padding' : '0px'});
+            td3.css({'width' : '50px', 'padding' : '0px'});
             tr.append(td3);
-            td3.append(prcText);
+            td3.append(this.percentText);
             
-            var $feedbackTip = $("<span>").removeClass();
+            var $feedbackTip = $("<span>").css({"vertical-align":"middle"}).removeClass();
             if (self.required) {
                 $feedbackTip.addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
             }
@@ -103,8 +120,8 @@
             	.append(spec.ui_name);
             var $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
             	.append($('<div>').css({"width":"100%","display":"inline-block"}).append(tbl))
-            	.append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
-            var $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
+            	.append($('<div>').css({"display":"inline-block", "height": "34px", "vertical-align":"top"}).append($feedbackTip));
+            var $hintCol = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
             	.append(spec.short_hint);
             $row.append($nameCol).append($inputCol).append($hintCol);
 
@@ -119,37 +136,48 @@
             return this;
         },
         
+        selectFileMode: function(inSelectFileMode) {
+            this.inSelectFileMode = inSelectFileMode;
+            this.fakeButton.innerHTML = inSelectFileMode ? "Select file" : "Cancel";
+        },
+        
         fileSelected: function (nameText, prcText, realButton) {
+        	if (realButton.files.length != 1)
+        		return;
             var self = this;
             self.shockNodeId = null;
             self.uploadIsReady = false;
     		self.isValid();
         	// get the selected file
         	var file = realButton.files[0];
-        	console.log(file);
-        	nameText.val(file.name);
-        	
-    		console.log("Before upload");
+        	self.fileName.val(file.name);
     		prcText.val("?..%");
-            var SHOCK = new ShockClient({ token: self.token, url: self.options.url });
-
-            SHOCK.upload_node(file, function(info) {
+            var shockClient = new ShockClient({ token: self.token, url: self.options.url });
+            this.selectFileMode(false);
+            this.cancelUpload = false;
+            shockClient.upload_node(file, function(info) {
             	if (info.uploaded_size) {
-            		console.log(info);
-            		self.shockNodeId = info['incomplete_id'];
+            		self.shockNodeId = info['node_id'];
             		if (info.uploaded_size >= info.file_size) {
                 		self.uploadIsReady = true;
                 		self.isValid();
-                		console.log("Finish");
+                        self.selectFileMode(true);
             		}
-            		var percent = Math.floor(info.uploaded_size * 1000 / info.file_size) / 10;
+            		var percent = "" + (Math.floor(info.uploaded_size * 1000 / info.file_size) / 10);
+            		if (percent.indexOf('.') < 0)
+            			percent += ".0";
             		prcText.val(percent + "%");
             		self.isValid();
             	}
             }, function(error) {
+                this.selectFileMode(true);
             	console.log("Shock error:");
             	console.log(error);
             	alert("Error: " + error);
+            }, function() {
+            	if (self.cancelUpload)
+            		console.log("Cancelled");
+            	return self.cancelUpload;
             });
         },
         
@@ -187,6 +215,22 @@
             return this.uploadIsReady ? this.shockNodeId : null;
         },
 
+        getState: function() {
+            return [[this.shockNodeId, this.fileName.val(), this.uploadIsReady, this.percentText.val()]];
+        },
+
+        loadState: function(state) {
+            if (!state)
+                return;
+            if (!$.isArray(state))
+            	return;
+            this.shockNodeId = state[0][0];
+            this.fileName.val(state[0][1]);
+            this.uploadIsReady = state[0][2];
+            this.percentText.val(state[0][3]);
+            this.isValid();
+        },
+
         loggedInCallback: function(event, auth) {
             this.token = auth.token;
             if (this.wrongToken)
@@ -200,6 +244,35 @@
             return this;
         },
         
+        disableParameterEditing: function() {
+            this.enabled = false;
+            if (this.rowDivs) {
+                this.rowDivs[0].$feedback.removeClass();
+            }
+        },
+        
+        enableParameterEditing: function() {
+            // enable the input
+            this.enabled = true;
+            this.isValid();
+        },
+        
+        lockInputs: function() {
+            if (this.enabled) {
+            	this.locked = true;
+            }
+            if (this.rowDivs) {
+                this.rowDivs[0].$feedback.removeClass();
+            }
+        },
+        
+        unlockInputs: function() {
+            if (this.enabled) {
+            	this.locked = false;
+            }
+            this.isValid();
+        },
+
         uuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
                 function(c) {

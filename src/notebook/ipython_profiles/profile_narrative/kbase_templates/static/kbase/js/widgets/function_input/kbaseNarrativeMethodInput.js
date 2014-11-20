@@ -206,6 +206,8 @@
             if (this.parameters) {
                 for(var i=0; i<this.parameters.length; i++) {
                     var parameterStatus = this.parameters[i].widget.isValid();
+                    console.log("Status for parameter " + this.parameters[i].id + ":");
+                    console.log(parameterStatus);
                     if (!parameterStatus.isValid) {
                         isValidRet.isValid = false;
                         for(var e = 0; e<parameterStatus.errormssgs.length; e++) {

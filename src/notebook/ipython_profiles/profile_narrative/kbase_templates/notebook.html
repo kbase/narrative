@@ -16,14 +16,9 @@
 
     {{super()}}
     <link rel="stylesheet" href="{{ static_url("kbnetwork/css/datavis.css") }}" type="text/css" />
-<!--     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseData.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFunc.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrFuncResults.css") }}" type="text/css" />
- -->    <link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/dataTables.bootstrap.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/bootstrap-fileupload.min.css") }}" type="text/css" />
-
-    <!-- <link rel="stylesheet" href="{{ static_url("kbase/css/widgets.css") }}" type="text/css" /> -->
     
     
     <link rel="stylesheet" href="{{ static_url("select2-v3.5.2/select2.css") }}" type="text/css" />
@@ -52,20 +47,15 @@ class="notebook_app"
 
     <div id="left-column">
         <div id="kb-side-panel"></div>
-
-<!--        <div id="kb-ws"></div>
-        <div id="kb-function-panel"></div>
-        <div id="kb-apps-panel"></div>
-        <div id="kb-jobs-panel"></div> -->
     </div>
 
     <div id="content-column">
-        <div id="menubar-container" class="narrative-menu-container pull-left">
+<!--         <div id="menubar-container" class="narrative-menu-container pull-left">
             <div id="menubar">
                 <div class="navbar">
                     <div>
                         <div>
-                            <!-- <ul id="menus" class="nav navbar-nav ">
+ -->                            <!-- <ul id="menus" class="nav navbar-nav ">
                                 <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">File</a>
                                     <ul class="dropdown-menu">
                                         <li id="new_notebook"><a href="#">New</a></li>
@@ -187,7 +177,7 @@ class="notebook_app"
                                 </li>
                             </ul>
                             <div id="notification_area"></div> -->
-                        </div>
+<!--                         </div>
                     </div>
                 </div>
                 <div id="maintoolbar" class="navbar" style="z-index:100;">
@@ -206,7 +196,7 @@ class="notebook_app"
                 <div class="creator-stamp pull-right"></div>
             </div>
         </div>
-
+ -->
         <div id="ipython-main-app">
             <div id="notebook_panel">
                 <div id="notebook"></div>

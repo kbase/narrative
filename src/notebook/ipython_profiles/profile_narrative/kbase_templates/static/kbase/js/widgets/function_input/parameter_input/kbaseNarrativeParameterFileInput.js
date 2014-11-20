@@ -7,7 +7,9 @@
         parent: "kbaseNarrativeParameterInput",
         version: '1.0.0',
         options: {
-            'url': 'https://kbase.us/services/shock-api/',
+            shockUrl: 'https://kbase.us/services/shock-api/',
+            ujsUrl: 'https://kbase.us/services/userandjobstate/',
+            fullShockSearchToResume: false
         },
         wrongToken: false,
         token: null,
@@ -145,6 +147,7 @@
         	if (realButton.files.length != 1)
         		return;
             var self = this;
+            var prevShockNodeId = self.shockNodeId;
             self.shockNodeId = null;
             self.uploadIsReady = false;
     		self.isValid();
@@ -152,33 +155,48 @@
         	var file = realButton.files[0];
         	self.fileName.val(file.name);
     		prcText.val("?..%");
-            var shockClient = new ShockClient({ token: self.token, url: self.options.url });
-            this.selectFileMode(false);
-            this.cancelUpload = false;
-            shockClient.upload_node(file, function(info) {
-            	if (info.uploaded_size) {
-            		self.shockNodeId = info['node_id'];
-            		if (info.uploaded_size >= info.file_size) {
-                		self.uploadIsReady = true;
-                		self.isValid();
-                        self.selectFileMode(true);
+    		var ujsKey = "File:"+file.size+":"+file.lastModifiedDate.getTime()+":"+file.name;
+            var ujsClient = new UserAndJobState(self.options.ujsUrl, {'token': self.token});
+            ujsClient.get_has_state("ShockUploader", ujsKey, 0, function(data) {
+    			var value = data[1];
+    			processAfterNodeCheck(value != null ? value : prevShockNodeId);
+    		}, function(error) {
+    			processAfterNodeCheck(prevShockNodeId);
+    		});
+    		
+            function processAfterNodeCheck(storedShockNodeId) {
+            	var shockClient = new ShockClient({url: self.options.shockUrl, token: self.token});
+            	self.selectFileMode(false);
+            	self.cancelUpload = false;
+            	shockClient.upload_node(file, storedShockNodeId, self.options.fullShockSearchToResume, function(info) {
+            		if (info.uploaded_size) {
+            			var shockNodeWasntDefined = self.shockNodeId == null || self.shockNodeId !== info['node_id'];
+            			if (shockNodeWasntDefined) {
+            				self.shockNodeId = info['node_id'];
+            				ujsClient.set_state("ShockUploader", ujsKey, self.shockNodeId, function(data) {
+            	    		}, function(error) {
+            	            	console.log("Error saving shock node " + self.shockNodeId + " into UJS:");
+            	    			console.log(error);
+            	    		});
+            			}
+            			if (info.uploaded_size >= info.file_size) {
+            				self.uploadIsReady = true;
+            				self.isValid();
+            				self.selectFileMode(true);
+            			}
+            			var percent = "" + (Math.floor(info.uploaded_size * 1000 / info.file_size) / 10);
+            			if (percent.indexOf('.') < 0)
+            				percent += ".0";
+            			prcText.val(percent + "%");
+            			self.isValid();
             		}
-            		var percent = "" + (Math.floor(info.uploaded_size * 1000 / info.file_size) / 10);
-            		if (percent.indexOf('.') < 0)
-            			percent += ".0";
-            		prcText.val(percent + "%");
-            		self.isValid();
-            	}
-            }, function(error) {
-                this.selectFileMode(true);
-            	console.log("Shock error:");
-            	console.log(error);
-            	alert("Error: " + error);
-            }, function() {
-            	if (self.cancelUpload)
-            		console.log("Cancelled");
-            	return self.cancelUpload;
-            });
+            	}, function(error) {
+            		self.selectFileMode(true);
+            		alert("Error: " + error);
+            	}, function() {
+            		return self.cancelUpload;
+            	});
+            }
         },
         
         getShockNodeId: function() {

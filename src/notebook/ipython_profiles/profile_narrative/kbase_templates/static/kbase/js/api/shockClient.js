@@ -21,7 +21,7 @@
     The node-id parameter is mandatory. This function returns a promise that is fulfilled once the node is deleted. The callback parameters in case they're defined should be functions.
 
   upload_node
-    create a new node with: shockClient.upload_node(file, retCallback, errorCallback, cancelCallback)
+    create a new node with: shockClient.upload_node(file, shockNodeId, searchToResume, retCallback, errorCallback, cancelCallback)
     The input parameter is a file from input form field. If no file is to be added to the node, this parameter must be null. The callback parameters in case they're defined should be functions.
 
   update_node
@@ -57,17 +57,15 @@ function ShockClient(params) {
     			var retval = null;
     			if (data != null && data.hasOwnProperty('data')) {
     			    if (data.error != null) {
-    			    	retval = null;
     			    	if (errorCallback)
-        					errorCallback(data.error);
+        					errorCallback(data);
     			    } else {
-    			    	retval = data.data;
+    	    			ret(data.data);
     			    }
     			} else {
     				if (errorCallback)
     					errorCallback("error: invalid return structure from SHOCK server");
     			}
-    			ret(retval);
     			promise.resolve();
     		},
     		error: function(jqXHR, error){
@@ -241,15 +239,31 @@ function ShockClient(params) {
     
     /**
      * Sends to ret function callback objects like {file_size: ..., uploaded_size: ..., node_id: ...}
-     * for showing progress info in UI.
+     * for showing progress info in UI. Parameter "shockNodeId" is optional but if you know it
+     * you can resume faster.
      */
-    self.upload_node = function (file, ret, errorCallback, cancelCallback) {
+    self.upload_node = function (file, shockNodeId, searchToResume, ret, errorCallback, cancelCallback) {
     	var url = self.url+'/node';
     	var promise = jQuery.Deferred();
 	    // if this is a chunked upload, check if it needs to be resumed
-    	self.check_file(file, function (incomplete) {
-    		if (cancelCallback && cancelCallback())
-    			return;
+
+    	function searchForIncomplete() {
+    		if (searchToResume) {
+    			self.check_file(file, function (incomplete) {
+    				if (cancelCallback && cancelCallback())
+    					return;
+    				processNode(incomplete);
+    			}, function(error){
+    				if (errorCallback)
+    					errorCallback(error);
+    				promise.resolve();
+    			});
+    		} else {
+    			processNode(null);
+    		}
+    	}
+    	
+    	function processNode(incomplete) {
     		if (incomplete != null) {
     			var incompleteId = incomplete["id"];
     			url += "/" + incomplete["id"];
@@ -297,11 +311,27 @@ function ShockClient(params) {
     				type: "POST"
     			});
     		}
-    	}, function(error){
-    		if (errorCallback)
-    			errorCallback(error);
-    		promise.resolve();
-    	});
+    	}
+    	
+    	if (shockNodeId) {
+    		self.get_node(shockNodeId, function(data) {
+				if (cancelCallback && cancelCallback())
+					return;
+				if (data && 
+						data["attributes"]["file_size"] === ("" + file.size) && 
+						data["attributes"]["file_name"] === file.name &&
+    					data["attributes"]["file_time"] === ("" + file.lastModifiedDate.getTime())) {
+					processNode(data);
+				} else {
+					searchForIncomplete();
+				}
+    		}, function(error) {
+				searchForIncomplete();
+    		});
+    	} else {
+    		searchForIncomplete();
+    	}
+    	
 	    return promise;
     };
     

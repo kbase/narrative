@@ -20,11 +20,20 @@ function UserAndJobState(url, auth, auth_cb) {
     var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
     var _auth_cb = auth_cb;
 
-
-    this.set_state = function (service, key, value, _callback, _errorCallback) {
-    return json_call_ajax("UserAndJobState.set_state",
-        [service, key, value], 0, _callback, _errorCallback);
+    this.ver = function (_callback, _errorCallback) {
+    return json_call_ajax("UserAndJobState.ver",
+        [], 1, _callback, _errorCallback);
 };
+
+	this.ver_async = function (_callback, _error_callback) {
+		deprecationWarning();
+		return json_call_ajax("UserAndJobState.ver", [], 1, _callback, _error_callback);
+	};
+        
+    this.set_state = function (service, key, value, _callback, _errorCallback) {
+    	return json_call_ajax("UserAndJobState.set_state",
+    			[service, key, value], 0, _callback, _errorCallback);
+    };
 
     this.set_state_async = function (service, key, value, _callback, _error_callback) {
         deprecationWarning();
@@ -51,6 +60,26 @@ function UserAndJobState(url, auth, auth_cb) {
         return json_call_ajax("UserAndJobState.get_state", [service, key, auth], 1, _callback, _error_callback);
     };
 
+    this.has_state = function (service, key, auth, _callback, _errorCallback) {
+        return json_call_ajax("UserAndJobState.has_state",
+            [service, key, auth], 1, _callback, _errorCallback);
+    };
+
+    this.has_state_async = function (service, key, auth, _callback, _error_callback) {
+    	deprecationWarning();
+    	return json_call_ajax("UserAndJobState.has_state", [service, key, auth], 1, _callback, _error_callback);
+    };
+
+    this.get_has_state = function (service, key, auth, _callback, _errorCallback) {
+    	return json_call_ajax("UserAndJobState.get_has_state",
+    			[service, key, auth], 2, _callback, _errorCallback);
+    };
+
+    this.get_has_state_async = function (service, key, auth, _callback, _error_callback) {
+    	deprecationWarning();
+    	return json_call_ajax("UserAndJobState.get_has_state", [service, key, auth], 2, _callback, _error_callback);
+    };
+    
     this.remove_state = function (service, key, _callback, _errorCallback) {
     return json_call_ajax("UserAndJobState.remove_state",
         [service, key], 0, _callback, _errorCallback);

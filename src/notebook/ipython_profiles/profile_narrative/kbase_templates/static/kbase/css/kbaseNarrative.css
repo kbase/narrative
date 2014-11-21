@@ -1745,12 +1745,14 @@ div[class="tooltip-inner"] {
     color:#333;
     font-size: 11pt;
     font-weight: bold;
+    white-space: nowrap;
     margin: 2px;
 }
 .kb-data-list-version {
     color:#777;
     font-size: 9pt;
     font-style: italic;
+    white-space: nowrap;
     margin: 2px;
 }
 .kb-data-list-type {
@@ -1764,6 +1766,7 @@ div[class="tooltip-inner"] {
     font-size: 10pt;
     margin: 2px;
     margin-left: 15px;
+    white-space: nowrap;
 }
 .kb-data-list-more-div {
     color:#777;

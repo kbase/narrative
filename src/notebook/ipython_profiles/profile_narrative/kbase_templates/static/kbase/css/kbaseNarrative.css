@@ -143,6 +143,15 @@ div#notebook {
 	margin: 0;
 }
 
+.kb-nav-btn > div {
+	color: #666 !important;
+}
+
+.kb-nav-btn .kb-nav-btn-txt {
+	font-size: 10pt;
+	margin-top: -5px;
+}
+
 #kb-narr-name {
 	font-style: italic;
 	font-family: 'OxygenBold';

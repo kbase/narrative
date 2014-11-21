@@ -287,9 +287,17 @@
     <nav class="navbar-kbase navbar-fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
-                <button class="btn btn-default navbar-btn kb-nav-btn">
-                    <span class="fa fa-navicon"></span>
-                </button>
+                <div style="display:inline-block">
+                    <button id="kb-nav-menu" class="btn btn-default navbar-btn kb-nav-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="fa fa-navicon"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="kb-nav-menu">
+                        <li><a href="/functional-site/#/narratives/">Narratives</a></li>
+                        <li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li>
+                        <li><a href="/functional-site/#/search/?q=*">Search Data</a></li>
+                        <li><a target="_blank" href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>
+                    </ul>
+                </div>
                 <a href="http://www.kbase.us">
                     <img id="logo" src="static/kbase/images/kbase_logo.png" width="46">
                 </a>
@@ -309,11 +317,19 @@
             <div class="navbar-right">
                 <button id="kb-save-btn" class="btn btn-default navbar-btn kb-nav-btn">
                     <div class="fa fa-save"></div>
-                    <div style="font-size:10pt; margin-top:-5px">save</div>
+                    <div class="kb-nav-btn-txt">save</div>
                 </button>
                 <button id="kb-share-btn" class="btn btn-default navbar-btn kb-nav-btn">
                     <div class="fa fa-share-alt"></div>
-                    <div style="font-size:10pt; margin-top:-5px">share</div>
+                    <div class="kb-nav-btn-txt">share</div>
+                </button>
+                <button id="kb-about-btn" class="btn btn-default navbar-btn kb-nav-btn">
+                    <div class="fa fa-info"></div>
+                    <div class="kb-nav-btn-txt">about</div>
+                </button>
+                <button id="kb-help-btn" class="btn btn-default navbar-btn kb-nav-btn">
+                    <div class="fa fa-question"></div>
+                    <div class="kb-nav-btn-txt">help</div>
                 </button>
                 <span id="signin-button"></span>
             </div>
@@ -347,6 +363,8 @@
 
     <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
+
     <script>
         var configJSON = $.parseJSON(
             $.ajax({
@@ -367,7 +385,6 @@
     <script src="{{ static_url("kbase/js/api/NarrativeMethodStore.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("kbase/js/widgets/kbapi.js") }}" type="text/javascript" charset="utf-8"></script>
 
-    <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("base/js/namespace.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("base/js/page.js") }}" type="text/javascript" charset="utf-8"></script>
 

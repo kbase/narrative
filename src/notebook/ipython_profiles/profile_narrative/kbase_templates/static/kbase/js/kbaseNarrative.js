@@ -114,10 +114,10 @@ narrative.init = function() {
                                             .append(
                                                 $('<button type="button" data-dismiss="modal">')
                                                 .addClass('btn btn-default')
-                                                .append('Okay')))));
+                                                .append('Dismiss')))));
 
-    var $versionBtn = $('<a href="#">About</a>')
-                      .click(function(event) {
+//    var $versionBtn = $('<a href="#">About</a>')
+    $('#kb-about-btn').click(function(event) {
                           event.preventDefault();
                           event.stopPropagation();
                           $versionModal.modal('show');
@@ -126,7 +126,7 @@ narrative.init = function() {
                           }
                       });
 
-    $('#kb-version-stamp').empty().append($versionBtn);
+//    $('#kb-version-stamp').empty().append($versionBtn);
     $('#notebook').append($versionModal);
 
     /*

@@ -4,7 +4,6 @@ a hack to deal with our current css styles and no new styling should be added in
 
 body.notebook_app {
 	overflow-y: auto;
-	height: 950px;
 }
 
 #ipython-main-app {

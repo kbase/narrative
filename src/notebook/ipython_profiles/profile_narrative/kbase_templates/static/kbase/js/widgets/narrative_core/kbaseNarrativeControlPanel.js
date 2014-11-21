@@ -82,12 +82,9 @@
                                 .css({'margin-top' : '-2px'});
 
             this.$elem.append($('<div>')
-                              .addClass('panel panel-primary kb-narr-side-panel')
-                              .append($('<div>')
-                                      .addClass('panel-heading')
+                              .addClass('kb-narr-side-panel')
                                       .append($('<div>')
-                                              .addClass('panel-title')
-                                              .css({'margin-left': '-8px', 'margin-right' : '-8px'})
+                                              .addClass('kb-title')
                                               .append($('<span>')
                                                       .css({'cursor' : 'pointer'})
                                                       .click(
@@ -108,9 +105,9 @@
                                                       .append($('<span>')
                                                               .addClass('glyphicon glyphicon-chevron-down kb-narr-panel-toggle'))
                                                       .append(this.options.title))
-                                                      .append(this.$buttonPanel)))
+                                                      .append(this.$buttonPanel))
                               .append($('<div>')
-                                      .addClass('panel-body kb-narr-panel-body')
+                                      .addClass(/*'panel-body*/ 'kb-narr-panel-body')
                                       .css({ 
                                           'max-height' : this.options.maxHeight,
                                           'overflow-y' : 'auto'

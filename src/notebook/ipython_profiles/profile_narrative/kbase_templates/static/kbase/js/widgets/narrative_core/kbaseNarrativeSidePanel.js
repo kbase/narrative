@@ -59,7 +59,8 @@
                 }
             ]);
 
-            this.$elem.append($tabs);
+            this.$elem.addClass('kb-side-panel');
+            this.$elem.append($tabs.header).append($tabs.body);
 
             $(document).on('toggleSidePanelOverlay.Narrative', $.proxy(function(event) {
                 this.toggleOverlay();
@@ -99,19 +100,18 @@
                     var idx = $headerDiv.index();
                     $header.find('div').removeClass('active');
                     $headerDiv.addClass('active');
-                    $body.find('div').removeClass('active');
-                    $body.find('div:nth-child(' + (idx+1) + ')').addClass('active');
+                    $body.find('div.kb-side-tab').removeClass('active');
+                    $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
                 }
             });
 
             $header.find('div:first-child').addClass('active');
-            $body.find('div:first-child').addClass('active');
+            $body.find('div:first-child.kb-side-tab').addClass('active');
 
-            var $tabPanel = $('<div>')
-                            .addClass('kb-side-panel')
-                            .append($header)
-                            .append($body);
-            return $tabPanel;
+            return {
+                header: $header,
+                body: $body
+            };
         },
 
         initOverlay: function() {
@@ -134,12 +134,16 @@
                             .append($overlayBody);
             $('body').append(this.$overlay);
             this.$overlay.hide();
-            this.$overlay.position({my: 'left top', at: 'right top', of: this.$elem});
 
             this.$narrativeDimmer = $('<div>')
                                     .addClass('kb-overlay-dimmer');
             $('body').append(this.$narrativeDimmer);
             this.$narrativeDimmer.hide();
+            this.updateOverlayPosition();
+        },
+
+        updateOverlayPosition: function() {
+            this.$overlay.position({my: 'left top', at: 'right top', of: this.$elem});
             this.$narrativeDimmer.position({my: 'left top', at: 'right top', of: this.$elem});
         },
 
@@ -183,19 +187,19 @@
          *
          */
         buildPanelSet: function(widgets) {
-            var $panelSet = $('<div>');
+            var $panelSet = $('<div>')
+                            .addClass('kb-narr-side-panel-set');
             if (!widgets || Object.prototype.toString.call(widgets) !== '[object Array]' || widgets.length === 0)
                 return $panelSet;
 
             var height = 100 / widgets.length;
             var minHeight = 200;
 
-            $panelSet.css({'height': '85vh', 'min-height' : (minHeight * widgets.length) + 'px'});
             var retObj = {};
             for (var i=0; i<widgets.length; i++) {
                 var widgetInfo = widgets[i];
                 var $widgetDiv = $('<div>')
-                                 .css({'height' : height + '%', 'border' : 'solid 1px #555'});
+                                 .css({'height' : height + '%', 'border-bottom' : '5px solid #e0e0e0'});
 
                 retObj[widgetInfo.name] = $widgetDiv[widgetInfo.name](widgetInfo.params);
                 $panelSet.append($widgetDiv);

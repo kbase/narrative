@@ -24,6 +24,8 @@ from biokbase.narrative.common.util import parse_kvp
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import log_common
 
+EVENT_MSG_SEP = log_common.EVENT_MSG_SEP
+
 g_log = None #  global logger
 LOGGER_NAME = "log_proxy"  # use this name for logger
 

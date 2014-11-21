@@ -25,12 +25,12 @@ import logging
 from logging import handlers
 import os
 import re
-import socket
 import threading
 import time
 # Local
 from .util import kbase_env
 from . import log_proxy
+from .log_common import format_event
 
 ## Constants
 
@@ -78,8 +78,7 @@ def _kbase_log_name(name):
 
 def log_event(log, event, mapping):
     """Log an event and a mapping."""
-    kvp = " ".join(["{}={}".format(k, v) for k, v in mapping.iteritems()])
-    log.info("{}{}{}".format(event, log_proxy.EVENT_MSG_SEP, kvp))
+    log.info(format_event(event, mapping))
 
 class LogAdapter(logging.LoggerAdapter):
     """Add some extra methods to the stock LoggerAdapter."""
@@ -134,6 +133,9 @@ def _get_meta():
     if kbase_env.narrative:
         meta['narr'] = kbase_env.narrative
 
+    # Client IP
+    meta['client_ip'] = kbase_env.client_ip or "0.0.0.0"
+
     return meta
 
 
@@ -145,11 +147,12 @@ class MetaFormatter(logging.Formatter):
             "%(levelname)s %(asctime)s %(name)s %(message)s")
 
     def format(self, record):
-        """Add KB_* environment values at format time."""
         s = logging.Formatter.format(self, record)
-        return "{} [{}]".format(s, ' '.join(["{}={}".format(k, v)
-                                             for k, v in os.environ.items()
-                                             if k.startswith('KB_')]))
+        return s
+        # XXX: This version adds env crap
+        # return "{} {}".format(s, ' '.join(["env.{}={}".format(k, v)
+        #                                    for k, v in os.environ.items()
+        #                                    if k.startswith('KB_')]))
 
 class BufferedSocketHandler(handlers.SocketHandler):
     """Proxy for another handler that always returns immediately
@@ -229,6 +232,8 @@ def init_handlers():
 
     if not g_log.socket_handler:
         cfg = get_proxy_config()
+        g_log.debug("Opening socket to proxy at {}:{}".format(
+            cfg.host, cfg.port))
         sock_handler = BufferedSocketHandler(cfg.host, cfg.port)
         g_log.addHandler(sock_handler)
 
@@ -237,7 +242,7 @@ def get_proxy_config():
     if config_file:
         _log.info("Configuring KBase logging from file '{}'".format(config_file))
     else:
-        _log.info("Configuring KBase logging from defaults ({} is empty, or not found)"
+        _log.warn("Configuring KBase logging from defaults ({} is empty, or not found)"
                   .format(KBASE_PROXY_ENV))
 #    return log_proxy.ProxyConfiguration(config_file)
     return log_proxy.ProxyConfigurationWrapper(config_file)

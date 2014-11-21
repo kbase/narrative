@@ -156,6 +156,7 @@ narrative.init = function() {
             var token = null;
             if (window.kb && window.kb.token)
                 token = window.kb.token;
+            
             $.ajax({
                 type: 'GET',
                 url: 'https://kbase.us/services/genome_comparison/users?usernames=' + username + '&token=' + window.kb.token,

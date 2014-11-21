@@ -16,7 +16,8 @@
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
             
             loadingImage: 'static/kbase/images/ajax-loader.gif',
-            
+            methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
+
             ws_chunk_size:10000,  // this is the limit of the number of objects to retrieve from the ws on each pass
             ws_max_objs_to_fetch: 75000, // this is the total limit of the number of objects before we stop trying to get more
                                          // note that if there are more objects than this, then sorts/search filters may
@@ -62,6 +63,8 @@
         $mainListDiv:null,
         $loadingDiv:null,
         
+        methClient: null,
+
         obj_list : [],
         obj_data : {}, // old style - type_name : info
         
@@ -103,6 +106,10 @@
             if (this.options.ws_name) {
                 this.setWorkspace(this.options.ws_name);
             }
+            if (window.kbconfig && window.kbconfig.urls) {
+                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+            }
+            this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
             
             return this;
         },
@@ -515,7 +522,17 @@
                                 .addClass("btn btn-warning")
                                 .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Get Data')
                                 .on('click',function() {
-                                    self.trigger('toggleSidePanelOverlay.Narrative');
+//                                    self.trigger('toggleSidePanelOverlay.Narrative');
+
+                                      // Lovely hack to make the 'Get Data' button behave like a method/app panel button.
+                                      self.methClient.get_method_spec({ 'ids' : ['import_genome_data_generic'] },
+                                          function(spec) {
+                                              self.trigger('methodClicked.Narrative', spec[0]);
+                                          },
+                                          function(error) {
+                                              self.showError(error);
+                                          }
+                                      );
                                 });
             
             

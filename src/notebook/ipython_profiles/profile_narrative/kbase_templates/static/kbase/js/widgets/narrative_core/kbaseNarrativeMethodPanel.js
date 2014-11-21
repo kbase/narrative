@@ -388,7 +388,7 @@
                               .attr('type', 'button')
                               .addClass('btn btn-default')
                               .append(method.title)
-                              .click(function(event) { self.trigger('function_clicked.Narrative', method); });
+                              .click(function(event) { console.log(method); self.trigger('function_clicked.Narrative', method); });
 
             var $helpButton = $('<span>')
                               .addClass('glyphicon glyphicon-question-sign')

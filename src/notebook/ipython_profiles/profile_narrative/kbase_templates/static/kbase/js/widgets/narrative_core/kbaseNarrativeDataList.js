@@ -164,7 +164,6 @@
                         self.obj_data[typeKey].push(infoList[i]);
                         
                     }
-                    self.renderList();
                     
                     // if we have more than 2k objects, make them hit enter to search...
                     self.$searchInput.off("input change blur");
@@ -189,8 +188,10 @@
                             self.$elem.find('#nar-data-list-default-sort-label').addClass('active');
                             self.$elem.find('#nar-data-list-default-sort-option').attr('checked');
                         }
-                        self.$loadingDiv.hide();
                     //}
+                    
+                    self.renderList();
+                    self.$loadingDiv.hide();
                 }, 
                 function(error) {
                     console.log(error);
@@ -297,7 +298,7 @@
             var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info').css({padding:'0px',margin:'0px'})
                                 .append($('<div>').append($('<table>').css({'width':'100%'})
                                         .append($('<tr>')
-                                                .append($('<td>')
+                                                .append($('<td>').css({'width':'50%'})
                                                     .append($name).append($version).append('<br>')
                                                     .append($type).append('<br>').append($date))
                                                 .append($('<td>').css({'vertical-align':'bottom','text-align':'right'})

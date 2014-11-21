@@ -69,7 +69,7 @@ def prepare_generic_method_input(token, workspace, methodSpec, paramValues, inpu
             if paramId is not None:
                 input[paramId] = paramValue
         if paramValue is None:
-            raise ValueError("Value is not defined in input mapping: " + mapping)
+            raise ValueError("Value is not defined in input mapping: " + json.dumps(mapping))
         build_args(paramValue, mapping, workspace, rpcArgs)
 
 def prepare_generic_method_output(token, workspace, methodSpec, input, output):
@@ -87,9 +87,9 @@ def prepare_generic_method_output(token, workspace, methodSpec, input, output):
             sysProp = mapping['narrative_system_variable']
             paramValue = narrSysProps[sysProp]
         elif 'service_method_output_path' in mapping:
-            paramValue = output
+            paramValue = get_sub_path(output, mapping['service_method_output_path'], 0)
         if paramValue is None:
-            raise ValueError("Value is not defined in input mapping: " + mapping)
+            raise ValueError("Value is not defined in output mapping: " + json.dumps(mapping))
         build_args(paramValue, mapping, workspace, outArgs)
     if len(outArgs) < 1:
         return {}

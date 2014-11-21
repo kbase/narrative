@@ -87,7 +87,15 @@
         },
         
         getParameters: function() {
-        	var ret = this._superMethod('getParameters');
+        	var ret = [];
+            var selectedParameterTab = this.getSelectedTabId();
+            for(var i=0; i<this.parameters.length; i++) {
+            	var paramId = this.parameters[i].id;
+                var tabId = this.paramIdToTab[paramId];
+            	var value = ((!tabId) || tabId === selectedParameterTab) ? 
+            			this.parameters[i].widget.getParameterValue() : "";
+            	ret.push(value);
+            }
         	ret.splice(this.tabParamPos, 0, this.getSelectedTabId());
         	return ret;
         },

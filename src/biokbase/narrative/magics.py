@@ -24,7 +24,7 @@ from biokbase.InvocationService.Client import \
     InvocationService as InvocationClient
 import biokbase.narrative.upload_handler
 from biokbase.narrative.common.url_config import URLS
-from biokbase.narrative.common.log_proxy import EVENT_MSG_SEP
+from biokbase.narrative.common.log_common import EVENT_MSG_SEP
 
 # Logging
 g_log = logging.getLogger(__name__)

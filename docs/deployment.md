@@ -1,14 +1,16 @@
+
+## Deploying with Docker
+
+This document schedules how to deploy the Narrative on a fresh developer’s server instance with Docker provisioning
+
 Last updated: Dan Gunter <dkgunter@lbl.gov> 7/18/2014
+
 Bill Riehl <wjriehl@lbl.gov> 7/15/2014
-
-# Deploying the Narrative on a fresh developer’s server instance with Docker provisioning
-
-Bill Riehl <wjriehl@lbl.gov>  
-Keith Keller <kkeller@lbl.gov>  
+Keith Keller <kkeller@lbl.gov>
 Dan Gunter <dkgunter@lbl.gov>
 (based on a document written by Steve Chan, emeritus)
 
-**The Narrative Interface has 3 main components:**  
+**The Narrative Interface has 3 main components:**
 
 1.  A front end with Nginx 1.3.13+ and some supporting Lua libraries. These implement a dynamic proxy and the provisioning logic that spins up/down docker containers.
 2.  A server running Docker to host the containers
@@ -106,7 +108,8 @@ This includes a few instructions, but some more details are available here:
 
 ## Upgrade Linux kernel
 
-Docker currently uses (at minimum) the 3.8 Linux kernel, so you’ll need to install that and restart.
+Docker currently uses (at minimum) the 3.8 Linux kernel, so if your host is running an older
+kernel (e.g., Ubuntu 12.04), you’ll need to install the new kernel and restart.
 
     sudo su - root
     apt-get update
@@ -129,41 +132,20 @@ First setup APT to use the proper repository, then refresh the package cache and
 
 Set up groups so docker and www-data can play nice with each other (so we can get proxied external access to the deployed containers that’ll be running the Narrative).  
 
-    # start editor for /etc/groups
-    vigr
+    usermod -G docker www-data
 
-When you are done, you will have 2 lines in the file like this:
-
-    www-data:x:33:docker
-    docker:x:998:www-data
-
-Save and exit, then stop and restart docker and Nginx.
+Then stop and restart docker and Nginx.
 
     service docker stop
     service nginx stop
     service docker start
     service nginx start
 
-The containers that run Narratives are also based on the Ubuntu 12.04 LTS image, so we need to pull that with Docker to make it available. This will take a couple of minutes, 
 
-    docker pull ubuntu:12.04
-    exit # finally done as root
+Next, run buildNarrativeContainer.sh to build the base Docker container for narrative instances.
 
-If you get a message like `2014/09/18 20:53:25 unexpected EOF` during the previous step, just try it again.
-
-The Dockerfile that builds the Narrative can be found in (relative to `~/kb_narr`) `narrative/docker/Dockerfile`. This is essentially a build script that constructs the Docker container image. To do so, it needs to be placed on directory above the narrative, along with a couple other dependency files (also in `narrative/docker`):
-
-    cd ~/kb_narr  # if not already there 
-    cp narrative/docker/Dockerfile narrative/docker/r-packages.R narrative/docker/sources.list .
-
-## Build the Narrative Docker container
-
-Now we can build our Docker container. The Lua provisioning library (currently) looks for containers named kbase/narrative:latest, so that’s the name we’ll give it.
-
-Eventually, it might be nice to have an external container repository that manages this, and every night or so, we just pull the most recent container and deploy it.
-
-    cd ~/kb_narr  # if not already there
-    sudo docker build -q -t kbase/narrative .
+    cd ~/kb_narr/narrative
+    ./buildNarrativeContainer.sh
 
 This will take around half an hour to pull, compile, and deploy the various components. So go get a cup of coffee or take a nap at this point.
 

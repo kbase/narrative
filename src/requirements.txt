@@ -16,3 +16,4 @@ thrift==0.9.1
 dateutils
 pymongo>=2.7
 sympy
+semantic_version>=2.3

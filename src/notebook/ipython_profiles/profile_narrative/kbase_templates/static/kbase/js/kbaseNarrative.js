@@ -55,9 +55,9 @@ EndpointTester.prototype.test = function(url) {
 
 var narrative = {};
 narrative.init = function() {
-    var token = null;
     var narr_ws = null;
     var readonly = false; /* whether whole narrative is read-only */
+    var authToken = null;
 
     var versionHtml = 'KBase Narrative<br>Alpha version';
     var endpointTesters = [];
@@ -128,23 +128,12 @@ narrative.init = function() {
 
 //    $('#kb-version-stamp').empty().append($versionBtn);
     $('#notebook').append($versionModal);
-
+    $('[data-toggle="tooltip"]').tooltip()
     /*
      * Before we get everything loading, just grey out the whole %^! page
      */
-//    $('#main-container').hide();
     var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
 
-    // var $dataWidget = $('#kb-ws').kbaseNarrativeDataPanel();
-    // $dataWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
-
-    // var $functionWidget = $('#kb-function-panel').kbaseNarrativeMethodPanel({ autopopulate: false });
-    // $functionWidget.refreshFromService();
-
-    // var $jobsWidget = $('#kb-jobs-panel').kbaseNarrativeJobsPanel({ autopopulate: false });
-    // $jobsWidget.showLoadingMessage('Waiting for Narrative to finish loading...');
-    
-    // var $appsWidget = $('#kb-apps-panel').kbaseNarrativeAppsPanel({ autopopulate: true });
     /*
      * Once everything else is loaded and the Kernel is idle,
      * Go ahead and fill in the rest of the Javascript stuff.
@@ -158,11 +147,25 @@ narrative.init = function() {
         var ws_name = null;
         if (IPython && IPython.notebook && IPython.notebook.metadata) {
             ws_name = IPython.notebook.metadata.ws_name;
-            var narrName = IPython.notebook.notebook_name;
-            var userName = IPython.notebook.metadata.creator;
-            $('#kb-narr-name #name').text(narrName);
-            $('#kb-narr-creator').text(userName);
+            var narrname = IPython.notebook.notebook_name;
+            var username = IPython.notebook.metadata.creator;
+            $('#kb-narr-name #name').text(narrname);
+            $('#kb-narr-creator').text(username);
             $('.kb-narr-namestamp').css({'display':'block'});
+
+            $.ajax({
+                type: 'GET',
+                url: 'https://kbase.us/services/genome_comparison/users?usernames=' + username + '&token=' + window.kb.token,
+                dataType: 'json',
+                crossDomain: true,
+                success: function(data, res, jqXHR) {
+                    if (username in data.data && data.data[username].fullName) {
+                        var fullName = data.data[username].fullName;
+                        $('#kb-narr-creator').text(fullName + ' (' + username + ')');
+                    }
+                }
+            });
+
         }
         if (ws_name) {
             /* It's ON like DONKEY KONG! */

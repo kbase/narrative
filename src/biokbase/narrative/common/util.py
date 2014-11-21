@@ -29,6 +29,7 @@ class _KBaseEnv(object):
     env_auth_token = "KB_AUTH_TOKEN"
     env_narrative = "KB_NARRATIVE"
     env_session = "KB_SESSION"
+    env_clientip = "KB_CLIENT_IP"
 
     @staticmethod
     def _getenv(name):
@@ -64,6 +65,14 @@ class _KBaseEnv(object):
     @session.setter
     def session(self, value):
         self._setenv(self.env_session, value)
+
+    @property
+    def client_ip(self):
+        return self._getenv(self.env_clientip)
+
+    @client_ip.setter
+    def client_ip(self, value):
+        return self._setenv(self.env_clientip, value)
 
 # Single instance
 kbase_env = _KBaseEnv()

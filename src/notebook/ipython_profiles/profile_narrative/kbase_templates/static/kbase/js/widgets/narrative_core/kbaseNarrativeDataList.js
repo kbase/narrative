@@ -37,6 +37,8 @@
         },
 
         // private variables
+        mainListPanelHeight : '300px',
+        
         ws_name: null,
         ws: null,
         ws_last_update_timestamp: null,
@@ -48,6 +50,13 @@
         real_name_lookup: {},
         
         $searchInput: null,
+        $filterTypeSelect: null,
+        availableTypes:{},
+        
+        $searchDiv: null,
+        $sortByDiv: null,
+        $filterTypeDiv: null,
+        
         $addDataButton:null,
         $controllerDiv: null,
         $mainListDiv:null,
@@ -77,7 +86,7 @@
                                  .append('<img src="' + this.options.loadingImage + '">');
             this.$elem.append(this.$loadingDiv);
             this.$mainListDiv = $('<div>')
-                .css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':'290px'})
+                .css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':this.mainListPanelHeight})
                 .on('scroll', function() {
                     if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
                         self.renderMore();
@@ -89,6 +98,11 @@
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
             setInterval(function(){self.refresh()}, this.options.refresh_interval); // check if there is new data every X ms
+            
+            this.showLoading();
+            if (this.options.ws_name) {
+                this.setWorkspace(this.options.ws_name);
+            }
             
             return this;
         },
@@ -150,6 +164,8 @@
                 // empty the existing object list first
                 self.objectList = [];
                 self.obj_data = {};
+                self.availableTypes = {};
+                        
                 self.getNextDataChunk(0);
             }
         },
@@ -179,9 +195,20 @@
                             }
                         );
                         var typeKey = infoList[i][2].split("-")[0];
-                        if (!(typeKey in self.obj_data)) { self.obj_data[typeKey]=[] }
+                        if (!(typeKey in self.obj_data)) {
+                            self.obj_data[typeKey]=[];
+                        }
                         self.obj_data[typeKey].push(infoList[i]);
                         
+                        var typeName = typeKey.split('.')[1];
+                        if (!(typeName in self.availableTypes)) {
+                            self.availableTypes[typeName] =
+                                        {
+                                            type:typeName,
+                                            count:0
+                                        };
+                        }
+                        self.availableTypes[typeName].count++;
                     }
                     
                     // if we have more than 2k objects, make them hit enter to search...
@@ -216,8 +243,9 @@
                         }
                     }
                     
+                    self.populateAvailableTypes();
                     self.renderList();
-                    self.$loadingDiv.hide();
+                    self.hideLoading();
                 }, 
                 function(error) {
                     console.log(error);
@@ -306,18 +334,18 @@
                                         .append(metadataText));
             
             var $toggleAdvancedViewBtn = $('<span>').addClass('btn-xs')
-                .html('<span class="glyphicon glyphicon-plus" style="color:#999" aria-hidden="true"/>')
+                .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
                 .mouseenter(function(){$(this).addClass('btn btn-default');})
                 .mouseleave(function(){$(this).removeClass('btn btn-default');})
-                    .on('click',function() {
+                .on('click',function() {
                         var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
                         if ($more.is(':visible')) {
                             $more.hide();
-                            $(this).html('<span class="glyphicon glyphicon-plus" style="color:#999" aria-hidden="true" />');
+                            $(this).html('<span class="fa fa-plus" style="color:#999" aria-hidden="true" />');
                         } else {
                             self.getRichData(object_info,$moreRow);
                             $more.show();
-                            $(this).html('<span class="glyphicon glyphicon-minus" style="color:#999" aria-hidden="true" />');
+                            $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
                     });
                     
@@ -415,7 +443,7 @@
         
         renderList: function() {
             var self = this;
-            self.$loadingDiv.show();
+            self.showLoading();
             
             self.detachAllRows();
             
@@ -432,7 +460,7 @@
                 // todo: show an upload button or some other message if there are no elements
             }
             
-            self.$loadingDiv.hide();
+            self.hideLoading();
         },
         
         renderController: function() {
@@ -470,38 +498,63 @@
                                         return 0;
                                     });
                                 });
-            var $upOrDown = $('<button class="btn btn-default btn-xs" type="button">').css({'margin-left':'5px'})
-                                .append('<span class="glyphicon glyphicon-sort"aria-hidden="true" />')
+            var $upOrDown = $('<button class="btn btn-default btn-sm" type="button">').css({'margin-left':'5px'})
+                                .append('<span class="glyphicon glyphicon-sort" style="color:#777" aria-hidden="true" />')
                                 .on('click',function() {
                                     self.reverseData();
                                 });
             
             var $sortByGroup = $('<div data-toggle="buttons">')
-                                    .addClass("btn-group btn-group-xs")
+                                    .addClass("btn-group btn-group-sm")
                                     .css({"margin":"2px"})
                                     .append($byDate)
                                     .append($byName)
                                     .append($byType);
             
             var $addDataBtn = $('<button>')
-                                .addClass("btn btn-success")
-                                .append('<span class="glyphicon glyphicon-plus" style="color:#fff" aria-hidden="true" /> Get Data')
+                                .addClass("btn btn-warning")
+                                .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Get Data')
                                 .on('click',function() {
                                     self.trigger('toggleSidePanelOverlay.Narrative');
                                 });
             
-            self.$controllerDiv.append(
-                $('<div>').addClass('row').css({'margin':'5px'})
-                    .append($('<div>').addClass('col-xs-7').css({'margin':'0px','padding':'0px'})
-                        .append("<div><small>sort by: </small></div>")
-                        .append($sortByGroup)
-                        .append($upOrDown))
-                    .append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'})
-                        .append($addDataBtn)));           
             
-            self.$searchInput = $('<input type="text">')
-                                    .addClass('form-control');
-            var $searchDiv = $('<div>').addClass("input-group").css({'margin-bottom':'10px'})
+            var $openSearch = $('<span>').addClass('btn btn-default')
+                .html('<span class="fa fa-search" style="color:#999" aria-hidden="true"/>')
+                .on('click',function() {
+                    if(!self.$searchDiv.is(':visible')) {
+                        self.$searchDiv.show();
+                        self.$sortByDiv.hide();
+                        self.$filterTypeDiv.hide();
+                    } else {
+                        self.$searchDiv.hide();
+                    }
+                });
+            var $openSort = $('<span>').addClass('btn btn-default').css({"margin-left":"5pt"})
+                .html('<span class="fa fa-sort-amount-asc"" style="color:#999" aria-hidden="true"/>')
+                .on('click',function() {
+                    if(!self.$sortByDiv.is(':visible')) {
+                        self.$sortByDiv.show();
+                        self.$searchDiv.hide();
+                        self.$filterTypeDiv.hide();
+                    } else {
+                        self.$sortByDiv.hide();
+                    }
+                });
+            var $openFilter = $('<span>').addClass('btn btn-default').css({"margin-left":"5pt"})
+                .html('<span class="fa fa-filter" style="color:#999" aria-hidden="true"/>')
+                .on('click',function() {
+                    if(!self.$filterTypeDiv.is(':visible')) {
+                        self.$filterTypeDiv.show();
+                        self.$sortByDiv.hide();
+                        self.$searchDiv.hide();
+                    } else {
+                        self.$filterTypeDiv.hide();
+                    }
+                });
+            
+            self.$searchInput = $('<input type="text">').addClass('form-control');
+            self.$searchDiv = $('<div>').addClass("input-group").css({'margin-bottom':'10px'})
                                 .append(self.$searchInput)
                                 .append($("<span>").addClass("input-group-addon")
                                             .append($("<span>")
@@ -509,9 +562,71 @@
                                                 .css({'cursor':'pointer'})
                                                 .on('click',function() {
                                                         self.search();
-                                                    })  ));    
-            self.$controllerDiv.append($searchDiv);
+                                                    })  ));
+
+            self.$sortByDiv = $('<div>').css({'margin':'3px','margin-left':'5px','margin-bottom':'10px'})
+                                .append("<small>sort by: </small>")
+                                .append($sortByGroup)
+                                .append($upOrDown);
+            
+            self.$filterTypeSelect = $('<select>').addClass("form-control")
+                                        .append($('<option value="">'))
+                                        .change(function() {
+                                            var optionSelected = $(this).find("option:selected");
+                                            var typeSelected  = optionSelected.val();
+                                            //var textSelected   = optionSelected.text();
+                                            self.filterByType(typeSelected);
+                                        });
+            
+            self.$filterTypeDiv = $('<div>').css({'margin':'3px','margin-left':'5px','margin-bottom':'10px'})
+                                .append(self.$filterTypeSelect);
+                                
+                                
+            
+            var $header = $('<div>').addClass('row').css({'margin':'5px'})
+                    .append($('<div>').addClass('col-xs-7').css({'margin':'0px','padding':'0px'})
+                        .append($openSearch)
+                        .append($openSort)
+                        .append($openFilter))
+                    .append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'})
+                        .append($addDataBtn));
+            
+            
+            self.$sortByDiv.hide();
+            self.$searchDiv.hide();
+            self.$filterTypeDiv.hide();
+            
+            var $filterDiv = $('<div>')
+                                .append(self.$sortByDiv)
+                                .append(self.$searchDiv)
+                                .append(self.$filterTypeDiv);
+                                
+            self.$controllerDiv.append($header).append($filterDiv);
         },
+        
+        populateAvailableTypes: function() {
+            var self = this;
+            if (self.availableTypes && self.$filterTypeSelect) {
+                
+                var types = [];
+                for(var type in self.availableTypes) {
+                    if(self.availableTypes.hasOwnProperty(type)) {
+                        types.push(type);
+                    }
+                }
+                types.sort();
+                
+                self.$filterTypeSelect.empty();
+                self.$filterTypeSelect.append($('<option value="">'));
+                for(var i=0; i<types.length; i++) {
+                    var countStr = " (".concat(self.availableTypes[types[i]].count).concat(" objects)");
+                    self.$filterTypeSelect.append(
+                        $('<option value="'+self.availableTypes[types[i]].type+'">')
+                            .append(self.availableTypes[types[i]].type + countStr));
+                }
+            }
+        },
+        
         
         reverseData: function() {
             var self = this;
@@ -519,31 +634,27 @@
             
             self.objectList.reverse();
             self.renderList();
-            if(self.$searchInput.val().trim().length>0) {
-                self.search();  // always refilter on the search term search if there is something there
-            }
-            self.$loadingDiv.hide();
+            self.search();
+            
+            self.hideLoading();
         },
         
         sortData: function(sortfunction) {
             var self = this;
             if (!self.objectList) { return; }
-            //should add spinning wait bar .... doesn't really work because js is single threaded...
-            //self.$loadingDiv.show();
+            //should add spinning wait bar ....
+            self.showLoading();
+            
+            self.objectList.sort(sortfunction);
+            self.renderList();
+            self.search();  // always refilter on the search term search if there is something there
+            
+            self.hideLoading();
             
             // go back to the top on sort
             self.$mainListDiv.animate({
                 scrollTop:0
-            },"fast");
-            
-            self.objectList.sort(sortfunction);
-            self.renderList();
-            if(self.$searchInput.val().trim().length>0) {
-                self.search();  // always refilter on the search term search if there is something there
-            }
-            var end= new Date().getTime();
-            
-            //self.$loadingDiv.hide();
+            }, 300); // fast = 200, slow = 600
         },
         
         
@@ -552,15 +663,23 @@
         searchFilterOn: false,
         n_filteredObjsRendered: null,
         
-        search: function(term) {
+        search: function(term, type) {
             var self = this;
             if (!self.objectList) { return; }
             
             if (!term && self.$searchInput) {
                 term = self.$searchInput.val();
             }
+            
+            // if type wasn't selected, then we try to get something that was set
+            if (!type) {
+                if (self.$filterTypeSelect) {
+                    type = self.$filterTypeSelect.find("option:selected").val();
+                }
+            }
+            
             term = term.trim();
-            if (term.length>0) {
+            if (term.length>0 || type) {
                 self.searchFilterOn = true;
                 // todo: should show searching indicator (could take several seconds if there is a lot of data)
                 // optimization => we filter existing matches instead of researching everything if the new
@@ -593,6 +712,12 @@
                     else if (regex.test(info[2].split('.')[1].split('-'))) { match = true; } // match on type name
                     else if (regex.test(info[5])) { match = true; } // match on saved_by user
                     
+                    if (type) { // if type is defined, then our sort must also filter by the type
+                        if (type !== info[2].split('-')[0].split('.')[1]) {
+                            match = false; // no match if we are not the selected type!
+                        }
+                    }
+                    
                     if (match) {
                         // matches must always switch to show if they are rendered
                         if (self.currentMatch[k].$div) {
@@ -616,19 +741,23 @@
                     }
                 }
                 self.currentMatch = newMatch; // update the current match
-                
             } else {
                 self.searchFilterOn = false;
-                if (self.currentTerm) {
-                    // no new search, so show all
-                    for(var k=0; k<self.objectList.length; k++) {
-                        if (self.objectList[k].$div) {
-                            self.objectList[k].$div.show();
-                        }
+                // no new search, so show all and render the list
+                for(var k=0; k<self.objectList.length; k++) {
+                    if (self.objectList[k].$div) {
+                        self.objectList[k].$div.show();
                     }
                 }
+                self.renderList();
             }
             self.currentTerm = term;
+        },
+        
+        
+        filterByType: function(type) {
+            var self = this;
+            self.search(null,type);
         },
         
         getRichData: function(object_info,$moreRow) {
@@ -637,9 +766,14 @@
             self.displayRealName(object_info[5],$usernameTd);
         },
         
-        
-        
-        
+        showLoading : function() {
+            this.$loadingDiv.show();
+            this.$mainListDiv.hide();
+        },
+        hideLoading : function() {
+            this.$loadingDiv.hide();
+            this.$mainListDiv.show();
+        },
         
         displayRealName: function(username,$targetSpan) {
 	    var self = this;
@@ -798,7 +932,7 @@
             }
             interval = Math.floor(seconds / 3600);
             if (interval > 1) {
-                return interval + "hours ago";
+                return interval + " hours ago";
             }
             interval = Math.floor(seconds / 60);
             if (interval > 1) {

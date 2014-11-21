@@ -153,7 +153,9 @@ narrative.init = function() {
             $('#kb-narr-creator').text(username);
             $('.kb-narr-namestamp').css({'display':'block'});
 
-            var token = window.kb.token;
+            var token = null;
+            if (window.kb && window.kb.token)
+                token = window.kb.token;
             $.ajax({
                 type: 'GET',
                 url: 'https://kbase.us/services/genome_comparison/users?usernames=' + username + '&token=' + window.kb.token,

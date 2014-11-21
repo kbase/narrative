@@ -3,19 +3,19 @@
 The narrative instances perform their logging through a 2-step process, where the data passes from the Docker container out to a "log proxy" on the host, and then from there to other sinks (currently MongoDB).
 
     +----------------------+
-    |Narrative UI in Docker|
+    |Narrative UI in Docker   | -- logging --> /tmp/kbase-narrative.log 
     +----------------------+
            |        
            | logging
            v        
     +----------------------+
-    |  Log proxy on host      |
+    |  Log proxy on host           |
     +----------------------+
            |        
            | logging
            v        
     +----------------------+
-    |    MongoDB, etc.     |
+    |    MongoDB, Syslog             |
     +----------------------+
 
 The narrative logging proxy was created to deal with security and networking issues for the Docker containers used for the KBase Narrative IPython Notebook backend (which is a mouthful, but basically is a web server that provides a bi-directional pipe to a Python interpreter). We want to log data to a remote location, like a MongoDB or Splunk server, from within the Docker container. However, within the Docker container we don't want to store the credentials needed to access the database. In addition, we don't want the management overhead and hassle of making socket connections to the Internet from within each Docker container.
@@ -23,6 +23,24 @@ The narrative logging proxy was created to deal with security and networking iss
 So, what the logging proxy really does is run a simple server that listens on a socket for Python logging messages (in the format sent by the standard logging module's SocketHandler class), and forward them to the remote destination of choice.
 
 The rest of this README describes the configuration and various tasks with the proxy.
+
+### Log format
+
+The narrative will log to both socket and a local file `/tmp/kbase-narrative.log`. This is useful for debugging in stand-alone versions of the notebook.
+
+The log format in this file is the same as the format that will be sent to syslog by the narrative log proxy. An example log entry is shown below. It will all be in a single line, the backslashes are added for legibility.
+
+    INFO 2014-11-20 02:05:44,386 biokbase.narrative open;client_ip=127.0.0.1 \
+    user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.111 Safari/537.36" \
+    user=dangunter \
+    session_id=3265e4f5b7557afa2ad62018cdc6af6f66679a0290e89ffbcdb53016dd9e40e1 \
+    narr=ws.2632.obj.3
+
+The format is:
+
+    <Level> <Date> <Time> <log-module> <event>;<key1>=<value1> <key2>=<value2> ...
+
+The Date and Time are in UTC.
 
 ### Code
 
@@ -49,6 +67,11 @@ For the most part, the logging proxy is configured from a single YAML file.
         password: "put-password-here"
         db: mongoDBName
         collection: mongoCollectionName
+        # syslog destination
+        syslog_facility: user
+        syslog_host: localhost
+        syslog_port: 514
+        syslog_proto: udp
 
 In addition, some environment variables have special meaning:
 

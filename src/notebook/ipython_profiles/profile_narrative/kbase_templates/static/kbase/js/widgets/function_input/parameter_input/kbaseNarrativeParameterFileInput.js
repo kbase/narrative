@@ -243,13 +243,26 @@
                 return;
             if (!$.isArray(state))
             	return;
+            var self = this;
             this.shockNodeId = state[0][0];
             if (this.shockNodeId === "")
             	this.shockNodeId = null;
             this.fileName.val(state[0][1]);
             this.uploadIsReady = state[0][2];
             this.percentText.val(state[0][3]);
-            this.isValid();
+            if (this.shockNodeId) {
+            	var shockClient = new ShockClient({url: self.options.shockUrl, token: self.token});
+            	shockClient.get_node(self.shockNodeId, function(info) {
+            		if (!info)
+                		self.shockNodeId = null;
+                	self.isValid();                		
+            	}, function(error) {
+            		self.shockNodeId = null;
+                	self.isValid();
+            	});
+            } else {
+            	this.isValid();
+            }
         },
 
         loggedInCallback: function(event, auth) {

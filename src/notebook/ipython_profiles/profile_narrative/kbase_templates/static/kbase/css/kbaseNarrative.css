@@ -140,6 +140,7 @@ div#notebook {
 	box-shadow: none;
 	-webkit-box-shadow: none;
 	moz-box-shadow: none;
+	margin: 0;
 }
 
 #kb-narr-name {

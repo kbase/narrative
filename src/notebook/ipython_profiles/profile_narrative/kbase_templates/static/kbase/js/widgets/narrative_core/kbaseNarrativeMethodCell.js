@@ -102,9 +102,11 @@
             var methodId = this.options.cellId + '-method-details-'+this.genUUID();
             var buttonLabel = 'details';
             var methodDesc = this.method.info.tooltip;
+            var $menuSpan = $('<div class="pull-right">');
             var $methodInfo = $('<div>')
                               .addClass('kb-func-desc')
                               .append('<h1><b>' + this.method.info.name + '</b></h1>')
+                              .append($menuSpan)
                               .append($('<span>')
                                       .addClass('pull-right kb-func-timestamp')
                                       .attr('id', 'last-run'))
@@ -134,6 +136,7 @@
                                      .append($progressBar)
                                      .append($buttons));
 
+            $menuSpan.kbaseNarrativeCellMenu();
             this.$elem.append($cellPanel);
 
             var inputWidgetName = this.method.widgets.input;

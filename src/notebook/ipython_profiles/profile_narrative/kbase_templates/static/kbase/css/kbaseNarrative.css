@@ -1716,6 +1716,26 @@ div[class="tooltip-inner"] {
 }
 
 /* again the css hover over div inherits strangly, so we use js */
+.kb-data-list-nav-buttons {
+    padding: 5px 8px;
+    font-size: 18px;
+    border: none;
+    text-shadow: none !important;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    moz-box-shadow: none;
+    margin: 0;
+}
+
+.kb-data-list-get-data-button {
+    border: none;
+    border-radius: 0;
+    text-shadow: none !important;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    moz-box-shadow: none;
+}
+
 .kb-data-list-obj-row-hover {
     /*background-color: #eee;*/
     border-left-style: solid;
@@ -1729,7 +1749,7 @@ div[class="tooltip-inner"] {
     background-color: #607D8B;
     border-radius: 50%;
     border-style:  solid;
-    border-width:  1px;
+    border-width:  0px;
     border-color:  #555;
     text-align: center;
     display: inline-block;
@@ -1767,6 +1787,16 @@ div[class="tooltip-inner"] {
     margin: 2px;
     margin-left: 15px;
     white-space: nowrap;
+}
+.kb-data-list-more-btn {
+    padding: 2px 4px;
+    font-size: 12px;
+    border: none;
+    text-shadow: none !important;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    moz-box-shadow: none;
+    margin: 0;
 }
 .kb-data-list-more-div {
     color:#777;

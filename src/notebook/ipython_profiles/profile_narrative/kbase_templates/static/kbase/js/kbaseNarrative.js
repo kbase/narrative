@@ -134,6 +134,15 @@ narrative.init = function() {
      */
     var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
 
+    var curCell = null;
+    $([IPython.events]).on('select.Cell', function(event, data) {
+        if (curCell && data.cell != this.curCell)
+            curCell.celltoolbar.hide();
+        curCell = data.cell;
+        if (!curCell.metadata['kb-cell'])
+            curCell.celltoolbar.show();
+    });
+
     /*
      * Once everything else is loaded and the Kernel is idle,
      * Go ahead and fill in the rest of the Javascript stuff.
@@ -143,6 +152,8 @@ narrative.init = function() {
         window.scrollTo(0,0);
 
         IPython.notebook.set_autosave_interval(0);
+        IPython.CellToolbar.activate_preset("KBase");
+
 
         var ws_name = null;
         if (IPython && IPython.notebook && IPython.notebook.metadata) {

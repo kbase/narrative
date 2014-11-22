@@ -45,60 +45,53 @@
 */
 
             this.addMenuItem({
-                text: $('<span>')
-                      .addClass('fa fa-arrow-up')
-                      .append(' Move Cell Up'),
+                icon: 'fa fa-arrow-up',
+                text: 'Move Cell Up',
                 action: function() {
                     IPython.notebook.move_cell_up();
                 }
             });
 
             this.addMenuItem({
-                text: $('<span>')
-                      .addClass('fa fa-arrow-down')
-                      .append(' Move Cell Down'),
+                icon: 'fa fa-arrow-down',
+                text: 'Move Cell Down',
                 action: function() {
                     IPython.notebook.move_cell_down();
                 }
             });
 
             this.addMenuItem({
-                text: $('<span>')
-                      .addClass('fa icon-remove')
-                      .append(' Delete Cell'),
+                icon: 'fa fa-caret-square-o-up',
+                text: 'Insert Cell Above',
                 action: function() {
-                    IPython.notebook.delete_cell();
+                    var cell = IPython.notebook.insert_cell_above('markdown');
                 }
             });
 
             this.addMenuItem({
-                text: $('<span>')
-                      .addClass('fa fa-caret-square-o-up')
-                      .append(' Insert Code Cell Above'),
+                icon: 'fa fa-caret-square-o-down',
+                text: 'Insert Cell Below',
                 action: function() {
-                    IPython.notebook.insert_cell_above('code');
+                    var cell = IPython.notebook.insert_cell_below('markdown');
                 }
             });
 
             this.addMenuItem({
-                text: $('<span>')
-                      .addClass('fa fa-caret-square-o-down')
-                      .append(' Insert Code Cell Below'),
-                action: function() {
-                    IPython.notebook.insert_cell_below('code');
-                }
-            });
-
-            this.addMenuItem({
-                text: $('<span>')
-                      .addClass('fa fa-terminal')
-                      .append(' Convert to code cell'),
+                icon: 'fa fa-terminal',
+                text: 'Convert to code cell',
                 action: function() {
                     //IPython.notebook.to_code();
                 },
                 disable: true
             });
 
+            this.addMenuItem({
+                icon: 'fa icon-remove',
+                text: 'Delete Cell',
+                action: function() {
+                    IPython.notebook.delete_cell();
+                }
+            });
 
             this.$elem.append($('<div class="dropdown">')
                               .append($btn)
@@ -108,8 +101,13 @@
         },
 
         addMenuItem: function(item) {
+            var $label = $('<span>');
+            if (item.icon)
+                $label.addClass(item.icon);
+            if (item.text)
+                $label.append(' ' + item.text);
             var $item = $('<a>')
-                        .append(item.text)
+                        .append($label)
                         .click($.proxy(function(event) {
                             event.preventDefault();
                             event.stopPropagation();

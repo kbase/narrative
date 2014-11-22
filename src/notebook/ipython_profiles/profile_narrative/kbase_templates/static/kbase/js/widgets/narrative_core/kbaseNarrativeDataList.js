@@ -535,7 +535,7 @@
             
             
             var $openSearch = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
-                .html('<span class="fa fa-search" style="color:#999" aria-hidden="true"/>')
+                .html('<span class="fa fa-search" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$searchDiv.is(':visible')) {
                         self.$searchDiv.show();
@@ -546,7 +546,7 @@
                     }
                 });
             var $openSort = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
-                .html('<span class="fa fa-sort-amount-asc" style="color:#999" aria-hidden="true"/>')
+                .html('<span class="fa fa-sort-amount-asc" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$sortByDiv.is(':visible')) {
                         self.$sortByDiv.show();
@@ -557,7 +557,7 @@
                     }
                 });
             var $openFilter = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
-                .html('<span class="fa fa-filter" style="color:#999" aria-hidden="true"/>')
+                .html('<span class="fa fa-filter" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$filterTypeDiv.is(':visible')) {
                         self.$filterTypeDiv.show();

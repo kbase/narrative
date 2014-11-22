@@ -1728,12 +1728,12 @@ div[class="tooltip-inner"] {
 }
 
 .kb-data-list-get-data-button {
-    border: none;
+    /*border: none;
     border-radius: 0;
     text-shadow: none !important;
     box-shadow: none;
     -webkit-box-shadow: none;
-    moz-box-shadow: none;
+    moz-box-shadow: none;*/
 }
 
 .kb-data-list-obj-row-hover {

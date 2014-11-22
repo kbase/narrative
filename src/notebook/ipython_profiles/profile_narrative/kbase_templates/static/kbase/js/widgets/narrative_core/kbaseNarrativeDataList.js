@@ -340,10 +340,8 @@
                                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                                         .append(metadataText));
             
-            var $toggleAdvancedViewBtn = $('<span>').addClass('btn-xs')
+            var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
                 .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
-                .mouseenter(function(){$(this).addClass('btn btn-default');})
-                .mouseleave(function(){$(this).removeClass('btn btn-default');})
                 .on('click',function() {
                         var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
                         if ($more.is(':visible')) {
@@ -519,7 +517,7 @@
                                     .append($byType);
             
             var $addDataBtn = $('<button>')
-                                .addClass("btn btn-warning")
+                                .addClass("btn btn-warning kb-data-list-get-data-button")
                                 .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Get Data')
                                 .on('click',function() {
 //                                    self.trigger('toggleSidePanelOverlay.Narrative');
@@ -536,8 +534,8 @@
                                 });
             
             
-            var $openSearch = $('<span>').addClass('btn btn-default')
-                .html('<span class="fa fa-search" style="color:#999" aria-hidden="true"/>')
+            var $openSearch = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
+                .html('<span class="fa fa-search" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$searchDiv.is(':visible')) {
                         self.$searchDiv.show();
@@ -547,8 +545,8 @@
                         self.$searchDiv.hide();
                     }
                 });
-            var $openSort = $('<span>').addClass('btn btn-default').css({"margin-left":"5pt"})
-                .html('<span class="fa fa-sort-amount-asc"" style="color:#999" aria-hidden="true"/>')
+            var $openSort = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
+                .html('<span class="fa fa-sort-amount-asc" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$sortByDiv.is(':visible')) {
                         self.$sortByDiv.show();
@@ -558,8 +556,8 @@
                         self.$sortByDiv.hide();
                     }
                 });
-            var $openFilter = $('<span>').addClass('btn btn-default').css({"margin-left":"5pt"})
-                .html('<span class="fa fa-filter" style="color:#999" aria-hidden="true"/>')
+            var $openFilter = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
+                .html('<span class="fa fa-filter" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$filterTypeDiv.is(':visible')) {
                         self.$filterTypeDiv.show();

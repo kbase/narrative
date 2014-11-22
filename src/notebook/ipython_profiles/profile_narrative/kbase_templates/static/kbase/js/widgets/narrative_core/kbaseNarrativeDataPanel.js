@@ -485,6 +485,12 @@
                                                       .addClass('modal-footer')
                                                       .append($footerButtons))));
 
+            // Add behaviors
+            // XXX: Nothing here yet
+            this.$infoAccordion.on('click', function() {
+              console.debug("I pity the fool who clicks on infoModal!");
+            });
+
             // Appending this to body since the left panels are now fixed.
             $('body').append(this.$infoModal);
             $infoAccordion.kbaseAccordion(

@@ -310,12 +310,60 @@
                                         .append($mainDiv))
                             .append($moreRow)
                             .mouseenter(function(){$(this).addClass('kb-data-list-obj-row-hover');})
-                            .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
-            
+                            .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');}) 
+
+            this.addDragAndDrop($row);
+
             return $row;
         },
         
-        
+        // ============= DnD ==================
+
+        addDragAndDrop: function($row) {
+            // Add data drag-and-drop (jquery-ui)
+            // allow data element to visually leave the left column
+            $('#left-column').css('overflow', 'visible');
+            $row.draggable({
+                cursor: 'move',
+                containment: '#site',
+                helper: 'clone',
+                start: this.dataDragged
+            });
+            $('#notebook-container').droppable({
+                drop: this.dataDropped
+            });
+
+            return this;
+        },
+
+        dataDragged: function(event, ui) {
+            console.debug("Gentlemen, start your dragging");
+        },
+
+        dataDropped: function(event, ui) {
+            console.debug("Done dragging, sucka!");
+            var elt = ui.draggable;
+            // find nearest cell using jquery-nearest lib.
+            var near_elt = $(elt).nearest('.cell');
+            var near_idx = IPython.notebook.find_cell_index($(near_elt).data().cell);
+            var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
+            var cell_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);});
+            cell.rendered = false;
+            // Extract metadata 
+            var meta_fields = ['name', 'type', 'version'];
+            var meta = _.object(meta_fields, _.map(meta_fields,
+                function(f) {return $(elt).find('.kb-data-list-' + f).text()}));
+
+            cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
+            cell.render();
+            // Insert the narrative data cell into the div we just rendered
+            $('#' + cell_id).kbaseNarrativeDataCell(meta);
+        },
+
+        // ============= end DnD ================
+
         renderList: function() {
             var self = this;
             self.$loadingDiv.show();

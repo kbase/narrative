@@ -1,7 +1,7 @@
 (function($, undefined) {
     $.KBWidget({
         name: 'kbaseNarrativeOutputCell',
-        parent: 'kbaseWidget',
+        parent: 'kbaseNarrativeCell',
         version: '1.0.0',
         options: {
             widget: 'kbaseDefaultNarrativeOutput',

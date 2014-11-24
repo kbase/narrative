@@ -10,7 +10,8 @@
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",
-            parsedParameterSpec: null
+            parsedParameterSpec: null,
+            wsObjSelectPageSize : 20
         },
         IGNORE_VERSION: true,
 
@@ -289,7 +290,10 @@
                 formatNoMatches: noMatchesFoundStr,
                 placeholder:placeholder,
                 allowClear: true,
+                //multiple: true,
+                //maximumSelectionSize:1,
                 query: function (query) {
+                    
                     var data = {results:[]};
                     
                     // populate the names from our valid data object list
@@ -317,8 +321,12 @@
                         }
                     }
                     
-                    query.callback(data);
+                    // paginate results
+                    var pageSize = self.options.wsObjSelectPageSize;
+                    query.callback({results:data.results.slice((query.page-1)*pageSize, query.page*pageSize),
+                                more:data.results.length >= query.page*pageSize });
                 },
+                
                 formatSelection: function(object, container) {
                     var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
                     return display;

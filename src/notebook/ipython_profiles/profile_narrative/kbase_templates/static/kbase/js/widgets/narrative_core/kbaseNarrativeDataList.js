@@ -115,9 +115,9 @@
         },
         
         setWorkspace : function(ws_name) {
+            this.ws_name = ws_name;
             //this.ws_name = "janakacore"; // for testing a bigish workspace
             //this.ws_name = "KBasePublicGenomesV4"; // for testing a very big workspace
-            this.ws_name = ws_name;
             this.refresh();
         },
         
@@ -787,6 +787,18 @@
                     if (regex.test(info[1])) { match = true; } // match on name
                     else if (regex.test(info[2].split('.')[1].split('-'))) { match = true; } // match on type name
                     else if (regex.test(info[5])) { match = true; } // match on saved_by user
+                    
+                    if (!match && info[10]) { // match on metadata values
+                        for(var metaKey in info[10]) {
+                            if (info[10].hasOwnProperty(metaKey)) {
+                                if (regex.test(info[10][metaKey])) { match = true; break; }
+                                else if (regex.test(metaKey+"::"+info[10][metaKey])) {
+                                    match = true; break; 
+                                }
+                            }
+                        }
+                    }
+                    
                     
                     if (type) { // if type is defined, then our sort must also filter by the type
                         if (type !== info[2].split('-')[0].split('.')[1]) {

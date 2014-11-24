@@ -6,7 +6,11 @@
  */
 "use strict";
 
-// TODO: Move this to setup code!
+$('#kb-del-btn').click(function(e) {
+    if (IPython && IPython.notebook)
+        IPython.notebook.delete_cell();
+});
+
 $('#kb-save-btn').click(function(e) {
     if (IPython && IPython.notebook)
         IPython.notebook.save_checkpoint();

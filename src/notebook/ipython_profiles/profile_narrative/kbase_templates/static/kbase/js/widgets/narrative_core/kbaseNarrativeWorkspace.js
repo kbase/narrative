@@ -51,6 +51,8 @@
         KB_CODE_CELL: 'kb_code',
         KB_STATE: 'widget_state',
 
+        curCell: null,
+
         // set up as a hash for quickie lookup time!
         ignoredDataTypes : {
             'string' : 1,

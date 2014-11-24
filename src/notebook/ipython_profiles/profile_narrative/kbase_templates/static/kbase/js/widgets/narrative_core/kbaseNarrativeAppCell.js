@@ -206,7 +206,7 @@
             
             this.$submitted = $('<span>').addClass("pull-right kb-func-timestamp").hide();
 
-            var $appInfo = this.appSpec.info.name;
+            var appInfo = this.appSpec.info.name;
             this.$methodPanel = $('<div>')
                                 .addClass('kb-app-steps');
             var stepHeaderText = "Step ";
@@ -234,12 +234,17 @@
             var $appHeaderDiv = $("<div>")
                                         .addClass('kb-app-panel-header')
                                         .append(headerCleaned);
+
+            var $menuSpan = $('<div class="pull-right">');
             
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
+                             .append($menuSpan)
                              .append($('<div>')
                                      .addClass('panel-heading app-panel-heading')
-                                     .append("<h1><b>"+$appInfo+"</b></h1>")
+                                     .append($('<div>')
+                                             .append($('<h1><b>' + appInfo + '</b></h1>'))
+                                             )
                                      .append($appSubtitleDiv))
                              .append($('<div>')
                                      .addClass('panel-body')
@@ -252,7 +257,7 @@
                                      .css({'overflow' : 'hidden'})
                                      .append($buttons));
 
-
+            $menuSpan.kbaseNarrativeCellMenu();
             //now we link the step parameters together that are linked
             this.linkStepsTogether();
             

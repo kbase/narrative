@@ -22,7 +22,7 @@ import IPython.utils.traitlets as trt
 from IPython.core.application import Application
 # Local
 from biokbase.narrative.common import kbtypes, kblogging
-from biokbase.narrative.common.log_proxy import EVENT_MSG_SEP
+from biokbase.narrative.common.log_common import EVENT_MSG_SEP
 from biokbase.narrative.common.kbjob_manager import KBjobManager
 
 from biokbase.narrative.common.url_config import URLS

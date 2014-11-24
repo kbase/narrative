@@ -300,7 +300,7 @@ var IPython = (function (IPython) {
         cm_config: {
             mode: 'gfm'
         },
-        placeholder: "Type *Markdown* and LaTeX: $\\alpha^2$"
+        placeholder: "[Empty Markdown / LaTeX cell]" //"Type *Markdown* and LaTeX: $\\alpha^2$"
     }
 
 

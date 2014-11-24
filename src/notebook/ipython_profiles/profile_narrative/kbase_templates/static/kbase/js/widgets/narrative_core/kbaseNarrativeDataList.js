@@ -1,5 +1,4 @@
 /**
- * 
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
@@ -9,7 +8,7 @@
         parent: 'kbaseAuthenticatedWidget',
         version: '1.0.0',
         options: {
-            ws_name: null,
+            ws_name: null, // must be the WS name, not the WS Numeric ID
             
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
@@ -17,31 +16,55 @@
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
             
             loadingImage: 'static/kbase/images/ajax-loader.gif',
+            methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
+
+            ws_chunk_size:10000,  // this is the limit of the number of objects to retrieve from the ws on each pass
+            ws_max_objs_to_fetch: 75000, // this is the total limit of the number of objects before we stop trying to get more
+                                         // note that if there are more objects than this, then sorts/search filters may
+                                         // not show accurate results
             
-            // WS chunking doesn't really work well, so this option is not used
-            //ws_chunk_size:10000,  // this is the limit
+            objs_to_render_to_start:40, // initial number of rows to display
+            objs_to_render_on_scroll:5, // number of rows to add when the user scrolls to the bottom, should be <=5, much more and
+                                        // the addition of new rows becomes jerky
             
-            max_objs_to_render:1000,
-            max_objs_to_prevent_filter_as_you_type_in_search:2000,
-            max_objs_to_prevent_initial_sort:2000,
+            max_objs_to_prevent_filter_as_you_type_in_search:50000, //if there are more than this # of objs, user must click search
+                                                                    //instead of updating as you type
+            
+            max_objs_to_prevent_initial_sort:10000, // initial sort makes loading slower, so we can turn it off if
+                                                    // there are more than this number of objects
+            
             max_name_length:22,
             refresh_interval:60000
         },
 
+        // private variables
+        mainListPanelHeight : '300px',
+        
         ws_name: null,
         ws: null,
         ws_last_update_timestamp: null,
+        ws_obj_count: null,
+        
+        n_objs_rendered:0,
         
         ws_landing_page_map: {},
         real_name_lookup: {},
         
         $searchInput: null,
+        $filterTypeSelect: null,
+        availableTypes:{},
+        
+        $searchDiv: null,
+        $sortByDiv: null,
+        $filterTypeDiv: null,
+        
         $addDataButton:null,
         $controllerDiv: null,
         $mainListDiv:null,
         $loadingDiv:null,
         
-        
+        methClient: null,
+
         obj_list : [],
         obj_data : {}, // old style - type_name : info
         
@@ -56,7 +79,7 @@
          */
         init: function(options) {
             this._super(options);
-            console.log(this);
+            var self = this;
             this.getLandingPageMap();  //start off this request so that we hopefully get something back right away
             
             this.$controllerDiv = $('<div>');
@@ -65,21 +88,35 @@
             this.$loadingDiv = $('<div>').addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">');
             this.$elem.append(this.$loadingDiv);
-            this.$mainListDiv = $('<div>').css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':'290px'});
+            this.$mainListDiv = $('<div>')
+                .css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':this.mainListPanelHeight})
+                .on('scroll', function() {
+                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
+                        self.renderMore();
+                    }
+                });
             this.$elem.append(this.$mainListDiv);
-            
             
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
-            var self = this;
-            setInterval(function(){self.refresh()}, this.options.refresh_interval); // check if there is new data every 15 sec
+            setInterval(function(){self.refresh()}, this.options.refresh_interval); // check if there is new data every X ms
+            
+            this.showLoading();
+            if (this.options.ws_name) {
+                this.setWorkspace(this.options.ws_name);
+            }
+            if (window.kbconfig && window.kbconfig.urls) {
+                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+            }
+            this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
             
             return this;
         },
         
         setWorkspace : function(ws_name) {
             //this.ws_name = "janakacore"; // for testing a bigish workspace
+            //this.ws_name = "KBasePublicGenomesV4"; // for testing a very big workspace
             this.ws_name = ws_name;
             this.refresh();
         },
@@ -119,8 +156,10 @@
             if (self.objectList.length>0) {
                 if (self.objectList.length<self.options.max_objs_to_prevent_filter_as_you_type_in_search) {
                     for(var i=0; i<self.objectList.length; i++) {
-                        self.objectList[i].$div.find('.kb-data-list-date')
-                            .html(self.getTimeStampStr(self.objectList[i].info[3]));
+                        if(self.objectList[i].$div) {
+                            self.objectList[i].$div.find('.kb-data-list-date')
+                                .html(self.getTimeStampStr(self.objectList[i].info[3]));
+                        }
                     }
                 }
             }
@@ -132,6 +171,8 @@
                 // empty the existing object list first
                 self.objectList = [];
                 self.obj_data = {};
+                self.availableTypes = {};
+                        
                 self.getNextDataChunk(0);
             }
         },
@@ -155,14 +196,26 @@
                         if (infoList[i][2].indexOf('KBaseNarrative') == 0) { continue; }
                         self.objectList.push(
                             {
-                                $div:null, //self.renderObjectRowDiv(infoList[i]),
-                                info:infoList[i]
+                                $div:null, //self.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
+                                info:infoList[i],
+                                attached:false
                             }
                         );
                         var typeKey = infoList[i][2].split("-")[0];
-                        if (!(typeKey in self.obj_data)) { self.obj_data[typeKey]=[] }
+                        if (!(typeKey in self.obj_data)) {
+                            self.obj_data[typeKey]=[];
+                        }
                         self.obj_data[typeKey].push(infoList[i]);
                         
+                        var typeName = typeKey.split('.')[1];
+                        if (!(typeName in self.availableTypes)) {
+                            self.availableTypes[typeName] =
+                                        {
+                                            type:typeName,
+                                            count:0
+                                        };
+                        }
+                        self.availableTypes[typeName].count++;
                     }
                     
                     // if we have more than 2k objects, make them hit enter to search...
@@ -174,11 +227,18 @@
                     
                     self.trigger('dataUpdated.Narrative');
                     
-                    // WE CAN ADD THIS BACK, BUT RIGHT NOW WS DOES NOT HANDLE THIS WELL!!
-                    //if (skip < self.ws_obj_count) {
-                    //if (skip < 100000) {
-                    //    self.getNextDataChunk(skip+self.options.ws_chunk_size);
-                    //} else {
+                    //LOGIC: we keep trying to get more until we reach the ws_obj_count or untill the max
+                    // fetch count option, UNLESS the last call returned nothing, in which case we stop.
+                    //IMPORTANT NOTE: IN RARE CASES THIS DOES NOT GAURANTEE THAT WE GET ALL OBJECTS FROM
+                    //THIS WS!!  IF THERE IS A CHUNK THAT RETURNED NOTHING, THERE STILL MAY BE MORE
+                    //OBJECTS DUE TO A BUG IN THE WORKSPACE THAT INCLUDES OLD VERSIONS AND DELETED VERSIONS
+                    //BEFORE FILTERING OUT THE NUMBER - A BETTER TEMP FIX WOULD BE TO LIMIT THE NUMBER OF
+                    //RECURSIONS TO 2 or 3 MAYBE...
+                    if (self.objectList.length < self.ws_obj_count
+                            && self.objectList.length < self.options.ws_max_objs_to_fetch
+                            && infoList.length>0) {
+                        self.getNextDataChunk(skip+self.options.ws_chunk_size);
+                    } else {
                         if (self.objectList.length<=self.options.max_objs_to_prevent_initial_sort) {
                             self.objectList.sort(function(a,b) {
                                     if (a.info[3] > b.info[3]) return -1; // sort by date
@@ -188,10 +248,11 @@
                             self.$elem.find('#nar-data-list-default-sort-label').addClass('active');
                             self.$elem.find('#nar-data-list-default-sort-option').attr('checked');
                         }
-                    //}
+                    }
                     
+                    self.populateAvailableTypes();
                     self.renderList();
-                    self.$loadingDiv.hide();
+                    self.hideLoading();
                 }, 
                 function(error) {
                     console.log(error);
@@ -279,19 +340,17 @@
                                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                                         .append(metadataText));
             
-            var $toggleAdvancedViewBtn = $('<span>').addClass('btn-xs')
-                .html('<span class="glyphicon glyphicon-plus" style="color:#999" aria-hidden="true"/>')
-                .mouseenter(function(){$(this).addClass('btn btn-default');})
-                .mouseleave(function(){$(this).removeClass('btn btn-default');})
-                    .on('click',function() {
+            var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
+                .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
+                .on('click',function() {
                         var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
                         if ($more.is(':visible')) {
                             $more.hide();
-                            $(this).html('<span class="glyphicon glyphicon-plus" style="color:#999" aria-hidden="true" />');
+                            $(this).html('<span class="fa fa-plus" style="color:#999" aria-hidden="true" />');
                         } else {
                             self.getRichData(object_info,$moreRow);
                             $more.show();
-                            $(this).html('<span class="glyphicon glyphicon-minus" style="color:#999" aria-hidden="true" />');
+                            $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
                     });
                     
@@ -310,9 +369,10 @@
                                         .append($mainDiv))
                             .append($moreRow)
                             .mouseenter(function(){$(this).addClass('kb-data-list-obj-row-hover');})
-                            .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');}) 
+                            .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
 
-            this.addDragAndDrop($row);
+            // Uncomment to re-enable DnD
+            //this.addDragAndDrop($row);
 
             return $row;
         },
@@ -337,7 +397,7 @@
         },
 
         dataDragged: function(event, ui) {
-            console.debug("Gentlemen, start your dragging");
+            console.debug("Gentlemen (?), start your dragging");
         },
 
         dataDropped: function(event, ui) {
@@ -364,30 +424,98 @@
 
         // ============= end DnD ================
 
+        renderMore: function() {
+            var self=this;
+            if (self.objectList) {
+                
+                if (!self.searchFilterOn) { // if search filter is off, then we just are showing everything
+                    var start = self.n_objs_rendered;
+                    for(var i=start; i<self.objectList.length; i++) {
+                        // only show them as we scroll to them
+                        if (self.n_objs_rendered >= start+self.options.objs_to_render_on_scroll) {
+                            break;
+                        }
+                        self.attachRow(i);
+                    }
+                    console.log('showing '+ self.n_objs_rendered + ' of ' + self.objectList.length);
+                } else {
+                    // search filter is on, so we have to base this on what is currently filtered
+                    var start = self.n_filteredObjsRendered;
+                    for(var i=start; i<self.currentMatch.length; i++) {
+                        // only show them as we scroll to them
+                        if (self.n_filteredObjsRendered >= start+self.options.objs_to_render_on_scroll) {
+                            break;
+                        }
+                        self.attachRowElement(self.currentMatch[i]);
+                        self.n_filteredObjsRendered++;
+                    }
+                    console.log('showing '+ self.n_filteredObjsRendered + ' of ' + self.currentMatch.length + ' objs matching search filter');
+                }
+            }
+        },
+        
+        attachRow: function(index) {
+            if (this.objectList[index].attached) { return; }
+            if (this.objectList[index].$div) {
+                this.$mainListDiv.append(this.objectList[index].$div);
+            } else {
+                this.objectList[index].$div = this.renderObjectRowDiv(this.objectList[index].info);
+                this.$mainListDiv.append(this.objectList[index].$div);
+            }
+            this.objectList[index].attached = true;
+            this.n_objs_rendered++;
+        },
+        attachRowElement: function(row) {
+            if (row.attached) { return; } // return if we are already attached
+            if (row.$div) {
+                this.$mainListDiv.append(row.$div);
+            } else {
+                row.$div = this.renderObjectRowDiv(row.info);
+                this.$mainListDiv.append(row.$div);
+            }
+            row.attached = true;
+            this.n_objs_rendered++;
+        },
+        
+        detachAllRows: function() {
+            for (var i=0; i<this.objectList.length; i++) {
+                this.detachRow(i);
+            }
+            this.$mainListDiv.children().detach();
+            this.n_objs_rendered=0;
+            this.renderedAll = false;
+        },
+        detachRow: function(index) {
+            if (this.objectList[index].attached) {
+                if (this.objectList[index].$div) {
+                    this.objectList[index].$div.detach();
+                }
+                this.objectList[index].attached = false;
+                this.n_objs_rendered--;
+            }
+        },
+        
+        
         renderList: function() {
             var self = this;
-            self.$loadingDiv.show();
-            self.$mainListDiv.children().detach();
+            self.showLoading();
+            
+            self.detachAllRows();
+            
             if (self.objectList.length>0) {
                 for(var i=0; i<self.objectList.length; i++) {
-                    // if more than a certain number, don't show any more
-                    if (i>=self.options.max_objs_to_render) {
-                        self.$mainListDiv.append($('<div>').append(''+(self.objectList.length-self.options.max_objs_to_render)+' more...'));
+                    // only show up to the given number
+                    if (i>=self.options.objs_to_render_to_start) {
+                        self.n_objs_rendered = i;
                         break;
                     }
-                    if (self.objectList[i].$div) {
-                        self.$mainListDiv.append(self.objectList[i].$div);
-                    } else {
-                        self.objectList[i].$div = self.renderObjectRowDiv(self.objectList[i].info);
-                        self.$mainListDiv.append(self.objectList[i].$div);
-                    }
+                    self.attachRow(i);
                 }
             } else {
-                // todo: show an upload button or some other message
+                // todo: show an upload button or some other message if there are no elements
             }
             
-            
-            self.$loadingDiv.hide();
+            self.hideLoading();
         },
         
         renderController: function() {
@@ -425,38 +553,73 @@
                                         return 0;
                                     });
                                 });
-            var $upOrDown = $('<button class="btn btn-default btn-xs" type="button">').css({'margin-left':'5px'})
-                                .append('<span class="glyphicon glyphicon-sort"aria-hidden="true" />')
+            var $upOrDown = $('<button class="btn btn-default btn-sm" type="button">').css({'margin-left':'5px'})
+                                .append('<span class="glyphicon glyphicon-sort" style="color:#777" aria-hidden="true" />')
                                 .on('click',function() {
                                     self.reverseData();
                                 });
             
             var $sortByGroup = $('<div data-toggle="buttons">')
-                                    .addClass("btn-group btn-group-xs")
+                                    .addClass("btn-group btn-group-sm")
                                     .css({"margin":"2px"})
                                     .append($byDate)
                                     .append($byName)
                                     .append($byType);
             
             var $addDataBtn = $('<button>')
-                                .addClass("btn btn-success")
-                                .append('<span class="glyphicon glyphicon-plus" style="color:#fff" aria-hidden="true" /> Get Data')
+                                .addClass("btn btn-warning kb-data-list-get-data-button")
+                                .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Get Data')
                                 .on('click',function() {
-                                    self.trigger('toggleSidePanelOverlay.Narrative');
+//                                    self.trigger('toggleSidePanelOverlay.Narrative');
+
+                                      // Lovely hack to make the 'Get Data' button behave like a method/app panel button.
+                                      self.methClient.get_method_spec({ 'ids' : ['import_genome_data_generic'] },
+                                          function(spec) {
+                                              self.trigger('methodClicked.Narrative', spec[0]);
+                                          },
+                                          function(error) {
+                                              self.showError(error);
+                                          }
+                                      );
                                 });
             
-            self.$controllerDiv.append(
-                $('<div>').addClass('row').css({'margin':'5px'})
-                    .append($('<div>').addClass('col-xs-7').css({'margin':'0px','padding':'0px'})
-                        .append("<div><small>sort by: </small></div>")
-                        .append($sortByGroup)
-                        .append($upOrDown))
-                    .append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'})
-                        .append($addDataBtn)));           
             
-            self.$searchInput = $('<input type="text">')
-                                    .addClass('form-control');
-            var $searchDiv = $('<div>').addClass("input-group").css({'margin-bottom':'10px'})
+            var $openSearch = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
+                .html('<span class="fa fa-search" style="color:#666" aria-hidden="true"/>')
+                .on('click',function() {
+                    if(!self.$searchDiv.is(':visible')) {
+                        self.$searchDiv.show();
+                        self.$sortByDiv.hide();
+                        self.$filterTypeDiv.hide();
+                    } else {
+                        self.$searchDiv.hide();
+                    }
+                });
+            var $openSort = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
+                .html('<span class="fa fa-sort-amount-asc" style="color:#666" aria-hidden="true"/>')
+                .on('click',function() {
+                    if(!self.$sortByDiv.is(':visible')) {
+                        self.$sortByDiv.show();
+                        self.$searchDiv.hide();
+                        self.$filterTypeDiv.hide();
+                    } else {
+                        self.$sortByDiv.hide();
+                    }
+                });
+            var $openFilter = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
+                .html('<span class="fa fa-filter" style="color:#666" aria-hidden="true"/>')
+                .on('click',function() {
+                    if(!self.$filterTypeDiv.is(':visible')) {
+                        self.$filterTypeDiv.show();
+                        self.$sortByDiv.hide();
+                        self.$searchDiv.hide();
+                    } else {
+                        self.$filterTypeDiv.hide();
+                    }
+                });
+            
+            self.$searchInput = $('<input type="text">').addClass('form-control');
+            self.$searchDiv = $('<div>').addClass("input-group").css({'margin-bottom':'10px'})
                                 .append(self.$searchInput)
                                 .append($("<span>").addClass("input-group-addon")
                                             .append($("<span>")
@@ -464,9 +627,71 @@
                                                 .css({'cursor':'pointer'})
                                                 .on('click',function() {
                                                         self.search();
-                                                    })  ));    
-            self.$controllerDiv.append($searchDiv);
+                                                    })  ));
+
+            self.$sortByDiv = $('<div>').css({'margin':'3px','margin-left':'5px','margin-bottom':'10px'})
+                                .append("<small>sort by: </small>")
+                                .append($sortByGroup)
+                                .append($upOrDown);
+            
+            self.$filterTypeSelect = $('<select>').addClass("form-control")
+                                        .append($('<option value="">'))
+                                        .change(function() {
+                                            var optionSelected = $(this).find("option:selected");
+                                            var typeSelected  = optionSelected.val();
+                                            //var textSelected   = optionSelected.text();
+                                            self.filterByType(typeSelected);
+                                        });
+            
+            self.$filterTypeDiv = $('<div>').css({'margin':'3px','margin-left':'5px','margin-bottom':'10px'})
+                                .append(self.$filterTypeSelect);
+                                
+                                
+            
+            var $header = $('<div>').addClass('row').css({'margin':'5px'})
+                    .append($('<div>').addClass('col-xs-7').css({'margin':'0px','padding':'0px'})
+                        .append($openSearch)
+                        .append($openSort)
+                        .append($openFilter))
+                    .append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'})
+                        .append($addDataBtn));
+            
+            
+            self.$sortByDiv.hide();
+            self.$searchDiv.hide();
+            self.$filterTypeDiv.hide();
+            
+            var $filterDiv = $('<div>')
+                                .append(self.$sortByDiv)
+                                .append(self.$searchDiv)
+                                .append(self.$filterTypeDiv);
+                                
+            self.$controllerDiv.append($header).append($filterDiv);
         },
+        
+        populateAvailableTypes: function() {
+            var self = this;
+            if (self.availableTypes && self.$filterTypeSelect) {
+                
+                var types = [];
+                for(var type in self.availableTypes) {
+                    if(self.availableTypes.hasOwnProperty(type)) {
+                        types.push(type);
+                    }
+                }
+                types.sort();
+                
+                self.$filterTypeSelect.empty();
+                self.$filterTypeSelect.append($('<option value="">'));
+                for(var i=0; i<types.length; i++) {
+                    var countStr = " (".concat(self.availableTypes[types[i]].count).concat(" objects)");
+                    self.$filterTypeSelect.append(
+                        $('<option value="'+self.availableTypes[types[i]].type+'">')
+                            .append(self.availableTypes[types[i]].type + countStr));
+                }
+            }
+        },
+        
         
         reverseData: function() {
             var self = this;
@@ -474,145 +699,145 @@
             
             self.objectList.reverse();
             self.renderList();
-            if(self.$searchInput.val().trim().length>0) {
-                self.search();  // always refilter on the search term search if there is something there
-            }
-            self.$loadingDiv.hide();
+            self.search();
+            
+            self.hideLoading();
         },
         
         sortData: function(sortfunction) {
             var self = this;
             if (!self.objectList) { return; }
-            //should add spinning wait bar .... doesn't really work because js is single threaded...
-            //self.$loadingDiv.show();
+            //should add spinning wait bar ....
+            self.showLoading();
             
-            // start it off separately so we don't block
-            //setTimeout(function() {
+            self.objectList.sort(sortfunction);
+            self.renderList();
+            self.search();  // always refilter on the search term search if there is something there
             
-                self.objectList.sort(sortfunction);
-                self.renderList();
-                if(self.$searchInput.val().trim().length>0) {
-                    self.search();  // always refilter on the search term search if there is something there
-                }
-                var end= new Date().getTime();
-                
-                //self.$loadingDiv.hide();
-            //}, 0);
+            self.hideLoading();
+            
+            // go back to the top on sort
+            self.$mainListDiv.animate({
+                scrollTop:0
+            }, 300); // fast = 200, slow = 600
         },
         
         
         currentMatch: [],
         currentTerm: '',
+        searchFilterOn: false,
+        n_filteredObjsRendered: null,
         
-        search: function(term) {
+        search: function(term, type) {
             var self = this;
             if (!self.objectList) { return; }
             
             if (!term && self.$searchInput) {
                 term = self.$searchInput.val();
             }
+            
+            // if type wasn't selected, then we try to get something that was set
+            if (!type) {
+                if (self.$filterTypeSelect) {
+                    type = self.$filterTypeSelect.find("option:selected").val();
+                }
+            }
+            
             term = term.trim();
-            //console.log('searching for ' + term);
-            if (term.length>0) {
-                
+            if (term.length>0 || type) {
+                self.searchFilterOn = true;
                 // todo: should show searching indicator (could take several seconds if there is a lot of data)
                 // optimization => we filter existing matches instead of researching everything if the new
                 // term starts with the last term searched for
                 var newMatch = [];
                 if (!self.currentTerm) {
                     // reset if currentTerm is null or empty
-                    //console.log('current term is null or empty, setting current match to all');
                     self.currentMatch = self.objectList;
                 } else {
-                    if (term.indexOf(self.currentTerm)===0) {
-                        //console.log('new term starts with current term, so we can continue to filter on current match');
-                    } else {
-                        //console.log('new term does not start with current term, so we must reset');
+                    if (term.indexOf(self.currentTerm)!==0) {
                         self.currentMatch = self.objectList;
                     }
                 }
-                //console.log('currentMatch.lenght='+self.currentMatch.length);
+                // clean the term for regex use
+                term = term.replace(/\|/g,'\\|').replace(/\\\\\|/g,'|'); // bars are common in kb ids, so escape them unless we have \\|
+                term = term.replace(/\./g,'\\.').replace(/\\\\\./g,'.'); // dots are common in names, so we escape them, but
+                                                                         // if a user writes '\\.' we assume they want the regex '.'
                 
-                term = term.replace('.','\\.');  // dots are common in names, so don't match anything!! escape them
                 var regex = new RegExp(term, 'i');
                 
-                
-                if (self.currentMatch.length<self.options.max_objs_to_render) {
-                    for(var k=0; k<self.currentMatch.length; k++) {
-                        // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                        // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                        // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                        // [9] : int size // [10] : usermeta meta
-                        var match = false;
-                        var info = self.currentMatch[k].info;
-                        if (regex.test(info[1])) { match = true; }
-                        else if (regex.test(info[2])) { match = true; }
-                        
-                        if (match) {
-                            self.currentMatch[k].$div.show();
-                            newMatch.push(self.currentMatch[k]);
-                        }
-                        else { self.currentMatch[k].$div.hide(); }
-                    }
-                } else {
-                    // then we do something stupid and remove them all and readd them - should refactor for performance later
-                   // self.$loadingDiv.show();
-                    self.$mainListDiv.children().detach();
-                    var n_matches = 0;
-                    for(var k=0; k<self.currentMatch.length; k++) {
-                        // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                        // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                        // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                        // [9] : int size // [10] : usermeta meta
-                        var match = false;
-                        var info = self.currentMatch[k].info;
-                        if (regex.test(info[1])) { match = true; }
-                        else if (regex.test(info[2])) { match = true; }
-                        //if (info[1].toUpperCase().indexOf(term.toUpperCase())) { match = true; } // surprisingly, this is slower if we ignore case!
-                        //else if (info[2].toUpperCase().indexOf(term.toUpperCase())) { match = true; }
-                        
-                        if (match) {
-                            if (n_matches<self.options.max_objs_to_render) {
-                                if (self.currentMatch[k].$div) {
-                                    self.$mainListDiv.append(self.currentMatch[k].$div);
-                                } else {
-                                    self.currentMatch[k].$div = self.renderObjectRowDiv(self.currentMatch[k].info);
-                                    self.$mainListDiv.append(self.currentMatch[k].$div);
-                                }
-                            }
-                            self.objectList[k].$div.show();
-                            newMatch.push(self.currentMatch[k]);
-                            n_matches++;
+                var n_matches = 0; self.n_filteredObjsRendered = 0;
+                for(var k=0; k<self.currentMatch.length; k++) {
+                    // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+                    // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+                    // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+                    // [9] : int size // [10] : usermeta meta
+                    var match = false;
+                    var info = self.currentMatch[k].info;
+                    if (regex.test(info[1])) { match = true; } // match on name
+                    else if (regex.test(info[2].split('.')[1].split('-'))) { match = true; } // match on type name
+                    else if (regex.test(info[5])) { match = true; } // match on saved_by user
+                    
+                    if (type) { // if type is defined, then our sort must also filter by the type
+                        if (type !== info[2].split('-')[0].split('.')[1]) {
+                            match = false; // no match if we are not the selected type!
                         }
                     }
                     
-                    if (n_matches >= self.options.max_objs_to_render) {
-                        self.$mainListDiv.append($('<div>').append(' '+(n_matches-self.options.max_objs_to_render)+' more...'));
+                    if (match) {
+                        // matches must always switch to show if they are rendered
+                        if (self.currentMatch[k].$div) {
+                            self.currentMatch[k].$div.show();
+                        }
+                        
+                        // todo: add check so we only show up to the number we render... switching to this will require that
+                        // we revise the renderMore logic...
+                        if (n_matches < self.options.objs_to_render_to_start) {
+                            self.attachRowElement(self.currentMatch[k]);
+                            self.n_filteredObjsRendered++;
+                        }
+                        
+                        newMatch.push(self.currentMatch[k]);
+                        n_matches++;
+                    }
+                    else {
+                        if (self.currentMatch[k].$div) {
+                            self.currentMatch[k].$div.hide();
+                        }
                     }
                 }
                 self.currentMatch = newMatch; // update the current match
             } else {
-                if (self.currentTerm) {
-                    // no new search, so show all
-                    if (self.objectList.length<self.options.max_objs_to_render) {
-                        for(var k=0; k<self.objectList.length; k++) {
-                            self.objectList[k].$div.show();
-                        }
-                    } else {
-                        self.renderList();
+                self.searchFilterOn = false;
+                // no new search, so show all and render the list
+                for(var k=0; k<self.objectList.length; k++) {
+                    if (self.objectList[k].$div) {
+                        self.objectList[k].$div.show();
                     }
                 }
+                self.renderList();
             }
             self.currentTerm = term;
         },
         
         
+        filterByType: function(type) {
+            var self = this;
+            self.search(null,type);
+        },
         
         getRichData: function(object_info,$moreRow) {
             var self = this;
             var $usernameTd = $moreRow.find(".kb-data-list-username-td");
             self.displayRealName(object_info[5],$usernameTd);
-            
+        },
+        
+        showLoading : function() {
+            this.$loadingDiv.show();
+            this.$mainListDiv.hide();
+        },
+        hideLoading : function() {
+            this.$loadingDiv.hide();
+            this.$mainListDiv.show();
         },
         
         displayRealName: function(username,$targetSpan) {
@@ -644,6 +869,62 @@
 	    }
         },
         
+        getLandingPageMap: function() {
+            /**
+             * Get the landing page map.
+             * First, try getting it from /functional-site/landing_page_map.json.
+             * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
+             */
+            $.ajax({
+                url: '/functional-site/landing_page_map.json',
+                async: true,
+                dataType: 'json',
+                success: $.proxy(function(response) {
+                    this.ws_landing_page_map = response;
+                }, this),
+                error: $.proxy(function(error) {
+                    this.dbg("Unable to get standard landing page map, looking for backup...");
+                    $.ajax({
+                        url: '/static/kbase/js/ui-common/functional-site/landing_page_map.json',
+                        async: true,
+                        dataType: 'json',
+                        success: $.proxy(function(response) {
+                            this.ws_landing_page_map = response;
+                        }, this),
+                        error: $.proxy(function(error) {
+                            this.dbg("Unable to get any landing page map! Landing pages mapping unavailable...");
+                            this.ws_landing_page_map = null;
+                        }, this)
+                    })
+                }, this)});
+        },
+        
+        /**
+         * @method loggedInCallback
+         * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
+         * is triggered when a login event occurs.
+         * It associates the new auth token with this widget and refreshes the data panel.
+         * @private
+         */
+        loggedInCallback: function(event, auth) {
+            this.ws = new Workspace(this.options.workspaceURL, auth);
+            this.isLoggedIn = true;
+            this.refresh();
+            return this;
+        },
+
+        /**
+         * @method loggedOutCallback
+         * Like the loggedInCallback, this is triggered during a logout event (through the login widget).
+         * It throws away the auth token and workspace client, and refreshes the widget
+         * @private
+         */
+        loggedOutCallback: function(event, auth) {
+            this.ws = null;
+            this.isLoggedIn = false;
+            this.refresh();
+            return this;
+        },
         
         logoColorLookup:function(type) {
             var colors = [
@@ -716,7 +997,7 @@
             }
             interval = Math.floor(seconds / 3600);
             if (interval > 1) {
-                return interval + "hours ago";
+                return interval + " hours ago";
             }
             interval = Math.floor(seconds / 60);
             if (interval > 1) {
@@ -732,70 +1013,7 @@
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
-        },
-        
-        
-        
-        /**
-         * @method loggedInCallback
-         * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
-         * is triggered when a login event occurs.
-         * It associates the new auth token with this widget and refreshes the data panel.
-         * @private
-         */
-        loggedInCallback: function(event, auth) {
-            this.ws = new Workspace(this.options.workspaceURL, auth);
-            this.isLoggedIn = true;
-            this.refresh();
-            return this;
-        },
-
-        /**
-         * @method loggedOutCallback
-         * Like the loggedInCallback, this is triggered during a logout event (through the login widget).
-         * It throws away the auth token and workspace client, and refreshes the widget
-         * @private
-         */
-        loggedOutCallback: function(event, auth) {
-            this.ws = null;
-            this.isLoggedIn = false;
-            this.refresh();
-            return this;
-        },
-        
-        getLandingPageMap: function() {
-            /**
-             * Get the landing page map.
-             * First, try getting it from /functional-site/landing_page_map.json.
-             * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
-             */
-            $.ajax({
-                url: '/functional-site/landing_page_map.json',
-                async: true,
-                dataType: 'json',
-                success: $.proxy(function(response) {
-                    this.ws_landing_page_map = response;
-                            console.log(response);
-                }, this),
-                error: $.proxy(function(error) {
-                    this.dbg("Unable to get standard landing page map, looking for backup...");
-                    $.ajax({
-                        url: '/static/kbase/js/ui-common/functional-site/landing_page_map.json',
-                        async: true,
-                        dataType: 'json',
-                        success: $.proxy(function(response) {
-                            this.ws_landing_page_map = response;
-                            console.log(response);
-                        }, this),
-                        error: $.proxy(function(error) {
-                            this.dbg("Unable to get any landing page map! Landing pages mapping unavailable...");
-                            this.ws_landing_page_map = null;
-                        }, this)
-                    })
-                }, this)});
         }
-        
-
     })
 
 })(jQuery);

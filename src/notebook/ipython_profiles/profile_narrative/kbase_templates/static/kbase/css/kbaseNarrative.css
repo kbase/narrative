@@ -839,7 +839,6 @@ div#notebook_panel {
 	font-size: 14pt;
 	font-family: "OxygenBold", Arial, sans-serif;
 	text-transform: uppercase;
-	font-weight: bold;
 	color: #2e618d;
 	border-bottom: 1px solid #e0e0e0;
 }
@@ -1716,6 +1715,26 @@ div[class="tooltip-inner"] {
 }
 
 /* again the css hover over div inherits strangly, so we use js */
+.kb-data-list-nav-buttons {
+    padding: 5px 8px;
+    font-size: 18px;
+    border: none;
+    text-shadow: none !important;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    moz-box-shadow: none;
+    margin: 0;
+}
+
+.kb-data-list-get-data-button {
+    /*border: none;
+    border-radius: 0;
+    text-shadow: none !important;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    moz-box-shadow: none;*/
+}
+
 .kb-data-list-obj-row-hover {
     /*background-color: #eee;*/
     border-left-style: solid;
@@ -1729,7 +1748,7 @@ div[class="tooltip-inner"] {
     background-color: #607D8B;
     border-radius: 50%;
     border-style:  solid;
-    border-width:  1px;
+    border-width:  0px;
     border-color:  #555;
     text-align: center;
     display: inline-block;
@@ -1742,15 +1761,17 @@ div[class="tooltip-inner"] {
 .kb-data-list-info {
 }
 .kb-data-list-name {
-    color:#333;
+    color:#2e618d;
     font-size: 11pt;
     font-weight: bold;
+    white-space: nowrap;
     margin: 2px;
 }
 .kb-data-list-version {
     color:#777;
     font-size: 9pt;
     font-style: italic;
+    white-space: nowrap;
     margin: 2px;
 }
 .kb-data-list-type {
@@ -1764,6 +1785,17 @@ div[class="tooltip-inner"] {
     font-size: 10pt;
     margin: 2px;
     margin-left: 15px;
+    white-space: nowrap;
+}
+.kb-data-list-more-btn {
+    padding: 2px 4px;
+    font-size: 12px;
+    border: none;
+    text-shadow: none !important;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    moz-box-shadow: none;
+    margin: 0;
 }
 .kb-data-list-more-div {
     color:#777;

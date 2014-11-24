@@ -372,7 +372,7 @@
                             .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
 
             // Uncomment to re-enable DnD
-            //this.addDragAndDrop($row);
+            this.addDragAndDrop($row);
 
             return $row;
         },
@@ -385,19 +385,30 @@
             $('#left-column').css('overflow', 'visible');
             $row.draggable({
                 cursor: 'move',
-                containment: '#site',
+                containment: '#main-container',
                 helper: 'clone',
                 start: this.dataDragged
             });
-            $('#notebook-container').droppable({
-                drop: this.dataDropped
+            // Uncomment this to enable dropping data directly onto the 
+            // notebook. (As opposed to on input fields)
+            //$('#notebook-container').droppable({
+            //    drop: this.dataDropped
+            //});
+            // Set text fields to name of dropped object
+            $('.kb-cell-params input[type=text]').droppable({
+                drop: function(event, ui) {
+                    console.log("dropped on input");
+                    var name = $(ui.draggable).find('.kb-data-list-name').text();
+                    $(this).val(name);
+                }
             });
 
             return this;
         },
 
         dataDragged: function(event, ui) {
-            console.debug("Gentlemen (?), start your dragging");
+            console.debug("Gentlemen (?), start your dragging:", ui);
+            // would like to make sure it is on top, but can't figure that out..
         },
 
         dataDropped: function(event, ui) {

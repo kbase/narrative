@@ -1,7 +1,7 @@
 (function($, undefined) {
     $.KBWidget({
         name: 'kbaseNarrativeOutputCell',
-        parent: 'kbaseNarrativeCell',
+        parent: 'kbaseWidget',
         version: '1.0.0',
         options: {
             widget: 'kbaseDefaultNarrativeOutput',
@@ -47,7 +47,7 @@
 
         // same as method for now
         renderAppOutputCell: function() {
-            renderMethodOutputCell();
+            this.renderMethodOutputCell();
         },
 
         renderErrorOutputCell: function() {

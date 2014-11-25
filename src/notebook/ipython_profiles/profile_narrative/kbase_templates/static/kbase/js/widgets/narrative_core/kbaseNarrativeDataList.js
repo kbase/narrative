@@ -386,7 +386,15 @@
             $row.draggable({
                 cursor: 'move',
                 containment: '#main-container',
-                helper: 'clone',
+                helper: function() {
+                            var w = $row.width(); // get orig. width
+                            var $elt = $row.clone();
+                            $elt.addClass("kb-data-inflight");
+                            // append to root container, to help with z-index
+                            $("#main-container").append($elt);
+                            // reset width (was: 100%)
+                            $elt.width(w); 
+                            return $elt; },
                 start: this.dataDragged
             });
             // Uncomment this to enable dropping data directly onto the 
@@ -394,21 +402,68 @@
             //$('#notebook-container').droppable({
             //    drop: this.dataDropped
             //});
+
+            var self = this;
+            // Old-style input fields
             // Set text fields to name of dropped object
             $('.kb-cell-params input[type=text]').droppable({
                 drop: function(event, ui) {
-                    console.log("dropped on input");
-                    var name = $(ui.draggable).find('.kb-data-list-name').text();
-                    $(this).val(name);
+                    console.log("dropped on (old-style) input");
+                    var meta = self.draggedMeta(ui.draggable);
+                    $('.kb-data-inflight').remove(); // remove cloned element
+                    $(this).val(meta.name);
                 }
             });
+            // New-style input fields
+            $('.kb-method-parameter-input a').droppable({
+                drop: function(event, ui) {                    
+                    console.log("dropped on (new-style) input");
+                    var meta = self.draggedMeta(ui.draggable);
+                    $('.kb-data-inflight').remove(); // remove cloned element
+                    var dc_class = 'kb-parameter-data-selection';
+                    var $velt = $(this).find('span.select2-chosen');
+                    var $curval = $velt.find('span.' + dc_class);
+                    console.debug("curval=", $curval, " length=", $curval.length);
+                    var $glyph_par = $(this).parent().parent().next();
+                    if ($curval.length == 0) {
+                        // insert new
+                        $velt.append($('<span>')
+                            .addClass(dc_class)
+                            .text(meta.name));
+                        // mark as a chosen element
+                        $(this).removeClass("select2-default");
+                        $(this).parent().addClass("select2-allowclear");  
+                        var $g = $glyph_par.find(".glyphicon");
+                        console.debug("glyph: ", g);
+                        $g.removeClass("glyphicon-arrow-left");
+                        $g.addClass("glyphicon-ok");
+                        $g.addClass("kb-method-parameter-accepted-glyph");
+                        $g.removeClass()
+                    }
+                    else {
+                        // replace existing XXX: multiple?
+                        console.debug("replace [0] of ", $curval);
+                        $($curval[0]).text(meta.name);
+                    }
+                }
+            })
 
             return this;
         },
 
         dataDragged: function(event, ui) {
             console.debug("Gentlemen (?), start your dragging:", ui);
+            console.debug("helper",ui.helper);
+            //$(ui.helper).css("z-index", 10);
             // would like to make sure it is on top, but can't figure that out..
+        },
+
+        /** Get metadata from dragged data. */
+        draggedMeta: function(elt) {
+            var fields = ['name', 'type', 'version'];
+            var values = _.map(fields, function(f) {
+                                return $(elt).find('.kb-data-list-' + f).text()});
+            return _.object(fields, values);
         },
 
         dataDropped: function(event, ui) {
@@ -422,15 +477,10 @@
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);});
             cell.rendered = false;
-            // Extract metadata 
-            var meta_fields = ['name', 'type', 'version'];
-            var meta = _.object(meta_fields, _.map(meta_fields,
-                function(f) {return $(elt).find('.kb-data-list-' + f).text()}));
-
             cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
             cell.render();
             // Insert the narrative data cell into the div we just rendered
-            $('#' + cell_id).kbaseNarrativeDataCell(meta);
+            $('#' + cell_id).kbaseNarrativeDataCell(draggedMeta(elt));
         },
 
         // ============= end DnD ================

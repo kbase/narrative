@@ -260,7 +260,7 @@
             };
 
             // console.debug('JOBS PANEL: refresh');
-            var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: false});
+            var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: false, store_history: false});
         },
 
         safeJSONStringify: function(method) {

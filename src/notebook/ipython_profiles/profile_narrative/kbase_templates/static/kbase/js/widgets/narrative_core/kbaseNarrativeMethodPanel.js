@@ -245,7 +245,7 @@
                 var accordion = {
                     title : catSet[cat].name,
                 };
-                var $methodList = $('<ul>');
+                var $methodList = $('<div>');
                 for (var i=0; i<catSet[cat].methods.length; i++) {
 
                     catSet[cat].methods[i].$elem = this.buildMethod(catSet[cat].methods[i]);
@@ -278,7 +278,7 @@
          * @param {object} method - the method object returned from the kernel.
          * @private
          */
-        buildMethod: function(method) {
+        buildMethodOld: function(method) {
             var $helpButton = $('<span>')
                               .addClass('glyphicon glyphicon-question-sign kb-function-help')
                               .css({'margin-top': '-5px'})
@@ -337,6 +337,79 @@
                           }, this));
             }
             return $newMethod;
+        },
+
+        buildMethod: function(method) {
+            console.log(method);
+            var $logo = $('<div>')
+                        .addClass('kb-data-list-logo')
+                        .css({'background-color':this.logoColorLookup(method.id), 'display':'inline-block'})
+                        .append(method.name[0]);
+            var $name = $('<div>')
+                        .addClass('kb-data-list-name')
+                        .css({'white-space':'normal'})
+                        .append(method.name);
+            var $version = $('<span>').addClass("kb-data-list-version").append('v'+method.ver);
+
+            var $more = $('<div>')
+                        .append(method.subtitle);
+
+            var $moreBtn = $('<span>')
+                           .addClass('btn btn-default btn-xs kb-data-list-more-btn pull-right fa fa-plus')
+                           .attr('aria-hidden', 'true')
+                           .css({'color' : '#999'})
+                           .click(function(e) {
+                               $more.slideToggle('fast', $.proxy(function() {
+                                   if ($more.is(':visible')) {
+                                       $(this).removeClass('fa-plus').addClass('fa-minus');
+                                   }
+                                   else {
+                                       $(this).removeClass('fa-minus').addClass('fa-plus');
+                                   }
+                                }, this));
+                           });
+
+            // var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
+            //     .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
+            //     .on('click',function() {
+            //             var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
+            //             if ($more.is(':visible')) {
+            //                 $more.hide();
+            //                 $(this).html('<span class="fa fa-plus" style="color:#999" aria-hidden="true" />');
+            //             } else {
+            //                 self.getRichData(object_info,$moreRow);
+            //                 $more.show();
+            //                 $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
+            //             }
+            //         });
+
+
+            var $mainDiv = $('<div>')
+                           .addClass('kb-data-list-info')
+                           .css({ padding:'0', margin:'0'})
+                           .append($name)
+                           .append($('<div>')
+                                   .append($version)
+                                   .append($moreBtn));
+
+            var $newMethod = $('<table>')
+                             .css({'width':'100%'})
+                             .append($('<tr>')
+                                     .append($('<td>')
+                                             .css({'width':'20%'})
+                                             .append($logo))
+                                     .append($('<td>')
+                                             // .css({'width':'80%'})
+                                             .append($mainDiv)));
+
+            return $('<div>')
+                   .addClass('kb-data-list-obj-row')
+                   .append($newMethod)
+                   .append($more.hide());
+        },
+
+        logoColorLookup: function() {
+            return "#789ABC";
         },
 
         /**

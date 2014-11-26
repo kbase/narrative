@@ -367,9 +367,9 @@
                             .append($('<div>').addClass('row kb-data-list-obj-row-main')
                                         .append($logoDiv)
                                         .append($mainDiv))
-                            .append($moreRow)
-                            .mouseenter(function(){$(this).addClass('kb-data-list-obj-row-hover');})
-                            .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
+                            .append($moreRow);
+                            // .mouseenter(function(){$(this).addClass('kb-data-list-obj-row-hover');})
+                            // .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
 
             // Uncomment to re-enable DnD
             this.addDragAndDrop($row);

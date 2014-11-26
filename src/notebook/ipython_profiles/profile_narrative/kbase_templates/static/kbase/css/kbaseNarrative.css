@@ -1735,7 +1735,7 @@ div[class="tooltip-inner"] {
     moz-box-shadow: none;*/
 }
 
-.kb-data-list-obj-row-hover {
+.kb-data-list-obj-row:hover {
     /*background-color: #eee;*/
     border-left-style: solid;
     border-left-width: 5px;

@@ -319,6 +319,7 @@ class KBaseWSNotebookManager(NotebookManager):
         self.log.debug("Narrative successfully read" )
         # Stash last read NB in env
         util.kbase_env.narrative = notebook_id
+        os.environ['KB_WORKSPACE_ID'] = nb.metadata.ws_name
         return last_modified, nb
 
     # def extract_data_dependencies(self, nb):

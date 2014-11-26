@@ -17,7 +17,7 @@
         options: {
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             autopopulate: true,
-            title: 'Methods',
+            title: 'Apps & Methods',
             methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
             methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
@@ -224,6 +224,18 @@
          *     --> Annotate Genome
          */
         parseMethodsFromService: function(catSet, methSet) {
+            var self = this;
+            var triggerMethod = function(method) {
+                self.methClient.get_method_spec({ 'ids' : [method.id] },
+                    function(spec) {
+                        self.trigger('methodClicked.Narrative', spec[0]);
+                    },
+                    function(error) {
+                        self.showError(error);
+                    }
+                );
+            };
+
             // add the methods to their categories.
             for (var method in methSet) {
                 parentList = methSet[method].categories;
@@ -248,7 +260,7 @@
                 var $methodList = $('<div>');
                 for (var i=0; i<catSet[cat].methods.length; i++) {
 
-                    catSet[cat].methods[i].$elem = this.buildMethod(catSet[cat].methods[i]);
+                    catSet[cat].methods[i].$elem = this.buildMethod(catSet[cat].methods[i], triggerMethod);
                     $methodList.append(catSet[cat].methods[i].$elem);
                 }
                 accordion['body'] = $methodList;
@@ -278,81 +290,96 @@
          * @param {object} method - the method object returned from the kernel.
          * @private
          */
-        buildMethodOld: function(method) {
-            var $helpButton = $('<span>')
-                              .addClass('glyphicon glyphicon-question-sign kb-function-help')
-                              .css({'margin-top': '-5px'})
-                              .click($.proxy(function(event) {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                  this.showTooltip(method, event);
-                              }, this));
+        // buildMethodOld: function(method) {
+        //     var $helpButton = $('<span>')
+        //                       .addClass('glyphicon glyphicon-question-sign kb-function-help')
+        //                       .css({'margin-top': '-5px'})
+        //                       .click($.proxy(function(event) {
+        //                           event.preventDefault();
+        //                           event.stopPropagation();
+        //                           this.showTooltip(method, event);
+        //                       }, this));
 
-            var $errButton = $('<span>')
-                             .addClass('glyphicon glyphicon-warning-sign kb-function-help')
-                             .css({'margin-top' : '-5px'})
-                             .click($.proxy(function(event) {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                this.showErrorTooltip(method, event);
-                             }, this));
+        //     var $errButton = $('<span>')
+        //                      .addClass('glyphicon glyphicon-warning-sign kb-function-help')
+        //                      .css({'margin-top' : '-5px'})
+        //                      .click($.proxy(function(event) {
+        //                         event.preventDefault();
+        //                         event.stopPropagation();
+        //                         this.showErrorTooltip(method, event);
+        //                      }, this));
 
-            /* this is for handling long function names.
-               long names will be cropped and have a tooltip
-               with the full name */
-            var methodTitle = method.name;
-            var $methodSpan = $('<span class="kb-data-obj-name" style="margin-bottom:-5px">');
-            if (methodTitle.length > 31) {
-                $methodSpan.append(methodTitle);
-                $methodSpan.tooltip({
-                    title: method.name,
-                    placement: "bottom"
-                }); 
-            } else {
-                 $methodSpan.append(methodTitle);
-            }
+        //     /* this is for handling long function names.
+        //        long names will be cropped and have a tooltip
+        //        with the full name */
+        //     var methodTitle = method.name;
+        //     var $methodSpan = $('<span class="kb-data-obj-name" style="margin-bottom:-5px">');
+        //     if (methodTitle.length > 31) {
+        //         $methodSpan.append(methodTitle);
+        //         $methodSpan.tooltip({
+        //             title: method.name,
+        //             placement: "bottom"
+        //         }); 
+        //     } else {
+        //          $methodSpan.append(methodTitle);
+        //     }
             
-            var $newMethod = $('<li>')
-                             .append($methodSpan);
+        //     var $newMethod = $('<li>')
+        //                      .append($methodSpan);
 
-            if (method.loading_error) {
-                $newMethod.addClass('kb-function-error')
-                          .append($errButton)
-                          .click($.proxy(function(event) {
-                              this.showErrorTooltip(method, event);
-                          }, this));
-            }
-            else {
-                $newMethod.append($helpButton)
-                          .click($.proxy(function(event) {
-                              // needs to move to controller.
-                              this.methClient.get_method_spec({ 'ids' : [method.id] },
-                                  $.proxy(function(spec) {
-                                      this.trigger('methodClicked.Narrative', spec[0]);
-                                  }, this),
-                                  $.proxy(function(error) {
-                                      this.showError(error);
-                                  }, this)
-                              );
-                          }, this));
-            }
-            return $newMethod;
-        },
+        //     if (method.loading_error) {
+        //         $newMethod.addClass('kb-function-error')
+        //                   .append($errButton)
+        //                   .click($.proxy(function(event) {
+        //                       this.showErrorTooltip(method, event);
+        //                   }, this));
+        //     }
+        //     else {
+        //         $newMethod.append($helpButton)
+        //                   .click($.proxy(function(event) {
+        //                       // needs to move to controller.
+        //                       this.methClient.get_method_spec({ 'ids' : [method.id] },
+        //                           $.proxy(function(spec) {
+        //                               this.trigger('methodClicked.Narrative', spec[0]);
+        //                           }, this),
+        //                           $.proxy(function(error) {
+        //                               this.showError(error);
+        //                           }, this)
+        //                       );
+        //                   }, this));
+        //     }
+        //     return $newMethod;
+        // },
 
-        buildMethod: function(method) {
+        buildMethod: function(method, triggerFn) {
             console.log(method);
+
             var $logo = $('<div>')
-                        .addClass('kb-data-list-logo')
-                        .css({'background-color':this.logoColorLookup(method.id), 'display':'inline-block'})
-                        .append(method.name[0]);
+                        .addClass('kb-method-list-logo')
+                        .css({ 'background-color' : this.logoColorLookup(method.name) })
+                        .append(method.name[0])
+                        .click($.proxy(function(e) {
+                            triggerFn(method);
+                        }, this));
+
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
-                        .css({'white-space':'normal'})
-                        .append(method.name);
+                        .css({'white-space':'normal', 'cursor':'pointer'})
+                        .append(method.name)
+                        .click($.proxy(function(e) {
+                            triggerFn(method);
+                        }, this));
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+method.ver);
 
             var $more = $('<div>')
-                        .append(method.subtitle);
+                        .addClass('kb-method-list-more-div')
+                        .append($('<div>')
+                                .append(method.subtitle))
+                        .append($('<div>')
+                                .append($('<a>')
+                                        .append('more...')
+                                        .attr('target', '_blank')
+                                        .attr('href', this.options.methodHelpLink + method.id)));
 
             var $moreBtn = $('<span>')
                            .addClass('btn btn-default btn-xs kb-data-list-more-btn pull-right fa fa-plus')
@@ -368,21 +395,6 @@
                                    }
                                 }, this));
                            });
-
-            // var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
-            //     .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
-            //     .on('click',function() {
-            //             var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
-            //             if ($more.is(':visible')) {
-            //                 $more.hide();
-            //                 $(this).html('<span class="fa fa-plus" style="color:#999" aria-hidden="true" />');
-            //             } else {
-            //                 self.getRichData(object_info,$moreRow);
-            //                 $more.show();
-            //                 $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
-            //             }
-            //         });
-
 
             var $mainDiv = $('<div>')
                            .addClass('kb-data-list-info')
@@ -408,8 +420,51 @@
                    .append($more.hide());
         },
 
-        logoColorLookup: function() {
-            return "#789ABC";
+        logoColorLookup:function(type) {
+            var colors = [
+                            '#F44336', //red
+                            '#E91E63', //pink
+                            '#9C27B0', //purple
+                            '#673AB7', //deep purple
+                            '#3F51B5', //indigo
+                            '#2196F3', //blue
+                            '#03A9F4', //light blue
+                            '#00BCD4', //cyan
+                            '#009688', //teal
+                            '#4CAF50', //green
+                            '#8BC34A', //lime green
+                            '#CDDC39', //lime
+                            '#FFEB3B', //yellow
+                            '#FFC107', //amber
+                            '#FF9800', //orange
+                            '#FF5722', //deep orange
+                            '#795548', //brown
+                            '#9E9E9E', //grey
+                            '#607D8B'  //blue grey
+                         ];
+            
+            // first, if there are some colors we want to catch...
+            switch (type) {
+                case "Genome":
+                    return '#2196F3'; //blue
+                case "FBAModel":
+                    return '#4CAF50'; //green
+                case "FBA":
+                    return '#F44336'; //red
+                case "ContigSet":
+                    return '#FF9800'; //orange
+                case "ProteomeComparison":
+                    return '#3F51B5'; //indigo
+                case "Tree":
+                    return '#795548'; //brown
+            }
+            
+            // pick one based on the characters
+            var code = 0;
+            for(var i=0; i<type.length; i++) {
+                code += type.charCodeAt(i);
+            }
+            return colors[ code % colors.length ];
         },
 
         /**

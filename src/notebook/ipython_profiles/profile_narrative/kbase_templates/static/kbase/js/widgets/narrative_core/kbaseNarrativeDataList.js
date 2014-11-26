@@ -368,6 +368,7 @@
                                         .append($logoDiv)
                                         .append($mainDiv))
                             .append($moreRow);
+                            // The below is unnecessary, just use a kb-data-list-obj-row:hover rule instead. - Bill
                             // .mouseenter(function(){$(this).addClass('kb-data-list-obj-row-hover');})
                             // .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
 

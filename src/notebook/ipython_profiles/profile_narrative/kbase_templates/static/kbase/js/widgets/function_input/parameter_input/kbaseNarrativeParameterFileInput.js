@@ -9,7 +9,10 @@
         options: {
             shockUrl: 'https://kbase.us/services/shock-api/',
             ujsUrl: 'https://kbase.us/services/userandjobstate/',
-            fullShockSearchToResume: false
+            fullShockSearchToResume: false,
+            serviceNameInUJS: "ShockUploader",
+            maxFileStatesInUJS: 100,
+            maxFileStateTime: 7 * 24 * 3600000	// in milliseconds
         },
         wrongToken: false,
         token: null,
@@ -155,17 +158,52 @@
         	var file = realButton.files[0];
         	self.fileName.val(file.name);
     		prcText.val("?..%");
-    		var ujsKey = "File:"+file.size+":"+file.lastModifiedDate.getTime()+":"+file.name;
+            var curTime = new Date().getTime();
+    		var ujsKey = "File:"+file.size+":"+file.lastModifiedDate.getTime()+":"+file.name+":"+self.getUser();
             var ujsClient = new UserAndJobState(self.options.ujsUrl, {'token': self.token});
-            ujsClient.get_has_state("ShockUploader", ujsKey, 0, function(data) {
+        	var shockClient = new ShockClient({url: self.options.shockUrl, token: self.token});
+            ujsClient.list_state(self.options.serviceNameInUJS, 0, function(data) {
+            	if (data.length >= self.options.maxFileStatesInUJS) {
+            		for (var keyPos in data) {
+            			removeFileState(data[keyPos]);
+            		}
+            	}
+    		}, function(error) {
+    			console.log(error);
+    		});
+            ujsClient.get_has_state(self.options.serviceNameInUJS, ujsKey, 0, function(data) {
     			var value = data[1];
+    			if (value != null)
+    				value = value.split(" ")[0];
     			processAfterNodeCheck(value != null ? value : prevShockNodeId);
     		}, function(error) {
     			processAfterNodeCheck(prevShockNodeId);
     		});
     		
+            function removeFileState(key) {
+                ujsClient.get_state(self.options.serviceNameInUJS, key, 0, function(value) {
+        			var parts = value.split(" ");
+        			var nodeId = parts[0];
+        			var nodeTime = parts.length < 2 ? 0 : parseInt(parts[1]);
+        			var timeDif = curTime - nodeTime;
+        			if (timeDif > self.options.maxFileStateTime) {
+                    	shockClient.delete_node(nodeId, function(info) {
+                			console.log("Shock node for file [" + key + "] was deleted: " + nodeId);                            		
+                    	}, function(error) {
+                    		console.log(error);
+                    	});
+                        ujsClient.remove_state(self.options.serviceNameInUJS, key, function(data) {
+                			console.log("UJS file [" + key + "] state was removed");
+                        }, function(error) {
+                			console.log(error);
+                		});
+        			}
+        		}, function(error) {
+        			console.log(error);
+        		});
+            }
+            
             function processAfterNodeCheck(storedShockNodeId) {
-            	var shockClient = new ShockClient({url: self.options.shockUrl, token: self.token});
             	self.selectFileMode(false);
             	self.cancelUpload = false;
             	shockClient.upload_node(file, storedShockNodeId, self.options.fullShockSearchToResume, function(info) {
@@ -173,7 +211,9 @@
             			var shockNodeWasntDefined = self.shockNodeId == null || self.shockNodeId !== info['node_id'];
             			if (shockNodeWasntDefined) {
             				self.shockNodeId = info['node_id'];
-            				ujsClient.set_state("ShockUploader", ujsKey, self.shockNodeId, function(data) {
+            				var fileState = self.shockNodeId + " " + curTime;
+            				ujsClient.set_state(self.options.serviceNameInUJS, ujsKey, fileState, function(data) {
+            					console.log("UJS file state saved: " + fileState);
             	    		}, function(error) {
             	            	console.log("Error saving shock node " + self.shockNodeId + " into UJS:");
             	    			console.log(error);
@@ -313,6 +353,19 @@
                     var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
+        },
+        
+        getUser: function() {
+            var ret = null;
+            if (!this.token)
+            	return ret;
+            var tokenParts = this.token.split("|");
+            for (var i in tokenParts) {
+            	var keyValue = tokenParts[i].split("=");
+            	if (keyValue.length == 2 && keyValue[0] === "un")
+            		ret = keyValue[1];
+            }
+            return ret;
         }
     });
 })(jQuery);

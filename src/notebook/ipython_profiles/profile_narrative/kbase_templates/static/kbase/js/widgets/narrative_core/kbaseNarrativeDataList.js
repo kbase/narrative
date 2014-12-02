@@ -97,18 +97,20 @@
                 });
             this.$elem.append(this.$mainListDiv);
             
+            if (window.kbconfig && window.kbconfig.urls) {
+                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+                this.options.ws_url = window.kbconfig.urls.workspace;
+            }
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
-            setInterval(function(){self.refresh()}, this.options.refresh_interval); // check if there is new data every X ms
+            setInterval(function(){self.refresh();}, this.options.refresh_interval); // check if there is new data every X ms
             
             this.showLoading();
             if (this.options.ws_name) {
                 this.setWorkspace(this.options.ws_name);
             }
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
-            }
+            
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
             
             return this;
@@ -147,6 +149,11 @@
                     },
                     function(error) {
                         // don't worry about it, just do nothing...
+                        self.$mainListDiv.show();
+                        self.$mainListDiv.append("error: ");
+                        self.$mainListDiv.append(error.error.message);
+                        console.error(error);
+                        self.hideLoading();
                     });
             } // else { we should probably do something if the user is not logged in or if the ws isn't set yet }
         },
@@ -255,7 +262,11 @@
                     self.hideLoading();
                 }, 
                 function(error) {
-                    console.log(error);
+                    self.$mainListDiv.show();
+                    self.$mainListDiv.append("error: ");
+                    self.$mainListDiv.append(error.error.message);
+                    console.error(error);
+                    self.hideLoading();
                 });
             
         },
@@ -981,7 +992,7 @@
          * @private
          */
         loggedInCallback: function(event, auth) {
-            this.ws = new Workspace(this.options.workspaceURL, auth);
+            this.ws = new Workspace(this.options.ws_url, auth);
             this.isLoggedIn = true;
             this.refresh();
             return this;

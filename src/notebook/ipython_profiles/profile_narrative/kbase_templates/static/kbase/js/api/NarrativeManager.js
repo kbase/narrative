@@ -140,8 +140,57 @@ var NarrativeManager = function(options, auth, auth_cb) {
     
     /**
      * Makes a temporary narrative permanent by giving it a name
+     *
+     * params = {
+     *  ws_name_or_id: name, // current ws name
+     *  new_name: name
+     * }
+     * 
      */
     this.nameNarrative = function(params, _callback, _error_callback) {
+        var self = this;
+        if (!params.ws_name_or_id) {
+            if (_error_callback) {
+                _error_callback("'ws_name_or_id' field not set in params to nameNarrative");
+            }
+            return;
+        }
+        if (!params.new_name) {
+            if (_error_callback) {
+                _error_callback("'new_name' field not set in params to nameNarrative");
+            }
+            return;
+        }
+        var wsIdentity = {};
+        if(/^([1-9]\d*)$/.test(params.ws_name_or_id)){ wsIdentity['id'] = parseInt(params.ws_name_or_id); }
+        else { wsIdentity['workspace'] = params.ws_name_or_id; }
+        self.ws.get_workspace_info(
+            wsIdentity,
+            function(info) {
+                console.log('info');
+                console.log(info);
+                
+                // first get narrative name in this workspace from the workspace metadata
+                if (!info[8].narrative) {
+                    _error_callback("Workspace is not properly configured for 1 workspace, 1 narrative.");
+                }
+                var narrative = info[8].narrative;
+                
+                // update the metadata to reflect the new name
+                var newMetadata = {
+                    is_temporary: 'false',  // set the is_temporary flag to false
+                    narrative_nice_name: params.new_name // save the nice name to the workspace
+                }
+                self.ws.alter_workspace_metadata(
+                    {wsi:wsIdentity, 'new': newMetadata},
+                    function() {
+                        // success, so set the narrative name
+                        
+                    },
+                    _error_callback
+                );
+            },
+            _error_callback);
     };
     
     
@@ -209,7 +258,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
     this.buildNarrativeObjects = function(ws_name, cells, parameters, _callback, _error_callback) {
         var self = this;
         // first thing first- we need to grap the app/method specs
-        self.getSpecs(cells,
+        self._getSpecs(cells,
             function() {
                 // now we can create the metadata and populate the cells
                 var metadata = {
@@ -226,10 +275,10 @@ var NarrativeManager = function(options, auth, auth_cb) {
                 if (cells) {
                     for(var c=0; c<cells.length; c++) {
                         if (cells[c].app) {
-                            var appCell = self.buildAppCell(cell_data.length, self.specMapping.apps[cells[c].app]);
+                            var appCell = self._buildAppCell(cell_data.length, self._specMapping.apps[cells[c].app]);
                             cell_data.push(appCell);
                         } else if (cells[c].method) {
-                            var methodCell = self.buildMethodCell(cell_data.length, self.specMapping.methods[cells[c].method]);
+                            var methodCell = self._buildMethodCell(cell_data.length, self._specMapping.methods[cells[c].method]);
                             cell_data.push(methodCell);
                         } else if (cells[c].markdown) {
                             cell_data.push({
@@ -275,13 +324,13 @@ var NarrativeManager = function(options, auth, auth_cb) {
             );
     };
     
-    this.buildAppCell = function(pos,spec) {
-        var cellId = 'kb-cell-'+pos+'-'+this.uuidgen();
+    this._buildAppCell = function(pos,spec) {
+        var cellId = 'kb-cell-'+pos+'-'+this._uuidgen();
         var cell = {
             cell_type: 'markdown',
             source: "<div id='" + cellId + "'></div>" +
                     "\n<script>" +
-                    "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(spec) + "', 'cellId' : '" + cellId + "'});" +
+                    "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this._safeJSONStringify(spec) + "', 'cellId' : '" + cellId + "'});" +
                     "</script>",
             metadata: { }
         };
@@ -293,13 +342,13 @@ var NarrativeManager = function(options, auth, auth_cb) {
         return cell;
     };
     
-    this.buildMethodCell = function(pos,spec) {
-        var cellId = 'kb-cell-'+pos+'-'+this.uuidgen();
+    this._buildMethodCell = function(pos,spec) {
+        var cellId = 'kb-cell-'+pos+'-'+this._uuidgen();
         var cell = {
             cell_type: 'markdown',
             source: "<div id='" + cellId + "'></div>" +
                     "\n<script>" +
-                    "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(spec) + "'});" +
+                    "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this._safeJSONStringify(spec) + "'});" +
                     "</script>",
             metadata: { }
         };
@@ -313,16 +362,16 @@ var NarrativeManager = function(options, auth, auth_cb) {
     };
     
     // map the app ID to the spec, map method id to spec
-    this.specMapping = {
+    this._specMapping = {
         apps : {},
         methods : {}
     };
     /** populates the app/method specs **/
-    this.getSpecs = function(cells, _callback, _error_callback) {
+    this._getSpecs = function(cells, _callback, _error_callback) {
         var self = this;
         if (cells) {
             var appSpecIds = []; var methodSpecIds = [];
-            this.specMapping = { apps : {}, methods : {} }
+            this._specMapping = { apps : {}, methods : {} }
             for(var c=0; c<cells.length; c++) {
                 if (cells[c].app) {
                     appSpecIds.push(cells[c].app);
@@ -336,7 +385,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
                     self.nms.get_app_spec({ids:appSpecIds},
                         function(appSpecs) {
                             for (var a=0; a<appSpecs.length; a++) {
-                                self.specMapping.apps[appSpecIds[a]] = appSpecs[a];
+                                self._specMapping.apps[appSpecIds[a]] = appSpecs[a];
                             }
                         },
                         function(error) {
@@ -350,7 +399,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
                     self.nms.get_method_spec({ids:methodSpecIds},
                         function(methodSpecs) {
                             for (var a=0; a<methodSpecs.length; a++) {
-                                self.specMapping.methods[methodSpecIds[a]] = methodSpecs[a];
+                                self._specMapping.methods[methodSpecIds[a]] = methodSpecs[a];
                             }
                         },
                         function(error) {
@@ -375,7 +424,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
     
     
     // !! copied from kbaseNarrativeWorkspace !!
-    this.safeJSONStringify = function(string) {
+    this._safeJSONStringify = function(string) {
         var esc = function(s) { 
             return s.replace(/'/g, "&apos;")
                     .replace(/"/g, "&quot;");
@@ -385,7 +434,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
         });
     };
     // !! copied from kbaseNarrativeWorkspace !!
-    this.uuidgen = function() {
+    this._uuidgen = function() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
             return v.toString(16);});

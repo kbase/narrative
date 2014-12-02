@@ -586,6 +586,7 @@
                 }
             } else {
                 // todo: show an upload button or some other message if there are no elements
+                self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'}).append("No data added yet."));
             }
             
             self.hideLoading();

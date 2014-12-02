@@ -228,7 +228,9 @@
          */
         dataImporter: function() {
             var self = this;
+            var user = 'nconrad';
             var minePanel = $('<div>');
+            var content = $('<div class="kb-import-content">');
             var publicPanel = $('<div>');
             var body = this.$overlayBody;   
 
@@ -252,12 +254,42 @@
             var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
             var ws = new Workspace(this.options.workspaceURL, auth);            
 
-            console.log(ws)
-            // get possible types
-            ws.list_all_types({}).done(function(types) {
-                console.log('types', types)
+
+            // get possible types (not used)
+            ws.list_all_types({}).done(function(res) {
+                console.log('types', res)
+
+                var types = [];
+                for (var mod in res) {
+                    var typeNames = res[mod]
+                    for (var type in typeNames) {
+                        types.push(type);
+                    }
+                }
+                console.log('type_names', types)
             })
-            var selector = $('<selector>')
+            
+
+            // useable types
+            var types = ['KBaseGenomes.Genome', 
+                         'KBaseFBA.FBAModel',
+                         'KBaseFBAModeling.FBA',
+                         'KBaseFBA.ContigSet',
+                         'KBaseGenomes.Pangenome',                         
+                         'KBaseFBA.Media'];
+
+            var selector = $('<select class="form-control">');
+            for (var i in types) {
+                selector.append('<option data-type="'+types[i]+'">'+
+                                    types[i].split('.')[1]+
+                                '</option>');
+            }
+            minePanel.append(selector);
+
+            selector.change(function(blah) {
+                var type = $(this).children('option:selected').data('type');
+                updateList(type, user);
+            })
 
 
             // this could be used elswhere
@@ -266,27 +298,40 @@
             body.append(footer);
 
             // populate list;
-            ws.list_objects({type: 'KBaseGenomes.Genome', savedby: ['nconrad']})
-                .done(function(d) {
-                    console.log('heres the data', d)
+            function updateList(type, user) {
+                // clear view
+                content.html('');
+                content.loading();
+                ws.list_objects({type: type, savedby: [user]})
+                    .done(function(d) {
+                        content.rmLoading();
+                        console.log('heres the data', d)
 
-                    minePanel.append('<div>')
-                    for (var i in d.slice(0,10)) {
-                        var obj = d[i];
-                        var id = obj[0];
-                        var name = obj[1];
-                        var wsID = obj[6];
-                        var ws = obj[7];
-                        var relativeTime = self.prettyTimestamp(obj[3]);
+                        minePanel.append('<div>')
+                        for (var i in d.slice(0,10)) {
+                            var obj = d[i];
+                            var id = obj[0];
+                            var name = obj[1];
+                            var wsID = obj[6];
+                            var ws = obj[7];
+                            var relativeTime = self.prettyTimestamp(obj[3]);
 
-                        var item = $('<div class="kb-import-item">');
-                        item.append('<input type="checkbox" value="" class="pull-left">')
-                        item.append('<span class="h4">'+name+'</span><br>');
-                        item.append('<i>'+relativeTime+'</i>');
-                        minePanel.append(item);
-                    }
+                            var item = $('<div class="kb-import-item">');
+                            item.append('<input type="checkbox" value="" class="pull-left">')
+                            item.append('<span class="h4">'+name+'</span><br>');
+                            item.append('<i>'+relativeTime+'</i>');
 
-            })
+
+                            content.append(item);
+                        }
+
+                        // update view
+                        minePanel.append(content);
+
+                })
+            }
+
+            updateList(types[0], user)
 
         }, 
 

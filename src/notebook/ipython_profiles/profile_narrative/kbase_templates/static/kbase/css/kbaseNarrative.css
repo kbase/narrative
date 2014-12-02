@@ -1843,11 +1843,19 @@ div[class="tooltip-inner"] {
 
 
 /* styling for data import overlay  */
+
+.kb-import-content {
+	margin: 20px 0 0 20px;
+}
 .kb-import-item {
-	margin: 0 0 20px 30px;
+	margin: 0 0 20px 0px;
 }
 
 .kb-import-item input {
 	margin: 15px 30px 15px 0px;
+}
+
+.loader {
+
 }
 

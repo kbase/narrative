@@ -5,6 +5,7 @@
         options: {
             loadingImage: "static/kbase/images/ajax-loader.gif",
             autorender: true,
+            workspaceURL: "https://kbase.us/services/ws", //used for data importer
         },
         $dataWidget: null,
         $methodsWidget: null,
@@ -126,12 +127,12 @@
                                            this.toggleOverlay();
                                         }, this))));
 
-            var $overlayBody = $('<div>empty</div>');
+            this.$overlayBody = $('<div>');
 
             this.$overlay = $('<div>')
                             .addClass('kb-side-overlay-container')
-                            .append($overlayHeader)
-                            .append($overlayBody);
+                            //.append($overlayHeader)
+                            .append(this.$overlayBody);
             $('body').append(this.$overlay);
             this.$overlay.hide();
 
@@ -140,6 +141,9 @@
             $('body').append(this.$narrativeDimmer);
             this.$narrativeDimmer.hide();
             this.updateOverlayPosition();
+
+            // putting this here for now, just for testing
+            this.dataImporter();
         },
 
         updateOverlayPosition: function() {
@@ -214,6 +218,96 @@
             this.$methodsWidget.refreshFromService();
             setTimeout($.proxy(function() { this.$jobsWidget.refresh(); }, this), 750);
 
-        }
+        },
+
+
+        /**
+         * Renders the data importer panel
+         * I'm throwing this here because I have no idea how to 
+         * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
+         */
+        dataImporter: function() {
+            var self = this;
+            var minePanel = $('<div>');
+            var publicPanel = $('<div>');
+            var body = this.$overlayBody;   
+
+            // add tabs
+            var $tabs = this.buildTabs([
+                {
+                    tabName : 'My Data',
+                    content : minePanel
+                },
+                {
+                    tabName : 'Public',
+                    content: publicPanel
+                }
+            ]);
+
+            body.addClass('kb-side-panel');
+            body.append($tabs.header).append($tabs.body);
+
+
+            // It is silly to invoke a new object for each widget
+            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
+            var ws = new Workspace(this.options.workspaceURL, auth);            
+
+            console.log(ws)
+            // get possible types
+            ws.list_all_types({}).done(function(types) {
+                console.log('types', types)
+            })
+            var selector = $('<selector>')
+
+
+            // this could be used elswhere
+            var footer = $('<div class="overlay-footer" style="position: absolute; bottom: 20px; right: 20px;">');
+            footer.append('<button class="btn btn-primary" disabled>Add to Narrative</button>')
+            body.append(footer);
+
+            // populate list;
+            ws.list_objects({type: 'KBaseGenomes.Genome', savedby: ['nconrad']})
+                .done(function(d) {
+                    console.log('heres the data', d)
+
+                    minePanel.append('<div>')
+                    for (var i in d.slice(0,10)) {
+                        var obj = d[i];
+                        var id = obj[0];
+                        var name = obj[1];
+                        var wsID = obj[6];
+                        var ws = obj[7];
+                        var relativeTime = self.prettyTimestamp(obj[3]);
+
+                        var item = $('<div class="kb-import-item">');
+                        item.append('<input type="checkbox" value="" class="pull-left">')
+                        item.append('<span class="h4">'+name+'</span><br>');
+                        item.append('<i>'+relativeTime+'</i>');
+                        minePanel.append(item);
+                    }
+
+            })
+
+        }, 
+
+
+        prettyTimestamp: function(timestamp) {
+            var format = function(x) {
+                if (x < 10)
+                    x = '0' + x;
+                return x;
+            };
+
+            var d = new Date(timestamp);
+            var hours = format(d.getHours());
+
+            var minutes = format(d.getMinutes());
+            var seconds = format(d.getSeconds());
+            var month = d.getMonth()+1;
+            var day = format(d.getDate());
+            var year = d.getFullYear();
+
+            return month + "/" + day + "/" + year + ", " + hours + ":" + minutes + ":" + seconds;
+        },        
     })
 })( jQuery );

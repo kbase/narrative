@@ -1840,3 +1840,14 @@ div[class="tooltip-inner"] {
 
 /* End kbaseData.css */
 
+
+
+/* styling for data import overlay  */
+.kb-import-item {
+	margin: 0 0 20px 30px;
+}
+
+.kb-import-item input {
+	margin: 15px 30px 15px 0px;
+}
+

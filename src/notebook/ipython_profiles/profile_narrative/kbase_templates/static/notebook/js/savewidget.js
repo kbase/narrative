@@ -116,7 +116,7 @@ var IPython = (function (IPython) {
         var that = this;
         var dialog = $('<div/>').append(
             $("<p/>").addClass("rename-message")
-                .html('Enter a new notebook name:')
+                .html('Enter a new Narrative name:')
         ).append(
             $("<br/>")
         ).append(
@@ -134,15 +134,18 @@ var IPython = (function (IPython) {
                     var new_name = $(this).find('input').val();
                     if (!IPython.notebook.test_notebook_name(new_name)) {
                         $(this).find('.rename-message').html(
-                            "Invalid notebook name. Notebook names must "+
-                            "have 1 or more characters and can contain any characters " +
-                            "except :/\\. Please enter a new notebook name:"
+                            "Invalid name. Narrative names must "+
+                            "have 1 or more characters. Please try again:"
                         );
+                        $(this).find('input').val(IPython.notebook.get_notebook_name());
                         return false;
                     } else {
+                        $('#kb-narr-name #name').text(new_name);
                         IPython.notebook.set_notebook_name(new_name);
                         IPython.notebook.save_notebook();
+                        
                     }
+                    return true;
                 }}
                 },
             open : function (event, ui) {

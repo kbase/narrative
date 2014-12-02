@@ -185,6 +185,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
                     {wsi:wsIdentity, 'new': newMetadata},
                     function() {
                         // success, so set the narrative name
+                       // self.ws.rename_object
                         
                     },
                     _error_callback

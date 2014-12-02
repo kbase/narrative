@@ -1508,12 +1508,14 @@ var IPython = (function (IPython) {
      * @return {Boolean} True if the name is valid, false if invalid
      */
     Notebook.prototype.test_notebook_name = function (nbname) {
-        nbname = nbname || '';
-        if (this.notebook_name_blacklist_re.test(nbname) == false && nbname.length>0) {
-            return true;
-        } else {
-            return false;
-        };
+        if(nbname) {
+            // names can be anything now!!! we only have to test that it is at least one character long
+            //if (this.notebook_name_blacklist_re.test(nbname) == false && nbname.length>0) {
+            if(nbname.length>0) {
+                return true;
+            }
+        }
+        return false;
     };
 
     /**

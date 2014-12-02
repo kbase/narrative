@@ -249,8 +249,11 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
         objectType = ''
         isWorkspaceId = 0
         if isScript and (paramId is not None) and (len(paramToTypes[paramId]) > 0) and (paramValue is not None) and (len(paramValue) > 0):
-            objectType = wsClient.get_object_info_new({'objects' : [{'ref': workspace + "/" + paramValue}]})[0][2]
-            objectType = objectType[0:objectType.index('-')]
+            if len(paramToTypes[paramId]) == 1:
+                objectType = paramToTypes[paramId][0]
+            else:
+                objectType = wsClient.get_object_info_new({'objects' : [{'ref': workspace + "/" + paramValue}]})[0][2]
+                objectType = objectType[0:objectType.index('-')]
             workspaceName = workspace
             isWorkspaceId = 1
         stepParam['is_workspace_id'] = isWorkspaceId

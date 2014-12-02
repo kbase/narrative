@@ -70,9 +70,6 @@ var NarrativeManager = function(options, auth, auth_cb) {
      *      info.object_info = [ ws_reference : [ .. ] ]
      *      
      *  }
-     *
-     *
-     *  
      */
     this.createTempNarrative = function(params, _callback, _error_callback) {
         var self = this;
@@ -94,76 +91,51 @@ var NarrativeManager = function(options, auth, auth_cb) {
             {
                 workspace: ws_name,
                 description: "",
-		meta: wsMetaData
+                meta: wsMetaData
             },
             function(ws_info) {
                 console.log("workspace created:");
                 console.log(ws_info);
                 
                 // 2 - create the Narrative object
-                var metadataInternal = {
-                    job_ids: { methods:[], apps:[] },
-                    format:'ipynb',
-                    creator:self.user_id,
-                    ws_name:ws_name,
-                    name:"Untitled",
-                    type:"KBaseNarrative.Narrative",
-                    description:"",
-                    data_dependencies:[]
-                };
-                var metadataExternal = {
-                    job_ids: '{"methods":[],"apps":[]}',
-                    format:'ipynb',
-                    creator:self.user_id,
-                    ws_name:ws_name,
-                    name:"Untitled",
-                    type:"KBaseNarrative.Narrative",
-                    description:"",
-                    data_dependencies:'[]'
-                };
-                var narrativeObject = {
-                    nbformat_minor: 0,
-                    worksheets: [],
-                    metadata: metadataInternal,
-                    nbformat:3
-                };
-                
-                // 3 - save the Narrative object
-                self.ws.save_objects(
-                    {
-                        workspace: ws_name,
-                        objects: [{
-                            type: "KBaseNarrative.Narrative",
-                            data: narrativeObject,
-                            name: nar_name,
-                            meta: metadataExternal,
-                            provenance: [
-                                {
-                                    service: "NarrativeManager",
-                                    description: "Created new Workspace/Narrative bundle."
-                                }
-                            ],
-                            hidden:0
-                        }]
+                var narObjs = self.buildNarrativeObjects(
+                    ws_name, params.cells, params.parameters,
+                    function(narrativeObject, metadataExternal) {
+                        // 3 - save the Narrative object
+                        self.ws.save_objects(
+                            {
+                                workspace: ws_name,
+                                objects: [{
+                                    type: "KBaseNarrative.Narrative",
+                                    data: narrativeObject,
+                                    name: nar_name,
+                                    meta: metadataExternal,
+                                    provenance: [
+                                        {
+                                            script: "NarrativeManager.js",
+                                            description: "Created new Workspace/Narrative bundle."
+                                        }
+                                    ],
+                                    hidden:0
+                                }]
+                            },
+                            function(obj_info_list) {
+                                console.log('saved narrative:');
+                                console.log(obj_info_list);
+                                _callback({ws_info:ws_info, nar_info: obj_info_list[0]});
+                            }, function (error) {
+                                console.error(error);
+                                if(_error_callback) { _error_callback(error); }
+                            });
                     },
-                    function(obj_info_list) {
-                        console.log('saved narrative:');
-                        console.log(obj_info_list);
-                    }, function (error) {
-                        console.error(error);
-                        if(_error_callback) { _error_callback(error); }
-                    }
-                )
-                
+                    _error_callback
+                );
             },
             function(error) {
                 console.error(error);
                 if(_error_callback) { _error_callback(error); }
             }
         );
-        
-        
-        
     };
     
     /**
@@ -214,13 +186,220 @@ var NarrativeManager = function(options, auth, auth_cb) {
     };
     
     
+    /*
+     *      cells : [
+     *          { app: app_id },
+     *          { method: method_id },
+     *          { markdown: markdown },
+     *          { code: code }
+     *      ],
+     *      parameters : [
+     *          {
+     *              cell: n,           // indicates index in the cell
+     *              step_id: id,
+     *              parameter_id: id,  
+     *              value: value
+     *          }
+     *      ],
+     */
     
-    
-    /* private method to setup the narrative object */
-    //this._createLocalNarrativeObject(cells, parameters) {
+    /* private method to setup the narrative object,
+    returns [narrative, metadata]
+    */
+    this.buildNarrativeObjects = function(ws_name, cells, parameters, _callback, _error_callback) {
+        var self = this;
+        // first thing first- we need to grap the app/method specs
+        self.getSpecs(cells,
+            function() {
+                // now we can create the metadata and populate the cells
+                var metadata = {
+                    job_ids: { methods:[], apps:[] },
+                    format:'ipynb',
+                    creator:self.user_id,
+                    ws_name:ws_name,
+                    name:"Untitled",
+                    type:"KBaseNarrative.Narrative",
+                    description:"",
+                    data_dependencies:[]
+                };
+                var cell_data = [];
+                if (cells) {
+                    for(var c=0; c<cells.length; c++) {
+                        if (cells[c].app) {
+                            var appCell = self.buildAppCell(cell_data.length, self.specMapping.apps[cells[c].app]);
+                            cell_data.push(appCell);
+                        } else if (cells[c].method) {
+                            var methodCell = self.buildMethodCell(cell_data.length, self.specMapping.methods[cells[c].method]);
+                            cell_data.push(methodCell);
+                        } else if (cells[c].markdown) {
+                            cell_data.push({
+                                cell_type: 'markdown',
+                                source: cells[c].markdown,
+                                metadata: {}
+                            });
+                        }
+                        //else if (cells[c].code) { }
+                        else {
+                            console.error('cannot add cell '+c+', unrecognized cell content');
+                            console.error(cells[c]);
+                            if(_error_callback) { _error_callback('cannot add cell '+c+', unrecognized cell content'); }
+                        }
+                    }
+                }
+                
+                var narrativeObject = {
+                    nbformat_minor: 0,
+                    worksheets: [ {
+                        cells: cell_data,
+                        metadata: {}
+                    }],
+                    metadata: metadata,
+                    nbformat:3
+                };
+                
+                // setup external string to string metadata for the WS object
+                var metadataExternal = {};
+                for(var m in metadata) {
+                    if (metadata.hasOwnProperty(m)) {
+                        if (typeof metadata[m] === 'string') {
+                            metadataExternal[m] = metadata[m];
+                        } else {
+                            metadataExternal[m] = JSON.stringify(metadata[m]);
+                        }
+                    }
+                }
+                _callback(narrativeObject, metadataExternal);
         
-    //}
+            },
+            _error_callback
+            );
+    };
     
+    this.buildAppCell = function(pos,spec) {
+        var cellId = 'kb-cell-'+pos+'-'+this.uuidgen();
+        var cell = {
+            cell_type: 'markdown',
+            source: "<div id='" + cellId + "'></div>" +
+                    "\n<script>" +
+                    "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(spec) + "', 'cellId' : '" + cellId + "'});" +
+                    "</script>",
+            metadata: { }
+        };
+        var cellInfo = {};
+        cellInfo[this.KB_TYPE] = this.KB_APP_CELL;
+        cellInfo['app'] = spec;
+        cellInfo[this.KB_STATE] = [];
+        cell.metadata[this.KB_CELL] = cellInfo;
+        return cell;
+    };
+    
+    this.buildMethodCell = function(pos,spec) {
+        var cellId = 'kb-cell-'+pos+'-'+this.uuidgen();
+        var cell = {
+            cell_type: 'markdown',
+            source: "<div id='" + cellId + "'></div>" +
+                    "\n<script>" +
+                    "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(spec) + "'});" +
+                    "</script>",
+            metadata: { }
+        };
+        var cellInfo = {};
+        cellInfo[this.KB_TYPE] = this.KB_FUNCTION_CELL;
+        cellInfo['method'] = spec;
+        cellInfo[this.KB_STATE] = [];
+        cellInfo['widget'] = spec.widgets.input;
+        cell.metadata[this.KB_CELL] = cellInfo;
+        return cell;
+    };
+    
+    // map the app ID to the spec, map method id to spec
+    this.specMapping = {
+        apps : {},
+        methods : {}
+    };
+    /** populates the app/method specs **/
+    this.getSpecs = function(cells, _callback, _error_callback) {
+        var self = this;
+        if (cells) {
+            var appSpecIds = []; var methodSpecIds = [];
+            this.specMapping = { apps : {}, methods : {} }
+            for(var c=0; c<cells.length; c++) {
+                if (cells[c].app) {
+                    appSpecIds.push(cells[c].app);
+                } else if (cells[c].method) {
+                    methodSpecIds.push(cells[c].method);
+                }
+            }
+            var getSpecsJobs = [];
+            if (appSpecIds.length>0) {
+                getSpecsJobs.push(
+                    self.nms.get_app_spec({ids:appSpecIds},
+                        function(appSpecs) {
+                            for (var a=0; a<appSpecs.length; a++) {
+                                self.specMapping.apps[appSpecIds[a]] = appSpecs[a];
+                            }
+                        },
+                        function(error) {
+                            console.error("error getting app specs:");
+                            console.error(error);
+                            if(_error_callback) { _error_callback(); }
+                        }));
+            }
+            if (methodSpecIds.length>0) {
+                getSpecsJobs.push(
+                    self.nms.get_method_spec({ids:methodSpecIds},
+                        function(methodSpecs) {
+                            for (var a=0; a<methodSpecs.length; a++) {
+                                self.specMapping.methods[methodSpecIds[a]] = methodSpecs[a];
+                            }
+                        },
+                        function(error) {
+                            console.error("error getting method specs:");
+                            console.error(error);
+                            if(_error_callback) { _error_callback(); }
+                        }));
+            }
+            
+            if (getSpecsJobs.length>0) {
+                $.when.apply($, getSpecsJobs).done(function() {
+                    _callback();
+                });
+            } else {
+                _callback();
+            }
+        } else {
+            _callback();
+        }
+    };
+    
+    
+    
+    // !! copied from kbaseNarrativeWorkspace !!
+    this.safeJSONStringify = function(string) {
+        var esc = function(s) { 
+            return s.replace(/'/g, "&apos;")
+                    .replace(/"/g, "&quot;");
+        };
+        return JSON.stringify(string, function(key, value) {
+            return (typeof(value) === 'string') ? esc(value) : value;
+        });
+    };
+    // !! copied from kbaseNarrativeWorkspace !!
+    this.uuidgen = function() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);});
+    };
+    
+    // !! copied from kbaseNarrativeWorkspace !!
+    this.KB_CELL= 'kb-cell';
+    this.KB_TYPE= 'type';
+    this.KB_APP_CELL= 'kb_app';
+    this.KB_FUNCTION_CELL= 'function_input';
+    this.KB_OUTPUT_CELL= 'function_output';
+    this.KB_ERROR_CELL= 'kb_error';
+    this.KB_CODE_CELL= 'kb_code';
+    this.KB_STATE= 'widget_state';
 };
 
 
@@ -238,16 +417,6 @@ WORKSPACE INFO
 7: lock_status lockstat
 8: usermeta metadata
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
  
 */
  

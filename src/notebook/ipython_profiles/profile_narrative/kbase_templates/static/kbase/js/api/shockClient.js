@@ -117,8 +117,9 @@ function ShockClient(params) {
     };
 
     self.delete_node = function (id, ret, errorCallback) {
+    	var url = self.url+'/node';
     	var promise = jQuery.Deferred();
-    	jQuery.ajax(url+"/" + id, {
+    	jQuery.ajax(url + "/" + id, {
     		success: function (data) {
     			ret(true);
     			promise.resolve();

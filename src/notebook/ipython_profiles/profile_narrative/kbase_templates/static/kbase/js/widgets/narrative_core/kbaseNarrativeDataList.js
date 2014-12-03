@@ -950,7 +950,7 @@
                             error: function(jqXHR, textStatus, errorThrown) {
                                 //do nothing
                             }
-                        })
+                        });
                 }
 	    }
         },

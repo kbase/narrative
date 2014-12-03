@@ -1870,6 +1870,19 @@ div[class="tooltip-inner"] {
 
 
 
+/* share panel styles */
+.kb-share-user-permissions-dropdown {
+    border-style:none;
+    text-shadow: none !important;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    moz-box-shadow: none;
+    padding:2px;
+    width:auto;
+    height:auto;
+}
+
+
 
 
 /* End kbaseData.css */

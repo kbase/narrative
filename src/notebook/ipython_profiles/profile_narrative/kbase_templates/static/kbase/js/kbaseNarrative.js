@@ -32,6 +32,21 @@ $('#kb-narr-name #name').click(function(e) {
     }
 });
 
+(function() {
+    var $dataList = $('<div>');
+    $dataList["kbaseNarrativeSharePanel"]({});
+    $('#kb-share-btn').popover({ 
+        html : true,
+        placement : "bottom",
+        title: function() {
+            return "Share this Narrative & Data";
+        },
+        content: function() {
+            return $dataList;
+        }
+    });
+})();
+
 var EndpointTester = function(url, target) {
     this.loadingImage = 'static/kbase/images/ajax-loader.gif';
     this.okayText = 'ok';

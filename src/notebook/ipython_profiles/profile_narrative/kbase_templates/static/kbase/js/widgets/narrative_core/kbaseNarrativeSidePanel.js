@@ -6,6 +6,7 @@
             loadingImage: "static/kbase/images/ajax-loader.gif",
             autorender: true,
             workspaceURL: "https://kbase.us/services/ws", //used for data importer
+            landingPageURL: "/functional-site/#/", // used for data importer            
         },
         $dataWidget: null,
         $methodsWidget: null,
@@ -86,6 +87,7 @@
                 var tab = tabs[i];
                 $header.append($('<div>')
                                .addClass('kb-side-header')
+                               .css('width', (100/tabs.length)+'%')
                                .append(tab.tabName));
                 $body.append($('<div>')
                              .addClass('kb-side-tab')
@@ -127,12 +129,17 @@
                                            this.toggleOverlay();
                                         }, this))));
 
-            this.$overlayBody = $('<div>');
+            // styling is easier if there is a class for containers
+            this.$overlayBody = $('<div class="kb-overlay-body">');
+
+            this.$overlayFooter  = $('<div class="kb-overlay-footer">');
 
             this.$overlay = $('<div>')
                             .addClass('kb-side-overlay-container')
                             //.append($overlayHeader)
-                            .append(this.$overlayBody);
+                            .append(this.$overlayBody)
+                            .append(this.$overlayFooter);
+
             $('body').append(this.$overlay);
             this.$overlay.hide();
 
@@ -227,24 +234,33 @@
          * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
         dataImporter: function() {
+            var narWSName;
+            $(document).on('setWorkspaceName.Narrative', function(e, info){
+                narWSName = info.wsId;
+            })
+
             var self = this;
             var user = 'nconrad';
-            var minePanel = $('<div>');
+
+            var body = this.$overlayBody;
+            var footer = this.$overlayFooter;
+
+            // tab panels
+            var minePanel = $('<div class="kb-import-panel">'),
+                sharedPanel = $('<div class="kb-import-panel">'),
+                publicPanel = $('<div class="kb-import-panel">'),
+                importPanel = $('<div class="kb-import-panel">');
+
+            // content wrapper
             var content = $('<div class="kb-import-content">');
-            var publicPanel = $('<div>');
-            var body = this.$overlayBody;   
 
             // add tabs
             var $tabs = this.buildTabs([
-                {
-                    tabName : 'My Data',
-                    content : minePanel
-                },
-                {
-                    tabName : 'Public',
-                    content: publicPanel
-                }
-            ]);
+                    {tabName: 'My Data', content: minePanel},
+                    {tabName: 'Shared', content: sharedPanel},
+                    {tabName: 'Public', content: publicPanel},
+                    {tabName: 'Import', content: importPanel},
+                ]);
 
             body.addClass('kb-side-panel');
             body.append($tabs.header).append($tabs.body);
@@ -269,58 +285,106 @@
                 console.log('type_names', types)
             })
             
-
             // useable types
-            var types = ['KBaseGenomes.Genome', 
+            var types = ['Data type...',
+                         'KBaseGenomes.Genome', 
                          'KBaseFBA.FBAModel',
                          'KBaseFBAModeling.FBA',
-                         'KBaseFBA.ContigSet',
+                         'KBaseGenomes.ContigSet',
                          'KBaseGenomes.Pangenome',                         
                          'KBaseFBA.Media'];
 
-            var selector = $('<select class="form-control">');
-            for (var i in types) {
-                selector.append('<option data-type="'+types[i]+'">'+
+            // add search box
+            var search = $('<input type="text" class="form-control kb-import-search" placeholder="Search objects" >');
+            search = $('<div class="col-md-4">').append(search);
+            minePanel.append(row);
+
+            search.keyup(function(e, v){
+                console.log(e, v, $(this).val())
+            })
+
+            // add type dropdown
+            var typeFilter = $('<select class="form-control kb-import-type-filter">');
+            typeFilter.append('<option>All types...</option>');
+            for (var i=1; i<types.length -1; i++) {
+                typeFilter.append('<option data-type="'+types[i]+'">'+
                                     types[i].split('.')[1]+
                                 '</option>');
             }
-            minePanel.append(selector);
+            typeFilter = $('<div class="col-md-3">').append(typeFilter);
 
-            selector.change(function(blah) {
+            var row = $('<div class="row">').append(search, typeFilter);
+            minePanel.append(row);
+
+            // evengt for type dropdown
+            typeFilter.change(function(blah) {
                 var type = $(this).children('option:selected').data('type');
-                updateList(type, user);
+                if (type) updateView(type);
             })
 
+            // add footer status container and button
+            var importStatus = $('<div class="pull-left kb-import-status">');
+            footer.append(importStatus)            
+            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
+            footer.append(btn);
 
-            // this could be used elswhere
-            var footer = $('<div class="overlay-footer" style="position: absolute; bottom: 20px; right: 20px;">');
-            footer.append('<button class="btn btn-primary" disabled>Add to Narrative</button>')
             body.append(footer);
 
-            // populate list;
-            function updateList(type, user) {
+            // get mapping to functional site
+            var prom = $.ajax({
+                url: '/static/kbase/js/widgets/landing_page_map.json',
+                success: function(response) {
+                    self.landingPageMap = response;
+                },
+                error: function() {
+                    self.dbg("Unable to get any landing page map! Landing pages mapping unavailable...");
+                    self.landingPageMap = null;
+                },
+            })
+
+            // load data list
+            $.when(prom).done(function() {
+                // update without type filter on first load
+                updateView(null);
+            });
+
+            // function used to update my data list
+            function getMyData(ids, type, user) {
                 // clear view
                 content.html('');
                 content.loading();
-                ws.list_objects({type: type, savedby: [user]})
-                    .done(function(d) {
-                        content.rmLoading();
-                        console.log('heres the data', d)
 
-                        minePanel.append('<div>')
-                        for (var i in d.slice(0,10)) {
+                if (type)
+                    var p = ws.list_objects({ids: ids, type: type});
+                else 
+                    var p = ws.list_objects({ids: ids});
+
+                $.when(p).done(function(d) {
+                        content.rmLoading();
+                        console.log('heres the data', d);
+                        if (type) content.append('<i>'+d.length+'</i> '+ type.split('.')[1] + 's');
+
+                        // add each item
+                        for (var i in d) {
                             var obj = d[i];
                             var id = obj[0];
                             var name = obj[1];
+                            var mod_type = obj[2].split('-')[0];
+                            var kind = mod_type.split('.')[1]
+                            var module = mod_type.split('.')[0];
                             var wsID = obj[6];
                             var ws = obj[7];
                             var relativeTime = self.prettyTimestamp(obj[3]);
 
-                            var item = $('<div class="kb-import-item">');
-                            item.append('<input type="checkbox" value="" class="pull-left">')
-                            item.append('<span class="h4">'+name+'</span><br>');
+                            var item = $('<div class="kb-import-item">')
+                                            .data('ref', wsID+'.'+id)
+                                            .data('obj-name', name);                                    
+                            item.append('<input type="checkbox" value="" class="pull-left kb-import-checkbox">');
+                            item.append('<a class="h4" href="'+
+                                            objURL(module, kind, ws, name)+
+                                            '" target="_blank">'+name+'</a>');
+                            item.append('<br>');
                             item.append('<i>'+relativeTime+'</i>');
-
 
                             content.append(item);
                         }
@@ -328,13 +392,95 @@
                         // update view
                         minePanel.append(content);
 
+                        // some events
+                        var selected = [];
+                        $('.kb-import-checkbox').change(function(){
+                            $(this).is(":checked")
+
+                            var item = $(this).parent('.kb-import-item');
+                            var ref = item.data('ref').replace(/\./g, '/');
+                            var name = item.data('obj-name');
+
+                            // update model for selected items
+                            if ($(this).is(":checked")) {
+                                selected.push({ref: ref, name: name});
+                            }
+                            else {
+                                for (var i=0; i<selected.length; i++) {
+                                    if (selected[0].ref == ref) 
+                                        selected.splice(i, 1);
+                                }
+                            }
+
+                            // disable/enable button
+                            if (selected.length > 0) btn.prop('disabled', false);
+                            else btn.prop('disabled', true);
+                        });
+
+                        // import items on button click
+                        btn.click(function() {
+                            if (selected.length == 0) return;
+
+                            var proms = copyObjects(selected, narWSName);
+                            $.when.apply($, proms).done(function(data) {
+                                importStatus.html('');
+                                var status = $('<span class="text-success">done.</span>');
+                                importStatus.append(status);
+                                status.delay(1000).fadeOut();
+
+                                // update sidebar data list
+                                self.trigger('updateDataList.Narrative');
+                            });
+                        });
                 })
             }
 
-            updateList(types[0], user)
+
+            function updateView(type) {
+                getMyWSIDs().done(function(ids) {
+                    getMyData(ids, (type ? type : null), user);
+                });
+            }
+
+            function objURL(module, type, ws, name) {
+                if (self.landingPageMap[module])
+                    return self.options.landingPageURL+self.landingPageMap[module][type]+'/'+ws+'/'+name;
+            }
+
+            function wsURL(ws) {
+                return self.options.landingPageURL+'ws/'+ws;
+            }            
+
+            function copyObjects(objs, nar_ws_name) {
+                importStatus.html('Adding <i>'+objs.length+'</i> objects to narrative...');
+
+                var proms = [];
+                for (var i in objs) {
+                    var ref = objs[i].ref;
+                    var name = objs[i].name;
+                    console.log('copying ', ref, 'to', nar_ws_name)
+                    proms.push( ws.copy_object({to: {workspace: nar_ws_name, name: name},
+                                                from: {ref: ref} }) );
+                }
+                return proms;
+            }
+
+            function getMyWSIDs() {
+                return ws.list_workspace_info({owners: [user]})
+                        .then(function(d) {
+                            var ids = [];
+                            for (var i in d) ids.push(d[i][0]);
+                            return ids;
+                        })
+            }
+
+            function getAllData() {
+
+            }
+
+
 
         }, 
-
 
         prettyTimestamp: function(timestamp) {
             var format = function(x) {

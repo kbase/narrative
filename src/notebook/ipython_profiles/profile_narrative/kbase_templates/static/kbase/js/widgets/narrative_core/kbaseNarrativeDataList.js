@@ -102,6 +102,12 @@
             }
             setInterval(function(){self.refresh()}, this.options.refresh_interval); // check if there is new data every X ms
             
+            // listener for refresh
+            $(document).on('updateDataList.Narrative', function(){
+                console.log('refreshing data!')
+                self.refresh()
+            })
+
             this.showLoading();
             if (this.options.ws_name) {
                 this.setWorkspace(this.options.ws_name);

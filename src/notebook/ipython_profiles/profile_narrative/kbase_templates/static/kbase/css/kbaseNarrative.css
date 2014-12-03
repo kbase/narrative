@@ -1887,7 +1887,9 @@ div[class="tooltip-inner"] {
     margin: 15px 30px 15px 0px;
 }
 
-
+.kb-import-status {
+    margin: 20px;
+}
 
 .loader {
 

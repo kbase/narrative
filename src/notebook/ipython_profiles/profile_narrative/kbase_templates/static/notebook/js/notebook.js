@@ -1511,11 +1511,14 @@ var IPython = (function (IPython) {
         if(nbname) {
             // names can be anything now!!! we only have to test that it is at least one character long
             //if (this.notebook_name_blacklist_re.test(nbname) == false && nbname.length>0) {
-            if(nbname.length>0) {
+            
+            // although we cannot now leave the notebook named untitled
+            if(nbname.trim().length>0 && nbname.trim().toLowerCase() !== 'untitled') {
                 return true;
             }
         }
         return false;
+    
     };
 
     /**

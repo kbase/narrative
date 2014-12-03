@@ -376,7 +376,7 @@ class KBaseWSNotebookManager(NotebookManager):
         if user_id is None:
             raise web.HTTPError(400, u'Cannot determine user identity from '
                                      u'session information')
-        
+    
         # we don't rename anymore--- we only set the name in the metadata
         #try:
         #    new_name = normalize('NFC', nb.metadata.name)
@@ -391,6 +391,8 @@ class KBaseWSNotebookManager(NotebookManager):
         (homews, homews_id) = ws_util.check_homews(wsclient, user_id)
         # Carry over some of the metadata stuff from ShockNBManager
         try:
+            if not hasattr(nb.metadata, 'name'):
+                nb.metadata.name = 'Untitled'
             if not hasattr(nb.metadata, 'ws_name'):
                 nb.metadata.ws_name = os.environ.get('KB_WORKSPACE_ID',homews)
             if not hasattr(nb.metadata, 'creator'):
@@ -409,6 +411,18 @@ class KBaseWSNotebookManager(NotebookManager):
 
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
+        
+        ## new approach, step 1: update current ws metadata
+        try:
+            updated_metadata = {
+                "is_temporary":"false",
+                "narrative_nice_name":nb.metadata.name
+            };
+            ws_util.alter_workspace_metadata(wsclient, notebook_id, updated_metadata)
+        except Exception as e:
+            raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
+        
+        ## new approach, step 2: save ws object
         try:
             # 'wsobj' = the ObjectSaveData type from the workspace client
             # requires type, data (the Narrative typed object), provenance,

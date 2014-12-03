@@ -14,8 +14,17 @@ var NarrativeManager = function(options, auth, auth_cb) {
         return;
     }
     this.config = {};
-    this.config.ws_url  = options.ws_url;
-    this.config.nms_url = options.nms_url;
+    this.config.ws_url = null;
+    this.config.nms_url = null;
+    if (options.ws_url) { this.config.ws_url  = options.ws_url; }
+    else if (window.kbconfig && window.kbconfig.urls) {
+        this.config.ws_url = window.kbconfig.urls.workspace;
+    }
+    if (options.nms_url) { this.config.nms_url  = options.nms_url; }
+    else if (window.kbconfig && window.kbconfig.urls) {
+        this.config.nms_url = window.kbconfig.urls.narrative_method_store;
+    }
+    
     if (typeof(this.config.ws_url) != "string" || this.config.ws_url.trim().length === 0) {
         this.config.ws_url = "https://kbase.us/services/ws";
     }

@@ -12,13 +12,20 @@ $('#kb-del-btn').click(function(e) {
 });
 
 $('#kb-save-btn').click(function(e) {
-    if (IPython && IPython.notebook)
-        IPython.notebook.save_checkpoint();
+    if (IPython && IPython.notebook) {
+        var narrName = IPython.notebook.notebook_name;
+        // we do not allow users to leave thier narratives untitled
+        if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
+            IPython.save_widget.rename_notebook("Please name your Narrative before saving.", false);
+        } else {
+            IPython.notebook.save_checkpoint();
+        }
+    }
 });
 
 $('#kb-narr-name #name').click(function(e) {
     if (IPython && IPython.save_widget) {
-        IPython.save_widget.rename_notebook();
+        IPython.save_widget.rename_notebook("Rename your Narrative.", true);
         var narrName = IPython.notebook.notebook_name;
         // this code needs to move to the save widget since rename_notebook is async!!
         //$('#kb-narr-name #name').text(narrName);

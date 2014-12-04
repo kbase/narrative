@@ -43,12 +43,12 @@
 
             this.render();
             /** commenting out the overlay panel for now **/
-            // this.addButton($('<button>')
-            //                .addClass('btn btn-xs btn-default')
-            //                .append('<span class="glyphicon glyphicon-play"></span>')
-            //                .click($.proxy(function(event) {
-            //                    this.trigger('toggleSidePanelOverlay.Narrative');
-            //                }, this)));
+            this.addButton($('<button>')
+                           .addClass('btn btn-xs btn-default')
+                           .append('<span class="glyphicon glyphicon-play"></span>')
+                           .click($.proxy(function(event) {
+                               this.trigger('toggleSidePanelOverlay.Narrative');
+                           }, this)));
             return this;
         },
 

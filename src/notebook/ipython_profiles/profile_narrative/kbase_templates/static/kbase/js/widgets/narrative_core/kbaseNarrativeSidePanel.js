@@ -309,24 +309,8 @@
             footer.append(btn);
 
             body.append(footer);
+            updateView('mine');
 
-            // get mapping to functional site
-            var prom = $.ajax({
-                url: '/static/kbase/js/widgets/landing_page_map.json',
-                success: function(response) {
-                    self.landingPageMap = response;
-                },
-                error: function() {
-                    self.dbg("Unable to get any landing page map! Landing pages mapping unavailable...");
-                    self.landingPageMap = null;
-                },
-            })
-
-            // load data list
-            $.when(prom).done(function() {
-                // update without type filter on first load
-                updateView(null);
-            });
 
             // function used to update my data list
             function getMyData(workspaces) {
@@ -353,10 +337,11 @@
 
             }
 
+            function updateView(view) {
+                //if (view == 'mine') var p = getMyWS();
+                //} else if 11
 
-            function updateView(type) {
-                getMyWS().done(function(workspaces) {
-
+                return getMyWS().done(function(workspaces) {
                     // update workspace dropdown model
                     workspaces = workspaces; 
 
@@ -435,6 +420,15 @@
 
             function getMyWS() {
                 return ws.list_workspace_info({owners: [user]})
+                        .then(function(d) {
+                            var workspaces = [];
+                            for (var i in d) workspaces.push({id: d[i][0], name: d[i][1]});
+                            return workspaces;
+                        })
+            }
+
+            function getSharedWS() {
+                return ws.list_workspace_info({perm: 'w'})
                         .then(function(d) {
                             var workspaces = [];
                             for (var i in d) workspaces.push({id: d[i][0], name: d[i][1]});
@@ -577,8 +571,9 @@
 
 
             function objURL(module, type, ws, name) {
-                if (self.landingPageMap[module])
-                    return self.options.landingPageURL+self.landingPageMap[module][type]+'/'+ws+'/'+name;
+                var mapping = window.kbconfig.landing_page_map;
+                if (mapping[module])
+                    return self.options.landingPageURL+mapping[module][type]+'/'+ws+'/'+name;
                 else 
                     console.error('could not find a landing page mapping for', module);
             }
@@ -607,6 +602,6 @@
             var year = d.getFullYear();
 
             return month + "/" + day + "/" + year + ", " + hours + ":" + minutes + ":" + seconds;
-        },        
+        },
     })
 })( jQuery );

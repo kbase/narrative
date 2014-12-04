@@ -334,10 +334,10 @@
                 var renderedApps = {};
                 for (var i=0; i<jobs.apps.length; i++) {
                     var app = jobs.apps[i];
-                    var appInfo = jobInfo[app.app_job_id];
+                    var appInfo = jobInfo[app.job_id];
                     $appsTable.append(this.renderApp(app, appInfo));
                     this.updateAppCell(app, appInfo);
-                    renderedApps[app.app_job_id] = true;
+                    renderedApps[app.job_id] = true;
                 }
                 for (var i=0; i<storedIds.apps.length; i++) {
                     var appTest = storedIds.apps[i];
@@ -403,7 +403,7 @@
                 return $app;
 
             $app.append($('<div class="kb-jobs-title">').append(appInfo.info.appSpec.info.name).append(this.makeAppDetailButton(appJob, appInfo)));
-            $app.append($('<div class="kb-jobs-descr">').append(appJob.app_job_id));
+            $app.append($('<div class="kb-jobs-descr">').append(appJob.job_id));
 
             var $itemTable = $('<table class="kb-jobs-info-table">');
             var $statusRow = $('<tr>').append($('<th>').append('Status:'));

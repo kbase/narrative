@@ -380,11 +380,19 @@
                 dataType: 'json'
             }).responseText
         );
+        var landingPageMap = $.parseJSON(
+            $.ajax({
+                url: "{{ static_url('kbase/landing_page_map.json') }}",
+                async: false,
+                dataType: 'json'
+            }).responseText
+        );
         window.kbconfig = { urls: configJSON[configJSON['config']],
                             version: configJSON['version'],
                             name: configJSON['name'],
                             git_commit_hash: configJSON['git_commit_hash'],
-                            git_commit_time: configJSON['git_commit_time'] };
+                            git_commit_time: configJSON['git_commit_time'],
+                            landing_page_map: landingPageMap };
     </script>
     <script src="{{ static_url("kbase/js/api/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("kbase/js/api/workspaceDeluxeClient.js") }}" type="text/javascript" charset="utf-8"></script>    

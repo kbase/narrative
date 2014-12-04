@@ -126,11 +126,12 @@
                 this)
             );
             
+            this.landingPageMap = window.kbconfig.landing_page_map;
             /**
              * Get the landing page map.
              * First, try getting it from /functional-site/landing_page_map.json.
              * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
-             */
+             
             $.ajax({
                 url: '/functional-site/landing_page_map.json',
                 async: true,
@@ -153,7 +154,7 @@
                         }, this)
                     })
                 }, this)
-            });
+            });*/
             
             if (this.ws_name)
                 this.trigger('workspaceUpdated.Narrative', this.ws_name);

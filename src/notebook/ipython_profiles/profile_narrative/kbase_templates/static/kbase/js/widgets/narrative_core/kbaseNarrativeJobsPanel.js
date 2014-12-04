@@ -220,6 +220,8 @@
                 if ($appCell.length > 0)
                     info = $appCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
 
+                console.log('app ' + app.id + ' info');
+                console.log(info);
                 if (info) {
                     // from the source, we need to get its containing app cell object.
                     appJobList.push("['" + app.id + "', " +
@@ -230,6 +232,8 @@
 
                 uniqueJobs[app.id] = {'app' : app, 'info' : info};
             }
+
+            console.log(appJobList)
 
             if (jobs.apps.length === 0 && jobs.methods.length === 0) {
                 // no jobs! skip the kernel noise and cut to the rendering!
@@ -321,6 +325,7 @@
             this.$methodsList.empty().append($methodsTable);
 
             // do apps.
+            console.log(jobs.apps);
             var $appsTable = $('<div class="kb-jobs-items">');
             if (jobs.apps.length === 0 && storedIds.apps.length === 0) {
                 $appsTable.append($('<div class="kb-data-loading">').append('No running apps!'));
@@ -361,7 +366,7 @@
             if (app.running_step_id) {
                 $appCell.kbaseNarrativeAppCell('setRunningStep', app.running_step_id);
             }
-            if (Object.keys(app.widget_outputs).length > 0) {
+            if (app.widget_outputs && Object.keys(app.widget_outputs).length > 0) {
                 for (var key in app.widget_outputs) {
                     if (app.widget_outputs.hasOwnProperty(key))
                         $appCell.kbaseNarrativeAppCell('setStepOutput', key, app.widget_outputs[key]);
@@ -614,6 +619,7 @@
                 var $tracebackDiv = $('<div>')
                                  .addClass('kb-function-error-traceback');
                 for (var i=0; i<error.traceback.length; i++) {
+                    error.traceback[i] = error.traceback[i].replace(/\[\d(;\d+)?m/g, '');
                     $tracebackDiv.append(error.traceback[i] + "<br>");
                 }
 
@@ -624,6 +630,8 @@
                                 .append($tracebackPanel);
                 $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
             }
+            if (this.refreshTimer)
+                clearTimeout(this.refreshTimer);
 
             this.$jobsPanel.hide();
             this.$loadingPanel.hide();

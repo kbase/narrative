@@ -1232,16 +1232,13 @@ div#notebook_panel {
     font-size: 12pt;
     line-height: 15px;
     color: #2E618D;
-    margin: 3px;
+    margin: 3px 13px 3px 3px;
     opacity: inherit;
     display: inline;
 }
 .kb-cell-run div.kb-func-desc {
     opacity: inherit;
     display: block;
-}
-.kb-func-desc button {
-    margin-left: 10px;
 }
 
 .kb-cell-run h2 {

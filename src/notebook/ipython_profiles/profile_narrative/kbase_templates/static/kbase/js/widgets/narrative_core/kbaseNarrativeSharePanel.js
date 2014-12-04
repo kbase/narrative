@@ -197,7 +197,7 @@ WORKSPACE INFO
                 }
                 self.$mainPanel.append($togglePublicPrivate);
                 
-                var $meDiv = $('<div>').css({'margin':'5px','margin-top':'10px'});
+                var $meDiv = $('<div>').css({'margin':'5px','margin-top':'20px'});
                 var status = "You do not have access to this Narrative.";
                 var isOwner = false;
                 if (self.ws_info[5]==='a') {
@@ -206,12 +206,12 @@ WORKSPACE INFO
                     $togglePublicPrivate.show();
                 } else if (self.ws_info[5]==='w') {
                     status="You can edit this Narrative, but you cannot share it.";
-                } else if (self.ws_info[5]==='r') {
+                } else if (self.ws_info[5]==='r' || self.ws_info[6]==='r') { // either you can read it, or it is globally readable
                     status="You can view this Narrative, but you cannot edit or share it.";
-                }
+                } 
                 var display = self.renderUserIconAndName(self.user_id);
                 $meDiv.append(display[0],display[1]);
-                $meDiv.append("<br><br>"+status);
+                $meDiv.append($('<div>').css({'margin-top':'10px'}).append(status));
                 self.$mainPanel.append($meDiv);
             
                 if (isOwner) {
@@ -295,10 +295,6 @@ WORKSPACE INFO
                 var $tbl = $('<table>');
                 $othersDiv.append($tbl);
                 
-                
-                
-                
-                
                 // sort
                 self.ws_permissions.sort(function(a,b) {
                     if (a[1]!==b[1]) { // based on privilege first
@@ -319,7 +315,7 @@ WORKSPACE INFO
                 
                 // show all other users
                 for (var i=0; i<self.ws_permissions.length; i++) {
-                    if (self.ws_permissions[i][0] !== self.user_id) {
+                    if (self.ws_permissions[i][0] !== self.user_id && self.ws_permissions[i][0] !== '*') {
                         var $select;
                         if (isOwner) {
                             var thisUser = self.ws_permissions[i][0];
@@ -369,66 +365,70 @@ WORKSPACE INFO
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input, placeholder) {
             var self = this;
-            var noMatchesFoundStr = "";//"no users found";
+            var noMatchesFoundStr = "Enter a user name";//"no users found";
             $input.select2({
                 matcher: self.select2Matcher,
                 formatNoMatches: noMatchesFoundStr,
                 placeholder:placeholder,
                 allowClear: true,
                 multiple: true,
+                /*tokenSeparators:[' ',','],
+                createSearchChoice: function(term) {
+                    return {id:term, text:term};
+                },*/
                 query: function (query) {
                     
                     var term = query.term.trim();
                     var results = [];
                     
-                    if (query.term.trim()!=="") {
-                        results.push({id:term,text:term});
-                    }
-                    
-                    query.callback({results:results});
-                    // populate the names from our valid data object list
-                    /*if (self.validDataObjectList) {
-                        for(var i=0; i<self.validDataObjectList.length; i++){
-                            var d = self.validDataObjectList[i];
-                            if (query.term.trim()!=="") {
-                                if(self.select2Matcher(query.term,d.name)) {
-                                    data.results.push({id:d.name, text:d.name, info:d.info});
+                    if (term.length>=2) {
+                        $.ajax({
+                            type: "GET",
+                            url: self.options.user_name_fetch_url + term + "&token="+self._attributes.auth.token,
+                            dataType:"json",
+                            crossDomain : true,
+                            success: function(data,res,jqXHR) {
+                               // console.log(data);
+                                if (data.data) {
+                                    if (data.data[term]) {
+                                        results.push({id:term,text:data.data[term].fullName, found:true})
+                                        query.callback({results:results});
+                                        return;
+                                    }
                                 }
-                            } else {
-                                data.results.push({id:d.name, text:d.name, info:d.info});
+                                results.push({id:term,text:term})
+                                query.callback({results:results});
+                            },
+                            error: function(jqXHR, textStatus, errorThrown) {
+                                results.push({id:term,text:term})
+                                console.error(errorThrown);
+                                query.callback({results:results}); 
                             }
-                        }
-                    }
-                    
-                    //always allow the name they give if there was no match...
-                    if (data.results.length===0) {
-                        if (query.term.trim()!=="") {
-                            if(self.isOutputName) {
-                                data.results.push({id:query.term, text:query.term});
-                            } else {
-                                data.results.push({id:query.term, text:query.term+" (not found)"});
-                            }
-                        }
+                        });
+                    } else {
+                       query.callback({results:results}); 
                     }
                     
                     // paginate results
-                    var pageSize = self.options.wsObjSelectPageSize;
-                    query.callback({results:data.results.slice((query.page-1)*pageSize, query.page*pageSize),
-                                more:data.results.length >= query.page*pageSize });*/
+                    //var pageSize = self.options.wsObjSelectPageSize;
+                    //query.callback({results:data.results.slice((query.page-1)*pageSize, query.page*pageSize),
+                    //            more:data.results.length >= query.page*pageSize });
                 },
                 
-                /*formatSelection: function(object, container) {
-                    var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
-                    return display;
-                },*/
-                formatResult: function(object, container, query) {
-                    return "<b>"+object.text+"</b>";
-                    /*if (object.info) {
-                        // we can add additional info here in the dropdown ...
-                        display = display + " (v" + object.info[4]+")<br>&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]);
-                        
+                formatSelection: function(object, container) {
+                    if (object.found) {
+                        var toShow = self.renderUserIconAndName(object.id, object.text);
+                        return $('<div>').append(toShow[0]).append(toShow[1].css({'white-space':'normal'})).html(); // wrapped in a div that we drop
                     }
-                    return display;*/
+                    return "<b>"+object.text+"</b> (not found)";
+                },
+                formatResult: function(object, container, query) {
+                    if (object.found) {
+                        var toShow = self.renderUserIconAndName(object.id, object.text);
+                        // hack on a hack on a hack!
+                        return $('<div>').append(toShow[0]).append(toShow[1].html()).html(); // wrapped in a div that we drop
+                    }
+                    return "<b>"+object.text+"</b> (not found)";
                 }
             });
         },
@@ -474,7 +474,7 @@ WORKSPACE INFO
             '#607D8B'  //blue grey
         ],
         
-        renderUserIconAndName: function(username) {
+        renderUserIconAndName: function(username, realName) {
             var code = 0;
             for(var i=0; i<username.length; i++) {
                 code += username.charCodeAt(i);
@@ -485,6 +485,8 @@ WORKSPACE INFO
             var userString = username;
             if (username === this.user_id) {
                 userString = " Me ("+username+")";
+            } else if (realName) {
+                userString = " "+realName+" ("+username+")";
             } else if (this.user_data[username]) {
                 userString = " "+this.user_data[username].fullName+" ("+username+")";
             }

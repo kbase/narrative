@@ -962,32 +962,6 @@
         
         getLandingPageMap: function() {
             this.ws_landing_page_map = window.kbconfig.landing_page_map;
-            /**
-             * Get the landing page map.
-             * First, try getting it from /functional-site/landing_page_map.json.
-             * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
-            $.ajax({
-                url: '/functional-site/landing_page_map.json',
-                async: true,
-                dataType: 'json',
-                success: $.proxy(function(response) {
-                    this.ws_landing_page_map = response;
-                }, this),
-                error: $.proxy(function(error) {
-                    this.dbg("Unable to get standard landing page map, looking for backup...");
-                    $.ajax({
-                        url: '/static/kbase/js/ui-common/functional-site/landing_page_map.json',
-                        async: true,
-                        dataType: 'json',
-                        success: $.proxy(function(response) {
-                            this.ws_landing_page_map = response;
-                        }, this),
-                        error: $.proxy(function(error) {
-                            this.dbg("Unable to get any landing page map! Landing pages mapping unavailable...");
-                            this.ws_landing_page_map = null;
-                        }, this)
-                    })
-                }, this)});*/
         },
         
         /**

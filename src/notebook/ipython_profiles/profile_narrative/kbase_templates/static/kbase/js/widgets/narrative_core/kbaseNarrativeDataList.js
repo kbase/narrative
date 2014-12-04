@@ -34,7 +34,7 @@
                                                     // there are more than this number of objects
             
             max_name_length:22,
-            refresh_interval:60000
+            refresh_interval:30000
         },
 
         // private variables
@@ -107,8 +107,7 @@
             setInterval(function(){self.refresh();}, this.options.refresh_interval); // check if there is new data every X ms
             
             // listener for refresh
-            $(document).on('updateDataList.Narrative', function(){
-                console.log('refreshing data!')
+            $(document).on('updateDataList.Narrative', function() {
                 self.refresh()
             })
 
@@ -142,9 +141,11 @@
                         //console.log('I have: '+self.ws_last_update_timestamp+ " remote has: "+workspace_info[3]);
                         if (self.ws_last_update_timestamp) {
                             if (self.ws_last_update_timestamp !== workspace_info[3]) {
+                                self.ws_last_update_timestamp = workspace_info[3];
                                 self.ws_obj_count = workspace_info[4];
                                 self.reloadWsData();
                             } else {
+                                //console.log('updating times');
                                 self.refreshTimeStrings();
                             }
                         } else {
@@ -166,13 +167,11 @@
         
         refreshTimeStrings: function() {
             var self = this;
-            if (self.objectList.length>0) {
-                if (self.objectList.length<self.options.max_objs_to_prevent_filter_as_you_type_in_search) {
-                    for(var i=0; i<self.objectList.length; i++) {
-                        if(self.objectList[i].$div) {
-                            self.objectList[i].$div.find('.kb-data-list-date')
-                                .html(self.getTimeStampStr(self.objectList[i].info[3]));
-                        }
+            if (self.objectList) {
+                for(var i=0; i<self.objectList.length; i++) {
+                    if(self.objectList[i].$div) {
+                        self.objectList[i].$div.find('.kb-data-list-date')
+                            .text(self.getTimeStampStr(self.objectList[i].info[3]));
                     }
                 }
             }
@@ -1070,10 +1069,24 @@
         getTimeStampStr: function (objInfoTimeStamp) {
             var date = new Date(objInfoTimeStamp);
             var seconds = Math.floor((new Date() - date) / 1000);
-            var interval = Math.floor(seconds / 31536000);
             
+            // f-ing safari, need to add extra ':' delimiter to parse the timestamp
+            if (isNaN(seconds)) {
+                var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
+                var newTimestamp = tokens[0] + '+'+tokens[0].substr(0,2) + ":" + tokens[1].substr(2,2);
+                date = new Date(newTimestamp);
+                seconds = Math.floor((new Date() - date) / 1000);
+                if (isNaN(seconds)) {
+                    // just in case that didn't work either, then parse without the timezone offset, but
+                    // then just show the day and forget the fancy stuff...
+                    date = new Date(tokens[0]);
+                    return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                }
+            }
+            
+            var interval = Math.floor(seconds / 31536000);
             if (interval > 1) {
-                return self.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
             }
             interval = Math.floor(seconds / 2592000);
             if (interval > 1) {

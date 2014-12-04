@@ -26,6 +26,7 @@
         options: {
             ws_url: "https://kbase.us/services/ws",
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",  // !!should not be hardcoded!!
+            loadingImage: 'static/kbase/images/ajax-loader.gif',
             ws_name_or_id: null,
             max_name_length: 35,
             max_list_height: '250px',
@@ -35,6 +36,7 @@
         ws:null, // workspace client
         
         $mainPanel:null,
+        $notificationPanel:null,
         
         init: function(options) {
             this._super(options);
@@ -44,8 +46,12 @@
                 this.options.ws_url = window.kbconfig.urls.workspace;
             }
             
+            this.$notificationPanel = $('<div>');
+            this.$elem.append(this.$notificationPanel);
+        
             this.$mainPanel = $('<div>');
             this.$elem.append(this.$mainPanel);
+            this.showWorking("loading narrative information");
             this.getInfoAndRender();
             
             $(document).on(
@@ -122,15 +128,10 @@
                                     }
                                 });
                             },
-                            function(error) {
-                                self.$mainPanel.empty();
-                                self.$mainPanel.append('<br>Error fetching Narrative share settings.<br><br>'+error.error.message);
-                            });
+                            function(error){self.reportError(error);}
+                            );
                     },
-                    function(error) {
-                        self.$mainPanel.empty();
-                        self.$mainPanel.append('<br>Error fetching Narrative share settings.<br><br>'+error.error.message);
-                    });
+                    function(error){self.reportError(error);});
             }
         },
         /*
@@ -173,6 +174,7 @@ WORKSPACE INFO
                 if (self.isPrivate) {
                     $togglePublicPrivate.append($('<a>').append('make public?')
                         .on('click',function() {
+                            self.showWorking("updating permissions...");
                             self.ws.set_global_permission(
                                 {id: self.ws_info[0], new_permission:'r' },
                                 function() { self.refresh();},
@@ -185,13 +187,11 @@ WORKSPACE INFO
                 } else {
                     $togglePublicPrivate.append($('<a>').append('make private?')
                         .on('click',function() {
+                            self.showWorking("updating permissions...");
                             self.ws.set_global_permission(
                                 {id: self.ws_info[0], new_permission:'n' },
                                 function() { self.refresh();},
-                                function(error) {
-                                    console.log(error);
-                                    self.refresh();
-                                }
+                                function(error){self.reportError(error); self.refresh(); }
                             );
                         }));
                 }
@@ -222,49 +222,55 @@ WORKSPACE INFO
                         $('<div>').addClass('btn-group')
                             .append($('<button>').addClass('btn btn-default dropdown-toggle')
                                 .attr('type','button').attr('data-toggle','dropdown').attr('aria-expanded','false')
-                                .append('<span class="caret"></span>'))
+                                .append('<span class="fa fa-caret-down"></span>'))
                             .append($('<ul>').addClass('dropdown-menu').attr('role','menu')
                                     .append($('<li>').append(
                                         $('<a>').append(' Add with view privileges')
                                             .on('click',function() {
                                                 var data = $input.select2("data");
+                                                self.showWorking("updating permissions...");
                                                 var users = [];
-                                                for(var i=0; i<data.length; i++) { users.push(data[i].id); }
+                                                for(var i=0; i<data.length; i++) {
+                                                    if(data[i].id.trim()!=='') {
+                                                        users.push(data[i].id.trim());
+                                                    }
+                                                }
                                                 self.ws.set_permissions(
                                                     {id: self.ws_info[0], new_permission:'r', users:users },
                                                     function() { self.refresh();},
-                                                    function(error) {
-                                                        console.log(error);
-                                                        self.refresh();
-                                                    }
+                                                    function(error){self.reportError(error); self.refresh(); }
                                                 );
                                             })))
                                     .append($('<li>').append($('<a>').append(' Add with edit privileges')
                                             .on('click',function() {
                                                 var data = $input.select2("data");
+                                                self.showWorking("updating permissions...");
                                                 var users = [];
-                                                for(var i=0; i<data.length; i++) { users.push(data[i].id); }
+                                                for(var i=0; i<data.length; i++) {
+                                                    if(data[i].id.trim()!=='') {
+                                                        users.push(data[i].id.trim());
+                                                    }
+                                                }
                                                 self.ws.set_permissions(
                                                     {id: self.ws_info[0], new_permission:'w', users:users },
                                                     function() { self.refresh();},
-                                                    function(error) {
-                                                        console.log(error);
-                                                        self.refresh();
-                                                    }
+                                                    function(error){self.reportError(error); self.refresh(); }
                                                 );
                                             })))
                                     .append($('<li>').append($('<a>').append(' Add with edit/share privileges')
                                             .on('click',function() {
                                                 var data = $input.select2("data");
+                                                self.showWorking("updating permissions...");
                                                 var users = [];
-                                                for(var i=0; i<data.length; i++) { users.push(data[i].id); }
+                                                for(var i=0; i<data.length; i++) {
+                                                    if(data[i].id.trim()!=='') {
+                                                        users.push(data[i].id.trim());
+                                                    }
+                                                }
                                                 self.ws.set_permissions(
                                                     {id: self.ws_info[0], new_permission:'a', users:users },
                                                     function() { self.refresh();},
-                                                    function(error) {
-                                                        console.log(error);
-                                                        self.refresh();
-                                                    }
+                                                    function(error){self.reportError(error); self.refresh(); }
                                                 );
                                             }))));
                     
@@ -325,6 +331,7 @@ WORKSPACE INFO
                                 .append($('<option>').val(thisUser+' ---n').append('remove access'))
                                 .val(thisUser+' ---'+self.ws_permissions[i][1])
                                 .on('change', function() {
+                                    self.showWorking("updating permissions...");
                                     var tokens = $(this).val().split(' ---');
                                     self.ws.set_permissions(
                                         {
@@ -333,12 +340,9 @@ WORKSPACE INFO
                                             users: [tokens[0]]
                                         },
                                         function () {
-                                            //code
                                             self.refresh();
-                                        }, function(error) {
-                                            console.error(error);
-                                            self.refresh();
-                                        }
+                                        },
+                                        function(error){self.reportError(error); self.refresh(); }
                                     );
                                     
                                 });
@@ -358,8 +362,6 @@ WORKSPACE INFO
                     }
                 }
                 self.$mainPanel.append($othersDiv);
-                
-            
             }
         },
         
@@ -367,7 +369,7 @@ WORKSPACE INFO
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input, placeholder) {
             var self = this;
-            var noMatchesFoundStr = "no users found";
+            var noMatchesFoundStr = "";//"no users found";
             $input.select2({
                 matcher: self.select2Matcher,
                 formatNoMatches: noMatchesFoundStr,
@@ -431,11 +433,22 @@ WORKSPACE INFO
             });
         },
         
+        showWorking: function(message) {
+            this.$mainPanel.empty();
+            this.$mainPanel.append('<br><br><div style="text-align:center"><img src="' + this.options.loadingImage
+                                   + '"><br>' + message + '</div>');
+        },
         
+        reportError: function(error) {
+            console.error(error);
+            this.$notificationPanel.append(
+                $('<div>').addClass('alert alert-danger alert-dismissible').attr('role','alert')
+                    .append('<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>')
+                    .append('<strong>Error: </strong> '+error.error.message)
+            );
+        },
         
         refresh: function() {
-            this.$mainPanel.empty();
-            this.$mainPanel.append('<br>Narrative data is loading...');
             this.getInfoAndRender();    
         },
         

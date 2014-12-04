@@ -75,7 +75,14 @@ def prepare_generic_method_input(token, workspace, methodSpec, paramValues, inpu
 def prepare_generic_method_output(token, workspace, methodSpec, input, output):
     narrSysProps = {'workspace': workspace, 'token': token}
     outArgs = []
-    outputMapping = methodSpec['behavior']['kb_service_output_mapping']
+    isScript = False
+    if 'kb_service_output_mapping' in methodSpec['behavior']:
+        outputMapping = methodSpec['behavior']['kb_service_output_mapping']
+    elif 'output_mapping' in methodSpec['behavior']:
+        outputMapping = methodSpec['behavior']['output_mapping']
+    else:
+        outputMapping = methodSpec['behavior']['script_output_mapping']
+        isScript = True
     for mapping in outputMapping:
         paramValue = None
         if 'input_parameter' in mapping:
@@ -86,10 +93,12 @@ def prepare_generic_method_output(token, workspace, methodSpec, input, output):
         elif 'narrative_system_variable' in mapping:
             sysProp = mapping['narrative_system_variable']
             paramValue = narrSysProps[sysProp]
-        elif 'service_method_output_path' in mapping:
+        elif isScript and 'service_method_output_path' in mapping:
             paramValue = get_sub_path(output, mapping['service_method_output_path'], 0)
+        elif (not isScript) and 'script_output_path' in mapping:
+            paramValue = get_sub_path(output, mapping['script_output_path'], 0)
         if paramValue is None:
-            raise ValueError("Value is not defined in output mapping: " + json.dumps(mapping))
+            raise ValueError("Value is not defined in output mapping [" + json.dumps(mapping) + "], actual output is: " + json.dumps(output))
         build_args(paramValue, mapping, workspace, outArgs)
     if len(outArgs) < 1:
         return {}
@@ -102,12 +111,12 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
     methIdToSpec = json.loads(method_specs_json.replace('\n', '\\n'))  #load_method_specs(appSpec)
 #    methIdToSpec = json.loads(method_specs_json)
     
-    njsClient = NJSMock(url = URLS.job_service, token = token)
+    njsClient = NarrativeJobService(URLS.job_service, token = token)
     appState = njsClient.check_app_state(app_job_id)
     appState['widget_outputs'] = {}
-    for stepId in appState['step_job_ids']:
-        stepJobId = appState['step_job_ids'][stepId]
-        job_manager.register_job(stepJobId)
+    #for stepId in appState['step_job_ids']:
+    #    stepJobId = appState['step_job_ids'][stepId]
+    #    job_manager.register_job(stepJobId)
     for stepSpec in appSpec['steps']:
         stepId = stepSpec['step_id']
         if not stepId in appState['step_outputs']:
@@ -116,11 +125,11 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
         methodId = stepSpec['method_id']
         methodSpec = methIdToSpec[methodId]
         methodOut = None
-        if 'kb_service_input_mapping' in methodSpec['behavior']:
+        if 'kb_service_input_mapping' in methodSpec['behavior'] or 'script_input_mapping' in methodSpec['behavior']:
             input = {}
             tempArgs = []
             methodInputValues = extract_param_values(paramValues, stepId)
-            prepare_generic_method_input(token, workspace, methodSpec, methodInputValues, input, tempArgs);
+            prepare_njs_method_input(token, workspace, methodSpec, methodInputValues, input, tempArgs);
             methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, rpcOut)
         else:
             methodOut = rpcOut
@@ -192,6 +201,78 @@ def transform_value(paramValue, workspace, targetTrans):
     if targetTrans == "none":
         return paramValue
     raise ValueError("Transformation type is not supported: " + targetTrans)
+
+def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues, input):
+    stepParams = []
+    narrSysProps = {'workspace': workspace, 'token': token}
+    parameters = methodSpec['parameters']
+    inputMapping = None
+    isScript = False
+    if 'kb_service_input_mapping' in methodSpec['behavior']:
+        inputMapping = methodSpec['behavior']['kb_service_input_mapping']
+    else:
+        inputMapping = methodSpec['behavior']['script_input_mapping']
+        isScript = True
+    
+    paramToTypes = {}
+    for paramPos in range(0, len(parameters)):
+        param = parameters[paramPos]
+        paramId = param['id']
+        paramValue = paramValues[paramPos]
+        input[paramId] = paramValue
+        types = []
+        if 'text_options' in param and 'valid_ws_types' in param['text_options']:
+            types = param['text_options']['valid_ws_types']
+        paramToTypes[paramId] = types
+    
+    for mapping in inputMapping:
+        paramValue = None
+        paramId = None
+        if 'input_parameter' in mapping:
+            paramId = mapping['input_parameter']
+            paramValue = input[paramId]
+        elif 'narrative_system_variable' in mapping:
+            sysProp = mapping['narrative_system_variable']
+            paramValue = narrSysProps[sysProp]
+        if 'constant_value' in mapping and not_defined(paramValue):
+            paramValue = mapping['constant_value']
+        if 'generated_value' in mapping and not_defined(paramValue):
+            paramValue = generate_value(mapping['generated_value'])
+            if paramId is not None:
+                input[paramId] = paramValue
+        if paramValue is None:
+            raise ValueError("Value is not defined in input mapping: " + json.dumps(mapping))
+        stepParam = build_args_njs(paramValue, mapping, workspace)
+        stepParam['step_source'] = ''
+        isInput = 0
+        workspaceName = ''
+        objectType = ''
+        isWorkspaceId = 0
+        if isScript and (paramId is not None) and (len(paramToTypes[paramId]) > 0) and (paramValue is not None) and (len(paramValue) > 0):
+            if len(paramToTypes[paramId]) == 1:
+                objectType = paramToTypes[paramId][0]
+            else:
+                objectType = wsClient.get_object_info_new({'objects' : [{'ref': workspace + "/" + paramValue}]})[0][2]
+                objectType = objectType[0:objectType.index('-')]
+            workspaceName = workspace
+            isWorkspaceId = 1
+        stepParam['is_workspace_id'] = isWorkspaceId
+        stepParam['ws_object'] = {'workspace_name': workspaceName, 'object_type': objectType, 'is_input' : isInput}
+        stepParams.append(stepParam)
+    return stepParams
+
+def build_args_njs(paramValue, paramMapping, workspace):
+    targetProp = None
+    targetTrans = "none"
+    ret = {}
+    if 'target_property' in paramMapping and paramMapping['target_property'] is not None:
+        targetProp = paramMapping['target_property']
+    if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
+        targetTrans = paramMapping['target_type_transform']
+    paramValue = transform_value(paramValue, workspace, targetTrans)
+    ret['label'] = targetProp
+    ret['value'] = paramValue
+    return ret
 
 def _get_token(user_id, password,
                auth_svc='https://nexus.api.globusonline.org/goauth/token?' +

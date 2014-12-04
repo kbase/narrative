@@ -961,11 +961,11 @@
         },
         
         getLandingPageMap: function() {
+            this.ws_landing_page_map = window.kbconfig.landing_page_map;
             /**
              * Get the landing page map.
              * First, try getting it from /functional-site/landing_page_map.json.
              * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
-             */
             $.ajax({
                 url: '/functional-site/landing_page_map.json',
                 async: true,
@@ -987,7 +987,7 @@
                             this.ws_landing_page_map = null;
                         }, this)
                     })
-                }, this)});
+                }, this)});*/
         },
         
         /**

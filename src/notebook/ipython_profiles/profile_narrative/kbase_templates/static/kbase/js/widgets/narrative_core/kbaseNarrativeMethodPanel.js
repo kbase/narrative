@@ -22,6 +22,7 @@
             methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
         services: null,
+        ignoreCategories : { 'inactive' : 1 },
 
         /**
          * This private method is automatically called when the widget is initialized.
@@ -204,9 +205,13 @@
         refreshFromService: function() {
             this.showLoadingMessage("Loading KBase Methods from service...");
 
-            this.methClient.list_categories({'load_methods': 1}, 
+            var methodAppCalls = [];
+            this.methClient.list_categories({'load_methods': 1, 'load_apps' : 1}, 
                 $.proxy(function(categories) {
-                    this.parseMethodsFromService(categories[0], categories[1]);
+                    console.log(categories);
+                    // this.parseMethodsFromService(categories[0], categories[1]);
+                    // this.parseAppsFromService(categories[0], categories[2]);
+                    this.parseMethodsAndApps(categories[0], categories[1], categories[2]);
                     this.showFunctionPanel();
                 }, this),
 
@@ -214,6 +219,86 @@
                     this.showError(error);
                 }, this)
             );
+        },
+
+        parseMethodsAndApps: function(catSet, methSet, appSet) {
+            var self = this;
+            var triggerMethod = function(method) {
+                self.methClient.get_method_spec({ 'ids' : [method.id] },
+                    function(spec) {
+                        self.trigger('methodClicked.Narrative', spec[0]);
+                    },
+                    function(error) {
+                        self.showError(error);
+                    }
+                );
+            };
+
+            var triggerApp = function(app) {
+                self.trigger('appClicked.Narrative', app);
+            };
+
+            var generatePanel = function(catSet, fnSet, icon, callback) {
+                var $fnPanel = $('<div>');
+                var fnList = [];
+                for (var fn in fnSet) {
+                    var ignoreFlag = false;
+                    for (var i=0; i<fnSet[fn].categories.length; i++) {
+                        if (self.ignoreCategories[fnSet[fn].categories[i]])
+                            ignoreFlag = true;
+                    }
+                    if (!ignoreFlag)
+                        fnList.push(fnSet[fn]);
+                }
+                fnList.sort(function(a, b) {
+                    return a.name.localeCompare(b.name);
+                });
+                for (var i=0; i<fnList.length; i++) {
+                    $fnPanel.append(self.buildMethod(icon, fnList[i], callback));
+                }
+                return $fnPanel;
+            };
+
+            var $methodPanel = generatePanel(catSet, methSet, 'M', triggerMethod);
+            var $appPanel = generatePanel(catSet, appSet, 'A', triggerApp);
+
+            // var $methodPanel = $('<div>');
+            // var methodList = [];
+            // for (var method in methSet) {
+            //     var ignoreFlag = false;
+            //     for (var i=0; i<methSet[method].categories.length; i++) {
+            //         if (this.ignoreCategories[methSet[method].categories[i]])
+            //             ignoreFlag = true;
+            //     }
+            //     if (!ignoreFlag)
+            //         methodList.push(methSet[method]);
+            // }
+            // methodList.sort(function(a, b) {
+            //     return a.name.localeCompare(b.name);
+            // });
+            // for (var i=0; i<methodList.length; i++) {
+            //     $methodPanel.append(this.buildMethod(methodList[i], triggerMethod));
+            // }
+
+            // var $appPanel = $('<div>');
+            // var appList = [];
+            // for (var app in appSet) {
+            //     var ignoreFlag = false;
+            //     for (var i=0; i<appSet[app].categories.length; i++) {
+            //         if (this.ignoreCategories[appSet[app].categories[i]])
+            //             ignoreFlag = true;
+            //     }
+            //     if (!ignoreFlag)
+            //         appList.push(appSet[app]);
+            // }
+            // appList.sort(function(a, b) {
+            //     return a.name.localeCompare(b.name);
+            // });
+            // for (var i=0; i<appList.length; i++) {
+            //     $appPanel.append(this.buildMethod(appList[i], triggerApp));
+            // }
+            this.$functionPanel.append($appPanel);
+            this.$functionPanel.append($methodPanel);
         },
 
         /**
@@ -234,6 +319,10 @@
                         self.showError(error);
                     }
                 );
+            };
+
+            var triggerApp = function(app) {
+                this.trigger('appClicked.Narrative', app);
             };
 
             // add the methods to their categories.
@@ -351,13 +440,11 @@
         //     return $newMethod;
         // },
 
-        buildMethod: function(method, triggerFn) {
-            console.log(method);
-
+        buildMethod: function(icon, method, triggerFn) {
             var $logo = $('<div>')
                         .addClass('kb-method-list-logo')
-                        .css({ 'background-color' : this.logoColorLookup(method.name) })
-                        .append(method.name[0])
+                        .css({ 'background-color' : this.logoColorLookup(icon) })
+                        .append(icon)
                         .click($.proxy(function(e) {
                             triggerFn(method);
                         }, this));
@@ -445,18 +532,12 @@
             
             // first, if there are some colors we want to catch...
             switch (type) {
-                case "Genome":
-                    return '#2196F3'; //blue
-                case "FBAModel":
-                    return '#4CAF50'; //green
-                case "FBA":
-                    return '#F44336'; //red
-                case "ContigSet":
-                    return '#FF9800'; //orange
-                case "ProteomeComparison":
-                    return '#3F51B5'; //indigo
-                case "Tree":
-                    return '#795548'; //brown
+                case "A":
+                    return "#FF9800";
+                    break;
+                case "M":
+                    return "#03A9F4";
+                    break;
             }
             
             // pick one based on the characters

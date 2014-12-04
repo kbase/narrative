@@ -41,7 +41,6 @@
 
             // The help element should be outside of the panel itself, so it can be manipulated separately.
             // It should hide itself when clicked.
-//            this.initMethodTooltip();
             this.$bodyDiv.append($('<div>')
                                  .addClass('kb-narr-panel-body')
                                  .append(this.$appPanel)

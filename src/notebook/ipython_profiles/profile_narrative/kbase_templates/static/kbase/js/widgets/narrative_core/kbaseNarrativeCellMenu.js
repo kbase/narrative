@@ -7,6 +7,12 @@
         init: function(options) {
             this._super(options);
 
+            var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
+                             .append($('<span class="fa icon-remove">'))
+                             .click(function(event) { 
+                                IPython.notebook.delete_cell();
+                             });
+
             var $btn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
                        .append($('<span class="fa fa-cog" style="font-size:10pt">'));
 
@@ -17,32 +23,6 @@
                                 'left' : 'auto', 
                                 'margin' : '0'
                          });
-/*
-
-        this.element.find('#move_cell_up').click(function () {
-            IPython.notebook.move_cell_up();
-        });
-        this.element.find('#move_cell_down').click(function () {
-            IPython.notebook.move_cell_down();
-        });
-
-        this.element.find('#insert_cell_above').click(function () {
-            IPython.notebook.insert_cell_above('code');
-        });  
-        this.element.find('#insert_cell_below').click(function () {
-            IPython.notebook.insert_cell_below('code');
-        });
-
-
-        this.element.find('#to_code').click(function () {
-            IPython.notebook.to_code();
-        });
-
-        this.element.find('#delete_cell').click(function () {
-            IPython.notebook.delete_cell();
-        });
-
-*/
 
             this.addMenuItem({
                 icon: 'fa fa-arrow-up',
@@ -93,9 +73,13 @@
                 }
             });
 
-            this.$elem.append($('<div class="dropdown">')
+            this.$elem.append(
+                $('<div>')
+                    .append($deleteBtn)
+                    .append($('<span class="dropdown">')
                               .append($btn)
-                              .append(this.$menu));
+                              .append(this.$menu)));
+            $deleteBtn.tooltip();
 
             return this;
         },
@@ -114,7 +98,7 @@
                             if (!item.disable) {
                                 if (item.action)
                                     item.action();
-                                this.$elem.find('[data-toggle]').dropdown('toggle');
+                                this.$menu.dropdown('toggle');
                             }
                         }, this));
             var $itemElem = $('<li>').append($item);

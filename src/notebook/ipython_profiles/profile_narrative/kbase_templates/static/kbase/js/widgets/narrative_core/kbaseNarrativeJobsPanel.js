@@ -408,12 +408,12 @@
             var $itemTable = $('<table class="kb-jobs-info-table">');
             var $statusRow = $('<tr>').append($('<th>').append('Status:'));
 
-            var status = 'Not Running';
+            var status = appJob.job_state;
+            status = status.charAt(0).toUpperCase() + status.substring(1);
             var task = null;
             var stepId = appJob.running_step_id;
             if (stepId) {
                 var stepSpec = getStepSpec(stepId, appInfo.info.appSpec);
-                status = 'Running';
                 task = appInfo.info.methodSpecs[stepSpec.method_id].info.name;
             }
             $statusRow.append($('<td>').append(status));

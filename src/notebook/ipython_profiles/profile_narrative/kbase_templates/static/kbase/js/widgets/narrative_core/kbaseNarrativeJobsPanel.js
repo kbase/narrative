@@ -321,7 +321,7 @@
             this.$methodsList.empty().append($methodsTable);
 
             // do apps.
-            console.log(jobs.apps);
+//            console.log(jobs.apps);
             var $appsTable = $('<div class="kb-jobs-items">');
             if (jobs.apps.length === 0 && storedIds.apps.length === 0) {
                 $appsTable.append($('<div class="kb-data-loading">').append('No running apps!'));

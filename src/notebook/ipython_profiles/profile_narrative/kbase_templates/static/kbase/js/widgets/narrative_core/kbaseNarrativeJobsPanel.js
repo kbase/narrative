@@ -321,6 +321,7 @@
             this.$methodsList.empty().append($methodsTable);
 
             // do apps.
+            console.log(jobs.apps);
             var $appsTable = $('<div class="kb-jobs-items">');
             if (jobs.apps.length === 0 && storedIds.apps.length === 0) {
                 $appsTable.append($('<div class="kb-data-loading">').append('No running apps!'));
@@ -361,7 +362,7 @@
             if (app.running_step_id) {
                 $appCell.kbaseNarrativeAppCell('setRunningStep', app.running_step_id);
             }
-            if (Object.keys(app.widget_outputs).length > 0) {
+            if (app.widget_outputs && Object.keys(app.widget_outputs).length > 0) {
                 for (var key in app.widget_outputs) {
                     if (app.widget_outputs.hasOwnProperty(key))
                         $appCell.kbaseNarrativeAppCell('setStepOutput', key, app.widget_outputs[key]);
@@ -614,6 +615,7 @@
                 var $tracebackDiv = $('<div>')
                                  .addClass('kb-function-error-traceback');
                 for (var i=0; i<error.traceback.length; i++) {
+                    error.traceback[i] = error.traceback[i].replace(/\[\d(;\d+)?m/g, '');
                     $tracebackDiv.append(error.traceback[i] + "<br>");
                 }
 
@@ -624,6 +626,8 @@
                                 .append($tracebackPanel);
                 $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
             }
+            if (this.refreshTimer)
+                clearTimeout(this.refreshTimer);
 
             this.$jobsPanel.hide();
             this.$loadingPanel.hide();

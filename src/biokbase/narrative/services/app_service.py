@@ -124,6 +124,7 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
             raise ValueError("Unsupported behavior type for [" + methodId + "]: " + json.dumps(behavior))
         steps.append(step)
     
+    #raise ValueError("App sending to NJS: " + json.dumps(app))
     njsClient = NarrativeJobService(service.URLS.job_service, token = token)
     appState = njsClient.run_app(app)
 

@@ -214,16 +214,13 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
         inputMapping = methodSpec['behavior']['script_input_mapping']
         isScript = True
     
-    paramToTypes = {}
+    paramToSpecs = {}
     for paramPos in range(0, len(parameters)):
         param = parameters[paramPos]
         paramId = param['id']
         paramValue = paramValues[paramPos]
         input[paramId] = paramValue
-        types = []
-        if 'text_options' in param and 'valid_ws_types' in param['text_options']:
-            types = param['text_options']['valid_ws_types']
-        paramToTypes[paramId] = types
+        paramToSpecs[paramId] = param
     
     for mapping in inputMapping:
         paramValue = None
@@ -248,14 +245,26 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
         workspaceName = ''
         objectType = ''
         isWorkspaceId = 0
-        if isScript and (paramId is not None) and (len(paramToTypes[paramId]) > 0) and (paramValue is not None) and (len(paramValue) > 0):
-            if len(paramToTypes[paramId]) == 1:
-                objectType = paramToTypes[paramId][0]
-            else:
-                objectType = wsClient.get_object_info_new({'objects' : [{'ref': workspace + "/" + paramValue}]})[0][2]
-                objectType = objectType[0:objectType.index('-')]
-            workspaceName = workspace
-            isWorkspaceId = 1
+        if isScript and (paramId is not None) and (paramId in paramToSpecs) and (paramValue is not None) and (len(paramValue) > 0):
+            paramSpec = paramToSpecs[paramId]
+            types = []
+            is_output_name = False
+            if 'text_options' in paramSpec:
+                textOptions = paramSpec['text_options']
+                if 'valid_ws_types' in textOptions:
+                    types = textOptions['valid_ws_types']
+                if 'is_output_name' in textOptions:
+                    is_output_name = (textOptions['is_output_name'] == 1)
+            if len(types) > 0:
+                if len(types) == 1:
+                    objectType = types[0]
+                else:
+                    objectType = wsClient.get_object_info_new({'objects' : [{'ref': workspace + "/" + paramValue}]})[0][2]
+                    objectType = objectType[0:objectType.index('-')]
+                workspaceName = workspace
+                isWorkspaceId = 1
+                if not is_output_name:
+                    isInput = 1
         stepParam['is_workspace_id'] = isWorkspaceId
         stepParam['ws_object'] = {'workspace_name': workspaceName, 'object_type': objectType, 'is_input' : isInput}
         stepParams.append(stepParam)

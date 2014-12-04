@@ -511,7 +511,8 @@ class LifecycleSubject(object):
                 job_manager = KBjobManager()
 
             self._event('debug', job_id)
-            job_manager.register_job(job_id)
+            if not job_id.startswith('njs:'):
+                job_manager.register_job(job_id)
             self._event('register_job', job_id)
 
     def register_app(self, app_id):
@@ -523,7 +524,8 @@ class LifecycleSubject(object):
                 job_manager = KBjobManager()
 
             self._event('debug', app_id)
-            job_manager.register_job(app_id)
+            if not app_id.startswith('njs:'):
+                job_manager.register_job(app_id)
             self._event('register_app', app_id)
 
     # get/set 'stage' property

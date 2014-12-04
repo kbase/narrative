@@ -362,11 +362,11 @@
                 .on('click',function() {
                         var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
                         if ($more.is(':visible')) {
-                            $more.hide();
+                            $more.slideToggle('fast');
                             $(this).html('<span class="fa fa-plus" style="color:#999" aria-hidden="true" />');
                         } else {
                             self.getRichData(object_info,$moreRow);
-                            $more.show();
+                            $more.slideToggle('fast');
                             $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
                     });

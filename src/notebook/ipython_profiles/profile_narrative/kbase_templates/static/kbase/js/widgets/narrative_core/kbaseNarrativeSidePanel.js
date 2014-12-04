@@ -34,10 +34,10 @@
             var $analysisPanel = analysisWidgets['panelSet'];
 
             var manageWidgets = this.buildPanelSet([
-                {
-                    name : 'kbaseNarrativeAppsPanel',
-                    params : { autopopulate: true }
-                },
+                // {
+                //     name : 'kbaseNarrativeAppsPanel',
+                //     params : { autopopulate: true }
+                // },
                 {
                     name : 'kbaseNarrativeJobsPanel',
                     params : { autopopulate: false }

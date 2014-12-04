@@ -129,8 +129,8 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
     appState = njsClient.run_app(app)
 
     # assuming we get a job ID out of this, do the following:
-    job_id = appState["job_id"]
-    #meth.register_app(job_id)
+    job_id = "njs:" + appState["job_id"]
+    meth.register_app(job_id)
 
     return json.dumps({ 'job_id' : job_id, 'app' : app, 'app_state' : appState})
 

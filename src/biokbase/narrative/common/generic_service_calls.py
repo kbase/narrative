@@ -113,6 +113,8 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
 #    methIdToSpec = json.loads(method_specs_json)
     
     njsClient = NarrativeJobService(URLS.job_service, token = token)
+    if app_job_id.startswith("njs:"):
+        app_job_id = app_job_id[4:]
     appState = njsClient.check_app_state(app_job_id)
     appState['widget_outputs'] = {}
     #for stepId in appState['step_job_ids']:

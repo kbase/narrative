@@ -649,17 +649,17 @@
                                 .addClass("btn btn-warning kb-data-list-get-data-button")
                                 .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Get Data')
                                 .on('click',function() {
-//                                    self.trigger('toggleSidePanelOverlay.Narrative');
+                                    self.trigger('toggleSidePanelOverlay.Narrative');
 
                                       // Lovely hack to make the 'Get Data' button behave like a method/app panel button.
-                                      self.methClient.get_method_spec({ 'ids' : ['import_genome_data_generic'] },
+                                    /*  self.methClient.get_method_spec({ 'ids' : ['import_genome_data_generic'] },
                                           function(spec) {
                                               self.trigger('methodClicked.Narrative', spec[0]);
                                           },
                                           function(error) {
                                               self.showError(error);
                                           }
-                                      );
+                                      );*/
                                 });
             
             

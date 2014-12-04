@@ -347,6 +347,7 @@
 
                     // update view
                     minePanel.append(content);
+                    events()
                     
                 })
 
@@ -377,6 +378,7 @@
                         wsInput.change(function() {
                             ws = $(this).children('option:selected').data('name');
                             renderFilteredData(type, ws, query);
+                            events();
                         })
 
 
@@ -394,6 +396,7 @@
                         typeInput.change(function() {
                             type = $(this).children('option:selected').data('type');
                             renderFilteredData(type, ws, query);
+                            events();                            
                         })
 
 
@@ -404,6 +407,7 @@
                         // event for filter (search)
                         filterInput.keyup(function(e){
                             renderFilteredData(type, ws, this.value);
+                            events();                            
                         });
 
                         // add search, type, ws filter to dom
@@ -442,8 +446,6 @@
                 var selected = [];
                 $('.kb-import-checkbox').unbind('change');
                 $('.kb-import-checkbox').change(function(){
-                    $(this).is(":checked");
-
                     var item = $(this).parent('.kb-import-item');
                     var ref = item.data('ref').replace(/\./g, '/');
                     var name = item.data('obj-name');
@@ -514,8 +516,7 @@
 
                     // update DOM
                     content.append(item);
-                    events();
-                }
+                }               
             }
 
             function renderAllData() {
@@ -541,8 +542,7 @@
                     var item = rowTemplate(item);
 
                     // update DOM
-                    content.append(item);
-                    events();                    
+                    content.append(item);                   
                 }
             }
 

@@ -169,10 +169,10 @@
         refresh: function(hideLoadingMessage) {
             // if there's no timer, set one up.
             if (this.refreshTimer === null) {
-                this.refreshTimer = setInterval(
-                    $.proxy(function() { this.refresh(true); }, this),
-                    this.refreshInterval
-                );
+                // this.refreshTimer = setInterval(
+                //     $.proxy(function() { this.refresh(true); }, this),
+                //     this.refreshInterval
+                // );
             }
 
 
@@ -233,7 +233,7 @@
                 uniqueJobs[app.id] = {'app' : app, 'info' : info};
             }
 
-            console.log(appJobList)
+            console.log(appJobList);
 
             if (jobs.apps.length === 0 && jobs.methods.length === 0) {
                 // no jobs! skip the kernel noise and cut to the rendering!

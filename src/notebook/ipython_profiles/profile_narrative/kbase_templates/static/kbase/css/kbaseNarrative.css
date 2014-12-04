@@ -1874,7 +1874,7 @@ div[class="tooltip-inner"] {
     margin: 10px 40px 10px 10px;
 }
 
-.kb-import-type-filter {
+.kb-import-filter {
     margin: 10px 40px 10px 10px;
 }
 
@@ -1883,8 +1883,28 @@ div[class="tooltip-inner"] {
     margin: 0 0 20px 0px;
 }
 
+.kb-import-item hr {
+    width: 600px;
+    border: 2px solid #eaeaea;
+}
+
 .kb-import-item input[type="checkbox"] {
     margin: 15px 30px 15px 0px;
+}
+
+.kb-import-info {
+    display: inline-block;
+    margin: 10px 20px 0 0;
+}
+
+.kb-import-info span {
+    font-size: .9em;
+    font-weight: 700;
+    color: #999;
+}
+
+.kb-import-info {
+    font-weight: 
 }
 
 .kb-import-status {

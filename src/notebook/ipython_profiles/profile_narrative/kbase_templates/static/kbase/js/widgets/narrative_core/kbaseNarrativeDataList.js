@@ -515,7 +515,7 @@
                         }
                         self.attachRow(i);
                     }
-                    console.log('showing '+ self.n_objs_rendered + ' of ' + self.objectList.length);
+                    //console.log('showing '+ self.n_objs_rendered + ' of ' + self.objectList.length);
                 } else {
                     // search filter is on, so we have to base this on what is currently filtered
                     var start = self.n_filteredObjsRendered;
@@ -527,7 +527,7 @@
                         self.attachRowElement(self.currentMatch[i]);
                         self.n_filteredObjsRendered++;
                     }
-                    console.log('showing '+ self.n_filteredObjsRendered + ' of ' + self.currentMatch.length + ' objs matching search filter');
+                    //console.log('showing '+ self.n_filteredObjsRendered + ' of ' + self.currentMatch.length + ' objs matching search filter');
                 }
             }
         },

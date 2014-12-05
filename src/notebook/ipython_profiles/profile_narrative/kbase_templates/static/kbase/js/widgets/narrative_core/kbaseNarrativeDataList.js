@@ -166,12 +166,15 @@
         },
         
         refreshTimeStrings: function() {
-            var self = this;
+            var self = this; var newTime; var oldTime;
             if (self.objectList) {
                 for(var i=0; i<self.objectList.length; i++) {
                     if(self.objectList[i].$div) {
-                        self.objectList[i].$div.find('.kb-data-list-date')
-                            .text(self.getTimeStampStr(self.objectList[i].info[3]));
+                        newTime = self.getTimeStampStr(self.objectList[i].info[3]);
+                        oldTime = self.objectList[i].$div.find('.kb-data-list-date').text();
+                        if (newTime !== oldTime) {
+                            self.objectList[i].$div.find('.kb-data-list-date').text(newTime);
+                        }
                     }
                 }
             }

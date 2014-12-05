@@ -432,6 +432,24 @@
                                     }
                                     errorDetectedHere = true;
                                     errorMessages.push("spaces are not allowed in data object names, in field "+self.spec.ui_name);
+                                } else if (/^\d+$/.test(pVal)) {
+                                    if (self.rowInfo[i]) {
+                                        self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
+                                        self.rowInfo[i].$error.html("data object names cannot be a number");
+                                        self.rowInfo[i].$error.show();
+                                        self.rowInfo[i].$feedback.removeClass();
+                                    }
+                                    errorDetectedHere = true;
+                                    errorMessages.push("data object names cannot be a number, in field "+self.spec.ui_name);
+                                } else if (!/^[a-z0-9|\.|\||_\-]*$/i.test(pVal)) {
+                                    if (self.rowInfo[i]) {
+                                        self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
+                                        self.rowInfo[i].$error.html("object names can only include symbols: _ - . |");
+                                        self.rowInfo[i].$error.show();
+                                        self.rowInfo[i].$feedback.removeClass();
+                                    }
+                                    errorDetectedHere = true;
+                                    errorMessages.push("object names can only include symbols: '_','-','.','|', in field "+self.spec.ui_name);
                                 }
                             }
                         }

@@ -220,8 +220,6 @@
                 if ($appCell.length > 0)
                     info = $appCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
 
-                console.log('app ' + app.id + ' info');
-                console.log(info);
                 if (info) {
                     // from the source, we need to get its containing app cell object.
                     appJobList.push("['" + app.id + "', " +
@@ -232,8 +230,6 @@
 
                 uniqueJobs[app.id] = {'app' : app, 'info' : info};
             }
-
-            console.log(appJobList);
 
             if (jobs.apps.length === 0 && jobs.methods.length === 0) {
                 // no jobs! skip the kernel noise and cut to the rendering!
@@ -325,7 +321,6 @@
             this.$methodsList.empty().append($methodsTable);
 
             // do apps.
-            console.log(jobs.apps);
             var $appsTable = $('<div class="kb-jobs-items">');
             if (jobs.apps.length === 0 && storedIds.apps.length === 0) {
                 $appsTable.append($('<div class="kb-data-loading">').append('No running apps!'));

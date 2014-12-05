@@ -170,8 +170,6 @@
 
             $(document).on('runApp.Narrative',
                 $.proxy(function(event, data) {
-                    console.log('running app');
-                    console.log(data);
                     this.runAppCell(data);
                 },
                 this)
@@ -255,8 +253,6 @@
 
             this.methClient.get_app_spec({'ids': [appInfo.id]}, 
                 $.proxy(function(appSpec) {
-                    console.log('got app spec');
-                    console.log(appSpec);
                     this.setAppCell(cell, appSpec[0]);
                     var cellIndex = IPython.notebook.ncells() - 1;
                     var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
@@ -268,7 +264,6 @@
                                       "\n<script>" +
                                       "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec[0]) + "', 'cellId' : '" + cellId + "'});" +
                                       "</script>";
-                    console.log(cellContent);
                     cell.set_text(cellContent);
                     cell.rendered = false;
                     cell.render();

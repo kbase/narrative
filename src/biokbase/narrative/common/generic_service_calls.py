@@ -95,9 +95,9 @@ def prepare_generic_method_output(token, workspace, methodSpec, input, output):
         elif 'narrative_system_variable' in mapping:
             sysProp = mapping['narrative_system_variable']
             paramValue = narrSysProps[sysProp]
-        elif isScript and 'service_method_output_path' in mapping:
+        elif (not isScript) and 'service_method_output_path' in mapping:
             paramValue = get_sub_path(output, mapping['service_method_output_path'], 0)
-        elif (not isScript) and 'script_output_path' in mapping:
+        elif isScript and 'script_output_path' in mapping:
             paramValue = get_sub_path(output, mapping['script_output_path'], 0)
         if paramValue is None:
             raise ValueError("Value is not defined in output mapping [" + json.dumps(mapping) + "], actual output is: " + json.dumps(output))

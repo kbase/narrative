@@ -1029,7 +1029,7 @@ div#notebook_panel {
     margin-right: 4px;
     margin-top: -4px; 
     cursor: pointer;
-    color: #ddd;
+    color: #888;
     -webkit-user-select: none; /* Chrome/Safari */        
        -moz-user-select: none; /* Firefox */
         -ms-user-select: none; /* IE10+ */

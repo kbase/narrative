@@ -167,12 +167,12 @@
          * @method
          */
         refresh: function(hideLoadingMessage) {
-            // if there's no timer, set one up.
+            // if there's no timer, set one up - this should only happen the first time.
             if (this.refreshTimer === null) {
-                // this.refreshTimer = setInterval(
-                //     $.proxy(function() { this.refresh(true); }, this),
-                //     this.refreshInterval
-                // );
+                this.refreshTimer = setInterval(
+                    $.proxy(function() { this.refresh(true); }, this),
+                    this.refreshInterval
+                );
             }
 
 

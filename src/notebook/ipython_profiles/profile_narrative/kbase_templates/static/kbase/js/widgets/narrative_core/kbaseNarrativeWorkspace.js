@@ -1104,8 +1104,24 @@
                 }
                 // if it's labeled as an output cell do that.
                 else if (this.isOutputCell(cell)) {
-                    // do output widget stuff.
-                    widget = 'kbaseNarrativeOutputCell';
+                    // get the output cell's target and widget.
+                    // eventually, we should probably just update the cells to the new version
+                    // but this should sort out any backward compatibility issues for now.
+
+                    var cellText = cell.get_text();
+                    var capture = cellText.match(/<script>\$\([\"\'](.+)[\"\']\)\.(\w+)\(.+\);<\/script>/);
+                    if (capture) {
+                        target = capture[1];
+                        widget = capture[2];
+                    }
+
+                    // // do output widget stuff.
+                    // widget = 'kbaseNarrativeOutputCell';
+
+                    // // if it's an older Narrative, then it might have metadata invoking a different widget.
+                    // var metadata = cell.metadata[this.KB_CELL];
+                    // if (metadata.widget)
+                    //     widget = metadata.widget;
                 }
                 else if (this.isAppCell(cell)) {
                     widget = 'kbaseNarrativeAppCell';

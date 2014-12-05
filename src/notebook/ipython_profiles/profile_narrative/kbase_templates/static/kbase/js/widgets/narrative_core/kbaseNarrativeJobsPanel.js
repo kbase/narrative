@@ -403,8 +403,14 @@
             var $itemTable = $('<table class="kb-jobs-info-table">');
             var $statusRow = $('<tr>').append($('<th>').append('Status:'));
 
+//            console.log(appJob);
+            if (appJob.error) {
+                // error out.
+                return $app;
+            }
             var status = appJob.job_state;
-            status = status.charAt(0).toUpperCase() + status.substring(1);
+            if (status)
+                status = status.charAt(0).toUpperCase() + status.substring(1);
             var task = null;
             var stepId = appJob.running_step_id;
             if (stepId) {

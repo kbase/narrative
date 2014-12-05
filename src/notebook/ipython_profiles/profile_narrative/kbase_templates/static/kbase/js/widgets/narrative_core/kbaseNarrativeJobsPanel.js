@@ -15,7 +15,7 @@
         $methodsList: null,
 
         refreshTimer: null,
-        refreshInterval: 5000,
+        refreshInterval: 10000,
 
         init: function(options) {
             this._super(options);

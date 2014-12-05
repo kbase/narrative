@@ -19,6 +19,7 @@ from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.workspace.client import Workspace as workspaceService
 from biokbase.narrative.common.generic_service_calls import prepare_njs_method_input
 from biokbase.narrative.common.generic_service_calls import prepare_generic_method_output
+from biokbase.narrative.common.generic_service_calls import create_app_for_njs
 
 ## Globals
 
@@ -57,72 +58,7 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
     
     #raise ValueError("========\nExternal=" + method_specs_json + "\n=======================\nInternal=" + json.dumps(methIdToSpec))
     
-    steps = []
-    app = { 'name' : appSpec['info']['id'],'steps' : steps }
-    wsClient = workspaceService(service.URLS.workspace, token=token)
-    for stepSpec in appSpec['steps']:
-        stepId = stepSpec['step_id']
-        methodId = stepSpec['method_id']
-        methodSpec = methIdToSpec[methodId]
-        behavior = methodSpec['behavior']
-        methodInputValues = extract_param_values(paramValues, stepId)
-        step = { 'step_id' : stepId }
-        if 'kb_service_input_mapping' in methodSpec['behavior'] or 'script_input_mapping' in methodSpec['behavior']:
-            tempInput = {}
-            stepParams = prepare_njs_method_input(token, wsClient, workspace, methodSpec, methodInputValues, tempInput)
-            serviceInfo = {'service_name' : '', 'method_name' : '', 'service_url' : ''}
-            scriptInfo = {'service_name' : '', 'method_name' : '', 'has_files' : 0}
-            if 'kb_service_input_mapping' in methodSpec['behavior']:
-                serviceName = behavior['kb_service_name']
-                methodName = behavior['kb_service_method']
-                serviceInfo['service_name'] = serviceName
-                serviceInfo['method_name'] = methodName
-                serviceInfo['service_url'] = behavior['kb_service_url']
-                step['type'] = 'service'
-            else:
-                scriptInfo['service_name'] = behavior['script_module']
-                scriptInfo['method_name'] = behavior['script_name']
-                if 'script_has_files' in behavior:
-                    scriptInfo['has_files'] = behavior['script_has_files']
-                step['type'] = 'script'
-            step['service'] = serviceInfo
-            step['script'] = scriptInfo
-            step['parameters'] = stepParams
-            step['is_long_running'] = 0
-            if 'job_id_output_field' in methodSpec:
-                step['is_long_running'] = 1
-            else:
-                step['is_long_running'] = 0
-            #    jobIdField = methodSpec['job_id_output_field']
-            #    rpcJobIdField = None
-            #    jobIdFieldFound = False
-            #    for mapping in behavior['kb_service_output_mapping']:
-            #        if mapping['target_property'] == jobIdField:
-            #            jobIdFieldFound = True
-            #            rpcOutPath = mapping['service_method_output_path']
-            #            if rpcOutPath is not None:
-            #                if len(rpcOutPath) > 1:
-            #                    raise ValueError("Unsupported path to job id field in RPC method output for method [" + methodId + "]: " + json.dumps(rpcOutPath))
-            #                if len(rpcOutPath) == 1:
-            #                    rpcJobIdField = rpcOutPath[0]
-            #    if not jobIdFieldFound:
-            #        raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
-            #    step['is_long_running'] = 1
-            #    if rpcJobIdField is not None:
-            #        step['job_id_output_field'] = rpcJobIdField                                   
-        #elif 'python_class' in behavior:
-        #    step['type'] = 'python'
-        #    step['input_values'] = methodInputValues
-        #    step['python'] = {'python_class' : behavior['python_class'], 'method_name' : behavior['python_function']}
-        #    if 'job_id_output_field' in methodSpec:
-        #        jobIdField = methodSpec['job_id_output_field']
-        #        step['is_long_running'] = 1
-        #        step['job_id_output_field'] = jobIdField
-        elif 'output_mapping' in behavior:
-            continue  # We don't put these steps in app sending to NJS. We will process them later in _app_get_state
-        else:
-            raise ValueError("Unsupported behavior type for [" + methodId + "]: " + json.dumps(behavior))
-        steps.append(step)
+    app = create_app_for_njs(workspace, token, service.URLS, appSpec['info']['id'], appSpec['steps'], methIdToSpec, paramValues)
     
     #raise ValueError("App sending to NJS: " + json.dumps(app))
     njsClient = NarrativeJobService(service.URLS.job_service, token = token)
@@ -133,18 +69,6 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
     meth.register_app(job_id)
 
     return json.dumps({ 'job_id' : job_id, 'app' : app, 'app_state' : appState})
-
-
-def extract_param_values(paramValues, stepId):
-    ret = None
-    for paramVal in paramValues:
-        if paramVal['stepId'] == stepId:
-            ret = []
-            for keyVal in paramVal['values']:
-                ret.append(keyVal['value'])
-    if ret is None:
-        raise ValueError("Step [" + stepId + "] wasn't found in input values: " + json.dumps(paramValues))
-    return ret
 
 def load_method_specs(appSpec):
     methodIds = []

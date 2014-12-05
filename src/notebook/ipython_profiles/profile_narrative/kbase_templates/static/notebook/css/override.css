@@ -14,3 +14,7 @@ body.notebook_app {
 pre { outline: none; }
 
 .btn * { color: black; }
+
+.celltoolbar {
+    height: auto;
+}

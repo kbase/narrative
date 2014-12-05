@@ -262,41 +262,6 @@
             var $methodPanel = generatePanel(catSet, methSet, 'M', triggerMethod);
             var $appPanel = generatePanel(catSet, appSet, 'A', triggerApp);
 
-            // var $methodPanel = $('<div>');
-            // var methodList = [];
-            // for (var method in methSet) {
-            //     var ignoreFlag = false;
-            //     for (var i=0; i<methSet[method].categories.length; i++) {
-            //         if (this.ignoreCategories[methSet[method].categories[i]])
-            //             ignoreFlag = true;
-            //     }
-            //     if (!ignoreFlag)
-            //         methodList.push(methSet[method]);
-            // }
-            // methodList.sort(function(a, b) {
-            //     return a.name.localeCompare(b.name);
-            // });
-            // for (var i=0; i<methodList.length; i++) {
-            //     $methodPanel.append(this.buildMethod(methodList[i], triggerMethod));
-            // }
-
-            // var $appPanel = $('<div>');
-            // var appList = [];
-            // for (var app in appSet) {
-            //     var ignoreFlag = false;
-            //     for (var i=0; i<appSet[app].categories.length; i++) {
-            //         if (this.ignoreCategories[appSet[app].categories[i]])
-            //             ignoreFlag = true;
-            //     }
-            //     if (!ignoreFlag)
-            //         appList.push(appSet[app]);
-            // }
-            // appList.sort(function(a, b) {
-            //     return a.name.localeCompare(b.name);
-            // });
-            // for (var i=0; i<appList.length; i++) {
-            //     $appPanel.append(this.buildMethod(appList[i], triggerApp));
-            // }
             this.$functionPanel.append($appPanel);
             this.$functionPanel.append($methodPanel);
         },
@@ -379,67 +344,6 @@
          * @param {object} method - the method object returned from the kernel.
          * @private
          */
-        // buildMethodOld: function(method) {
-        //     var $helpButton = $('<span>')
-        //                       .addClass('glyphicon glyphicon-question-sign kb-function-help')
-        //                       .css({'margin-top': '-5px'})
-        //                       .click($.proxy(function(event) {
-        //                           event.preventDefault();
-        //                           event.stopPropagation();
-        //                           this.showTooltip(method, event);
-        //                       }, this));
-
-        //     var $errButton = $('<span>')
-        //                      .addClass('glyphicon glyphicon-warning-sign kb-function-help')
-        //                      .css({'margin-top' : '-5px'})
-        //                      .click($.proxy(function(event) {
-        //                         event.preventDefault();
-        //                         event.stopPropagation();
-        //                         this.showErrorTooltip(method, event);
-        //                      }, this));
-
-        //     /* this is for handling long function names.
-        //        long names will be cropped and have a tooltip
-        //        with the full name */
-        //     var methodTitle = method.name;
-        //     var $methodSpan = $('<span class="kb-data-obj-name" style="margin-bottom:-5px">');
-        //     if (methodTitle.length > 31) {
-        //         $methodSpan.append(methodTitle);
-        //         $methodSpan.tooltip({
-        //             title: method.name,
-        //             placement: "bottom"
-        //         }); 
-        //     } else {
-        //          $methodSpan.append(methodTitle);
-        //     }
-            
-        //     var $newMethod = $('<li>')
-        //                      .append($methodSpan);
-
-        //     if (method.loading_error) {
-        //         $newMethod.addClass('kb-function-error')
-        //                   .append($errButton)
-        //                   .click($.proxy(function(event) {
-        //                       this.showErrorTooltip(method, event);
-        //                   }, this));
-        //     }
-        //     else {
-        //         $newMethod.append($helpButton)
-        //                   .click($.proxy(function(event) {
-        //                       // needs to move to controller.
-        //                       this.methClient.get_method_spec({ 'ids' : [method.id] },
-        //                           $.proxy(function(spec) {
-        //                               this.trigger('methodClicked.Narrative', spec[0]);
-        //                           }, this),
-        //                           $.proxy(function(error) {
-        //                               this.showError(error);
-        //                           }, this)
-        //                       );
-        //                   }, this));
-        //     }
-        //     return $newMethod;
-        // },
-
         buildMethod: function(icon, method, triggerFn) {
             var $logo = $('<div>')
                         .addClass('kb-method-list-logo')

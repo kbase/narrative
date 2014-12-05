@@ -138,6 +138,7 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
         else:
             methodOut = rpcOut
         appState['widget_outputs'][stepId] = methodOut
+    appState['job_id'] = "njs:" + appState['job_id']
     return appState
 
 def extract_param_values(paramValues, stepId):

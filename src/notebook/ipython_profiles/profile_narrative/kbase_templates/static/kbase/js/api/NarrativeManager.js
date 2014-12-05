@@ -147,63 +147,6 @@ var NarrativeManager = function(options, auth, auth_cb) {
         );
     };
     
-    /**
-     * Makes a temporary narrative permanent by giving it a name
-     *
-     * params = {
-     *  ws_name_or_id: name, // current ws name
-     *  new_name: name
-     * }
-     * 
-     */
-    this.nameNarrative = function(params, _callback, _error_callback) {
-        var self = this;
-        if (!params.ws_name_or_id) {
-            if (_error_callback) {
-                _error_callback("'ws_name_or_id' field not set in params to nameNarrative");
-            }
-            return;
-        }
-        if (!params.new_name) {
-            if (_error_callback) {
-                _error_callback("'new_name' field not set in params to nameNarrative");
-            }
-            return;
-        }
-        var wsIdentity = {};
-        if(/^([1-9]\d*)$/.test(params.ws_name_or_id)){ wsIdentity['id'] = parseInt(params.ws_name_or_id); }
-        else { wsIdentity['workspace'] = params.ws_name_or_id; }
-        self.ws.get_workspace_info(
-            wsIdentity,
-            function(info) {
-                console.log('info');
-                console.log(info);
-                
-                // first get narrative name in this workspace from the workspace metadata
-                if (!info[8].narrative) {
-                    _error_callback("Workspace is not properly configured for 1 workspace, 1 narrative.");
-                }
-                var narrative = info[8].narrative;
-                
-                // update the metadata to reflect the new name
-                var newMetadata = {
-                    is_temporary: 'false',  // set the is_temporary flag to false
-                    narrative_nice_name: params.new_name // save the nice name to the workspace
-                }
-                self.ws.alter_workspace_metadata(
-                    {wsi:wsIdentity, 'new': newMetadata},
-                    function() {
-                        // success, so set the narrative name
-                       // self.ws.rename_object
-                        
-                    },
-                    _error_callback
-                );
-            },
-            _error_callback);
-    };
-    
-    
     this.discardTempNarrative = function(params, _callback, _error_callback) {
     };
     
@@ -213,37 +156,6 @@ var NarrativeManager = function(options, auth, auth_cb) {
      */
     this.cleanTempNarratives = function(params, _callback, _error_callback) {
     };
-    
-    
-    this.shareNarrative = function(params, _callback, _error_callback) {
-    }; 
-    
-    
-    /**
-     *  _callback = function(list) {
-     *
-     *      list = [
-     *          mine: [
-     *              {
-     *                  ws_info: [...],
-     *                  narrative_info: [...],
-     *                  ..
-     *              },
-     *              ...
-     *              ]
-     *          shared_readable: [ .. ],
-     *          shared_writable: [ .. ],
-     *          pending: [ .. ],
-     *          public: [ .. ]
-     *      ]
-     *  }
-     *
-     *
-     *  
-     */
-    this.listNarratives = function(params, _callback, _error_callback) {
-    };
-    
     
     /*
      *      cells : [

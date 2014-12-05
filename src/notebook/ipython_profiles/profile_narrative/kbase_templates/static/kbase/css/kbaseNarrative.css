@@ -362,7 +362,7 @@ p#site-title {
 
 .kb-side-panel {
     height: 100%;
-    overflow: none;
+    overflow-y: auto;
 }
 
 .kb-side-header {
@@ -550,7 +550,6 @@ ul.pane-list li {
     height: 30pt;
     color:  #fff;
     background-color: #607D8B;
-    border-radius: 50%;
     border-style:  solid;
     border-width:  0px;
     border-color:  #555;
@@ -1030,7 +1029,7 @@ div#notebook_panel {
     margin-right: 4px;
     margin-top: -4px; 
     cursor: pointer;
-    color: #ddd;
+    color: #888;
     -webkit-user-select: none; /* Chrome/Safari */        
        -moz-user-select: none; /* Firefox */
         -ms-user-select: none; /* IE10+ */

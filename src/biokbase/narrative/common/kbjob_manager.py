@@ -113,7 +113,7 @@ class KBjobManager():
                 app_state_list.append(self.get_app_state(app_info[1], app_info[2], app_info[3], app_info[0]))
             except Exception as e:
                 import traceback
-                app_state_list.append({'app_job_id' : app_info[0], 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
+                app_state_list.append({'job_id' : app_info[0], 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
 
         jobs_info = {'methods' : meth_state_list, 'apps' : app_state_list}
 

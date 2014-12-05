@@ -8,13 +8,13 @@
             this._super(options);
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
-                             .append($('<span class="fa icon-remove">'))
+                             .append($('<span class="fa fa-trash-o" style="font-size:14pt">'))
                              .click(function(event) { 
                                 IPython.notebook.delete_cell();
                              });
 
             var $btn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
-                       .append($('<span class="fa fa-cog" style="font-size:10pt">'));
+                       .append($('<span class="fa fa-cog" style="font-size:14pt">'));
 
             this.$menu = $('<ul>')
                          .addClass('dropdown-menu')
@@ -66,7 +66,7 @@
             });
 
             this.addMenuItem({
-                icon: 'fa icon-remove',
+                icon: 'fa fa-trash-o',
                 text: 'Delete Cell',
                 action: function() {
                     IPython.notebook.delete_cell();

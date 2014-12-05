@@ -304,19 +304,30 @@
                                 if(self.select2Matcher(query.term,d.name)) {
                                     data.results.push({id:d.name, text:d.name, info:d.info});
                                 }
+                                // search metadata too
+                                else if (d.info[10]) {
+                                    for(var key in d.info[10]) {
+                                        if (d.info[10].hasOwnProperty(key)) {
+                                            if(self.select2Matcher(query.term,d.info[10][key])) {
+                                                data.results.push({id:d.name, text:d.name,
+                                                                  mm:key+' - '+d.info[10][key],info:d.info});
+                                                // allow us to show metadata match!
+                                            }
+                                        }
+                                    }
+                                }
+                                
                             } else {
                                 data.results.push({id:d.name, text:d.name, info:d.info});
                             }
                         }
                     }
                     
-                    //always allow the name they give if there was no match...
+                    //only allow the name if it is set as an output name...
                     if (data.results.length===0) {
                         if (query.term.trim()!=="") {
                             if(self.isOutputName) {
                                 data.results.push({id:query.term, text:query.term});
-                            } else {
-                                data.results.push({id:query.term, text:query.term+" (not found)"});
                             }
                         }
                     }
@@ -335,8 +346,11 @@
                     var display = "<b>"+object.text+"</b>";
                     if (object.info) {
                         // we can add additional info here in the dropdown ...
-                        display = display + " (v" + object.info[4]+")<br>&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]);
-                        
+                        display = display + " (v" + object.info[4]+")<br>";
+                        if (object.mm) {
+                            display = display + "&nbsp&nbsp&nbsp<i>"+object.mm+"</i><br>";
+                        }
+                        display = display + "&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3])+"</i>";
                     }
                     return display;
                 }
@@ -407,9 +421,8 @@
                                 }
                             }
                         }
-                        
-                        if (self.validDataObjectList) {
-                            if(self.validDataObjectList.length>0) {
+                        if (self.spec.text_options.valid_ws_types) {
+                            if(self.spec.text_options.valid_ws_types.length>0) {
                                 if (/\s/.test(pVal)) {
                                     if (self.rowInfo[i]) {
                                         self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
@@ -584,8 +597,21 @@
         getTimeStampStr: function (objInfoTimeStamp) {
             var date = new Date(objInfoTimeStamp);
             var seconds = Math.floor((new Date() - date) / 1000);
-            var interval = Math.floor(seconds / 31536000);
             
+            // f-ing safari, need to add extra ':' delimiter to parse the timestamp
+            if (isNaN(seconds)) {
+                var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
+                var newTimestamp = tokens[0] + '+'+tokens[0].substr(0,2) + ":" + tokens[1].substr(2,2);
+                date = new Date(newTimestamp);
+                seconds = Math.floor((new Date() - date) / 1000);
+                if (isNaN(seconds)) {
+                    // just in case that didn't work either, then parse without the timezone offset, but
+                    // then just show the day and forget the fancy stuff...
+                    date = new Date(tokens[0]);
+                    return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                }
+            }
+            var interval = Math.floor(seconds / 31536000);
             if (interval > 1) {
                 return self.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
             }

@@ -362,6 +362,7 @@ p#site-title {
 
 .kb-side-panel {
     height: 100%;
+    overflow-y: auto;
 }
 
 .kb-side-header {
@@ -549,7 +550,6 @@ ul.pane-list li {
     height: 30pt;
     color:  #fff;
     background-color: #607D8B;
-    border-radius: 50%;
     border-style:  solid;
     border-width:  0px;
     border-color:  #555;

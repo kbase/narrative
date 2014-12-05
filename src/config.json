@@ -37,7 +37,7 @@
         "log_proxy_port": 32001, 
         "login": "https://kbase.us/services/authorization/Sessions/Login", 
         "narrative_job_proxy": "http://140.221.67.225:8088", 
-        "narrative_method_store": "http://dev19.berkeley.kbase.us/narrative_method_store/rpc", 
+        "narrative_method_store": "https://kbase.us/narrative_method_store/rpc", 
         "protein_info": "https://kbase.us/services/protein_info_service", 
         "reset_password": "https://gologin.kbase.us/ResetPassword", 
         "trees": "https://kbase.us/services/trees", 

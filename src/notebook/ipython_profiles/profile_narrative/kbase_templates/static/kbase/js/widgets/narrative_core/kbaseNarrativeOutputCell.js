@@ -70,8 +70,11 @@
                               .addClass('pull-right kb-func-timestamp');
 
             if (this.options.time) {
-                this.$timestamp.html(this.readableTimestamp(this.options.time));
+                this.$timestamp.append($('<span>')
+                                       .append(this.readableTimestamp(this.options.time)));
             }
+            var $menuSpan = $('<span style="margin-left:5px">');
+            this.$timestamp.append($menuSpan);
 
             var $headerLabel = $('<span>')
                                .addClass('label label-info')
@@ -93,6 +96,8 @@
                                 .append($('<div>')
                                         .addClass('panel-body')
                                         .append($('<div>'))));
+
+            $menuSpan.kbaseNarrativeCellMenu();
 
             this.$elem.append($body);
 

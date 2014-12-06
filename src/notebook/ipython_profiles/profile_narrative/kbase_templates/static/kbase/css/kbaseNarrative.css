@@ -1343,6 +1343,7 @@ div#notebook_panel {
     color: #555;
     font-size: 10pt;
     font-family: 'Roboto';
+    margin-top: -3px;
 }
 
 .kb-func-panel {

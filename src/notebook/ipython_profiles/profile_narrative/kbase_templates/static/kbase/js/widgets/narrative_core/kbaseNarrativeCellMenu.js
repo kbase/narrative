@@ -74,7 +74,7 @@
             });
 
             this.$elem.append(
-                $('<div>')
+                $('<span>')
                     .append($deleteBtn)
                     .append($('<span class="dropdown">')
                               .append($btn)

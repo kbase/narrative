@@ -50,6 +50,10 @@ $('#kb-narr-name #name').click(function(e) {
     });
 })();
 
+/**
+ * A fun little idea... but it doesn't really work. We need an actual way to poke at endpoints to see if they're alive.
+ * But I'm leaving this in here for now. --Bill
+ */
 var EndpointTester = function(url, target) {
     this.loadingImage = 'static/kbase/images/ajax-loader.gif';
     this.okayText = 'ok';
@@ -141,6 +145,10 @@ narrative.init = function() {
                                             .append($versionDiv))
                                     .append($('<div>')
                                             .addClass('modal-footer')
+                                            .append(
+                                                $('<button type="button" data-dismiss="modal">')
+                                                .addClass('btn btn-danger')
+                                                .append('Shutdown'))
                                             .append(
                                                 $('<button type="button" data-dismiss="modal">')
                                                 .addClass('btn btn-default')

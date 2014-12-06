@@ -402,8 +402,8 @@ var NarrativeManager = function(options, auth, auth_cb) {
         "Save & Share your Results\n------------\n\n"+
         "When you're ready, name this Narrative and save it.  Once it is saved, "+
         "click on the 'share' button above to let others view your analysis.  Or if you're "+
-        "brave, make it public for the world to see.\n<br><br><br>"+
-        "\nThat's it!\n"+
+        "brave, make it public for the world to see.\n<br><br>\n\n"+
+        "\nThat's it!\n\n"+
         "<b>Questions?</b> Visit https://kbase.us to search for more detailed tutorials and documentation.\n\n"+
         "<b>More Questions?</b> Email: [help@kbase.us](mailto:help@kbase.us)\\n\n\n";
 };

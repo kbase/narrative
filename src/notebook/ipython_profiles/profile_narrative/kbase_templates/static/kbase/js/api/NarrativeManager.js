@@ -395,8 +395,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
         "Simply click on an App or Method on the side bar, and it will appear "+
         "directly in your Narrative.  Fill in the parameters and click run.  "+
         "Output will be generated and new data objects may be created and added "+
-        "to your data list.  Add and run as many Apps and Methods as you like!  "+
-        "The steps you take in your analysis will.\n\n"+
+        "to your data list.  Add and run as many Apps and Methods as you like!\n\n"+
         "Long running computations can be tracked in your Jobs panel, located on "+
         "the side panel under the 'Manage' tab.\n<br>\n\n"+
         "Save & Share your Results\n------------\n\n"+

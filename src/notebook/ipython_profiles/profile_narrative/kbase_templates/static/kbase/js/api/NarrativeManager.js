@@ -75,7 +75,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
      *  _callback = function(info) {
      *
      *      info.ws_info = [ .. ]
-     *      info.narrative_info = [ .. ]
+     *      info.nar_info = [ .. ]
      *      info.object_info = [ ws_reference : [ .. ] ]
      *      
      *  }
@@ -195,26 +195,35 @@ var NarrativeManager = function(options, auth, auth_cb) {
                 };
                 var cell_data = [];
                 if (cells) {
-                    for(var c=0; c<cells.length; c++) {
-                        if (cells[c].app) {
-                            var appCell = self._buildAppCell(cell_data.length, self._specMapping.apps[cells[c].app]);
-                            cell_data.push(appCell);
-                        } else if (cells[c].method) {
-                            var methodCell = self._buildMethodCell(cell_data.length, self._specMapping.methods[cells[c].method]);
-                            cell_data.push(methodCell);
-                        } else if (cells[c].markdown) {
-                            cell_data.push({
+                    if (cells.length>0) {
+                        for(var c=0; c<cells.length; c++) {
+                            if (cells[c].app) {
+                                var appCell = self._buildAppCell(cell_data.length, self._specMapping.apps[cells[c].app]);
+                                cell_data.push(appCell);
+                            } else if (cells[c].method) {
+                                var methodCell = self._buildMethodCell(cell_data.length, self._specMapping.methods[cells[c].method]);
+                                cell_data.push(methodCell);
+                            } else if (cells[c].markdown) {
+                                cell_data.push({
+                                    cell_type: 'markdown',
+                                    source: cells[c].markdown,
+                                    metadata: {}
+                                });
+                            }
+                            //else if (cells[c].code) { }
+                            else {
+                                console.error('cannot add cell '+c+', unrecognized cell content');
+                                console.error(cells[c]);
+                                if(_error_callback) { _error_callback('cannot add cell '+c+', unrecognized cell content'); }
+                            }
+                        }
+                    } else {
+                        cell_data.push(
+                            {
                                 cell_type: 'markdown',
-                                source: cells[c].markdown,
-                                metadata: {}
+                                source: self.introText,
+                                metadata: { }
                             });
-                        }
-                        //else if (cells[c].code) { }
-                        else {
-                            console.error('cannot add cell '+c+', unrecognized cell content');
-                            console.error(cells[c]);
-                            if(_error_callback) { _error_callback('cannot add cell '+c+', unrecognized cell content'); }
-                        }
                     }
                 }
                 
@@ -371,6 +380,32 @@ var NarrativeManager = function(options, auth, auth_cb) {
     this.KB_ERROR_CELL= 'kb_error';
     this.KB_CODE_CELL= 'kb_code';
     this.KB_STATE= 'widget_state';
+    
+    
+    
+    this.introText =
+        "Welcome to KBase!\n============\n\n"+
+        "Add Data to this Narrative\n------------\n\n"+
+        "Click on 'Get Data' and browse for KBase data or upload your own."+
+        "Select the data and click 'Add to narrative'.  Perhaps start by "+
+        "importing your favorite Genome.  Once your data has been loaded, "+
+        "you can inspect it in the data list.\n<br>\n\n"+
+        "Perform an Analysis\n------------\n\n"+
+        "When you're ready, select an App or Method to run on your data.  "+
+        "Simply click on an App or Method on the side bar, and it will appear "+
+        "directly in your Narrative.  Fill in the parameters and click run.  "+
+        "Output will be generated and new data objects may be created and added "+
+        "to your data list.  Add and run as many Apps and Methods as you like!  "+
+        "The steps you take in your analysis will.\n\n"+
+        "Long running computations can be tracked in your Jobs panel, located on "+
+        "the side panel under the 'Manage' tab.\n<br>\n\n"+
+        "Save & Share your Results\n------------\n\n"+
+        "When you're ready, name this Narrative and save it.  Once it is saved, "+
+        "click on the 'share' button above to let others view your analysis.  Or if you're "+
+        "brave, make it public for the world to see.\n<br><br><br>"+
+        "\nThat's it!\n"+
+        "<b>Questions?</b> Visit https://kbase.us to search for more detailed tutorials and documentation.\n\n"+
+        "<b>More Questions?</b> Email: [help@kbase.us](mailto:help@kbase.us)\\n\n\n";
 };
 
 

@@ -114,6 +114,7 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
 #    methIdToSpec = json.loads(method_specs_json)
     
     njsClient = NarrativeJobService(URLS.job_service, token = token)
+    wsClient = workspaceService(URLS.workspace, token = token)
     if app_job_id.startswith("njs:"):
         app_job_id = app_job_id[4:]
     appState = njsClient.check_app_state(app_job_id)
@@ -133,7 +134,7 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
             input = {}
             tempArgs = []
             methodInputValues = extract_param_values(paramValues, stepId)
-            prepare_njs_method_input(token, workspace, methodSpec, methodInputValues, input, tempArgs);
+            prepare_njs_method_input(token, wsClient, workspace, methodSpec, methodInputValues, input);
             methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, rpcOut)
         else:
             methodOut = rpcOut

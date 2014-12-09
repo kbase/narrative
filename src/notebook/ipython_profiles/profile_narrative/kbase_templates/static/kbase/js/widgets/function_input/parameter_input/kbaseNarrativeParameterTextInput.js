@@ -599,6 +599,16 @@
          * in the method spec.
          */
         getParameterValue: function() {
+            // if this is an output, and there's only one row, and it's optional,
+            // but it's not filled out, then we need a random name.
+            if (this.spec.text_options && 
+                this.spec.text_options.is_output_name === 1 && 
+                this.rowInfo.length === 1 &&
+                this.rowInfo[0].$input.val().length === 0 &&
+                this.spec.optional === 1) {
+//                this.setParameterValue(this.generateRandomOutputString());
+            }
+
             if (this.rowInfo.length===1) {
                 return this.rowInfo[0].$input.val();
             }
@@ -608,8 +618,6 @@
             }
             return value;
         },
-        
-        
         
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
         getTimeStampStr: function (objInfoTimeStamp) {
@@ -658,6 +666,27 @@
         
         monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"],
         
+        // make a randomized string, assuming it's for an output.
+        generateRandomOutputString: function() {
+            // default prefix is just 'output'
+            var prefix = "output";
+
+            // if we know something about what workspace type it should be, take the last part
+            // of the type (past the last '.') and make it lowercase
+            // e.g. 'KBaseGenomes.Genome' becomes 'genome'
+            if (this.spec.text_options.valid_ws_types && this.spec.text_options.valid_ws_types.length > 0) {
+                prefix = this.spec.text_options.valid_ws_types[0];
+                prefix = prefix.substring(prefix.lastIndexOf(".")+1).toLowerCase();
+            }
+
+            // add eight random letters to the end, with an underscore - Roman style!
+            var strArr = [];
+            for (var i=0; i<8; i++) {
+                strArr.push(String.fromCharCode(65 + Math.floor(Math.random() * 26)));
+            }
+            return prefix + "_" + strArr.join('');
+        },
+
         genUUID: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);

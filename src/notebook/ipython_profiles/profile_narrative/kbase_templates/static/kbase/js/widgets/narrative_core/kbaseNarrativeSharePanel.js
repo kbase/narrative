@@ -64,16 +64,17 @@
             return this;
         },
 
+        my_user_id: null,
         /* handle login and logout */
         loggedInCallback: function(event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
-            this.user_id = auth.user_id;
+            this.my_user_id = auth.user_id;
             this.refresh();
             return this;
         },
         loggedOutCallback: function(event, auth) {
             this.ws = null;
-            this.user_id = null;
+            this.my_user_id = null;
             this.refresh();
             return this;
         },
@@ -105,11 +106,13 @@
                                 self.ws_permissions = [];
                                 self.user_data = {};
                                 
-                                var usernames = self.user_id + ",";
+                                var usernames = self.my_user_id + ",";
                                 for(var u in perm) {
                                     if (perm.hasOwnProperty(u)) {
-                                        self.ws_permissions.push([u,perm[u]]);
-                                        usernames += u+',';
+                                        if (u!=='*') {
+                                            self.ws_permissions.push([u,perm[u]]);
+                                            usernames += u+',';
+                                        }
                                     }
                                 }
                                 $.ajax({
@@ -209,7 +212,7 @@ WORKSPACE INFO
                 } else if (self.ws_info[5]==='r' || self.ws_info[6]==='r') { // either you can read it, or it is globally readable
                     status="You can view this Narrative, but you cannot edit or share it.";
                 } 
-                var display = self.renderUserIconAndName(self.user_id);
+                var display = self.renderUserIconAndName(self.my_user_id);
                 $meDiv.append(display[0],display[1]);
                 $meDiv.append($('<div>').css({'margin-top':'10px'}).append(status));
                 self.$mainPanel.append($meDiv);
@@ -315,7 +318,7 @@ WORKSPACE INFO
                 
                 // show all other users
                 for (var i=0; i<self.ws_permissions.length; i++) {
-                    if (self.ws_permissions[i][0] !== self.user_id && self.ws_permissions[i][0] !== '*') {
+                    if (self.ws_permissions[i][0] !== self.my_user_id && self.ws_permissions[i][0] !== '*') {
                         var $select;
                         if (isOwner) {
                             var thisUser = self.ws_permissions[i][0];
@@ -483,7 +486,7 @@ WORKSPACE INFO
             var $span =  $("<span>").addClass("fa fa-user").css({'color':userColor});
             
             var userString = username;
-            if (username === this.user_id) {
+            if (username === this.my_user_id) {
                 userString = " Me ("+username+")";
             } else if (realName) {
                 userString = " "+realName+" ("+username+")";

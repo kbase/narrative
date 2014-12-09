@@ -296,23 +296,6 @@
             var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
             var ws = new Workspace(this.options.workspaceURL, auth);            
 
-
-            // get possible types (not used)
-            /*
-            ws.list_all_types({}).done(function(res) {
-                console.log('types', res)
-
-                var types = [];
-                for (var mod in res) {
-                    var typeNames = res[mod]
-                    for (var type in typeNames) {
-                        types.push(type);
-                    }
-                }
-                console.log('type_names', types)
-            })*/
-            
-
             // add footer status container and button
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)            
@@ -375,7 +358,6 @@
                 // remove items from only current container being rendered
                 container.find('.kb-import-items').remove();
 
-                console.log('redering', data)
                 if (data.length == 0) 
                     container.append('<div class="kb-import-items text-muted">No data found</div>');
                 else if (data.length-1 < end) 
@@ -383,7 +365,6 @@
 
                 var rows = buildMyRows(data, start, end);
                 container.append(rows);
-                console.log('building rows', data, data.length, start, end) 
 
                 // infinite scroll
                 container.unbind('scroll');
@@ -391,7 +372,6 @@
                     if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {                            
                         var rows = buildMyRows(data, start, end);
                         container.append(rows);
-                        console.log('building rows', data, data.length, start, end);
                     }
                 });
 
@@ -521,8 +501,6 @@
             }
 
             function filterData(data, f) {
-                console.log('filtering data with', data, f)
-
                 if (data.length == 0) return [];
 
                 var filteredData = [];

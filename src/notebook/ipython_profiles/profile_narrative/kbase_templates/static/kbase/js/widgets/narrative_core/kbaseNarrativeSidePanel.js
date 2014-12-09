@@ -265,10 +265,10 @@
 
             var myWorkspaces = [],
                 sharedWorkspaces = [];
-            /*
-            var pageNext = $('<button class="btn btn-default"><<</button>')
-                pagePrev = $('<button class="btn btn-default">>></button>');
-                pagination = $('<div class="col-md-1">').append(pageNext, pagePrev);*/
+
+            // model for selected objects to import
+            var selected = [];
+
 
             // tab panels
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
@@ -308,13 +308,9 @@
             // this is because data sets can be large and 
             // makes things more fluid
             minePanel.loading();
+            sharedPanel.loading();
             updateView('mine').done(function() {
-                minePanel.rmLoading();
-
-                sharedPanel.loading();
-                updateView('shared').done(function() {
-                    sharedPanel.rmLoading();
-                });
+                updateView('shared');
             });
 
 
@@ -327,8 +323,13 @@
                     if (view == 'mine') prom = getMyData(workspaces);
                     else if (view == 'shared') prom = getSharedData(workspaces);
                     $.when(prom).done(function(filterOptions) {
-                        if (view == 'mine') addMyFilters();
-                        if (view == 'shared') addSharedFilters();                        
+                        if (view == 'mine') {
+                            minePanel.rmLoading();                            
+                            addMyFilters();
+                        } else if(view == 'shared') {
+                            sharedPanel.rmLoading();                            
+                            addSharedFilters();
+                        }
                     });
                 });
             }
@@ -345,7 +346,7 @@
                     // update model
                     myData = d;
                     render(myData, minePanel);
-                    events();
+                    events(minePanel);
                 })
             }
 
@@ -373,6 +374,7 @@
                         var rows = buildMyRows(data, start, end);
                         container.append(rows);
                     }
+                    events(container);
                 });
 
                 /* pagination
@@ -383,8 +385,6 @@
                     var end = end
                     var rows = buildMyRows(start, end);
                     container.append(rows);
-
-                    events();                  
                 });*/
             }
 
@@ -398,7 +398,7 @@
                     // update model
                     sharedData = d;
                     render(sharedData, sharedPanel);                    
-                    events();
+                    events(sharedPanel);
                 })
             }
 
@@ -458,10 +458,9 @@
             }
 
 
-            function events() {
-                var selected = [];
-                $('.kb-import-checkbox').unbind('change');
-                $('.kb-import-checkbox').change(function(){
+            function events(panel) {
+                panel.find('.kb-import-checkbox').unbind('change');
+                panel.find('.kb-import-checkbox').change(function(){
                     var item = $(this).parent('.kb-import-item');
                     var ref = item.data('ref').replace(/\./g, '/');
                     var name = item.data('obj-name');
@@ -472,11 +471,12 @@
                     }
                     else {
                         for (var i=0; i<selected.length; i++) {
-                            if (selected[0].ref == ref) 
+                            if (selected[i].ref == ref) 
                                 selected.splice(i, 1);
                         }
                     }
 
+                    console.log('selected', selected)
                     // disable/enable button
                     if (selected.length > 0) btn.prop('disabled', false);
                     else btn.prop('disabled', true);
@@ -486,6 +486,11 @@
                 btn.unbind('click');
                 btn.click(function() {
                     if (selected.length == 0) return;
+
+                    //uncheck all checkboxes, disable b
+                    $('.kb-import-checkbox').prop('checked', false);
+                    $(this).prop('disabled', true);
+
 
                     var proms = copyObjects(selected, narWSName);
                     $.when.apply($, proms).done(function(data) {
@@ -579,7 +584,7 @@
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, minePanel);
-                    events();
+                    events(minePanel);
                 })
 
 
@@ -599,7 +604,7 @@
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, minePanel)                                   
-                    events();                            
+                    events(minePanel);                            
                 })
 
 
@@ -613,7 +618,7 @@
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, minePanel)  
-                    events();                            
+                    events(minePanel);                            
                 });
 
 
@@ -645,7 +650,7 @@
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query});
                     render(filtered, sharedPanel);
-                    events();
+                    events(sharedPanel);
                 })
 
 
@@ -665,7 +670,7 @@
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
                     render(filtered, sharedPanel)
-                    events();                            
+                    events(sharedPanel);                            
                 })
 
 
@@ -679,7 +684,7 @@
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
                     render(filtered, sharedPanel)
-                    events();                            
+                    events(sharedPanel);                            
                 });
 
                 // add search, type, ws filter to dom

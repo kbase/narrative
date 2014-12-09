@@ -90,9 +90,9 @@ var NarrativeManager = function(options, auth, auth_cb) {
         
         var wsMetaData = {
             'narrative' : nar_name,
-            'is_temporary' : 'true',
-            'pending_shared_users': '[]',
-            'rejected_shared_users': '[]'
+            'is_temporary' : 'true'
+            //'pending_shared_users': '[]',
+            //'rejected_shared_users': '[]'
         };
         
         // 1 - create ws
@@ -132,6 +132,11 @@ var NarrativeManager = function(options, auth, auth_cb) {
                                 console.log('saved narrative:');
                                 console.log(obj_info_list);
                                 _callback({ws_info:ws_info, nar_info: obj_info_list[0]});
+                                // better to keep the narrative perm id instead of the name
+                                self.ws.alter_workspace_metadata(
+                                    {wsi:{workspace:ws_name},new:{narrative:obj_info_list[0][0]+''}},
+                                    function() {},
+                                    function() {});
                             }, function (error) {
                                 console.error(error);
                                 if(_error_callback) { _error_callback(error); }
@@ -404,7 +409,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
         "brave, make it public for the world to see.\n<br><br>\n\n"+
         "\nThat's it!\n\n"+
         "<b>Questions?</b> Visit https://kbase.us to search for more detailed tutorials and documentation.\n\n"+
-        "<b>More Questions?</b> Email: [help@kbase.us](mailto:help@kbase.us)\\n\n\n";
+        "<b>More Questions?</b> Email: [help@kbase.us](mailto:help@kbase.us)\n\n\n";
 };
 
 

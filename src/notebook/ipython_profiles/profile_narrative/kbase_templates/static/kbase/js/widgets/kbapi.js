@@ -300,7 +300,7 @@ function KBCacheClient(token) {
                     }                    
                 }
 
-                $('.my-nar-count').text(mine.length)
+                $('.my-nar-count').text(mine.length);
                 $('.shared-nar-count').text(shared.length);  
                 $('.public-nar-count').text(pub.length);            
 

@@ -70,8 +70,7 @@
 
             if (this.autorender) {
                 this.render();
-            }
-            else {
+            } else {
 
             }
             // add the stuff to the tabs
@@ -129,7 +128,6 @@
                                            this.toggleOverlay();
                                         }, this))));
 
-            // styling is easier if there is a class for containers
             this.$overlayBody = $('<div class="kb-overlay-body">');
 
             this.$overlayFooter  = $('<div class="kb-overlay-footer">');
@@ -145,6 +143,7 @@
 
             this.$narrativeDimmer = $('<div>')
                                     .addClass('kb-overlay-dimmer');
+
             $('body').append(this.$narrativeDimmer);
             this.$narrativeDimmer.hide();
             this.updateOverlayPosition();
@@ -250,36 +249,34 @@
                 sharedData = [],
                 publicData = [];
 
-            // models for filter selections
-            var query;
-
-            // models for options in type and workspace dropdowns
-            var types = [];
-                workspaces =[];
+            var myWorkspaces = [],
+                sharedWorkspaces = [];
+            /*
+            var pageNext = $('<button class="btn btn-default"><<</button>')
+                pagePrev = $('<button class="btn btn-default">>></button>');
+                pagination = $('<div class="col-md-1">').append(pageNext, pagePrev);*/
 
             // tab panels
-            var minePanel = $('<div class="kb-import-panel">'),
-                sharedPanel = $('<div class="kb-import-panel">'),
-                publicPanel = $('<div class="kb-import-panel">'),
-                importPanel = $('<div class="kb-import-panel">');
+            var minePanel = $('<div class="kb-import-content kb-import-mine">'),
+                sharedPanel = $('<div class="kb-import-content kb-import-shared"">'),
+                publicPanel = $('<div class="kb-import-content kb-import-public"">'),
+                importPanel = $('<div class="kb-import-content kb-import-import"">');
 
-            // content wrapper
-            var content = $('<div class="kb-import-content">');
 
             // add tabs
             var $tabs = this.buildTabs([
-                    {tabName: 'My Data', content: minePanel},
-                    {tabName: 'Shared', content: sharedPanel},
-                    {tabName: 'Public', content: publicPanel},
-                    {tabName: 'Import', content: importPanel},
+                    {tabName: '<small>My Data</small>', content: minePanel},
+                    {tabName: '<small>Shared with me</small>', content: sharedPanel},
+                    {tabName: '<small>Public</small>', content: publicPanel},
+                    {tabName: '<small>Import</small>', content: importPanel},
                 ]);
 
-            sharedPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
+            //sharedPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             publicPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             importPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
 
             body.addClass('kb-side-panel');
-            body.append($tabs.header).append($tabs.body);
+            body.append($tabs.header, $tabs.body);
 
             // It is silly to invoke a new object for each widget
             var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
@@ -309,99 +306,151 @@
             footer.append(btn);
 
             body.append(footer);
-            updateView('mine');
+
+            // start with my data, then fetch other data
+            // this is because data sets can be large and 
+            // makes things more fluid
+            minePanel.loading();
+            updateView('mine').done(function() {
+                minePanel.rmLoading();
+
+                sharedPanel.loading();
+                updateView('shared').done(function() {
+                    sharedPanel.rmLoading();
+                });
+            });
+
+
+            function updateView(view) {
+                var p;
+                if (view == 'mine') p = getMyWS();
+                else if (view == 'shared') p = getSharedWS();
+                //else if (view == 'public') p = getSharedWS();
+
+
+                return $.when(p).done(function(workspaces) {
+                    // update workspace dropdown model
+
+                    if (view == 'mine') prom = getMyData(workspaces);
+                    else if (view == 'shared') prom = getSharedData(workspaces);
+                    $.when(prom).done(function(filterOptions) {
+                        if (view == 'mine') addMyFilters();
+                        if (view == 'shared') addSharedFilters();                        
+                    });
+                });
+            }
 
 
             // function used to update my data list
             function getMyData(workspaces) {
                 // clear view
-                content.html('');
-                content.loading();
-
                 var ws_ids = []
                 for (var i in workspaces) ws_ids.push(workspaces[i].id);
 
-
                 var p = ws.list_objects({ids: ws_ids});
                 return $.when(p).then(function(d) {
-                    content.rmLoading();                    
-
+                    // update model
                     myData = d;
-                    renderAllData();
-
-                    // update view
-                    minePanel.append(content);
-                    events()
-                    
+                    render(myData, minePanel);
+                    events();
                 })
-
             }
 
-            function updateView(view) {
-                //if (view == 'mine') var p = getMyWS();
-                //} else if 11
+            // This function takes data to render and 
+            // a container to put data in.
+            // It produces a scrollable dataset
+            function render(data, container) {
+                var start = 0, end = 9;
 
-                return getMyWS().done(function(workspaces) {
-                    // update workspace dropdown model
-                    workspaces = workspaces; 
+                // remove items from only current container being rendered
+                container.find('.kb-import-items').remove();
 
-                    getMyData(workspaces).done(function(filterOptions) {
-                        // possible filters via input
-                        var type, ws, query;
+                console.log('redering', data)
+                if (data.length == 0) 
+                    container.append('<div class="kb-import-items text-muted">No data found</div>');
+                else if (data.length-1 < end) 
+                    end = data.length;
 
-                        // create workspace filter
-                        var wsInput = $('<select class="form-control kb-import-filter">');
-                        wsInput.append('<option>All narratives...</option>');
-                        for (var i=1; i < workspaces.length-1; i++) {
-                            wsInput.append('<option data-id="'+workspaces[i].id+'" data-name="'+workspaces[i].name+'">'+
-                                                  workspaces[i].name+
-                                            '</option>');
-                        }
-                        var wsFilter = $('<div class="col-md-4">').append(wsInput);
+                var rows = buildMyRows(data, start, end);
+                container.append(rows);
+                console.log('building rows', data, data.length, start, end) 
 
-                        // event for type dropdown
-                        wsInput.change(function() {
-                            ws = $(this).children('option:selected').data('name');
-                            renderFilteredData(type, ws, query);
-                            events();
-                        })
-
-
-                        // create type filter
-                        var typeInput = $('<select class="form-control kb-import-filter">');
-                        typeInput.append('<option>All types...</option>');
-                        for (var i=1; i < types.length-1; i++) {
-                            typeInput.append('<option data-type="'+types[i]+'">'+
-                                                  types[i].split('.')[1]+
-                                             '</option>');
-                        }
-                        var typeFilter = $('<div class="col-md-3">').append(typeInput);
-
-                        // event for type dropdown
-                        typeInput.change(function() {
-                            type = $(this).children('option:selected').data('type');
-                            renderFilteredData(type, ws, query);
-                            events();                            
-                        })
-
-
-                        // create filter (search)
-                        var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter objects">');
-                        var searchFilter = $('<div class="col-md-4">').append(filterInput);
-
-                        // event for filter (search)
-                        filterInput.keyup(function(e){
-                            renderFilteredData(type, ws, this.value);
-                            events();                            
-                        });
-
-                        // add search, type, ws filter to dom
-                        var row = $('<div class="row">').append(searchFilter, typeFilter, wsFilter);
-                        minePanel.prepend(row);     
-                    });
-
-
+                // infinite scroll
+                container.unbind('scroll');
+                container.on('scroll', function() {                        
+                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {                            
+                        var rows = buildMyRows(data, start, end);
+                        container.append(rows);
+                        console.log('building rows', data, data.length, start, end);
+                    }
                 });
+
+                /* pagination
+                pageNext.unbind('click')
+                pageNext.click(function() {
+                    container.html('')
+                    var start = end + 1;
+                    var end = end
+                    var rows = buildMyRows(start, end);
+                    container.append(rows);
+
+                    events();                  
+                });*/
+            }
+
+            // function used to update my data list
+            function getSharedData(workspaces) {
+                // clear view
+                var ws_ids = []
+                for (var i in workspaces) ws_ids.push(workspaces[i].id);
+                var p = ws.list_objects({ids: ws_ids});
+                return $.when(p).then(function(d) {
+                    // update model
+                    sharedData = d;
+                    render(sharedData, sharedPanel);                    
+                    events();
+                })
+            }
+
+            function getMyWS() {
+                return ws.list_workspace_info({owners: [user]})
+                        .then(function(d) {
+                            var workspaces = [];
+                            for (var i in d) workspaces.push({id: d[i][0], name: d[i][1]});
+
+                            // add to model for filter
+                            myWorkspaces = workspaces;
+                            return workspaces;
+                        })
+            }
+
+            function getSharedWS() {
+                return ws.list_workspace_info({excludeGlobal: 0})
+                        .then(function(d) {
+                            var workspaces = [];
+                            for (var i in d) {
+                                // skip owned workspaced
+                                if (d[i][2] == user) {
+                                    continue;
+                                }
+                                workspaces.push({id: d[i][0], name: d[i][1]});
+                            }
+
+                            // add to model for filter
+                            sharedWorkspaces = workspaces;                            
+                            return workspaces;
+                        })
+            }
+
+            function typeList(data) {
+                var types = [];
+
+                for (var i in data) {
+                    var mod_type = data[i][2].split('-')[0];
+                    // update model for types dropdown
+                    if (types.indexOf(mod_type) == -1) types.push(mod_type);
+                }
+                return types;
             }
 
             function copyObjects(objs, nar_ws_name) {
@@ -418,23 +467,6 @@
                 return proms;
             }
 
-            function getMyWS() {
-                return ws.list_workspace_info({owners: [user]})
-                        .then(function(d) {
-                            var workspaces = [];
-                            for (var i in d) workspaces.push({id: d[i][0], name: d[i][1]});
-                            return workspaces;
-                        })
-            }
-
-            function getSharedWS() {
-                return ws.list_workspace_info({perm: 'w'})
-                        .then(function(d) {
-                            var workspaces = [];
-                            for (var i in d) workspaces.push({id: d[i][0], name: d[i][1]});
-                            return workspaces;
-                        })
-            }
 
             function events() {
                 var selected = [];
@@ -478,13 +510,42 @@
                 });                
             }
 
-            function renderFilteredData(typeFilter, wsFilter, queryFilter) {
-                content.html('');
-                console.log('filtering on', typeFilter, wsFilter, queryFilter)
+            function filterData(data, f) {
+                console.log('filtering data with', data, f)
+
+                if (data.length == 0) return [];
+
+                var filteredData = [];
+                // add each item to view
+                for (var i=0; i<data.length; i< i++) {
+                    var obj = data[i];
+
+                    var mod_type = obj[2].split('-')[0],
+                        ws = obj[7],
+                        name = obj[1];
+                    var kind = mod_type.split('.')[1];
+
+                    // filter conditions
+                    if (f.query && name.toLowerCase().indexOf(f.query.toLowerCase()) == -1) 
+                        continue;
+                    if (f.type && f.type.split('.')[1] != kind) 
+                        continue;
+                    if (f.ws && f.ws != ws)
+                        continue;
+                    
+                    filteredData.push(obj);
+
+                }
+                return filteredData;
+            }
+
+            function buildSharedFilteredRows(start, end, f) {
+                var rows = $('<div class="kb-import-items">');
+                console.log('filtering on', f)
 
                 // add each item to view
-                for (var i in myData) {
-                    var obj = myData[i];
+                for (var i in sharedData) {
+                    var obj = sharedData[i];
 
                     var mod_type = obj[2].split('-')[0];
                     var item = {id: obj[0],
@@ -499,25 +560,29 @@
 
 
                     // filter conditions
-                    if (queryFilter && item.name.toLowerCase().indexOf(queryFilter.toLowerCase()) == -1) 
+                    if (f.query && item.name.toLowerCase().indexOf(f.query.toLowerCase()) == -1) 
                         continue;
-                    if (typeFilter && typeFilter.split('.')[1] != item.kind) 
+                    if (f.type && f.type.split('.')[1] != item.kind) 
                         continue;
-                    if (wsFilter && wsFilter != item.ws)
+                    if (f.ws && f.ws != item.ws)
                         continue;
 
                     var item = rowTemplate(item);
 
-                    // update DOM
-                    content.append(item);
-                }               
-            }
+                    // update content object
+                    rows.append(item);
+                }
+                return rows;
+            }            
 
-            function renderAllData() {
-                content.html('');
-                // add each item to view
-                for (var i in myData) {
-                    var obj = myData[i];
+
+            function buildMyRows(data, start, end) {
+
+                // add each set of items to container to be added to DOM
+                var rows = $('<div class="kb-import-items">');
+
+                for (var i=start; i< (start+end); i++) {
+                    var obj = data[i];
 
                     var mod_type = obj[2].split('-')[0];
                     var item = {id: obj[0],
@@ -528,17 +593,149 @@
                                 module: mod_type.split('.')[0],
                                 wsID: obj[6],
                                 ws: obj[7],
-                                relativeTime: self.prettyTimestamp(obj[3]) }                             
-
-                    // update model for types dropdown
-                    if (types.indexOf(mod_type) == -1) types.push(mod_type);
+                                relativeTime: self.prettyTimestamp(obj[3]) }
 
                     var item = rowTemplate(item);
 
-                    // update DOM
-                    content.append(item);                   
+                    rows.append(item);  
                 }
+
+                return rows;
             }
+
+
+            function addMyFilters() {
+                var types = typeList(myData);
+                var wsList = myWorkspaces;
+
+                // possible filters via input
+                var type, ws, query;
+
+                // create workspace filter
+                var wsInput = $('<select class="form-control kb-import-filter">');
+                wsInput.append('<option>All narratives...</option>');
+                for (var i=1; i < wsList.length-1; i++) {
+                    wsInput.append('<option data-id="'+[i].id+'" data-name="'+wsList[i].name+'">'+
+                                          wsList[i].name+
+                                   '</option>');
+                }
+                var wsFilter = $('<div class="col-sm-4">').append(wsInput);
+
+                // event for type dropdown
+                wsInput.change(function() {
+                    ws = $(this).children('option:selected').data('name');                    
+
+                    var filtered = filterData(myData, {type: type, ws:ws, query:query})
+                    render(filtered, minePanel);
+                    events();
+                })
+
+
+                // create type filter
+                var typeInput = $('<select class="form-control kb-import-filter">');
+                typeInput.append('<option>All types...</option>');
+                for (var i=1; i < types.length-1; i++) {
+                    typeInput.append('<option data-type="'+types[i]+'">'+
+                                          types[i].split('.')[1]+
+                                     '</option>');
+                }
+                var typeFilter = $('<div class="col-sm-3">').append(typeInput);
+
+                // event for type dropdown
+                typeInput.change(function() {
+                    type = $(this).children('option:selected').data('type');
+
+                    var filtered = filterData(myData, {type: type, ws:ws, query:query})
+                    render(filtered, minePanel)                                   
+                    events();                            
+                })
+
+
+                // create filter (search)
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter objects">');
+                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
+
+                // event for filter (search)
+                filterInput.keyup(function(e){ 
+                    query = $(this).val();
+
+                    var filtered = filterData(myData, {type: type, ws:ws, query:query})
+                    render(filtered, minePanel)  
+                    events();                            
+                });
+
+
+                // add search, type, ws filter to dom
+                var row = $('<div class="row">').append(searchFilter, typeFilter, wsFilter);
+                minePanel.prepend(row);
+            }
+
+            function addSharedFilters() {
+                var types = typeList(sharedData);
+                var wsList = sharedWorkspaces
+
+                // possible filters via input
+                var type, ws, query;
+
+                // create workspace filter
+                var wsInput = $('<select class="form-control kb-import-filter">');
+                wsInput.append('<option>All narratives...</option>');
+                for (var i=1; i < wsList.length-1; i++) {
+                    wsInput.append('<option data-id="'+wsList[i].id+'" data-name="'+wsList[i].name+'">'+
+                                          wsList[i].name+
+                                    '</option>');
+                }
+                var wsFilter = $('<div class="col-sm-4">').append(wsInput);
+
+                // event for type dropdown
+                wsInput.change(function() {
+                    ws = $(this).children('option:selected').data('name');
+
+                    var filtered = filterData(sharedData, {type: type, ws:ws, query:query});
+                    render(filtered, sharedPanel);
+                    events();
+                })
+
+
+                // create type filter
+                var typeInput = $('<select class="form-control kb-import-filter">');
+                typeInput.append('<option>All types...</option>');
+                for (var i=1; i < types.length-1; i++) {
+                    typeInput.append('<option data-type="'+types[i]+'">'+
+                                          types[i].split('.')[1]+
+                                     '</option>');
+                }
+                var typeFilter = $('<div class="col-sm-3">').append(typeInput);
+
+                // event for type dropdown
+                typeInput.change(function() {
+                    type = $(this).children('option:selected').data('type');
+
+                    var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
+                    render(filtered, sharedPanel)
+                    events();                            
+                })
+
+
+                // create filter (search)
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter objects">');
+                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
+
+                // event for filter (search)
+                filterInput.keyup(function(e){
+                    query = $(this).val();                    
+
+                    var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
+                    render(filtered, sharedPanel)
+                    events();                            
+                });
+
+                // add search, type, ws filter to dom
+                var row = $('<div class="row">').append(searchFilter, typeFilter, wsFilter);
+                sharedPanel.prepend(row);
+            }
+
+
 
             function rowTemplate(obj) {
                 var item = $('<div class="kb-import-item">')

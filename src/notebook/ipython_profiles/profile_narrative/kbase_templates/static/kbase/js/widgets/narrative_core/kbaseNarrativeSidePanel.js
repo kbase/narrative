@@ -140,7 +140,7 @@
 
             this.$overlay = $('<div>')
                             .addClass('kb-side-overlay-container')
-                            //.append($overlayHeader)
+                            //.append($overlayHeader) 
                             .append(this.$overlayBody)
                             .append(this.$overlayFooter);
 
@@ -549,42 +549,6 @@
                 return filteredData;
             }
 
-            function buildSharedFilteredRows(start, end, f) {
-                var rows = $('<div class="kb-import-items">');
-                console.log('filtering on', f)
-
-                // add each item to view
-                for (var i in sharedData) {
-                    var obj = sharedData[i];
-
-                    var mod_type = obj[2].split('-')[0];
-                    var item = {id: obj[0],
-                                name: obj[1],
-                                mod_type: mod_type,
-                                version: obj[4],
-                                kind: mod_type.split('.')[1],
-                                module: mod_type.split('.')[0],
-                                wsID: obj[6],
-                                ws: obj[7],
-                                relativeTime: self.prettyTimestamp(obj[3]) }   
-
-
-                    // filter conditions
-                    if (f.query && item.name.toLowerCase().indexOf(f.query.toLowerCase()) == -1) 
-                        continue;
-                    if (f.type && f.type.split('.')[1] != item.kind) 
-                        continue;
-                    if (f.ws && f.ws != item.ws)
-                        continue;
-
-                    var item = rowTemplate(item);
-
-                    // update content object
-                    rows.append(item);
-                }
-                return rows;
-            }            
-
 
             function buildMyRows(data, start, end) {
 
@@ -603,7 +567,7 @@
                                 module: mod_type.split('.')[0],
                                 wsID: obj[6],
                                 ws: obj[7],
-                                relativeTime: self.prettyTimestamp(obj[3]) }
+                                relativeTime: kb.ui.relativeTime( kb.ui.getTimestamp(obj[3]) ) }
 
                     var item = rowTemplate(item);
 
@@ -790,25 +754,6 @@
             }            
 
 
-        }, 
-
-        prettyTimestamp: function(timestamp) {
-            var format = function(x) {
-                if (x < 10)
-                    x = '0' + x;
-                return x;
-            };
-
-            var d = new Date(timestamp);
-            var hours = format(d.getHours());
-
-            var minutes = format(d.getMinutes());
-            var seconds = format(d.getSeconds());
-            var month = d.getMonth()+1;
-            var day = format(d.getDate());
-            var year = d.getFullYear();
-
-            return month + "/" + day + "/" + year + ", " + hours + ":" + minutes + ":" + seconds;
-        },
+        }
     })
 })( jQuery );

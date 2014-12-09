@@ -609,7 +609,7 @@
 
 
                 // create filter (search)
-                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter objects">');
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter data">');
                 var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
                 // event for filter (search)

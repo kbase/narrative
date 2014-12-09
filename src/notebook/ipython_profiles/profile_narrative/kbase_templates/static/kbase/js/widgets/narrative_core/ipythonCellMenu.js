@@ -17,5 +17,4 @@
 
     CellToolbar.register_preset('KBase', kbasePreset);
     console.log('KBase extension cell toolbar loaded.');
-
 }(IPython));

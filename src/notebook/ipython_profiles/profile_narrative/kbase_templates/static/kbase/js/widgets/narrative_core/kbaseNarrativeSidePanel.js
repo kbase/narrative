@@ -21,6 +21,11 @@
         init: function(options) {
             this._super(options);
 
+            // make sure we pick up the proper config urls
+            if (window.kbconfig && window.kbconfig.urls) {
+                this.options.workspaceURL = window.kbconfig.urls.workspace;
+            }
+            
             var analysisWidgets = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeDataPanel',
@@ -36,10 +41,10 @@
             var $analysisPanel = analysisWidgets['panelSet'];
 
             var manageWidgets = this.buildPanelSet([
-                // {
-                //     name : 'kbaseNarrativeAppsPanel',
-                //     params : { autopopulate: true }
-                // },
+                {
+                    name : 'kbaseNarrativeManagePanel',
+                    params : { autopopulate: true }
+                },
                 {
                     name : 'kbaseNarrativeJobsPanel',
                     params : { autopopulate: false }

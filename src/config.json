@@ -47,5 +47,5 @@
         "workspace": "https://kbase.us/services/ws", 
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
-    "version": "v. alpha, 9/25/2014"
+    "version": "v0.2.0"
 }

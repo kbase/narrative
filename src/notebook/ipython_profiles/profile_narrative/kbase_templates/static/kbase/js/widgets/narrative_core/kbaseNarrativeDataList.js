@@ -166,12 +166,15 @@
         },
         
         refreshTimeStrings: function() {
-            var self = this;
+            var self = this; var newTime; var oldTime;
             if (self.objectList) {
                 for(var i=0; i<self.objectList.length; i++) {
                     if(self.objectList[i].$div) {
-                        self.objectList[i].$div.find('.kb-data-list-date')
-                            .text(self.getTimeStampStr(self.objectList[i].info[3]));
+                        newTime = self.getTimeStampStr(self.objectList[i].info[3]);
+                        oldTime = self.objectList[i].$div.find('.kb-data-list-date').text();
+                        if (newTime !== oldTime) {
+                            self.objectList[i].$div.find('.kb-data-list-date').text(newTime);
+                        }
                     }
                 }
             }
@@ -515,7 +518,7 @@
                         }
                         self.attachRow(i);
                     }
-                    console.log('showing '+ self.n_objs_rendered + ' of ' + self.objectList.length);
+                    //console.log('showing '+ self.n_objs_rendered + ' of ' + self.objectList.length);
                 } else {
                     // search filter is on, so we have to base this on what is currently filtered
                     var start = self.n_filteredObjsRendered;
@@ -527,7 +530,7 @@
                         self.attachRowElement(self.currentMatch[i]);
                         self.n_filteredObjsRendered++;
                     }
-                    console.log('showing '+ self.n_filteredObjsRendered + ' of ' + self.currentMatch.length + ' objs matching search filter');
+                    //console.log('showing '+ self.n_filteredObjsRendered + ' of ' + self.currentMatch.length + ' objs matching search filter');
                 }
             }
         },
@@ -961,33 +964,7 @@
         },
         
         getLandingPageMap: function() {
-            /**
-             * Get the landing page map.
-             * First, try getting it from /functional-site/landing_page_map.json.
-             * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
-             */
-            $.ajax({
-                url: '/functional-site/landing_page_map.json',
-                async: true,
-                dataType: 'json',
-                success: $.proxy(function(response) {
-                    this.ws_landing_page_map = response;
-                }, this),
-                error: $.proxy(function(error) {
-                    this.dbg("Unable to get standard landing page map, looking for backup...");
-                    $.ajax({
-                        url: '/static/kbase/js/ui-common/functional-site/landing_page_map.json',
-                        async: true,
-                        dataType: 'json',
-                        success: $.proxy(function(response) {
-                            this.ws_landing_page_map = response;
-                        }, this),
-                        error: $.proxy(function(error) {
-                            this.dbg("Unable to get any landing page map! Landing pages mapping unavailable...");
-                            this.ws_landing_page_map = null;
-                        }, this)
-                    })
-                }, this)});
+            this.ws_landing_page_map = window.kbconfig.landing_page_map;
         },
         
         /**

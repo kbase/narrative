@@ -266,11 +266,6 @@
             
             // finally, we refresh so that our drop down or other boxes can be populated
             this.refresh();
-            
-            //this.updateStepStatus("step_2","status");
-            //this.setStepOutput("step_2",{data:{id:"IntegratedModel",ws:"wstester1:home"}});
-            //this.setRunningStep("step_2");
-            
         },
 
         // given a method spec, returns a jquery div that is rendered but not added yet to the dom

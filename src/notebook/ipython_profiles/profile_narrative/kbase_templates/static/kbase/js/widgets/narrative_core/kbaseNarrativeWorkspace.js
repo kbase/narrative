@@ -170,8 +170,6 @@
 
             $(document).on('runApp.Narrative',
                 $.proxy(function(event, data) {
-                    console.log('running app');
-                    console.log(data);
                     this.runAppCell(data);
                 },
                 this)
@@ -255,8 +253,6 @@
 
             this.methClient.get_app_spec({'ids': [appInfo.id]}, 
                 $.proxy(function(appSpec) {
-                    console.log('got app spec');
-                    console.log(appSpec);
                     this.setAppCell(cell, appSpec[0]);
                     var cellIndex = IPython.notebook.ncells() - 1;
                     var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
@@ -268,7 +264,6 @@
                                       "\n<script>" +
                                       "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec[0]) + "', 'cellId' : '" + cellId + "'});" +
                                       "</script>";
-                    console.log(cellContent);
                     cell.set_text(cellContent);
                     cell.rendered = false;
                     cell.render();
@@ -1109,8 +1104,24 @@
                 }
                 // if it's labeled as an output cell do that.
                 else if (this.isOutputCell(cell)) {
-                    // do output widget stuff.
-                    widget = 'kbaseNarrativeOutputCell';
+                    // get the output cell's target and widget.
+                    // eventually, we should probably just update the cells to the new version
+                    // but this should sort out any backward compatibility issues for now.
+
+                    var cellText = cell.get_text();
+                    var capture = cellText.match(/<script>\$\([\"\'](.+)[\"\']\)\.(\w+)\(.+\);<\/script>/);
+                    if (capture) {
+                        target = capture[1];
+                        widget = capture[2];
+                    }
+
+                    // // do output widget stuff.
+                    // widget = 'kbaseNarrativeOutputCell';
+
+                    // // if it's an older Narrative, then it might have metadata invoking a different widget.
+                    // var metadata = cell.metadata[this.KB_CELL];
+                    // if (metadata.widget)
+                    //     widget = metadata.widget;
                 }
                 else if (this.isAppCell(cell)) {
                     widget = 'kbaseNarrativeAppCell';

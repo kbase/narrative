@@ -75,7 +75,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
      *  _callback = function(info) {
      *
      *      info.ws_info = [ .. ]
-     *      info.narrative_info = [ .. ]
+     *      info.nar_info = [ .. ]
      *      info.object_info = [ ws_reference : [ .. ] ]
      *      
      *  }
@@ -90,9 +90,9 @@ var NarrativeManager = function(options, auth, auth_cb) {
         
         var wsMetaData = {
             'narrative' : nar_name,
-            'is_temporary' : 'true',
-            'pending_shared_users': '[]',
-            'rejected_shared_users': '[]'
+            'is_temporary' : 'true'
+            //'pending_shared_users': '[]',
+            //'rejected_shared_users': '[]'
         };
         
         // 1 - create ws
@@ -132,6 +132,11 @@ var NarrativeManager = function(options, auth, auth_cb) {
                                 console.log('saved narrative:');
                                 console.log(obj_info_list);
                                 _callback({ws_info:ws_info, nar_info: obj_info_list[0]});
+                                // better to keep the narrative perm id instead of the name
+                                self.ws.alter_workspace_metadata(
+                                    {wsi:{workspace:ws_name},new:{narrative:obj_info_list[0][0]+''}},
+                                    function() {},
+                                    function() {});
                             }, function (error) {
                                 console.error(error);
                                 if(_error_callback) { _error_callback(error); }
@@ -147,63 +152,6 @@ var NarrativeManager = function(options, auth, auth_cb) {
         );
     };
     
-    /**
-     * Makes a temporary narrative permanent by giving it a name
-     *
-     * params = {
-     *  ws_name_or_id: name, // current ws name
-     *  new_name: name
-     * }
-     * 
-     */
-    this.nameNarrative = function(params, _callback, _error_callback) {
-        var self = this;
-        if (!params.ws_name_or_id) {
-            if (_error_callback) {
-                _error_callback("'ws_name_or_id' field not set in params to nameNarrative");
-            }
-            return;
-        }
-        if (!params.new_name) {
-            if (_error_callback) {
-                _error_callback("'new_name' field not set in params to nameNarrative");
-            }
-            return;
-        }
-        var wsIdentity = {};
-        if(/^([1-9]\d*)$/.test(params.ws_name_or_id)){ wsIdentity['id'] = parseInt(params.ws_name_or_id); }
-        else { wsIdentity['workspace'] = params.ws_name_or_id; }
-        self.ws.get_workspace_info(
-            wsIdentity,
-            function(info) {
-                console.log('info');
-                console.log(info);
-                
-                // first get narrative name in this workspace from the workspace metadata
-                if (!info[8].narrative) {
-                    _error_callback("Workspace is not properly configured for 1 workspace, 1 narrative.");
-                }
-                var narrative = info[8].narrative;
-                
-                // update the metadata to reflect the new name
-                var newMetadata = {
-                    is_temporary: 'false',  // set the is_temporary flag to false
-                    narrative_nice_name: params.new_name // save the nice name to the workspace
-                }
-                self.ws.alter_workspace_metadata(
-                    {wsi:wsIdentity, 'new': newMetadata},
-                    function() {
-                        // success, so set the narrative name
-                       // self.ws.rename_object
-                        
-                    },
-                    _error_callback
-                );
-            },
-            _error_callback);
-    };
-    
-    
     this.discardTempNarrative = function(params, _callback, _error_callback) {
     };
     
@@ -213,37 +161,6 @@ var NarrativeManager = function(options, auth, auth_cb) {
      */
     this.cleanTempNarratives = function(params, _callback, _error_callback) {
     };
-    
-    
-    this.shareNarrative = function(params, _callback, _error_callback) {
-    }; 
-    
-    
-    /**
-     *  _callback = function(list) {
-     *
-     *      list = [
-     *          mine: [
-     *              {
-     *                  ws_info: [...],
-     *                  narrative_info: [...],
-     *                  ..
-     *              },
-     *              ...
-     *              ]
-     *          shared_readable: [ .. ],
-     *          shared_writable: [ .. ],
-     *          pending: [ .. ],
-     *          public: [ .. ]
-     *      ]
-     *  }
-     *
-     *
-     *  
-     */
-    this.listNarratives = function(params, _callback, _error_callback) {
-    };
-    
     
     /*
      *      cells : [
@@ -283,26 +200,35 @@ var NarrativeManager = function(options, auth, auth_cb) {
                 };
                 var cell_data = [];
                 if (cells) {
-                    for(var c=0; c<cells.length; c++) {
-                        if (cells[c].app) {
-                            var appCell = self._buildAppCell(cell_data.length, self._specMapping.apps[cells[c].app]);
-                            cell_data.push(appCell);
-                        } else if (cells[c].method) {
-                            var methodCell = self._buildMethodCell(cell_data.length, self._specMapping.methods[cells[c].method]);
-                            cell_data.push(methodCell);
-                        } else if (cells[c].markdown) {
-                            cell_data.push({
+                    if (cells.length>0) {
+                        for(var c=0; c<cells.length; c++) {
+                            if (cells[c].app) {
+                                var appCell = self._buildAppCell(cell_data.length, self._specMapping.apps[cells[c].app]);
+                                cell_data.push(appCell);
+                            } else if (cells[c].method) {
+                                var methodCell = self._buildMethodCell(cell_data.length, self._specMapping.methods[cells[c].method]);
+                                cell_data.push(methodCell);
+                            } else if (cells[c].markdown) {
+                                cell_data.push({
+                                    cell_type: 'markdown',
+                                    source: cells[c].markdown,
+                                    metadata: {}
+                                });
+                            }
+                            //else if (cells[c].code) { }
+                            else {
+                                console.error('cannot add cell '+c+', unrecognized cell content');
+                                console.error(cells[c]);
+                                if(_error_callback) { _error_callback('cannot add cell '+c+', unrecognized cell content'); }
+                            }
+                        }
+                    } else {
+                        cell_data.push(
+                            {
                                 cell_type: 'markdown',
-                                source: cells[c].markdown,
-                                metadata: {}
+                                source: self.introText,
+                                metadata: { }
                             });
-                        }
-                        //else if (cells[c].code) { }
-                        else {
-                            console.error('cannot add cell '+c+', unrecognized cell content');
-                            console.error(cells[c]);
-                            if(_error_callback) { _error_callback('cannot add cell '+c+', unrecognized cell content'); }
-                        }
                     }
                 }
                 
@@ -459,6 +385,31 @@ var NarrativeManager = function(options, auth, auth_cb) {
     this.KB_ERROR_CELL= 'kb_error';
     this.KB_CODE_CELL= 'kb_code';
     this.KB_STATE= 'widget_state';
+    
+    
+    
+    this.introText =
+        "Welcome to KBase!\n============\n\n"+
+        "Add Data to this Narrative\n------------\n\n"+
+        "Click on 'Get Data' and browse for KBase data or upload your own."+
+        "Select the data and click 'Add to narrative'.  Perhaps start by "+
+        "importing your favorite Genome.  Once your data has been loaded, "+
+        "you can inspect it in the data list.\n<br>\n\n"+
+        "Perform an Analysis\n------------\n\n"+
+        "When you're ready, select an App or Method to run on your data.  "+
+        "Simply click on an App or Method on the side bar, and it will appear "+
+        "directly in your Narrative.  Fill in the parameters and click run.  "+
+        "Output will be generated and new data objects may be created and added "+
+        "to your data list.  Add and run as many Apps and Methods as you like!\n\n"+
+        "Long running computations can be tracked in your Jobs panel, located on "+
+        "the side panel under the 'Manage' tab.\n<br>\n\n"+
+        "Save & Share your Results\n------------\n\n"+
+        "When you're ready, name this Narrative and save it.  Once it is saved, "+
+        "click on the 'share' button above to let others view your analysis.  Or if you're "+
+        "brave, make it public for the world to see.\n<br><br>\n\n"+
+        "\nThat's it!\n\n"+
+        "<b>Questions?</b> Visit https://kbase.us to search for more detailed tutorials and documentation.\n\n"+
+        "<b>More Questions?</b> Email: [help@kbase.us](mailto:help@kbase.us)\n\n\n";
 };
 
 

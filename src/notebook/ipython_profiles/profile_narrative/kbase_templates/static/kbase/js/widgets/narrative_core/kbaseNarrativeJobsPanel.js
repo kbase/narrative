@@ -15,7 +15,7 @@
         $methodsList: null,
 
         refreshTimer: null,
-        refreshInterval: 5000,
+        refreshInterval: 10000,
 
         init: function(options) {
             this._super(options);
@@ -167,7 +167,7 @@
          * @method
          */
         refresh: function(hideLoadingMessage) {
-            // if there's no timer, set one up.
+            // if there's no timer, set one up - this should only happen the first time.
             if (this.refreshTimer === null) {
                 this.refreshTimer = setInterval(
                     $.proxy(function() { this.refresh(true); }, this),
@@ -321,7 +321,6 @@
             this.$methodsList.empty().append($methodsTable);
 
             // do apps.
-            console.log(jobs.apps);
             var $appsTable = $('<div class="kb-jobs-items">');
             if (jobs.apps.length === 0 && storedIds.apps.length === 0) {
                 $appsTable.append($('<div class="kb-data-loading">').append('No running apps!'));
@@ -330,10 +329,10 @@
                 var renderedApps = {};
                 for (var i=0; i<jobs.apps.length; i++) {
                     var app = jobs.apps[i];
-                    var appInfo = jobInfo[app.app_job_id];
+                    var appInfo = jobInfo[app.job_id];
                     $appsTable.append(this.renderApp(app, appInfo));
                     this.updateAppCell(app, appInfo);
-                    renderedApps[app.app_job_id] = true;
+                    renderedApps[app.job_id] = true;
                 }
                 for (var i=0; i<storedIds.apps.length; i++) {
                     var appTest = storedIds.apps[i];
@@ -399,17 +398,23 @@
                 return $app;
 
             $app.append($('<div class="kb-jobs-title">').append(appInfo.info.appSpec.info.name).append(this.makeAppDetailButton(appJob, appInfo)));
-            $app.append($('<div class="kb-jobs-descr">').append(appJob.app_job_id));
+            $app.append($('<div class="kb-jobs-descr">').append(appJob.job_id));
 
             var $itemTable = $('<table class="kb-jobs-info-table">');
             var $statusRow = $('<tr>').append($('<th>').append('Status:'));
 
-            var status = 'Not Running';
+//            console.log(appJob);
+            if (appJob.error) {
+                // error out.
+                return $app;
+            }
+            var status = appJob.job_state;
+            if (status)
+                status = status.charAt(0).toUpperCase() + status.substring(1);
             var task = null;
             var stepId = appJob.running_step_id;
             if (stepId) {
                 var stepSpec = getStepSpec(stepId, appInfo.info.appSpec);
-                status = 'Running';
                 task = appInfo.info.methodSpecs[stepSpec.method_id].info.name;
             }
             $statusRow.append($('<td>').append(status));

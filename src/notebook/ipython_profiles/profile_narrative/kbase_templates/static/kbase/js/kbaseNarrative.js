@@ -42,6 +42,15 @@ $('#kb-narr-name #name').click(function(e) {
         //    return "Share this Narrative & Data";
         //},
         content: function() {
+            // we do not allow users to leave thier narratives untitled
+            if (IPython && IPython.notebook) {
+                var narrName = IPython.notebook.notebook_name;
+                if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
+                    IPython.save_widget.rename_notebook("Your Narrative must be named before you can share it with others.", false);
+                    return "<br><br>Please name your Narrative before sharing.<br><br>"
+                }
+            }
+            
             //!! arg!! I have to refresh to get reattach the events, which are lost when
             //the popover is hidden!!!  makes it a little slower because we refetch permissions from ws each time
             $shareWidget.refresh();
@@ -50,6 +59,10 @@ $('#kb-narr-name #name').click(function(e) {
     });
 })();
 
+/**
+ * A fun little idea... but it doesn't really work. We need an actual way to poke at endpoints to see if they're alive.
+ * But I'm leaving this in here for now. --Bill
+ */
 var EndpointTester = function(url, target) {
     this.loadingImage = 'static/kbase/images/ajax-loader.gif';
     this.okayText = 'ok';
@@ -141,6 +154,10 @@ narrative.init = function() {
                                             .append($versionDiv))
                                     .append($('<div>')
                                             .addClass('modal-footer')
+                                            .append(
+                                                $('<button type="button" data-dismiss="modal">')
+                                                .addClass('btn btn-danger')
+                                                .append('Shutdown'))
                                             .append(
                                                 $('<button type="button" data-dismiss="modal">')
                                                 .addClass('btn btn-default')

@@ -116,6 +116,30 @@ function ShockClient(params) {
     	return promise;
     };
 
+    self.get_node_acls = function (id, ret, errorCallback) {
+    	var url = self.url+'/node/' + id + "/acl/";
+    	var promise = jQuery.Deferred();
+    	jQuery.ajax(url, {
+    		success: function(data) {
+    			if (data.data) {
+    				ret(data.data);
+    			} else {
+    				if (errorCallback)
+    					errorCallback(data.error);
+    			}
+    			promise.resolve();
+    		},
+    		error: function(jqXHR, error) {
+				if (errorCallback)
+					errorCallback(error);
+    			promise.resolve();
+    		},
+    		headers: self.auth_header
+    	});
+
+    	return promise;
+    };
+
     self.delete_node = function (id, ret, errorCallback) {
     	var url = self.url+'/node';
     	var promise = jQuery.Deferred();

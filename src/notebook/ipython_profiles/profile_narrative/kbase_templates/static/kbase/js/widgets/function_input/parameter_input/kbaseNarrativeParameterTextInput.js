@@ -304,19 +304,30 @@
                                 if(self.select2Matcher(query.term,d.name)) {
                                     data.results.push({id:d.name, text:d.name, info:d.info});
                                 }
+                                // search metadata too
+                                else if (d.info[10]) {
+                                    for(var key in d.info[10]) {
+                                        if (d.info[10].hasOwnProperty(key)) {
+                                            if(self.select2Matcher(query.term,d.info[10][key])) {
+                                                data.results.push({id:d.name, text:d.name,
+                                                                  mm:key+' - '+d.info[10][key],info:d.info});
+                                                // allow us to show metadata match!
+                                            }
+                                        }
+                                    }
+                                }
+                                
                             } else {
                                 data.results.push({id:d.name, text:d.name, info:d.info});
                             }
                         }
                     }
                     
-                    //always allow the name they give if there was no match...
+                    //only allow the name if it is set as an output name...
                     if (data.results.length===0) {
                         if (query.term.trim()!=="") {
                             if(self.isOutputName) {
                                 data.results.push({id:query.term, text:query.term});
-                            } else {
-                                data.results.push({id:query.term, text:query.term+" (not found)"});
                             }
                         }
                     }
@@ -335,8 +346,11 @@
                     var display = "<b>"+object.text+"</b>";
                     if (object.info) {
                         // we can add additional info here in the dropdown ...
-                        display = display + " (v" + object.info[4]+")<br>&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3]);
-                        
+                        display = display + " (v" + object.info[4]+")<br>";
+                        if (object.mm) {
+                            display = display + "&nbsp&nbsp&nbsp<i>"+object.mm+"</i><br>";
+                        }
+                        display = display + "&nbsp&nbsp&nbsp<i>updated " + self.getTimeStampStr(object.info[3])+"</i>";
                     }
                     return display;
                 }
@@ -407,9 +421,8 @@
                                 }
                             }
                         }
-                        
-                        if (self.validDataObjectList) {
-                            if(self.validDataObjectList.length>0) {
+                        if (self.spec.text_options.valid_ws_types) {
+                            if(self.spec.text_options.valid_ws_types.length>0) {
                                 if (/\s/.test(pVal)) {
                                     if (self.rowInfo[i]) {
                                         self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
@@ -419,6 +432,24 @@
                                     }
                                     errorDetectedHere = true;
                                     errorMessages.push("spaces are not allowed in data object names, in field "+self.spec.ui_name);
+                                } else if (/^\d+$/.test(pVal)) {
+                                    if (self.rowInfo[i]) {
+                                        self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
+                                        self.rowInfo[i].$error.html("data object names cannot be a number");
+                                        self.rowInfo[i].$error.show();
+                                        self.rowInfo[i].$feedback.removeClass();
+                                    }
+                                    errorDetectedHere = true;
+                                    errorMessages.push("data object names cannot be a number, in field "+self.spec.ui_name);
+                                } else if (!/^[a-z0-9|\.|\||_\-]*$/i.test(pVal)) {
+                                    if (self.rowInfo[i]) {
+                                        self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
+                                        self.rowInfo[i].$error.html("object names can only include symbols: _ - . |");
+                                        self.rowInfo[i].$error.show();
+                                        self.rowInfo[i].$feedback.removeClass();
+                                    }
+                                    errorDetectedHere = true;
+                                    errorMessages.push("object names can only include symbols: '_','-','.','|', in field "+self.spec.ui_name);
                                 }
                             }
                         }
@@ -568,6 +599,16 @@
          * in the method spec.
          */
         getParameterValue: function() {
+            // if this is an output, and there's only one row, and it's optional,
+            // but it's not filled out, then we need a random name.
+            if (this.spec.text_options && 
+                this.spec.text_options.is_output_name === 1 && 
+                this.rowInfo.length === 1 &&
+                this.rowInfo[0].$input.val().length === 0 &&
+                this.spec.optional === 1) {
+//                this.setParameterValue(this.generateRandomOutputString());
+            }
+
             if (this.rowInfo.length===1) {
                 return this.rowInfo[0].$input.val();
             }
@@ -578,14 +619,25 @@
             return value;
         },
         
-        
-        
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
         getTimeStampStr: function (objInfoTimeStamp) {
             var date = new Date(objInfoTimeStamp);
             var seconds = Math.floor((new Date() - date) / 1000);
-            var interval = Math.floor(seconds / 31536000);
             
+            // f-ing safari, need to add extra ':' delimiter to parse the timestamp
+            if (isNaN(seconds)) {
+                var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
+                var newTimestamp = tokens[0] + '+'+tokens[0].substr(0,2) + ":" + tokens[1].substr(2,2);
+                date = new Date(newTimestamp);
+                seconds = Math.floor((new Date() - date) / 1000);
+                if (isNaN(seconds)) {
+                    // just in case that didn't work either, then parse without the timezone offset, but
+                    // then just show the day and forget the fancy stuff...
+                    date = new Date(tokens[0]);
+                    return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                }
+            }
+            var interval = Math.floor(seconds / 31536000);
             if (interval > 1) {
                 return self.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
             }
@@ -614,6 +666,27 @@
         
         monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"],
         
+        // make a randomized string, assuming it's for an output.
+        generateRandomOutputString: function() {
+            // default prefix is just 'output'
+            var prefix = "output";
+
+            // if we know something about what workspace type it should be, take the last part
+            // of the type (past the last '.') and make it lowercase
+            // e.g. 'KBaseGenomes.Genome' becomes 'genome'
+            if (this.spec.text_options.valid_ws_types && this.spec.text_options.valid_ws_types.length > 0) {
+                prefix = this.spec.text_options.valid_ws_types[0];
+                prefix = prefix.substring(prefix.lastIndexOf(".")+1).toLowerCase();
+            }
+
+            // add eight random letters to the end, with an underscore - Roman style!
+            var strArr = [];
+            for (var i=0; i<8; i++) {
+                strArr.push(String.fromCharCode(65 + Math.floor(Math.random() * 26)));
+            }
+            return prefix + "_" + strArr.join('');
+        },
+
         genUUID: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);

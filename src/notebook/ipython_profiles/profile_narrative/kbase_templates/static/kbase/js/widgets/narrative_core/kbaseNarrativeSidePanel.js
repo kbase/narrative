@@ -122,6 +122,7 @@
         },
 
         initOverlay: function() {
+            var self = this;
             var $overlayHeader = $('<div>')
                                  .addClass('kb-side-overlay-header')
                                  .append('Header!')
@@ -143,6 +144,7 @@
                             .append(this.$overlayBody)
                             .append(this.$overlayFooter);
 
+
             $('body').append(this.$overlay);
             this.$overlay.hide();
 
@@ -152,6 +154,13 @@
             $('body').append(this.$narrativeDimmer);
             this.$narrativeDimmer.hide();
             this.updateOverlayPosition();
+
+            // hide panel when clicking outside
+            this.$narrativeDimmer.unbind('click')
+            this.$narrativeDimmer.click(function() {
+                self.$overlay.hide();
+                $(this).hide();
+            });
 
             // putting this here for now, just for testing
             this.dataImporter();
@@ -330,12 +339,8 @@
                 var p;
                 if (view == 'mine') p = getMyWS();
                 else if (view == 'shared') p = getSharedWS();
-                //else if (view == 'public') p = getSharedWS();
-
 
                 return $.when(p).done(function(workspaces) {
-                    // update workspace dropdown model
-
                     if (view == 'mine') prom = getMyData(workspaces);
                     else if (view == 'shared') prom = getSharedData(workspaces);
                     $.when(prom).done(function(filterOptions) {

@@ -314,7 +314,7 @@
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
             var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
-            footer.append(btn);
+            minePanel.append(btn);
 
             body.append(footer);
             updateView('mine');

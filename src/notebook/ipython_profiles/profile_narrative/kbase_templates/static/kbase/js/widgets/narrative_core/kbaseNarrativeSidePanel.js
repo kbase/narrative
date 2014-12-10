@@ -6,7 +6,7 @@
             loadingImage: "static/kbase/images/ajax-loader.gif",
             autorender: true,
             workspaceURL: "https://kbase.us/services/ws", //used for data importer
-            landingPageURL: "/functional-site/#/", // used for data importer            
+            landingPageURL: "/functional-site/#/", // used for data importer
         },
         $dataWidget: null,
         $methodsWidget: null,
@@ -25,7 +25,7 @@
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.workspaceURL = window.kbconfig.urls.workspace;
             }
-            
+
             var analysisWidgets = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeDataPanel',
@@ -235,7 +235,7 @@
 
         /**
          * Renders the data importer panel
-         * I'm throwing this here because I have no idea how to 
+         * I'm throwing this here because I have no idea how to
          * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
         dataImporter: function() {
@@ -267,6 +267,7 @@
                 sharedPanel = $('<div class="kb-import-panel">'),
                 publicPanel = $('<div class="kb-import-panel">'),
                 importPanel = $('<div class="kb-import-panel">');
+                galleryPanel = $('<div class="kb-import-panel">');
 
             // content wrapper
             var content = $('<div class="kb-import-content">');
@@ -277,18 +278,20 @@
                     {tabName: 'Shared', content: sharedPanel},
                     {tabName: 'Public', content: publicPanel},
                     {tabName: 'Import', content: importPanel},
+                    {tabName: 'Gallery', content: galleryPanel},
                 ]);
 
             sharedPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             publicPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             importPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
+            galleryPanel.kbaseMethodGallery({sidePanel : this});
 
             body.addClass('kb-side-panel');
             body.append($tabs.header).append($tabs.body);
 
             // It is silly to invoke a new object for each widget
             var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
-            var ws = new Workspace(this.options.workspaceURL, auth);            
+            var ws = new Workspace(this.options.workspaceURL, auth);
 
 
             // get possible types (not used)
@@ -305,11 +308,11 @@
                 }
                 console.log('type_names', types)
             })*/
-            
+
 
             // add footer status container and button
             var importStatus = $('<div class="pull-left kb-import-status">');
-            footer.append(importStatus)            
+            footer.append(importStatus)
             var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
             footer.append(btn);
 
@@ -329,7 +332,7 @@
 
                 var p = ws.list_objects({ids: ws_ids});
                 return $.when(p).then(function(d) {
-                    content.rmLoading();                    
+                    content.rmLoading();
 
                     myData = d;
                     renderAllData();
@@ -337,7 +340,7 @@
                     // update view
                     minePanel.append(content);
                     events()
-                    
+
                 })
 
             }
@@ -348,7 +351,7 @@
 
                 return getMyWS().done(function(workspaces) {
                     // update workspace dropdown model
-                    workspaces = workspaces; 
+                    workspaces = workspaces;
 
                     getMyData(workspaces).done(function(filterOptions) {
                         // possible filters via input
@@ -386,7 +389,7 @@
                         typeInput.change(function() {
                             type = $(this).children('option:selected').data('type');
                             renderFilteredData(type, ws, query);
-                            events();                            
+                            events();
                         })
 
 
@@ -397,12 +400,12 @@
                         // event for filter (search)
                         filterInput.keyup(function(e){
                             renderFilteredData(type, ws, this.value);
-                            events();                            
+                            events();
                         });
 
                         // add search, type, ws filter to dom
                         var row = $('<div class="row">').append(searchFilter, typeFilter, wsFilter);
-                        minePanel.prepend(row);     
+                        minePanel.prepend(row);
                     });
 
 
@@ -455,7 +458,7 @@
                     }
                     else {
                         for (var i=0; i<selected.length; i++) {
-                            if (selected[0].ref == ref) 
+                            if (selected[0].ref == ref)
                                 selected.splice(i, 1);
                         }
                     }
@@ -480,7 +483,7 @@
                         // update sidebar data list
                         self.trigger('updateDataList.Narrative');
                     });
-                });                
+                });
             }
 
             function renderFilteredData(typeFilter, wsFilter, queryFilter) {
@@ -500,13 +503,13 @@
                                 module: mod_type.split('.')[0],
                                 wsID: obj[6],
                                 ws: obj[7],
-                                relativeTime: self.prettyTimestamp(obj[3]) }   
+                                relativeTime: self.prettyTimestamp(obj[3]) }
 
 
                     // filter conditions
-                    if (queryFilter && item.name.toLowerCase().indexOf(queryFilter.toLowerCase()) == -1) 
+                    if (queryFilter && item.name.toLowerCase().indexOf(queryFilter.toLowerCase()) == -1)
                         continue;
-                    if (typeFilter && typeFilter.split('.')[1] != item.kind) 
+                    if (typeFilter && typeFilter.split('.')[1] != item.kind)
                         continue;
                     if (wsFilter && wsFilter != item.ws)
                         continue;
@@ -515,7 +518,7 @@
 
                     // update DOM
                     content.append(item);
-                }               
+                }
             }
 
             function renderAllData() {
@@ -533,7 +536,7 @@
                                 module: mod_type.split('.')[0],
                                 wsID: obj[6],
                                 ws: obj[7],
-                                relativeTime: self.prettyTimestamp(obj[3]) }                             
+                                relativeTime: self.prettyTimestamp(obj[3]) }
 
                     // update model for types dropdown
                     if (types.indexOf(mod_type) == -1) types.push(mod_type);
@@ -541,14 +544,14 @@
                     var item = rowTemplate(item);
 
                     // update DOM
-                    content.append(item);                   
+                    content.append(item);
                 }
             }
 
             function rowTemplate(obj) {
                 var item = $('<div class="kb-import-item">')
                                 .data('ref', obj.wsID+'.'+obj.id)
-                                .data('obj-name', obj.name);                                    
+                                .data('obj-name', obj.name);
                 item.append('<input type="checkbox" value="" class="pull-left kb-import-checkbox">');
                 item.append('<a class="h4" href="'+
                                 objURL(obj.module, obj.kind, obj.ws, obj.name)+
@@ -579,16 +582,16 @@
                 var mapping = window.kbconfig.landing_page_map;
                 if (mapping[module])
                     return self.options.landingPageURL+mapping[module][type]+'/'+ws+'/'+name;
-                else 
+                else
                     console.error('could not find a landing page mapping for', module);
             }
 
             function wsURL(ws) {
                 return self.options.landingPageURL+'ws/'+ws;
-            }            
+            }
 
 
-        }, 
+        },
 
         prettyTimestamp: function(timestamp) {
             var format = function(x) {

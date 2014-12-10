@@ -1135,9 +1135,9 @@
                         }
                     } catch(err) {
                         // just ignore it and move on.
-                        this.dbg('Unable to load cell state! Ignoring the following cell:')
-                        this.dbg(cell);
-                        this.dbg(err);
+                        // this.dbg('Unable to load cell state! Ignoring the following cell:')
+                        // this.dbg(cell);
+                        // this.dbg(err);
                     }
                 }
             }
@@ -1598,6 +1598,7 @@
                 id : jobId,
                 source : cellId,
                 target : '',
+                timestamp : new Date().toISOString()
             };
 
             if (this.isAppCell(sourceCell))

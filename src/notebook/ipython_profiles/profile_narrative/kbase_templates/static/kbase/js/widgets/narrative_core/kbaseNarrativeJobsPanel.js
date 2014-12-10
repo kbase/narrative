@@ -75,11 +75,12 @@
             this.$jobsAccordion = $('<div>');
             // Make a function panel for everything to sit inside.
             this.$jobsPanel = $('<div>')
-                              .addClass('kb-function-body')
-                              .append(this.$jobsAccordion);
-            
-            this.$jobsAccordion.kbaseAccordion({'elements' : [{ 'title' : 'Apps', 'body' : this.$appsList },
-                                                              { 'title' : 'Methods', 'body' : this.$methodsList }]});
+                              .addClass('kb-function-body');
+//                              .append(this.$jobsAccordion);
+            // this.$jobsAccordion.append(this.$appsList)
+            //                    .append(this.$methodsList);
+            // this.$jobsAccordion.kbaseAccordion({'elements' : [{ 'title' : 'Apps', 'body' : this.$appsList },
+            //                                                   { 'title' : 'Methods', 'body' : this.$methodsList }]});
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
@@ -144,6 +145,7 @@
             // Check to make sure the Narrative has been instantiated to begin with.
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel || !IPython.notebook.metadata)
                 return;
+
             // If the job ids hasn't been inited yet, or it was done in the old way (as an array) then do it.
             if (!IPython.notebook.metadata.job_ids || 
                 Object.prototype.toString.call(IPython.notebook.metadata.job_ids) === '[object Array]') {
@@ -308,40 +310,70 @@
 
             var storedIds = IPython.notebook.metadata.job_ids;
 
+            var $jobsList = $('<div>').addClass('kb-jobs-items');
+
             // do methods.
-            var $methodsTable = $('<div class="kb-jobs-items">');
-            if (jobs.methods.length === 0 && storedIds.methods.length === 0) {
-                $methodsTable.append($('<div class="kb-data-loading">').append('No running methods!'));
+//            var $methodsTable = $('<div class="kb-jobs-items">');
+            if (jobs.methods.length === 0 && 
+                storedIds.methods.length === 0 &&
+                jobs.apps.length === 0 &&
+                storedIds.apps.length === 0) {
+                $jobsList.append($('<div class="kb-data-loading">').append('No running jobs!'));
+//                $methodsTable.append($('<div class="kb-data-loading">').append('No running methods!'));
             }
+
             else {
                 for (var i=0; i<jobs.methods.length; i++) {
-                    $methodsTable.append(this.renderMethod(jobs.methods[i], jobInfo[jobs.methods[i][0]]));
-                }                
-            }
-            this.$methodsList.empty().append($methodsTable);
+                    $jobsList.append(this.renderMethod(jobs.methods[i], jobInfo[jobs.methods[i][0]]));
+                }
 
-            // do apps.
-            var $appsTable = $('<div class="kb-jobs-items">');
-            if (jobs.apps.length === 0 && storedIds.apps.length === 0) {
-                $appsTable.append($('<div class="kb-data-loading">').append('No running apps!'));
-            }
-            else {
                 var renderedApps = {};
                 for (var i=0; i<jobs.apps.length; i++) {
                     var app = jobs.apps[i];
                     var appInfo = jobInfo[app.job_id];
-                    $appsTable.append(this.renderApp(app, appInfo));
+                    $jobsList.append(this.renderApp(app, appInfo));
                     this.updateAppCell(app, appInfo);
                     renderedApps[app.job_id] = true;
                 }
                 for (var i=0; i<storedIds.apps.length; i++) {
                     var appTest = storedIds.apps[i];
                     if (!renderedApps[appTest.id]) {
-                        $appsTable.append(this.renderAppError(appTest));
+                        $jobsList.append(this.renderAppError(appTest));
                     }
                 }
             }
-            this.$appsList.empty().append($appsTable);
+            this.$jobsPanel.empty().append($jobsList);
+
+
+            // else {
+            //     for (var i=0; i<jobs.methods.length; i++) {
+            //         $methodsTable.append(this.renderMethod(jobs.methods[i], jobInfo[jobs.methods[i][0]]));
+            //     }                
+            // }
+            // this.$methodsList.empty().append($methodsTable);
+
+            // // do apps.
+            // var $appsTable = $('<div class="kb-jobs-items">');
+            // if (jobs.apps.length === 0 && storedIds.apps.length === 0) {
+            //     $appsTable.append($('<div class="kb-data-loading">').append('No running apps!'));
+            // }
+            // else {
+            //     var renderedApps = {};
+            //     for (var i=0; i<jobs.apps.length; i++) {
+            //         var app = jobs.apps[i];
+            //         var appInfo = jobInfo[app.job_id];
+            //         $appsTable.append(this.renderApp(app, appInfo));
+            //         this.updateAppCell(app, appInfo);
+            //         renderedApps[app.job_id] = true;
+            //     }
+            //     for (var i=0; i<storedIds.apps.length; i++) {
+            //         var appTest = storedIds.apps[i];
+            //         if (!renderedApps[appTest.id]) {
+            //             $appsTable.append(this.renderAppError(appTest));
+            //         }
+            //     }
+            // }
+            // this.$appsList.empty().append($appsTable);
 
         },
 
@@ -397,13 +429,17 @@
             if (!appJob || !appInfo)
                 return $app;
 
-            $app.append($('<div class="kb-jobs-title">').append(appInfo.info.appSpec.info.name).append(this.makeAppDetailButton(appJob, appInfo)));
-            $app.append($('<div class="kb-jobs-descr">').append(appJob.job_id));
+            $app.append($('<div class="kb-jobs-title">')
+                        .append(appInfo.info.appSpec.info.name)
+                        .append(this.makeAppDetailButton(appJob, appInfo)));
+            // $app.append($('<div class="kb-jobs-descr">')
+            //             .append(appJob.job_id));
 
             var $itemTable = $('<table class="kb-jobs-info-table">');
-            var $statusRow = $('<tr>').append($('<th>').append('Status:'));
+            var $statusRow = $('<tr>')
+                             .append($('<th>')
+                                     .append('Status:'));
 
-//            console.log(appJob);
             if (appJob.error) {
                 // error out.
                 return $app;

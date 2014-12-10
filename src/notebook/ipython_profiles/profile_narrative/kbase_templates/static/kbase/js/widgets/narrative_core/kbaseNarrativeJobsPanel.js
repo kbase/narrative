@@ -75,11 +75,12 @@
             this.$jobsAccordion = $('<div>');
             // Make a function panel for everything to sit inside.
             this.$jobsPanel = $('<div>')
-                              .addClass('kb-function-body')
-                              .append(this.$jobsAccordion);
-            
-            this.$jobsAccordion.kbaseAccordion({'elements' : [{ 'title' : 'Apps', 'body' : this.$appsList },
-                                                              { 'title' : 'Methods', 'body' : this.$methodsList }]});
+                              .addClass('kb-function-body');
+//                              .append(this.$jobsAccordion);
+            // this.$jobsAccordion.append(this.$appsList)
+            //                    .append(this.$methodsList);
+            // this.$jobsAccordion.kbaseAccordion({'elements' : [{ 'title' : 'Apps', 'body' : this.$appsList },
+            //                                                   { 'title' : 'Methods', 'body' : this.$methodsList }]});
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
@@ -144,6 +145,7 @@
             // Check to make sure the Narrative has been instantiated to begin with.
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel || !IPython.notebook.metadata)
                 return;
+
             // If the job ids hasn't been inited yet, or it was done in the old way (as an array) then do it.
             if (!IPython.notebook.metadata.job_ids || 
                 Object.prototype.toString.call(IPython.notebook.metadata.job_ids) === '[object Array]') {
@@ -161,6 +163,7 @@
             var type = isApp ? 'apps' : 'methods';
             IPython.notebook.metadata.job_ids[type].push(jobInfo);
             this.refresh();
+            IPython.notebook.save_checkpoint();
         },
 
         /**
@@ -308,41 +311,36 @@
 
             var storedIds = IPython.notebook.metadata.job_ids;
 
-            // do methods.
-            var $methodsTable = $('<div class="kb-jobs-items">');
-            if (jobs.methods.length === 0 && storedIds.methods.length === 0) {
-                $methodsTable.append($('<div class="kb-data-loading">').append('No running methods!'));
-            }
-            else {
-                for (var i=0; i<jobs.methods.length; i++) {
-                    $methodsTable.append(this.renderMethod(jobs.methods[i], jobInfo[jobs.methods[i][0]]));
-                }                
-            }
-            this.$methodsList.empty().append($methodsTable);
+            var $jobsList = $('<div>').addClass('kb-jobs-items');
 
-            // do apps.
-            var $appsTable = $('<div class="kb-jobs-items">');
-            if (jobs.apps.length === 0 && storedIds.apps.length === 0) {
-                $appsTable.append($('<div class="kb-data-loading">').append('No running apps!'));
+            if (jobs.methods.length === 0 && storedIds.methods.length === 0 &&
+                jobs.apps.length === 0 && storedIds.apps.length === 0) {
+                $jobsList.append($('<div class="kb-data-loading">').append('No running jobs!'));
             }
+
             else {
+                // do all methods
+                for (var i=0; i<jobs.methods.length; i++) {
+                    $jobsList.append(this.renderMethod(jobs.methods[i], jobInfo[jobs.methods[i][0]]));
+                }
+
+                // do all apps
                 var renderedApps = {};
                 for (var i=0; i<jobs.apps.length; i++) {
                     var app = jobs.apps[i];
                     var appInfo = jobInfo[app.job_id];
-                    $appsTable.append(this.renderApp(app, appInfo));
+                    $jobsList.append(this.renderApp(app, appInfo));
                     this.updateAppCell(app, appInfo);
                     renderedApps[app.job_id] = true;
                 }
                 for (var i=0; i<storedIds.apps.length; i++) {
                     var appTest = storedIds.apps[i];
                     if (!renderedApps[appTest.id]) {
-                        $appsTable.append(this.renderAppError(appTest));
+                        $jobsList.append(this.renderAppError(appTest));
                     }
                 }
             }
-            this.$appsList.empty().append($appsTable);
-
+            this.$jobsPanel.empty().append($jobsList);
         },
 
         /**
@@ -393,17 +391,24 @@
             };
 
             var $app = $('<div>')
-                       .addClass('kb-jobs-item');
+                       .addClass('kb-data-list-obj-row');
             if (!appJob || !appInfo)
                 return $app;
 
-            $app.append($('<div class="kb-jobs-title">').append(appInfo.info.appSpec.info.name).append(this.makeAppDetailButton(appJob, appInfo)));
-            $app.append($('<div class="kb-jobs-descr">').append(appJob.job_id));
+            $app.append($('<div class="kb-data-list-name">')
+                        .append(appInfo.info.appSpec.info.name)
+                        .append(this.makeScrollToButton(appJob, appInfo)));
+            // $app.append($('<div class="kb-jobs-descr">')
+            //             .append(appJob.job_id));
 
             var $itemTable = $('<table class="kb-jobs-info-table">');
-            var $statusRow = $('<tr>').append($('<th>').append('Status:'));
+            var $statusRow = $('<tr>')
+                             .append($('<th>')
+                                     .append('Status:'));
+            var $startedRow = $('<tr>')
+                              .append($('<th>')
+                                      .append('Started:'));
 
-//            console.log(appJob);
             if (appJob.error) {
                 // error out.
                 return $app;
@@ -421,6 +426,10 @@
             $itemTable.append($statusRow);
             if (task !== null) {
                 $itemTable.append($('<tr><th>Task:</th><td>' + task + '</td></tr>'));
+            }
+            if (appInfo.app.timestamp) {
+                var ts = this.makePrettyTimestamp(appInfo.app.timestamp);
+                $itemTable.append($('<tr><th>Started:</th><td>' + ts + '</td></tr>'));
             }
             $app.append($itemTable);
             return $app;
@@ -461,14 +470,17 @@
                    }, this));
         },
 
-        makeAppDetailButton: function(app, appInfo) {
-            return $('<span>')
-                   .addClass('glyphicon glyphicon-info-sign kb-function-help')
+        makeScrollToButton: function(app, appInfo) {
+            return $('<span data-toggle="tooltip" title="Scroll To App" data-placement="left">')
+                   .addClass('btn btn-default btn-xs kb-data-list-more-btn pull-right fa fa-location-arrow')
                    .click(function(e) {
-                       console.log(app);
-                       console.log(appInfo);
-
-                   });
+                       var sourceId = appInfo.app.source;
+                       if (sourceId) {
+                           $('html, body').animate({ scrollTop: $('#' + sourceId).offset().top-85 }, 1000);
+                           $('#' + sourceId).click();
+                       }
+                   })
+                   .tooltip();
         },
 
         makeJobDetailButton: function(job, jobInfo) {
@@ -564,8 +576,6 @@
                 if (progressType !== 'none') {
                     status +=  '<div class="pull-right" style="width: 75%">' + this.makeProgressBarElement(job, false) + '</div></div>';
                 }
-
-                
             }
             return status + '</div>';
         },
@@ -589,7 +599,7 @@
             var timediff = this.calcTimeDifference(null, d);
             var timeMillis = d ? d.getTime() : "";
 
-            var timeHtml = '<div href="#" data-toggle="tooltip" title="' + parsedTime + '" millis="' + timeMillis + '" class="kbujs-timestamp">' + timediff + '</div>';
+            var timeHtml = '<div href="#" data-toggle="tooltip" title="' + parsedTime + '" millis="' + timeMillis + '" >' + timediff + '</div>';
             return timeHtml;
         },
 
@@ -818,21 +828,28 @@
          * @returns {Object} - a Date object or null if the timestamp's invalid.
          */
         parseDate: function(time) {
-            var t = time.split(/[^0-9]/);
-            while (t.length < 7) {
-                t.append(0);
-            }
-            var d = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5], t[6]);
-            if (Object.prototype.toString.call(d) === '[object Date]') {
-                if (isNaN(d.getTime())) {
-                    return null;
+            var d = new Date(time);
+            // if that doesn't work, then split it apart.
+            if (Object.prototype.toString.call(d) !== '[object Date]') {
+                var t = time.split(/[^0-9]/);
+                while (t.length < 7) {
+                    t.append(0);
                 }
-                else {
-                    d.setFullYear(t[0]);
-                    return d;
+                d = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5], t[6]);
+                if (Object.prototype.toString.call(d) === '[object Date]') {
+                    if (isNaN(d.getTime())) {
+                        return null;
+                    }
+                    else {
+                        d.setFullYear(t[0]);
+                        return d;
+                    }
                 }
+                return null;
             }
-            return null;
+            else {
+                return d;
+            }
         },
     });
 

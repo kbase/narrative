@@ -163,6 +163,7 @@
             var type = isApp ? 'apps' : 'methods';
             IPython.notebook.metadata.job_ids[type].push(jobInfo);
             this.refresh();
+            IPython.notebook.save_checkpoint();
         },
 
         /**
@@ -312,21 +313,18 @@
 
             var $jobsList = $('<div>').addClass('kb-jobs-items');
 
-            // do methods.
-//            var $methodsTable = $('<div class="kb-jobs-items">');
-            if (jobs.methods.length === 0 && 
-                storedIds.methods.length === 0 &&
-                jobs.apps.length === 0 &&
-                storedIds.apps.length === 0) {
+            if (jobs.methods.length === 0 && storedIds.methods.length === 0 &&
+                jobs.apps.length === 0 && storedIds.apps.length === 0) {
                 $jobsList.append($('<div class="kb-data-loading">').append('No running jobs!'));
-//                $methodsTable.append($('<div class="kb-data-loading">').append('No running methods!'));
             }
 
             else {
+                // do all methods
                 for (var i=0; i<jobs.methods.length; i++) {
                     $jobsList.append(this.renderMethod(jobs.methods[i], jobInfo[jobs.methods[i][0]]));
                 }
 
+                // do all apps
                 var renderedApps = {};
                 for (var i=0; i<jobs.apps.length; i++) {
                     var app = jobs.apps[i];
@@ -343,38 +341,6 @@
                 }
             }
             this.$jobsPanel.empty().append($jobsList);
-
-
-            // else {
-            //     for (var i=0; i<jobs.methods.length; i++) {
-            //         $methodsTable.append(this.renderMethod(jobs.methods[i], jobInfo[jobs.methods[i][0]]));
-            //     }                
-            // }
-            // this.$methodsList.empty().append($methodsTable);
-
-            // // do apps.
-            // var $appsTable = $('<div class="kb-jobs-items">');
-            // if (jobs.apps.length === 0 && storedIds.apps.length === 0) {
-            //     $appsTable.append($('<div class="kb-data-loading">').append('No running apps!'));
-            // }
-            // else {
-            //     var renderedApps = {};
-            //     for (var i=0; i<jobs.apps.length; i++) {
-            //         var app = jobs.apps[i];
-            //         var appInfo = jobInfo[app.job_id];
-            //         $appsTable.append(this.renderApp(app, appInfo));
-            //         this.updateAppCell(app, appInfo);
-            //         renderedApps[app.job_id] = true;
-            //     }
-            //     for (var i=0; i<storedIds.apps.length; i++) {
-            //         var appTest = storedIds.apps[i];
-            //         if (!renderedApps[appTest.id]) {
-            //             $appsTable.append(this.renderAppError(appTest));
-            //         }
-            //     }
-            // }
-            // this.$appsList.empty().append($appsTable);
-
         },
 
         /**
@@ -425,13 +391,13 @@
             };
 
             var $app = $('<div>')
-                       .addClass('kb-jobs-item');
+                       .addClass('kb-data-list-obj-row');
             if (!appJob || !appInfo)
                 return $app;
 
-            $app.append($('<div class="kb-jobs-title">')
+            $app.append($('<div class="kb-data-list-name">')
                         .append(appInfo.info.appSpec.info.name)
-                        .append(this.makeAppDetailButton(appJob, appInfo)));
+                        .append(this.makeScrollToButton(appJob, appInfo)));
             // $app.append($('<div class="kb-jobs-descr">')
             //             .append(appJob.job_id));
 
@@ -439,6 +405,9 @@
             var $statusRow = $('<tr>')
                              .append($('<th>')
                                      .append('Status:'));
+            var $startedRow = $('<tr>')
+                              .append($('<th>')
+                                      .append('Started:'));
 
             if (appJob.error) {
                 // error out.
@@ -457,6 +426,10 @@
             $itemTable.append($statusRow);
             if (task !== null) {
                 $itemTable.append($('<tr><th>Task:</th><td>' + task + '</td></tr>'));
+            }
+            if (appInfo.app.timestamp) {
+                var ts = this.makePrettyTimestamp(appInfo.app.timestamp);
+                $itemTable.append($('<tr><th>Started:</th><td>' + ts + '</td></tr>'));
             }
             $app.append($itemTable);
             return $app;
@@ -497,14 +470,17 @@
                    }, this));
         },
 
-        makeAppDetailButton: function(app, appInfo) {
-            return $('<span>')
-                   .addClass('glyphicon glyphicon-info-sign kb-function-help')
+        makeScrollToButton: function(app, appInfo) {
+            return $('<span data-toggle="tooltip" title="Scroll To App" data-placement="left">')
+                   .addClass('btn btn-default btn-xs kb-data-list-more-btn pull-right fa fa-location-arrow')
                    .click(function(e) {
-                       console.log(app);
-                       console.log(appInfo);
-
-                   });
+                       var sourceId = appInfo.app.source;
+                       if (sourceId) {
+                           $('html, body').animate({ scrollTop: $('#' + sourceId).offset().top-85 }, 1000);
+                           $('#' + sourceId).click();
+                       }
+                   })
+                   .tooltip();
         },
 
         makeJobDetailButton: function(job, jobInfo) {
@@ -600,8 +576,6 @@
                 if (progressType !== 'none') {
                     status +=  '<div class="pull-right" style="width: 75%">' + this.makeProgressBarElement(job, false) + '</div></div>';
                 }
-
-                
             }
             return status + '</div>';
         },
@@ -625,7 +599,7 @@
             var timediff = this.calcTimeDifference(null, d);
             var timeMillis = d ? d.getTime() : "";
 
-            var timeHtml = '<div href="#" data-toggle="tooltip" title="' + parsedTime + '" millis="' + timeMillis + '" class="kbujs-timestamp">' + timediff + '</div>';
+            var timeHtml = '<div href="#" data-toggle="tooltip" title="' + parsedTime + '" millis="' + timeMillis + '" >' + timediff + '</div>';
             return timeHtml;
         },
 
@@ -854,21 +828,28 @@
          * @returns {Object} - a Date object or null if the timestamp's invalid.
          */
         parseDate: function(time) {
-            var t = time.split(/[^0-9]/);
-            while (t.length < 7) {
-                t.append(0);
-            }
-            var d = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5], t[6]);
-            if (Object.prototype.toString.call(d) === '[object Date]') {
-                if (isNaN(d.getTime())) {
-                    return null;
+            var d = new Date(time);
+            // if that doesn't work, then split it apart.
+            if (Object.prototype.toString.call(d) !== '[object Date]') {
+                var t = time.split(/[^0-9]/);
+                while (t.length < 7) {
+                    t.append(0);
                 }
-                else {
-                    d.setFullYear(t[0]);
-                    return d;
+                d = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5], t[6]);
+                if (Object.prototype.toString.call(d) === '[object Date]') {
+                    if (isNaN(d.getTime())) {
+                        return null;
+                    }
+                    else {
+                        d.setFullYear(t[0]);
+                        return d;
+                    }
                 }
+                return null;
             }
-            return null;
+            else {
+                return d;
+            }
         },
     });
 

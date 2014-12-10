@@ -667,24 +667,54 @@
         monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"],
         
         // make a randomized string, assuming it's for an output.
-        generateRandomOutputString: function() {
-            // default prefix is just 'output'
-            var prefix = "output";
-
-            // if we know something about what workspace type it should be, take the last part
-            // of the type (past the last '.') and make it lowercase
-            // e.g. 'KBaseGenomes.Genome' becomes 'genome'
-            if (this.spec.text_options.valid_ws_types && this.spec.text_options.valid_ws_types.length > 0) {
-                prefix = this.spec.text_options.valid_ws_types[0];
-                prefix = prefix.substring(prefix.lastIndexOf(".")+1).toLowerCase();
-            }
-
-            // add eight random letters to the end, with an underscore - Roman style!
+        generateRandomOutputString: function(generProps) {
             var strArr = [];
-            for (var i=0; i<8; i++) {
+            var symbols = 8
+            if (generProps['symbols'])
+                symbols = generProps['symbols'];
+            for (var i=0; i<symbols; i++)
                 strArr.push(String.fromCharCode(65 + Math.floor(Math.random() * 26)));
+            var ret = strArr.join('');
+            if (generProps['prefix'])
+                ret = generProps['prefix'] + ret;
+            if (generProps['suffix'])
+                ret = ret + str(generProps['suffix']);
+            return ret;
+        },
+
+        prepareValueBeforeRun: function(methodSpec) {
+            if (this.spec.text_options && 
+                    this.spec.text_options.is_output_name === 1 && 
+                    this.rowInfo.length === 1 &&
+                    this.rowInfo[0].$input.val().length === 0 &&
+                    this.spec.optional === 1) {
+            	//var e = new Error('dummy');
+            	//var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '')
+            	//	.replace(/^\s+at\s+/gm, '')
+            	//	.replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
+            	//	.split('\n');
+            	//console.log(stack);
+            	var paramId = this.spec.id;
+                var inputMapping = null;
+                var isScript = false;
+                var inputMapping = methodSpec['behavior']['kb_service_input_mapping'];
+                if (!inputMapping) {
+                    inputMapping = methodSpec['behavior']['script_input_mapping'];
+                    isScript = true;
+                }
+                var generatedValueMapping = null;
+                for (var i in inputMapping) {
+                	mapping = inputMapping[i];
+                    var aParamId = mapping['input_parameter'];
+                    if (aParamId && aParamId === paramId && mapping['generated_value']) {
+                    	generatedValueMapping = mapping['generated_value'];
+                    	break;
+                    }
+                }
+                if (generatedValueMapping) {
+                	this.setParameterValue(this.generateRandomOutputString(generatedValueMapping));
+                }
             }
-            return prefix + "_" + strArr.join('');
         },
 
         genUUID: function() {

@@ -337,6 +337,17 @@
             }
         },
         
+        /*
+         * This function is invoked every time we run app or method. This is the difference between it
+         * and getAllParameterValues/getParameterValue which could be invoked many times before running 
+         * (e.g. when widget is rendered). 
+         */
+        prepareDataBeforeRun: function() {
+            if (this.parameters) {
+                for (var i = 0; i < this.parameters.length; i++)
+                    this.parameters[i].widget.prepareValueBeforeRun(this.options.method);
+            }
+        },
         
         genUUID: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {

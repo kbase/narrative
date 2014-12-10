@@ -110,6 +110,15 @@
         },
         unlockInputs: function() {
             
+        },
+        
+        /*
+         * This function is invoked every time we run app or method. This is the difference between it
+         * and getAllParameterValues/getParameterValue which could be invoked many times before running 
+         * (e.g. when widget is rendered). 
+         */
+        prepareDataBeforeRun: function() {
+        	
         }
         
     });

@@ -332,9 +332,8 @@ p#site-title {
 }
 
 .kb-side-overlay-container {
-    /*width : 50vw;
-    height: 80vh;*/
-    width: 525px;
+    min-width: 550px;
+    max-width: 800px;
     height: 620px;
     border : 1px solid #ababab;
     z-index : 10000;

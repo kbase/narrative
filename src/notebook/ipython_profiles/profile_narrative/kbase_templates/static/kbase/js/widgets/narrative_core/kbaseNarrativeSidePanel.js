@@ -287,7 +287,8 @@
 
             //sharedPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             publicPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
-            importPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
+            importPanel.kbaseNarrativeSideImportTab({});
+            //append('<div class="kb-import-content"><br>coming soon.</div>');
 
             body.addClass('kb-side-panel');
             body.append($tabs.header, $tabs.body);

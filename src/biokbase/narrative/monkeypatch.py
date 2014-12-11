@@ -10,7 +10,7 @@ https://mail.python.org/pipermail/python-dev/2008-January/076194.html
 sychan@lbl.gov
 
 """
-
+import logging
 import os
 import sys
 import urllib
@@ -71,6 +71,8 @@ def do_patching(c):
     all_cookies = (auth_cookie_name, backup_cookie)
 
     app_log = IPython.html.base.handlers.app_log  # alias
+    if os.environ.get('KBASE_DEBUG', False):
+        app_log.setLevel(logging.DEBUG)
 
     if c.NotebookApp.get('kbase_auth', False):
         app_log.debug("Monkeypatching IPython.html."
@@ -90,8 +92,10 @@ def do_patching(c):
             as a kbase_session attribute
             """
             sess = parse_cookie(cookie)
-            app_log.debug("user_id = " + sess.get('token', 'None'))
-            app_log.debug("token = " + sess.get('token', 'None'))
+            if app_log.isEnabledFor(logging.DEBUG):
+                app_log.debug("cookie_pusher: user_id={uid} token={tok}"
+                    .format(uid=sess.get('token', 'none'),
+                            tok=sess.get('token', 'none')))
             setattr(handler, 'kbase_session', sess)
             # also push the token into the environment hash so that
             # KBase python clients pick it up
@@ -107,8 +111,8 @@ def do_patching(c):
         def get(self, notebook_id):
             client_ip = self.request.remote_ip
             http_headers = self.request.headers
-            user_agent = http_headers.get('User-Agent', 'unknown')
-            app_log.warn("Http-Headers={}".format(list(self.request.headers.get_all())))
+            ua = http_headers.get('User-Agent', 'unknown')
+            app_log.info("Http-Headers={}".format(list(self.request.headers.get_all())))
             # save client ip in environ for later logging
             kbase_env.client_ip = client_ip
             app_log.debug("notebook_id = " + notebook_id)
@@ -122,11 +126,11 @@ def do_patching(c):
                 # Log the event
                 user = cookie_obj.get('user_id', '')
                 session = cookie_obj.get('kbase_sessionid', '')
-                log_event(g_log, 'open', {'narr': notebook_id,
-                                          'user': user,
-                                          'session_id': session,
-                                          'client_ip': client_ip,
-                                          'user_agent': user_agent})
+                kbase_env.narrative = notebook_id
+                kbase_env.session = session
+                kbase_env.client_ip = client_ip
+                log_event(g_log, 'open', {'user': user, 'user_agent': ua})
+            app_log.info("After get(): KB_NARRATIVE={}".format(os.environ.get('KB_NARRATIVE', 'none')))
             return old_get(self, notebook_id)
 
         app_log.debug("Monkeypatching IPython.html.services.notebooks.handlers.NotebookRootHandler.get() in process {}".format(os.getpid()))

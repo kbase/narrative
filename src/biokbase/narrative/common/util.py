@@ -5,7 +5,6 @@ __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 __date__ = '1/6/14'
 
 import json
-import logging
 import os
 import re
 import requests
@@ -14,67 +13,79 @@ import time
 from biokbase.workspace.client import Workspace as WS2
 from biokbase.workspace.client import ServerError, URLError
 
+def kbase_debug_mode():
+    return bool(os.environ.get('KBASE_DEBUG', None))
 
 class _KBaseEnv(object):
     """Single place to get/set KBase environment variables.
 
-    Usage:
-       # get value
-       token = KBaseEnv().auth_token
-       # set value
-       KBaseEnv().narrative = "hello"
-       # introspect var names
-       print(KBaseEnv.env_auth_token)
+    Also act as a dict for LogAdapter's "extra" arg.
+
+    Use global variable `kbase_env` instead of this class.
     """
+    # Environment variables.
+    # Each is associated with an attribute that is the
+    # same as the variable name without the 'env_' prefix.
     env_auth_token = "KB_AUTH_TOKEN"
-    env_narrative = "KB_NARRATIVE"
-    env_session = "KB_SESSION"
-    env_clientip = "KB_CLIENT_IP"
+    env_narrative  = "KB_NARRATIVE"
+    env_session    = "KB_SESSION"
+    env_client_ip  = "KB_CLIENT_IP"
+    env_user       = None
 
-    @staticmethod
-    def _getenv(name):
-        return os.getenv(name, "")
+    _defaults = {'auth_token': 'none',
+                 'narrative': 'none',
+                 'session': 'none',
+                 'client_ip': '0.0.0.0',
+                 'user': 'anonymous'}
 
-    @staticmethod
-    def _setenv(name, value):
-        if value:
-            os.environ[name] = value
-        elif name in os.environ:
-            del os.environ[name]
+    def __getattr__(self, name):
+        ename = "env_" + name
+        if ename in _KBaseEnv.__dict__:
+            if ename == 'env_user':
+                return self._user()
+            else:
+                return os.environ.get(getattr(self.__class__, ename),
+                                      self._defaults[name])
+        else:
+            raise KeyError("kbase_env:{}".format(name))
 
-    @property
-    def auth_token(self):
-        return self._getenv(self.env_auth_token)
+    def __setattr__(self, name, value):
+        ename = "env_" + name
+        if ename in _KBaseEnv.__dict__:
+            if ename != 'env_user':
+                os.environ[getattr(self.__class__, ename)] = value
 
-    @auth_token.setter
-    def auth_token(self, value):
-        self._setenv(self.env_auth_token, value)
+    # Dict emulation
 
-    @property
-    def narrative(self):
-        return self._getenv(self.env_narrative)
+    def __iter__(self):
+        return self.iterkeys()
 
-    @narrative.setter
-    def narrative(self, value):
-        self._setenv(self.env_narrative, value)
+    def __getitem__(self, name):
+        return getattr(self, name)
 
-    @property
-    def session(self):
-        return self._getenv(self.env_session)
+    def __contains__(self, name):
+        return name in self._defaults
 
-    @session.setter
-    def session(self, value):
-        self._setenv(self.env_session, value)
+    def keys(self):
+        return self._defaults.keys()
 
-    @property
-    def client_ip(self):
-        return self._getenv(self.env_clientip)
+    def iterkeys(self):
+        return self._defaults.iterkeys()
 
-    @client_ip.setter
-    def client_ip(self, value):
-        return self._setenv(self.env_clientip, value)
+    def __str__(self):
+        return ', '.join(['{}: {}'.format(k, self[k])
+                          for k in self.keys()])
 
-# Single instance
+    def _user(self):
+        token = self.auth_token
+        if not token:
+            return self._defaults['user']
+        m = re.search('un=([^|]+)', token)
+        return m.group(1) if m else self._defaults['user']
+
+
+# Get/set KBase environment variables by getting/setting
+# attributes of this object.
 kbase_env = _KBaseEnv()
 
 class AweTimeoutError(Exception):

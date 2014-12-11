@@ -23,50 +23,15 @@ from IPython.core.application import Application
 # Local
 from biokbase.narrative.common import kbtypes, kblogging
 from biokbase.narrative.common.log_common import EVENT_MSG_SEP
+from biokbase.narrative.common.url_config import URLS
+from biokbase.narrative.common import util
 from biokbase.narrative.common.kbjob_manager import KBjobManager
 
-from biokbase.narrative.common.url_config import URLS
-
-# Init logging.
-g_log = logging.getLogger(__name__)
+# Logging
+_log = logging.getLogger(__name__)
 
 # Init job manager
 job_manager = KBjobManager()
-
-## Globals
-
-from url_config import URLS
-
-# class Struct:
-#     def __init__(self, **args):
-#         self.__dict__.update(args)
-
-# try:
-#     nar_path = os.environ["NARRATIVEDIR"]
-#     config_json = open(os.path.join(nar_path, "config.json")).read()
-#     config = json.loads(config_json)
-#     url_config = config[config['config']]  #fun, right?
-
-#     URLS = Struct(**url_config)
-# except:
-#     url_dict = {
-#         "workspace" : "https://kbase.us/services/ws/",
-#         "invocation" : "https://kbase.us/services/invocation",
-#         "fba" : "https://kbase.us/services/KBaseFBAModeling",
-#         "genomeCmp" : "https://kbase.us/services/genome_comparison/jsonrpc",
-#         "trees" : "http://dev19.berkeley.kbase.us:7047"
-#     }
-#     URLS = Struct(**url_dict)
-
-# class URLS:
-#     workspace = "https://kbase.us/services/ws/"
-#     invocation = "https://kbase.us/services/invocation"
-#     #fba = "http://140.221.84.183:7036"
-#     fba = "https://kbase.us/services/KBaseFBAModeling"
-#     genomeCmp = "http://140.221.85.57:8283/jsonrpc"
-
-def _logdbg(msg):
-    open("/tmp/kb-logdebug", "a").write("{}\n".format(msg))
 
 ## Exceptions
 
@@ -715,8 +680,6 @@ class LifecycleLogger(LifecycleObserver):
     to a file.
     """
     MAX_MSG_LEN = 240  # Truncate message to this length, in chars
-                       # Actual display may be a bit longer to indicate
-                       # that the message was indeed truncated.
 
     def __init__(self, name, debug=False):
         """Create a Python logging.Logger with the given name, under the existing
@@ -738,19 +701,14 @@ class LifecycleLogger(LifecycleObserver):
         self._is_debug = debug
         self._start_time = None
 
-    def _write(self, level, event, msg):
-        if msg and (len(msg) > self.MAX_MSG_LEN):
-            msg = msg[:self.MAX_MSG_LEN] + " [..]"
-        # replace newlines with softer dividers
-        msg = msg.replace("\n\n", "\n").replace("\n", " // ").replace("\r", "")
-        # log the whole tamale
-        _logdbg("Log at level {:d} event={}".format(level, event))
-        self._log.log(level, "{}{}{}".format(event, EVENT_MSG_SEP, msg))
+    def _write(self, level, event, kvp):
+        kvp['severity'] = logging.getLevelName(level)
+        kblogging.log_event(self._log, event, kvp)
 
     def started(self, params):
         # note: quote params so the logging can handle spaces inside them
         pstr = str(params).replace('"', '\\"')  # escape embedded quotes
-        self._write(logging.INFO, "func.begin", 'params="{}"'.format(pstr))
+        self._write(logging.INFO, "func.begin", {'params': pstr})
         self._start_time = time.time()
 
     def done(self):
@@ -760,18 +718,20 @@ class LifecycleLogger(LifecycleObserver):
             self._start_time = None
         else:
             dur = -1
-        self._write(logging.INFO, "func.end", "dur={:.3g}".format(dur))
+        self._write(logging.INFO, "func.end", {'dur': dur})
 
     def stage(self, n, total, name):
         self._write(logging.INFO, "func.stage.{}".format(name),
-                    "num={:d} total={:d}".format(n, total))
+                    {'num': n, 'total': total})
 
     def error(self, code, err):
-        self._write(logging.ERROR, "func.error code={:d}".format(code), "msg={}".format(err))
+        if len(err) > self.MAX_MSG_LEN:
+            err = err[self.MAX_MSG_LEN] + '[..]'
+        self._write(logging.ERROR, "func.error", {'errcode': code, 'errmsg':err})
 
     def debug(self, msg):
         if self._is_debug:
-            self._write(logging.DEBUG, "func.debug", "msg={}".format(msg))
+            self._write(logging.DEBUG, "func.debug", {'dbgmsg': msg})
 
     def register_job(self, job_id):
         self._write(logging.INFO, "start job", "id={}".format(job_id))
@@ -859,8 +819,9 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         else:
             # make some noise
             if not self._observers:  # for idempotence
+                debug = util.kbase_debug_mode()
                 self._observers = [LifecyclePrinter(),
-                                   LifecycleLogger(self.full_name, debug=True)]
+                                   LifecycleLogger(self.full_name, debug=debug)]
                 map(self.register, self._observers)
 
     def set_func(self, fn, params, outputs, vis_info):

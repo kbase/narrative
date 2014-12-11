@@ -53,7 +53,10 @@
                 var cmd = "import os";
 
                 if (IPython.notebook.metadata && IPython.notebook.metadata.name) {
-                    cmd += "\nos.environ['KB_NARRATIVE'] = '" + escapeParamString(IPython.notebook.metadata.name) + "'"
+                    // No. We want the actual object id, not the name (which is not unique)
+                    //cmd += "\nos.environ['KB_NARRATIVE'] = '" + escapeParamString(IPython.notebook.metadata.name) + "'"
+                    var narr_id = window.location.pathname.split('/').pop();
+                    cmd += "\nos.environ['KB_NARRATIVE'] = '" + escapeParamString(narr_id) + "'";
                 }
 
                 var wsName = "Unknown";

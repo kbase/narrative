@@ -2,4 +2,6 @@
 source $e/activate
 export NARRATIVEDIR=$d/src
 export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
+cp $NARRATIVEDIR/config.json $IPYTHONDIR/profile_narrative/kbase_templates/static/kbase
+python $NARRATIVEDIR/biokbase/narrative/common/service_root.py -f $IPYTHONDIR/profile_narrative/kbase_templates/static/kbase/services.json
 ipython notebook $* --NotebookManager.notebook_dir=~/.narrative --profile=narrative

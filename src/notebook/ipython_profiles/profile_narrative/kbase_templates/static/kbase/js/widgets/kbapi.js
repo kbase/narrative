@@ -300,7 +300,7 @@ function KBCacheClient(token) {
                     }                    
                 }
 
-                $('.my-nar-count').text(mine.length)
+                $('.my-nar-count').text(mine.length);
                 $('.shared-nar-count').text(shared.length);  
                 $('.public-nar-count').text(pub.length);            
 
@@ -595,7 +595,7 @@ function UIUtils() {
     var months = {0: 'Jan', 1: 'Feb', 2: 'March', 3: 'April', 4: 'May',
                   5:'June', 6: 'July', 7: 'Aug', 8: 'Sept', 9: 'Oct', 
                   10: 'Nov', 11: 'Dec'};
-    this.formateDate = function(timestamp) {
+    this.relativeTime = function(timestamp) {
         var date = new Date()
 
         var interval =  date.getTime() - timestamp;

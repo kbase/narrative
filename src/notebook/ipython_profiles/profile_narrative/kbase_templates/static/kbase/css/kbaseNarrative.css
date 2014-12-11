@@ -332,9 +332,10 @@ p#site-title {
 }
 
 .kb-side-overlay-container {
-    width : 50vw;
-    /*height: 80vh;*/
-    height: 650px;
+    /*width : 50vw;
+    height: 80vh;*/
+    width: 525px;
+    height: 620px;
     border : 1px solid #ababab;
     z-index : 10000;
     background : white;
@@ -1897,7 +1898,7 @@ div[class="tooltip-inner"] {
     margin: 0 0 0 20px;
     overflow-x: hidden; 
     overflow-y: auto; 
-    height: 480px; 
+    height: 500px; 
     display: block;
 }
 
@@ -1928,7 +1929,7 @@ div[class="tooltip-inner"] {
 }
 
 .kb-import-item hr {
-    width: 600px;
+    width: 400px;
     border: 2px solid #eaeaea;
 }
 

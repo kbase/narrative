@@ -152,7 +152,21 @@
         	var ret = this._superMethod('getAllParameterValues');
         	ret.splice(this.tabParamPos, 0, {id:this.tabParamId, value:this.getSelectedTabId()});
         	return ret;
+        },
+        
+        prepareDataBeforeRun: function() {
+            var selectedParameterTab = this.getSelectedTabId();
+            if (this.parameters) {
+                for (var i = 0; i < this.parameters.length; i++) {
+                	var paramId = this.parameters[i].id;
+                    var tabId = this.paramIdToTab[paramId];
+                    if ((!tabId) || tabId === selectedParameterTab) {
+                    	this.parameters[i].widget.prepareValueBeforeRun(this.options.method);
+                    }
+                }
+            }
         }
+
     });
 
 })( jQuery );

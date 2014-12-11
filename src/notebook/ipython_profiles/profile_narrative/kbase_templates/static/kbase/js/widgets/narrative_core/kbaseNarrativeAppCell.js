@@ -388,6 +388,18 @@
             return isValidRet;
         },
         
+        /*
+         * This function is invoked every time we run app. This is the difference between it
+         * and getAllParameterValues/getParameterValue which could be invoked many times before running 
+         * (e.g. when widget is rendered). 
+         */
+        prepareDataBeforeRun: function() {
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++)
+                    var v = this.inputSteps[i].widget.prepareDataBeforeRun();
+            }
+        },
+
         /* locks inputs and updates display properties to reflect the running state
             returns true if everything is valid and we can start, false if there were errors
         */
@@ -413,7 +425,7 @@
                     return false;
                 }
             }
-            
+            self.prepareDataBeforeRun();
             self.$submitted.show();
             self.$runButton.hide();
             self.$stopButton.show();

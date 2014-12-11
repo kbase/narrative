@@ -599,6 +599,16 @@
          * in the method spec.
          */
         getParameterValue: function() {
+            // if this is an output, and there's only one row, and it's optional,
+            // but it's not filled out, then we need a random name.
+            if (this.spec.text_options && 
+                this.spec.text_options.is_output_name === 1 && 
+                this.rowInfo.length === 1 &&
+                this.rowInfo[0].$input.val().length === 0 &&
+                this.spec.optional === 1) {
+//                this.setParameterValue(this.generateRandomOutputString());
+            }
+
             if (this.rowInfo.length===1) {
                 return this.rowInfo[0].$input.val();
             }
@@ -608,8 +618,6 @@
             }
             return value;
         },
-        
-        
         
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
         getTimeStampStr: function (objInfoTimeStamp) {
@@ -658,6 +666,57 @@
         
         monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"],
         
+        // make a randomized string, assuming it's for an output.
+        generateRandomOutputString: function(generProps) {
+            var strArr = [];
+            var symbols = 8
+            if (generProps['symbols'])
+                symbols = generProps['symbols'];
+            for (var i=0; i<symbols; i++)
+                strArr.push(String.fromCharCode(65 + Math.floor(Math.random() * 26)));
+            var ret = strArr.join('');
+            if (generProps['prefix'])
+                ret = generProps['prefix'] + ret;
+            if (generProps['suffix'])
+                ret = ret + str(generProps['suffix']);
+            return ret;
+        },
+
+        prepareValueBeforeRun: function(methodSpec) {
+            if (this.spec.text_options && 
+                    this.spec.text_options.is_output_name === 1 && 
+                    this.rowInfo.length === 1 &&
+                    this.rowInfo[0].$input.val().length === 0 &&
+                    this.spec.optional === 1) {
+            	//var e = new Error('dummy');
+            	//var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '')
+            	//	.replace(/^\s+at\s+/gm, '')
+            	//	.replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
+            	//	.split('\n');
+            	//console.log(stack);
+            	var paramId = this.spec.id;
+                var inputMapping = null;
+                var isScript = false;
+                var inputMapping = methodSpec['behavior']['kb_service_input_mapping'];
+                if (!inputMapping) {
+                    inputMapping = methodSpec['behavior']['script_input_mapping'];
+                    isScript = true;
+                }
+                var generatedValueMapping = null;
+                for (var i in inputMapping) {
+                	mapping = inputMapping[i];
+                    var aParamId = mapping['input_parameter'];
+                    if (aParamId && aParamId === paramId && mapping['generated_value']) {
+                    	generatedValueMapping = mapping['generated_value'];
+                    	break;
+                    }
+                }
+                if (generatedValueMapping) {
+                	this.setParameterValue(this.generateRandomOutputString(generatedValueMapping));
+                }
+            }
+        },
+
         genUUID: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);

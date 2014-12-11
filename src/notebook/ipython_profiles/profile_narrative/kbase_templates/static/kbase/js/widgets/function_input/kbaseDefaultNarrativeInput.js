@@ -64,7 +64,10 @@
             var paramList = [];
 
             $(this.$elem).find("[name^=param]").filter(":input").each(function(key, field) {
-                paramList.push(field.value.trim());
+                var value = field.value;
+                if (!value)
+                    value = field.placeholder;
+                paramList.push(value.trim());
             });
 
             return paramList;

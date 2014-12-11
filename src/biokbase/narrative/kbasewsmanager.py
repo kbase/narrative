@@ -203,6 +203,7 @@ class KBaseWSNotebookManager(NotebookManager):
             nb.metadata.description = ''
             nb.metadata.name = new_name
             nb.metadata.data_dependencies = []
+            nb.metadata.job_ids = { 'methods' : [], 'apps' : [] }
             nb.metadata.format = self.node_format
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
@@ -213,8 +214,12 @@ class KBaseWSNotebookManager(NotebookManager):
                       'provenance' : [],
                       'meta' : nb.metadata.copy(),
                     }
-            wsid = homews_id
+            # We flatten the data_dependencies array into a json string so that the
+            # workspace service will accept it
             wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
+            # Same for jobs list
+            wsobj['meta']['job_ids'] = json.dumps(wsobj['meta']['job_ids'])
+            wsid = homews_id
             self.log.debug("calling ws_util.put_wsobj")
             res = ws_util.put_wsobj(wsclient, wsid, wsobj)
             self.log.debug("save_object returned %s" % res)
@@ -311,7 +316,9 @@ class KBaseWSNotebookManager(NotebookManager):
 
         last_modified = dateutil.parser.parse(wsobj['metadata']['save_date'])
         self.log.debug("Narrative successfully read" )
+        # Stash last read NB in env
         self._set_narrative_env(notebook_id)
+        os.environ['KB_WORKSPACE_ID'] = nb.metadata.ws_name
         return last_modified, nb
 
     # def extract_data_dependencies(self, nb):
@@ -368,17 +375,23 @@ class KBaseWSNotebookManager(NotebookManager):
         if user_id is None:
             raise web.HTTPError(400, u'Cannot determine user identity from '
                                      u'session information')
-        try:
-            new_name = normalize('NFC', nb.metadata.name)
-        except AttributeError:
-            raise web.HTTPError(400, u'Missing Narrative name')
-        new_name = self._clean_id(new_name)
+    
+        # we don't rename anymore--- we only set the name in the metadata
+        #try:
+        #    new_name = normalize('NFC', nb.metadata.name)
+        #except AttributeError:
+        #    raise web.HTTPError(400, u'Missing Narrative name')
+        #new_name = self._clean_id(new_name)
+        
+        
         # Verify that our own home workspace exists, note that we aren't doing this
         # as a general thing for other workspaces
         wsclient = self.wsclient()
         (homews, homews_id) = ws_util.check_homews(wsclient, user_id)
         # Carry over some of the metadata stuff from ShockNBManager
         try:
+            if not hasattr(nb.metadata, 'name'):
+                nb.metadata.name = 'Untitled'
             if not hasattr(nb.metadata, 'ws_name'):
                 nb.metadata.ws_name = os.environ.get('KB_WORKSPACE_ID',homews)
             if not hasattr(nb.metadata, 'creator'):
@@ -391,10 +404,24 @@ class KBaseWSNotebookManager(NotebookManager):
             # This gets auto-updated on the front end, and is easier to manage.
             if not hasattr(nb.metadata, 'data_dependencies'):
                 nb.metadata.data_dependencies = list()
+            if not hasattr(nb.metadata, 'job_ids'):
+                nb.metadata.job_ids = { 'methods' : [], 'apps' : [] }
             nb.metadata.format = self.node_format
 
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
+        
+        ## new approach, step 1: update current ws metadata
+        try:
+            updated_metadata = {
+                "is_temporary":"false",
+                "narrative_nice_name":nb.metadata.name
+            };
+            ws_util.alter_workspace_metadata(wsclient, notebook_id, updated_metadata)
+        except Exception as e:
+            raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
+        
+        ## new approach, step 2: save ws object
         try:
             # 'wsobj' = the ObjectSaveData type from the workspace client
             # requires type, data (the Narrative typed object), provenance,
@@ -404,12 +431,18 @@ class KBaseWSNotebookManager(NotebookManager):
             wsobj = { 
                       'type' : self.ws_type,
                       'data' : nb,
-                      'provenance' : [],
+                      'provenance' : [
+                        {
+                            'service' : 'narrative',
+                            'description': 'saved through the narrative interface'
+                        }
+                        ],
                       'meta' : nb.metadata.copy(),
                     }
             # We flatten the data_dependencies array into a json string so that the
             # workspace service will accept it
             wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
+            wsobj['meta']['job_ids'] = json.dumps(wsobj['meta']['job_ids'])
 
             # If we're given a notebook id, try to parse it for the save parameters
             if notebook_id:
@@ -423,26 +456,27 @@ class KBaseWSNotebookManager(NotebookManager):
                 wsobj['objid'] = m.group('objid')
             elif nb.metadata.ws_name == homews:
                 wsid = homews_id
-                wsobj['name'] = new_name
+                #wsobj['name'] = new_name
             else:
                 wsid = ws_util.get_wsid(nb.metadata.ws_name)
-                wsobj['name'] = new_name
+                #wsobj['name'] = new_name
 
             self.log.debug("calling ws_util.put_wsobj")
             res = ws_util.put_wsobj(wsclient, wsid, wsobj)
             self.log.debug("save_object returned %s" % res)
 
+            # we no longer update names
             # Now that we've saved the object, if its Narrative name (new_name) has changed,
             # update that in the Workspace
-            if (res['name'] != new_name):
-                identity = { 'wsid' : res['wsid'], 'objid' : res['objid'] }
-                res = ws_util.rename_wsobj(wsclient, identity, new_name)
+            #if (res['name'] != new_name):
+            #    identity = { 'wsid' : res['wsid'], 'objid' : res['objid'] }
+            #    res = ws_util.rename_wsobj(wsclient, identity, new_name)
 
         except Exception as e:
             raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
         # use "ws.ws_id.obj.object_id" as the identifier
         id = "ws.%s.obj.%s" % (res['wsid'], res['objid'])
-        self.mapping[id] = "%s/%s" % (res['workspace'], new_name)
+        self.mapping[id] = "%s/%s" % (res['workspace'], res['name'])
         self._set_narrative_env(id)
         return id
 

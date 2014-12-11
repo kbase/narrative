@@ -20,13 +20,16 @@
             // Inline function that does a kernel call and sets callbacks for each event.
             var doKernelCall = function(cmd) {
 
+                // console.debug('SET ENVIRONMENT - doKernelCall: START');
+                // console.debug('doKernelCall - ' + cmd);
+
                 // Very simple callback function that dumps its message to console.
                 // This only gets run at page-reload, and is good for checking errors.
                 var kernelCallback = function(type, content, etc) {
-                    // console.log('KERNEL CALLBACK : "' + type + '"');
-                    // console.log(content);
+                    // console.debug('doKernelCall - KERNEL CALLBACK : "' + type + '"');
+                    // console.debug(content);
                     // if (etc)
-                    //     console.log(etc);
+                    //     console.debug(etc);
                 };
 
                 var callbacks = {
@@ -149,7 +152,7 @@
                 window.kb = new KBCacheClient(args.token);
                 // Do actual login once the kernel is up - only an issue for prior_login
                 $([IPython.events]).one('status_started.Kernel', function() {
-                    setTimeout( function() { setEnvironment(); }, 500 );
+                    setTimeout( function() { setEnvironment(); }, 250 );
                 });
             },
         });

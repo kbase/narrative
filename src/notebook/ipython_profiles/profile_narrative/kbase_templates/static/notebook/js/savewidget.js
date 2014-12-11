@@ -112,37 +112,43 @@ var IPython = (function (IPython) {
     };
 
 
-    SaveWidget.prototype.rename_notebook = function () {
+    SaveWidget.prototype.rename_notebook = function (titleText, setDefault) {
         var that = this;
+        var $input = $('<input/>').attr('type','text').addClass('form-control');
+        if (setDefault) { $input.val(IPython.notebook.get_notebook_name()); }
         var dialog = $('<div/>').append(
             $("<p/>").addClass("rename-message")
-                .html('Enter a new notebook name:')
+                .html('Enter a new name:')
         ).append(
             $("<br/>")
         ).append(
-            $('<input/>').attr('type','text').attr('size','25')
-            .val(IPython.notebook.get_notebook_name())
+            $input
         );
         IPython.dialog.modal({
-            title: "Rename Notebook",
+            title: titleText,
             body: dialog,
             buttons : {
                 "Cancel": {},
                 "OK": {
-                    class: "btn-primary",
+                    class: "btn btn-primary",
                     click: function () {
                     var new_name = $(this).find('input').val();
                     if (!IPython.notebook.test_notebook_name(new_name)) {
                         $(this).find('.rename-message').html(
-                            "Invalid notebook name. Notebook names must "+
-                            "have 1 or more characters and can contain any characters " +
-                            "except :/\\. Please enter a new notebook name:"
+                            "Invalid name. Narrative names cannot be empty or be "+
+                            "left 'Untitled'. Please try again:"
                         );
+                        //if (setDefault) { $(this).find('input').val(IPython.notebook.get_notebook_name()); }
                         return false;
                     } else {
+                        new_name = new_name.trim();
                         IPython.notebook.set_notebook_name(new_name);
+                        $('#kb-narr-name #name').text(new_name); // Bad! but how else to set this?
+                        that.update_notebook_name();
+                        that.update_document_title();
                         IPython.notebook.save_notebook();
                     }
+                    return true;
                 }}
                 },
             open : function (event, ui) {

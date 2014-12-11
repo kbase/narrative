@@ -18,11 +18,21 @@ function Workspace(url, auth, auth_cb) {
     }
 
     if (typeof(_url) != "string" || _url.length == 0) {
-        _url = "http://kbase.us/services/ws/";
+        _url = "https://kbase.us/services/ws/";
     }
     var _auth = auth ? auth : { 'token' : '', 'user_id' : ''};
     var _auth_cb = auth_cb;
 
+
+    this.ver = function (_callback, _errorCallback) {
+    return json_call_ajax("Workspace.ver",
+        [], 1, _callback, _errorCallback);
+};
+
+    this.ver_async = function (_callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.ver", [], 1, _callback, _error_callback);
+    };
 
     this.create_workspace = function (params, _callback, _errorCallback) {
     return json_call_ajax("Workspace.create_workspace",
@@ -32,6 +42,16 @@ function Workspace(url, auth, auth_cb) {
     this.create_workspace_async = function (params, _callback, _error_callback) {
         deprecationWarning();
         return json_call_ajax("Workspace.create_workspace", [params], 1, _callback, _error_callback);
+    };
+
+    this.alter_workspace_metadata = function (params, _callback, _errorCallback) {
+    return json_call_ajax("Workspace.alter_workspace_metadata",
+        [params], 0, _callback, _errorCallback);
+};
+
+    this.alter_workspace_metadata_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.alter_workspace_metadata", [params], 0, _callback, _error_callback);
     };
 
     this.clone_workspace = function (params, _callback, _errorCallback) {
@@ -154,6 +174,16 @@ function Workspace(url, auth, auth_cb) {
         return json_call_ajax("Workspace.get_object", [params], 1, _callback, _error_callback);
     };
 
+    this.get_object_provenance = function (object_ids, _callback, _errorCallback) {
+    return json_call_ajax("Workspace.get_object_provenance",
+        [object_ids], 1, _callback, _errorCallback);
+};
+
+    this.get_object_provenance_async = function (object_ids, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.get_object_provenance", [object_ids], 1, _callback, _error_callback);
+    };
+
     this.get_objects = function (object_ids, _callback, _errorCallback) {
     return json_call_ajax("Workspace.get_objects",
         [object_ids], 1, _callback, _errorCallback);
@@ -182,6 +212,36 @@ function Workspace(url, auth, auth_cb) {
     this.get_object_history_async = function (object, _callback, _error_callback) {
         deprecationWarning();
         return json_call_ajax("Workspace.get_object_history", [object], 1, _callback, _error_callback);
+    };
+
+    this.list_referencing_objects = function (object_ids, _callback, _errorCallback) {
+    return json_call_ajax("Workspace.list_referencing_objects",
+        [object_ids], 1, _callback, _errorCallback);
+};
+
+    this.list_referencing_objects_async = function (object_ids, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.list_referencing_objects", [object_ids], 1, _callback, _error_callback);
+    };
+
+    this.list_referencing_object_counts = function (object_ids, _callback, _errorCallback) {
+    return json_call_ajax("Workspace.list_referencing_object_counts",
+        [object_ids], 1, _callback, _errorCallback);
+};
+
+    this.list_referencing_object_counts_async = function (object_ids, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.list_referencing_object_counts", [object_ids], 1, _callback, _error_callback);
+    };
+
+    this.get_referenced_objects = function (ref_chains, _callback, _errorCallback) {
+    return json_call_ajax("Workspace.get_referenced_objects",
+        [ref_chains], 1, _callback, _errorCallback);
+};
+
+    this.get_referenced_objects_async = function (ref_chains, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.get_referenced_objects", [ref_chains], 1, _callback, _error_callback);
     };
 
     this.list_workspaces = function (params, _callback, _errorCallback) {
@@ -242,6 +302,16 @@ function Workspace(url, auth, auth_cb) {
     this.get_object_info_async = function (object_ids, includeMetadata, _callback, _error_callback) {
         deprecationWarning();
         return json_call_ajax("Workspace.get_object_info", [object_ids, includeMetadata], 1, _callback, _error_callback);
+    };
+
+    this.get_object_info_new = function (params, _callback, _errorCallback) {
+    return json_call_ajax("Workspace.get_object_info_new",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.get_object_info_new_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.get_object_info_new", [params], 1, _callback, _error_callback);
     };
 
     this.rename_workspace = function (params, _callback, _errorCallback) {
@@ -454,6 +524,16 @@ function Workspace(url, auth, auth_cb) {
         return json_call_ajax("Workspace.get_type_info", [type], 1, _callback, _error_callback);
     };
 
+    this.get_all_type_info = function (mod, _callback, _errorCallback) {
+    return json_call_ajax("Workspace.get_all_type_info",
+        [mod], 1, _callback, _errorCallback);
+};
+
+    this.get_all_type_info_async = function (mod, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.get_all_type_info", [mod], 1, _callback, _error_callback);
+    };
+
     this.get_func_info = function (func, _callback, _errorCallback) {
     return json_call_ajax("Workspace.get_func_info",
         [func], 1, _callback, _errorCallback);
@@ -462,6 +542,46 @@ function Workspace(url, auth, auth_cb) {
     this.get_func_info_async = function (func, _callback, _error_callback) {
         deprecationWarning();
         return json_call_ajax("Workspace.get_func_info", [func], 1, _callback, _error_callback);
+    };
+
+    this.get_all_func_info = function (mod, _callback, _errorCallback) {
+    return json_call_ajax("Workspace.get_all_func_info",
+        [mod], 1, _callback, _errorCallback);
+};
+
+    this.get_all_func_info_async = function (mod, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.get_all_func_info", [mod], 1, _callback, _error_callback);
+    };
+
+    this.grant_module_ownership = function (params, _callback, _errorCallback) {
+    return json_call_ajax("Workspace.grant_module_ownership",
+        [params], 0, _callback, _errorCallback);
+};
+
+    this.grant_module_ownership_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.grant_module_ownership", [params], 0, _callback, _error_callback);
+    };
+
+    this.remove_module_ownership = function (params, _callback, _errorCallback) {
+    return json_call_ajax("Workspace.remove_module_ownership",
+        [params], 0, _callback, _errorCallback);
+};
+
+    this.remove_module_ownership_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.remove_module_ownership", [params], 0, _callback, _error_callback);
+    };
+
+    this.list_all_types = function (params, _callback, _errorCallback) {
+    return json_call_ajax("Workspace.list_all_types",
+        [params], 1, _callback, _errorCallback);
+};
+
+    this.list_all_types_async = function (params, _callback, _error_callback) {
+        deprecationWarning();
+        return json_call_ajax("Workspace.list_all_types", [params], 1, _callback, _error_callback);
     };
 
     this.administer = function (command, _callback, _errorCallback) {

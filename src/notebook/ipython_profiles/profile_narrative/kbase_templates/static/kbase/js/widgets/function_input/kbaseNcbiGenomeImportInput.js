@@ -1,6 +1,7 @@
 /**
  * Input widget for import NCBI genomes into workspace.
  * @author Roman Sutormin <rsutormin@lbl.gov>
+ * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
 
@@ -23,36 +24,56 @@
 
         useSelect2: true,
 
-        /**
-         * Builds the input div for a function cell, based on the given method object.
-         * @param {Object} method - the method being constructed around.
-         * @returns {String} an HTML string describing the available parameters for the cell.
-         * @private
-         */
         render: function() {
-            // figure out all types from the method
-            var method = this.options.method;
-            var params = method.properties.parameters;
+            var $inputDiv = $('<div>')
+                            .addClass('kb-cell-params');
+            var $inputGenome = $('<input>')
+                               .addClass('form-control')
+                               .css({'width' : '95%'})
+                               .attr('name', 'param0')
+                               .attr('placeholder', 'Select an NCBI Genome')
+                               .attr('type', 'text');
+            var $outputGenome = $('<input>')
+                               .addClass('form-control')
+                               .css({'width' : '95%'})
+                               .attr('name', 'param1')
+                               .attr('placeholder', 'Select an output genome')
+                               .attr('type', 'text');
 
-            var inputDiv = "<div class='kb-cell-params'><table class='table'>";
-            for (var i=0; i<Object.keys(params).length; i++) {
-                var pid = 'param' + i;
-                var p = params[pid];
+            var cellCss = { 'border' : 'none', 'vertical-align' : 'middle' };
+            var thCss = {'font-family' : '"OxygenBold", sans-serif', 'font-weight': 'bold'};
+            var inputCss = {'width' : '40%'};
+            var descCss = {'color' : '#777'};
+            $inputDiv.append($('<table>')
+                             .addClass('table')
+                             .append($('<tr>')
+                                     .css(cellCss)
+                                     .append($('<th>')
+                                        .css(cellCss)
+                                        .css(thCss)
+                                        .append('NCBI Genome Name'))
+                                     .append($('<td>')
+                                        .css(cellCss)
+                                        .css(inputCss)
+                                        .append($inputGenome))
+                                     .append($('<td>')
+                                        .css(cellCss)
+                                        .append('Name of public genome accessible on NCBI FTP')))
+                             .append($('<tr>')
+                                     .css(cellCss)
+                                     .append($('<th>')
+                                        .css(cellCss)
+                                        .css(thCss)
+                                        .append('Output Genome Id'))
+                                     .append($('<td>')
+                                        .css(cellCss)
+                                        .css(inputCss)
+                                        .append($outputGenome))
+                                     .append($('<td>')
+                                        .css(cellCss)
+                                        .append('Output Genome Id. If empty, an ID will be chosen automatically.'))));
 
-                var input_default = (p.default !== "" && p.default !== undefined) ?
-                                    " placeholder='" + p.default + "'" : "";
-                input = "<input class='form-control' style='width: 95%' name='" + pid + "'" + input_default +
-                        " value='' type='text'></input>";
-
-                var cellStyle = "border:none; vertical-align:middle;";
-                inputDiv += "<tr style='" + cellStyle + "'>" + 
-                                "<th style='" + cellStyle + " font-family: 'OxygenBold', sans-serif; font-weight: bold;>" + p.ui_name + "</th>" +
-                                "<td style='" + cellStyle + " width: 40%;'>" + input + "</td>" +
-                                "<td style='" + cellStyle + " color: #777;'>" + p.description + "</td>" +
-                            "</tr>";
-            }
-            inputDiv += "</table></div>";
-            this.$elem.append(inputDiv);
+            this.$elem.append($inputDiv);
         },
 
         /**
@@ -116,97 +137,71 @@
             });
         },
 
-        /**
-         * Refreshes the input fields for this widget. I.e. if any of them reference workspace
-         * information, those fields get refreshed without altering any other inputs.
-         */
         refresh: function() {
-            var method = this.options.method;
-            var params = method.properties.parameters;
-            var lookupTypes = [];
-            var tempObj = {};
-            for (var p in params) {
-                if (!tempObj.hasOwnProperty(params[p].type)) {
-                    lookupTypes.push(params[p].type);
-                    tempObj[params[p].type] = 1;
-                }
-            }
             this.fixGenomeNames();
-            this.trigger('dataLoadedQuery.Narrative', [lookupTypes, this.IGNORE_VERSION, $.proxy(
+            var type = 'KBaseGenomes.Genome';
+            this.trigger('dataLoadedQuery.Narrative', [type, this.IGNORE_VERSION, $.proxy(
                 function(objects) {
-                    // we know from each parameter what each input type is.
-                    // we also know how many of each type there is.
-                    // so, iterate over all parameters and fulfill cases as below.
+                    var $input = $($(this.$elem).find('[name=param1]'));
+                    var objList = [];
 
-                    for (var i=1; i<Object.keys(params).length; i++) { // starting from 1 because param0 is special
-                        var pid = 'param' + i;
-                        var p = params[pid];
-
-                        // we're refreshing, not rendering, so assume that there's an
-                        // input with name = pid present.
-                        var $input = $($(this.$elem).find("[name=" + pid + "]"));
-                        var objList = [];
-
+                    if (objects[type] && objects[type].length > 0) {
+                        objList = objects[type];
                         /*
-                         * New sorting - by date, then alphabetically within dates.
+                         * Sorting - by date, then alphabetically within dates.
                          */
-                        if (objects[p.type] && objects[p.type].length > 0) {
-                            objList = objects[p.type];
-                            objList.sort(function(a, b) {
-                                if (a[3] > b[3]) return -1;
-                                if (a[3] < b[3]) return 1;
-                                if (a[1] < b[1]) return -1;
-                                if (a[1] > b[1]) return 1;
-                                return 0;
-                            });
+                        objList.sort(function(a, b) {
+                            if (a[3] > b[3]) return -1;
+                            if (a[3] < b[3]) return 1;
+                            if (a[1] < b[1]) return -1;
+                            if (a[1] > b[1]) return 1;
+                            return 0;
+                        })
+                    }
+                    /* down to cases:
+                     * 1. (simple) objList is empty, $input doesn't have a list attribute.
+                     * -- don't do anything.
+                     * 2. objList is empty, $input has a list attribute.
+                     * -- no more data exists, so remove that list attribute and the associated datalist element
+                     * 3. objList is not empty, $input doesn't have a list attribute.
+                     * -- data exists, new datalist needs to be added and linked.
+                     * 4. objList is not empty, $input has a list attribute.
+                     * -- datalist needs to be cleared and updated.
+                     */
+
+                    // case 1 - no data, input is unchanged
+
+                    // case 2 - no data, need to clear input
+                    var datalistID = $input.attr('list');
+                    if (objList.length == 0 && datalistID) {
+                        $(this.$elem.find("#" + datalistID)).remove();
+                        $input.removeAttr('list');
+                        $input.val("");
+                    }
+
+                    // case 3 - data, need new datalist
+                    // case 4 - data, need to update existing datalist
+                    else if (objList.length > 0) {
+                        var $datalist;
+                        if (!datalistID) {
+                            datalistID = this.genUUID();
+                            $input.attr('list', datalistID);
+                            $datalist = $('<datalist>')
+                                        .attr('id', datalistID);
+                            $input.after($datalist);
                         }
-
-                        /* down to cases:
-                         * 1. (simple) objList is empty, $input doesn't have a list attribute.
-                         * -- don't do anything.
-                         * 2. objList is empty, $input has a list attribute.
-                         * -- no more data exists, so remove that list attribute and the associated datalist element
-                         * 3. objList is not empty, $input doesn't have a list attribute.
-                         * -- data exists, new datalist needs to be added and linked.
-                         * 4. objList is not empty, $input has a list attribute.
-                         * -- datalist needs to be cleared and updated.
-                         */
-
-                        // case 1 - no data, input is unchanged
-
-                        // case 2 - no data, need to clear input
-                        var datalistID = $input.attr('list');
-                        if (objList.length == 0 && datalistID) {
-                            $(this.$elem.find("#" + datalistID)).remove();
-                            $input.removeAttr('list');
-                            $input.val("");
+                        else {
+                            $datalist = $(this.$elem.find("#" + datalistID));
                         }
-
-                        // case 3 - data, need new datalist
-                        // case 4 - data, need to update existing datalist
-                        else if (objList.length > 0) {
-                            var $datalist;
-                            if (!datalistID) {
-                                datalistID = this.genUUID();
-                                $input.attr('list', datalistID);
-                                $datalist = $('<datalist>')
-                                            .attr('id', datalistID);
-                                $input.after($datalist);
-                            }
-                            else {
-                                $datalist = $(this.$elem.find("#" + datalistID));
-                            }
-                            $datalist.empty();
-                            for (var j=0; j<objList.length; j++) {
-                                $datalist.append($('<option>')
-                                                 .attr('value', objList[j][1])
-                                                 .append(objList[j][1]));
-                            }
+                        $datalist.empty();
+                        for (var j=0; j<objList.length; j++) {
+                            $datalist.append($('<option>')
+                                             .attr('value', objList[j][1])
+                                             .append(objList[j][1]));
                         }
                     }
-                },
-                this
-            )]);
+                }, this)])
+            return;
         },
 
         fixGenomeNames: function() {
@@ -218,23 +213,23 @@
             
             //kbws.list_referencing_objects([objectIdentity], function(data) {
             $.when(request).done(function(data) {
-            	var objList = [];
-            	for (var key in data)
-            		objList.push(key);
-            	var datalistID = $input.attr('list');
-            	var $datalist;
-            	if (!datalistID) {
-            		datalistID = self.genUUID();
-            		$input.attr('list', datalistID);
-            		$datalist = $('<datalist>').attr('id', datalistID);
-            		$input.after($datalist);
-            	} else {
-            		$datalist = $(self.$elem.find("#" + datalistID));
-            	}
-            	$datalist.empty();
-            	for (var j=0; j<objList.length; j++) {
-            		$datalist.append($('<option>').attr('value', objList[j]).append(objList[j]));
-            	}
+                var objList = [];
+                for (var key in data)
+                    objList.push(key);
+                var datalistID = $input.attr('list');
+                var $datalist;
+                if (!datalistID) {
+                    datalistID = self.genUUID();
+                    $input.attr('list', datalistID);
+                    $datalist = $('<datalist>').attr('id', datalistID);
+                    $input.after($datalist);
+                } else {
+                    $datalist = $(self.$elem.find("#" + datalistID));
+                }
+                $datalist.empty();
+                for (var j=0; j<objList.length; j++) {
+                    $datalist.append($('<option>').attr('value', objList[j]).append(objList[j]));
+                }
             }).fail(function(err){
                 console.error("Error loading ncbi genome names from JSON resource file:");
                 console.error(err);

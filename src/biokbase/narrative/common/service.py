@@ -25,9 +25,13 @@ from biokbase.narrative.common import kbtypes, kblogging
 from biokbase.narrative.common.log_common import EVENT_MSG_SEP
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import util
+from biokbase.narrative.common.kbjob_manager import KBjobManager
 
 # Logging
 _log = logging.getLogger(__name__)
+
+# Init job manager
+job_manager = KBjobManager()
 
 ## Exceptions
 
@@ -220,6 +224,25 @@ def get_func_info(fn):
 
 _services = {}
 
+# def register_job(job_id):
+#     """Register a long-running job by id.
+
+#     This takes a job id from the User and Job Service, and registers it in
+#     the Narrative interface. This registration process does two things:
+#     1. Shares that job with NarrativeJobViewer account on behalf of the current user.
+#     2. Sends that job id forward to the Narrative front-end to be stored in the
+#     Narrative object and made visible to any querying front-end widget.
+
+#     :param str job_id: Unique identifier for the long-running job.
+#     """
+#     pass
+
+# def poll_job(job_id):
+#     """Fetch a job from the User and Job Service.
+
+#     :param str job_id: Unique identifier for the job.
+#     """
+#     pass
 
 def register_service(svc, name=None):
     """Register a service.
@@ -444,6 +467,32 @@ class LifecycleSubject(object):
         """
         self._event('debug', msg)
 
+    def register_job(self, job_id):
+        """Register a new long-running job.
+        """
+        global job_manager
+        if job_id is not None:
+            if job_manager is None:
+                job_manager = KBjobManager()
+
+            self._event('debug', job_id)
+            if not job_id.startswith('njs:'):
+                job_manager.register_job(job_id)
+            self._event('register_job', job_id)
+
+    def register_app(self, app_id):
+        """Register a new long-running app process.
+        """
+        global job_manager
+        if app_id is not None:
+            if job_manager is None:
+                job_manager = KBjobManager()
+
+            self._event('debug', app_id)
+            if not app_id.startswith('njs:'):
+                job_manager.register_job(app_id)
+            self._event('register_app', app_id)
+
     # get/set 'stage' property
     
     @property
@@ -504,6 +553,14 @@ class LifecycleObserver(object):
 
     def debug(self, msg):
         """Debugging message"""
+        pass
+
+    def register_job(self, job_id):
+        """Register a long-running job"""
+        pass
+
+    def register_app(self, app_id):
+        """Register a an app job that's composed of several subjobs"""
         pass
 
 
@@ -611,6 +668,12 @@ class LifecyclePrinter(LifecycleObserver):
     def debug(self, msg):
         self._write('G' + msg)
 
+    def register_job(self, job_id):
+        self._write('J' + job_id)
+
+    def register_app(self, app_id):
+        self._write('A' + app_id)
+
 
 class LifecycleLogger(LifecycleObserver):
     """Log lifecycle messages in a simple but structured format,
@@ -669,6 +732,12 @@ class LifecycleLogger(LifecycleObserver):
     def debug(self, msg):
         if self._is_debug:
             self._write(logging.DEBUG, "func.debug", {'dbgmsg': msg})
+
+    def register_job(self, job_id):
+        self._write(logging.INFO, "start job", "id={}".format(job_id))
+
+    def register_app(self, app_id):
+        self._write(logging.INFO, "start app", "id={}".format(app_id))
 
 
 class ServiceMethod(trt.HasTraits, LifecycleSubject):
@@ -877,6 +946,14 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         """Workspace ID passed in from front-end.
         """
         return os.environ['KB_WORKSPACE_ID']
+
+    def poll_job(self, job_id):
+        global job_manager
+        if job_manager is None:
+            job_manager = KBjobManager()
+
+        return job_manager.poll_job(job_id)
+
 
     ## JSON serialization
 

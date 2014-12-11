@@ -19,8 +19,8 @@
 (function( $, undefined ) {
 
     $.KBWidget({
-        name: "kbaseWorkspaceDataDeluxe", 
-        parent: "kbaseAuthenticatedWidget",
+        name: "kbaseNarrativeDataPanel", 
+        parent: "kbaseNarrativeControlPanel",
         version: "1.0.0",
         wsClient: null,
         table: null,
@@ -33,6 +33,7 @@
         // The set of all data currently loaded into the widget
         loadedData: {},
         options: {
+            title: 'Data',
             loadingImage: "static/kbase/images/ajax-loader.gif",
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: "https://kbase.us/services/ws",
@@ -41,18 +42,26 @@
             uploaderURL: "//kbase.us/services/docs/uploader/uploader.html",
             defaultLandingPage: "/functional-site/#/ws/json/", // ws_name/obj_name
             container: null,
-            wsId: null,
+            ws_name: null,
         },
-        wsId: null,
+        ws_name: null,
         // Constants
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
 
+        
+        dataListWidget: null,
+        
         init: function(options) {
             this._super(options);
 
-            if (this.options.wsId)
-                this.wsId = options.wsId;
+            if (this.options.wsId) {
+                this.ws_name = options.wsId;
+                this.options.ws_name = options.wsId;
+            }
+            if (this.options.ws_name) {
+                this.ws_name = options.ws_name;
+            }
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.uploaderURL = window.kbconfig.urls.uploader;
@@ -60,66 +69,69 @@
                 this.options.wsBrowserURL = window.kbconfig.urls.ws_browser;
                 this.options.landingPageURL = window.kbconfig.urls.landing_pages;
             }
-
+            
+            var $dataList = $('<div>');
+            this.body().append($dataList);
+            this.dataListWidget = $dataList["kbaseNarrativeDataList"](
+                                    {
+                                        ws_name: this.ws_name,
+                                        ws_url: this.options.workspaceURL,
+                                        loadingImage: this.options.loadingImage
+                                    });
+            
+            $(document).on(
+                'setWorkspaceName.Narrative', $.proxy(function(e, info) {
+                    console.log('data panel -- setting ws to ' + info.wsId);
+                    this.ws_name = info.wsId;
+                    this.narrWs = info.narrController;
+                    this.dataListWidget.setWorkspace(this.ws_name);
+                }, this)
+            );
+            
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
              */
             $(document).on(
                 'dataLoadedQuery.Narrative', $.proxy(function(e, params, ignoreVersion, callback) {
-                    var objList = this.getLoadedData(params, ignoreVersion);
+                    var obj_data = this.dataListWidget.getObjData(params,ignoreVersion);
                     if (callback) {
-                        callback(objList);
+                        callback(obj_data);
                     }
                 },
                 this)
             );
-
+            
+            
             /**
              * This should be triggered when something updates the available data in either the narrative or
              * in the workspace.
              */
             $(document).on(
                 'updateData.Narrative', $.proxy(function(e) {
-                    this.refresh();
+                    //this.refresh();
+                    this.dataListWidget.refresh();
                 },
                 this )
             );
-
+            
             /**
              * This should be triggered when something wants to know what workspace this widget is currently linked to.
              */
             $(document).on(
                 'workspaceQuery.Narrative', $.proxy(function(e, callback) {
                     if (callback) {
-                        callback(this.wsId);
+                        callback(this.ws_name);
                     }
                 }, 
                 this)
             );
-
-            /**
-             * This should be triggered whenever something clicks on a data info button (or just
-             * wants the info modal to appear).
-             */
-            $(document).on(
-                'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
-                    this.showInfoModal(workspace, id);
-                }, 
-                this)
-            );
-
-            $(document).on(
-                'updateNarrativeDataTab.Narrative', $.proxy(function(e) {
-                    this.refreshNarrativeTab();
-                },
-                this)
-            );
-
+            
+            this.landingPageMap = window.kbconfig.landing_page_map;
             /**
              * Get the landing page map.
              * First, try getting it from /functional-site/landing_page_map.json.
              * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
-             */
+             
             $.ajax({
                 url: '/functional-site/landing_page_map.json',
                 async: true,
@@ -142,13 +154,44 @@
                         }, this)
                     })
                 }, this)
-            });
+            });*/
+            
+            if (this.ws_name)
+                this.trigger('workspaceUpdated.Narrative', this.ws_name);
+
+            this.addButton($('<button>')
+                           .addClass('btn btn-xs btn-default')
+                           .append('<span class="glyphicon glyphicon-play"></span>')
+                           .click($.proxy(function(event) {
+                               this.trigger('toggleSidePanelOverlay.Narrative');
+                           }, this)));
+            
+            return this;
+            
+            
+            
+            /**
+             * This should be triggered whenever something clicks on a data info button (or just
+             * wants the info modal to appear).
+             */
+            $(document).on(
+                'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
+                    this.showInfoModal(workspace, id);
+                }, 
+                this)
+            );
+
+            $(document).on(
+                'updateNarrativeDataTab.Narrative', $.proxy(function(e) {
+                    this.refreshNarrativeTab();
+                },
+                this)
+            );
+
 
             this.createStructure()
                 .createMessages();
 
-            if (this.wsId)
-                this.trigger('workspaceUpdated.Narrative', this.wsId);
 
             return this;
         },
@@ -180,8 +223,8 @@
             return this;
         },
 
-        setWorkspace: function(wsId) {
-            this.wsId = wsId;
+        setWorkspace: function(ws_name) {
+            this.ws_name = ws_name;
             this.refresh();
         },
 
@@ -222,7 +265,8 @@
                 $.proxy(function(obj) {
                     console.debug("isReadonlyWorkspace: error!", obj);
                     callback(false);
-                }, this));
+                }, this)
+            );
         },
 
         /**
@@ -243,15 +287,21 @@
              */
 
             // header bar.
-            var $headerDiv = $('<div>')
-                              .append('Data')
-                              .append($('<button>')
-                                      .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
-                                      .css({'margin-top': '-4px',
-                                            'margin-right': '4px'})
-                                      .click($.proxy(function(event) { this.refresh(); }, this))
-                                      .append($('<span>')
-                                              .addClass('glyphicon glyphicon-refresh')));
+            // var $headerDiv = $('<div>')
+            //                   .append('Data')
+            //                   .append($('<button>')
+            //                           .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
+            //                           .css({'margin-top': '-4px',
+            //                                 'margin-right': '4px'})
+            //                           .click($.proxy(function(event) { this.refresh(); }, this))
+            //                           .append($('<span>')
+            //                                   .addClass('glyphicon glyphicon-refresh')));
+
+            var $refreshBtn = $('<button>')
+                              .addClass('btn btn-xs btn-default')
+                              .click($.proxy(function(event) { this.refresh(); }, this))
+                              .append($('<span>')
+                                      .addClass('glyphicon glyphicon-refresh'));
 
             // encapsulating data panel - all the data-related stuff goes in here.
             // this way, it can all be hidden easily.
@@ -279,19 +329,27 @@
                                .addClass('kb-error')
                                .hide();
 
-            this.$elem.append($('<div>')
-                              .addClass('panel panel-primary kb-data-main-panel')
-                              .append($('<div>')
-                                      .addClass('panel-heading')
-                                      .append($('<div>')
-                                              .addClass('panel-title')
-                                              .css({'text-align': 'center'})
-                                              .append($headerDiv)))
-                              .append($('<div>')
-                                      .addClass('panel-body kb-narr-panel-body')
-                                      .append(this.$dataPanel)
-                                      .append(this.$loadingPanel)
-                                      .append(this.$errorPanel)));
+            this.addButton($refreshBtn);
+
+            this.body().append($('<div>')
+                               .addClass('kb-narr-panel-body')
+                               .append(this.$dataPanel)
+                               .append(this.$loadingPanel)
+                               .append(this.$errorPanel));
+
+            // this.$elem.append($('<div>')
+            //                   .addClass('panel panel-primary kb-data-main-panel')
+            //                   .append($('<div>')
+            //                           .addClass('panel-heading')
+            //                           .append($('<div>')
+            //                                   .addClass('panel-title')
+            //                                   .css({'text-align': 'center'})
+            //                                   .append($headerDiv)))
+            //                   .append($('<div>')
+            //                           .addClass('panel-body kb-narr-panel-body')
+            //                           .append(this.$dataPanel)
+            //                           .append(this.$loadingPanel)
+            //                           .append(this.$errorPanel)));
             
 
 
@@ -435,6 +493,12 @@
                                                       .addClass('modal-footer')
                                                       .append($footerButtons))));
 
+            // Add behaviors
+            // XXX: Nothing here yet
+            this.$infoAccordion.on('click', function() {
+              console.debug("I pity the fool who clicks on infoModal!");
+            });
+
             // Appending this to body since the left panels are now fixed.
             $('body').append(this.$infoModal);
             $infoAccordion.kbaseAccordion(
@@ -476,6 +540,10 @@
          * @public
          */
         refresh: function() {
+            
+            this.dataListWidget.refresh();
+            
+            return;
             console.debug("kbWS.refresh.start");
             if (this.wsClient && this.wsId) {
                 console.debug("kbWS.refresh.test-for-readonly");
@@ -834,47 +902,12 @@
          * @returns a list of data objects
          */
         getLoadedData: function(type, ignoreVersion) {
-            if (!type || type.length === 0)
-                return this.loadedData;
-
-            var dataSet = {};
-            if (typeof type === 'string') {
-                type = [type];
+            if (this.dataListWidget) {
+                return this.dataListWidget.getObjData(params,ignoreVersion);
+            } else {
+                return {};
             }
-            if (Object.prototype.toString.call(type) === '[object Array]') {
-                for (var i=0; i<type.length; i++) {
-                    var dataType = type[i];
-
-                    // If we're ignoring the version, strip the version off
-                    // the end of the query data type
-                    if (ignoreVersion) {
-                        var unversionType = /(\S+)-\d+\.\d+/.exec(dataType);
-
-                        if (unversionType && unversionType[1])
-                            dataType = unversionType[1];
-
-                        // turn the dataType's . into \.
-                        // then build the regex /^datatype/
-                        // so it'll look like /^KBaseGenomes\.Genome/ for example
-                        var typeRegex = new RegExp("^" + dataType.replace(/\./g, '\\.') + "(-\d+\.\d+)?$");
-
-                        for (var typeName in this.loadedData) {
-                            if (typeRegex.test(typeName)) {
-                                if (!dataSet[dataType])
-                                    dataSet[dataType] = [];
-                                dataSet[dataType] = dataSet[dataType].concat(this.loadedData[typeName]);
-                            }
-                        }
-                    }
-                    // Otherwise, just look for the match.
-                    else {
-                        if (this.loadedData[dataType])
-                            dataSet[dataType] = this.loadedData[dataType];
-                    }
-                }
-            }
-
-            return dataSet;
+            
         },
 
         /**

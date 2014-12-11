@@ -88,9 +88,12 @@
                              .attr('value', 'Run')
                              .addClass('btn btn-primary btn-sm')
                              .append('Run');
-            var $runButton.click(
+            var self = this;
+            $runButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
+                    var params = self.inputWidget.getParameters();
+                    alert(JSON.stringify(params));
                 }, this)
             );
 
@@ -151,6 +154,10 @@
                     .append($buttons));
             
             this.inputWidget = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
+        },
+        
+        runImport: function() {
+        	
         },
         
         loggedInCallback: function(event, auth) {

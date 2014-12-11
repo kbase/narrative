@@ -274,7 +274,7 @@
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared"">'),
                 publicPanel = $('<div class="kb-import-content kb-import-public"">'),
-                importPanel = $('<div class="kb-import-content kb-import-import"">');
+                importPanel = $('<div class="kb-import-content kb-import-import" style="margin-right: 20px;">');
 
 
             // add tabs
@@ -308,8 +308,10 @@
             // start with my data, then fetch other data
             // this is because data sets can be large and 
             // makes things more fluid
-            minePanel.loading();
-            sharedPanel.loading();
+            if (minePanel.loading)
+            	minePanel.loading();
+            if (sharedPanel.loading)
+            	sharedPanel.loading();
             updateView('mine').done(function() {
                 updateView('shared');
             });

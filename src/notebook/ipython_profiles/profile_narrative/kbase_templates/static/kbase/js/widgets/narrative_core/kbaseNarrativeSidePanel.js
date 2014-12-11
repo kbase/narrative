@@ -291,7 +291,6 @@
             publicPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             importPanel.kbaseNarrativeSideImportTab({});
             //append('<div class="kb-import-content"><br>coming soon.</div>');
-            importPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             galleryPanel.kbaseMethodGallery({sidePanel : this});
 
             body.addClass('kb-side-panel');

@@ -7,6 +7,7 @@
         parent: "kbaseNarrativeParameterInput",
         version: '1.0.0',
         options: {
+        	isInSidePanel: false,
             shockUrl: 'https://kbase.us/services/shock-api/',
             ujsUrl: 'https://kbase.us/services/userandjobstate/',
             fullShockSearchToResume: false,
@@ -118,6 +119,10 @@
             var nameColClass  = "col-md-2";
             var inputColClass = "col-md-5";
             var hintColClass  = "col-md-5";
+            if (self.options.isInSidePanel) {
+                var inputColClass = "col-md-7";
+                var hintColClass  = "col-md-3";
+            }
 
             var $row = $('<div>').addClass("row kb-method-parameter-row")
             	.hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});

@@ -11,6 +11,7 @@
         parent: "kbaseNarrativeMethodInput",
         version: "1.0.0",
         options: {
+            isInSidePanel: false
         },
 
         tabParamId: null,		// string
@@ -33,32 +34,54 @@
             var self = this;
             var method = this.options.method;
             var params = method.parameters;
+            var tabParamSpec = null;
             for (var i=0; i<params.length; i++) {
                 var paramSpec = params[i];
                 // check what kind of parameter here.
                 if (paramSpec.field_type === "tab") {
-                	self.tabNames = paramSpec.radio_options.ids_to_options;
-                	self.tabParamId = paramSpec.id;
+                	tabParamSpec = paramSpec;
                 	self.tabParamPos = i;
-                	self.tabPane = $('<div/>');
-                	self.tabPane.kbaseTabs({canDelete : true, tabs : []});
-                	self.tabs = {};
-                	self.tabParamToSpec = {};
-                	self.paramIdToTab = {};
-                	var tabCount = 0;
-                	for (var tabId in self.tabNames) {
-                		var tabName = self.tabNames[tabId];
-                    	tab = $('<div/>');
-                    	var isShown = tabCount == 0;
-                    	self.tabPane.kbaseTabs('addTab', {tab: tabName, content: tab, canDelete : false, show: isShown});
-                		tabCount++;
-                    	self.tabs[tabId] = tab;
-                    	self.tabParamToSpec[tabId] = {};
-                	}
-                	var paramIdToTabJson = paramSpec.default_values[0];
-                	paramIdToTabJson = $('<div/>').html(paramIdToTabJson).text();
-                	self.paramIdToTab = JSON.parse(paramIdToTabJson);
+                	break;
                 }
+            }
+            if (tabParamSpec) {
+            	var paramIdToTabJson = tabParamSpec.default_values[0];
+            	paramIdToTabJson = $('<div/>').html(paramIdToTabJson).text();
+            	self.paramIdToTab = JSON.parse(paramIdToTabJson);
+            	var tabNamesRaw = tabParamSpec.radio_options.ids_to_options;
+            	if (this.options.isInSidePanel) {
+                	self.tabNames = {};
+                	var tabIdToParamCount = {};
+                	for (var paramId in self.paramIdToTab) {
+                		var tabId = self.paramIdToTab[paramId];
+                		if (!tabIdToParamCount[tabId]) {
+                			tabIdToParamCount[tabId] = 1;
+                		} else {
+                			tabIdToParamCount[tabId]++;
+                		}
+                	}
+            		for (var tabId in tabNamesRaw) {
+            			if (tabIdToParamCount[tabId])
+            				self.tabNames[tabId] = tabNamesRaw[tabId];
+            		}
+            	} else {
+                	self.tabNames = tabNamesRaw;            		
+            	}
+            	self.tabParamId = tabParamSpec.id;
+            	self.tabPane = $('<div/>');
+            	self.tabPane.kbaseTabs({canDelete : true, tabs : []});
+            	self.tabs = {};
+            	self.tabParamToSpec = {};
+            	var tabCount = 0;
+            	for (var tabId in self.tabNames) {
+            		var tabName = self.tabNames[tabId];
+            		tab = $('<div/>');
+            		var isShown = tabCount == 0;
+            		self.tabPane.kbaseTabs('addTab', {tab: tabName, content: tab, canDelete : false, show: isShown});
+            		tabCount++;
+            		self.tabs[tabId] = tab;
+            		self.tabParamToSpec[tabId] = {};
+            	}
             }
             self._superMethod('render');
         },

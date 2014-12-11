@@ -31,7 +31,8 @@
                 this.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
             var upperPanel = $('<div>');
-            this.widgetPanel = $('<div>');
+            this.widgetPanel = $('<div>').addClass('panel kb-func-panel kb-cell-run');
+
             this.$elem.append(upperPanel);
             this.$elem.append(this.widgetPanel);
             this.methClient = new NarrativeMethodStore(this.methodStoreURL);
@@ -77,7 +78,79 @@
             if (!inputWidgetName || inputWidgetName === 'null')
                 inputWidgetName = "kbaseNarrativeMethodInput";
             var methodJson = JSON.stringify(this.methodSpec);
-            this.inputWidget = this.widgetPanel[inputWidgetName]({ method: methodJson });
+            
+            var $inputDiv = $('<div>');
+
+            // These are the 'delete' and 'run' buttons for the cell
+            var $runButton = $('<button>')
+                             .attr('id', this.cellId + '-run')
+                             .attr('type', 'button')
+                             .attr('value', 'Run')
+                             .addClass('btn btn-primary btn-sm')
+                             .append('Run');
+            var $runButton.click(
+                $.proxy(function(event) {
+                    event.preventDefault();
+                }, this)
+            );
+
+            var $buttons = $('<div>')
+                           .addClass('buttons pull-right')
+                           .append($runButton);
+
+            var $progressBar = $('<div>')
+            .attr('id', 'kb-func-progress')
+            .addClass('pull-left')
+            .css({'display' : 'none'})
+            .append($('<div>')
+                    .addClass('progress progress-striped active kb-cell-progressbar')
+                    .append($('<div>')
+                            .addClass('progress-bar progress-bar-success')
+                            .attr('role', 'progressbar')
+                            .attr('aria-valuenow', '0')
+                            .attr('aria-valuemin', '0')
+                            .attr('aria-valuemax', '100')
+                            .css({'width' : '0%'})))
+            .append($('<p>')
+                    .addClass('text-success'));
+
+            var methodId = 'import-method-details-'+this.uuid();
+            var buttonLabel = 'details';
+            var methodDesc = this.methodSpec.info.tooltip;
+            var $menuSpan = $('<div class="pull-right">');
+            var $methodInfo = $('<div>')
+            .addClass('kb-func-desc')
+            .append('<h1><b>' + this.methodSpec.info.name + '</b></h1>')
+            .append($menuSpan)
+            .append($('<span>')
+                    .addClass('pull-right kb-func-timestamp')
+                    .attr('id', 'last-run'))
+            .append($('<button>')
+                    .addClass('btn btn-default btn-xs')
+                    .attr('type', 'button')
+                    .attr('data-toggle', 'collapse')
+                    .attr('data-target', '#' + methodId)
+                    .append(buttonLabel))
+            .append($('<h2>')
+                    .attr('id', methodId)
+                    .addClass('collapse')
+                    .append(methodDesc));
+
+            
+            this.widgetPanel
+            .append($('<div>')
+                    .addClass('panel-heading')
+                    .append($methodInfo))
+            .append($('<div>')
+                    .addClass('panel-body')
+                    .append($inputDiv))
+            .append($('<div>')
+                    .addClass('panel-footer')
+                    .css({'overflow' : 'hidden'})
+                    .append($progressBar)
+                    .append($buttons));
+            
+            this.inputWidget = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
         },
         
         loggedInCallback: function(event, auth) {

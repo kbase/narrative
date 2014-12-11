@@ -10,6 +10,7 @@
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",
+            isInSidePanel: false
         },
 
         init: function(options) {
@@ -51,23 +52,23 @@
                 var $stepDiv = $('<div>');
                 // check what kind of parameter here.
                 if (paramSpec.field_type === "text") {
-                    var textInputWidget = $stepDiv["kbaseNarrativeParameterTextInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
+                    var textInputWidget = $stepDiv["kbaseNarrativeParameterTextInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:textInputWidget});
                     this.parameterIdLookup[paramSpec.id] = textInputWidget;
                 } else if (paramSpec.field_type === "dropdown") {
-                    var dropdownInputWidget = $stepDiv["kbaseNarrativeParameterDropdownInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
+                    var dropdownInputWidget = $stepDiv["kbaseNarrativeParameterDropdownInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:dropdownInputWidget});
                     this.parameterIdLookup[paramSpec.id] = dropdownInputWidget;
                 } else if (paramSpec.field_type === "checkbox") {
-                    var checkboxInputWidget = $stepDiv["kbaseNarrativeParameterCheckboxInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
+                    var checkboxInputWidget = $stepDiv["kbaseNarrativeParameterCheckboxInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:checkboxInputWidget});
                     this.parameterIdLookup[paramSpec.id] = checkboxInputWidget;
                 }else if (paramSpec.field_type === "textarea") {
-                    var textareaInputWidget = $stepDiv["kbaseNarrativeParameterTextareaInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
+                    var textareaInputWidget = $stepDiv["kbaseNarrativeParameterTextareaInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:textareaInputWidget});
                     this.parameterIdLookup[paramSpec.id] = textareaInputWidget;
                 }else if (paramSpec.field_type === "file") {
-                    var fileInputWidget = $stepDiv["kbaseNarrativeParameterFileInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i]});
+                    var fileInputWidget = $stepDiv["kbaseNarrativeParameterFileInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:fileInputWidget});
                     this.parameterIdLookup[paramSpec.id] = fileInputWidget;
                 }else if (paramSpec.field_type === "tab") {

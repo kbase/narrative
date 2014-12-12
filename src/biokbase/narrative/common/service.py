@@ -734,10 +734,10 @@ class LifecycleLogger(LifecycleObserver):
             self._write(logging.DEBUG, "func.debug", {'dbgmsg': msg})
 
     def register_job(self, job_id):
-        self._write(logging.INFO, "start job", "id={}".format(job_id))
+        self._write(logging.INFO, "start job", {'jobid': "id={}".format(job_id)})
 
     def register_app(self, app_id):
-        self._write(logging.INFO, "start app", "id={}".format(app_id))
+        self._write(logging.INFO, "start app", {'jobid': "id={}".format(app_id)})
 
 
 class ServiceMethod(trt.HasTraits, LifecycleSubject):

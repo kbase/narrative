@@ -274,7 +274,7 @@
             var minePanel = $('<div class="kb-import-panel">'),
                 sharedPanel = $('<div class="kb-import-panel">'),
                 publicPanel = $('<div class="kb-import-panel">'),
-                importPanel = $('<div class="kb-import-panel">');
+                importPanel = $('<div class="kb-import-panel" style="margin-left: 20px; margin-right: 20px;">');
                 galleryPanel = $('<div class="kb-import-panel">');
 
 

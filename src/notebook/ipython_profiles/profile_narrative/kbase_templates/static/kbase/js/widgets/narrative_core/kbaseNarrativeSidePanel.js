@@ -275,6 +275,7 @@
                 sharedPanel = $('<div class="kb-import-panel">'),
                 publicPanel = $('<div class="kb-import-panel">'),
                 importPanel = $('<div class="kb-import-panel" style="margin-left: 20px; margin-right: 20px;">');
+                examplePanel = $('<div class="kb-import-panel">');
                 galleryPanel = $('<div class="kb-import-panel">');
 
 
@@ -283,6 +284,7 @@
                     {tabName: 'My Data', content: minePanel},
                     {tabName: 'Shared', content: sharedPanel},
                     {tabName: 'Public', content: publicPanel},
+                    {tabName: 'Example', content: examplePanel},
                     {tabName: 'Import', content: importPanel},
                     {tabName: 'Gallery', content: galleryPanel},
                 ]);
@@ -290,6 +292,7 @@
             //sharedPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             publicPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             importPanel.kbaseNarrativeSideImportTab({});
+            examplePanel.kbaseNarrativeExampleDataTab({});
             //append('<div class="kb-import-content"><br>coming soon.</div>');
             galleryPanel.kbaseMethodGallery({sidePanel : this});
 

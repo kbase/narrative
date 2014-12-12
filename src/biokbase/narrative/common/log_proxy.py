@@ -187,7 +187,6 @@ class DBConfiguration(Configuration):
     def collection(self):
         return self._obj['collection']
 
-
 class SyslogConfiguration(Configuration):
     DEFAULT_HOST = 'localhost'
     DEFAULT_PORT = 514
@@ -225,7 +224,6 @@ class SyslogConfiguration(Configuration):
             'socktype': {'tcp': socket.SOCK_STREAM,
                          'udp': socket.SOCK_DGRAM}[self.proto]}
 
-
 def get_sample_config():
     """Get a sample configuration."""
     fields = [
@@ -247,7 +245,6 @@ def get_sample_config():
         'syslog_proto: {}'.format(SyslogConfiguration.DEFAULT_PROTO)
     ]
     return '\n'.join(fields)
-
 
 class LogForwarder(asyncore.dispatcher):
     __host, __ip = None, None
@@ -314,11 +311,12 @@ class LogForwarder(asyncore.dispatcher):
 class LogStreamForwarder(asyncore.dispatcher):
 
     def __init__(self, sock, hnd, meta):
-        """Forward logs coming in on socket `sock` to handler list `hnd`.
+        """Forward logs coming in on socket `sock` to pymongo.Collection
+        `collection`, augmenting each record with dict of values in `meta`.
         """
         asyncore.dispatcher.__init__(self, sock)
         self._meta, self._hnd = meta, hnd
-        self._hdr, self._dbg = '', g_log.isEnabledFor(logging.DEBUG)
+        self._hdr = ''
 
     def handle_read(self):
         # Read header
@@ -339,30 +337,19 @@ class LogStreamForwarder(asyncore.dispatcher):
             chunk = chunk + self.recv(size - len(chunk))
         record = pickle.loads(chunk)
 
-        if self._dbg:
-            g_log.debug("handle_read: record={}".format(record))
+        if g_log.isEnabledFor(logging.DEBUG):
+            g_log.debug("Got record: {}".format(record))
 
         meta = self._meta or {}
         # Dispatch to handlers
+        g_log.info("Dispatch to {:d} handlers".format(len(self._hnd)))
         for h in self._hnd:
-            if self._dbg:
-                g_log.debug("Dispatch to handler {}".format(h))
             h.handle(record, meta)
 
 # Handlers
 
 class Handler(object):
-    # extract these from the incoming records,
-    # incoming name is in key, outgoing name is in value
-    EXTRACT_META = {
-        'session': 'session_id',
-        'narrative': 'narr',
-        'client_ip': 'client.ip',
-        'user': 'user'}
-
-    def _get_record_meta(self, record):
-        return {val: record.get(key, '')
-                for key, val in self.EXTRACT_META.iteritems()}
+    pass
 
 class MongoDBHandler(Handler):
     def __init__(self, coll):
@@ -375,30 +362,20 @@ class MongoDBHandler(Handler):
             g_log.error("Bad input to 'handle_read': {}".format(err))
             return
         kbrec.record.update(meta)
-        kbrec.record.update(self._get_record_meta())
         self._coll.insert(kbrec.record)
 
 class SyslogHandler(Handler):
-
     def __init__(self, log_handler):
         f = logging.Formatter("%(levelname)s %(asctime)s %(name)s %(message)s")
         f.converter = time.gmtime
         log_handler.setFormatter(f)
         log_handler.setLevel(logging.DEBUG - 1)  # everything!
         self._hnd = log_handler
-        self._dbg = g_log.isEnabledFor(logging.DEBUG)
 
     def handle(self, record, meta):
-        if self._dbg:
-            g_log.debug("SyslogHandler: rec.in={}".format(record))
-        kvp = meta.copy()
-        kvp.update(self._get_record_meta(record))
-        message = record.get('message', record.get('msg', ''))
-        record['msg'] = message + ' ' + log_common.format_kvps(kvp)
-        if 'message' in record:
-            del record['message'] #??
-        if self._dbg:
-            g_log.debug("SyslogHandler: rec.out={}".format(record))
+        if meta:
+            message = record.get('message', record.get('msg', ''))
+            record['msg'] = message + ' ' + log_common.format_kvps(meta)
         logrec = logging.makeLogRecord(record)
         self._hnd.emit(logrec)
 
@@ -455,19 +432,14 @@ class DBRecord(object):
         del rec['levelname']
 
     def _strip_logging_junk(self):
-        """Delete/rename fields from logging library."""
+        """Get rid of unneeded fields from logging library."""
         rec = self.record  # alias
         # not needed at all
-        for k in ('msg', 'threadName', 'thread', 'pathname', 'msecs',
+        for k in ('msg', 'threadName', 'thread', 'pathname', 'msecs', 'name',
                   'levelno', 'asctime', 'relativeCreated', 'filename',
                   'processName', 'process', 'module', 'lineno', 'funcName'):
             if k in rec:
                 del rec[k]
-        # rename
-        for old_name, new_name in (('name', 'method'),):
-            if old_name in rec:
-                rec[new_name] = rec[old_name]
-                del rec[old_name]
         # remove exception stuff if empty
         if rec.get('exc_info', None) is None:
             for k in 'exc_info', 'exc_text':

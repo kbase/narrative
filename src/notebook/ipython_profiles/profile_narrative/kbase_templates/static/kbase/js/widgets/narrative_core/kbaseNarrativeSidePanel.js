@@ -274,7 +274,7 @@
             var minePanel = $('<div class="kb-import-panel">'),
                 sharedPanel = $('<div class="kb-import-panel">'),
                 publicPanel = $('<div class="kb-import-panel">'),
-                importPanel = $('<div class="kb-import-panel">');
+                importPanel = $('<div class="kb-import-panel" style="margin-left: 20px; margin-right: 20px;">');
                 galleryPanel = $('<div class="kb-import-panel">');
 
 
@@ -291,7 +291,8 @@
             publicPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             importPanel.kbaseNarrativeSideImportTab({});
             //append('<div class="kb-import-content"><br>coming soon.</div>');
-            galleryPanel.kbaseMethodGallery({sidePanel : this});
+            if (galleryPanel.kbaseMethodGallery)
+            	galleryPanel.kbaseMethodGallery({sidePanel : this});
 
             body.addClass('kb-side-panel');
             body.append($tabs.header, $tabs.body);
@@ -311,8 +312,10 @@
             // start with my data, then fetch other data
             // this is because data sets can be large and 
             // makes things more fluid
-            minePanel.loading();
-            sharedPanel.loading();
+            if (minePanel.loading)
+            	minePanel.loading();
+            if (sharedPanel.loading)
+            	sharedPanel.loading();
             updateView('mine').done(function() {
                 updateView('shared');
             });

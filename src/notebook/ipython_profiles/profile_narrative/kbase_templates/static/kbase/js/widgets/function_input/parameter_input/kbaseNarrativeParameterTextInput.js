@@ -11,7 +11,8 @@
         options: {
             loadingImage: "../images/ajax-loader.gif",
             parsedParameterSpec: null,
-            wsObjSelectPageSize : 20
+            wsObjSelectPageSize : 20,
+            isInSidePanel: false
         },
         IGNORE_VERSION: true,
 
@@ -38,6 +39,11 @@
         
         render: function() {
             var self = this;
+            if (self.options.isInSidePanel) {
+                self.inputColClass = "col-md-7";
+                self.hintColClass  = "col-md-3";
+            }
+
             var spec = self.spec;
             
             // check if we need to allow multiple values

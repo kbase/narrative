@@ -11,11 +11,13 @@
         options: {
         },
         token: null,
+        wsName: null,
         loadingImage: "static/kbase/images/ajax-loader.gif",
         wsUrl: "https://kbase.us/services/ws/",
         methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
         methClient: null,
         uploaderURL: 'http://140.221.67.172:7778',
+        aweURL: 'http://140.221.67.172:7080',
         methods: null,			// {method_id -> method_spec}
         types: null,			// {type_name -> type_spec}
         selectedType: null,		// selected type name
@@ -24,6 +26,13 @@
         methodSpec: null,		// method spec-file for selected type
         init: function(options) {
             this._super(options);
+            var self = this;
+            $(document).on(
+            		'setWorkspaceName.Narrative', $.proxy(function(e, info) {
+                        //console.log('side panel import tab -- setting ws to ' + info.wsId);
+                        self.wsName = info.wsId;
+            		}, this)
+            );
             return this;
         },
         
@@ -104,7 +113,9 @@
         },
 
         showWidget: function(type) {
+        	console.log("WS name: " + this.wsName);
             var self = this;
+            this.selectedType = type;
         	this.widgetPanel.empty();
         	this.widgetPanel.addClass('panel kb-func-panel kb-cell-run')
         	var methodId = this.types[type]["import_method_ids"][0];
@@ -122,7 +133,7 @@
                              .attr('type', 'button')
                              .attr('value', 'Run')
                              .addClass('btn btn-primary btn-sm')
-                             .append('Run');
+                             .append('Import');
             $runButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
@@ -212,27 +223,65 @@
             	var paramValue = paramValueArray[i];
             	params[paramId] = paramValue;
         	}
-        	alert(JSON.stringify(params));
-        	//
+        	console.log(params);
+        	//alert(JSON.stringify(params));
             var uploaderClient = new Transform(this.uploaderURL, {'token': self.token});
             if (self.selectedType === 'KBaseGenomes.Genome') {
             	var mode = params["mode"];
             	if (mode === 'uploadGbk') {
+            		var contigsetId = null;
+            		if (params['contigObject'].length > 0) {
+            			contigsetId = params['contigObject'];
+            		} else {
+            			contigsetId = params['outputObject'] + '.contigset';
+            		}
+            		var args = {'etype': 'KBaseGenomes.GBK', 
+            				'kb_type': 'KBaseGenomes.Genome', 
+            				'in_id': params['gbkFile'], 
+            				'ws_name': self.wsName, 
+            				'obj_name': params['outputObject'], 
+            				'opt_args': '{"validator":{},"transformer":{"contigset_ref":"'+self.wsName+'/'+contigsetId+'"}}'}
+            		console.log(args);
             		uploaderClient.upload({},
             				$.proxy(function(data) {
+            					console.log(data);
+            					self.waitForJob(data[0]);
                             }, this),
                             $.proxy(function(error) {
                                 self.showError(error);
                             }, this)
                         );
             	} else {
-                	showError("We don't support [" + mode + "] import mode for Genome type");
+            		self.showError(mode + " import mode for Genome type is not supported yet");
             	}
             } else if (self.selectedType === 'KBaseGenomes.ContigSet') {
-            	showError("Support for ContigSet is coming.");
+            	self.showError("Support for ContigSet is coming.");
             } else {
-            	showError("We don't support import for [" + self.selectedType + "] type yet.");
+            	self.showError("Import for [" + self.selectedType + "] type is not supported yet.");
             }
+        },
+        
+        waitForJob: function(jobId) {
+        	var self = this;
+        	var aweClient = new AweClient({url: self.aweURL, token: self.token});
+        	var timeLst = function(event) {
+        		aweClient.get_job(jobId, function(data) {
+        			console.log("Job status:");
+        			console.log(data);
+        			var state = data['state'];
+        			if (state === 'completed') {  // Done
+        				clearInterval(self.timer);
+        				console.log("Import is done");
+        			} else if (state === 'suspended') {  // Error
+        				clearInterval(self.timer);
+        				self.showError("Unexpected error");
+        			}
+        		}, function(error) {
+    				clearInterval(self.timer);
+    				console.log(error);
+        		});
+        	};
+        	self.timer = setInterval(timeLst, 5000);
         },
         
         showError: function(error) {

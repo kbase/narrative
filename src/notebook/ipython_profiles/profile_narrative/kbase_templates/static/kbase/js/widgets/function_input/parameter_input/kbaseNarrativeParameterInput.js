@@ -10,8 +10,7 @@
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",
-            parsedParameterSpec: null,
-            isInSidePanel: false
+            parsedParameterSpec: null
         },
         IGNORE_VERSION: true,
 

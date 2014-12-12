@@ -336,7 +336,7 @@ p#site-title {
     max-width: 800px;
     height: 620px;
     border : 1px solid #ababab;
-    z-index : 9990;
+    z-index : 10000;
     background : white;
     position : fixed;
 }

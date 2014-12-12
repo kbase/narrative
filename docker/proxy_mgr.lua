@@ -38,6 +38,7 @@ local val_regex = "[%w_%-:%.]+"
 local json = require('json')
 local p = require('pl.pretty')
 local notemgr = require('notelauncher')
+local locklib = require("resty.lock")
 local httplib = require("resty.http")
 local httpclient = httplib:new()
 
@@ -396,14 +397,20 @@ set_proxy = function(self)
             if target == nil then
                 ngx.status = ngx.HTTP_NOT_FOUND
             else
-                response = target
+                local last, flags = proxy_last:get(key)
+                response = {
+                    proxy_target = proxy_map:get(key),
+                    last_seen = os.date("%c",last),
+                    last_ip = proxy_last_ip:get(key),
+                    active = tostring(proxy_state:get(key))
+                }
             end
         else 
             local keys = proxy_map:get_keys() 
             for key = 1, #keys do
-                local last, flags = proxy_last:get(key)
+                local last, flags = proxy_last:get(keys[key])
                 response[keys[key]] = { 
-                    proxy_target = proxy_map:get( keys[key]),
+                    proxy_target = proxy_map:get(keys[key]),
                     last_seen = os.date("%c",last),
                     last_ip = proxy_last_ip:get(keys[key]),
                     active = tostring(proxy_state:get(keys[key]))

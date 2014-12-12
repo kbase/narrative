@@ -51,7 +51,6 @@ local check_sweeper
 local initialize
 local set_proxy
 local use_proxy
-local idle_status
 local new_container
 local url_decode
 local get_session
@@ -664,46 +663,9 @@ use_proxy = function(self)
     end
 end
 
-idle_status = function(self)
-    local uri_key_rx = ngx.var.uri_base.."/("..key_regex ..")"
-    local uri_value_rx = ngx.var.uri_base.."/"..key_regex .."/".."("..val_regex..")$"
-    local method = ngx.req.get_method()
-    local response = {}
-
-    -- run the reap marker to update state of all containers if there isn't one in the queue
-    local next_mark = proxy_mgr:get('next_mark')
-    if next_mark == nil or next_mark + 10 < os.time() then
-        ngx.log( ngx.WARN, "No marker in queue, performing immediate marker run")
-        marker()
-    end
-
-    -- Check URI to see if a specific proxy entry is being asked for
-    -- or if we just dump it all out
-    local uri_base = ngx.var.uri_base
-    local key = string.match(ngx.var.uri,uri_key_rx)
-    if key then
-        local last, flags = proxy_last:get(key)
-        if last == nil then
-            ngx.status = ngx.HTTP_NOT_FOUND
-        else
-        -- return the last timestamp and IP seen plus the status value
-        response = { last_seen = os.date("%c",last), last_ip = proxy_last_ip:get(key), active = tostring(proxy_state:get(key))}
-    end
-    else 
-        local keys = proxy_last:get_keys() 
-        for key = 1, #keys do
-            local last, flags = proxy_last:get( keys[key])
-        -- return the last timestamp and IP seen plus the status value
-        response[keys[key]] = { last_seen = os.date("%c",last), last_ip = proxy_last_ip:get(keys[key]), active = tostring(proxy_state:get(keys[key]))}
-        end
-    end
-    ngx.say(json.encode( response ))
-end
-
 M.set_proxy = set_proxy
 M.use_proxy = use_proxy
 M.initialize = initialize
-M.idle_status = idle_status
 M.est_connections = est_connections
 
 return M

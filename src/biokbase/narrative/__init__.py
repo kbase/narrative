@@ -8,7 +8,7 @@ version = lambda: __version__
 #   no args = print current version
 #   1 arg = self-modify version to arg value
 if __name__ == '__main__':
-    import sys
+    import os, sys
     if len(sys.argv) == 1:
         print(version())
     elif len(sys.argv) == 2:
@@ -20,7 +20,8 @@ if __name__ == '__main__':
             sys.exit(1)
         oldver = '"' + str(version()) + '"'
         newver = '"' + ver + '"'
-        oldself = open(__file__).read()
+        myfile = os.path.abspath(sys.argv[0])
+        oldself = open(myfile).read()
         newself = oldself.replace(oldver, newver)
-        open(__file__, 'w').write(newself)
+        open(myfile, 'w').write(newself)
     sys.exit(0)

@@ -507,7 +507,7 @@ class KBaseWSNotebookManager(NotebookManager):
         # only the one checkpoint ID:
         checkpoint_id = u"checkpoint"
         chkpt_created = datetime.datetime.utcnow()
-        self._set_narrative_env(id)
+        self._set_narrative_env(notebook_id)
         # This is a no-op for now
         # return the checkpoint info
         return { 'checkpoint_id' : checkpoint_id , 'last_modified' : chkpt_created }

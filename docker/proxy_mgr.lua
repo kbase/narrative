@@ -126,9 +126,6 @@ M.mark_interval = 60
 -- shutting it down?
 M.timeout = 180
 
--- How long (in seconds) after we mark an instance for deletion should we try to sweep it?
-M.sweep_delay = 30
-
 -- Default URL for authentication failure redirect, defaults to nil which means just error
 -- out without redirect
 M.auth_redirect = "/?redirect=%s"

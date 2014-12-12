@@ -662,8 +662,11 @@
          * If it passes, do nothing. If it fails, dim it out.
          *
          * So we need a handle on the functions. No big.
+         * !!! THIS IS OLD - We aren't using the accordion style before February, so 
+         * this needs to be slightly twiddled.
+         * !!!
          */
-        visualFilter: function(filterFn, fnInput) {
+        visualFilterAccordion: function(filterFn, fnInput) {
             var numHidden = 0;
             for (var catId in this.services) {
                 var cat = this.services[catId];
@@ -705,6 +708,30 @@
             else {
                 this.$toggleHiddenDiv.hide();
                 this.toggleHiddenMethods(1);
+            }
+        },
+
+        visualFilter: function(filterFn, fnInput) {
+            var numHidden = 0;
+            for (var methId in this.methodList) {
+                if (!filterFn(fnInput, this.methodList.methId)) {
+                    this.methodList.methId.$elem.hide();
+                    this.methodList.methId.$elem.addClass('kb-function-dim');
+                    numHidden++;
+                }
+                else {
+                    this.methodList.methId.$elem.removeClass('kb-function-dim');
+                    this.methodList.methId.$elem.show();
+                }
+            }
+            if (numHidden > 0) {
+                this.$numHiddenSpan.text(numHidden);
+                this.$toggleHiddenDiv.show();
+                this.toggleHiddenMethods(this.$showHideSpan.text() !== 'show');
+            }
+            else {
+                this.$toggleHiddenDiv.hide();
+                this.toggleHiddenMethods(true);
             }
         },
 

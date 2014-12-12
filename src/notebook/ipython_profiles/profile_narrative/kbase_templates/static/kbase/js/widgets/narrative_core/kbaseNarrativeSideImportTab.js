@@ -22,6 +22,7 @@
         types: null,			// {type_name -> type_spec}
         selectedType: null,		// selected type name
         widgetPanel: null,		// div for selected type
+        infoPanel: null,
         inputWidget: null,		// widget for selected type
         methodSpec: null,		// method spec-file for selected type
         init: function(options) {
@@ -60,11 +61,11 @@
             }
             var upperPanel = $('<div>');
             this.widgetPanel = $('<div>');
-            this.errorPanel = $('<div>');
+            this.infoPanel = $('<div>');
 
             this.$elem.append(upperPanel);
             this.$elem.append(this.widgetPanel);
-            this.$elem.append(this.errorPanel);
+            this.$elem.append(this.infoPanel);
             this.methClient = new NarrativeMethodStore(this.methodStoreURL);
             this.methClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1}, 
                     $.proxy(function(data) {
@@ -271,10 +272,12 @@
         			var state = data['state'];
         			if (state === 'completed') {  // Done
         				clearInterval(self.timer);
-        				console.log("Import is done");
+        				self.showInfo("Import job is done");
         			} else if (state === 'suspended') {  // Error
         				clearInterval(self.timer);
         				self.showError("Unexpected error");
+        			} else {
+        				self.showInfo("Import job has status: " + state, true);
         			}
         		}, function(error) {
     				clearInterval(self.timer);
@@ -282,6 +285,7 @@
         		});
         	};
         	self.timer = setInterval(timeLst, 5000);
+        	timeLst();
         },
         
         showError: function(error) {
@@ -289,10 +293,17 @@
         	var errorMsg = error;
         	if (error.error && error.error.message)
         		errorMsg = error.error.message;
-        	this.errorPanel.empty();
-        	this.errorPanel.append('<span class="label label-danger">Error: '+errorMsg+'"</span>');
+        	this.infoPanel.empty();
+        	this.infoPanel.append('<span class="label label-danger">Error: '+errorMsg+'"</span>');
         },
-        
+
+        showInfo: function(message, spinner) {
+        	if (spinner)
+        		message = '<img src="'+this.loadingImage+'"/> ' + message;
+        	this.infoPanel.empty();
+        	this.infoPanel.append(message);
+        },
+
         loggedInCallback: function(event, auth) {
             this.token = auth.token;
             this.render();

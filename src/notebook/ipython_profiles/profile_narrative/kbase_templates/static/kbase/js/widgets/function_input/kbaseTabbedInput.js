@@ -45,23 +45,22 @@
                 }
             }
             if (tabParamSpec) {
-            	var paramIdToTabJson = tabParamSpec.default_values[0];
-            	paramIdToTabJson = $('<div/>').html(paramIdToTabJson).text();
-            	self.paramIdToTab = JSON.parse(paramIdToTabJson);
-            	var tabNamesRaw = tabParamSpec.radio_options.ids_to_options;
+            	//console.log(tabParamSpec);
+            	self.paramIdToTab = {};
+            	var tabIdToParamCount = {};
+            	for (var tabId in tabParamSpec.tab_options.tab_id_to_param_ids) {
+            		var paramIds = tabParamSpec.tab_options.tab_id_to_param_ids[tabId];
+            		tabIdToParamCount[tabId] = paramIds.length;
+            		for (var paramPosInTab in paramIds) {
+            			paramId = paramIds[paramPosInTab];
+            			self.paramIdToTab[paramId] = tabId;
+            		}
+            	}
+            	var tabNamesRaw = tabParamSpec.tab_options.tab_id_to_tab_name;
             	if (this.options.isInSidePanel) {
                 	self.tabNames = {};
-                	var tabIdToParamCount = {};
-                	for (var paramId in self.paramIdToTab) {
-                		var tabId = self.paramIdToTab[paramId];
-                		if (!tabIdToParamCount[tabId]) {
-                			tabIdToParamCount[tabId] = 1;
-                		} else {
-                			tabIdToParamCount[tabId]++;
-                		}
-                	}
             		for (var tabId in tabNamesRaw) {
-            			if (tabIdToParamCount[tabId])
+            			if (tabIdToParamCount[tabId] && tabIdToParamCount[tabId] > 0)
             				self.tabNames[tabId] = tabNamesRaw[tabId];
             		}
             	} else {
@@ -73,8 +72,11 @@
             	self.tabs = {};
             	self.tabParamToSpec = {};
             	var tabCount = 0;
-            	for (var tabId in self.tabNames) {
+            	for (var tabPos in tabParamSpec.tab_options.tab_id_order) {
+            		var tabId = tabParamSpec.tab_options.tab_id_order[tabPos];
             		var tabName = self.tabNames[tabId];
+            		if (!tabName)
+            			continue;
             		tab = $('<div/>');
             		var isShown = tabCount == 0;
             		self.tabPane.kbaseTabs('addTab', {tab: tabName, content: tab, canDelete : false, show: isShown});

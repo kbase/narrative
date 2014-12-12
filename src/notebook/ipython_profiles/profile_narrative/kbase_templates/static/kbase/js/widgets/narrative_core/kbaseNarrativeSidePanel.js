@@ -271,18 +271,11 @@
 
 
             // tab panels
-<<<<<<< HEAD
-            var minePanel = $('<div class="kb-import-content kb-import-mine">'),
-                sharedPanel = $('<div class="kb-import-content kb-import-shared"">'),
-                publicPanel = $('<div class="kb-import-content kb-import-public"">'),
-                importPanel = $('<div class="kb-import-content kb-import-import" style="margin-right: 20px;">');
-=======
             var minePanel = $('<div class="kb-import-panel">'),
                 sharedPanel = $('<div class="kb-import-panel">'),
                 publicPanel = $('<div class="kb-import-panel">'),
-                importPanel = $('<div class="kb-import-panel">');
+                importPanel = $('<div class="kb-import-panel" style="margin-left: 20px; margin-right: 20px;">');
                 galleryPanel = $('<div class="kb-import-panel">');
->>>>>>> refs/remotes/origin/develop
 
 
             // add tabs
@@ -298,7 +291,8 @@
             publicPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             importPanel.kbaseNarrativeSideImportTab({});
             //append('<div class="kb-import-content"><br>coming soon.</div>');
-            galleryPanel.kbaseMethodGallery({sidePanel : this});
+            if (galleryPanel.kbaseMethodGallery)
+            	galleryPanel.kbaseMethodGallery({sidePanel : this});
 
             body.addClass('kb-side-panel');
             body.append($tabs.header, $tabs.body);

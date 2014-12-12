@@ -264,6 +264,7 @@
             	self.rowDivs[0].$error.hide();
             	errorDetectedHere = true;
             	errorMessages.push("required field "+self.spec.ui_name+" missing.");
+            	errorDetected = true;
             } else {
             	self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
             	self.rowDivs[0].$error.hide();

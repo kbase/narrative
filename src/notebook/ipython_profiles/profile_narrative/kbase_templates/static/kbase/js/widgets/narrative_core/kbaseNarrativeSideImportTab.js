@@ -15,11 +15,13 @@
         wsUrl: "https://kbase.us/services/ws/",
         methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
         methClient: null,
-        methods: null,
-        types: null,
-        widgetPanel: null,
-        inputWidget: null,
-        methodSpec: null,
+        uploaderURL: 'http://140.221.67.172:7778',
+        methods: null,			// {method_id -> method_spec}
+        types: null,			// {type_name -> type_spec}
+        selectedType: null,		// selected type name
+        widgetPanel: null,		// div for selected type
+        inputWidget: null,		// widget for selected type
+        methodSpec: null,		// method spec-file for selected type
         init: function(options) {
             this._super(options);
             return this;
@@ -27,22 +29,49 @@
         
         render: function() {
         	var self = this;
+            var errorModalId = "app-error-modal-"+ self.uuid();
+            var modalLabel = "app-error-modal-lablel-"+ self.uuid();
+            self.$errorModalContent = $('<div>');
+            self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="z-index: 1000000;">').addClass("modal fade");
+            self.$errorModal.append(
+                $('<div>').addClass('modal-dialog').append(
+                    $('<div>').addClass('modal-content').append(
+                        $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" id="'+modalLabel+'">Problems exist in your parameter settings.</h4>')
+                    ).append(
+                       $('<div>').addClass('modal-body').append(self.$errorModalContent)
+                    ).append(
+                        $('<div>').addClass('modal-footer').append(
+                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
+                    )
+                ));
+            self.$elem.append(self.$errorModal);
+
             if (window.kbconfig && window.kbconfig.urls) {
                 this.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
             var upperPanel = $('<div>');
-            this.widgetPanel = $('<div>').addClass('panel kb-func-panel kb-cell-run');
+            this.widgetPanel = $('<div>');
+            this.errorPanel = $('<div>');
 
             this.$elem.append(upperPanel);
             this.$elem.append(this.widgetPanel);
+            this.$elem.append(this.errorPanel);
             this.methClient = new NarrativeMethodStore(this.methodStoreURL);
-            this.methClient.list_categories({'load_methods': 1, 'load_apps' : 1, 'load_types' : 1}, 
+            this.methClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1}, 
                     $.proxy(function(data) {
-                    	self.types = data[3];
+                    	var aTypes = data[3];
                     	var methodIds = [];
-                    	for (var key in self.types) {
-                        	var methodId = self.types[key]["import_method_ids"][0];
-                        	methodIds.push(methodId);
+                    	self.types = {};
+                    	for (var key in aTypes) {
+                    		if (aTypes[key]["loading_error"]) {
+                            	console.log("Error loading type [" + key + "]: " + aTypes[key]["loading_error"]);
+                    			continue;
+                    		}
+                    		if (aTypes[key]["import_method_ids"].length > 0) {
+                    			self.types[key] = aTypes[key];
+                    			var methodId = aTypes[key]["import_method_ids"][0];
+                    			methodIds.push(methodId);
+                    		}
                     	}
                         self.methClient.get_method_spec({ 'ids' : methodIds },
                                 $.proxy(function(specs) {
@@ -51,6 +80,10 @@
                                 		self.methods[specs[i].info.id] = specs[i];
                                 	}
                                 	for (var key in self.types) {
+                                		addButton(key);
+                                	}
+                                	
+                                	function addButton(key) {
                                 		var btn = $('<button>' + self.types[key]["name"] + '</button>');
                                     	btn.click(function() {
                                         	self.showWidget(key);                                	
@@ -59,19 +92,21 @@
                                 	}
                                 }, this),
                                 $.proxy(function(error) {
-                                    this.showError(error);
+                                    self.showError(error);
                                 }, this)
                             );
                     }, this),
                     $.proxy(function(error) {
-                        this.showError(error);
+                        self.showError(error);
                     }, this)
                 );
             return this;
         },
 
         showWidget: function(type) {
+            var self = this;
         	this.widgetPanel.empty();
+        	this.widgetPanel.addClass('panel kb-func-panel kb-cell-run')
         	var methodId = this.types[type]["import_method_ids"][0];
         	this.methodSpec = this.methods[methodId];
             var inputWidgetName = this.methodSpec.widgets.input;
@@ -88,12 +123,24 @@
                              .attr('value', 'Run')
                              .addClass('btn btn-primary btn-sm')
                              .append('Run');
-            var self = this;
             $runButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
-                    var params = self.inputWidget.getParameters();
-                    alert(JSON.stringify(params));
+                    var v = self.inputWidget.isValid();
+                    if (v.isValid) {
+                    	self.runImport();
+                    } else {
+                        var errorCount = 1;
+                        self.$errorModalContent.empty();
+                        var $errorStep = $('<div>');
+                        for (var e=0; e<v.errormssgs.length; e++) {
+                        	$errorStep.append($('<div>').addClass("kb-app-step-error-mssg").append('['+errorCount+']: ' + v.errormssgs[e]));
+                        	errorCount = errorCount+1;
+                        }
+                        self.$errorModalContent.append($errorStep);
+                        self.$errorModal.modal('show');
+                        return false;
+                    }
                 }, this)
             );
 
@@ -102,20 +149,20 @@
                            .append($runButton);
 
             var $progressBar = $('<div>')
-            .attr('id', 'kb-func-progress')
-            .addClass('pull-left')
-            .css({'display' : 'none'})
-            .append($('<div>')
-                    .addClass('progress progress-striped active kb-cell-progressbar')
-                    .append($('<div>')
-                            .addClass('progress-bar progress-bar-success')
-                            .attr('role', 'progressbar')
-                            .attr('aria-valuenow', '0')
-                            .attr('aria-valuemin', '0')
-                            .attr('aria-valuemax', '100')
-                            .css({'width' : '0%'})))
-            .append($('<p>')
-                    .addClass('text-success'));
+                               .attr('id', 'kb-func-progress')
+                               .addClass('pull-left')
+                               .css({'display' : 'none'})
+                               .append($('<div>')
+                                       .addClass('progress progress-striped active kb-cell-progressbar')
+                                       .append($('<div>')
+                                               .addClass('progress-bar progress-bar-success')
+                                               .attr('role', 'progressbar')
+                                               .attr('aria-valuenow', '0')
+                                               .attr('aria-valuemin', '0')
+                                               .attr('aria-valuemax', '100')
+                                               .css({'width' : '0%'})))
+                               .append($('<p>')
+                                       .addClass('text-success'));
 
             var methodId = 'import-method-details-'+this.uuid();
             var buttonLabel = 'details';
@@ -157,7 +204,44 @@
         },
         
         runImport: function() {
-        	
+        	var self = this;
+        	var paramValueArray = self.inputWidget.getParameters();
+        	var params = {};
+        	for(var i in self.methodSpec.parameters) {
+            	var paramId = self.methodSpec.parameters[i].id;
+            	var paramValue = paramValueArray[i];
+            	params[paramId] = paramValue;
+        	}
+        	alert(JSON.stringify(params));
+        	//
+            var uploaderClient = new Transform(this.uploaderURL, {'token': self.token});
+            if (self.selectedType === 'KBaseGenomes.Genome') {
+            	var mode = params["mode"];
+            	if (mode === 'uploadGbk') {
+            		uploaderClient.upload({},
+            				$.proxy(function(data) {
+                            }, this),
+                            $.proxy(function(error) {
+                                self.showError(error);
+                            }, this)
+                        );
+            	} else {
+                	showError("We don't support [" + mode + "] import mode for Genome type");
+            	}
+            } else if (self.selectedType === 'KBaseGenomes.ContigSet') {
+            	showError("Support for ContigSet is coming.");
+            } else {
+            	showError("We don't support import for [" + self.selectedType + "] type yet.");
+            }
+        },
+        
+        showError: function(error) {
+        	console.log(error);
+        	var errorMsg = error;
+        	if (error.error && error.error.message)
+        		errorMsg = error.error.message;
+        	this.errorPanel.empty();
+        	this.errorPanel.append('<span class="label label-danger">Error: '+errorMsg+'"</span>');
         },
         
         loggedInCallback: function(event, auth) {

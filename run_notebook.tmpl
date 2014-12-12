@@ -1,7 +1,22 @@
 #!/bin/bash
+function log () {
+  now=`date '+%Y-%m-%d %H:%M:%S'`
+  echo "$now [run_notebook] $1"
+}
+
+log "Activate virtualenv in $e"
 source $e/activate
+
 export NARRATIVEDIR=$d/src
 export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
-cp $NARRATIVEDIR/config.json $IPYTHONDIR/profile_narrative/kbase_templates/static/kbase
-python $NARRATIVEDIR/biokbase/narrative/common/service_root.py -f $IPYTHONDIR/profile_narrative/kbase_templates/static/kbase/services.json
+
+cfgdir=$IPYTHONDIR/profile_narrative/kbase_templates/static/kbase
+log "Copy config.json to $cfgdir"
+cp $NARRATIVEDIR/config.json $cfgdir
+
+svcjson=$IPYTHONDIR/profile_narrative/kbase_templates/static/kbase/services.json
+log "Generate services dynamically from $svcjson"
+python $NARRATIVEDIR/biokbase/narrative/common/service_root.py -f $svcjson
+
+log "Start notebook"
 ipython notebook $* --NotebookManager.notebook_dir=~/.narrative --profile=narrative

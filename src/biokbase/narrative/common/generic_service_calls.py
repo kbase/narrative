@@ -300,12 +300,12 @@ def create_app_for_njs(workspace, token, URLS, appId, stepSpecs, methIdToSpec, p
         behavior = methodSpec['behavior']
         methodInputValues = extract_param_values(paramValues, stepId)
         step = { 'step_id' : stepId }
-        if 'kb_service_input_mapping' in methodSpec['behavior'] or 'script_input_mapping' in methodSpec['behavior']:
+        if 'kb_service_input_mapping' in behavior or 'script_input_mapping' in behavior:
             tempInput = {}
             stepParams = prepare_njs_method_input(token, wsClient, workspace, methodSpec, methodInputValues, tempInput)
             serviceInfo = {'service_name' : '', 'method_name' : '', 'service_url' : ''}
             scriptInfo = {'service_name' : '', 'method_name' : '', 'has_files' : 0}
-            if 'kb_service_input_mapping' in methodSpec['behavior']:
+            if 'kb_service_input_mapping' in behavior:
                 serviceName = behavior['kb_service_name']
                 methodName = behavior['kb_service_method']
                 serviceInfo['service_name'] = serviceName
@@ -354,7 +354,7 @@ def create_app_for_njs(workspace, token, URLS, appId, stepSpecs, methIdToSpec, p
         elif 'output_mapping' in behavior:
             continue  # We don't put these steps in app sending to NJS. We will process them later in _app_get_state
         else:
-            raise ValueError("Unsupported behavior type for [" + methodId + "]: " + json.dumps(behavior))
+            raise ValueError("Unsupported behavior type for [" + methodId + "]: " + json.dumps(behavior) + " expected 'kb_service_input_mapping' or 'script_input_mapping'")
         steps.append(step)
     return app
 

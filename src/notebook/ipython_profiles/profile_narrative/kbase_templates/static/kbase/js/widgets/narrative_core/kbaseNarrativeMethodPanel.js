@@ -90,9 +90,28 @@
             $searchDiv.append(this.$searchInput)
                       .append($clearSearchBtn);
 
+            var $ipyButtonDiv = $('<div style="margin-bottom:5px">')
+                                .append($('<button>')
+                                        .addClass('btn btn-warning')
+                                        .append($('<span style="color:#fff; font-weight:bold">')
+                                                .addClass('fa fa-terminal')
+                                                .append(' Add Code Cell'))
+                                        .click(function(event) {
+                                            IPython.notebook.insert_cell_below('code');
+                                        }))
+                                .append($('<button>')
+                                        .addClass('btn btn-warning pull-right')
+                                        .append($('<span style="color:#fff; font-weight:bold">')
+                                                .addClass('fa fa-paragraph')
+                                                .append(' Add MD Cell'))
+                                        .click(function(event) {
+                                            IPython.notebook.insert_cell_below('markdown');
+                                        }));
+
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                                   .addClass('kb-function-body')
+                                  .append($ipyButtonDiv)
                                   .append($searchDiv)
                                   .append(this.$toggleHiddenDiv);
 
@@ -436,10 +455,10 @@
             
             // first, if there are some colors we want to catch...
             switch (type) {
-                case "A":
+                case "M":
                     return "#FF9800";
                     break;
-                case "M":
+                case "A":
                     return "#03A9F4";
                     break;
             }

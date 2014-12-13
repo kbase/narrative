@@ -292,7 +292,7 @@
             //sharedPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             publicPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             importPanel.kbaseNarrativeSideImportTab({});
-            examplePanel.kbaseNarrativeExampleDataTab({});
+//            examplePanel.kbaseNarrativeExampleDataTab({});
             //append('<div class="kb-import-content"><br>coming soon.</div>');
             galleryPanel.kbaseMethodGallery({sidePanel : this});
 

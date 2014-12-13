@@ -319,6 +319,7 @@
                 updateView('shared');
             });
 
+            var narrativeNameLookup={};
 
             function updateView(view) {
                 var p;
@@ -412,7 +413,18 @@
                 return ws.list_workspace_info({owners: [user]})
                         .then(function(d) {
                             var workspaces = [];
-                            for (var i in d) workspaces.push({id: d[i][0], name: d[i][1]});
+                            for (var i in d) {
+                                 if (d[i][8].is_temporary) {
+                                    if (d[i][8].is_temporary === 'true') { continue; }
+                                }
+                                var displayName = d[i][1];
+                                if (d[i][8].narrative_nice_name) {
+                                    displayName = d[i][8].narrative_nice_name;
+                                }
+                                // todo: should skip temporary narratives
+                                workspaces.push({id: d[i][0], name: d[i][1], displayName:displayName});
+                                narrativeNameLookup[d[i][1]] = displayName;
+                            }
 
                             // add to model for filter
                             myWorkspaces = workspaces;
@@ -421,7 +433,7 @@
             }
 
             function getSharedWS() {
-                return ws.list_workspace_info({excludeGlobal: 0})
+                return ws.list_workspace_info({excludeGlobal: 1})
                         .then(function(d) {
                             var workspaces = [];
                             for (var i in d) {
@@ -429,7 +441,16 @@
                                 if (d[i][2] == user) {
                                     continue;
                                 }
-                                workspaces.push({id: d[i][0], name: d[i][1]});
+                                if (d[i][8].is_temporary) {
+                                    if (d[i][8].is_temporary === 'true') { continue; }
+                                }
+                                var displayName = d[i][1];
+                                if (d[i][8].narrative_nice_name) {
+                                    displayName = d[i][8].narrative_nice_name;
+                                }
+                                // todo: should skip temporary narratives
+                                workspaces.push({id: d[i][0], name: d[i][1], displayName:displayName});
+                                narrativeNameLookup[d[i][1]] = displayName;
                             }
 
                             // add to model for filter
@@ -579,7 +600,7 @@
                 wsInput.append('<option>All narratives...</option>');
                 for (var i=1; i < wsList.length-1; i++) {
                     wsInput.append('<option data-id="'+[i].id+'" data-name="'+wsList[i].name+'">'+
-                                          wsList[i].name+
+                                          wsList[i].displayName+
                                    '</option>');
                 }
                 var wsFilter = $('<div class="col-sm-4">').append(wsInput);
@@ -645,7 +666,7 @@
                 wsInput.append('<option>All narratives...</option>');
                 for (var i=1; i < wsList.length-1; i++) {
                     wsInput.append('<option data-id="'+wsList[i].id+'" data-name="'+wsList[i].name+'">'+
-                                          wsList[i].name+
+                                          wsList[i].displayName+
                                     '</option>');
                 }
                 var wsFilter = $('<div class="col-sm-4">').append(wsInput);
@@ -716,9 +737,13 @@
                                 '<span>TYPE</span><br>'+
                                 '<b>'+obj.kind+'</b>'+
                             '</div>');
+                var narName = obj.ws;
+                if (narrativeNameLookup[obj.ws]) {
+                    narName = narrativeNameLookup[obj.ws];
+                }
                 item.append('<div class="kb-import-info">'+
                                 '<span>NARRATIVE</span><br>'+
-                                '<b>'+obj.ws+'<b>'+   //<a class="" href="'+wsURL(obj.ws)+'">'
+                                '<b>'+narName+'<b>'+   //<a class="" href="'+wsURL(obj.ws)+'">'
                             '</div>');
                 item.append('<div class="kb-import-info">'+
                                 '<span>LAST MODIFIED</span><br>'+

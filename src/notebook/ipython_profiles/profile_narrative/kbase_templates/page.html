@@ -324,10 +324,23 @@
             </div>
 
             <div class="navbar-right">
-                <button id="kb-del-btn" class="btn btn-default navbar-btn kb-nav-btn">
+                <div class="btn-group">
+                    <button id="kb-ipy-menu" class="btn btn-default navbar-btn kb-nav-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <div id="kb-kernel-icon" class="fa fa-circle-o"><span class="caret"></div>
+                        <div class="kb-nav-btn-txt">kernel</div>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="kb-ipy-menu">
+                        <li><a id="kb-kernel-int-btn"><span class="fa fa-times"> Interrupt</span></a></li>
+                        <li><a id="kb-kernel-ref-btn"><span class="fa fa-refresh"> Restart</span></a></li>
+                        <li><a id="kb-kernel-rec-btn"><span class="fa fa-power-off"> Reconnect</span></a></li>
+                    </ul>
+                </div>
+
+<!--                 <button id="kb-del-btn" class="btn btn-default navbar-btn kb-nav-btn">
                     <div class="fa fa-trash-o"></div>
                     <div class="kb-nav-btn-txt">delete cell</div>
                 </button>
+ -->            
                 <button id="kb-save-btn" class="btn btn-default navbar-btn kb-nav-btn">
                     <div class="fa fa-save"></div>
                     <div class="kb-nav-btn-txt">save</div>

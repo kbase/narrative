@@ -6,11 +6,6 @@
  */
 "use strict";
 
-$('#kb-del-btn').click(function(e) {
-    if (IPython && IPython.notebook)
-        IPython.notebook.delete_cell();
-});
-
 $('#kb-save-btn').click(function(e) {
     if (IPython && IPython.notebook) {
         var narrName = IPython.notebook.notebook_name;
@@ -22,13 +17,22 @@ $('#kb-save-btn').click(function(e) {
         }
     }
 });
-
 $('#kb-narr-name #name').click(function(e) {
     if (IPython && IPython.save_widget) {
         IPython.save_widget.rename_notebook("Rename your Narrative.", true);
         var narrName = IPython.notebook.notebook_name;
         // this code needs to move to the save widget since rename_notebook is async!!
         //$('#kb-narr-name #name').text(narrName);
+    }
+});
+$('#kb-kernel-int-btn').click(function(e) {
+    if (IPython && IPython.notebook && IPython.notebook.kernel) {
+        IPython.notebook.kernel.interrupt();
+    }
+});
+$('#kb-kernel-ref-btn').click(function(e) {
+    if (IPython && IPython.notebook && IPython.notebook.kernel) {
+        IPython.notebook.kernel.restart();
     }
 });
 
@@ -101,6 +105,14 @@ narrative.init = function() {
     var narr_ws = null;
     var readonly = false; /* whether whole narrative is read-only */
     var authToken = null;
+
+    $([IPython.events]).on('status_idle.Kernel',function () {
+        $("#kb-kernel-icon").removeClass().addClass('fa fa-circle-o');
+    });
+
+    $([IPython.events]).on('status_busy.Kernel',function () {
+        $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
+    });
 
     var versionHtml = 'KBase Narrative<br>Alpha version';
     var endpointTesters = [];

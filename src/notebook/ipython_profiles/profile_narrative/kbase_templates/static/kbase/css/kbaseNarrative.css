@@ -1,5 +1,8 @@
 @import url("//fonts.googleapis.com/css?family=Roboto");
 
+input.raw_input {
+    height:auto;
+}
 div#notebook {
     overflow-y: auto;
 }

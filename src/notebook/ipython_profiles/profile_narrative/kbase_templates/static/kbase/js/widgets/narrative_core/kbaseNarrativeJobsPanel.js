@@ -263,7 +263,7 @@
             };
 
             // console.debug('JOBS PANEL: refresh');
-            var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: false, store_history: false});
+            var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: true, store_history: false});
         },
 
         safeJSONStringify: function(method) {
@@ -309,6 +309,10 @@
                 return;
             }
 
+            var storedAppIds = {};
+            for (var i=0; i<IPython.notebook.metadata.job_ids.apps.length; i++) {
+                storedAppIds[IPython.notebook.metadata.job_ids.apps[i].id] = IPython.notebook.metadata.job_ids.apps[i];
+            };
             var storedIds = IPython.notebook.metadata.job_ids;
 
             var $jobsList = $('<div>').addClass('kb-jobs-items');
@@ -325,28 +329,25 @@
                 }
 
                 // do all apps
-                var renderedApps = {};
+                // have a checklist of apps (from the storedIds list)
+                // render 'em all, pop one out when it's done.
+
                 for (var i=0; i<jobs.apps.length; i++) {
                     var app = jobs.apps[i];
                     var appInfo = jobInfo[app.job_id];
                     $jobsList.append(this.renderApp(app, appInfo));
                     this.updateAppCell(app, appInfo);
-                    renderedApps[app.job_id] = true;
+                    delete storedAppIds[app.job_id];
                 }
-                for (var i=0; i<storedIds.apps.length; i++) {
-                    var appTest = storedIds.apps[i];
-                    if (!renderedApps[appTest.id]) {
-                        $jobsList.append(this.renderAppError(appTest));
+                for (var missingId in storedAppIds) {
+                    if (storedAppIds.hasOwnProperty(missingId)) {
+                        $jobsList.append(this.renderApp(storedAppIds[missingId], null));
                     }
                 }
             }
             this.$jobsPanel.empty().append($jobsList);
         },
 
-        /**
-         * TODO: add logic to signal to the user that an app has been deleted, and to ask them if they want to
-         * clear the job as well.
-         */
         updateAppCell: function(app, appInfo) {
             var source = appInfo.app.source;
             if (!source)
@@ -390,17 +391,37 @@
                 return null;
             };
 
+            console.log([appJob, appInfo]);
+
+            /* Cases:
+             * 1. have appJob, have appInfo
+             *    a. appJob has 'error' property
+             *        - render as an error'd job!
+             *        - include delete btn
+             *    b. appJob looks normal, not complete
+             *        - show status as usual
+             *    c. appJob is completed
+             *        - show delete btn
+             * 2. have appJob, no appInfo
+             *    - probably an error - missing app cell or something
+             *        - show an error, option to delete.
+             * 3. have no appJob
+             *    - just return null. nothing invokes this like that, anyway
+             */
+
+            if (!appJob)
+                return null;
+
             var $app = $('<div>')
                        .addClass('kb-data-list-obj-row');
-            if (!appJob || !appInfo)
-                return $app;
+
+            var appName = "Unknown App";
+            if (appInfo && appInfo.info.appSpec.info.name) // so i'm cheating for now...
+                appName = appInfo.info.appSpec.info.name;
 
             $app.append($('<div class="kb-data-list-name">')
-                        .append(appInfo.info.appSpec.info.name)
+                        .append(appName)
                         .append(this.makeScrollToButton(appJob, appInfo)));
-            // $app.append($('<div class="kb-jobs-descr">')
-            //             .append(appJob.job_id));
-
             var $itemTable = $('<table class="kb-jobs-info-table">');
             var $statusRow = $('<tr>')
                              .append($('<th>')
@@ -411,28 +432,30 @@
 
             if (appJob.error) {
                 // error out.
-                return $app;
+                $statusRow.append($('<td>').append('Error'));
             }
-            var status = appJob.job_state;
-            if (status)
-                status = status.charAt(0).toUpperCase() + status.substring(1);
-            var task = null;
-            var stepId = appJob.running_step_id;
-            if (stepId) {
-                var stepSpec = getStepSpec(stepId, appInfo.info.appSpec);
-                task = appInfo.info.methodSpecs[stepSpec.method_id].info.name;
-            }
-            $statusRow.append($('<td>').append(status));
-            $itemTable.append($statusRow);
-            if (task !== null) {
-                $itemTable.append($('<tr><th>Task:</th><td>' + task + '</td></tr>'));
-            }
-            if (appInfo.app.timestamp) {
-                var ts = this.makePrettyTimestamp(appInfo.app.timestamp);
-                $itemTable.append($('<tr><th>Started:</th><td>' + ts + '</td></tr>'));
+            else {
+                var status = appJob.job_state;
+                if (status)
+                    status = status.charAt(0).toUpperCase() + status.substring(1);
+                var task = null;
+                var stepId = appJob.running_step_id;
+                if (stepId) {
+                    var stepSpec = getStepSpec(stepId, appInfo.info.appSpec);
+                    task = appInfo.info.methodSpecs[stepSpec.method_id].info.name;
+                }
+                $statusRow.append($('<td>').append(status));
+                $itemTable.append($statusRow);
+                if (task !== null) {
+                    $itemTable.append($('<tr><th>Task:</th><td>' + task + '</td></tr>'));
+                }
+                if (appInfo.app.timestamp) {
+                    var ts = this.makePrettyTimestamp(appInfo.app.timestamp);
+                    $itemTable.append($('<tr><th>Started:</th><td>' + ts + '</td></tr>'));
+                }
             }
             $app.append($itemTable);
-            return $app;
+            return $app;                
         },
 
         renderMethod: function(job, jobInfo) {

@@ -273,13 +273,20 @@
                     return a.name.localeCompare(b.name);
                 });
                 for (var i=0; i<fnList.length; i++) {
-                    $fnPanel.append(self.buildMethod(icon, fnList[i], callback));
+                    var $fnElem = self.buildMethod(icon, fnList[i], callback);
+                    $fnPanel.append($fnElem);
+                    self.methodSet[fnList[i].id] = fnList[i];
+                    self.methodSet[fnList[i].id]['$elem'] = $fnElem;
                 }
                 return $fnPanel;
             };
 
+            this.methodSet = {};
+
             var $methodPanel = generatePanel(catSet, methSet, 'M', triggerMethod);
             var $appPanel = generatePanel(catSet, appSet, 'A', triggerApp);
+
+            console.log(this.methodSet);
 
             this.$functionPanel.append($appPanel);
             this.$functionPanel.append($methodPanel);
@@ -730,17 +737,28 @@
             }
         },
 
+        /**
+         * @method
+         * @public
+         * Expects this.methodSet to be an associative array, like this:
+         * {
+         *     <methodId> : {
+         *         $elem : rendered element as jQuery node,
+         *         rest of method spec
+         *     }
+         * }
+         */
         visualFilter: function(filterFn, fnInput) {
             var numHidden = 0;
-            for (var methId in this.methodList) {
-                if (!filterFn(fnInput, this.methodList.methId)) {
-                    this.methodList.methId.$elem.hide();
-                    this.methodList.methId.$elem.addClass('kb-function-dim');
+            for (var methId in this.methodSet) {
+                if (!filterFn(fnInput, this.methodSet[methId])) {
+                    this.methodSet[methId].$elem.hide();
+                    this.methodSet[methId].$elem.addClass('kb-function-dim');
                     numHidden++;
                 }
                 else {
-                    this.methodList.methId.$elem.removeClass('kb-function-dim');
-                    this.methodList.methId.$elem.show();
+                    this.methodSet[methId].$elem.removeClass('kb-function-dim');
+                    this.methodSet[methId].$elem.show();
                 }
             }
             if (numHidden > 0) {
@@ -760,20 +778,28 @@
              * show is falsy -> hide()
              */
 
-            // if show, show 'em all, and trigger the class for the kb-has-hidden attribute
             if (show) {
-                this.$functionPanel.find('.panel-default').show();
-                this.$functionPanel.find('.kb-data-obj-name').parent().show();
-                this.$functionPanel.find('[kb-has-hidden]').addClass('kb-function-cat-dim');
+                this.$functionPanel.find('.kb-function-dim').show();
             }
-            // otherwise, remove the kb-function-cat-dim class from everything, and
-            // show only those that do not have kb-function-dim, and hide the rest
             else {
-                this.$functionPanel.find('.panel-default').removeClass('kb-function-cat-dim');
                 this.$functionPanel.find('.kb-function-dim').hide();
-                this.$functionPanel.find('.panel:not(.kb-function-dim)').show();
-                this.$functionPanel.find('li:not(.kb-function-dim)').show();
+
             }
+
+            // // if show, show 'em all, and trigger the class for the kb-has-hidden attribute
+            // if (show) {
+            //     this.$functionPanel.find('.panel-default').show();
+            //     this.$functionPanel.find('.kb-data-obj-name').parent().show();
+            //     this.$functionPanel.find('[kb-has-hidden]').addClass('kb-function-cat-dim');
+            // }
+            // // otherwise, remove the kb-function-cat-dim class from everything, and
+            // // show only those that do not have kb-function-dim, and hide the rest
+            // else {
+            //     this.$functionPanel.find('.panel-default').removeClass('kb-function-cat-dim');
+            //     this.$functionPanel.find('.kb-function-dim').hide();
+            //     this.$functionPanel.find('.panel:not(.kb-function-dim)').show();
+            //     this.$functionPanel.find('li:not(.kb-function-dim)').show();
+            // }
         },
     });
 })( jQuery );

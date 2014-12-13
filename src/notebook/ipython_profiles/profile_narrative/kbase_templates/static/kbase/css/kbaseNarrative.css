@@ -1191,9 +1191,8 @@ div#notebook_panel {
 }
 
 .kb-function-dim {
-    background-color: #444 !important;
-    color: #999;
-    border-color: #000 !important;
+    background-color: #aaa !important;
+    border-color: #aaa !important;
 }
 
 .kb-function-dim .panel-heading {

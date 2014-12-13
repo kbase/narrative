@@ -158,8 +158,7 @@
             // hide panel when clicking outside
             this.$narrativeDimmer.unbind('click')
             this.$narrativeDimmer.click(function() {
-                self.$overlay.hide();
-                $(this).hide();
+                self.hideOverlay();
             });
 
             // putting this here for now, just for testing

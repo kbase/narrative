@@ -136,7 +136,7 @@
 
             this.$overlayBody = $('<div class="kb-overlay-body">');
 
-            this.$overlayFooter  = $('<div class="kb-overlay-footer">');
+            this.$overlayFooter  = $('<div>'); // class="kb-overlay-footer">'); // this seems to add strange footer line in my browser
 
             this.$overlay = $('<div>')
                             .addClass('kb-side-overlay-container')

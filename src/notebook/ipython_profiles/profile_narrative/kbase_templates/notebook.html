@@ -17,8 +17,8 @@
     {{super()}}
     <link rel="stylesheet" href="{{ static_url("kbnetwork/css/datavis.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/css/dataTables.bootstrap.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/css/bootstrap-fileupload.min.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("components/bootstrap-extensions/css/dataTables.bootstrap.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("components/bootstrap-extensions/css/bootstrap-fileupload.min.css") }}" type="text/css" />
     
     
     <link rel="stylesheet" href="{{ static_url("select2-v3.5.2/select2.css") }}" type="text/css" />
@@ -221,27 +221,27 @@ class="notebook_app"
 
 {{super()}}
 
-<script src="{{ static_url("kbase/js/jquery.dataTables.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("components/jquery-extensions/js/jquery.dataTables.js") }}" type="text/javascript" charset="utf-8"></script>
 
 
 <!-- inserted KBase Javascript below -->
-<script src="{{ static_url("kbase/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("components/bootstrap-extensions/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/kbaseLogging.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/InvocationService.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/KBaseTrees.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/genomeComparisonClient.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/api/InvocationService.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/api/KBaseTrees.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/api/genomeComparisonClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgetMaxWidthCorrection.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseTabs2.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbasePromptNew.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/datatables-bootstrap-paging.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("components/bootstrap-extensions/js/datatables-bootstrap-paging.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseAccordion.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseDeletePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/genomes/kbaseContigBrowserButtons.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/genomes/kbasePhenotypeSet.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/d3/d3.v3.min.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/jquery.svg.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("components/jquery-extensions/js/jquery.svg.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/api/shockClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseShockFileUploader.js") }}" type="text/javascript" charset="utf-8"></script>

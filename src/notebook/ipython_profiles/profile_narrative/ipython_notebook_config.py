@@ -110,10 +110,11 @@ try:
 except NameError:
 	myfile = os.path.abspath(inspect.getsourcefile(lambda _: None))
 
-myfile = os.path.dirname( myfile)
+myfile = os.path.dirname(myfile)
 c.NotebookApp.webapp_settings = { 'template_path': os.path.join(myfile,"kbase_templates"),
                                   'static_path': os.path.join(myfile,"kbase_templates","static"),
-                                  'debug' : True }
+                                  'debug' : True,
+                                  'gzip' : True }
 
 c.NotebookApp.kbase_auth = True
 

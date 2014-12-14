@@ -95,7 +95,7 @@
                                         .addClass('btn btn-warning')
                                         .append($('<span style="color:#fff; font-weight:bold">')
                                                 .addClass('fa fa-terminal')
-                                                .append(' Add Code Cell'))
+                                                .append(' Code Cell'))
                                         .click(function(event) {
                                             IPython.notebook.insert_cell_below('code');
                                         }))
@@ -103,7 +103,7 @@
                                         .addClass('btn btn-warning pull-right')
                                         .append($('<span style="color:#fff; font-weight:bold">')
                                                 .addClass('fa fa-paragraph')
-                                                .append(' Add MD Cell'))
+                                                .append(' Text Cell'))
                                         .click(function(event) {
                                             IPython.notebook.insert_cell_below('markdown');
                                         }));

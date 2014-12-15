@@ -19,7 +19,7 @@
 (function( $, undefined ) {
 
     $.KBWidget({
-        name: "kbaseNarrativeDataPanel", 
+        name: "kbaseNarrativeDataPanel",
         parent: "kbaseNarrativeControlPanel",
         version: "1.0.0",
         wsClient: null,
@@ -49,9 +49,9 @@
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
 
-        
+
         dataListWidget: null,
-        
+
         init: function(options) {
             this._super(options);
 
@@ -69,7 +69,7 @@
                 this.options.wsBrowserURL = window.kbconfig.urls.ws_browser;
                 this.options.landingPageURL = window.kbconfig.urls.landing_pages;
             }
-            
+
             var $dataList = $('<div>');
             this.body().append($dataList);
             this.dataListWidget = $dataList["kbaseNarrativeDataList"](
@@ -78,7 +78,7 @@
                                         ws_url: this.options.workspaceURL,
                                         loadingImage: this.options.loadingImage
                                     });
-            
+
             $(document).on(
                 'setWorkspaceName.Narrative', $.proxy(function(e, info) {
                     console.log('data panel -- setting ws to ' + info.wsId);
@@ -87,7 +87,7 @@
                     this.dataListWidget.setWorkspace(this.ws_name);
                 }, this)
             );
-            
+
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
              */
@@ -100,8 +100,8 @@
                 },
                 this)
             );
-            
-            
+
+
             /**
              * This should be triggered when something updates the available data in either the narrative or
              * in the workspace.
@@ -113,7 +113,7 @@
                 },
                 this )
             );
-            
+
             /**
              * This should be triggered when something wants to know what workspace this widget is currently linked to.
              */
@@ -122,16 +122,16 @@
                     if (callback) {
                         callback(this.ws_name);
                     }
-                }, 
+                },
                 this)
             );
-            
+
             this.landingPageMap = window.kbconfig.landing_page_map;
             /**
              * Get the landing page map.
              * First, try getting it from /functional-site/landing_page_map.json.
              * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
-             
+
             $.ajax({
                 url: '/functional-site/landing_page_map.json',
                 async: true,
@@ -155,7 +155,7 @@
                     })
                 }, this)
             });*/
-            
+
             if (this.ws_name)
                 this.trigger('workspaceUpdated.Narrative', this.ws_name);
 
@@ -163,13 +163,14 @@
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-play"></span>')
                            .click($.proxy(function(event) {
+                               this.trigger('hideGalleryPanelOverlay.Narrative');
                                this.trigger('toggleSidePanelOverlay.Narrative');
                            }, this)));
-            
+
             return this;
-            
-            
-            
+
+
+
             /**
              * This should be triggered whenever something clicks on a data info button (or just
              * wants the info modal to appear).
@@ -177,7 +178,7 @@
             $(document).on(
                 'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
                     this.showInfoModal(workspace, id);
-                }, 
+                },
                 this)
             );
 
@@ -244,7 +245,7 @@
          * Test if this narrative is in a workspace that this user is not
          * able to modify.
          *
-         * XXX: 
+         * XXX:
          * XXX: DISABLED! To re-enable see TODO: comment below
          * XXX:
          */
@@ -350,7 +351,7 @@
             //                           .append(this.$dataPanel)
             //                           .append(this.$loadingPanel)
             //                           .append(this.$errorPanel)));
-            
+
 
 
             /*********** MAIN DATA TABLES ***********/
@@ -387,7 +388,7 @@
                 function (e) {
                     var url = $that.options.wsBrowserURL + "/objtable/" + $that.wsId;
                     window.open(url,'_blank');
-                }   
+                }
             );
 
             //add the tooltip to the workspace list
@@ -396,7 +397,7 @@
                 placement: "bottom"
             });
 
-            this.$dataPanel.find('a').on('click', 
+            this.$dataPanel.find('a').on('click',
                 $.proxy(function() {
                     setTimeout($.proxy(function() {
                         this.$myDataDiv.kbaseNarrativeDataTable('poke');
@@ -424,7 +425,7 @@
             this.$versionSelect = $('<select>')
                                   .addClass('form-control')
                                   .change($.proxy(function(event) {
-                                      this.populateInfoModal(this.$versionSelect.find('option:selected').val()); 
+                                      this.populateInfoModal(this.$versionSelect.find('option:selected').val());
                                   }, this));
 
             var $infoAccordion = $('<div>');
@@ -540,14 +541,14 @@
          * @public
          */
         refresh: function() {
-            
+
             this.dataListWidget.refresh();
-            
+
             return;
             console.debug("kbWS.refresh.start");
             if (this.wsClient && this.wsId) {
                 console.debug("kbWS.refresh.test-for-readonly");
-                this.isReadonlyWorkspace(this.wsClient, this.wsId, 
+                this.isReadonlyWorkspace(this.wsClient, this.wsId,
                     $.proxy(function(ro) {
                         if (ro) {
                             // hide in readonly mode
@@ -586,7 +587,7 @@
                 },
                 $.proxy(function(list) {
                     // first, go through the list and pull out Narrative objects.
-                    // otherwise it's a little recursive. Including a Narrative within its narrative 
+                    // otherwise it's a little recursive. Including a Narrative within its narrative
                     // would give me nightmares.
 
                     this.loadedData = {};
@@ -621,7 +622,7 @@
                     this.$myDataDiv.kbaseNarrativeDataTable('poke');
                     this.$narrativeDiv.kbaseNarrativeDataTable('poke');
 
-                }, this), 
+                }, this),
                 $.proxy(function(error) {
                     this.showError(error);
                 }, this)
@@ -743,7 +744,7 @@
                 obj['name'] = id;
 
             // Fetch the workspace object.
-            this.wsClient.get_object_history(obj, 
+            this.wsClient.get_object_history(obj,
                 $.proxy(function(infoList) {
                     infoList.sort(function(a, b) { return b[4]-a[4]; });
                     this.objInfoList = infoList;
@@ -890,12 +891,12 @@
          *
          * If 'type' is a string, then it returns only objects matching that
          * object type (this is case-sensitive!).
-         * 
+         *
          * If 'type' is an array, then it returns only objects matching all of
          * those types.
          *
          * Returns data like this:
-         * { 
+         * {
          *   type1 : [ [metadata1], [metadata2], ... ],
          *   type2 : [ [metadata3], [metadata4], ... ]
          * }
@@ -907,7 +908,7 @@
             } else {
                 return {};
             }
-            
+
         },
 
         /**
@@ -970,7 +971,7 @@
                 s = JSON.stringify(s, undefined, 2);
             }
             s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
+            s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
                 function (match) {
                     var cls = 'number';
                     if (/^"/.test(match)) {
@@ -992,7 +993,7 @@
 
         /**
          * Formats a given timestamp to look pretty.
-         * Takes any timestamp that the Javascript Date object can handle, and 
+         * Takes any timestamp that the Javascript Date object can handle, and
          * returns it formatted as: MM/DD/YYYY, HH:MM:SS (in 24-hour time)
          * @param {String} timestamp - the timestamp string
          * @returns a formatted timestamp

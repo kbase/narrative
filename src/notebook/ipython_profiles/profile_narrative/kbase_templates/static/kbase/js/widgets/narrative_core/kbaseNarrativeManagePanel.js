@@ -104,6 +104,8 @@
         
         narData: null,
         allNarInfo:null,
+        tempNars:null,
+        oldStyleWs:null,
         
         loadDataAndRenderPanel: function() {
             var self = this;
@@ -114,7 +116,9 @@
                     function(wsList) {
                         self.narData={
                             mine:[],
-                            shared:[]
+                            shared:[],
+                            temp:[],
+                            allWs:[]
                         };
                         self.allNarData=[];
                         /*WORKSPACE INFO
@@ -134,6 +138,7 @@
                                 // if it is temporary, we skip
                                 if (wsList[i][8].is_temporary) {
                                     if (wsList[i][8].is_temporary === 'true') {
+                                        self.narData.temp.push({ws_info:wsList[i]});
                                         continue;
                                     }
                                 }
@@ -153,6 +158,11 @@
                                         self.narData.shared.push(info);
                                         narRefsToLookup.push({ref:info.ws_info[0]+"/"+wsList[i][8].narrative});
                                     }
+                                }
+                                if (wsList[i][5]==='a' || wsList[i][5]==='w') {
+                                    // allWs is used for advanced management options, which we only
+                                    // have if we have admin or write access
+                                    self.narData.allWs.push({ws_info:wsList[i]});
                                 }
                             }
                         }
@@ -189,18 +199,20 @@
                 self.$newNarrativeLink = $('<div>');
                 self.$mainPanel.append(self.$newNarrativeLink);
                 
-                self.$narPanel = $('<div>');
+                self.$narPanel = $('<div>').css({'margin':'10px'});
                 self.$mainPanel.append(self.$narPanel);
                 self.renderPanel();
             }
         },
+        
+        advancedSetNarLookup: {},
         
         renderPanel: function() {
             var self = this;
             if (self.$narPanel && self.narData) {
                 self.$narPanel.empty();
                 
-                self.$narPanel.append("<h2>Mine</h2>");
+                self.$narPanel.append($('<div>').append($('<span>').append("<h2>Mine</h2>")));
                 for(var k=0; k<self.narData.mine.length; k++) {
                     if (!self.narData.mine[k].$div) {
                         self.narData.mine[k].$div = self.renderNarrativeDiv(self.narData.mine[k]);
@@ -209,13 +221,136 @@
                 }
                 
                 
-                self.$narPanel.append("<h2>Shared With Me</h2>");
+                self.$narPanel.append($('<div>').append($('<span>').append("<h2>Shared With Me</h2>")));
                 for(var k=0; k<self.narData.shared.length; k++) {
                     if (!self.narData.shared[k].$div) {
                         self.narData.shared[k].$div = self.renderNarrativeDiv(self.narData.shared[k]);
                     }
                     self.$narPanel.append(self.narData.shared[k].$div);
                 }
+                
+                
+                // ADVANCED TAB: allows users to set the default narrative for any workspace
+                var $advancedDiv = $('<div>').hide();
+                var $advLink = $('<h3>').append("Show Advanced Controls");
+                self.$narPanel.append($('<div>').append($('<span>').append($("<a>").append($advLink)))
+                                        .css({'text-align':'center','cursor':'pointer'})
+                                        .on('click', function() {
+                                            if ($advancedDiv.is(":visible") ) {
+                                                $advancedDiv.hide();
+                                                $advLink.html("Show Advanced Controls");
+                                            } else {
+                                                $advancedDiv.show();
+                                                $advLink.html("Hide Advanced Controls");
+                                            }
+                                        }));
+                self.$narPanel.append($advancedDiv);
+                
+                
+                var $selectWsContainer = $('<select id="setPrimaryNarSelectWs">').addClass('form-control');
+                var $selectNarContainer = $('<select id="setPrimaryNarSelectNar">').addClass('form-control').hide();
+                var $setBtn = $('<button>').addClass('btn btn-default').append('Set this Narrative').hide();
+                var $setPrimary = $('<div>').append(
+                    $('<div>').addClass('form-group').css({'text-align':'center'})
+                        .append($('<label for="setPrimaryNarSelectWs">').append("Set Active Narrative for Workspace"))
+                        .append($selectWsContainer)
+                        .append($selectNarContainer)
+                        .append($setBtn));
+                
+                self.narData.allWs.sort(function(a,b) {
+                    if (a.ws_info[1].toLowerCase() > b.ws_info[1].toLowerCase()) return 1; // sort by name
+                    if (a.ws_info[1].toLowerCase() < b.ws_info[1].toLowerCase()) return -1;  // sort by name
+                    return 0;
+                });
+                
+                for(var k=0; k<self.narData.allWs.length; k++) {
+                    var info = self.narData.allWs[k].ws_info;
+                    $selectWsContainer.append($('<option value="'+info[1]+'">').append(info[1] + ' (id='+info[0]+')'));
+                }
+                $selectWsContainer.on('change',
+                    function() {
+                        $selectNarContainer.empty();
+                        self.ws.list_objects({
+                                workspaces: [$selectWsContainer.val()],
+                                type:"KBaseNarrative.Narrative",
+                                includeMetadata:1
+                            },
+                            function(objList) {
+                                if (objList.length==0) {
+                                    $selectNarContainer.append($('<option value="none">').append('No Narratives'));
+                                    $setBtn.prop('disabled', true);
+                                    $selectNarContainer.prop('disabled', true);
+                                    return;
+                                }
+                                $setBtn.prop('disabled', false);
+                                $selectNarContainer.prop('disabled', false);
+                                
+                                // sort by date
+                                objList.sort(function(a,b) {
+                                    if (a[3] > b[3]) return -1; // sort by date
+                                    if (a[3] < b[3]) return 1;  // sort by date
+                                    return 0;
+                                });
+                                self.advancedSetNarLookup = {};
+                                // add the list to the select
+                                for(var i=0; i<objList.length; i++) {
+                                    var narDispName = objList[i][1];
+                                    if (objList[i][10].name) {
+                                        narDispName = objList[i][10].name;
+                                    }
+                                    self.advancedSetNarLookup[objList[i][0]] = narDispName;
+                                    $selectNarContainer.append($('<option value="'+objList[i][0]+'">')
+                                                                .append(narDispName + ' (id='+objList[i][0]+')'));
+                                }
+                            },
+                            function(error) {
+                                console.error(error);
+                            });
+                        
+                        $selectNarContainer.show();
+                        $setBtn.show();
+                    });
+                $selectWsContainer.change();
+                $setBtn.on('click',
+                    function() {
+                        // should only get here if it was a valid WS/Nar combo
+                        var ws = $selectWsContainer.val();
+                        var nar = $selectNarContainer.val();
+                        $(this).prop('disabled', true).empty().append("please wait...");
+                        // should probably be moved to NarrativeManager
+                        self.ws.alter_workspace_metadata({
+                                wsi:{workspace:ws},
+                                new: {
+                                    'narrative' : nar,
+                                    'is_temporary' : 'false',
+                                    'narrative_nice_name': self.advancedSetNarLookup[nar]
+                                }
+                            },
+                            function (args) {
+                                self.loadDataAndRenderPanel();  
+                            },
+                            function name(error) {
+                                $setBtn.html("error...");
+                                console.error(error);
+                            }
+                        );
+                        
+                        
+                          
+                    });
+                $advancedDiv.append($setPrimary);
+                
+                //$setPrimary.append()
+                
+                // 1) allow to update old workspaces/narratives
+                // 2) change primary narrative
+                /*var update = $('<div>');
+                for(var k=0; k<self.narData.old.length; k++) {
+                    if (!self.narData.old[k].$div) {
+                        self.narData.shared[k].$div = self.renderNarrativeDiv(self.narData.shared[k]);
+                    }
+                    self.$narPanel.append(self.narData.shared[k].$div);
+                }*/
             }
         },
         

@@ -66,7 +66,6 @@
             
             $(document).on(
                 'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-                    console.log('manage panel -- setting ws to ' + info.wsId);
                     this.ws_name = info.wsId;
                     this.nar_name = info.narrController;
                     this.refresh();
@@ -171,7 +170,6 @@
                                     for(var i=0; i<objList.length; i++) {
                                         self.allNarData[i].nar_info = objList[i];
                                     }
-                                    console.log(self.narData);
                                     self.renderPanel();
                                 },
                                 function(error) {
@@ -199,7 +197,7 @@
                 self.$newNarrativeLink = $('<div>');
                 self.$mainPanel.append(self.$newNarrativeLink);
                 
-                self.$narPanel = $('<div>').css({'margin':'10px'});
+                self.$narPanel = $('<div>'); //.css({'margin':'10px'});
                 self.$mainPanel.append(self.$narPanel);
                 self.renderPanel();
             }
@@ -212,21 +210,24 @@
             if (self.$narPanel && self.narData) {
                 self.$narPanel.empty();
                 
-                self.$narPanel.append($('<div>').append($('<span>').append("<h2>Mine</h2>")));
-                for(var k=0; k<self.narData.mine.length; k++) {
-                    if (!self.narData.mine[k].$div) {
-                        self.narData.mine[k].$div = self.renderNarrativeDiv(self.narData.mine[k]);
+                if (self.narData.mine.length>0) {
+                    self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append("Mine")));
+                    for(var k=0; k<self.narData.mine.length; k++) {
+                        if (!self.narData.mine[k].$div) {
+                            self.narData.mine[k].$div = self.renderNarrativeDiv(self.narData.mine[k]);
+                        }
+                        self.$narPanel.append(self.narData.mine[k].$div);
                     }
-                    self.$narPanel.append(self.narData.mine[k].$div);
                 }
                 
-                
-                self.$narPanel.append($('<div>').append($('<span>').append("<h2>Shared With Me</h2>")));
-                for(var k=0; k<self.narData.shared.length; k++) {
-                    if (!self.narData.shared[k].$div) {
-                        self.narData.shared[k].$div = self.renderNarrativeDiv(self.narData.shared[k]);
+                if (self.narData.shared.length>0) {
+                    self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append("Shared With Me")));
+                    for(var k=0; k<self.narData.shared.length; k++) {
+                        if (!self.narData.shared[k].$div) {
+                            self.narData.shared[k].$div = self.renderNarrativeDiv(self.narData.shared[k]);
+                        }
+                        self.$narPanel.append(self.narData.shared[k].$div);
                     }
-                    self.$narPanel.append(self.narData.shared[k].$div);
                 }
                 
                 
@@ -334,36 +335,24 @@
                                 console.error(error);
                             }
                         );
-                        
-                        
-                          
                     });
                 $advancedDiv.append($setPrimary);
-                
-                //$setPrimary.append()
-                
-                // 1) allow to update old workspaces/narratives
-                // 2) change primary narrative
-                /*var update = $('<div>');
-                for(var k=0; k<self.narData.old.length; k++) {
-                    if (!self.narData.old[k].$div) {
-                        self.narData.shared[k].$div = self.renderNarrativeDiv(self.narData.shared[k]);
-                    }
-                    self.$narPanel.append(self.narData.shared[k].$div);
-                }*/
             }
         },
         
         
         renderNarrativeDiv: function(data) {
-            console.log(data);
-            var $narDiv = $('<div>');
+            var $narDiv = $('<div>').addClass('kb-data-list-obj-row');
             var narRef = "ws."+data.ws_info[0]+".obj."+data.nar_info[0];
             var nameText = narRef;
             if (data.nar_info[10].name) {
                 nameText = data.nar_info[10].name;
             }
-            $narDiv.append('<a href="'+narRef+'" target="_blank">'+nameText+'</a>');
+            $narDiv.append(
+                $('<div>').addClass('kb-data-list-name').css({'white-space':'normal', 'cursor':'pointer'})
+                    .append('<a href="'+narRef+'" target="_blank">'+nameText+'</a>'));
+            
+            $narDiv.append('<i>modified '+this.getTimeStampStr(data.nar_info[3])+'</i><br>');
             return $narDiv;
         },
         
@@ -401,7 +390,33 @@
                     });
             
             return $btn;
-        }
+        },
+        
+        
+        // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
+        getTimeStampStr: function (objInfoTimeStamp) {
+            var date = new Date(objInfoTimeStamp);
+            var seconds = Math.floor((new Date() - date) / 1000);
+            
+            // f-ing safari, need to add extra ':' delimiter to parse the timestamp
+            if (isNaN(seconds)) {
+                var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
+                var newTimestamp = tokens[0] + '+'+tokens[0].substr(0,2) + ":" + tokens[1].substr(2,2);
+                date = new Date(newTimestamp);
+                seconds = Math.floor((new Date() - date) / 1000);
+                if (isNaN(seconds)) {
+                    // just in case that didn't work either, then parse without the timezone offset, but
+                    // then just show the day and forget the fancy stuff...
+                    date = new Date(tokens[0]);
+                    return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                }
+            }
+            // keep it simple, just give a date
+            return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+        },
+        
+        monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"],
+        
         
     });
 

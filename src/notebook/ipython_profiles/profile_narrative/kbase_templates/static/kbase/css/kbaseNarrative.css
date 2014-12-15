@@ -1867,8 +1867,6 @@ div[class="tooltip-inner"] {
 
 /* end data list*/
 
-
-
 /* share panel styles */
 .kb-share-user-permissions-dropdown {
     border-style:none;
@@ -1881,7 +1879,14 @@ div[class="tooltip-inner"] {
     height:auto;
 }
 
-
+.kb-nar-manager-titles {
+    font-family: 'OxygenBold';
+    color:  #777;
+    margin: 10px;
+    margin-top: 20px;
+    font-size: 18pt;
+    font-weight: bold;
+}
 
 
 /* End kbaseData.css */

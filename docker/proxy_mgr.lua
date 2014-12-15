@@ -55,6 +55,7 @@ local new_container
 local url_decode
 local get_session
 local discover
+local narrative_shutdown
 
 -- this are name/value pairs referencing ngx.shared.DICT objects
 -- that we use to track docker containers. The ngx.shared.DICT
@@ -301,6 +302,24 @@ initialize = function( self, conf )
                                             M.sweep_interval,M.mark_interval, M.timeout, tostring(M.auth_redirect)))
     else
         ngx.log( ngx.INFO, string.format("Initialized at %d, skipping",initialized))
+    end
+end
+
+narrative_shutdown = function(self)
+    local uri_key_rx = ngx.var.uri_base.."/("..key_regex..")"
+    local uri_value_rx = ngx.var.uri_base.."/"..key_regex.."/".."("..val_regex..")$"
+    local method = ngx.req.get_method()
+
+    if method == "POST" then
+        ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
+    elseif method == "GET" then
+        ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
+    elseif method == "DELETE" then
+        ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
+    elseif method == "PUT" then
+        ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
+    elseif method == "DELETE" then
+        ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
     end
 end
 

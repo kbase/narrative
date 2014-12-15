@@ -306,23 +306,24 @@ initialize = function( self, conf )
 end
 
 narrative_shutdown = function(self)
-    local uri_key_rx = ngx.var.uri_base.."/("..key_regex..")"
-    local uri_value_rx = ngx.var.uri_base.."/"..key_regex.."/".."("..val_regex..")$"
+    local uri_key_rx = ngx.var.uri_base.."/("..key_regex ..")"
+    local uri_value_rx = ngx.var.uri_base.."/"..key_regex .."/".."("..val_regex..")$"
     local method = ngx.req.get_method()
     local response = {}
-    if method == "POST" then
-        ngx.say(json.encode(response)))
-    elseif method == "GET" then
-        ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
-    elseif method == "DELETE" then
-        ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
-    elseif method == "PUT" then
-        ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
-    elseif method == "DELETE" then
-        ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
-    else
-        ngx.exit( ngx.HTTP_METHOD_NOT_IMPLEMENTED )
-    end
+    ngx.exit( ngx.HTTP_METHOD_NOT_IMPLEMENTED )
+
+    -- if method == "POST" then
+    --     ngx.say(json.encode(response)))
+    -- elseif method == "GET" then
+    --     ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
+    -- elseif method == "DELETE" then
+    --     ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
+    -- elseif method == "PUT" then
+    --     ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
+    -- elseif method == "DELETE" then
+    --     ngx.say(json.encode({"action":"narrative_shutdown","method":method}))
+    -- else
+    -- end
 end
 
 -- This function is used to implement the rest interface

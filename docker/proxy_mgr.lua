@@ -717,5 +717,6 @@ M.use_proxy = use_proxy
 M.initialize = initialize
 M.idle_status = idle_status
 M.est_connections = est_connections
+M.narrative_shutdown = narrative_shutdown
 
 return M

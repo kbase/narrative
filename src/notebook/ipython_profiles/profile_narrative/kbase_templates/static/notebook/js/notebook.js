@@ -1508,12 +1508,17 @@ var IPython = (function (IPython) {
      * @return {Boolean} True if the name is valid, false if invalid
      */
     Notebook.prototype.test_notebook_name = function (nbname) {
-        nbname = nbname || '';
-        if (this.notebook_name_blacklist_re.test(nbname) == false && nbname.length>0) {
-            return true;
-        } else {
-            return false;
-        };
+        if(nbname) {
+            // names can be anything now!!! we only have to test that it is at least one character long
+            //if (this.notebook_name_blacklist_re.test(nbname) == false && nbname.length>0) {
+            
+            // although we cannot now leave the notebook named untitled
+            if(nbname.trim().length>0 && nbname.trim().toLowerCase() !== 'untitled') {
+                return true;
+            }
+        }
+        return false;
+    
     };
 
     /**
@@ -1630,7 +1635,7 @@ var IPython = (function (IPython) {
     Notebook.prototype.save_notebook = function () {
         // We may want to move the name/id/nbformat logic inside toJSON?
 
-        $('#kb-ws').kbaseNarrativeWorkspace('saveAllCellStates');
+        $('#notebook_panel').kbaseNarrativeWorkspace('saveAllCellStates');
 
         var data = this.toJSON();
         data.metadata.name = this.notebook_name;

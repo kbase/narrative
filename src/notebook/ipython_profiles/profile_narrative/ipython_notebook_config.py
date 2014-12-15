@@ -19,7 +19,8 @@ c.NotebookApp.notebook_manager_class="biokbase.narrative.kbasewsmanager.KBaseWSN
 # c.NotebookApp.profile = u'default'
 
 # The url for MathJax.js.
-c.NotebookApp.mathjax_url = 'https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
+# c.NotebookApp.mathjax_url = 'https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
+c.NotebookApp.mathjax_url = 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
 
 # The IP address the notebook server will listen on.
 # c.NotebookApp.ip = '127.0.0.1'
@@ -109,10 +110,11 @@ try:
 except NameError:
 	myfile = os.path.abspath(inspect.getsourcefile(lambda _: None))
 
-myfile = os.path.dirname( myfile)
+myfile = os.path.dirname(myfile)
 c.NotebookApp.webapp_settings = { 'template_path': os.path.join(myfile,"kbase_templates"),
                                   'static_path': os.path.join(myfile,"kbase_templates","static"),
-                                  'debug' : True }
+                                  'debug' : True,
+                                  'gzip' : True }
 
 c.NotebookApp.kbase_auth = True
 
@@ -506,6 +508,7 @@ c.IPKernelApp.pylab = 'inline'
 # checking for config directives that control what to patch. For example if
 # NotebookApp.kbase_auth = True then the monkeypatch code should patch all the notebook app
 # handlers to enforce and pass along kbase auth tokens
+
 monkeypatch.do_patching(c)
 
 # The default aliases for IPython have dysfunction entries for mv, rm and cp that include the "-i"

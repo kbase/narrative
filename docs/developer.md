@@ -93,9 +93,9 @@ If you are comfortable with virtualenv, and already have it set up, there is ano
 
 1. ** Activate your virtual environment **
 
-2. ** Run the Makefile **
+2. ** Install into it **
 
-    make -f Makefile.narrative
+    ./curenv-install.sh
 
 3. ** Use the `run_notebook` script ** The script file generated is called "run_notebook" instead of "run_notebook.sh", and does not require the extra "notebook" argument, so ignore the whole next section and just use:
 

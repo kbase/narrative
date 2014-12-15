@@ -212,6 +212,11 @@
                 
                 if (self.narData.mine.length>0) {
                     self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append("Mine")));
+                    self.narData.mine.sort(function(a,b) {
+                                    if (a.nar_info[3] > b.nar_info[3]) return -1; // sort by date
+                                    if (a.nar_info[3] < b.nar_info[3]) return 1;  // sort by date
+                                    return 0;
+                                });
                     for(var k=0; k<self.narData.mine.length; k++) {
                         if (!self.narData.mine[k].$div) {
                             self.narData.mine[k].$div = self.renderNarrativeDiv(self.narData.mine[k]);
@@ -221,6 +226,11 @@
                 }
                 
                 if (self.narData.shared.length>0) {
+                    self.narData.shared.sort(function(a,b) {
+                                    if (a.nar_info[3] > b.nar_info[3]) return -1; // sort by date
+                                    if (a.nar_info[3] < b.nar_info[3]) return 1;  // sort by date
+                                    return 0;
+                                });
                     self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append("Shared With Me")));
                     for(var k=0; k<self.narData.shared.length; k++) {
                         if (!self.narData.shared[k].$div) {

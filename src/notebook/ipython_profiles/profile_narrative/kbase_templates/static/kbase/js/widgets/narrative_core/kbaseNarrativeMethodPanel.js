@@ -11,7 +11,7 @@
  */
 (function( $, undefined ) {
     $.KBWidget({
-        name: 'kbaseNarrativeMethodPanel',
+        name: 'kbaseNarrativeMethodPanel', 
         parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
@@ -26,7 +26,7 @@
 
         /**
          * This private method is automatically called when the widget is initialized.
-         *
+         * 
          * Initialization steps:
          * 1. Put a loading spinner in its attached div
          * 2. Assume that the kernel is loaded before this is inited. //Check if the kernel is loaded - wait until it is.
@@ -53,8 +53,8 @@
             this.$searchInput = $('<input type="text">')
                                 .addClass('form-control')
                                 .attr('Placeholder', 'Search methods')
-                                .on('input',
-                                    $.proxy(function(e) {
+                                .on('input', 
+                                    $.proxy(function(e) { 
                                         this.visualFilter(this.textFilter, this.$searchInput.val());
                                     }, this)
                                 );
@@ -82,17 +82,36 @@
                                           .append($('<span>')
                                                   .append('X'))
                                           .click(
-                                            $.proxy(function(event) {
-                                                this.$searchInput.val('');
-                                                this.$searchInput.trigger('input');
+                                            $.proxy(function(event) { 
+                                                this.$searchInput.val(''); 
+                                                this.$searchInput.trigger('input'); 
                                             }, this)
                                           ));
             $searchDiv.append(this.$searchInput)
                       .append($clearSearchBtn);
 
+            var $ipyButtonDiv = $('<div style="margin-bottom:5px">')
+                                .append($('<button>')
+                                        .addClass('btn btn-warning')
+                                        .append($('<span style="color:#fff; font-weight:bold">')
+                                                .addClass('fa fa-terminal')
+                                                .append(' Code Cell'))
+                                        .click(function(event) {
+                                            IPython.notebook.insert_cell_below('code');
+                                        }))
+                                .append($('<button>')
+                                        .addClass('btn btn-warning pull-right')
+                                        .append($('<span style="color:#fff; font-weight:bold">')
+                                                .addClass('fa fa-paragraph')
+                                                .append(' Text Cell'))
+                                        .click(function(event) {
+                                            IPython.notebook.insert_cell_below('markdown');
+                                        }));
+
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                                   .addClass('kb-function-body')
+                                  .append($ipyButtonDiv)
                                   .append($searchDiv)
                                   .append(this.$toggleHiddenDiv);
 
@@ -118,7 +137,7 @@
                                  .append(this.$loadingPanel)
                                  .append(this.$errorPanel));
 
-            $(document).on('hasFunction.Narrative',
+            $(document).on('hasFunction.Narrative', 
                 $.proxy(function(e, service, method, callback) {
                     if (callback) {
                         callback(this.hasFunction(service, method));
@@ -136,18 +155,6 @@
             if (this.options.autopopulate === true) {
                 this.refresh();
             }
-
-            this.addButton($('<button>')
-                           .addClass('btn btn-xs btn-default')
-                           .append('<span class="glyphicon glyphicon-play"></span>')
-                           .click($.proxy(function(event) {
-                               this.trigger('hideSidePanelOverlay.Narrative');
-                               this.toggleOverlay();
-                           }, this)));
-
-            $(document).on('hideGalleryPanelOverlay.Narrative', $.proxy(function(event) {
-                this.hideOverlay();
-            }, this));
 
             return this;
         },
@@ -189,7 +196,7 @@
 
         /**
          * Shows a popup panel with a description of the clicked method.
-         * @param {object} method - the method containing a title and
+         * @param {object} method - the method containing a title and 
          * description for populating the popup.
          * @private
          */
@@ -199,7 +206,7 @@
             this.help.$helpBody.html(method.tooltip);
             this.help.$helpLinkout.attr('href', this.options.methodHelpLink + method.id);
             this.help.$helpPanel.css({
-                                       'left':event.pageX,
+                                       'left':event.pageX, 
                                        'top':event.pageY
                                      })
                                 .show();
@@ -218,7 +225,7 @@
             this.showLoadingMessage("Loading KBase Methods from service...");
 
             var methodAppCalls = [];
-            this.methClient.list_categories({'load_methods': 1, 'load_apps' : 1},
+            this.methClient.list_categories({'load_methods': 1, 'load_apps' : 1}, 
                 $.proxy(function(categories) {
                     console.log(categories);
                     // this.parseMethodsFromService(categories[0], categories[1]);
@@ -266,13 +273,20 @@
                     return a.name.localeCompare(b.name);
                 });
                 for (var i=0; i<fnList.length; i++) {
-                    $fnPanel.append(self.buildMethod(icon, fnList[i], callback));
+                    var $fnElem = self.buildMethod(icon, fnList[i], callback);
+                    $fnPanel.append($fnElem);
+                    self.methodSet[fnList[i].id] = fnList[i];
+                    self.methodSet[fnList[i].id]['$elem'] = $fnElem;
                 }
                 return $fnPanel;
             };
 
+            this.methodSet = {};
+
             var $methodPanel = generatePanel(catSet, methSet, 'M', triggerMethod);
             var $appPanel = generatePanel(catSet, appSet, 'A', triggerApp);
+
+            console.log(this.methodSet);
 
             this.$functionPanel.append($appPanel);
             this.$functionPanel.append($methodPanel);
@@ -347,10 +361,10 @@
 
         /**
          * Creates and returns a list item containing info about the given narrative function.
-         * Clicking the function anywhere outside the help (?) button will trigger a
-         * function_clicked.Narrative event. Clicking the help (?) button will trigger a
+         * Clicking the function anywhere outside the help (?) button will trigger a 
+         * function_clicked.Narrative event. Clicking the help (?) button will trigger a 
          * function_help.Narrative event.
-         *
+         * 
          * Both events have the relevant data passed along with them for use by the responding
          * element.
          * @param {object} method - the method object returned from the kernel.
@@ -445,17 +459,17 @@
                             '#9E9E9E', //grey
                             '#607D8B'  //blue grey
                          ];
-
+            
             // first, if there are some colors we want to catch...
             switch (type) {
-                case "A":
+                case "M":
                     return "#FF9800";
                     break;
-                case "M":
+                case "A":
                     return "#03A9F4";
                     break;
             }
-
+            
             // pick one based on the characters
             var code = 0;
             for(var i=0; i<type.length; i++) {
@@ -485,11 +499,11 @@
         /**
          * Creates a new function field in the functions list.
          * This 'function' is represented as a DOM element. It has a name (styled as
-         * a button, or something buttonish) and a help button.
+         * a button, or something buttonish) and a help button. 
          *
          * Clicking the function button triggers a function_clicked.Narrative event,
          * and clicking the help button triggers a function_help.Narrative event.
-         *
+         * 
          * Both of these events have the relevant data passed along with them for
          * population by the responding element.
          *
@@ -506,7 +520,7 @@
 
             var $helpButton = $('<span>')
                               .addClass('glyphicon glyphicon-question-sign')
-                              .css({'float': 'right',
+                              .css({'float': 'right', 
                                     'cursor': 'pointer',
                                     'font-size': '14pt',
                                     'color': '#0064b6'})
@@ -524,7 +538,7 @@
          */
         showLoadingMessage: function(message) {
             this.$loadingPanel.find('#message').empty();
-            if (message)
+            if (message) 
                 this.$loadingPanel.find('#message').html(message);
             this.$functionPanel.hide();
             this.$errorPanel.hide();
@@ -602,7 +616,7 @@
             $.each(elements,
                 $.proxy(
                     function (idx, val) {
-                        var $topElem =
+                        var $topElem = 
                             $('<div></div>')
                             .addClass('panel panel-default')
                             .css('margin-bottom', '2px')
@@ -674,14 +688,17 @@
          * If it passes, do nothing. If it fails, dim it out.
          *
          * So we need a handle on the functions. No big.
+         * !!! THIS IS OLD - We aren't using the accordion style before February, so 
+         * this needs to be slightly twiddled.
+         * !!!
          */
-        visualFilter: function(filterFn, fnInput) {
+        visualFilterAccordion: function(filterFn, fnInput) {
             var numHidden = 0;
             for (var catId in this.services) {
                 var cat = this.services[catId];
                 if (!cat.methods || cat.methods.length === 0)
                     continue;
-
+                
                 var numPass = 0;
                 for (var i=0; i<cat.methods.length; i++) {
                     if (!filterFn(fnInput, cat.methods[i])) {
@@ -720,239 +737,69 @@
             }
         },
 
+        /**
+         * @method
+         * @public
+         * Expects this.methodSet to be an associative array, like this:
+         * {
+         *     <methodId> : {
+         *         $elem : rendered element as jQuery node,
+         *         rest of method spec
+         *     }
+         * }
+         */
+        visualFilter: function(filterFn, fnInput) {
+            var numHidden = 0;
+            for (var methId in this.methodSet) {
+                if (!filterFn(fnInput, this.methodSet[methId])) {
+                    this.methodSet[methId].$elem.hide();
+                    this.methodSet[methId].$elem.addClass('kb-function-dim');
+                    numHidden++;
+                }
+                else {
+                    this.methodSet[methId].$elem.removeClass('kb-function-dim');
+                    this.methodSet[methId].$elem.show();
+                }
+            }
+            if (numHidden > 0) {
+                this.$numHiddenSpan.text(numHidden);
+                this.$toggleHiddenDiv.show();
+                this.toggleHiddenMethods(this.$showHideSpan.text() !== 'show');
+            }
+            else {
+                this.$toggleHiddenDiv.hide();
+                this.toggleHiddenMethods(true);
+            }
+        },
+
         toggleHiddenMethods: function(show) {
             /* 2 cases
              * show is truthy -> show()
              * show is falsy -> hide()
              */
 
-            // if show, show 'em all, and trigger the class for the kb-has-hidden attribute
             if (show) {
-                this.$functionPanel.find('.panel-default').show();
-                this.$functionPanel.find('.kb-data-obj-name').parent().show();
-                this.$functionPanel.find('[kb-has-hidden]').addClass('kb-function-cat-dim');
+                this.$functionPanel.find('.kb-function-dim').show();
             }
-            // otherwise, remove the kb-function-cat-dim class from everything, and
-            // show only those that do not have kb-function-dim, and hide the rest
             else {
-                this.$functionPanel.find('.panel-default').removeClass('kb-function-cat-dim');
                 this.$functionPanel.find('.kb-function-dim').hide();
-                this.$functionPanel.find('.panel:not(.kb-function-dim)').show();
-                this.$functionPanel.find('li:not(.kb-function-dim)').show();
-            }
-        },
-
-
-
-        //cobbled together crap. Hacked out of kbaseNarrativeSidePanel and pulled into here
-        //to create the method gallery panel.
-        buildTabs: function(tabs) {
-            var $header = $('<div>');
-            var $body = $('<div>');
-
-            for (var i=0; i<tabs.length; i++) {
-                var tab = tabs[i];
-                $header.append($('<div>')
-                               .addClass('kb-side-header')
-                               .css('width', (100/tabs.length)+'%')
-                               .append(tab.tabName));
-                $body.append($('<div>')
-                             .addClass('kb-side-tab')
-                             .append(tab.content));
-            }
-
-            $header.find('div').click(function(event) {
-                event.preventDefault();
-                event.stopPropagation();
-                var $headerDiv = $(event.currentTarget);
-
-                if (!$headerDiv.hasClass('active')) {
-                    var idx = $headerDiv.index();
-                    $header.find('div').removeClass('active');
-                    $headerDiv.addClass('active');
-                    $body.find('div.kb-side-tab').removeClass('active');
-                    $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
-                }
-            });
-
-            $header.find('div:first-child').addClass('active');
-            $body.find('div:first-child.kb-side-tab').addClass('active');
-
-            return {
-                header: $header,
-                body: $body
-            };
-        },
-
-
-        initOverlay: function() {
-            var $overlayHeader = $('<div>')
-                                 .addClass('kb-side-overlay-header')
-                                 .append('Header!')
-                                 .append($('<div>')
-                                        .addClass('pull-right')
-                                        .append($('<span>')
-                                                .addClass('kb-side-overlay-close glyphicon glyphicon-remove')
-                                        .click($.proxy(function(event) {
-                                           this.toggleOverlay();
-                                        }, this))));
-
-            // styling is easier if there is a class for containers
-            this.$overlayBody = $('<div class="kb-overlay-body">');
-
-            this.$overlayFooter  = $('<div class="kb-overlay-footer">');
-
-            this.$overlay = $('<div>')
-                            .addClass('kb-side-overlay-container')
-                            //.append($overlayHeader)
-                            .append(this.$overlayBody)
-                            .append(this.$overlayFooter);
-
-            $('body').append(this.$overlay);
-            this.$overlay.hide();
-
-            this.$narrativeDimmer = $('<div>')
-                                    .addClass('kb-overlay-dimmer');
-            $('body').append(this.$narrativeDimmer);
-            this.$narrativeDimmer.hide();
-            this.updateOverlayPosition();
-
-            this.buildOverlay();
-        },
-
-        updateOverlayPosition: function() {
-        console.log("ME IS ", this.$elem);
-        console.log("HE IS", this.$elem.closest('.kb-side-panel'));
-            this.$overlay.position({my: 'left top', at: 'right top', of: this.$elem.closest('.kb-side-panel')});
-            this.$narrativeDimmer.position({my: 'left top', at: 'right top', of: this.$elem.closest('.kb-side-panel')});
-        },
-
-        toggleOverlay: function() {
-
-            if (this.$overlay == undefined) {
-                this.initOverlay();
-            }
-
-            if (this.$overlay.is(':visible'))
-                this.hideOverlay();
-            else
-                this.showOverlay();
-        },
-
-        showOverlay: function() {
-            if (this.$overlay) {
-                this.$narrativeDimmer.show();
-                this.$elem.find('.kb-side-header').addClass('overlay-active');
-                this.$overlay.show('slide', 'fast', $.proxy(function() {
-                }, this));
-            }
-        },
-
-        hideOverlay: function() {
-            if (this.$overlay) {
-                this.$narrativeDimmer.hide();
-                this.$elem.find('.kb-side-header').removeClass('overlay-active');
-                this.$overlay.hide('slide', 'fast', $.proxy(function() {
-                }, this));
-            }
-        },
-
-        /**
-         * Builds the general structure for a panel set.
-         * These are intended to start with 2 panels, but we can move from there if needed.
-         *
-         * (I'll jsdoc this up in a bit)
-         * widgets = [
-         *     {
-         *         name: kbaseNarrativeDataPanel (for instance)
-         *         params: {}
-         *     }
-         * ]
-         * @param {object} widgets
-         *
-         */
-
-
-        /**
-         * Renders the method gallery panel
-        */
-        buildOverlay: function() {
-            var narWSName;
-            $(document).on('setWorkspaceName.Narrative', function(e, info){
-                narWSName = info.wsId;
-            })
-
-            var self = this;
-            var user = $("#signin-button").kbaseLogin('session', 'user_id');
-
-            var body = this.$overlayBody;
-            var footer = this.$overlayFooter;
-
-            // models
-            var myData = [],
-                sharedData = [],
-                publicData = [];
-
-            // models for filter selections
-            var query;
-
-            // models for options in type and workspace dropdowns
-            var types = [];
-                workspaces =[];
-
-            // tab panels
-            var minePanel = $('<div class="kb-import-panel">'),
-                sharedPanel = $('<div class="kb-import-panel">'),
-                publicPanel = $('<div class="kb-import-panel">'),
-                importPanel = $('<div class="kb-import-panel">');
-                galleryPanel = $('<div class="kb-import-panel">');
-
-            // content wrapper
-            var content = $('<div class="kb-import-content">');
-
-            // add tabs
-            var $tabs = this.buildTabs([
-                    {tabName: 'Gallery', content: galleryPanel},
-                ]);
-
-            galleryPanel.kbaseMethodGallery({sidePanel : this});
-
-            body.addClass('kb-side-panel');
-            body.append($tabs.header).append($tabs.body);
-
-            // It is silly to invoke a new object for each widget
-            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
-            var ws = new Workspace(this.options.workspaceURL, auth);
-
-
-            // get possible types (not used)
-            /*
-            ws.list_all_types({}).done(function(res) {
-                console.log('types', res)
-
-                var types = [];
-                for (var mod in res) {
-                    var typeNames = res[mod]
-                    for (var type in typeNames) {
-                        types.push(type);
-                    }
-                }
-                console.log('type_names', types)
-            })*/
-
-
-            // add footer status container and button
-            var importStatus = $('<div class="pull-left kb-import-status">');
-            footer.append(importStatus)
-
-            body.append(footer);
-
 
             }
 
-        //end cobbled together crap
-
-
-
+            // // if show, show 'em all, and trigger the class for the kb-has-hidden attribute
+            // if (show) {
+            //     this.$functionPanel.find('.panel-default').show();
+            //     this.$functionPanel.find('.kb-data-obj-name').parent().show();
+            //     this.$functionPanel.find('[kb-has-hidden]').addClass('kb-function-cat-dim');
+            // }
+            // // otherwise, remove the kb-function-cat-dim class from everything, and
+            // // show only those that do not have kb-function-dim, and hide the rest
+            // else {
+            //     this.$functionPanel.find('.panel-default').removeClass('kb-function-cat-dim');
+            //     this.$functionPanel.find('.kb-function-dim').hide();
+            //     this.$functionPanel.find('.panel:not(.kb-function-dim)').show();
+            //     this.$functionPanel.find('li:not(.kb-function-dim)').show();
+            // }
+        },
     });
 })( jQuery );

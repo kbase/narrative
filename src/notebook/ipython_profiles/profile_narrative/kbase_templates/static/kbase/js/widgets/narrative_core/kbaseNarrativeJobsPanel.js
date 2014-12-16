@@ -428,7 +428,7 @@
             };
 
 
-            console.log([appJob, appInfo]);
+            // console.log([appJob, appInfo]);
 
             /* Cases:
              * 1. have appJob, have appInfo

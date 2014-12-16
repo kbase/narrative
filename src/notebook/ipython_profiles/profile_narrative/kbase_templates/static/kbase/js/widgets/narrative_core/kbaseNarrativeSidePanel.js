@@ -279,11 +279,11 @@
 
 
             // tab panels
-            var minePanel = $('<div class="kb-import-panel">'),
-                sharedPanel = $('<div class="kb-import-panel">'),
-                publicPanel = $('<div class="kb-import-panel">'),
-                importPanel = $('<div class="kb-import-panel" style="margin-left: 20px; margin-right: 20px;">'),
-                examplePanel = $('<div class="kb-import-panel">');
+            var minePanel = $('<div class="kb-import-content kb-import-mine">'),
+                sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
+                publicPanel = $('<div class="kb-import-content kb-import-public">'),
+                importPanel = $('<div class="kb-import-content kb-import-import" style="margin-left: 20px; margin-right: 20px;">'),
+                examplePanel = $('<div class="kb-import-content">');
                 // galleryPanel = $('<div class="kb-import-panel">');
 
 

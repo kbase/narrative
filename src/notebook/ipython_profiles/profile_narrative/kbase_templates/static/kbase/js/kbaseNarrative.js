@@ -149,20 +149,38 @@ narrative.init = function() {
         }
     }
 
+
     var $shutdownButton = $('<button>')
                           .attr({'type':'button', 'data-dismiss':'modal'})
                           .addClass('btn btn-danger')
-                          .append('Shutdown')
+                          .append('Okay. Shut it all down!')
                           .click(function(e) {
                               var user = 'wjriehl';
                               var prom = $.ajax({
                                   contentType: 'applcation/json',
-                                  url: window.kbconfig.urls.narrative_server + 'narrative_shutdown/' + user,
+                                  url: '/narrative_shutdown/' + user,
                                   type: 'DELETE',
-                                  success: function(response) { alert(response); },
                                   crossDomain: true
                               });
+                              prom.done(function(jqXHR, response, status) {
+                                  setTimeout(function(){window.close();}, 200);
+                              });
+                              prom.fail(function(jqXHR, response, error) {
+                                  alert('Unable to close your Narrative session\nError: ' + jqXHR.status + ' ' + error);
+                              });
                           });
+    var $reallyShutdownPanel = $('<div style="margin-top:10px">')
+                               .append('This will shutdown your Narrative session and close this window.<br><b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b><br>')
+                               .append($shutdownButton)
+                               .hide();
+
+    var $firstShutdownBtn = $('<button>')
+                            .attr({'type':'button'})
+                            .addClass('btn btn-danger')
+                            .append('Shutdown')
+                            .click(function(e) {
+                                $reallyShutdownPanel.slideDown('fast');
+                            });
 
     var $versionModal = $('<div tabindex=-1 role="dialog" aria-labelledby="kb-version-label" aria-hidden="true">')
                         .addClass('modal fade')
@@ -181,11 +199,15 @@ narrative.init = function() {
                                             .append($versionDiv))
                                     .append($('<div>')
                                             .addClass('modal-footer')
-                                            .append($shutdownButton)
-                                            .append(
-                                                $('<button type="button" data-dismiss="modal">')
-                                                .addClass('btn btn-default')
-                                                .append('Dismiss')))));
+                                            .append($('<div>')
+                                                    .append($('<button type="button" data-dismiss="modal">')
+                                                            .addClass('btn btn-default')
+                                                            .append('Dismiss')
+                                                            .click(function(e) {
+                                                                $reallyShutdownPanel.hide();
+                                                            }))
+                                                    .append($firstShutdownBtn))
+                                            .append($reallyShutdownPanel))));
 
 //    var $versionBtn = $('<a href="#">About</a>')
     $('#kb-about-btn').click(function(event) {

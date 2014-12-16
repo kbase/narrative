@@ -64,7 +64,7 @@
                     tabName : 'Manage',
                     content: $managePanel
                 }
-            ]);
+            ], true);
 
             this.$elem.addClass('kb-side-panel');
             this.$elem.append($tabs.header).append($tabs.body);
@@ -92,7 +92,18 @@
             return this;
         },
 
-        buildTabs: function(tabs) {
+        /**
+         * @method
+         * @private
+         * Builds a very simple set of tabs.
+         * @param {Array} tabs - a list of objects where each has a 'tabName' and 'content' property. 
+         * As you might expect, 'tabName' is the name of the tab that goes into the styled header,
+         * and 'content' is the tab content, expected to be something that can be attached via .append()
+         * @param isOuter - if true, treat these tabs as though they belong to the outer side panel,
+         * not to an inner set of tabs. That is, when any new tab is selected, it hides the overlay,
+         * if it's open.
+         */
+        buildTabs: function(tabs, isOuter) {
             var $header = $('<div>');
             var $body = $('<div>');
 
@@ -107,7 +118,7 @@
                              .append(tab.content));
             }
 
-            $header.find('div').click(function(event) {
+            $header.find('div').click($.proxy(function(event) {
                 event.preventDefault();
                 event.stopPropagation();
                 var $headerDiv = $(event.currentTarget);
@@ -118,8 +129,10 @@
                     $headerDiv.addClass('active');
                     $body.find('div.kb-side-tab').removeClass('active');
                     $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
+                    if (isOuter)
+                        this.hideOverlay();
                 }
-            });
+            }, this));
 
             $header.find('div:first-child').addClass('active');
             $body.find('div:first-child.kb-side-tab').addClass('active');

@@ -397,17 +397,13 @@
                     $ctrCol.append($('<span>').addClass('fa fa-share-alt').css({'color':'#777','cursor':'pointer'})
                                         .append(' '+shareCount)
                                         .on('click',function() {
-                                            if ($shareContainer.is(':visible')) {
-                                                $shareContainer.hide();
-                                            } else {
-                                                $shareContainer.show();
-                                                if($shareContainer.is(':empty')) {
-                                                    var $share = $('<div>');
-                                                    // just use the share panel, max height is practically unlimited because we are already
-                                                    // in a scrollable pane
-                                                    $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none'});
-                                                    $shareContainer.append($share);
-                                                }
+                                            $shareContainer.slideToggle('fast');
+                                            if($shareContainer.is(':empty')) {
+                                                var $share = $('<div>');
+                                                // just use the share panel, max height is practically unlimited because we are already
+                                                // in a scrollable pane
+                                                $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none'});
+                                                $shareContainer.append($share);
                                             }
                                         }));
                 },

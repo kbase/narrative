@@ -10,11 +10,9 @@
 -- The following ngx.shared.DICT need to be declared in the main config, or
 -- else use different names and pass them in during initialization:
 --
+-- session_map
 -- proxy_map
--- proxy_state
--- proxy_last
 -- proxy_mgr
--- proxy_token_cache
 --
 -- author: Steve Chan sychan@lbl.gov
 --
@@ -52,6 +50,7 @@ local initialize
 local set_proxy
 local use_proxy
 local new_container
+local assign_container
 local url_decode
 local get_session
 local discover
@@ -60,27 +59,22 @@ local discover
 -- that we use to track docker containers. The ngx.shared.DICT
 -- implementation only supports basic scalar types, so we need a
 -- couple of these instead of using a common table object
--- proxy_map maps a session key (kbase token userid 'sychan') to an
---           ip/port proxy target ('127.0.0.1:49000')
--- proxy_last maps a session key (kbase token userid 'sychan') to a time value
---           (output from os.time()) when the proxy target was
---           last seen to be active
--- proxy_last_ip maps a session key (kbase token userid 'sychan') to an IP address
---           that was last seen connecting
--- proxy_state maps a session key (kbase token userid 'sychan') to a boolean that
---           flags if that proxy has been marked for reaping
---           a true value means that the proxy is considered alive
---           and a false value means the instance is ready to be
---           reaped
--- proxy_token_cache is cache of validated tokens
-local proxy_map = nil
-local proxy_last = nil
-local proxy_last_ip = nil
-local proxy_state = nil
-local proxy_token_cache = nil
+-- session_map maps a session key (kbase token userid) to a whitespace seperated list of:
+--          1. ip/port proxy target (eg. '127.0.0.1:49000')
+--          2. docker ID
+-- docker_map maps a docker ID to a whitespace seperated list of:
+--          1. state of container: 'queued', 'active', 'idle'
+--          2. ip/port of container
+--          3. session assigned to container (same as in session_map), '*' if none
+--          4. time value (os.time) of last activity
+--          5. IP that last connected
+-- token_cache is cache of validated tokens
+local session_map = nil
+local docker_map = nil
+local token_cache = nil
 
 -- This is a dictionary for storing proxy manager internal state
--- The following names are currentl supported
+-- The following names are currently supported
 -- 'next_sweep' - this stores the next time() the reap_sweeper is scheduled
 --                 to be run. It is cleared when the sweeper runs, and
 --                 set when the sweeper is rescheduled. If we notice that
@@ -103,16 +97,14 @@ local initialized = nil
 -- pure numeric form (no DNS or service name lookups)
 local NETSTAT = 'netstat -nt'
 
--- Lifetime of entry in the token cache, it is measured in milliseconds
--- per http://wiki.nginx.org/HttpLuaModule#ngx.shared.DICT.set
--- Set for 8 hours
-local token_cache_time = 8*60*60*1000
-
 -- Base URL for Globus Online Nexus API
 -- the non-clocking client library we are using, resty.http, doesn't
 -- support https, so we depend on a locally configured Nginx
 -- reverse proxy to actually perform the request
 nexus_url = 'http://127.0.0.1:65001/users/'
+
+-- name of shared dict for locking library
+M.lock_name = "lock_map"
 
 -- How often (in seconds) does the sweeper wake up to delete dead
 -- containers?
@@ -143,7 +135,7 @@ est_connections = function()
         netstat = handle:read('*a')
         handle:close()
         for conn in string.gmatch(netstat,"[%d%.]+:[%d]+ + ESTABLISHED") do
-            ipport = string.match( conn, "[%d%.]+:[%d]+")
+            ipport = string.match(conn, "[%d%.]+:[%d]+")
             if connections[ipport] then
                 connections[ipport] = connections[ipport] + 1
             else
@@ -151,7 +143,7 @@ est_connections = function()
             end
         end
     else
-        ngx.log( ngx.ERR, string.format("Error trying to execute %s", NETSTAT))
+        ngx.log(ngx.ERR, string.format("Error trying to execute %s", NETSTAT))
     end
     return connections
 end
@@ -160,32 +152,42 @@ end
 -- Reaper function that looks in the proxy_state table for instances that need to be
 -- removed and removes them
 sweeper = function(self)
-    ngx.log( ngx.INFO, "sweeper running")
-    proxy_mgr:delete('next_sweep')
-
-    local keys = proxy_state:get_keys() 
-    for key = 1, #keys do
-        name = keys[key]
-        if proxy_state:get(name) == false then
-            ngx.log( ngx.INFO, "sweeper removing ",name)
-            local success, err = pcall( notemgr.remove_notebook, name)
-            if success then
-                proxy_map:delete(name)
-                proxy_state:delete(name)
-                proxy_last:delete(name)
-                proxy_last_ip:delete(name)
-                ngx.log( ngx.INFO, "notebook removed")
-            elseif string.find(err, "does not exist") then
-                ngx.log( ngx.INFO, "notebook nonexistent - removing references")
-                proxy_map:delete(name)
-                proxy_state:delete(name)
-                proxy_last_ip:delete(name)
-                proxy_last:delete(name)
-            else
-                ngx.log( ngx.ERROR, string.format("error: %s", err))
+    ngx.log(ngx.INFO, "sweeper running")
+    -- get locker
+    local dock_lock = locklib:new(M.lock_name)
+    -- loop through ids
+    local ids = docker_map:get_keys()
+    for num = 1, #ids do
+        id = ids[num]
+        -- lock docker map before read/write
+        elapsed, err = dock_lock:lock(id)
+        if elapsed then -- lock worked
+            local val = docker_map:get(id) -- make sure its still there
+            if val then
+                -- info = { state, ip:port, session, last_time, last_ip }
+                local info = notemgr:split(val)
+                -- this is assigned to be reaped
+                if info[1] == "idle" then
+                    ngx.log(ngx.INFO, string.format("sweeper removing %s, %s", info[3], id))
+                    local ok, err = pcall(notemgr.remove_notebook, id)
+                    if ok then
+                        docker_map:delete(id)
+                        session_map:delete(info[3])
+                        ngx.log(ngx.INFO, "notebook removed")
+                    elseif string.find(err, "does not exist") then
+                        ngx.log(ngx.INFO, "notebook nonexistent - removing references")
+                        docker_map:delete(id)
+                        session_map:delete(info[3])
+                    else
+                        ngx.log(ngx.ERROR, string.format("error: %s", err))
+                    end
+                end
             end
+            docker_lock:unlock() -- unlock if it worked
         end
     end
+    -- reset sweeper
+    proxy_mgr:delete('next_sweep')
     -- enqueue ourself again
     check_sweeper()
 end
@@ -194,54 +196,68 @@ end
 check_sweeper = function(self)
     local next_run = proxy_mgr:get('next_sweep')
     if next_run == nil then -- no sweeper in the queue, put one into the queue!
-        ngx.log( ngx.ERR, string.format("enqueuing sweeper to run in  %d seconds",M.sweep_interval))
+        ngx.log(ngx.ERR, string.format("enqueuing sweeper to run in  %d seconds", M.sweep_interval))
         local success, err = ngx.timer.at(M.sweep_interval, sweeper)
         if success then
             proxy_mgr:set('next_sweep', os.time() + M.sweep_interval)
         else
-            ngx.log( ngx.ERR, string.format("Error enqueuing sweeper to run in %d seconds: %s",
-            M.sweep_interval,err ))
+            ngx.log(ngx.ERR, string.format("Error enqueuing sweeper to run in %d seconds: %s", M.sweep_interval, err))
         end
-        return(false)
+        return false
     end
-    return(true)
+    return true
 end
 
 --
 -- Reaper function that examines containers to see if they have been idle for longer than
 -- M.timeout and then marks them for cleanup
+-- updates those with active connections
 --
 marker = function(self)
-    ngx.log( ngx.INFO, "marker running")
-    proxy_mgr:delete('next_mark')
-    local keys = proxy_last:get_keys() 
+    ngx.log(ngx.INFO, "marker running")
     local now = os.time()
     local timeout = now - M.timeout
-
+    -- get locker
+    local dock_lock = locklib:new(M.lock_name)
     -- fetch currently open connections
     local conn = est_connections()
-
-    for key = 1, #keys do
-        name = keys[key]
-        local target = proxy_map:get( name)
-        ngx.log( ngx.INFO, string.format("Checking %s -> %s", name, target))
-        if conn[target] then
-            ngx.log( ngx.INFO, string.format("Found %s among current connections", name))
-            success, err = proxy_last:set(name, now)
-            if not success then
-                ngx.log( ngx.ERR, string.format("Error setting proxy_last[ %s ] from established connections: %s",
-                         name,err ))
+    -- loop through ids
+    local ids = docker_map:get_keys()
+    for num = 1, #ids do
+        id = ids[num]
+        -- lock docker map before read/write
+        elapsed, err = dock_lock:lock(id)
+        if elapsed then -- lock worked
+            local val = docker_map:get(id) -- make sure its still there
+            if val then
+                -- info = { state, ip:port, session, last_time, last_ip }
+                local info = notemgr:split(val)
+                -- this is assigned to a session
+                if info[1] ~= "queued" then
+                    -- currently has connection, update
+                    if conn[info[2]] then
+                        info[4] = now
+                        success, err = docker_map:set(id, table.concat(info, " ")
+                        if not success then
+                            ngx.log(ngx.ERR, string.format("Error setting %s from established connections: %s", name, err))
+                        end
+                    -- past due, mark for reaping
+                    elseif info[4] <= timeout then
+                        ngx.log(ngx.INFO, string.format("Marking %s for reaping - last seen %s", info[3], os.date("%c",info[4])))
+                        info[1] = "idle"
+                        success, err = docker_map:set(id, table.concat(info, " ")
+                        if not success then
+                            ngx.log(ngx.ERR, string.format("Error setting %s as idle: %s", name, err))
+                        end
+                    end
+                end
             end
-        else -- not among current connections, check for reaping
-            local last, flags = proxy_last:get( name)
-            if last <= timeout then
-                -- reap it
-                ngx.log( ngx.INFO, string.format("Marking %s for reaping - last seen %s",
-                name,os.date("%c",last)))
-                proxy_state:set(name,false)
-            end
+            docker_lock:unlock() -- unlock if it worked
         end
     end
+    -- reset marker
+    proxy_mgr:delete('next_mark')
+    -- enqueue sweeper
     check_sweeper()
     -- requeue ourselves
     check_marker()
@@ -252,31 +268,25 @@ end
 check_marker = function(self)
     local next_run = proxy_mgr:get('next_mark')
     if next_run == nil then -- no marker in the queue, put one into the queue!
-        ngx.log( ngx.ERR, string.format("enqueuing marker to run in %d seconds",M.mark_interval))
+        ngx.log(ngx.ERR, string.format("enqueuing marker to run in %d seconds", M.mark_interval))
         local success, err = ngx.timer.at(M.mark_interval, marker)
         if success then
             proxy_mgr:set('next_mark', os.time() + M.mark_interval)
         else
-            ngx.log( ngx.ERR, string.format("Error enqueuing marker to run in %d seconds: %s",
-            M.mark_interval,err ))
+            ngx.log(ngx.ERR, string.format("Error enqueuing marker to run in %d seconds: %s", M.mark_interval, err))
         end
-        return(false)
+        return false
     end
-    return(true)
+    return true
 end
 
 --
 -- Do some initialization for the proxy manager.
--- Named parameters are:
---     reap_interval - number of seconds between runs of the reaper, unused for now
---     idle_timeout  - number of seconds since last activity before a container is reaped
---     proxy_map - name to use for the nginx shared memory proxy_map
---     proxy_last - name to use for the nginx shared memory last connection access time
 --
-initialize = function( self, conf )
+initialize = function(self, conf)
     if conf then
         for k,v in pairs(conf) do
-            ngx.log( ngx.INFO, string.format("conf(%s) = %s",k,tostring(v)))
+            ngx.log(ngx.INFO, string.format("conf(%s) = %s",k,tostring(v)))
         end
     else
         conf = {}
@@ -287,17 +297,21 @@ initialize = function( self, conf )
         M.mark_interval = conf.mark_interval or M.mark_interval
         M.timeout = conf.idle_timeout or M.timeout
         M.auth_redirect = conf.auth_redirect or M.auth_redirect
-        proxy_map = conf.proxy_map or ngx.shared.proxy_map
-        proxy_last = conf.proxy_last or ngx.shared.proxy_last
-        proxy_last_ip = conf.proxy_last_ip or ngx.shared.proxy_last_ip
-        proxy_state = conf.proxy_state or ngx.shared.proxy_state
-        proxy_token_cache = conf.proxy_token_cache or ngx.shared.proxy_token_cache
+        M.lock_name = conf.lock_name or M.lock_name
+        session_map = conf.session_map or ngx.shared.session_map
+        docker_map = conf.docker_map or ngx.shared.docker_map
+        token_cache = conf.token_cache or ngx.shared.token_cache
         proxy_mgr = conf.proxy_mgr or ngx.shared.proxy_mgr
-
-        ngx.log( ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d auth_redirect %s",
-                                            M.sweep_interval,M.mark_interval, M.timeout, tostring(M.auth_redirect)))
+        -- get the reaper functions into the run queue
+        check_marker()
+        -- temp hack to pre-start containers
+        for var=1,5 do
+            new_container()
+        end
+        ngx.log(ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d auth_redirect %s",
+                                            M.sweep_interval, M.mark_interval, M.timeout, tostring(M.auth_redirect)))
     else
-        ngx.log( ngx.INFO, string.format("Initialized at %d, skipping",initialized))
+        ngx.log(ngx.INFO, string.format("Initialized at %d, skipping",initialized))
     end
 end
 
@@ -389,11 +403,11 @@ set_proxy = function(self)
         local uri_base = ngx.var.uri_base
         local key = string.match(ngx.var.uri,uri_key_rx)
         if key then
-            local target, flags = proxy_map:get(key)
+            local target = proxy_map:get(key)
             if target == nil then
                 ngx.status = ngx.HTTP_NOT_FOUND
             else
-                local last, flags = proxy_last:get(key)
+                local last = proxy_last:get(key)
                 response = {
                     proxy_target = proxy_map:get(key),
                     last_seen = os.date("%c",last),
@@ -404,7 +418,7 @@ set_proxy = function(self)
         else 
             local keys = proxy_map:get_keys() 
             for key = 1, #keys do
-                local last, flags = proxy_last:get(keys[key])
+                local last = proxy_last:get(keys[key])
                 response[keys[key]] = { 
                     proxy_target = proxy_map:get(keys[key]),
                     last_seen = os.date("%c",last),
@@ -454,7 +468,7 @@ set_proxy = function(self)
         local uri_base = ngx.var.uri_base
         local key = string.match(ngx.var.uri,uri_key_rx)
         if key then
-            local target, flags = proxy_map:get(key)
+            local target = proxy_map:get(key)
             if target == nil then
                 ngx.status = ngx.HTTP_NOT_FOUND
             else
@@ -469,7 +483,7 @@ set_proxy = function(self)
         end
         ngx.say(json.encode( response ))
     else
-        ngx.exit( ngx.HTTP_METHOD_NOT_IMPLEMENTED )
+        ngx.exit(ngx.HTTP_METHOD_NOT_IMPLEMENTED )
     end
 end
 
@@ -491,18 +505,18 @@ end
 --
 -- In the current implementation we take the token (if given) and
 -- try to query Globus Online for the user profile, if it comes back
--- then the token is good and we put an entry in the proxy_token_cache
+-- then the token is good and we put an entry in the token_cache
 -- table for it
+--
+-- session identifier is parsed out of token from user name (un=) value
 get_session = function()
     local hdrs = ngx.req.get_headers()
     local cheader = hdrs['Cookie']
     local token = {}
     local session_id = nil; -- nil return value by default
-    local error_msg = nil;
-
     if cheader then
         -- ngx.log( ngx.INFO, string.format("cookie = %s",cheader))
-        local session = string.match(cheader, auth_cookie_name .. "=([%S]+);?")
+        local session = string.match(cheader, auth_cookie_name.."=([%S]+);?")
         if session then
             -- ngx.log( ngx.INFO, string.format("kbase_session = %s",session))
             session = string.gsub(session, ";$", "")
@@ -518,7 +532,7 @@ get_session = function()
         end
     end
     if token['un'] then
-        local cached,err = proxy_token_cache:get(token['kbase_sessionid'])
+        local cached = token_cache:get(token['kbase_sessionid'])
         -- we have to cache either the token itself, or a hash of the token
         -- because this method gets called for every GET for something as
         -- trivial as a .png or .css file, calculating and comparing an MD5
@@ -528,129 +542,224 @@ get_session = function()
         -- however the exposure would require a hacker of fairly high end
         -- skills (or someone who has read the source code...)
         if cached and cached == token['token'] then
-            session_id = token['un']
+            return token['un']
+        end
+        -- lock and try again
+        local token_lock = locklib:new(M.lock_name)
+        elapsed, err = token_lock:lock(token['kbase_sessionid'])
+        if elapsed == nil then
+            ngx.log(ngx.ERR, "Error: failed to update token cache: "..err)
+            return nil
+        end
+        cached = token_cache:get(token['kbase_sessionid'])
+        if cached and cached == token['token'] then
+            token_lock:unlock()
+            return token['un']
+        -- still missing, now get from globus
         else
             ngx.log(ngx.ERR, "Token cache miss : ", token['kbase_sessionid'])
             local req = {
                 url = nexus_url .. token['un'],
                 method = "GET",
-                headers = { Authorization = "Globus-Goauthtoken " .. token['token'] }
+                headers = { Authorization = "Globus-Goauthtoken "..token['token'] }
             }
             --ngx.log( ngx.DEBUG, "request.url = " .. req.url)
-            local ok,code,headers,status,body = httpclient:request( req)
+            local ok,code,headers,status,body = httpclient:request(req)
             --ngx.log( ngx.DEBUG, "Response - code: ", code)
             if code >= 200 and code < 300 then
                 local profile = json.decode(body)
-                ngx.log( ngx.INFO, "Token validated for " .. profile.fullname .. " (" .. profile.username .. ")")
+                ngx.log(ngx.INFO, "Token validated for "..profile.fullname.." ("..profile.username..")")
                 if profile.username == token.un then
-                    ngx.log(ngx.INFO, "Token username matches cookie identity, inserting session_id into token cache: " .. token['kbase_sessionid'])
-                    proxy_token_cache:set(token['kbase_sessionid'],token['token'])
+                    ngx.log(ngx.INFO, "Token username matches cookie identity, inserting session_id into token cache: "..token['kbase_sessionid'])
+                    token_cache:set(token['kbase_sessionid'], token['token'])
                     session_id = profile.username
+                    token_lock:unlock()
                 else
-                    error_msg = "token username DOES NOT match cookie identity: " .. profile.username
-                    ngx.log(ngx.ERR, "Error: " .. err_msg)
+                    ngx.log(ngx.ERR, "Error: token username DOES NOT match cookie identity: "..profile.username)
                 end
             else
-                error_msg = "Error during token validation: " ..  status .. " " .. body
-                ngx.log(ngx.ERR, error_msg)
+                ngx.log(ngx.ERR, "Error during token validation: "..status.." "..body)
             end
         end
+        token_lock:unlock() -- make sure its unlcoked
     end
-    return session_id, error_msg
+    return session_id
 end
 
 --
--- Check docker and update our list of containers
+-- Check docker_map and update session_map if missing
+-- info = { state, ip:port, session, last_time, last_ip }
+-- this for-loop makes me wish lua had a continue statement
+-- currently not using this function
 --
 discover = function()
-    local notebooks = notemgr:get_notebooks()
-    ngx.log( ngx.INFO, json.encode(notebooks))
-    -- add any notebooks we don't know about
-    local k,v
-    for k,v in pairs(notebooks) do
-        if proxy_map:get(k) == nil then
-            ngx.log(ngx.INFO, "Discovered new container " .. k )
-            local success,err,forcible = proxy_map:set(k,v)
-            if not success then
-                ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-                ngx.log(ngx.ERR, "Error setting proxy_map: " .. err)
+    -- add any assigned notebooks we don't know about
+    local ids = docker_map:get_keys()
+    local docker_lock = locklib:new(M.lock_name)
+    local session_lock = locklib:new(M.lock_name)
+    for num = 1, #ids do
+        id = ids[num]
+        -- lock memory map before access
+        elapsed, err = docker_lock:lock(id)
+        if elapsed then -- lock worked
+            local val = docker_map:get(id) -- make sure its still there
+            if val then
+                local info = notemgr:split(val)
+                -- this is assigned to a session
+                if info[1] ~= "queued" then
+                    local target = session_map:get(info[3])
+                    if target == nil then -- not in session_map
+                        -- lock session_map before update
+                        elapsed, err = session_lock:lock(info[3])
+                        if elapsed then -- lock worked
+                            target = session_map:get(info[3])
+                            if target == nil then -- its still missing after lock
+                                ngx.log(ngx.INFO, "session_map is stale, missing "..info[3]..", "..id)
+                                local success,err,forcible = session_map:set(info[3], table.concat({info[2], id}, " "))
+                                if not success then
+                                    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+                                    ngx.log(ngx.ERR, "Error setting session_map: "..err)
+                                end
+                            end
+                            session_lock:unlock() -- unlock if it worked
+                        end
+                    end
+                end
             end
-            success,err,forcible = proxy_last:set(k,os.time())
-            if not success then
-                ngx.log( ngx.WARN, "Error setting last seen timestamp proxy_last" )
-            end
-            success,err,forcible = proxy_state:set(k,true)
-            success,err,forcible = proxy_last_ip:set(k,client_ip)
+            docker_lock:unlock() -- unlock if it worked
         end
     end
 end
 
 --
--- Spin up a new instance
+-- Spin up a new container, add to docker_map
+-- id = container uuid
+-- info = { state, ip:port, session, last_time, last_ip }
+-- true if success, fasle if failed
 --
-new_container = function(session_id)
-    local res = nil
-    ngx.log( ngx.INFO, "Creating new notebook instance for ",session_id )
-    local ok,res = pcall(notemgr.launch_notebook,session_id)
-    if ok then
-        ngx.log( ngx.INFO, "New instance at: " .. res)
-        -- do a non-blocking sleep for 5 seconds to allow the instance to spin up
-        -- ngx.sleep(5)
-        local success,err,forcible = proxy_map:set(session_id,res)
-        if not success then
-            ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-            ngx.log( ngx.ERR, "Error setting proxy_map: " .. err)
-            response = "Unable to set routing for notebook " .. err
-        else
-            success,err,forcible = proxy_state:set(session_id,true)
-            success,err,forcible = proxy_last:set(session_id,os.time())
-        end
+new_container = function()
+    ngx.log(ngx.INFO, "Creating container for queue")
+    local id, info = notemgr:launch_notebook()
+    if id == nil then
+        ngx.log(ngx.ERR, "Failed to launch new instance : ".. p.write(info))
+        return false
     else
-        ngx.log( ngx.ERR, "Failed to launch new instance : ".. p.write(res ))
-        res = nil
+        -- lock key before writing it
+        local dock_lock = locklib:new(M.lock_name)
+        elapsed, err = dock_lock:lock(id)
+        if elapsed == nil then
+            ngx.log(ngx.ERR, "Error: failed to update docker cache: "..err)
+            return false
+        end
+        docker_map:set(id, table.concat(info, " "))
+        dock_lock:unlock()
+        return true
     end
-    return(res)
+end
+
+--
+-- Assign session to running container
+-- edits docker_map and session_map
+-- session_id is already locked when this function called
+-- returns IP:port of session, nil if error
+--
+assign_container = function(session_id, client_ip)
+    -- sync map with state
+    notemgr:sync_notebooks(M.lock_name)
+    local dock_lock = locklib:new(M.lock_name)
+    local ids = docker_map:get_keys()
+    for num = 1, #ids do
+        id = ids[num]
+        -- lock docker map before read/write
+        elapsed, err = dock_lock:lock(id)
+        if elapsed then -- lock worked
+            local val = docker_map:get(id) -- make sure its still there
+            if val then
+                -- info = { state, ip:port, session, last_time, last_ip }
+                local info = notemgr:split(val)
+                -- this is not assigned to a session
+                if info[1] == "queued" then
+                    if info[3] == "*" then
+                        session_val = table.concat({info[2], id}, " ")
+                        session_map:set(session_id, session_val)
+                        docker_map:set(id, table.concat({"active", info[2], session_id, os.time(), client_ip}, " ")
+                        dock_lock:unlock()
+                        return session_val
+                    else -- bad state, session with queued
+                        info[1] = "idle"
+                        docker_map:set(id, table.concat(info, " "))
+                    end
+                end
+            dock_lock:unlock() -- unlock if it worked
+        end
+    end
+    -- no available docker container - launch new
+    res = new_container()
+    -- new container created, try and re-assign
+    -- i hope this recusion works
+    if res:
+        return assign_container(session_id, client_ip)
+    else:
+        return nil
 end
 
 --
 -- Route to the appropriate proxy
 --
 use_proxy = function(self)
-    local target, flags
+    local target = nil
     local new_flag = false
     -- ngx.log( ngx.INFO, "In /narrative/ handler")
-    -- get the reaper functions into the run queue if not already
-    check_marker()
     local client_ip = ngx.var.remote_addr
-    local session_key,err = get_session()
-
-    if session_key then
-        target, flags = proxy_map:get(session_key)
-        if target == nil then -- didn't find in proxy map, check containers
-            ngx.log( ngx.WARN, "Unknown proxy key:" .. session_key)
-            discover()
-        end
-        -- try to fetch the target again
-        target = proxy_map:get(session_key)
-        if target == nil then
-            target = new_container(session_key)
-            local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
-            local returnurl = string.format("%s://%s%s", scheme,ngx.var.host,ngx.var.request_uri)
-            return ngx.redirect( string.format(M.load_redirect, ngx.escape_uri(returnurl)))
-        end
-    else
-        ngx.log(ngx.WARN,"No session_key found!")
+    -- get session
+    -- unauthorized if no session
+    local session_key = get_session()
+    if not session_key then
+        ngx.log(ngx.WARN,"No session_key found, bad auth!")
+        return(ngx.exit(ngx.HTTP_UNAUTHORIZED))
     end
-
-    if target ~= nil then
-        ngx.var.target = target
-        -- ngx.log( ngx.INFO, "session: " .. session_key .. " target: " .. ngx.var.target )
-        local success,err,forcible = proxy_last:set(session_key,os.time())
-        if not success then
-            ngx.log( ngx.WARN, "Error setting last seen timestamp proxy_last" )
+    -- get proxy target
+    target = session_map:get(session_key)
+    -- didn't find in session_map, lock and try again
+    if target == nil then
+        session_lock = locklib:new(M.lock_name)
+        elapsed, err = session_lock:lock(session_key)
+        if elasped then
+            target = session_map:get(session_key)
         end
-        success,err,forcible = proxy_state:set(session_key,true)
-        success,err,forcible = proxy_last_ip:set(session_key,client_ip)
+        -- still missing, assign comtainer to session
+        if target == nil then
+            -- session_key still locked in called function
+            -- this updates docker_map with session info
+            target = assign_container(session_key, client_ip)
+            session_lock.unlock()
+            -- can not assign a new one / bad state
+            if target == nil then
+                ngx.log(ngx.WARN,"No available docker containers!")
+                return(ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE))
+            end
+            -- assign comtainer to session
+            local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
+            local returnurl = string.format("%s://%s%s", scheme, ngx.var.host, ngx.var.request_uri)
+            return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(returnurl)))
+        end
+    end
+    -- proxy target already in session
+    if target ~= nil then
+        -- session = { IP:port, docker_id }
+        local session = notemgr:split(target)
+        ngx.var.target = session[1]
+        -- update docker_map session info, lock first
+        local dock_lock = locklib:new(M.lock_name)
+        elapsed, err = dock_lock:lock(session[2])
+        if elapsed == nil then
+            ngx.log(ngx.ERR, "Error: failed to lock docker cache: "..err)
+        end
+        success,err,forcible = docker_map:set(session[2], table.concat({"active", session[1], session_key, os.time(), client_ip}, " ")
+        if not success then
+            ngx.log(ngx.WARN, "Error: failed to update docker cache: "..err)
+        end
+        dock_lock:unlock()
     elseif M.auth_redirect then
         local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
         local returnurl = string.format("%s://%s/%s", scheme,ngx.var.host,ngx.var.request_uri)

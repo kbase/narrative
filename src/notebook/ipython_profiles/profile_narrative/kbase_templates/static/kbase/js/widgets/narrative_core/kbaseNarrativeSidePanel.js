@@ -288,8 +288,8 @@
                 sharedWorkspaces = [];
 
             // model for selected objects to import
-            var selected = [];
-
+            var mineSelected = [];
+            var sharedSelected = [];
 
             // tab panels
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
@@ -297,7 +297,6 @@
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
                 importPanel = $('<div class="kb-import-content kb-import-import" style="margin-left: 20px; margin-right: 20px;">'),
                 examplePanel = $('<div class="kb-import-content">');
-                // galleryPanel = $('<div class="kb-import-panel">');
 
 
             // add tabs
@@ -307,15 +306,11 @@
                     {tabName: 'Public', content: publicPanel},
                     {tabName: 'Example', content: examplePanel},
                     {tabName: 'Import', content: importPanel},
-//                    {tabName: 'Gallery', content: galleryPanel},
                 ]);
 
-            //sharedPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             publicPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             importPanel.kbaseNarrativeSideImportTab({});
             examplePanel.kbaseNarrativeExampleDataTab({});
-            //append('<div class="kb-import-content"><br>coming soon.</div>');
-            // galleryPanel.kbaseMethodGallery({sidePanel : this});
 
             body.addClass('kb-side-panel');
             body.append($tabs.header, $tabs.body);
@@ -327,8 +322,11 @@
             // add footer status container and button
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
-            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
-            minePanel.append(btn);
+            var addMineBtn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
+            minePanel.append(addMineBtn);
+
+            var addSharedBtn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
+            sharedPanel.append(addSharedBtn);
 
             body.append(footer);
 
@@ -374,15 +372,15 @@
                 return $.when(p).then(function(d) {
                     // update model
                     myData = d;
-                    render(myData, minePanel);
-                    events(minePanel);
+                    render(myData, minePanel, addMineBtn, mineSelected);
+                    events(minePanel, addMineBtn, mineSelected);
                 })
             }
 
             // This function takes data to render and 
             // a container to put data in.
             // It produces a scrollable dataset
-            function render(data, container) {
+            function render(data, container, btn, selected) {
                 var start = 0, end = 9;
 
                 // remove items from only current container being rendered
@@ -403,7 +401,7 @@
                         var rows = buildMyRows(data, start, end);
                         container.append(rows);
                     }
-                    events(container);
+                    events(container, btn, selected);
                 });
 
                 /* pagination
@@ -426,8 +424,8 @@
                 return $.when(p).then(function(d) {
                     // update model
                     sharedData = d;
-                    render(sharedData, sharedPanel);                    
-                    events(sharedPanel);
+                    render(sharedData, sharedPanel, addSharedBtn, sharedSelected);
+                    events(sharedPanel, addSharedBtn, sharedSelected);
                 })
             }
 
@@ -507,7 +505,7 @@
             }
 
 
-            function events(panel) {
+            function events(panel, btn, selected) {
                 panel.find('.kb-import-checkbox').unbind('change');
                 panel.find('.kb-import-checkbox').change(function(){
                     var item = $(this).parent('.kb-import-item');
@@ -633,7 +631,7 @@
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, minePanel);
-                    events(minePanel);
+                    events(minePanel, addMineBtn, mineSelected);
                 })
 
 
@@ -653,7 +651,7 @@
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, minePanel)                                   
-                    events(minePanel);                            
+                    events(minePanel, addMineBtn, mineSelected);
                 })
 
 
@@ -667,7 +665,7 @@
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, minePanel)  
-                    events(minePanel);                            
+                    events(minePanel, addMineBtn, mineSelected);
                 });
 
 
@@ -699,7 +697,7 @@
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query});
                     render(filtered, sharedPanel);
-                    events(sharedPanel);
+                    events(sharedPanel, addSharedBtn, sharedSelected);
                 })
 
 
@@ -719,7 +717,7 @@
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
                     render(filtered, sharedPanel)
-                    events(sharedPanel);                            
+                    events(sharedPanel, addSharedBtn, sharedSelected);
                 })
 
 
@@ -733,7 +731,7 @@
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
                     render(filtered, sharedPanel)
-                    events(sharedPanel);                            
+                    events(sharedPanel, addSharedBtn, sharedSelected);
                 });
 
                 // add search, type, ws filter to dom

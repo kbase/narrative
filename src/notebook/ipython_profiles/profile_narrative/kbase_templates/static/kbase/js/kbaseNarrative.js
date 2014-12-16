@@ -149,6 +149,21 @@ narrative.init = function() {
         }
     }
 
+    var $shutdownButton = $('<button>')
+                          .attr({'type':'button', 'data-dismiss':'modal'})
+                          .addClass('btn btn-danger')
+                          .append('Shutdown')
+                          .click(function(e) {
+                              var user = 'wjriehl';
+                              var prom = $.ajax({
+                                  contentType: 'applcation/json',
+                                  url: window.kbconfig.urls.narrative_server + 'narrative_shutdown/' + user,
+                                  type: 'DELETE',
+                                  success: function(response) { alert(response); },
+                                  crossDomain: true
+                              });
+                          });
+
     var $versionModal = $('<div tabindex=-1 role="dialog" aria-labelledby="kb-version-label" aria-hidden="true">')
                         .addClass('modal fade')
                         .append($('<div>')
@@ -166,10 +181,7 @@ narrative.init = function() {
                                             .append($versionDiv))
                                     .append($('<div>')
                                             .addClass('modal-footer')
-                                            .append(
-                                                $('<button type="button" data-dismiss="modal">')
-                                                .addClass('btn btn-danger')
-                                                .append('Shutdown'))
+                                            .append($shutdownButton)
                                             .append(
                                                 $('<button type="button" data-dismiss="modal">')
                                                 .addClass('btn btn-default')

@@ -69,13 +69,22 @@
             this.$elem.addClass('kb-side-panel');
             this.$elem.append($tabs.header).append($tabs.body);
 
+            $(document).on('showSidePanelOverlay.Narrative', $.proxy(function(event) {
+                this.showOverlay();
+            }, this));
+
+            $(document).on('hideSidePanelOverlay.Narrative', $.proxy(function(event) {
+                this.hideOverlay();
+            }, this));
+
             $(document).on('toggleSidePanelOverlay.Narrative', $.proxy(function(event) {
                 this.toggleOverlay();
             }, this));
 
             if (this.autorender) {
                 this.render();
-            } else {
+            } 
+            else {
 
             }
             // add the stuff to the tabs
@@ -136,7 +145,8 @@
 
             this.$overlayBody = $('<div class="kb-overlay-body">');
 
-            this.$overlayFooter  = $('<div>'); // class="kb-overlay-footer">'); // this seems to add strange footer line in my browser
+//            this.$overlayFooter  = $('<div>'); // class="kb-overlay-footer">'); // this seems to add strange footer line in my browser
+            this.$overlayFooter  = $('<div class="kb-overlay-footer">');
 
             this.$overlay = $('<div>')
                             .addClass('kb-side-overlay-container')
@@ -156,7 +166,7 @@
             this.updateOverlayPosition();
 
             // hide panel when clicking outside
-            this.$narrativeDimmer.unbind('click')
+            this.$narrativeDimmer.unbind('click');
             this.$narrativeDimmer.click(function() {
                 self.hideOverlay();
             });
@@ -273,9 +283,9 @@
             var minePanel = $('<div class="kb-import-panel">'),
                 sharedPanel = $('<div class="kb-import-panel">'),
                 publicPanel = $('<div class="kb-import-panel">'),
-                importPanel = $('<div class="kb-import-panel" style="margin-left: 20px; margin-right: 20px;">');
+                importPanel = $('<div class="kb-import-panel" style="margin-left: 20px; margin-right: 20px;">'),
                 examplePanel = $('<div class="kb-import-panel">');
-                galleryPanel = $('<div class="kb-import-panel">');
+                // galleryPanel = $('<div class="kb-import-panel">');
 
 
             // add tabs
@@ -285,7 +295,7 @@
                     {tabName: 'Public', content: publicPanel},
                     {tabName: 'Example', content: examplePanel},
                     {tabName: 'Import', content: importPanel},
-                    {tabName: 'Gallery', content: galleryPanel},
+//                    {tabName: 'Gallery', content: galleryPanel},
                 ]);
 
             //sharedPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
@@ -293,7 +303,7 @@
             importPanel.kbaseNarrativeSideImportTab({});
             examplePanel.kbaseNarrativeExampleDataTab({});
             //append('<div class="kb-import-content"><br>coming soon.</div>');
-            galleryPanel.kbaseMethodGallery({sidePanel : this});
+            // galleryPanel.kbaseMethodGallery({sidePanel : this});
 
             body.addClass('kb-side-panel');
             body.append($tabs.header, $tabs.body);

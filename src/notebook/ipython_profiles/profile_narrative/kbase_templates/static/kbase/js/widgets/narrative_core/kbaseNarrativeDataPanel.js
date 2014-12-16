@@ -163,6 +163,7 @@
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-play"></span>')
                            .click($.proxy(function(event) {
+                               this.trigger('hideGalleryPanelOverlay.Narrative');
                                this.trigger('toggleSidePanelOverlay.Narrative');
                            }, this)));
             

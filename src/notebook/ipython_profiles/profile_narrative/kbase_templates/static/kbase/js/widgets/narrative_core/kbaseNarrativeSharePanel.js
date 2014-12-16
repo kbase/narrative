@@ -54,12 +54,14 @@
             this.showWorking("loading narrative information");
             this.getInfoAndRender();
             
-            $(document).on(
-                'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-                    this.options.ws_name_or_id = info.wsId;
-                    this.refresh();
-                }, this)
-            );
+            if (!this.options.ws_name_or_id) {
+                $(document).on(
+                    'setWorkspaceName.Narrative', $.proxy(function(e, info) {
+                        this.options.ws_name_or_id = info.wsId;
+                        this.refresh();
+                    }, this)
+                );
+            }
             
             return this;
         },
@@ -203,9 +205,13 @@ WORKSPACE INFO
                 var $meDiv = $('<div>').css({'margin':'5px','margin-top':'20px'});
                 var status = "You do not have access to this Narrative.";
                 var isOwner = false;
-                if (self.ws_info[5]==='a') {
+                if (self.ws_info[2]===self.my_user_id) {
                     status="You own this Narrative. You can edit it and share it with other users.";
                     isOwner = true;
+                    $togglePublicPrivate.show();
+                } else if (self.ws_info[5]==='a') {
+                    status="You can edit and share this Narrative.";
+                    isOwner = true;  // not really, but set this so we show sharing controls
                     $togglePublicPrivate.show();
                 } else if (self.ws_info[5]==='w') {
                     status="You can edit this Narrative, but you cannot share it.";
@@ -223,12 +229,13 @@ WORKSPACE INFO
                     
                     var $addAction =
                         $('<div>').addClass('btn-group')
-                            .append($('<button>').addClass('btn btn-default dropdown-toggle')
+                            .append($('<button>').addClass('btn btn-default dropdown-toggle ')
                                 .attr('type','button').attr('data-toggle','dropdown').attr('aria-expanded','false')
                                 .append('<span class="fa fa-caret-down"></span>'))
-                            .append($('<ul>').addClass('dropdown-menu').attr('role','menu')
+                            .append($('<ul>').addClass('dropdown-menu pull-right').attr('role','menu')
+                                    // TODO: pull-right is deprecated, use dropdown-menu-right when bootstrap updates
                                     .append($('<li>').append(
-                                        $('<a>').append(' Add with view privileges')
+                                        $('<a>').append('Add with view privileges')
                                             .on('click',function() {
                                                 var data = $input.select2("data");
                                                 self.showWorking("updating permissions...");
@@ -244,7 +251,7 @@ WORKSPACE INFO
                                                     function(error){self.reportError(error); self.refresh(); }
                                                 );
                                             })))
-                                    .append($('<li>').append($('<a>').append(' Add with edit privileges')
+                                    .append($('<li>').append($('<a>').append('Add with edit privileges')
                                             .on('click',function() {
                                                 var data = $input.select2("data");
                                                 self.showWorking("updating permissions...");
@@ -260,7 +267,7 @@ WORKSPACE INFO
                                                     function(error){self.reportError(error); self.refresh(); }
                                                 );
                                             })))
-                                    .append($('<li>').append($('<a>').append(' Add with edit/share privileges')
+                                    .append($('<li>').append($('<a>').append('Add with edit/share privileges')
                                             .on('click',function() {
                                                 var data = $input.select2("data");
                                                 self.showWorking("updating permissions...");
@@ -291,7 +298,7 @@ WORKSPACE INFO
             
                 var $othersDiv = $('<div>').css({
                         'margin-top':'15px',
-                        'height':self.options.max_list_height,
+                        'max-height':self.options.max_list_height,
                         'overflow-y':'auto',
                         'overflow-x':'hidden'
                         });

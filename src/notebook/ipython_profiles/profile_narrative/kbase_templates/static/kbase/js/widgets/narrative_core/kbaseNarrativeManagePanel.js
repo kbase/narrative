@@ -37,6 +37,7 @@
             loadingImage: "static/kbase/images/ajax-loader.gif",
             ws_url: "https://kbase.us/services/ws",
             nms_url: "https://kbase.us/services/narrative_method_store/rpc",
+            user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
             ws_name: null,
             nar_name: null,
         },
@@ -211,7 +212,7 @@
                 self.$narPanel.empty();
                 
                 if (self.narData.mine.length>0) {
-                    self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append("Mine")));
+                    self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append("My Narratives")));
                     self.narData.mine.sort(function(a,b) {
                                     if (a.nar_info[3] > b.nar_info[3]) return -1; // sort by date
                                     if (a.nar_info[3] < b.nar_info[3]) return 1;  // sort by date
@@ -243,7 +244,7 @@
                 
                 // ADVANCED TAB: allows users to set the default narrative for any workspace
                 var $advancedDiv = $('<div>').hide();
-                var $advLink = $('<h3>').append("Show Advanced Controls");
+                var $advLink = $('<h4>').append("Show Advanced Controls");
                 self.$narPanel.append($('<div>').append($('<span>').append($("<a>").append($advLink)))
                                         .css({'text-align':'center','cursor':'pointer'})
                                         .on('click', function() {
@@ -353,16 +354,72 @@
         
         renderNarrativeDiv: function(data) {
             var $narDiv = $('<div>').addClass('kb-data-list-obj-row');
+            
+            var $tbl = $('<table>').css({'width':'100%'});
+            var $dataCol = $('<td>').css({'text-align':'left'});
+            var $ctrCol = $('<td>').css({'text-align':'right'});
+            
             var narRef = "ws."+data.ws_info[0]+".obj."+data.nar_info[0];
             var nameText = narRef;
             if (data.nar_info[10].name) {
                 nameText = data.nar_info[10].name;
             }
-            $narDiv.append(
-                $('<div>').addClass('kb-data-list-name').css({'white-space':'normal', 'cursor':'pointer'})
-                    .append('<a href="'+narRef+'" target="_blank">'+nameText+'</a>'));
+            var $priv = $('<span>').css({'color':'#999','margin-left':'8px'}).prop('data-toggle','tooltip').prop('data-placement','right');
+             if (data.ws_info[5]==='r') {
+                $priv.addClass('fa fa-lock').prop('title','read-only');
+            } else if (data.ws_info[5]==='w' || data.ws_info[5]==='a') {
+                $priv.addClass('fa fa-pencil').prop('title','you can edit');
+            }
             
-            $narDiv.append('<i>modified '+this.getTimeStampStr(data.nar_info[3])+'</i><br>');
+            $dataCol.append(
+                $('<div>').addClass('kb-data-list-name').css({'white-space':'normal', 'cursor':'pointer'})
+                    .append($('<a href="'+narRef+'" target="_blank">').append(nameText).append($priv)));
+            var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
+            if(data.ws_info[2]===this._attributes.auth.user_id) {
+                $usrNameSpan.html();
+            } else {
+                $dataCol.append($usrNameSpan).append('<br>');
+                this.displayRealName(data.ws_info[2], $usrNameSpan);
+            }
+            $dataCol.append($('<span>').addClass('kb-data-list-type').append(this.getTimeStampStr(data.nar_info[3])));
+            
+            var $shareContainer = $('<div>').hide();
+            var self = this;
+            this.ws.get_permissions({id:data.ws_info[0]},
+                function(perm) {
+                    var shareCount = 0;
+                    for(var usr in perm) {
+                        if (perm.hasOwnProperty(usr)) {
+                            if (usr === '*') { continue; }
+                            shareCount++;
+                        }
+                    }
+                    $ctrCol.append($('<span>').addClass('fa fa-share-alt').css({'color':'#777','cursor':'pointer'})
+                                        .append(' '+shareCount)
+                                        .on('click',function() {
+                                            if ($shareContainer.is(':visible')) {
+                                                $shareContainer.hide();
+                                            } else {
+                                                $shareContainer.show();
+                                                if($shareContainer.is(':empty')) {
+                                                    var $share = $('<div>');
+                                                    // just use the share panel, max height is practically unlimited because we are already
+                                                    // in a scrollable pane
+                                                    $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none'});
+                                                    $shareContainer.append($share);
+                                                }
+                                            }
+                                        }));
+                },
+                function(error) {
+                    console.error('error getting permissions for manage panel');
+                    console.error(error);
+                });
+            
+            
+            
+            $narDiv.append($('<table>').css({'width':'100%'}).append($('<tr>').append($dataCol).append($ctrCol)));
+            $narDiv.append($shareContainer);
             return $narDiv;
         },
         
@@ -421,12 +478,43 @@
                     return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
                 }
             }
+            
             // keep it simple, just give a date
             return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
         },
         
         monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"],
         
+        /* we really need to stop all this copy pasting */
+        real_name_lookup: {},
+        displayRealName: function(username,$targetSpan) {
+	    var self = this;
+	    // todo : use globus to populate user names, but we use a hack because of globus CORS headers
+	    if (self.ws) { // make sure we are logged in and have some things
+		
+                if (self.real_name_lookup[username]) {
+                    $targetSpan.html(self.real_name_lookup[username]+" ("+username+")");
+                } else {
+                    self.real_name_lookup[username] = "..."; // set a temporary value so we don't search again
+                    $targetSpan.html(username);
+                    $.ajax({
+                            type: "GET",
+                            url: self.options.user_name_fetch_url + username + "&token="+self._attributes.auth.token,
+                            dataType:"json",
+                            crossDomain : true,
+                            success: function(data,res,jqXHR) {
+                                if (username in data['data'] && data['data'][username]['fullName']) {
+                                    self.real_name_lookup[username] = data['data'][username]['fullName'];
+                                    $targetSpan.html(self.real_name_lookup[username]+" ("+username+")");
+                                }
+                            },
+                            error: function(jqXHR, textStatus, errorThrown) {
+                                //do nothing
+                            }
+                        });
+                }
+	    }
+        }
         
     });
 

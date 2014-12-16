@@ -145,24 +145,11 @@
 
         initOverlay: function() {
             var self = this;
-            var $overlayHeader = $('<div>')
-                                 .addClass('kb-side-overlay-header')
-                                 .append('Header!')
-                                 .append($('<div>')
-                                        .addClass('pull-right')
-                                        .append($('<span>')
-                                                .addClass('kb-side-overlay-close glyphicon glyphicon-remove')
-                                        .click($.proxy(function(event) {
-                                           this.toggleOverlay();
-                                        }, this))));
 
             this.$overlayBody = $('<div class="kb-overlay-body">');
-
             this.$overlayFooter  = $('<div>'); // class="kb-overlay-footer">'); // this seems to add strange footer line in my browser
-
             this.$overlay = $('<div>')
                             .addClass('kb-side-overlay-container')
-                            //.append($overlayHeader) 
                             .append(this.$overlayBody)
                             .append(this.$overlayFooter);
 
@@ -298,7 +285,6 @@
                 importPanel = $('<div class="kb-import-content kb-import-import" style="margin-left: 20px; margin-right: 20px;">'),
                 examplePanel = $('<div class="kb-import-content">');
 
-
             // add tabs
             var $tabs = this.buildTabs([
                     {tabName: 'My Data', content: minePanel},
@@ -322,12 +308,15 @@
             // add footer status container and button
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
-            var addMineBtn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
-            minePanel.append(addMineBtn);
+            var addMineBtn = $('<button class="btn btn-primary kb-import-search" style="margin-top:0" disabled>Add to Narrative</button>');
+            minePanel.append($('<div class="row">')
+                             .append($('<div class="col-sm-4">')
+                                     .append(addMineBtn)));
 
-            var addSharedBtn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
-            sharedPanel.append(addSharedBtn);
-
+            var addSharedBtn = $('<button class="btn btn-primary kb-import-search" style="margin-top:0" disabled>Add to Narrative</button>');
+            sharedPanel.append($('<div class="row">')
+                               .append($('<div class="col-sm-4">')
+                                       .append(addSharedBtn)));
             body.append(footer);
 
             // start with my data, then fetch other data

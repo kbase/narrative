@@ -64,7 +64,7 @@
                     tabName : 'Manage',
                     content: $managePanel
                 }
-            ]);
+            ], true);
 
             this.$elem.addClass('kb-side-panel');
             this.$elem.append($tabs.header).append($tabs.body);
@@ -92,7 +92,18 @@
             return this;
         },
 
-        buildTabs: function(tabs) {
+        /**
+         * @method
+         * @private
+         * Builds a very simple set of tabs.
+         * @param {Array} tabs - a list of objects where each has a 'tabName' and 'content' property. 
+         * As you might expect, 'tabName' is the name of the tab that goes into the styled header,
+         * and 'content' is the tab content, expected to be something that can be attached via .append()
+         * @param isOuter - if true, treat these tabs as though they belong to the outer side panel,
+         * not to an inner set of tabs. That is, when any new tab is selected, it hides the overlay,
+         * if it's open.
+         */
+        buildTabs: function(tabs, isOuter) {
             var $header = $('<div>');
             var $body = $('<div>');
 
@@ -107,7 +118,7 @@
                              .append(tab.content));
             }
 
-            $header.find('div').click(function(event) {
+            $header.find('div').click($.proxy(function(event) {
                 event.preventDefault();
                 event.stopPropagation();
                 var $headerDiv = $(event.currentTarget);
@@ -118,8 +129,10 @@
                     $headerDiv.addClass('active');
                     $body.find('div.kb-side-tab').removeClass('active');
                     $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
+                    if (isOuter)
+                        this.hideOverlay();
                 }
-            });
+            }, this));
 
             $header.find('div:first-child').addClass('active');
             $body.find('div:first-child.kb-side-tab').addClass('active');
@@ -132,25 +145,11 @@
 
         initOverlay: function() {
             var self = this;
-            var $overlayHeader = $('<div>')
-                                 .addClass('kb-side-overlay-header')
-                                 .append('Header!')
-                                 .append($('<div>')
-                                        .addClass('pull-right')
-                                        .append($('<span>')
-                                                .addClass('kb-side-overlay-close glyphicon glyphicon-remove')
-                                        .click($.proxy(function(event) {
-                                           this.toggleOverlay();
-                                        }, this))));
 
             this.$overlayBody = $('<div class="kb-overlay-body">');
-
-//            this.$overlayFooter  = $('<div>'); // class="kb-overlay-footer">'); // this seems to add strange footer line in my browser
-            this.$overlayFooter  = $('<div class="kb-overlay-footer">');
-
+            this.$overlayFooter  = $('<div>'); // class="kb-overlay-footer">'); // this seems to add strange footer line in my browser
             this.$overlay = $('<div>')
                             .addClass('kb-side-overlay-container')
-                            //.append($overlayHeader) 
                             .append(this.$overlayBody)
                             .append(this.$overlayFooter);
 
@@ -276,17 +275,15 @@
                 sharedWorkspaces = [];
 
             // model for selected objects to import
-            var selected = [];
-
+            var mineSelected = [];
+            var sharedSelected = [];
 
             // tab panels
-            var minePanel = $('<div class="kb-import-panel">'),
-                sharedPanel = $('<div class="kb-import-panel">'),
-                publicPanel = $('<div class="kb-import-panel">'),
-                importPanel = $('<div class="kb-import-panel" style="margin-left: 20px; margin-right: 20px;">'),
-                examplePanel = $('<div class="kb-import-panel">');
-                // galleryPanel = $('<div class="kb-import-panel">');
-
+            var minePanel = $('<div class="kb-import-content kb-import-mine">'),
+                sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
+                publicPanel = $('<div class="kb-import-content kb-import-public">'),
+                importPanel = $('<div class="kb-import-content kb-import-import" style="margin-left: 20px; margin-right: 20px;">'),
+                examplePanel = $('<div class="kb-import-content">');
 
             // add tabs
             var $tabs = this.buildTabs([
@@ -295,15 +292,11 @@
                     {tabName: 'Public', content: publicPanel},
                     {tabName: 'Example', content: examplePanel},
                     {tabName: 'Import', content: importPanel},
-//                    {tabName: 'Gallery', content: galleryPanel},
                 ]);
 
-            //sharedPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             publicPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             importPanel.kbaseNarrativeSideImportTab({});
             examplePanel.kbaseNarrativeExampleDataTab({});
-            //append('<div class="kb-import-content"><br>coming soon.</div>');
-            // galleryPanel.kbaseMethodGallery({sidePanel : this});
 
             body.addClass('kb-side-panel');
             body.append($tabs.header, $tabs.body);
@@ -315,9 +308,15 @@
             // add footer status container and button
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
-            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
-            minePanel.append(btn);
+            var addMineBtn = $('<button class="btn btn-primary kb-import-search" style="margin-top:0" disabled>Add to Narrative</button>');
+            minePanel.append($('<div class="row">')
+                             .append($('<div class="col-sm-4">')
+                                     .append(addMineBtn)));
 
+            var addSharedBtn = $('<button class="btn btn-primary kb-import-search" style="margin-top:0" disabled>Add to Narrative</button>');
+            sharedPanel.append($('<div class="row">')
+                               .append($('<div class="col-sm-4">')
+                                       .append(addSharedBtn)));
             body.append(footer);
 
             // start with my data, then fetch other data
@@ -362,15 +361,15 @@
                 return $.when(p).then(function(d) {
                     // update model
                     myData = d;
-                    render(myData, minePanel);
-                    events(minePanel);
+                    render(myData, minePanel, addMineBtn, mineSelected);
+                    events(minePanel, addMineBtn, mineSelected);
                 })
             }
 
             // This function takes data to render and 
             // a container to put data in.
             // It produces a scrollable dataset
-            function render(data, container) {
+            function render(data, container, btn, selected) {
                 var start = 0, end = 9;
 
                 // remove items from only current container being rendered
@@ -391,7 +390,7 @@
                         var rows = buildMyRows(data, start, end);
                         container.append(rows);
                     }
-                    events(container);
+                    events(container, btn, selected);
                 });
 
                 /* pagination
@@ -414,8 +413,8 @@
                 return $.when(p).then(function(d) {
                     // update model
                     sharedData = d;
-                    render(sharedData, sharedPanel);                    
-                    events(sharedPanel);
+                    render(sharedData, sharedPanel, addSharedBtn, sharedSelected);
+                    events(sharedPanel, addSharedBtn, sharedSelected);
                 })
             }
 
@@ -495,7 +494,7 @@
             }
 
 
-            function events(panel) {
+            function events(panel, btn, selected) {
                 panel.find('.kb-import-checkbox').unbind('change');
                 panel.find('.kb-import-checkbox').change(function(){
                     var item = $(this).parent('.kb-import-item');
@@ -621,7 +620,7 @@
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, minePanel);
-                    events(minePanel);
+                    events(minePanel, addMineBtn, mineSelected);
                 })
 
 
@@ -641,7 +640,7 @@
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, minePanel)                                   
-                    events(minePanel);                            
+                    events(minePanel, addMineBtn, mineSelected);
                 })
 
 
@@ -655,7 +654,7 @@
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, minePanel)  
-                    events(minePanel);                            
+                    events(minePanel, addMineBtn, mineSelected);
                 });
 
 
@@ -687,7 +686,7 @@
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query});
                     render(filtered, sharedPanel);
-                    events(sharedPanel);
+                    events(sharedPanel, addSharedBtn, sharedSelected);
                 })
 
 
@@ -707,7 +706,7 @@
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
                     render(filtered, sharedPanel)
-                    events(sharedPanel);                            
+                    events(sharedPanel, addSharedBtn, sharedSelected);
                 })
 
 
@@ -721,7 +720,7 @@
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
                     render(filtered, sharedPanel)
-                    events(sharedPanel);                            
+                    events(sharedPanel, addSharedBtn, sharedSelected);
                 });
 
                 // add search, type, ws filter to dom

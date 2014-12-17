@@ -45,8 +45,7 @@
         "uploader": "http://kbase.us/services/docs/uploader/uploader.html", 
         "user_and_job_state": "https://kbase.us/services/userandjobstate", 
         "workspace": "https://kbase.us/services/ws", 
-        "ws_browser": "https://narrative.kbase.us/functional-site/#/ws",
-        "narrative_server": "http://localhost.kbase.us:8080/"
+        "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
-    "version": "v0.2.2"
+    "version": "v0.3.0"
 }

@@ -155,7 +155,7 @@ narrative.init = function() {
                           .addClass('btn btn-danger')
                           .append('Okay. Shut it all down!')
                           .click(function(e) {
-                              var user = 'wjriehl';
+                              var user = $('#signin-button').kbaseLogin('session', 'user_id');
                               var prom = $.ajax({
                                   contentType: 'applcation/json',
                                   url: '/narrative_shutdown/' + user,

@@ -30,7 +30,7 @@ M.private_port = 8888
 M.syslog_src = '/dev/log'
 
 -- simple function to split string by whitespace and return table
-local function split(s)
+local function split(self, s)
     t = {}
     for x in string.gmatch(s, "%S+") do
         table.insert(t, x)
@@ -43,7 +43,7 @@ end
 -- return a list of the container ids that have listeners on
 -- port 8888. Keyed on container name, value is IP:Port that can
 -- be fed into an nginx proxy target
-local function get_notebooks()
+local function get_notebooks(self)
     local ok, res = pcall(docker.client.containers, docker.client)
     local portmap = {}
     ngx.log(ngx.DEBUG, string.format("list containers result: %s", p.write(res.body)))
@@ -69,7 +69,7 @@ end
 -- Actually launch a new docker container.
 -- Return docker ID and table of info: { state, ip:port, session, last_time, last_ip }
 --
-local function launch_notebook()
+local function launch_notebook(self)
     -- don't wrap this in a pcall, if it fails let it propagate to
     -- the caller
     local conf = docker.config()
@@ -97,7 +97,7 @@ local function launch_notebook()
             local stat = lfs.attributes(M.syslog_src)
             if stat ~= nil and stat.mode == 'socket' then
                 bind_syslog = { string.format("%s:%s",M.syslog_src,"/dev/log") }
-                ngx.log(ngx.ERR, string.format("Binding %s in container %s", bind_syslog[1], id))
+                ngx.log(ngx.INFO, string.format("Binding %s in container %s", bind_syslog[1], id))
             else
                 ngx.log(ngx.ERR, string.format("%s is not writeable, not mounting in container %s", M.syslog_src, id))
             end
@@ -126,8 +126,8 @@ end
 --
 --    Kill and remove an existing docker container.
 --
-local function remove_notebook(id)
-   --ngx.log(ngx.INFO,string.format("removing notebook: %s",id))
+local function remove_notebook(self, id)
+   ngx.log(ngx.INFO, string.format("removing container: %s",id))
    local res = docker.client:stop_container{id = id}
    --ngx.log(ngx.INFO,string.format("response from stop_container: %d : %s",res.status,res.body))
    assert(res.status == 204, "Failed to stop container: "..json.encode(res.body))
@@ -143,4 +143,3 @@ M.get_notebooks = get_notebooks
 M.launch_notebook = launch_notebook
 M.remove_notebook = remove_notebook
 return M
-

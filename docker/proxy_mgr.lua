@@ -168,7 +168,7 @@ end
 --
 -- Reaper function that looks in the docker_map for instances that need to be
 -- removed and removes them
-sweeper = function(self)
+sweeper = function()
     ngx.log(ngx.INFO, "sweeper running")
     -- get locker
     local dock_lock = locklib:new(M.lock_name, lock_opts)
@@ -200,7 +200,7 @@ sweeper = function(self)
                     end
                 end
             end
-            docker_lock:unlock() -- unlock if it worked
+            dock_lock:unlock() -- unlock if it worked
         end
     end
     -- reset sweeper
@@ -245,7 +245,7 @@ end
 -- M.timeout and then marks them for cleanup
 -- updates those with active connections
 --
-marker = function(self)
+marker = function()
     ngx.log(ngx.INFO, "marker running")
     local now = os.time()
     local timeout = now - M.timeout
@@ -284,7 +284,7 @@ marker = function(self)
                     end
                 end
             end
-            docker_lock:unlock() -- unlock if it worked
+            dock_lock:unlock() -- unlock if it worked
         end
     end
     -- reset marker
@@ -329,8 +329,10 @@ end
 --
 -- Provisoning function that looks in the docker_map to identify how many provisioned
 -- containers there are, if less than provion_count, spawns more
-provisioner = function(self)
+provisioner = function()
     ngx.log(ngx.INFO, "provisioner running")
+    -- sync docker_map with existing containers
+    sync_containers()
     local queued = 0
     -- get locker
     local dock_lock = locklib:new(M.lock_name, lock_opts)
@@ -349,7 +351,7 @@ provisioner = function(self)
                     queued = queued + 1
                 end
             end
-            docker_lock:unlock() -- unlock if it worked
+            dock_lock:unlock() -- unlock if it worked
         end
     end
     if queued < M.provision_count then
@@ -417,6 +419,10 @@ initialize = function(self, conf)
         docker_map = conf.docker_map or ngx.shared.docker_map
         token_cache = conf.token_cache or ngx.shared.token_cache
         proxy_mgr = conf.proxy_mgr or ngx.shared.proxy_mgr
+        -- pre-provision containers
+        for i = 1, M.provision_count do
+             new_container()
+        end
         ngx.log(ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d auth_redirect %s",
                                             M.sweep_interval, M.mark_interval, M.timeout, tostring(M.auth_redirect)))
     else
@@ -743,6 +749,7 @@ end
 -- function to sync docker state with docker memory map
 -- remove any containers that don't exist in both
 sync_containers = function()
+    ngx.log(ngx.INFO, "Syncing docker memory map with docker container state")
     local portmap = notemgr:get_notebooks()
     local ids = docker_map:get_keys()
     local dock_lock = locklib:new(M.lock_name, lock_opts)
@@ -782,6 +789,7 @@ new_container = function()
     if id == nil then
         ngx.log(ngx.ERR, "Failed to launch new instance : ".. p.write(info))
         return false
+    end
     -- lock key before writing it
     local dock_lock = locklib:new(M.lock_name, lock_opts)
     elapsed, err = dock_lock:lock(id)
@@ -906,9 +914,10 @@ use_proxy = function(self)
     end
 end
 
+M.check_marker = check_marker
+M.check_provisioner = check_provisioner
 M.set_proxy = set_proxy
 M.use_proxy = use_proxy
 M.initialize = initialize
-M.est_connections = est_connections
 
 return M

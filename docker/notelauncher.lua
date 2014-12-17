@@ -80,6 +80,10 @@ local function launch_notebook(self)
     -- we wrap the next call in pcall because we want to trap the case where we get an
     -- error and try deleting the old container and creating a new one again
     local ok, res = pcall(docker.client.create_container, docker.client, {payload = conf})
+    if not ok and res.response.status == "connection refused" then
+        ngx.log(ngx.ERR, "Unable to connect to docker API: "..p.write(res))
+        return nil, res
+    end
     if not ok and res.response.status >= 409 and res.body.Id then
         -- conflict, try to delete it and then create it again
         local id = res.body.Id

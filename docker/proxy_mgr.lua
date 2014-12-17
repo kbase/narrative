@@ -436,7 +436,9 @@ set_proxy = function(self)
     local uri_value_rx = ngx.var.uri_base.."/"..key_regex .."/".."("..val_regex..")$"
     local method = ngx.req.get_method()
     local new_flag = false
-    -- get the reaper functions into the run queue if not already
+    -- get the provisioning / reaper functions into the run queue if not already
+    -- the workers sometimes crashe and having it here guarentees it will be running
+    check_provisioner()
     check_marker()
     if method == "POST" then
         -- POST method takes either a key and a IP_ADDR:PORT port, or
@@ -543,13 +545,17 @@ set_proxy = function(self)
             local ids = docker_map:get_keys()
             for num = 1, #ids do
                 local id = ids[num]
-                response[id] = {
-                    state = info[1],
-                    proxy_target = info[2],
-                    session_id = info[3],
-                    last_seen = os.date("%c", info[4]),
-                    last_ip = info[5]
-                }
+                local val = docker_map:get(id)
+                if val:
+                    local info = notemgr:split(val)
+                    response[id] = {
+                        state = info[1],
+                        proxy_target = info[2],
+                        session_id = info[3],
+                        last_seen = os.date("%c", info[4]),
+                        last_ip = info[5]
+                    }
+                end
             end
         end
         ngx.say(json.encode(response))

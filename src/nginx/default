@@ -46,7 +46,7 @@ init_by_lua '
 # start worker processes
 init_worker_by_lua '
     proxymgr:check_marker()
-    proxymgr:check_provisioner()
+    proxymgr:check_provisioner(0)
 ';
 
 server {

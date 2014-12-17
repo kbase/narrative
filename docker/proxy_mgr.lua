@@ -512,40 +512,49 @@ set_proxy = function(self)
         ngx.say(json.encode( response ))
     elseif method == "GET" then
         local response = {}
-
         -- Check URI to see if a specific proxy entry is being asked for
         -- or if we just dump it all out
+        -- info = { state, ip:port, session, last_time, last_ip }
         local uri_base = ngx.var.uri_base
         local key = string.match(ngx.var.uri,uri_key_rx)
         if key then
-            local target = proxy_map:get(key)
-            if target == nil then
-                ngx.status = ngx.HTTP_NOT_FOUND
+            local id
+            local target = session_map:get(key)
+            if target then
+                local session = notemgr:split(target)
+                id = session[2]
             else
-                local last = proxy_last:get(key)
-                response = {
-                    proxy_target = proxy_map:get(key),
-                    last_seen = os.date("%c",last),
-                    last_ip = proxy_last_ip:get(key),
-                    active = tostring(proxy_state:get(key))
-                }
+                id = key
             end
-        else 
-            local keys = proxy_map:get_keys() 
-            for key = 1, #keys do
-                local last = proxy_last:get(keys[key])
-                response[keys[key]] = { 
-                    proxy_target = proxy_map:get(keys[key]),
-                    last_seen = os.date("%c",last),
-                    last_ip = proxy_last_ip:get(keys[key]),
-                    active = tostring(proxy_state:get(keys[key]))
+            local val = docker_map:get(id)
+            if val == nil then
+                ngx.exit(ngx.HTTP_NOT_FOUND)
+            end
+            local info = notemgr:split(val)
+            response = {
+               docker_id = id,
+               state = info[1],
+               proxy_target = info[2],
+               session_id = info[3],
+               last_seen = os.date("%c", info[4]),
+               last_ip = info[5]
+            }
+        else
+            local ids = docker_map:get_keys()
+            for num = 1, #ids do
+                local id = ids[num]
+                response[id] = {
+                    state = info[1],
+                    proxy_target = info[2],
+                    session_id = info[3],
+                    last_seen = os.date("%c", info[4]),
+                    last_ip = info[5]
                 }
             end
         end
-        ngx.say(json.encode( response ))
+        ngx.say(json.encode(response))
     elseif method == "PUT" then
         local response = {}
-
         -- Check URI to make sure a specific key is being asked for
         local uri_base = ngx.var.uri_base
         local key = string.match(ngx.var.uri,uri_key_rx)
@@ -575,30 +584,35 @@ set_proxy = function(self)
             response = "No key specified"
             ngx.status = ngx.HTTP_NOT_FOUND
         end
-        ngx.say(json.encode( response ))
+        ngx.say(json.encode(response))
     elseif method == "DELETE" then
         local response = {}
-
         -- Check URI to make sure a specific key is being asked for
         local uri_base = ngx.var.uri_base
         local key = string.match(ngx.var.uri,uri_key_rx)
         if key then
-            local target = proxy_map:get(key)
+            local target = session_map:get(key)
             if target == nil then
-                ngx.status = ngx.HTTP_NOT_FOUND
-            else
-                response = "Marked for reaping"
-                -- mark the proxy instance for deletion
-                proxy_state:set(key,false)
-                ngx.log( ngx.NOTICE, "Makred for reaping: " .. key )
+                ngx.exit(ngx.HTTP_NOT_FOUND)
             end
+            local session = notemgr:split(target)
+            local val = docker_map:get(session[2])
+            if val == nil then
+                ngx.exit(ngx.HTTP_NOT_FOUND)
+            end
+            local info = notemgr:split(val)
+            response = "Marked for reaping"
+            -- mark the proxy instance for deletion
+            info[1] = "idle"
+            docker_map:set(id, table.concat(info, " "))
+            ngx.log( ngx.NOTICE, "Makred for reaping: " .. key )
         else 
             response = "No key specified"
             ngx.status = ngx.HTTP_NOT_FOUND
         end
-        ngx.say(json.encode( response ))
+        ngx.say(json.encode(response))
     else
-        ngx.exit(ngx.HTTP_METHOD_NOT_IMPLEMENTED )
+        ngx.exit(ngx.HTTP_METHOD_NOT_IMPLEMENTED)
     end
 end
 
@@ -706,7 +720,8 @@ end
 -- this for-loop makes me wish lua had a continue statement
 -- currently not using this function
 --
-discover = function()
+sync_sessions = function()
+    ngx.log(ngx.INFO, "Updating session_map from docker_map")
     -- add any assigned notebooks we don't know about
     local ids = docker_map:get_keys()
     local docker_lock = locklib:new(M.lock_name, lock_opts)
@@ -787,7 +802,7 @@ new_container = function()
     ngx.log(ngx.INFO, "Creating container for queue")
     local id, info = notemgr:launch_notebook()
     if id == nil then
-        ngx.log(ngx.ERR, "Failed to launch new instance : ".. p.write(info))
+        ngx.log(ngx.ERR, "Failed to launch new instance : "..p.write(info))
         return false
     end
     -- lock key before writing it
@@ -850,6 +865,10 @@ use_proxy = function(self)
     local new_flag = false
     -- ngx.log( ngx.INFO, "In /narrative/ handler")
     local client_ip = ngx.var.remote_addr
+    -- get the provisioning / reaper functions into the run queue if not already
+    -- the workers sometimes crashe and having it here guarentees it will be running
+    check_provisioner()
+    check_marker()
     -- get session
     -- unauthorized if no session
     local session_key = get_session()
@@ -871,6 +890,7 @@ use_proxy = function(self)
             -- session_key still locked in called function
             -- this updates docker_map with session info
             target = assign_container(session_key, client_ip)
+            -- if assignment fails, launch new container and try again
             if target == nil then
                 res = new_container()
                 if res then

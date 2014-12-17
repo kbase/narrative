@@ -19,6 +19,7 @@ from biokbase.narrativejobproxy.client import NarrativeJobProxy
 from biokbase.narrative.common.url_config import URLS
 import biokbase.auth
 from biokbase.narrative.common.generic_service_calls import _app_get_state
+from biokbase.narrative.common.generic_service_calls import _method_get_state
 
 class KBjobManager():
 
@@ -129,3 +130,12 @@ class KBjobManager():
         token = os.environ['KB_AUTH_TOKEN']
         workspace = os.environ['KB_WORKSPACE_ID']
         return _app_get_state(workspace, token, URLS, self, app_spec_json, method_specs_json, param_values_json, app_job_id)
+
+    def get_method_state(self, method_spec_json, param_values_json, method_job_id):
+        """
+        Prepare method state returned by NJS (use widget_output field of resulting state for visualization).
+        Parameter param_values_json is an array of values returned by kbaseNarrativeMethodInput.getParameters() .
+        """
+        token = os.environ['KB_AUTH_TOKEN']
+        workspace = os.environ['KB_WORKSPACE_ID']
+        return _method_get_state(workspace, token, URLS, self, method_spec_json, param_values_json, method_job_id)

@@ -391,7 +391,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
     this.introText =
         "Welcome to KBase!\n============\n\n"+
         "Add Data to this Narrative\n------------\n\n"+
-        "Click on 'Get Data' and browse for KBase data or upload your own."+
+        "Click on '<b>Add Data</b>' and browse for KBase data or upload your own."+
         "Select the data and click 'Add to narrative'.  Perhaps start by "+
         "importing your favorite Genome.  Once your data has been loaded, "+
         "you can inspect it in the data list.\n<br>\n\n"+

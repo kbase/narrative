@@ -612,7 +612,8 @@
                 }
             } else {
                 // todo: show an upload button or some other message if there are no elements
-                self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'}).append("No data added yet."));
+                self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'})
+                                         .append("This Narrative has no data yet.<br><br>Press the 'Add Data' button above to bring data into your Narrative."));
             }
             
             self.hideLoading();
@@ -668,7 +669,7 @@
             
             var $addDataBtn = $('<button>')
                                 .addClass("btn btn-warning kb-data-list-get-data-button")
-                                .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Get Data')
+                                .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Add Data')
                                 .on('click',function() {
                                     self.trigger('toggleSidePanelOverlay.Narrative');
 

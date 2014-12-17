@@ -368,7 +368,11 @@ end
 
 -- This function just checks to make sure there is a provisioner function in the queue
 -- returns true if there was one, false otherwise
-check_provisioner = function(self)
+check_provisioner = function(self, now)
+    local interval = M.provision_interval
+    if now then
+        interval = now
+    end
     local prov_lock = locklib:new(M.lock_name, lock_opts)
     local next_run = proxy_mgr:get('next_provision')
     if next_run == nil then -- no provisioner in the queue, put one into the queue!
@@ -381,12 +385,12 @@ check_provisioner = function(self)
         -- retry get, if still nil then reset
         next_run = proxy_mgr:get('next_provision')
         if next_run == nil then
-            ngx.log(ngx.INFO, string.format("enqueuing provisioner to run in %d seconds", M.provision_interval))
-            local success, err = ngx.timer.at(M.provision_interval, provisioner)
+            ngx.log(ngx.INFO, string.format("enqueuing provisioner to run in %d seconds", interval))
+            local success, err = ngx.timer.at(interval, provisioner)
             if success then
-                proxy_mgr:set('next_provision', os.time() + M.provision_interval)
+                proxy_mgr:set('next_provision', os.time() + interval)
             else
-                ngx.log(ngx.ERR, string.format("Error enqueuing provisioner to run in %d seconds: %s", M.provision_interval, err))
+                ngx.log(ngx.ERR, string.format("Error enqueuing provisioner to run in %d seconds: %s", interval, err))
             end
             prov_lock:unlock()
             return false
@@ -419,10 +423,6 @@ initialize = function(self, conf)
         docker_map = conf.docker_map or ngx.shared.docker_map
         token_cache = conf.token_cache or ngx.shared.token_cache
         proxy_mgr = conf.proxy_mgr or ngx.shared.proxy_mgr
-        -- pre-provision containers
-        for i = 1, M.provision_count do
-             new_container()
-        end
         ngx.log(ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d auth_redirect %s",
                                             M.sweep_interval, M.mark_interval, M.timeout, tostring(M.auth_redirect)))
     else

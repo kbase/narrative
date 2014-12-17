@@ -38,36 +38,6 @@ local function split(s)
     return t
 end
 
--- function to sync docker state with docker memory map
--- remove any containers that don't exist in both
-local function sync_notebooks(lock_name)
-    local portmap = get_notebooks()
-    local ids = docker_map:get_keys()
-    local dock_lock = locklib:new(lock_name)
-    -- delete from memory if not a container
-    for num = 1, #ids do
-        id = ids[num]
-        -- lock memory map before delete
-        elapsed, err = dock_lock:lock(id)
-        if elapsed then
-            val = docker_map:get(id)  -- make sure its still there
-            if val and not portmap[id] then
-                docker_map:delete(id)
-            end
-            dock_lock:unlock() -- unlock if it worked
-        end
-    end
-    -- delete from docker if not in memory
-    -- we don't know if it was given a session or not
-    for id, _ in pairs(portmap) do
-        local mem_id = docker_map:get(id)
-        -- its missing, kill / remove
-        if mem_id == nil then
-            remove_notebook(id)
-        end
-    end
-end
-
 --
 -- Query the docker container for a list of containers and
 -- return a list of the container ids that have listeners on
@@ -169,7 +139,6 @@ end
 
 M.docker = docker
 M.split = split
-M.sync_notebooks = sync_notebooks
 M.get_notebooks = get_notebooks
 M.launch_notebook = launch_notebook
 M.remove_notebook = remove_notebook

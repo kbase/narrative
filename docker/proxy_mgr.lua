@@ -29,10 +29,16 @@ local M={}
 
 local auth_cookie_name = "kbase_narr_session"
 local num_prov_retry = 10
+local lock_opts = {
+    exptime = 5,
+    timeout = 5
+}
 
 -- regexes for matching/validating keys and values
 local key_regex = "[%w_%-%.]+"
 local val_regex = "[%w_%-:%.]+"
+
+-- packages to load
 local json = require('json')
 local p = require('pl.pretty')
 local notemgr = require('notelauncher')
@@ -43,16 +49,19 @@ local httpclient = httplib:new()
 -- forward declare the functions in this module
 local est_connections
 local sweeper
+local check_sweeper
 local marker
 local check_marker
-local check_sweeper
+local provision
+local check_provision
 local initialize
 local set_proxy
 local use_proxy
+local get_session
+local sync_containers
 local new_container
 local assign_container
 local url_decode
-local get_session
 local discover
 
 -- this are name/value pairs referencing ngx.shared.DICT objects
@@ -75,18 +84,24 @@ local token_cache = nil
 
 -- This is a dictionary for storing proxy manager internal state
 -- The following names are currently supported
--- 'next_sweep' - this stores the next time() the reap_sweeper is scheduled
+-- 'next_sweep' - this stores the next time() the sweeper is scheduled
 --                 to be run. It is cleared when the sweeper runs, and
 --                 set when the sweeper is rescheduled. If we notice that
 --                 'next_sweep' is either relatively far in the past, or
 --                 not set, we generate a warning in the logs and schedule
 --                 an semi-immediate asynchronous sweeper run
--- 'next_mark' - this stores the next time() the reap_marker is scheduled
+-- 'next_mark' - this stores the next time() the marker is scheduled
 --                 to be run. It is cleared when the marker runs, and
 --                 set when the marker is rescheduled. If we notice that
 --                 'next_mark' is either relatively far in the past, or
 --                 not set, we generate a warning in the logs and schedule
 --                 an immediate marker run
+-- 'next_provision' - this stores the next time() the provisioner is scheduled
+--                 to be run. It is cleared when the provisioner runs, and
+--                 set when the provisioner is rescheduled. If we notice that
+--                 'next_provision' is either relatively far in the past, or
+--                 not set, we generate a warning in the logs and schedule
+--                 an immediate provisioner run
 local proxy_mgr = nil
 
 -- strangely, init_by_lua seems to run the initialize() method twice,
@@ -106,20 +121,22 @@ nexus_url = 'http://127.0.0.1:65001/users/'
 -- name of shared dict for locking library
 M.lock_name = "lock_map"
 
--- How often (in seconds) does the sweeper wake up to delete dead
--- containers?
+-- How often (in seconds) does the sweeper wake up to delete dead containers
 M.sweep_interval = 300
 
--- How often (in seconds) does the marker wake up to mark containers
--- for deletion?
+-- How often (in seconds) does the marker wake up to mark containers for deletion
 M.mark_interval = 60
 
--- How long (in seconds) since we last saw activity on a container should we wait before
--- shutting it down?
+-- How long (in seconds) since last activity on a container should we wait before shutting it down
 M.timeout = 180
 
--- Default URL for authentication failure redirect, defaults to nil which means just error
--- out without redirect
+-- How often (in seconds) does the provisioner wake up to provision new containers
+M.provision_interval = 60
+
+-- How many provisioned (un-assigned) containers should we have on stand-by
+M.provision_count = 5
+
+-- Default URL for authentication failure redirect, nil means just error out without redirect
 M.auth_redirect = "/?redirect=%s"
 
 M.load_redirect = "/loading.html?n=%s"
@@ -149,12 +166,12 @@ est_connections = function()
 end
 
 --
--- Reaper function that looks in the proxy_state table for instances that need to be
+-- Reaper function that looks in the docker_map for instances that need to be
 -- removed and removes them
 sweeper = function(self)
     ngx.log(ngx.INFO, "sweeper running")
     -- get locker
-    local dock_lock = locklib:new(M.lock_name)
+    local dock_lock = locklib:new(M.lock_name, lock_opts)
     -- loop through ids
     local ids = docker_map:get_keys()
     for num = 1, #ids do
@@ -192,18 +209,33 @@ sweeper = function(self)
     check_sweeper()
 end
 
--- Check for a sweeper in the queue and enqueue if necessary
+-- This function just checks to make sure there is a sweeper function in the queue
+-- returns true if there was one, false otherwise
 check_sweeper = function(self)
+    local sweep_lock = locklib:new(M.lock_name, lock_opts)
     local next_run = proxy_mgr:get('next_sweep')
     if next_run == nil then -- no sweeper in the queue, put one into the queue!
-        ngx.log(ngx.ERR, string.format("enqueuing sweeper to run in  %d seconds", M.sweep_interval))
-        local success, err = ngx.timer.at(M.sweep_interval, sweeper)
-        if success then
-            proxy_mgr:set('next_sweep', os.time() + M.sweep_interval)
-        else
-            ngx.log(ngx.ERR, string.format("Error enqueuing sweeper to run in %d seconds: %s", M.sweep_interval, err))
+        -- lock it
+        elapsed, err = sweep_lock:lock('next_sweep')
+        if elapsed == nil then
+            ngx.log(ngx.ERR, "Error acquiring sweeper lock: "..err)
+            return false
         end
-        return false
+        -- retry get, if still nil then reset
+        next_run = proxy_mgr:get('next_sweep')
+        if next_run == nil then
+            ngx.log(ngx.INFO, string.format("enqueuing sweeper to run in  %d seconds", M.sweep_interval))
+            local success, err = ngx.timer.at(M.sweep_interval, sweeper)
+            if success then
+                proxy_mgr:set('next_sweep', os.time() + M.sweep_interval)
+            else
+                ngx.log(ngx.ERR, string.format("Error enqueuing sweeper to run in %d seconds: %s", M.sweep_interval, err))
+            end
+            sweep_lock:unlock()
+            return false
+        end
+        sweep_lock:unlock()
+        return true
     end
     return true
 end
@@ -218,7 +250,7 @@ marker = function(self)
     local now = os.time()
     local timeout = now - M.timeout
     -- get locker
-    local dock_lock = locklib:new(M.lock_name)
+    local dock_lock = locklib:new(M.lock_name, lock_opts)
     -- fetch currently open connections
     local conn = est_connections()
     -- loop through ids
@@ -237,7 +269,7 @@ marker = function(self)
                     -- currently has connection, update
                     if conn[info[2]] then
                         info[4] = now
-                        success, err = docker_map:set(id, table.concat(info, " ")
+                        success, err = docker_map:set(id, table.concat(info, " "))
                         if not success then
                             ngx.log(ngx.ERR, string.format("Error setting %s from established connections: %s", name, err))
                         end
@@ -245,7 +277,7 @@ marker = function(self)
                     elseif info[4] <= timeout then
                         ngx.log(ngx.INFO, string.format("Marking %s for reaping - last seen %s", info[3], os.date("%c",info[4])))
                         info[1] = "idle"
-                        success, err = docker_map:set(id, table.concat(info, " ")
+                        success, err = docker_map:set(id, table.concat(info, " "))
                         if not success then
                             ngx.log(ngx.ERR, string.format("Error setting %s as idle: %s", name, err))
                         end
@@ -263,19 +295,102 @@ marker = function(self)
     check_marker()
 end
 
--- This function just checks to make sure there is a sweeper function in the queue
+-- This function just checks to make sure there is a marker function in the queue
 -- returns true if there was one, false otherwise
 check_marker = function(self)
+    local mark_lock = locklib:new(M.lock_name, lock_opts)
     local next_run = proxy_mgr:get('next_mark')
     if next_run == nil then -- no marker in the queue, put one into the queue!
-        ngx.log(ngx.ERR, string.format("enqueuing marker to run in %d seconds", M.mark_interval))
-        local success, err = ngx.timer.at(M.mark_interval, marker)
-        if success then
-            proxy_mgr:set('next_mark', os.time() + M.mark_interval)
-        else
-            ngx.log(ngx.ERR, string.format("Error enqueuing marker to run in %d seconds: %s", M.mark_interval, err))
+        -- lock it
+        elapsed, err = mark_lock:lock('next_mark')
+        if elapsed == nil then
+            ngx.log(ngx.ERR, "Error acquiring marker lock: "..err)
+            return false
         end
-        return false
+        -- retry get, if still nil then reset
+        next_run = proxy_mgr:get('next_mark')
+        if next_run == nil then
+            ngx.log(ngx.INFO, string.format("enqueuing marker to run in %d seconds", M.mark_interval))
+            local success, err = ngx.timer.at(M.mark_interval, marker)
+            if success then
+                proxy_mgr:set('next_mark', os.time() + M.mark_interval)
+            else
+                ngx.log(ngx.ERR, string.format("Error enqueuing marker to run in %d seconds: %s", M.mark_interval, err))
+            end
+            mark_lock:unlock()
+            return false
+        end
+        mark_lock:unlock()
+        return true
+    end
+    return true
+end
+
+--
+-- Provisoning function that looks in the docker_map to identify how many provisioned
+-- containers there are, if less than provion_count, spawns more
+provisioner = function(self)
+    ngx.log(ngx.INFO, "provisioner running")
+    local queued = 0
+    -- get locker
+    local dock_lock = locklib:new(M.lock_name, lock_opts)
+    -- loop through ids
+    local ids = docker_map:get_keys()
+    for num = 1, #ids do
+        id = ids[num]
+        -- lock docker map before read/write
+        elapsed, err = dock_lock:lock(id)
+        if elapsed then -- lock worked
+            local val = docker_map:get(id) -- make sure its still there
+            if val then
+                -- info = { state, ip:port, session, last_time, last_ip }
+                local info = notemgr:split(val)
+                if info[1] == "queued" then
+                    queued = queued + 1
+                end
+            end
+            docker_lock:unlock() -- unlock if it worked
+        end
+    end
+    if queued < M.provision_count then
+        local to_spawn = M.provision_count - queued
+        for i = 1, to_spawn do
+             new_container()
+        end
+    end
+    -- reset provisioner
+    proxy_mgr:delete('next_provision')
+    -- enqueue self
+    check_provisioner()
+end
+
+-- This function just checks to make sure there is a provisioner function in the queue
+-- returns true if there was one, false otherwise
+check_provisioner = function(self)
+    local prov_lock = locklib:new(M.lock_name, lock_opts)
+    local next_run = proxy_mgr:get('next_provision')
+    if next_run == nil then -- no provisioner in the queue, put one into the queue!
+        -- lock it
+        elapsed, err = prov_lock:lock('next_provision')
+        if elapsed == nil then
+            ngx.log(ngx.ERR, "Error acquiring provisioner lock: "..err)
+            return false
+        end
+        -- retry get, if still nil then reset
+        next_run = proxy_mgr:get('next_provision')
+        if next_run == nil then
+            ngx.log(ngx.INFO, string.format("enqueuing provisioner to run in %d seconds", M.provision_interval))
+            local success, err = ngx.timer.at(M.provision_interval, provisioner)
+            if success then
+                proxy_mgr:set('next_provision', os.time() + M.provision_interval)
+            else
+                ngx.log(ngx.ERR, string.format("Error enqueuing provisioner to run in %d seconds: %s", M.provision_interval, err))
+            end
+            prov_lock:unlock()
+            return false
+        end
+        prov_lock:unlock()
+        return true
     end
     return true
 end
@@ -302,16 +417,10 @@ initialize = function(self, conf)
         docker_map = conf.docker_map or ngx.shared.docker_map
         token_cache = conf.token_cache or ngx.shared.token_cache
         proxy_mgr = conf.proxy_mgr or ngx.shared.proxy_mgr
-        -- get the reaper functions into the run queue
-        check_marker()
-        -- temp hack to pre-start containers
-        for var=1,5 do
-            new_container()
-        end
         ngx.log(ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d auth_redirect %s",
                                             M.sweep_interval, M.mark_interval, M.timeout, tostring(M.auth_redirect)))
     else
-        ngx.log(ngx.INFO, string.format("Initialized at %d, skipping",initialized))
+        ngx.log(ngx.INFO, string.format("Initialized at %d, skipping", initialized))
     end
 end
 
@@ -588,15 +697,14 @@ end
 
 --
 -- Check docker_map and update session_map if missing
--- info = { state, ip:port, session, last_time, last_ip }
 -- this for-loop makes me wish lua had a continue statement
 -- currently not using this function
 --
 discover = function()
     -- add any assigned notebooks we don't know about
     local ids = docker_map:get_keys()
-    local docker_lock = locklib:new(M.lock_name)
-    local session_lock = locklib:new(M.lock_name)
+    local docker_lock = locklib:new(M.lock_name, lock_opts)
+    local session_lock = locklib:new(M.lock_name, lock_opts)
     for num = 1, #ids do
         id = ids[num]
         -- lock memory map before access
@@ -604,6 +712,7 @@ discover = function()
         if elapsed then -- lock worked
             local val = docker_map:get(id) -- make sure its still there
             if val then
+                -- info = { state, ip:port, session, last_time, last_ip }
                 local info = notemgr:split(val)
                 -- this is assigned to a session
                 if info[1] ~= "queued" then
@@ -631,6 +740,36 @@ discover = function()
     end
 end
 
+-- function to sync docker state with docker memory map
+-- remove any containers that don't exist in both
+sync_containers = function()
+    local portmap = notemgr:get_notebooks()
+    local ids = docker_map:get_keys()
+    local dock_lock = locklib:new(M.lock_name, lock_opts)
+    -- delete from memory if not a container
+    for num = 1, #ids do
+        id = ids[num]
+        -- lock memory map before delete
+        elapsed, err = dock_lock:lock(id)
+        if elapsed then
+            val = docker_map:get(id)  -- make sure its still there
+            if val and not portmap[id] then
+                docker_map:delete(id)
+            end
+            dock_lock:unlock() -- unlock if it worked
+        end
+    end
+    -- delete from docker if not in memory
+    -- we don't know if it was given a session or not
+    for id, _ in pairs(portmap) do
+        local mem_id = docker_map:get(id)
+        -- its missing, kill / remove
+        if mem_id == nil then
+            notemgr:remove_notebook(id)
+        end
+    end
+end
+
 --
 -- Spin up a new container, add to docker_map
 -- id = container uuid
@@ -643,18 +782,16 @@ new_container = function()
     if id == nil then
         ngx.log(ngx.ERR, "Failed to launch new instance : ".. p.write(info))
         return false
-    else
-        -- lock key before writing it
-        local dock_lock = locklib:new(M.lock_name)
-        elapsed, err = dock_lock:lock(id)
-        if elapsed == nil then
-            ngx.log(ngx.ERR, "Error: failed to update docker cache: "..err)
-            return false
-        end
-        docker_map:set(id, table.concat(info, " "))
-        dock_lock:unlock()
-        return true
+    -- lock key before writing it
+    local dock_lock = locklib:new(M.lock_name, lock_opts)
+    elapsed, err = dock_lock:lock(id)
+    if elapsed == nil then
+        ngx.log(ngx.ERR, "Error: failed to update docker cache: "..err)
+        return false
     end
+    docker_map:set(id, table.concat(info, " "))
+    dock_lock:unlock()
+    return true
 end
 
 --
@@ -665,8 +802,8 @@ end
 --
 assign_container = function(session_id, client_ip)
     -- sync map with state
-    notemgr:sync_notebooks(M.lock_name)
-    local dock_lock = locklib:new(M.lock_name)
+    sync_containers()
+    local dock_lock = locklib:new(M.lock_name, lock_opts)
     local ids = docker_map:get_keys()
     for num = 1, #ids do
         id = ids[num]
@@ -682,7 +819,7 @@ assign_container = function(session_id, client_ip)
                     if info[3] == "*" then
                         session_val = table.concat({info[2], id}, " ")
                         session_map:set(session_id, session_val)
-                        docker_map:set(id, table.concat({"active", info[2], session_id, os.time(), client_ip}, " ")
+                        docker_map:set(id, table.concat({"active", info[2], session_id, os.time(), client_ip}, " "))
                         dock_lock:unlock()
                         return session_val
                     else -- bad state, session with queued
@@ -690,17 +827,11 @@ assign_container = function(session_id, client_ip)
                         docker_map:set(id, table.concat(info, " "))
                     end
                 end
+            end
             dock_lock:unlock() -- unlock if it worked
         end
     end
-    -- no available docker container - launch new
-    res = new_container()
-    -- new container created, try and re-assign
-    -- i hope this recusion works
-    if res:
-        return assign_container(session_id, client_ip)
-    else:
-        return nil
+    return nil
 end
 
 --
@@ -722,7 +853,7 @@ use_proxy = function(self)
     target = session_map:get(session_key)
     -- didn't find in session_map, lock and try again
     if target == nil then
-        session_lock = locklib:new(M.lock_name)
+        session_lock = locklib:new(M.lock_name, lock_opts)
         elapsed, err = session_lock:lock(session_key)
         if elasped then
             target = session_map:get(session_key)
@@ -732,6 +863,12 @@ use_proxy = function(self)
             -- session_key still locked in called function
             -- this updates docker_map with session info
             target = assign_container(session_key, client_ip)
+            if target == nil then
+                res = new_container()
+                if res then
+                    target = assign_container(session_key, client_ip)
+                end
+            end
             session_lock.unlock()
             -- can not assign a new one / bad state
             if target == nil then
@@ -750,12 +887,12 @@ use_proxy = function(self)
         local session = notemgr:split(target)
         ngx.var.target = session[1]
         -- update docker_map session info, lock first
-        local dock_lock = locklib:new(M.lock_name)
+        local dock_lock = locklib:new(M.lock_name, lock_opts)
         elapsed, err = dock_lock:lock(session[2])
         if elapsed == nil then
             ngx.log(ngx.ERR, "Error: failed to lock docker cache: "..err)
         end
-        success,err,forcible = docker_map:set(session[2], table.concat({"active", session[1], session_key, os.time(), client_ip}, " ")
+        success,err,forcible = docker_map:set(session[2], table.concat({"active", session[1], session_key, os.time(), client_ip}, " "))
         if not success then
             ngx.log(ngx.WARN, "Error: failed to update docker cache: "..err)
         end

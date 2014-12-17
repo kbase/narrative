@@ -28,7 +28,9 @@ lua_shared_dict token_cache 2m;
 lua_shared_dict proxy_mgr 100m;
 lua_shared_dict lock_map 2m;
 
+# load lua files
 lua_package_path "/home/vagrant/dockerstuff/narrative/docker/?;/home/vagrant/dockerstuff/narrative/docker/?.lua;;";
+# initilize proxymgr - set shared dictionaries
 init_by_lua '
     json = require("json")
     proxymgr = require("proxy_mgr")
@@ -39,6 +41,11 @@ init_by_lua '
         token_cache = ngx.shared.token_cache,
         proxy_mgr = ngx.shared.proxy_mgr
     }
+';
+# start worker processes
+init_worker_by_lua '
+    proxymgr:check_marker()
+    proxymgr:check_provisioner()
 ';
 
 server {
@@ -66,23 +73,21 @@ server {
 	location /narrative/ {
 	     default_type 'text/plain';
   	     set $target '';
-             access_by_lua '
-	     		   proxymgr:use_proxy()
-	     ';
+         access_by_lua 'proxymgr:use_proxy()';
 
-	     proxy_set_header X-Forwarded-Host $host;
-	     proxy_set_header X-Real-IP $remote_addr;
-             proxy_set_header X-Forwarded-Server $host;
-             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-	     proxy_set_header Host $http_host;
-	     proxy_set_header X-NginX-Proxy true;
-             proxy_pass http://$target;
-             proxy_redirect off;
-	     proxy_http_version 1.1;
-      	     proxy_set_header Upgrade $http_upgrade;
-      	     proxy_set_header Connection "upgrade";
-      	     proxy_read_timeout 86400;
-        }
+         proxy_set_header X-Forwarded-Host $host;
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-Server $host;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_set_header Host $http_host;
+         proxy_set_header X-NginX-Proxy true;
+         proxy_pass http://$target;
+         proxy_redirect off;
+         proxy_http_version 1.1;
+         proxy_set_header Upgrade $http_upgrade;
+         proxy_set_header Connection "upgrade";
+         proxy_read_timeout 86400;
+    }
 
 	#location / {
 #		# First attempt to serve request as file, then

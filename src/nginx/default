@@ -30,6 +30,7 @@ lua_shared_dict lock_map 2m;
 
 # load lua files
 lua_package_path "/home/vagrant/dockerstuff/narrative/docker/?;/home/vagrant/dockerstuff/narrative/docker/?.lua;;";
+#lua_package_path "/home/ubuntu/narrative/docker/?;/home/ubuntu/narrative/docker/?.lua;;";
 # initilize proxymgr - set shared dictionaries
 init_by_lua '
     json = require("json")

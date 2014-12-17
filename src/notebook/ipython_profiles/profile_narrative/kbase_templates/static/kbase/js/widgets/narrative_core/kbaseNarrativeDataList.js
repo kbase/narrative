@@ -438,8 +438,8 @@
                     cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
                     cell.render();
                     // Insert the narrative data cell into the div we just rendered
-                    $('#' + cell_id).text("wtf?!");
-                    $('#' + cell_id).kbaseNarrativeDataCell(self.draggedMeta(elt));
+                    var o = self.draggedMeta(elt)['name'];
+                    $('#' + cell_id).kbaseNarrativeDataCell({objid: o});
                 }
             });
             // Old-style input fields

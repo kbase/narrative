@@ -546,7 +546,7 @@ set_proxy = function(self)
             for num = 1, #ids do
                 local id = ids[num]
                 local val = docker_map:get(id)
-                if val:
+                if val then
                     local info = notemgr:split(val)
                     response[id] = {
                         state = info[1],

@@ -106,12 +106,16 @@ def prepare_generic_method_output(token, workspace, methodSpec, input, output):
         return {}
     return outArgs[0]
 
+def correct_method_specs_json(method_specs_json):
+    method_specs_json = method_specs_json.replace('\n', '\\n')
+    method_specs_json = method_specs_json.replace('\t', '\\t')
+    return method_specs_json
+
 def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_specs_json, param_values_json, app_job_id):
     
     appSpec = json.loads(app_spec_json)
     paramValues = json.loads(param_values_json)
-    methIdToSpec = json.loads(method_specs_json.replace('\n', '\\n'))  #load_method_specs(appSpec)
-#    methIdToSpec = json.loads(method_specs_json)
+    methIdToSpec = json.loads(correct_method_specs_json(method_specs_json))
     
     njsClient = NarrativeJobService(URLS.job_service, token = token)
     wsClient = workspaceService(URLS.workspace, token = token)

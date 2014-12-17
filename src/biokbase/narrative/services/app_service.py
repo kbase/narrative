@@ -17,8 +17,7 @@ from biokbase.narrative.common.service import *
 from biokbase.narrative_method_store.client import NarrativeMethodStore
 from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.workspace.client import Workspace as workspaceService
-from biokbase.narrative.common.generic_service_calls import prepare_njs_method_input
-from biokbase.narrative.common.generic_service_calls import prepare_generic_method_output
+from biokbase.narrative.common.generic_service_calls import correct_method_specs_json
 from biokbase.narrative.common.generic_service_calls import create_app_for_njs
 
 ## Globals
@@ -54,7 +53,7 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
     appSpec = json.loads(app_spec_json)
     paramValues = json.loads(param_values_json)
 
-    methIdToSpec = json.loads(method_specs_json.replace('\n', '\\n'))  #load_method_specs(appSpec)
+    methIdToSpec = json.loads(correct_method_specs_json(method_specs_json))
     
     #raise ValueError("========\nExternal=" + method_specs_json + "\n=======================\nInternal=" + json.dumps(methIdToSpec))
     
@@ -70,19 +69,6 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
 
     return json.dumps({ 'job_id' : job_id, 'app' : app, 'app_state' : appState})
 
-def load_method_specs(appSpec):
-    methodIds = []
-    for stepSpec in appSpec['steps']:
-        methodId = stepSpec['method_id']
-        methodIds.append(methodId)
-    nmsClient = NarrativeMethodStore(service.URLS.narrative_method_store)
-    
-    methSpecs = nmsClient.get_method_spec({'ids' : methodIds})
-    
-    methIdToSpec = {}
-    for methSpec in methSpecs:
-        methIdToSpec[methSpec['info']['id']] = methSpec
-    return methIdToSpec
 
 # Finalize (registers service)
 finalize_service()

@@ -476,7 +476,10 @@ class LifecycleSubject(object):
                 job_manager = KBjobManager()
 
             self._event('debug', job_id)
-            if not job_id.startswith('njs:'):
+            # njs jobs start with either
+            # 'njs:' or 'method:' - either way
+            # they're the only ones with a colon
+            if job_id.find(':') == -1:
                 job_manager.register_job(job_id)
             self._event('register_job', job_id)
 
@@ -489,7 +492,7 @@ class LifecycleSubject(object):
                 job_manager = KBjobManager()
 
             self._event('debug', app_id)
-            if not app_id.startswith('njs:'):
+            if app_id.find(':') == -1:
                 job_manager.register_job(app_id)
             self._event('register_app', app_id)
 

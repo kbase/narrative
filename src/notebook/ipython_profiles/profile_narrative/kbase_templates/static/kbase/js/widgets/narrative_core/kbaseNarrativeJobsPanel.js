@@ -291,7 +291,7 @@
                 }, this),
             };
 
-            // console.debug('JOBS PANEL: refresh');
+            //console.debug('JOBS PANEL: refresh');
             var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: true, store_history: false});
         },
 

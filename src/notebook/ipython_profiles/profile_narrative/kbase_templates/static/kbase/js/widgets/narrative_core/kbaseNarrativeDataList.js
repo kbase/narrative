@@ -400,6 +400,9 @@
         // ============= DnD ==================
 
         addDragAndDrop: function($row) {
+
+            var self = this;
+
             // Add data drag-and-drop (jquery-ui)
             // allow data element to visually leave the left column
             $('#left-column').css('overflow', 'visible');
@@ -419,11 +422,26 @@
             });
             // Uncomment this to enable dropping data directly onto the 
             // notebook. (As opposed to on input fields)
-            //$('#notebook-container').droppable({
-            //    drop: this.dataDropped
-            //});
-
-            var self = this;
+            $('#notebook-container').droppable({
+                drop: function(event, ui) {
+                    console.debug("Done dragging, sucka!");
+                    var elt = ui.draggable;
+                    // find nearest cell using jquery-nearest lib.
+                    var near_elt = $(elt).nearest('.cell');
+                    var near_idx = IPython.notebook.find_cell_index($(near_elt).data().cell);
+                    var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
+                    // Add unique id attr. to cell
+                    var cell_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                        return v.toString(16);});
+                    cell.rendered = false;
+                    cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
+                    cell.render();
+                    // Insert the narrative data cell into the div we just rendered
+                    $('#' + cell_id).text("wtf?!");
+                    $('#' + cell_id).kbaseNarrativeDataCell(self.draggedMeta(elt));
+                }
+            });
             // Old-style input fields
             // Set text fields to name of dropped object
             $('.kb-cell-params input[type=text]').droppable({
@@ -500,7 +518,7 @@
             cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
             cell.render();
             // Insert the narrative data cell into the div we just rendered
-            $('#' + cell_id).kbaseNarrativeDataCell(draggedMeta(elt));
+            $('#' + cell_id).kbaseNarrativeDataCell(self.draggedMeta(elt));
         },
 
         // ============= end DnD ================

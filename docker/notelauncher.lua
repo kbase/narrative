@@ -119,7 +119,8 @@ local function launch_notebook(self)
         local ThePort = string.format("%d/tcp", M.private_port)
         assert(ports[ThePort] ~= nil, string.format("Port binding for port %s not found!", ThePort))
         local ip_port = string.format("%s:%d", "127.0.0.1", ports[ThePort][1].HostPort)
-        local info = {"queued", "*", ip_port, os.time(), "127.0.0.1"} -- default values except for ip_port
+        -- info = { state, ip:port, session, last_time, last_ip }
+        local info = {"queued", ip_port, "*", os.time(), "127.0.0.1"} -- default values except for ip_port
         return id, info
     else
         ngx.log(ngx.ERR, "Failed to create container: "..p.write(res))

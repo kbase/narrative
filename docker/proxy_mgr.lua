@@ -196,7 +196,7 @@ sweeper = function()
                         docker_map:delete(id)
                         session_map:delete(info[3])
                     else
-                        ngx.log(ngx.ERROR, string.format("error: %s", err))
+                        ngx.log(ngx.ERR, "Error: "..err)
                     end
                 end
             end
@@ -274,8 +274,8 @@ marker = function()
                             ngx.log(ngx.ERR, string.format("Error setting %s from established connections: %s", name, err))
                         end
                     -- past due, mark for reaping
-                    elseif info[4] <= timeout then
-                        ngx.log(ngx.INFO, string.format("Marking %s for reaping - last seen %s", info[3], os.date("%c",info[4])))
+                    elseif tonumber(info[4]) <= timeout then
+                        ngx.log(ngx.INFO, string.format("Marking %s for reaping - last seen %s", info[3], os.date("%c", tonumber(info[4]))))
                         info[1] = "idle"
                         success, err = docker_map:set(id, table.concat(info, " "))
                         if not success then
@@ -538,7 +538,7 @@ set_proxy = function(self)
                state = info[1],
                proxy_target = info[2],
                session_id = info[3],
-               last_seen = os.date("%c", info[4]),
+               last_seen = os.date("%c", tonumber(info[4])),
                last_ip = info[5]
             }
         else
@@ -552,7 +552,7 @@ set_proxy = function(self)
                         state = info[1],
                         proxy_target = info[2],
                         session_id = info[3],
-                        last_seen = os.date("%c", info[4]),
+                        last_seen = os.date("%c", tonumber(info[4])),
                         last_ip = info[5]
                     }
                 end
@@ -650,10 +650,10 @@ get_session = function()
     local token = {}
     local session_id = nil; -- nil return value by default
     if cheader then
-        -- ngx.log( ngx.INFO, string.format("cookie = %s",cheader))
+        -- ngx.log( ngx.DEBUG, string.format("cookie = %s",cheader))
         local session = string.match(cheader, auth_cookie_name.."=([%S]+);?")
         if session then
-            -- ngx.log( ngx.INFO, string.format("kbase_session = %s",session))
+            -- ngx.log( ngx.DEBUG, string.format("kbase_session = %s",session))
             session = string.gsub(session, ";$", "")
             session = url_decode(session)
             for k, v in string.gmatch(session, "([%w_]+)=([^|]+);?") do
@@ -662,7 +662,7 @@ get_session = function()
             if token['token'] then
                 token['token'] = string.gsub(token['token'], "PIPESIGN", "|")
                 token['token'] = string.gsub(token['token'], "EQUALSSIGN", "=")
-                --ngx.log( ngx.INFO, string.format("token[token] = %s",token['token']))
+                -- ngx.log( ngx.DEBUG, string.format("token[token] = %s",token['token']))
             end
         end
     end
@@ -692,7 +692,7 @@ get_session = function()
             return token['un']
         -- still missing, now get from globus
         else
-            ngx.log(ngx.ERR, "Token cache miss : ", token['kbase_sessionid'])
+            ngx.log(ngx.WARN, "Token cache miss: ", token['kbase_sessionid'])
             local req = {
                 url = nexus_url .. token['un'],
                 method = "GET",
@@ -750,7 +750,7 @@ sync_sessions = function()
                         if elapsed then -- lock worked
                             target = session_map:get(info[3])
                             if target == nil then -- its still missing after lock
-                                ngx.log(ngx.INFO, "session_map is stale, missing "..info[3]..", "..id)
+                                ngx.log(ngx.WARN, "session_map is stale, missing "..info[3]..", "..id)
                                 local success,err,forcible = session_map:set(info[3], table.concat({info[2], id}, " "))
                                 if not success then
                                     ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
@@ -832,6 +832,7 @@ end
 assign_container = function(session_id, client_ip)
     -- sync map with state
     sync_containers()
+    ngx.log(ngx.INFO, "Assigning container from queue")
     local dock_lock = locklib:new(M.lock_name, lock_opts)
     local ids = docker_map:get_keys()
     for num = 1, #ids do
@@ -841,10 +842,12 @@ assign_container = function(session_id, client_ip)
         if elapsed then -- lock worked
             local val = docker_map:get(id) -- make sure its still there
             if val then
+                ngx.log(ngx.DEBUG, string.format("ID %s: %s", id, val))
                 -- info = { state, ip:port, session, last_time, last_ip }
                 local info = notemgr:split(val)
                 -- this is not assigned to a session
                 if info[1] == "queued" then
+                    ngx.log(ngx.DEBUG, "info table: "..p.write(info))
                     if info[3] == "*" then
                         session_val = table.concat({info[2], id}, " ")
                         session_map:set(session_id, session_val)
@@ -879,7 +882,7 @@ use_proxy = function(self)
     -- unauthorized if no session
     local session_key = get_session()
     if not session_key then
-        ngx.log(ngx.WARN,"No session_key found, bad auth!")
+        ngx.log(ngx.WARN, "No session_key found, bad auth")
         return(ngx.exit(ngx.HTTP_UNAUTHORIZED))
     end
     -- get proxy target
@@ -898,6 +901,7 @@ use_proxy = function(self)
             target = assign_container(session_key, client_ip)
             -- if assignment fails, launch new container and try again
             if target == nil then
+                ngx.log(ngx.WARN, "No queued containers to assign, launching new")
                 res = new_container()
                 if res then
                     target = assign_container(session_key, client_ip)
@@ -906,7 +910,7 @@ use_proxy = function(self)
             session_lock.unlock()
             -- can not assign a new one / bad state
             if target == nil then
-                ngx.log(ngx.WARN,"No available docker containers!")
+                ngx.log(ngx.ERR, "No available docker containers!")
                 return(ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE))
             end
             -- assign comtainer to session

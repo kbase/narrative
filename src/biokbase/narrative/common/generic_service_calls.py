@@ -113,11 +113,23 @@ def correct_method_specs_json(method_specs_json):
     method_specs_json = method_specs_json.replace('\t', '\\t')
     return method_specs_json
 
+def app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut):
+    methodOut = None
+    if 'kb_service_input_mapping' in methodSpec['behavior'] or 'script_input_mapping' in methodSpec['behavior']:
+        if 'kb_service_input_mapping' in methodSpec['behavior']:
+            rpcOut = json.loads(rpcOut)
+        input = {}
+        tempArgs = []
+        prepare_njs_method_input(token, wsClient, workspace, methodSpec, methodInputValues, input);
+        methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, rpcOut)
+    else:
+        methodOut = rpcOut
+    return methodOut
+
 def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_specs_json, param_values_json, app_job_id):
     appSpec = json.loads(app_spec_json)
     paramValues = json.loads(param_values_json)
     methIdToSpec = json.loads(correct_method_specs_json(method_specs_json))
-    
     njsClient = NarrativeJobService(URLS.job_service, token = token)
     wsClient = workspaceService(URLS.workspace, token = token)
     if app_job_id.startswith("njs:"):
@@ -131,23 +143,14 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
         rpcOut = appState['step_outputs'][stepId]
         methodId = stepSpec['method_id']
         methodSpec = methIdToSpec[methodId]
-        methodOut = None
-        if 'kb_service_input_mapping' in methodSpec['behavior'] or 'script_input_mapping' in methodSpec['behavior']:
-            input = {}
-            tempArgs = []
-            methodInputValues = extract_param_values(paramValues, stepId)
-            prepare_njs_method_input(token, wsClient, workspace, methodSpec, methodInputValues, input);
-            methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, rpcOut)
-        else:
-            methodOut = rpcOut
-        appState['widget_outputs'][stepId] = methodOut
+        methodInputValues = extract_param_values(paramValues, stepId)
+        appState['widget_outputs'][stepId] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
     appState['job_id'] = "njs:" + appState['job_id']
     return appState
 
 def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, param_values_json, method_job_id):
     methodSpec = json.loads(method_spec_json)
-    paramValues = json.loads(param_values_json)
-    
+    methodInputValues = json.loads(param_values_json)
     njsClient = NarrativeJobService(URLS.job_service, token = token)
     wsClient = workspaceService(URLS.workspace, token = token)
     if mathod_job_id.startswith("method:"):
@@ -155,15 +158,7 @@ def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, par
     appState = njsClient.check_app_state(method_job_id)
     for stepId in appState['step_outputs']:
         rpcOut = appState['step_outputs'][stepId]
-        methodOut = None
-        if 'kb_service_input_mapping' in methodSpec['behavior'] or 'script_input_mapping' in methodSpec['behavior']:
-            input = {}
-            tempArgs = []
-            prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues, input);
-            methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, rpcOut)
-        else:
-            methodOut = rpcOut
-        appState['widget_output'] = methodOut
+        appState['widget_output'] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
     appState['job_id'] = "method:" + appState['job_id']
     return appState
 

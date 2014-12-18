@@ -213,12 +213,12 @@
          */
         refresh: function(hideLoadingMessage) {
             // if there's no timer, set one up - this should only happen the first time.
-            // if (this.refreshTimer === null) {
-            //     this.refreshTimer = setInterval(
-            //         $.proxy(function() { this.refresh(true); }, this),
-            //         this.refreshInterval
-            //     );
-            // }
+            if (this.refreshTimer === null) {
+                this.refreshTimer = setInterval(
+                    $.proxy(function() { this.refresh(true); }, this),
+                    this.refreshInterval
+                );
+            }
 
             // If none of the base IPython stuff shows up, then it's not inited yet.
             // Just return silently.
@@ -525,119 +525,6 @@
                             .append($('<td>')
                                     .append(info));
         },
-
-        // renderApp: function(appJob, appInfo) {
-        //     var getStepSpec = function(id, appSpec) {
-        //         for (var i=0; i<appSpec.steps.length; i++) {
-        //             if (id === appSpec.steps[i].step_id)
-        //                 return appSpec.steps[i];
-        //         }
-        //         return null;
-        //     };
-
-        //     // console.log([appJob, appInfo]);
-
-        //     /* Cases:
-        //      * 1. have appJob, have appInfo
-        //      *    a. appJob has 'error' property
-        //      *        - render as an error'd job!
-        //      *        - include delete btn
-        //      *    b. appJob looks normal, not complete
-        //      *        - show status as usual
-        //      *    c. appJob is completed
-        //      *        - show delete btn
-        //      * 2. have appJob, no appInfo
-        //      *    - probably an error - missing app cell or something
-        //      *        - show an error, option to delete.
-        //      * 3. have no appJob
-        //      *    - just return null. nothing invokes this like that, anyway
-        //      */
-
-        //     var $app = $('<div>')
-        //                .addClass('kb-data-list-obj-row');
-
-        //     var appName = "Unknown App";
-        //     var appId = "Unknown Job Id";
-        //     if (appInfo && appInfo.info && appInfo.info.appSpec && appInfo.info.appSpec.info)
-        //         appName = appInfo.info.appSpec.info.name;
-        //     if (appInfo && appInfo.app && appInfo.app.id)
-        //         appId = appInfo.app.id;
-
-        //     var $appInfoDiv = $('<div class="kb-data-list-name">')
-        //                        .append(appName);
-        //     var $appControlDiv = $('<span class="pull-right">')
-        //                          .append(this.makeAppClearButton(appJob, appInfo))
-        //                          .append('<br>')
-        //                          .append(this.makeScrollToButton(appJob, appInfo));
-        //     $appInfoDiv.append($appControlDiv)
-        //                .append($('<div style="font-size:75%">')
-        //                        .append(appId));
-
-
-        //     var status = "Unknown";
-        //     var started = "Unknown";
-        //     var task = null;
-
-        //     // don't know nothing about no job!
-        //     if (!appJob || appJob.error) {
-        //         status = this.makeAppErrorButton(appJob, appInfo, 'Error');
-        //         $app.addClass('kb-jobs-error');
-        //     }
-        //     else if (Object.keys(appJob.step_errors).length !== 0) {
-        //         var $errBtn = this.makeAppErrorButton(appJob, appInfo);
-        //         status = $('<span>').append(appJob.job_state.charAt(0).toUpperCase() + appJob.job_state.substring(1) + ' ')
-        //                             .append($errBtn);
-        //     }
-        //     else {
-        //         if (appJob.job_state) {
-        //             status = appJob.job_state.charAt(0).toUpperCase() + appJob.job_state.substring(1);
-        //         }
-        //         var stepId = appJob.running_step_id;
-        //         if (stepId) {
-        //             var stepSpec = getStepSpec(stepId, appInfo.info.appSpec);
-        //             task = appInfo.info.methodSpecs[stepSpec.method_id].info.name;
-        //         }
-        //     }
-        //     if (appInfo && appInfo.app && appInfo.app.timestamp) {
-        //         started = this.makePrettyTimestamp(appInfo.app.timestamp);
-        //     }
-        //     var $infoTable = $('<table class="kb-jobs-info-table">')
-        //                      .append(this.makeInfoRow('Status', status));
-        //     if (task !== null)
-        //         $infoTable.append(this.makeInfoRow('Task', task));
-        //     $infoTable.append(this.makeInfoRow('Started', started));
-
-
-        //     $app.append($appInfoDiv)
-        //         .append($infoTable);
-        //     // $appInfoDiv.append($infoTable).append($appControlDiv);
-        //     // $app.append($appInfoDiv);
-        //     return $app;
-        // },
-
-        // renderMethod: function(job, jobInfo) {
-        //     var $row = $('<div class="kb-jobs-item">');
-        //     if (!job || job.length < 12) {
-        //         return $row;
-        //     }
-        //     $row.append($('<div class="kb-jobs-title">').append(job[1]).append(this.makeJobDetailButton(job, jobInfo)));
-        //     $row.append($('<div class="kb-jobs-descr">').append(job[12]));
-
-        //     var $itemTable = $('<table class="kb-jobs-info-table">');
-        //     var $statusRow = $('<tr>').append($('<th>').append('Status:'));
-        //     $statusRow.append($('<td>').append(this.makeStatusElement(job)));
-        //     $itemTable.append($statusRow);
-        //     if (job[9] != null) {
-        //         var $startedRow = $('<tr>').append($('<th>').append('Est. Finish:'));
-        //         var $startedCell = $('<td>');
-        //         $startedCell.append(this.makePrettyTimestamp(job[9], ' remaining'));
-        //         $startedRow.append($startedCell);
-        //         $itemTable.append($startedRow);
-        //     }
-            
-        //     $row.append($itemTable);
-        //     return $row;
-        // },
 
         makeJobErrorButton: function(jobStatus, jobInfo, btnText) {
             var removeText = "Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?";

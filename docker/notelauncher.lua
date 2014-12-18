@@ -12,7 +12,6 @@
 
 local M = {}
 
-local locklib = require("resty.lock")
 local docker = require('docker')
 local json = require('json')
 local p = require('pl.pretty')
@@ -131,8 +130,8 @@ end
 --
 --    Kill and remove an existing docker container.
 --
-local function remove_notebook(self, id)
-   ngx.log(ngx.INFO, string.format("removing container: %s",id))
+local function remove_notebook(id)
+   ngx.log(ngx.INFO, "Removing container: "..id)
    local res = docker.client:stop_container{id = id}
    --ngx.log(ngx.INFO,string.format("response from stop_container: %d : %s",res.status,res.body))
    assert(res.status == 204, "Failed to stop container: "..json.encode(res.body))

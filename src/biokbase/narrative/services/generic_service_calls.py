@@ -43,6 +43,10 @@ import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import *
 from biokbase.narrative.common.generic_service_calls import prepare_generic_method_input
 from biokbase.narrative.common.generic_service_calls import prepare_generic_method_output
+from biokbase.narrative.common.generic_service_calls import is_script_method
+from biokbase.narrative.common.generic_service_calls import create_app_step
+from biokbase.workspace.client import Workspace as workspaceService
+from biokbase.NarrativeJobService.Client import NarrativeJobService
 
 ## Globals
 
@@ -72,22 +76,32 @@ def _method_call(meth, method_spec_json, param_values_json):
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
     methodSpec = json.loads(method_spec_json)
-    paramValues = json.loads(param_values_json)    
+    paramValues = json.loads(param_values_json)
+    methodOut = None
 
-    input = {}
-    rpcArgs = []
-    prepare_generic_method_input(token, workspace, methodSpec, paramValues, input, rpcArgs);
-    
-    behavior = methodSpec['behavior']
-    url = behavior['kb_service_url']
-    serviceName = behavior['kb_service_name']
-    methodName = behavior['kb_service_method']
-    if serviceName:
-        methodName = serviceName + '.' + methodName
-    genericClient = GenericService(url = url, token = token)
-    output = genericClient.call_method(methodName, rpcArgs)
-    
-    methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, output)
+    if is_script_method(methodSpec):
+        wsClient = workspaceService(service.URLS.workspace, token = token)
+        steps = []
+        methodId = methodSpec['info']['id']
+        app = { 'name' : 'App wrapper for method ' + methodId,'steps' : steps }
+        steps.append(create_app_step(workspace, token, wsClient, methodSpec, paramValues, methodId, True))
+        njsClient = NarrativeJobService(service.URLS.job_service, token = token)
+        appState = njsClient.run_app(app)
+        jobId = "method:" + appState["job_id"]
+        meth.register_app(jobId)
+        methodOut = {'job_id': jobId}
+    else:
+        input = {}
+        rpcArgs = prepare_generic_method_input(token, workspace, methodSpec, paramValues, input);
+        behavior = methodSpec['behavior']
+        url = behavior['kb_service_url']
+        serviceName = behavior['kb_service_name']
+        methodName = behavior['kb_service_method']
+        if serviceName:
+            methodName = serviceName + '.' + methodName
+        genericClient = GenericService(url = url, token = token)
+        output = genericClient.call_method(methodName, rpcArgs)
+        methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, output)
 
     return json.dumps(methodOut)
 

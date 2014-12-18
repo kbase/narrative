@@ -19,6 +19,7 @@ from biokbase.narrativejobproxy.client import NarrativeJobProxy
 from biokbase.narrative.common.url_config import URLS
 import biokbase.auth
 from biokbase.narrative.common.generic_service_calls import _app_get_state
+from biokbase.narrative.common.generic_service_calls import _method_get_state
 
 class KBjobManager():
 
@@ -61,7 +62,7 @@ class KBjobManager():
         res = ujs.get_results(job_id)
         return res
 
-    def poll_job(self, job_id, ujs_proxy=None):
+    def poll_ujs_job(self, job_id, ujs_proxy=None):
         """
         Polls a single job id on behalf of the narrativejoblistener account
         Will raise biokbase.user_and_job_state.ServerError if a job doesn't exist.
@@ -79,53 +80,75 @@ class KBjobManager():
 
         return ujs_proxy.get_job_info(job_id)
 
-    def poll_jobs(self, meth_jobs, app_jobs, as_json=False):
+    def poll_jobs(self, jobs, as_json=False):
         """
         Polls a list of job ids on behalf of the narrativejoblistener
         account and returns the results
         """
-        meth_state_list = list()
+        job_states = list()
         ujs_proxy = self.__proxy_client()
 
-        for job_id in meth_jobs:
-            try:
-                meth_state_list.append(self.poll_job(job_id, ujs_proxy))
-            except Exception:
-                raise
-                # info_list.append([job_id, 
-                #                   u'error', 
-                #                   u'error', 
-                #                   u'0000-00-00T00:00:00+0000', 
-                #                   u'error', 
-                #                   u'0000-00-00T00:00:00+0000', 
-                #                   None, 
-                #                   None, 
-                #                   u'error',
-                #                   u'0000-00-00T00:00:00+0000',
-                #                   0,
-                #                   0,
-                #                   u'error',
-                #                   None])
+        for job in jobs:
+            # Expect job to be a list.
+            # The first element is the id of the job
+            job_id = job.pop(0)
 
-        app_state_list = list()
-        for app_info in app_jobs:
-            try:
-                app_state_list.append(self.get_app_state(app_info[1], app_info[2], app_info[3], app_info[0]))
-            except Exception as e:
-                import traceback
-                app_state_list.append({'job_id' : app_info[0], 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
-
-        jobs_info = {'methods' : meth_state_list, 'apps' : app_state_list}
-
+            if job_id.startswith('method:'):
+                try:
+                    job_states.append(self.get_method_state(job, job_id))
+                except Exception as e:
+                    import traceback
+                    job_states.append({'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
+                    # put dummy stuff in
+            elif job_id.startswith('njs:'):
+                try:
+                    job_states.append(self.get_app_state(job, job_id))
+                except Exception as e:
+                    import traceback
+                    job_states.append({'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
+            else:
+                try:
+                    # 0  job_id job, 
+                    # 1  service_name service, 
+                    # 2  job_stage stage,
+                    # 3  timestamp started, 
+                    # 4  job_status status, 
+                    # 5  timestamp last_update,
+                    # 6  total_progress prog, 
+                    # 7  max_progress max, 
+                    # 8  progress_type ptype,
+                    # 9  timestamp est_complete, 
+                    # 10 boolean complete, 
+                    # 11 boolean error,
+                    # 12 job_description desc, 
+                    # 13 Results res
+                    ujs_job = self.poll_ujs_job(job_id, ujs_proxy)
+                    job = { 'job_id' : job_id, 'job_state' : ujs_job[4], 'running_step_id' : '', 'step_errors': {}, 'step_outputs': {}, 'widget_output': {}, 'ujs_info' : ujs_job }
+                    if ujs_job[11] == 1:
+                        job['job_state'] = 'error'
+                        job['error'] = ujs_job[4]
+                    job_states.append(job)
+                except Exception as e:
+                    import traceback
+                    job_states.append({'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
         if as_json:
             import json
-            jobs_info = json.dumps(jobs_info)
-        return jobs_info
+            job_states = json.dumps(job_states)
+        return job_states
 
-    def get_app_state(self, app_spec_json, method_specs_json, param_values_json, app_job_id):
+    def get_app_state(self, app_info, app_job_id):
         """
         Prepare app state returned by NJS (use map {step_id -> widget_data} stored in widget_outputs field of resulting app state).
         """
         token = os.environ['KB_AUTH_TOKEN']
         workspace = os.environ['KB_WORKSPACE_ID']
-        return _app_get_state(workspace, token, URLS, self, app_spec_json, method_specs_json, param_values_json, app_job_id)
+        return _app_get_state(workspace, token, URLS, self, app_info[0], app_info[1], app_info[2], app_job_id)
+
+    def get_method_state(self, method_info, method_job_id):
+        """
+        Prepare method state returned by NJS (use widget_output field of resulting state for visualization).
+        Parameter param_values_json is an array of values returned by kbaseNarrativeMethodInput.getParameters() .
+        """
+        token = os.environ['KB_AUTH_TOKEN']
+        workspace = os.environ['KB_WORKSPACE_ID']
+        return _method_get_state(workspace, token, URLS, self, method_info[0], method_info[1], method_job_id)

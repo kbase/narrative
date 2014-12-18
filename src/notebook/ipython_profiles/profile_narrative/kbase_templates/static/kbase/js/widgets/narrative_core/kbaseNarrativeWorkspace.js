@@ -228,10 +228,13 @@
             };
 
             var code = '';
+            // old, pre-njs style where the methods were all living in IPython-land
             if (data.method.behavior.python_class && data.method.behavior.python_function) {
                 code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
             }
-            else if (data.method.behavior.kb_service_method && data.method.behavior.kb_service_name) {
+            // newer, njs/njs-mock style where methods get farmed out
+            else if ((data.method.behavior.kb_service_method && data.method.behavior.kb_service_name) ||
+                     (data.method.behavior.script_module && data.method.behavior.script_name)) {
                 code = this.buildGenericRunCommand(data);
             }
             else {

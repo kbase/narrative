@@ -17,6 +17,8 @@
 
             this.data = this.options.data;
             this.options.type = this.options.type.toLowerCase();
+            if (this.options.widget.toLowerCase() === "null")
+                this.options.widget = 'kbaseDefaultNarrativeOutput';
 
             this.render();
 

@@ -18,6 +18,7 @@
         methClient: null,
         uploaderURL: 'http://140.221.67.172:7778',
         aweURL: 'http://140.221.67.172:7080',
+        ujsURL: 'https://kbase.us/services/userandjobstate/',
         methods: null,			// {method_id -> method_spec}
         types: null,			// {type_name -> type_spec}
         selectedType: null,		// selected type name
@@ -243,10 +244,11 @@
             				'obj_name': params['outputObject'], 
             				'opt_args': '{"validator":{},"transformer":{"contigset_ref":"'+self.wsName+'/'+contigsetId+'"}}'}
             		console.log(args);
+    				self.showInfo("Sending data...", true);
             		uploaderClient.upload({},
             				$.proxy(function(data) {
             					console.log(data);
-            					self.waitForJob(data[0]);
+            					self.waitForJob(data[1]);
                             }, this),
                             $.proxy(function(error) {
                                 self.showError(error);
@@ -264,7 +266,7 @@
         
         waitForJob: function(jobId) {
         	var self = this;
-        	var aweClient = new AweClient({url: self.aweURL, token: self.token});
+        	/*var aweClient = new AweClient({url: self.aweURL, token: self.token});
         	var timeLst = function(event) {
         		aweClient.get_job(jobId, function(data) {
         			console.log("Job status:");
@@ -282,6 +284,27 @@
         		}, function(error) {
     				clearInterval(self.timer);
     				console.log(error);
+        		});
+        	};*/
+            var jobSrv = new UserAndJobState(self.ujsURL, {'token': self.token});
+        	var timeLst = function(event) {
+        		jobSrv.get_job_status(jobId, function(data) {
+        			var status = data[2];
+        			var complete = data[5];
+        			var wasError = data[6];
+        			if (complete === 1) {
+        				clearInterval(self.timer);
+        				if (wasError === 0) {
+            				self.showInfo("Import job is done");
+        				} else {
+            				self.showError("Error: " + status);
+        				}
+        			} else {
+        				self.showInfo("Import job has status: " + status, true);
+        			}
+        		}, function(data) {
+    				clearInterval(self.timer);
+    				console.log(data.error.message);
         		});
         	};
         	self.timer = setInterval(timeLst, 5000);

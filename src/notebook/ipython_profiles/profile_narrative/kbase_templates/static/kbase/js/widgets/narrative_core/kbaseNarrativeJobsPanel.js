@@ -368,8 +368,18 @@
             if (jobStatus.length === 0 && Object.keys(storedIds).length === 0) {
                 $jobsList.append($('<div class="kb-data-loading">').append('No running jobs!'));                
             }
-
             else {
+                jobStatus.sort(function(a, b) {
+                    var aTime = jobInfo[a.job_id].job.timestamp;
+                    var bTime = jobInfo[b.job_id].job.timestamp;
+                    // if we have timestamps for both, compare them
+                    if (aTime && bTime)
+                        return (new Date(aTime) < new Date(bTime)) ? 1 : -1;
+                    else if (aTime) // if we only have one for a, sort for a
+                        return 1;
+                    else            // if aTime is null, but bTime isn't, OR they're both null, then we don't care the order
+                        return -1;
+                });
                 for (var i=0; i<jobStatus.length; i++) {
                     var job = jobStatus[i];
                     var info = jobInfo[job.job_id];
@@ -419,8 +429,8 @@
             // jobinfo: {
             //     job: { id, source, target, timestamp },
             //     spec: { appSpec?, methodSpec?, methodSpecs?, parameterValues }
-            // type=njs: appSpec, methodSpecs
-            // type=method: methodSpec
+            //     type=njs: appSpec, methodSpecs
+            //     type=method: methodSpec
             // }
             var specType = null;
             switch(jobType) {
@@ -512,7 +522,7 @@
                     if (job.widget_outputs.hasOwnProperty(key)) {
                         if (jobType === 'njs')
                             $cell.kbaseNarrativeAppCell('setStepOutput', key, job.widget_outputs[key]);
-                        else 
+                        else
                             $cell.kbaseNarrativeMethodCell('setOutput', job.widget_outputs[key]);
                     }
                 }

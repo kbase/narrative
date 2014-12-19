@@ -198,6 +198,7 @@
         setOutput: function(data) {
             console.log('Creating output cell from data');
             console.log(data);
+            this.trigger('createMethodOutput.Narrative', { 'cellId' : this.cellId, 'result' : data });
         }
 
     });

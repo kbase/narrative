@@ -175,6 +175,13 @@
                 this)
             );
 
+            $(document).on('createOutputCell.Narrative',
+                $.proxy(function(event, data) {
+                    var cellIndex = $('#'+data.cellId).nearest('.cell').index();
+                    this.createOutputCell(IPython.notebook.get_cell(cellIndex), data.result);
+                }, this)
+            );
+
             // Initialize the data table.
             this.render();
             return this;

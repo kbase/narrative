@@ -132,7 +132,7 @@ M.timeout = 300
 M.provision_interval = 30
 
 -- How many provisioned (un-assigned) containers should we have on stand-by
-M.provision_count = 5
+M.provision_count = 10
 
 -- Default URL for authentication failure redirect, nil means just error out without redirect
 M.auth_redirect = "/?redirect=%s"
@@ -460,6 +460,7 @@ set_proxy = function(self)
                     end
                 end
                 if target then
+                    new_container() -- if a queued container is assigned, enqueue another
                     local session = notemgr:split(target)
                     response["msg"] = "Assigned container "..session[2].." to "..key
                 else
@@ -834,31 +835,39 @@ new_container = function()
 end
 
 --
--- Assign session to running container
+-- Assign session to oldest qeueued container
 -- edits docker_map and session_map
 -- session_id is already locked when this function called
--- returns IP:port of session, nil if error
+-- returns session info, nil if error
 --
 assign_container = function(session_id, client_ip)
     -- sync map with state
     sync_containers()
     ngx.log(ngx.INFO, "Assigning container from queue")
-    local dock_lock = locklib:new(M.lock_name, lock_opts)
+    -- get list of queued ids, oldest to newest
+    local ordered = {}
     local ids = docker_map:get_keys()
     for num = 1, #ids do
-        id = ids[num]
-        -- lock docker map before read/write
+        local id = ids[num]
+        local val = docker_map:get(id)
+        if val then
+            local info = notemgr:split(val)
+            table.insert(ordered, {id, tonumber(info[4])})
+        end
+    end
+    -- sort by time
+    table.sort(ordered, function(a,b) return a[2] < b[2] end)
+    -- process queued containers: oldest first / lock each in turn
+    local dock_lock = locklib:new(M.lock_name, lock_opts)
+    for id, time in pairs(ordered) do
         elapsed, err = dock_lock:lock(id)
-        if elapsed then -- lock worked
-            local val = docker_map:get(id) -- make sure its still there
+        if elapsed then
+            local val = docker_map:get(id)
+             -- make sure its still there
             if val then
-                ngx.log(ngx.DEBUG, string.format("ID %s: %s", id, val))
-                -- info = { state, ip:port, session, last_time, last_ip }
                 local info = notemgr:split(val)
-                -- this is not assigned to a session
                 if info[1] == "queued" then
-                    ngx.log(ngx.DEBUG, "info table: "..p.write(info))
-                    if info[3] == "*" then
+                    if info[3] == "*" then  -- found one
                         session_val = table.concat({info[2], id}, " ")
                         session_map:set(session_id, session_val)
                         docker_map:set(id, table.concat({"active", info[2], session_id, os.time(), client_ip}, " "))
@@ -917,12 +926,13 @@ use_proxy = function(self)
                     target = assign_container(session_key, client_ip)
                 end
             end
-            session_lock.unlock()
             -- can not assign a new one / bad state
             if target == nil then
                 ngx.log(ngx.ERR, "No available docker containers!")
                 return(ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE))
             end
+            -- if a queued container is assigned, enqueue another
+            new_container()
             -- assign comtainer to session
             local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
             local returnurl = string.format("%s://%s%s", scheme, ngx.var.host, ngx.var.request_uri)

@@ -295,7 +295,7 @@
             return this.obj_data;  
         },
         
-        renderObjectRowDiv: function(object_info) {
+        renderObjectRowDiv: function(object_info, object_key) {
             var self = this;
             // object_info:
             // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
@@ -383,6 +383,7 @@
                                                     .append($toggleAdvancedViewBtn)))));
         
             var $row = $('<div>').addClass('kb-data-list-obj-row')
+                            .attr('kb-oid', object_key)
                             .append($('<div>').addClass('row kb-data-list-obj-row-main')
                                         .append($logoDiv)
                                         .append($mainDiv))
@@ -420,36 +421,30 @@
                             return $elt; },
                 start: this.dataDragged
             });
-            // Uncomment this to enable dropping data directly onto the 
-            // notebook. (As opposed to on input fields)
+
+            // Dropping data directly onto the notebook. (As opposed to on input fields)
             $('#notebook-container').droppable({
                 drop: function(event, ui) {
-                    console.debug("Done dragging, sucka!");
                     var elt = ui.draggable;
+                    console.debug("Dropping on notebook");
                     // find nearest cell using jquery-nearest lib.
                     var near_elt = $(elt).nearest('.cell');
                     var near_idx = IPython.notebook.find_cell_index($(near_elt).data().cell);
                     var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
                     // Add unique id attr. to cell
-                    var cell_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                        return v.toString(16);});
+                    var cell_id = self.genUUID();
                     cell.rendered = false;
                     cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
                     cell.render();
+                    // Get object info
+                    var key = $(elt).attr('kb-oid');
+                    console.debug("drop :: key:", key, "elt:", $(elt));
+                    var obj = _.findWhere(self.objectList, {key: key});
+                    console.debug("drop :: key -> obj", obj, "in", self.objectList);
+                    var info = self.createInfoObject(obj.info);
+                    console.debug("drop :: info=", info);
                     // Insert the narrative data cell into the div we just rendered
-                    var o = self.draggedMeta(elt)['name'];
-                    $('#' + cell_id).kbaseNarrativeDataCell({objid: o});
-                }
-            });
-            // Old-style input fields
-            // Set text fields to name of dropped object
-            $('.kb-cell-params input[type=text]').droppable({
-                drop: function(event, ui) {
-                    console.log("dropped on (old-style) input");
-                    var meta = self.draggedMeta(ui.draggable);
-                    $('.kb-data-inflight').remove(); // remove cloned element
-                    $(this).val(meta.name);
+                    $('#' + cell_id).kbaseNarrativeDataCell({info: info});
                 }
             });
             // New-style input fields
@@ -492,33 +487,11 @@
         dataDragged: function(event, ui) {
             console.debug("Gentlemen (?), start your dragging:", ui);
             console.debug("helper",ui.helper);
-            //$(ui.helper).css("z-index", 10);
-            // would like to make sure it is on top, but can't figure that out..
         },
 
-        /** Get metadata from dragged data. */
-        draggedMeta: function(elt) {
-            var fields = ['name', 'type', 'version'];
-            var values = _.map(fields, function(f) {
-                                return $(elt).find('.kb-data-list-' + f).text()});
-            return _.object(fields, values);
-        },
-
-        dataDropped: function(event, ui) {
-            console.debug("Done dragging, sucka!");
-            var elt = ui.draggable;
-            // find nearest cell using jquery-nearest lib.
-            var near_elt = $(elt).nearest('.cell');
-            var near_idx = IPython.notebook.find_cell_index($(near_elt).data().cell);
-            var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
-            var cell_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);});
-            cell.rendered = false;
-            cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
-            cell.render();
-            // Insert the narrative data cell into the div we just rendered
-            $('#' + cell_id).kbaseNarrativeDataCell(self.draggedMeta(elt));
+        createInfoObject: function(info) {
+          return { id: info[0], name: info[1], type: info[2], save_date: info[3],
+                       version: info[4], saved_by: info[5], }; // XXX: etc.
         },
 
         // ============= end DnD ================
@@ -554,22 +527,24 @@
         },
         
         attachRow: function(index) {
-            if (this.objectList[index].attached) { return; }
-            if (this.objectList[index].$div) {
-                this.$mainListDiv.append(this.objectList[index].$div);
+            var obj = this.objectList[index];
+            if (obj.attached) { return; }
+            if (obj.$div) {
+                this.$mainListDiv.append(obj.$div);
             } else {
-                this.objectList[index].$div = this.renderObjectRowDiv(this.objectList[index].info);
-                this.$mainListDiv.append(this.objectList[index].$div);
+                obj.$div = this.renderObjectRowDiv(obj.info, obj.key);
+                this.$mainListDiv.append(obj.$div);
             }
-            this.objectList[index].attached = true;
+            obj.attached = true;
             this.n_objs_rendered++;
         },
+
         attachRowElement: function(row) {
             if (row.attached) { return; } // return if we are already attached
             if (row.$div) {
                 this.$mainListDiv.append(row.$div);
             } else {
-                row.$div = this.renderObjectRowDiv(row.info);
+                row.$div = this.renderObjectRowDiv(row.info, row.key);
                 this.$mainListDiv.append(row.$div);
             }
             row.attached = true;
@@ -602,11 +577,17 @@
             self.detachAllRows();
             
             if (self.objectList.length>0) {
-                for(var i=0; i<self.objectList.length; i++) {
+                for(var i=0; i < self.objectList.length; i++) {
                     // only show up to the given number
-                    if (i>=self.options.objs_to_render_to_start) {
+                    if (i >= self.options.objs_to_render_to_start) {
                         self.n_objs_rendered = i;
                         break;
+                    }
+                    // If object does not have a key, define one.
+                    // This will be used for 'id' of rendered element.
+                    // But do *not* replace an existing key.
+                    if (self.objectList[i].key == undefined) {
+                        self.objectList[i].key = self.genUUID(); 
                     }
                     self.attachRow(i);
                 }
@@ -994,6 +975,7 @@
          */
         loggedInCallback: function(event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
+            console.debug("Setting this.ws from loggedInCallback:", this.ws);
             this.isLoggedIn = true;
             this.refresh();
             return this;

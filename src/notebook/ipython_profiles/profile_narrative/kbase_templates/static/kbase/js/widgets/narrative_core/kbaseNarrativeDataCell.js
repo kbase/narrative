@@ -10,18 +10,17 @@
         parent: 'kbaseNarrativeCell',
         version: '0.0.1',
         options: {
-            objid: null, // object id
+            info: null, // object info
         },
+        obj_info: null,
         // for 'method_store' service
         method_client: null,
-        // workspace service client
-        ws_client: null,
 
         // Factory to initialize the appropriate Viewer for a data object.
         // See ~line 88 of view() for the keys in the 'info' object.
         narrativeViewers: {  
           genericViewer: function(elt, info) {
-            desc = name + "(v" + info.version + "), last saved by " + info.saved_by;
+            desc = info.name + "(v" + info.version + "), last saved by " + info.saved_by;
             return elt.DisplayTextWidget({'header': info.type, 'text': desc});
           },
         },
@@ -32,9 +31,9 @@
         init: function(options) {
             console.debug("kbaseNarrativeDataCell.init");
             this._super(options);
-            this.ws_client = window.kb.ws;
+            this.obj_info = options.info;
             this._initMethodStoreClient();
-            return this.render(options.objid);
+            return this.render(options.info);
         },
 
         _initMethodStoreClient: function() {
@@ -46,40 +45,16 @@
         _getMethodStoreURL: function() { return window.kbconfig.urls.narrative_method_store },
 
         /**
-         * Render
-         */
-        render: function(objid) {
-            return this.view(objid);
-        },
-
-        /**
          * Create viewer widget (and params) for a data object.
          *
-         * @param object_id (string) Object identifer
-         * @param elt (jQuery) jQuery DOM element
+         * @param object_info (object) Object with info about data item
          *
-         * @return object with attributes 'widget' and 'params'
+         * @return Whatever the 'viewer' function returns.
          */
-        view: function(object_id) {
-          var raw_info = {}
-          console.debug("ws_client: ",this.ws_client);
-          obj = this.ws_client.get_object_info_new({'objects':[object_id], 'includeMetadata': true, 'ignoreErrors': true},
-            function(info) {
-              raw_info.info = info;
-          });
-          if (raw_info.info === null) {
-            console.error("Cannot get object info for:", object_id);
-            return null;
-          }
-          var viewer_name = "genericViewer"; // TODO: use ws_client to get the appropriate Viewer name from method_store
-          var viewer = this.narrativeViewers[viewer_name];
-          if (viewer == undefined) {
-            console.error("Unknown viewer '" + viewer_name + "' for:", object_id);
-            return null;
-          }
-          obj_info = { id: raw_info[0], name: raw_info[1], type: raw_info[2], save_date: raw_info[3],
-                       version: raw_info[4], saved_by: raw_info[5], }; // XXX: etc.
-          return viewer(this, obj_info);
+        render: function() {
+          var viewer_names = {default: "genericViewer"}; // XXX
+          var viewer = this.narrativeViewers[viewer_names.default];
+          return viewer(this.$elem, this.obj_info);
         }
 
 

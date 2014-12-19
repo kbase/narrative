@@ -27,7 +27,7 @@
 
 local M = {}
 
-local auth_cookie_name = "kbase_narr_session"
+local auth_cookie_name = "kbase_session"
 local lock_opts = {
     exptime = 5,
     timeout = 5
@@ -120,16 +120,16 @@ nexus_url = 'http://127.0.0.1:65001/users/'
 M.lock_name = "lock_map"
 
 -- How often (in seconds) does the sweeper wake up to delete dead containers
-M.sweep_interval = 300
+M.sweep_interval = 600
 
 -- How often (in seconds) does the marker wake up to mark containers for deletion
-M.mark_interval = 60
+M.mark_interval = 120
 
 -- How long (in seconds) since last activity on a container should we wait before shutting it down
-M.timeout = 180
+M.timeout = 300
 
 -- How often (in seconds) does the provisioner wake up to provision new containers
-M.provision_interval = 60
+M.provision_interval = 30
 
 -- How many provisioned (un-assigned) containers should we have on stand-by
 M.provision_count = 5
@@ -647,7 +647,7 @@ end
 -- session identifier is parsed out of token from user name (un=) value
 get_session = function()
     local hdrs = ngx.req.get_headers()
-    local cheader = hdrs['Cookie']
+    local cheader = ngx.unescape_uri(hdrs['Cookie'])
     local token = {}
     local session_id = nil; -- nil return value by default
     if cheader then
@@ -718,6 +718,12 @@ get_session = function()
             end
         end
         token_lock:unlock() -- make sure its unlcoked
+    else
+        if cheader then
+            ngx.log(ngx.ERR, "Error: invalid token / auth format: "..cheader)
+        else
+            ngx.log(ngx.ERR, "Error: missing 'cookie' header")
+        end
     end
     return session_id
 end

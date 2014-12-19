@@ -859,7 +859,8 @@ assign_container = function(session_id, client_ip)
     table.sort(ordered, function(a,b) return a[2] < b[2] end)
     -- process queued containers: oldest first / lock each in turn
     local dock_lock = locklib:new(M.lock_name, lock_opts)
-    for id, time in pairs(ordered) do
+    for num = 1, #ordered do
+        local id = ordered[num][1]
         elapsed, err = dock_lock:lock(id)
         if elapsed then
             local val = docker_map:get(id)

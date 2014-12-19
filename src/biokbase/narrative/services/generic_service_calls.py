@@ -102,7 +102,10 @@ def _method_call(meth, method_spec_json, param_values_json):
         genericClient = GenericService(url = url, token = token)
         output = genericClient.call_method(methodName, rpcArgs)
         methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, output)
-
+        if 'job_id_output_field' in methodSpec:
+            jobIdField = methodSpec['job_id_output_field']
+            if jobIdField in methodOut:
+                meth.register_job(methodOut[jobIdField])
     return json.dumps(methodOut)
 
 

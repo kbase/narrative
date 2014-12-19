@@ -55,6 +55,7 @@ local new_container
 local url_decode
 local get_session
 local discover
+local narrative_shutdown
 
 -- this are name/value pairs referencing ngx.shared.DICT objects
 -- that we use to track docker containers. The ngx.shared.DICT
@@ -301,6 +302,72 @@ initialize = function( self, conf )
                                             M.sweep_interval,M.mark_interval, M.timeout, tostring(M.auth_redirect)))
     else
         ngx.log( ngx.INFO, string.format("Initialized at %d, skipping",initialized))
+    end
+end
+
+-- This function will shut down a running Narrative Docker container immediately
+-- Once that's done, the user's token is removed from the cache.
+-- The intent is that this is a fast, specific reaping process, accessible from outside.
+-- It's set up as a REST call, but a valid user token is required, and that token must come
+-- from the user who's instance it's trying to shut down.
+-- Only the GET and DELETE methods are implemented. GET returns some info, and DELETE 
+-- will shutdown the container under 2 conditions:
+-- 1. A valid KBase auth token is given in the cookie given by auth_cookie_name
+-- 2. The user specified by that cookie is shutting down their own Narrative instance
+narrative_shutdown = function(self)
+    local uri_key_rx = ngx.var.uri_base .. "/(" .. key_regex .. ")"
+    local uri_value_rx = ngx.var.uri_base .. "/" .. key_regex .. "/" .. "(" .. val_regex .. ")$"
+    local method = ngx.req.get_method()
+    local response = {}
+    if method == "GET" then
+        ngx.say(json.encode(response))
+    elseif method == "DELETE" then
+        local session_id, err = get_session()
+        if session_id then
+            local uri_base = ngx.var.uri_base
+            local name = string.match(ngx.var.uri, uri_key_rx)
+            if name then
+                if name == session_id then
+                    local target, flags = proxy_map:get(name)
+                    if target == nil then
+                        ngx.status = ngx.HTTP_NOT_FOUND
+                    else
+                        response = "Reaping container"
+                        proxy_state:set(name, false)
+                        ngx.log(ngx.NOTICE, "Manual shutdown by user: " .. name)
+                        local success, err = pcall( notemgr.remove_notebook, name)
+                        if success then
+                            proxy_map:delete(name)
+                            proxy_state:delete(name)
+                            proxy_last:delete(name)
+                            proxy_last_ip:delete(name)
+                            ngx.log( ngx.INFO, "notebook removed")
+                        elseif string.find(err, "does not exist") then
+                            ngx.log( ngx.INFO, "notebook nonexistent - removing references")
+                            proxy_map:delete(name)
+                            proxy_state:delete(name)
+                            proxy_last_ip:delete(name)
+                            proxy_last:delete(name)
+                        end
+                    end
+                else
+                    ngx.status = ngx.HTTP_UNAUTHORIZED
+                    ngx.log(ngx.WARN, "Unauthorized user " .. session_id .. " attempting to shutdown a Narrative owned by " .. key)
+                    response = "You do not have permission to shut down this Narrative"
+                    ngx.say(json.encode(response))
+                end
+            else
+                response = "No key specified"
+                ngx.status = ngx.HTTP_NOT_FOUND
+            end
+            ngx.say(json.encode(response))
+        else
+            ngx.log(ngx.WARN, "Unauthorized user attempting to shutdown a Narrative")
+            response = "Must provide user credentials to shutdown a running server!"
+            ngx.say(json.encode(response))
+        end
+    else
+        ngx.exit(ngx.HTTP_METHOD_NOT_IMPLEMENTED)
     end
 end
 
@@ -698,5 +765,6 @@ M.use_proxy = use_proxy
 M.initialize = initialize
 M.idle_status = idle_status
 M.est_connections = est_connections
+M.narrative_shutdown = narrative_shutdown
 
 return M

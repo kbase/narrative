@@ -6,7 +6,7 @@
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "GenomeAnnotation",
+        name: "kbaseGenomeView",
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         ws_id: null,
@@ -31,6 +31,10 @@
             this.ws_id = options.ws_id;
             if (options.job_id)
             	this.job_id = options.job_id;
+            if (options.ws && options.id) {
+                  this.ws_id = options.id;
+                  this.ws_name = options.ws;
+            }
             return this;
         },
         

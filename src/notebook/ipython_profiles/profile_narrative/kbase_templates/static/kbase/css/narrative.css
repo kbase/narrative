@@ -760,11 +760,10 @@ box-shadow: 0 -1px 0px rgba(0, 0, 0, 0.1);
 border-left: 1px solid #f2f2f2;
 }
 
-.version-stamp {
+.version-stamp a{
 	padding-right: 320px;
 	text-align: right;
-	color: #666;
-	font-size: 90%;
+	color: #0088CC !important;
 }
 
 .creator-stamp {
@@ -781,6 +780,66 @@ border-left: 1px solid #f2f2f2;
 	margin-bottom: 0px;
 }
 
+#kb-jobs-panel {
+	margin-bottom: 5px;
+}
+
+.kb-narr-side-panel {
+	margin-bottom: 5px;
+}
+
+.kbujs-table-container {
+    height: auto;
+}
+
+.kbujs-timestamp {
+	color: #0066b9;
+	cursor: pointer;
+}
+
+.kbujs-error-cell {
+	color: #c7254e;
+	font-weight: bold;
+}
+
+.kbujs-error:hover {
+	cursor: pointer;
+}
+
+.kbujs-loading-modal {
+	text-align: center;
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.kbujs-refresh-btn {
+    position: absolute;
+    right: 5px;
+}
+
+.kbujs-jobs-table {
+	margin-left: auto !important;
+	margin-right: auto !important;
+}
+
+.kbujs-loading {
+    height: 100%
+    vertical-align: middle;
+    text-align: center
+}
+
+.kbujs-delete-job {
+	cursor: pointer;
+}
+
+.kbujs-error-traceback {
+    white-space : nowrap;
+    float : left;
+    max-width : 516px;
+    max-height: 250px;
+    overflow-x : scroll;
+    overflow-y: scroll;
+}
 /* For connecting lines */
 .kb-line {
     background-color: lightgrey;

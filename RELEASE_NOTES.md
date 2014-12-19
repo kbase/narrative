@@ -3,6 +3,34 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.0
+__Changes__
+- Added Method Gallery for browing methods and apps and viewing information
+- Added a manual Narrative Shutdown button (under the 'about' button)
+- Integrated code cells and IPython kernel management
+- Added prototype Narrative Management panel
+
+### Version 0.2.2
+__Changes__
+- Restyled Jobs panel, added better management controls, added ability to see Job error statuses
+- Added first pass at data importer
+
+### Version 0.2.1
+__Changes__
+- More improvements to logging - includes more details like user's IP address, Narrative machine, etc.
+- Changed data panel to be able to draw data from all other Narratives and Workspaces
+- Stubs in place for importing data into your Narrative
+- Changed paradigm to one narrative/one workspace for simplicity
+
+### Version 0.2.0
+__Changes__
+- Switched to semantic versioning - www.semver.org
+- Began massive changes to the UI
+- Improved logging of events and method/app running
+- Introduced App interface
+- Added a Job management panel for tracking App status
+- Switched to fetching lists of Methods and Apps from a centralized method store
+
 ### Release 9/25/2014
 __Changes__
 - Fixed a bug that prevented a few Narrative functions from working if the

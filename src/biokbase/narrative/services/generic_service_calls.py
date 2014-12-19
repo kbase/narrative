@@ -45,6 +45,8 @@ from biokbase.narrative.common.generic_service_calls import prepare_generic_meth
 from biokbase.narrative.common.generic_service_calls import prepare_generic_method_output
 from biokbase.narrative.common.generic_service_calls import is_script_method
 from biokbase.narrative.common.generic_service_calls import create_app_step
+from biokbase.workspace.client import Workspace as workspaceService
+from biokbase.NarrativeJobService.Client import NarrativeJobService
 
 ## Globals
 

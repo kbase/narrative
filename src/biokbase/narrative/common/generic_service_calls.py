@@ -153,7 +153,7 @@ def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, par
     methodInputValues = json.loads(param_values_json)
     njsClient = NarrativeJobService(URLS.job_service, token = token)
     wsClient = workspaceService(URLS.workspace, token = token)
-    if mathod_job_id.startswith("method:"):
+    if method_job_id.startswith("method:"):
         method_job_id = method_job_id[7:]
     appState = njsClient.check_app_state(method_job_id)
     for stepId in appState['step_outputs']:

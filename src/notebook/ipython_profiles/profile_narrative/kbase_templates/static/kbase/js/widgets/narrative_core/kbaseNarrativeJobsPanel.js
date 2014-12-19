@@ -195,6 +195,19 @@
             IPython.notebook.save_checkpoint();
         },
 
+        /*
+         * For now, ':' is the delimiter.
+         * Anything before ':' is the job type.
+         */
+        jobTypeFromId: function(jobId) {
+            if (jobId.indexOf(':') === -1) 
+                return 'ujs';
+            else {
+                var type = jobId.split(':')[0];
+                return type.toLowerCase();
+            }
+        },
+
         /**
          * @method
          */
@@ -206,7 +219,6 @@
                     this.refreshInterval
                 );
             }
-
 
             // If none of the base IPython stuff shows up, then it's not inited yet.
             // Just return silently.
@@ -229,50 +241,53 @@
             var jobs = IPython.notebook.metadata.job_ids;
             var uniqueJobs = {};
 
-            // set up methods
-            var methJobList = [];
-            for (var i=0; i<jobs.methods.length; i++) {
-                if (uniqueJobs.hasOwnProperty(jobs.methods[i].id))
+            var jobList = [];
+            var allJobs = jobs.methods.concat(jobs.apps);
+            for (var i=0; i<allJobs.length; i++) {
+                var jobInfo = allJobs[i];
+                if (uniqueJobs.hasOwnProperty(jobInfo.id) || !jobInfo.source)
                     continue;
-                uniqueJobs[jobs.methods[i].id] = jobs.methods[i];
-                methJobList.push("'" + jobs.methods[i].id + "'");
-            }
-
-            // set up apps
-            var appJobList = [];
-            for (var i=0; i<jobs.apps.length; i++) {
-                var app = jobs.apps[i];
-                if (uniqueJobs.hasOwnProperty(app.id))
-                    continue;
-                if (!app.source || app.source.length === 0)
-                    continue;
-
-                var info = null; //{ appSpec : {}, methodSpecs: {}, parameterValues: {} };
-                var $appCell = $('#' + app.source);
-                if ($appCell.length > 0)
-                    info = $appCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
-
-                if (info) {
-                    // from the source, we need to get its containing app cell object.
-                    appJobList.push("['" + app.id + "', " +
-                                    "'" + this.safeJSONStringify(info.appSpec) + "', " +
-                                    "'" + this.safeJSONStringify(info.methodSpecs) + "', " + 
-                                    "'" + this.safeJSONStringify(info.parameterValues) + "']");                    
+                var jobType = this.jobTypeFromId(jobInfo.id);
+                uniqueJobs[jobInfo.id] = { 'job' : jobInfo };
+                // if it's a "method:" job, then we need the spec.
+                if (jobType === "method" || jobType === "njs") {
+                    // format method packet.
+                    var $sourceCell = $('#' + jobInfo.source);
+                    var specInfo = null;
+                    if ($sourceCell.length > 0) {
+                        if (jobType === "method") {
+                            specInfo = $sourceCell.kbaseNarrativeMethodCell('getSpecAndParameterInfo');
+                            if (specInfo) {
+                                jobList.push("['" + jobInfo.id + "', " +
+                                             "'" + this.safeJSONStringify(specInfo.methodSpec) + "', " +
+                                             "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
+                            }
+                        }
+                        else {
+                            specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
+                            if (specInfo) {
+                                jobList.push("['" + jobInfo.id + "', " +
+                                             "'" + this.safeJSONStringify(specInfo.appSpec) + "', " +
+                                             "'" + this.safeJSONStringify(specInfo.methodSpecs) + "', " +
+                                             "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
+                            }
+                        }
+                        uniqueJobs[jobInfo.id]['spec'] = specInfo;
+                    }
                 }
-
-                uniqueJobs[app.id] = {'app' : app, 'info' : info};
+                else {
+                    jobList.push("['" + jobInfo.id + "']");
+                }
             }
 
-            if (jobs.apps.length === 0 && jobs.methods.length === 0) {
+            if (allJobs.length === 0) {
                 // no jobs! skip the kernel noise and cut to the rendering!
                 this.populateJobsPanel();
                 return;
             }
-
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
-                                  'print job_manager.poll_jobs(meth_jobs=[' + methJobList + '], app_jobs=[' + appJobList + '], as_json=True)\n';
-
+                                  'print job_manager.poll_jobs([' + jobList + '], as_json=True)\n'; //meth_jobs=[' + methJobList + '], app_jobs=[' + appJobList + '], as_json=True)\n';
             var callbacks = {
                 'output' : $.proxy(function(msgType, content) { 
                     this.parseKernelResponse(msgType, content, uniqueJobs); 
@@ -332,83 +347,176 @@
             }
         },
 
-        populateJobsPanel: function(jobs, jobInfo) {
-            if (!jobs || jobs.length === 0) {
+        populateJobsPanel: function(jobStatus, jobInfo) {
+            if (!jobStatus || jobStatus.length === 0) {
                 this.showMessage('No running jobs!');
                 return;
             }
 
-            var storedAppIds = {};
+            console.log([jobStatus, jobInfo]);
+
+            var storedIds = {};
+            for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {
+                storedIds[IPython.notebook.metadata.job_ids.methods[i].id] = IPython.notebook.metadata.job_ids.methods[i];
+            }
             for (var i=0; i<IPython.notebook.metadata.job_ids.apps.length; i++) {
-                storedAppIds[IPython.notebook.metadata.job_ids.apps[i].id] = IPython.notebook.metadata.job_ids.apps[i];
-            };
-            var storedIds = IPython.notebook.metadata.job_ids;
+                storedIds[IPython.notebook.metadata.job_ids.apps[i].id] = IPython.notebook.metadata.job_ids.apps[i];
+            }
 
             var $jobsList = $('<div>').addClass('kb-jobs-items');
 
-            if (jobs.methods.length === 0 && storedIds.methods.length === 0 &&
-                jobs.apps.length === 0 && storedIds.apps.length === 0) {
-                $jobsList.append($('<div class="kb-data-loading">').append('No running jobs!'));
+            if (jobStatus.length === 0 && Object.keys(storedIds).length === 0) {
+                $jobsList.append($('<div class="kb-data-loading">').append('No running jobs!'));                
             }
 
             else {
-                // do all methods
-                for (var i=0; i<jobs.methods.length; i++) {
-                    $jobsList.append(this.renderMethod(jobs.methods[i], jobInfo[jobs.methods[i][0]]));
+                for (var i=0; i<jobStatus.length; i++) {
+                    var job = jobStatus[i];
+                    var info = jobInfo[job.job_id];
+                    $jobsList.append(this.renderJob(job, info));
+                    this.updateCell(job, info);
+                    delete storedIds[job.job_id];
                 }
-
-                // do all apps
-                // have a checklist of apps (from the storedIds list)
-                // render 'em all, pop one out when it's done.
-
-                for (var i=0; i<jobs.apps.length; i++) {
-                    var app = jobs.apps[i];
-                    var appInfo = jobInfo[app.job_id];
-                    $jobsList.append(this.renderApp(app, appInfo));
-                    this.updateAppCell(app, appInfo);
-                    delete storedAppIds[app.job_id];
-                }
-                for (var missingId in storedAppIds) {
-                    if (storedAppIds.hasOwnProperty(missingId)) {
-                        $jobsList.append(this.renderApp(null, {'app': storedAppIds[missingId]}));
+                for (var missingId in storedIds) {
+                    if (storedIds.hasOwnProperty(missingId)) {
+                        $jobsList.append(this.renderJob(null, {'job': storedIds[missingId]}));
                     }
                 }
             }
             this.$jobsPanel.empty().append($jobsList);
         },
 
-        updateAppCell: function(app, appInfo) {
-            var source = appInfo.app.source;
+        renderJob: function(job, jobInfo) {
+            var getStepSpec = function(id, spec) {
+                for (var i=0; i<spec.steps.length; i++) {
+                    if (id === spec.steps[i].step_id)
+                        return spec.steps[i];
+                }
+                return null;
+            };
+
+            /* Cases:
+             * 1. have job, have info
+             *    a. job has 'error' property
+             *        - render as an error'd job!
+             *        - include delete btn
+             *    b. job looks normal, not complete
+             *        - show status as usual
+             *    c. job is completed
+             *        - show delete btn
+             * 2. have job, no info
+             *    - probably an error - missing app cell or something
+             *        - show an error, option to delete.
+             * 3. have no job
+             *    - just return null. nothing invokes this like that, anyway
+             */
+
+            var jobType = this.jobTypeFromId(jobInfo.job.id);
+
+            var $jobDiv = $('<div>')
+                          .addClass('kb-data-list-obj-row');
+
+            // jobinfo: {
+            //     job: { id, source, target, timestamp },
+            //     spec: { appSpec?, methodSpec?, methodSpecs?, parameterValues }
+            // type=njs: appSpec, methodSpecs
+            // type=method: methodSpec
+            // }
+            var specType = null;
+            switch(jobType) {
+                case 'njs':
+                    specType = 'appSpec';
+                    break;
+                case 'method':
+                    specType = 'methodSpec';
+                    break;
+                default:
+                    break;
+            }
+
+            var jobName = "Unknown " + ((jobType === 'njs') ? "App" : "Method");
+            var jobId = "Unknown Job Id";
+            if (jobInfo && jobInfo.spec && jobInfo.spec[specType] && jobInfo.spec[specType].info)
+                jobName = jobInfo.spec[specType].info.name;
+            if (jobInfo && jobInfo.job && jobInfo.job.id)
+                jobId = jobInfo.job.id;
+
+            var $jobInfoDiv = $('<div class="kb-data-list-name">')
+                               .append(jobName);
+            var $jobControlDiv = $('<span class="pull-right">')
+                                 .append(this.makeJobClearButton(job, jobInfo))
+                                 .append('<br>')
+                                 .append(this.makeScrollToButton(job, jobInfo));
+            $jobInfoDiv.append($jobControlDiv)
+                       .append($('<div style="font-size:75%">')
+                               .append(jobId));
+
+            var status = "Unknown";
+            var started = "Unknown";
+            var task = null;
+
+            // don't know nothing about no job!
+            if (!job || job.error) {
+                status = this.makeJobErrorButton(job, jobInfo, 'Error');
+                $jobDiv.addClass('kb-jobs-error');
+            }
+            else if (job.step_errors && Object.keys(job.step_errors).length !== 0) {
+                var $errBtn = this.makeJobErrorButton(job, jobInfo);
+                status = $('<span>').append(job.job_state.charAt(0).toUpperCase() + job.job_state.substring(1) + ' ')
+                                    .append($errBtn);
+            }
+            else {
+                if (job.job_state) {
+                    status = job.job_state.charAt(0).toUpperCase() + job.job_state.substring(1);
+                }
+
+                if (jobType === "njs") {
+                    var stepId = job.running_step_id;
+                    if (stepId) {
+                        var stepSpec = getStepSpec(stepId, jobInfo.spec.appSpec);
+                        task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
+                    }
+                }
+            }
+            if (jobInfo && jobInfo.job && jobInfo.job.timestamp) {
+                started = this.makePrettyTimestamp(jobInfo.job.timestamp);
+            }
+            var $infoTable = $('<table class="kb-jobs-info-table">')
+                             .append(this.makeInfoRow('Status', status));
+            if (task !== null)
+                $infoTable.append(this.makeInfoRow('Task', task));
+            $infoTable.append(this.makeInfoRow('Started', started));
+
+
+            $jobDiv.append($jobInfoDiv)
+                   .append($infoTable);
+            return $jobDiv;
+        },
+
+
+        updateCell: function(job, jobInfo) {
+            var source = jobInfo.job.source;
+            var jobType = this.jobTypeFromId(jobInfo.job.id)
             if (!source)
                 return; // don't do anything if we can't find the cell. it might have been deleted.
 
-            var $appCell = $('#' + source);
-            if (!$appCell)
-                return; // don't do anything if we can't find the app cell, either.
+            var $cell = $('#' + source);
+            if (!$cell)
+                return; // don't do anything if we can't find the running cell, either.
 
-            if (app.running_step_id) {
-                $appCell.kbaseNarrativeAppCell('setRunningStep', app.running_step_id);
+            if (job.running_step_id && jobType === 'njs') {
+                $cell.kbaseNarrativeAppCell('setRunningStep', job.running_step_id);
             }
-            if (app.widget_outputs && Object.keys(app.widget_outputs).length > 0) {
-                for (var key in app.widget_outputs) {
-                    if (app.widget_outputs.hasOwnProperty(key))
-                        $appCell.kbaseNarrativeAppCell('setStepOutput', key, app.widget_outputs[key]);
+            if (job.widget_outputs && Object.keys(job.widget_outputs).length > 0) {
+                for (var key in job.widget_outputs) {
+                    if (job.widget_outputs.hasOwnProperty(key)) {
+                        if (jobType === 'njs')
+                            $cell.kbaseNarrativeAppCell('setStepOutput', key, job.widget_outputs[key]);
+                        else 
+                            $cell.kbaseNarrativeMethodCell('setOutput', job.widget_outputs[key]);
+                    }
                 }
             }
-        },
-
-        renderAppError: function(app) {
-            var $appErr = $('<div>')
-                          .addClass('kb-jobs-item kb-jobs-error')
-                          .append($('<div>')
-                                  .addClass('kb-jobs-title')
-                                  .append('Error')
-                                  .append(this.makeAppClearButton(app)))
-                          .append($('<div>')
-                                  .addClass('kb-jobs-descr')
-                                  .append('Unable to find job info. The associated app may have been removed. Click the X to delete this job'));
-
-            return $appErr;
         },
 
         makeInfoRow: function(heading, info) {
@@ -418,121 +526,7 @@
                                     .append(info));
         },
 
-        renderApp: function(appJob, appInfo) {
-            var getStepSpec = function(id, appSpec) {
-                for (var i=0; i<appSpec.steps.length; i++) {
-                    if (id === appSpec.steps[i].step_id)
-                        return appSpec.steps[i];
-                }
-                return null;
-            };
-
-
-            // console.log([appJob, appInfo]);
-
-            /* Cases:
-             * 1. have appJob, have appInfo
-             *    a. appJob has 'error' property
-             *        - render as an error'd job!
-             *        - include delete btn
-             *    b. appJob looks normal, not complete
-             *        - show status as usual
-             *    c. appJob is completed
-             *        - show delete btn
-             * 2. have appJob, no appInfo
-             *    - probably an error - missing app cell or something
-             *        - show an error, option to delete.
-             * 3. have no appJob
-             *    - just return null. nothing invokes this like that, anyway
-             */
-
-            var $app = $('<div>')
-                       .addClass('kb-data-list-obj-row');
-
-            var appName = "Unknown App";
-            var appId = "Unknown Job Id";
-            if (appInfo && appInfo.info && appInfo.info.appSpec && appInfo.info.appSpec.info)
-                appName = appInfo.info.appSpec.info.name;
-            if (appInfo && appInfo.app && appInfo.app.id)
-                appId = appInfo.app.id;
-
-            var $appInfoDiv = $('<div class="kb-data-list-name">')
-                               .append(appName);
-            var $appControlDiv = $('<span class="pull-right">')
-                                 .append(this.makeAppClearButton(appJob, appInfo))
-                                 .append('<br>')
-                                 .append(this.makeScrollToButton(appJob, appInfo));
-            $appInfoDiv.append($appControlDiv)
-                       .append($('<div style="font-size:75%">')
-                               .append(appId));
-
-
-            var status = "Unknown";
-            var started = "Unknown";
-            var task = null;
-
-            // don't know nothing about no job!
-            if (!appJob || appJob.error) {
-                status = this.makeAppErrorButton(appJob, appInfo, 'Error');
-                $app.addClass('kb-jobs-error');
-            }
-            else if (Object.keys(appJob.step_errors).length !== 0) {
-                var $errBtn = this.makeAppErrorButton(appJob, appInfo);
-                status = $('<span>').append(appJob.job_state.charAt(0).toUpperCase() + appJob.job_state.substring(1) + ' ')
-                                    .append($errBtn);
-            }
-            else {
-                if (appJob.job_state) {
-                    status = appJob.job_state.charAt(0).toUpperCase() + appJob.job_state.substring(1);
-                }
-                var stepId = appJob.running_step_id;
-                if (stepId) {
-                    var stepSpec = getStepSpec(stepId, appInfo.info.appSpec);
-                    task = appInfo.info.methodSpecs[stepSpec.method_id].info.name;
-                }
-            }
-            if (appInfo && appInfo.app && appInfo.app.timestamp) {
-                started = this.makePrettyTimestamp(appInfo.app.timestamp);
-            }
-            var $infoTable = $('<table class="kb-jobs-info-table">')
-                             .append(this.makeInfoRow('Status', status));
-            if (task !== null)
-                $infoTable.append(this.makeInfoRow('Task', task));
-            $infoTable.append(this.makeInfoRow('Started', started));
-
-
-            $app.append($appInfoDiv)
-                .append($infoTable);
-            // $appInfoDiv.append($infoTable).append($appControlDiv);
-            // $app.append($appInfoDiv);
-            return $app;
-        },
-
-        renderMethod: function(job, jobInfo) {
-            var $row = $('<div class="kb-jobs-item">');
-            if (!job || job.length < 12) {
-                return $row;
-            }
-            $row.append($('<div class="kb-jobs-title">').append(job[1]).append(this.makeJobDetailButton(job, jobInfo)));
-            $row.append($('<div class="kb-jobs-descr">').append(job[12]));
-
-            var $itemTable = $('<table class="kb-jobs-info-table">');
-            var $statusRow = $('<tr>').append($('<th>').append('Status:'));
-            $statusRow.append($('<td>').append(this.makeStatusElement(job)));
-            $itemTable.append($statusRow);
-            if (job[9] != null) {
-                var $startedRow = $('<tr>').append($('<th>').append('Est. Finish:'));
-                var $startedCell = $('<td>');
-                $startedCell.append(this.makePrettyTimestamp(job[9], ' remaining'));
-                $startedRow.append($startedCell);
-                $itemTable.append($startedRow);
-            }
-            
-            $row.append($itemTable);
-            return $row;
-        },
-
-        makeAppErrorButton: function(appJob, appInfo, btnText) {
+        makeJobErrorButton: function(jobStatus, jobInfo, btnText) {
             var removeText = "Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?";
             var headText = "An error has been detected in this job!";
             var errorText = "The KBase servers are reporting an error for this job:";
@@ -543,66 +537,71 @@
             if (btnText)
                 $errBtn.append(' ' + btnText);
             $errBtn.click($.proxy(function(e) {
-                       this.removeId = appInfo.app.id;
-                       this.$jobsModalTitle.html('Job Error');
-                       /* error types:
-                        * 1. appJob.error is a real string. Just cough it up.
-                        * 2. appJob is missing
-                        * 3. appInfo is partly missing (e.g., lost the cell that it should point to)
-                        * 4. appInfo is still partly missing (e.g., dont' know what cell it should point to)
-                        */
-                       if (!appJob && appInfo) {
-                           if (!appInfo.app.source) {
-                               errorText = "This job is not associated with an App Cell.";
-                               errorType = "Unknown App Cell";
-                           }
-                           else if ($('#' + appInfo.app.source).length === 0) {
-                               errorText = "The App Cell associated with this job can no longer be found in your Narrative.";
-                               errorType = "Missing App Cell";
-                           }
-                       }
-                       else if (appJob.error) {
-                           errorText = appJob.error;
-                           errorType = "Runtime";
-                       }
-                       else if (Object.keys(appJob.step_errors).length !== 0) {
-                           errorType = "Runtime";
-                           errorText = $('<div>');
-                           for (var stepId in appJob.step_errors) {
-                               if (appJob.step_errors.hasOwnProperty(stepId)) {
-                                   // contort that into the method name
-                                   // gotta search for it in the spec for the method id, first.
-                                   var methodId = null;
-                                   for (var i=0; i<appInfo.info.appSpec.steps.length; i++) {
-                                       if (stepId === appInfo.info.appSpec.steps[i].step_id) {
-                                           methodId = appInfo.info.appSpec.steps[i].method_id;
-                                           break;
-                                       }
-                                   }
-                                   var methodName = "Unknown method: " + stepId;
-                                   if (methodId)
-                                       methodName = appInfo.info.methodSpecs[methodId].info.name;
-                                   errorText.append($('<b>').append('In ' + methodName + ':<br>'))
-                                            .append(appJob.step_errors[stepId] + '<br><br>');
-                               }
-                           }
-                       }
-
-                       var $errorTable = $('<table class="table table-bordered">')
-                                         .append(this.makeInfoRow('Id', appInfo.app.id))
-                                         .append(this.makeInfoRow('Type', errorType))
-                                         .append(this.makeInfoRow('Error', errorText));
-
-                       this.$jobsModalBody.empty();
-                       this.$jobsModalBody.append($('<div>').append(headText))
-                                          .append($errorTable)
-                                          .append($('<div>').append(removeText));
-                       this.$jobsModal.openPrompt();
-                   }, this));
+                this.removeId = jobInfo.job.id;
+                this.$jobsModalTitle.html('Job Error');
+                /* error types:
+                 * 1. jobStatus.error is a real string. Just cough it up.
+                 * 2. jobStatus is missing
+                 * 3. jobInfo is partly missing (e.g., lost the cell that it should point to)
+                 * 4. jobInfo is still partly missing (e.g., dont' know what cell it should point to)
+                 */
+                if (!jobStatus && jobInfo) {
+                    if (!jobInfo.job.source) {
+                        errorText = "This job is not associated with an App Cell.";
+                        errorType = "Unknown App Cell";
+                    }
+                    else if ($('#' + jobInfo.job.source).length === 0) {
+                        errorText = "The App Cell associated with this job can no longer be found in your Narrative.";
+                        errorType = "Missing App Cell";
+                    }
+                }
+                else if (jobStatus.error) {
+                    errorText = jobStatus.error;
+                    errorType = "Runtime";
+                }
+                else if (Object.keys(jobStatus.step_errors).length !== 0) {
+                    errorType = "Runtime";
+                    errorText = $('<div>');
+                    for (var stepId in jobStatus.step_errors) {
+                        if (jobStatus.step_errors.hasOwnProperty(stepId)) {
+                            // contort that into the method name
+                            // gotta search for it in the spec for the method id, first.
+                            var methodName = "Unknown method: " + stepId;
+                            if (this.jobTypeFromId(jobInfo.job.id) === "njs") {
+                                var methodId = null;
+                                for (var i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
+                                    if (stepId === jobInfo.spec.appSpec.steps[i].step_id) {
+                                        methodId = jobInfo.spec.appSpec.steps[i].method_id;
+                                        break;
+                                    }
+                                }
+                                if (methodId)
+                                    methodName = jobInfo.spec.methodSpecs[methodId].info.name;
+                            }
+                            else {
+                                methodName = jobInfo.spec.methodSpec.info.name;
+                            }
+                            errorText.append($('<b>').append('In ' + methodName + ':<br>'))
+                                     .append(jobStatus.step_errors[stepId] + '<br><br>');
+                        }
+                    }
+                }
+ 
+                var $errorTable = $('<table class="table table-bordered">')
+                                  .append(this.makeInfoRow('Id', jobInfo.job.id))
+                                  .append(this.makeInfoRow('Type', errorType))
+                                  .append(this.makeInfoRow('Error', errorText));
+ 
+                this.$jobsModalBody.empty();
+                this.$jobsModalBody.append($('<div>').append(headText))
+                                   .append($errorTable)
+                                   .append($('<div>').append(removeText));
+                this.$jobsModal.openPrompt();
+            }, this));
             return $errBtn;
         },
 
-        makeAppClearButton: function(appJob, appInfo) {
+        makeJobClearButton: function(jobStatus, jobInfo) {
             var removeText = "Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?";
             var warningText = "This job appears to have fallen into an error state and is no longer running on KBase servers.";
 
@@ -611,15 +610,15 @@
                    .css({'cursor':'pointer'})
                    .click($.proxy(function() {
                        /* cases for communication!
-                        * 1. we don't know what the job's linked to - either appJob is null, or appInfo is 
+                        * 1. we don't know what the job's linked to - either jobStatus is null, or jobInfo is 
                         *    missing things.
                         * 2. the job is well formed, and complete.
                         * 3. the job is in an error state.
                         * 4. the job is running
                         */
-                       var id = appInfo.app.id;
-                       if (appJob && appJob.job_state) {
-                           var status = appJob.job_state.toLowerCase();
+                       var id = jobStatus.job_id;
+                       if (jobStatus && jobStatus.job_state) {
+                           var status = jobStatus.job_state.toLowerCase();
                            if (status === 'queued' || status === 'running' || status === 'in-progress') {
                                warningText = "This job is currently running on KBase servers! Removing it will prevent your App from updating, though data is currently being generated and may still appear in your Narrative.";
                            }
@@ -636,12 +635,12 @@
                    .tooltip();
         },
 
-        makeScrollToButton: function(app, appInfo) {
+        makeScrollToButton: function(job, jobInfo) {
             return $('<span data-toggle="tooltip" title="Scroll To App" data-placement="left">')
                    .addClass('btn-xs kb-data-list-more-btn pull-right fa fa-location-arrow')
                    .css({'cursor':'pointer'})
                    .click(function(e) {
-                       var sourceId = appInfo.app.source;
+                       var sourceId = jobInfo.job.source;
                        if (sourceId) {
                            $('html, body').animate({ scrollTop: $('#' + sourceId).offset().top-85 }, 1000);
                            $('#' + sourceId).click();
@@ -700,6 +699,16 @@
 
             return $btn;
         },
+
+
+
+
+
+
+
+
+
+
 
         /**
          * @method makeStatusElement

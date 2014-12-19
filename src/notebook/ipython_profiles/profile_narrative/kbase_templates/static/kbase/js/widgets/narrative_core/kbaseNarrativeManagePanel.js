@@ -33,7 +33,7 @@
         // The set of all data currently loaded into the widget
         loadedData: {},
         options: {
-            title: 'Manage',
+            title: 'Narratives',
             loadingImage: "static/kbase/images/ajax-loader.gif",
             ws_url: "https://kbase.us/services/ws",
             nms_url: "https://kbase.us/services/narrative_method_store/rpc",
@@ -117,6 +117,7 @@
                         self.narData={
                             mine:[],
                             shared:[],
+                            pub:[],
                             temp:[],
                             allWs:[]
                         };
@@ -402,7 +403,7 @@
                                                 var $share = $('<div>');
                                                 // just use the share panel, max height is practically unlimited because we are already
                                                 // in a scrollable pane
-                                                $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none'});
+                                                $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'220px'});
                                                 $shareContainer.append($share);
                                             }
                                         }));

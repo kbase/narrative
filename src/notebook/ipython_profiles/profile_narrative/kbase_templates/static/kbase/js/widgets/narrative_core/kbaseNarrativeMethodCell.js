@@ -187,6 +187,19 @@
             });
         },
 
+        /* temp hack to deal with current state of NJS */
+        getSpecAndParameterInfo: function() {
+            return {
+                methodSpec : this.method,
+                parameterValues: this.getParameters()
+            };
+        },
+
+        setOutput: function(data) {
+            console.log('Creating output cell from data');
+            console.log(data);
+        }
+
     });
 
 })( jQuery );

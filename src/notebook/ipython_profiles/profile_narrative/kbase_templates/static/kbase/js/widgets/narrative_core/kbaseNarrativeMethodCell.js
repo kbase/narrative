@@ -20,7 +20,8 @@
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
-
+        allowOutput: true,
+        runState: 'input',
 
         /**
          * @private
@@ -45,6 +46,7 @@
          */
         render: function() {
             this.$inputDiv = $('<div>');
+            this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
 
             // These are the 'delete' and 'run' buttons for the cell
             this.$runButton = $('<button>')
@@ -56,30 +58,33 @@
             this.$runButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
+                    this.submittedText = 'submitted on ' + this.readableTimestamp();
                     this.trigger('runCell.Narrative', { 
                         cell: IPython.notebook.get_selected_cell(),
                         method: this.method,
                         parameters: this.getParameters()
                     });
+                    this.changeState('submitted');
                 }, this)
             );
 
-            this.$deleteButton = $('<button>')
-                                .attr('id', this.cellId + '-delete')
-                                .attr('type', 'button')
-                                .attr('value', 'Delete')
-                                .addClass('btn btn-default btn-sm')
-                                .append('Delete');
-            this.$deleteButton.click(
-                $.proxy(function(event) {
-                    event.preventDefault();
-                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
-                }, this)
-            );
+            // this.$deleteButton = $('<button>')
+            //                     .attr('id', this.cellId + '-delete')
+            //                     .attr('type', 'button')
+            //                     .attr('value', 'Delete')
+            //                     .addClass('btn btn-default btn-sm')
+            //                     .append('Delete');
+            // this.$deleteButton.click(
+            //     $.proxy(function(event) {
+            //         event.preventDefault();
+            //         this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
+            //     }, this)
+            // );
 
             var $buttons = $('<div>')
                            .addClass('buttons pull-right')
-                           .append(this.$deleteButton)
+                           // .append(this.$deleteButton)
+                           .append(this.$submitted)
                            .append(this.$runButton);
 
 
@@ -121,23 +126,23 @@
                                       .addClass('collapse')
                                       .append(methodDesc));
 
-            var $cellPanel = $('<div>')
-                             .addClass('panel kb-func-panel kb-cell-run')
-                             .attr('id', this.options.cellId)
-                             .append($('<div>')
-                                     .addClass('panel-heading')
-                                     .append($methodInfo))
-                             .append($('<div>')
-                                     .addClass('panel-body')
-                                     .append(this.$inputDiv))
-                             .append($('<div>')
-                                     .addClass('panel-footer')
-                                     .css({'overflow' : 'hidden'})
-                                     .append($progressBar)
-                                     .append($buttons));
+            this.$cellPanel = $('<div>')
+                              .addClass('panel kb-func-panel kb-cell-run')
+                              .attr('id', this.options.cellId)
+                              .append($('<div>')
+                                      .addClass('panel-heading')
+                                      .append($methodInfo))
+                              .append($('<div>')
+                                      .addClass('panel-body')
+                                      .append(this.$inputDiv))
+                              .append($('<div>')
+                                      .addClass('panel-footer')
+                                      .css({'overflow' : 'hidden'})
+                                      .append($progressBar)
+                                      .append($buttons));
 
             $menuSpan.kbaseNarrativeCellMenu();
-            this.$elem.append($cellPanel);
+            this.$elem.append(this.$cellPanel);
 
             var inputWidgetName = this.method.widgets.input;
             if (!inputWidgetName || inputWidgetName === 'null')
@@ -161,7 +166,14 @@
          * @public
          */
         getState: function() {
-            return this.$inputWidget.getState();
+            return {
+                'runningState' : {
+                    'runState' : this.runState,
+                    'submittedText' : this.submittedText,
+                    'outputState' : this.allowOutput
+                },
+                'params' : this.$inputWidget.getState()
+            };
         },
 
         /**
@@ -170,7 +182,63 @@
          * @public
          */
         loadState: function(state) {
-            return this.$inputWidget.loadState(state);
+            // cases (for older ones)
+            // 1. state looks like: 
+            // { params: {},
+            //   runningState: {runState, 
+            //                  submittedText,
+            //                  outputState}
+            // }
+            // That's new!
+            // old one just has the state that should be passed to the input widget.
+            // that'll be deprecated soonish.
+            console.log(state);
+            if (state.hasOwnProperty('params') && state.hasOwnProperty('runningState')) {
+                this.allowOutput = state.runningState.outputState;
+                this.$inputWidget.loadState(state.params);
+                this.submittedText = state.runningState.submittedText;
+                this.changeState(state.runningState);
+            }
+            else 
+                this.$inputWidget.loadState(state);
+        },
+
+        /**
+         * @method
+         * Updates the method cell's state.
+         * Currently supports "input", "submitted", "running", or "complete".
+         */
+        changeState: function(runState) {
+            if (this.runState !== runState) {
+                this.runState = runState.toLowerCase();
+                switch(this.runState) {
+                    case 'submitted':
+                        this.$cellPanel.removeClass('kb-app-step-running');
+                        this.$submitted.html(this.submittedText).show();
+                        this.$runButton.hide();
+                        this.$inputWidget.lockInputs();
+                        break;
+                    case 'complete':
+                        this.$cellPanel.removeClass('kb-app-step-running');
+                        this.$submitted.html(this.submittedText).show();
+                        this.$runButton.hide();
+                        this.$inputWidget.lockInputs();
+                        // maybe unlock? show a 'last run' box?
+                        break;
+                    case 'running':
+                        this.$submitted.html(this.submittedText).show();
+                        this.$cellPanel.addClass('kb-app-step-running');
+                        this.$runButton.hide();
+                        this.$inputWidget.lockInputs();
+                        break;
+                    default:
+                        this.$cellPanel.removeClass('kb-app-step-running');
+                        this.$submitted.hide();
+                        this.$runButton.show();
+                        this.$inputWidget.unlockInputs();
+                        break;
+                }
+            }
         },
 
         /**
@@ -196,10 +264,40 @@
         },
 
         setOutput: function(data) {
-            console.log('Creating output cell from data');
-            console.log(data);
+            if (data.cellId && this.allowOutput) {
+                this.allowOutput = false;
+                this.trigger('createOutputCell.Narrative', data);
+                this.changeState('complete');
+            }
+        },
+
+        /**
+         * Converts a timestamp to a simple string.
+         * Do this American style - HH:MM:SS MM/DD/YYYY
+         *
+         * @param {string} timestamp - a timestamp in number of milliseconds since the epoch.
+         * @return {string} a human readable timestamp
+         */
+        readableTimestamp: function(timestamp) {
+            var format = function(x) {
+                if (x < 10)
+                    x = '0' + x;
+                return x;
+            };
+
+            var d = null;
+            if (timestamp)
+                d = new Date(timestamp);
+            else
+                d = new Date();
+            var hours = format(d.getHours());
+            var minutes = format(d.getMinutes());
+            var seconds = format(d.getSeconds());
+            var month = d.getMonth()+1;
+            var day = format(d.getDate());
+            var year = d.getFullYear();
+
+            return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         }
-
     });
-
 })( jQuery );

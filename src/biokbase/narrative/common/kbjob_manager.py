@@ -99,7 +99,6 @@ class KBjobManager():
                 except Exception as e:
                     import traceback
                     job_states.append({'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
-                    # put dummy stuff in
             elif job_id.startswith('njs:'):
                 try:
                     job_states.append(self.get_app_state(job, job_id))
@@ -108,22 +107,28 @@ class KBjobManager():
                     job_states.append({'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
             else:
                 try:
-                    # 0  job_id job, 
-                    # 1  service_name service, 
+                    # 0  job_id job,
+                    # 1  service_name service,
                     # 2  job_stage stage,
-                    # 3  timestamp started, 
-                    # 4  job_status status, 
+                    # 3  timestamp started,
+                    # 4  job_status status,
                     # 5  timestamp last_update,
-                    # 6  total_progress prog, 
-                    # 7  max_progress max, 
+                    # 6  total_progress prog,
+                    # 7  max_progress max,
                     # 8  progress_type ptype,
-                    # 9  timestamp est_complete, 
-                    # 10 boolean complete, 
+                    # 9  timestamp est_complete,
+                    # 10 boolean complete,
                     # 11 boolean error,
-                    # 12 job_description desc, 
+                    # 12 job_description desc,
                     # 13 Results res
                     ujs_job = self.poll_ujs_job(job_id, ujs_proxy)
-                    job = { 'job_id' : job_id, 'job_state' : ujs_job[4], 'running_step_id' : '', 'step_errors': {}, 'step_outputs': {}, 'widget_output': {}, 'ujs_info' : ujs_job }
+                    job = { 'job_id' : job_id, 
+                            'job_state' : ujs_job[4], 
+                            'running_step_id' : '', 
+                            'step_errors': {}, 
+                            'step_outputs': {}, 
+                            'widget_outputs': ujs_job[13], 
+                            'ujs_info' : ujs_job }
                     if ujs_job[11] == 1:
                         job['job_state'] = 'error'
                         job['error'] = ujs_job[4]

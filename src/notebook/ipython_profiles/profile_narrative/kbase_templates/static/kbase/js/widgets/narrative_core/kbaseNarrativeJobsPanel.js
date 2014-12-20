@@ -514,6 +514,16 @@
             if (job.running_step_id && jobType === 'njs') {
                 $cell.kbaseNarrativeAppCell('setRunningStep', job.running_step_id);
             }
+            else if (jobType === 'ujs' || jobType === 'method') {
+                    // assume we have 'in-progress' or 'running' vs. 'complete' or 'done'
+                var state = job.job_state.toLowerCase();
+                var submitState = 'complete';
+                if (state.indexOf('run') != -1 || state.indexOf('progress') != -1)
+                    submitState = 'running';
+                else if (state.indexOf('queue') != -1 || state.indexOf('submit') != -1)
+                    submitState = 'submitted';
+                $cell.kbaseNarrativeMethodCell('changeState', submitState);
+            }
             if (job.widget_outputs && Object.keys(job.widget_outputs).length > 0) {
                 if (jobType === 'njs') {
                     for (var key in job.widget_outputs) {

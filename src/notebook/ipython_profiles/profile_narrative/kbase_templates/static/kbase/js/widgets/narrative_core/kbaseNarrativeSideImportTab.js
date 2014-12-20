@@ -24,6 +24,7 @@
         selectedType: null,		// selected type name
         widgetPanel: null,		// div for selected type
         widgetPanelCard1: null, // first page with importer type combobox (this page will be put on widgetPanel) 
+        widgetPanelCard2: null, // second page with import widget (this page will be put on widgetPanel) 
         infoPanel: null,
         inputWidget: null,		// widget for selected type
         methodSpec: null,		// method spec-file for selected type
@@ -57,16 +58,68 @@
                     )
                 ));
             self.$elem.append(self.$errorModal);
+            self.$warningModalContent = $('<div>');
+            self.$warningModal =  $('<div tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="z-index: 1000000;">').addClass("modal fade");
+            var confirmButton = $('<button type="button" data-dismiss="modal">').addClass("btn").append("Confirm");
+            confirmButton.click($.proxy(function(event) {
+            	self.stopTimer();
+            	self.back();
+            }, this));
+            self.$warningModal.append(
+                $('<div>').addClass('modal-dialog').append(
+                    $('<div>').addClass('modal-content').append(
+                        $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" id="'+modalLabel+'">User confirmation required.</h4>')
+                    ).append(
+                       $('<div>').addClass('modal-body').append(self.$warningModalContent)
+                    ).append(
+                        $('<div>').addClass('modal-footer').append(confirmButton).append(
+                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Cancel"))
+                    )
+                ));
+            self.$elem.append(self.$warningModal);
+
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
             var upperPanel = $('<div>');
-            this.widgetPanel = $('<div style="margin: 50px 50px 0px 30px;">');
+            this.widgetPanel = $('<div style="margin: 50px 50px 0px 30px; width: 600px;">');
             this.widgetPanelCard1 = $('<div>');
             this.widgetPanel.append(this.widgetPanelCard1);
             this.widgetPanelCard1.append("Use your own data or data from another data source in your narrative. First, select the type of data you wish to import.<hr>");
             
+            var $nameDiv = $('<div>').addClass("kb-method-parameter-name").css("text-align", "left")
+            	.append("DATA TYPE");
+
+            var $dropdown= $('<select>').css({width:"400px"});
+            var $nextButton = $('<button>')
+                              .attr('id', this.cellId + '-next')
+                              .attr('type', 'button')
+                              .attr('value', 'Next')
+                              .addClass('btn btn-primary btn-sm')
+                              .css({'border' : '4px'})
+                              .append('Next');
+            var $hintDiv  = $('<div>').addClass("kb-method-parameter-hint")
+            	.append("Select the type of data you wish to import.");
+
+            $nextButton.click(
+            		$.proxy(function(event) {
+            			event.preventDefault();
+            			var selectedType = $dropdown.val();
+                    	self.showWidget(selectedType);
+            		}, this)
+            );
+            this.widgetPanelCard1
+            	.append('<div style="height: 30px">')
+            	.append($nameDiv)
+            	.append($('<div>').append($dropdown))
+            	.append($hintDiv)
+            	.append('<div style="height: 30px">')
+            	.append($('<div>').append($nextButton));
+            
+            this.widgetPanelCard2 = $('<div style="display: none;">');
+            this.widgetPanel.append(this.widgetPanelCard2);
+
             this.infoPanel = $('<div style="margin: 20px 0px 0px 30px;">');
 
             this.$elem.append(upperPanel);
@@ -96,15 +149,24 @@
                                 		self.methods[specs[i].info.id] = specs[i];
                                 	}
                                 	for (var key in self.types) {
-                                		addButton(key);
+                                		addItem(key);
                                 	}
-                                	
-                                	function addButton(key) {
-                                		var btn = $('<button>' + self.types[key]["name"] + '</button>');
+                                    $dropdown.select2({
+                                        minimumResultsForSearch: -1,
+                                        formatSelection: function(object, container) {
+                                            var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
+                                            return display;
+                                        }
+                                    });
+
+                                	function addItem(key) {
+                                		var name = self.types[key]["name"];
+                                        $dropdown.append($('<option value="'+key+'">').append(name));
+                                		/*var btn = $('<button>' + name + '</button>');
                                     	btn.click(function() {
                                         	self.showWidget(key);                                	
                                     	});
-                                    	self.widgetPanelCard1.append(btn);
+                                    	self.widgetPanelCard1.append(btn);*/
                                 	}
                                 }, this),
                                 $.proxy(function(error) {
@@ -120,10 +182,11 @@
         },
 
         showWidget: function(type) {
-        	console.log("WS name: " + this.wsName);
             var self = this;
             this.selectedType = type;
-        	this.widgetPanel.empty();
+            this.widgetPanelCard1.css('display', 'none');
+        	this.widgetPanelCard2.css('display', '');
+        	this.widgetPanelCard2.empty();
         	//this.widgetPanel.addClass('panel kb-func-panel kb-cell-run')
         	var methodId = this.types[type]["import_method_ids"][0];
         	this.methodSpec = this.methods[methodId];
@@ -161,7 +224,7 @@
                 }, this)
             );
             var $backButton = $('<button>')
-                             .attr('id', this.cellId + '-run')
+                             .attr('id', this.cellId + '-back')
                              .attr('type', 'button')
                              .attr('value', 'Back')
                              .addClass('btn btn-primary btn-sm')
@@ -176,6 +239,7 @@
             var $buttons = $('<div>')
                            .addClass('buttons')
                            .append($runButton)
+                           .append('&nbsp;')
                            .append($backButton);
 
             var $progressBar = $('<div>')
@@ -199,10 +263,10 @@
             var methodDesc = this.methodSpec.info.tooltip;
             var $menuSpan = $('<div class="pull-right">');
             var $methodInfo = $('<div>')
-            .addClass('kb-func-desc')
-            .append('<h1><b>' + this.methodSpec.info.name + '</b></h1>')
-            .append($menuSpan)
-            .append($('<span>')
+                    .addClass('kb-func-desc')
+                    .append('<h1><b>' + this.methodSpec.info.name + '</b></h1>')
+                    .append($menuSpan)
+                    .append($('<span>')
                     .addClass('pull-right kb-func-timestamp')
                     .attr('id', 'last-run'))
             .append($('<h2>')
@@ -210,15 +274,15 @@
                     .addClass('collapse in')
                     .append(methodDesc));
             
-            this.widgetPanel
-            .append($('<div>')
+            this.widgetPanelCard2
+                    .append($('<div>')
                     .addClass('kb-func-panel kb-cell-run')
                     .append($methodInfo))
-            .append("<hr>")
-            .append($('<div>')
+                    .append("<hr>")
+                    .append($('<div>')
                     //.addClass('panel-body')
                     .append($inputDiv))
-            .append($('<div>')
+                    .append($('<div>')
                     //.addClass('panel kb-func-panel kb-cell-run panel-footer')
                     .css({'overflow' : 'hidden'})
                     //.append($progressBar)
@@ -228,10 +292,18 @@
         },
         
         back: function() {
-        	this.stopTimer();
+        	var self = this;
+        	if (self.timer != null) {
+                self.$warningModalContent.empty();
+                self.$warningModalContent.append(
+                		$('<div>').addClass("kb-app-step-error-mssg")
+                			.append('Import process is not finished yet. Are you sure you want to stop watching it?'));
+                self.$warningModal.modal('show');
+        		return;
+        	}
         	this.infoPanel.empty();
-        	this.widgetPanel.empty();
-            this.widgetPanel.append(this.widgetPanelCard1);
+        	this.widgetPanelCard2.css('display', 'none');
+            this.widgetPanelCard1.css('display', '');
         },
         
         runImport: function() {

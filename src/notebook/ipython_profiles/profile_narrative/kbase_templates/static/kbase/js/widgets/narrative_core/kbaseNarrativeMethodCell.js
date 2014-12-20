@@ -192,7 +192,6 @@
             // That's new!
             // old one just has the state that should be passed to the input widget.
             // that'll be deprecated soonish.
-            console.log(state);
             if (state.hasOwnProperty('params') && state.hasOwnProperty('runningState')) {
                 this.allowOutput = state.runningState.outputState;
                 this.$inputWidget.loadState(state.params);

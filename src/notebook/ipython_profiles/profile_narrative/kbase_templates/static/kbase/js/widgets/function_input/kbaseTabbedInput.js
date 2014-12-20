@@ -98,8 +98,6 @@
             var tabNameToIndex = {};
             var tabCount = 0;
             tabPane['kbaseTabs'] = function(funcName, params) {
-            	console.log("funcName=" + funcName);
-            	console.log(params);
             	if (funcName === 'addTab') {
             		tabNameToIndex[params.tab] = tabCount;
             		tabCount++;
@@ -109,12 +107,13 @@
                     	.append(params.tab);
                     $header.append(tabHeader);
                     var tabContent = $('<div>')
-                    	.addClass('kb-side-tab')
+                    	.addClass('kb-side-tab2')
+                    	.css("display", "none")
                     	.append(params.content);
                     $body.append(tabContent);
                     if (params.show) {
                         tabHeader.addClass('active');
-                        tabContent.addClass('active');
+                        tabContent.css('display', '');
                     }
             		tabHeader.click($.proxy(function(event) {
                         event.preventDefault();
@@ -124,8 +123,8 @@
                             var idx = $headerDiv.index();
                             $header.find('div').removeClass('active');
                             $headerDiv.addClass('active');
-                            $body.find('div.kb-side-tab').removeClass('active');
-                            $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
+                            $body.find('div.kb-side-tab2').css('display', 'none');
+                            $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab2').css('display', '');
                         }
                     }, this));
             	}

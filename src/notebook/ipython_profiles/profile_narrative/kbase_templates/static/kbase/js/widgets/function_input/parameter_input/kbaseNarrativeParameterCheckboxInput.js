@@ -75,13 +75,16 @@
                 var inputColClass = "col-md-5";
                 var hintColClass  = "col-md-5";
                 if (self.options.isInSidePanel) {
-                    var inputColClass = "col-md-6";
-                    var hintColClass  = "col-md-4";
+                	nameColClass  = "col-md-12";
+                    inputColClass = "col-md-12";
+                    hintColClass  = "col-md-12";
                 }
                 
                 var $row = $('<div>').addClass("row kb-method-parameter-row")
                                 .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
                 var $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name");
+                if (self.options.isInSidePanel)
+                	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
                 var $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
                                 .append($('<div>').css({"width":"100%","display":"inline-block"}).append($checkboxContainer))
                                 .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));

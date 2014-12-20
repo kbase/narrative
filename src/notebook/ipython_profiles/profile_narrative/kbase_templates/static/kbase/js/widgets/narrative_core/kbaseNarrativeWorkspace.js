@@ -177,8 +177,11 @@
 
             $(document).on('createOutputCell.Narrative',
                 $.proxy(function(event, data) {
+                    console.log('making output cell');
                     var cellIndex = $('#'+data.cellId).nearest('.cell').index();
-                    this.createOutputCell(IPython.notebook.get_cell(cellIndex), data.result);
+                    console.log(cellIndex);
+                    this.createOutputCell(IPython.notebook.get_cell(cellIndex), 
+                        {'embed' : true, 'data' : this.safeJSONStringify(data.result)});
                 }, this)
             );
 
@@ -1648,6 +1651,8 @@
             // Note that an empty object is not null! So if result.data = {}, it'll still do something.
             if (!isError && (!result.embed || result.data === null || result.data === undefined)) {
                 //do something.
+                console.error('Unable to create output cell from supplied data object');
+                console.error(result);
                 return;
             }
 

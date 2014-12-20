@@ -249,34 +249,30 @@
                     continue;
                 var jobType = this.jobTypeFromId(jobInfo.id);
                 uniqueJobs[jobInfo.id] = { 'job' : jobInfo };
-                // if it's a "method:" job, then we need the spec.
-                if (jobType === "method" || jobType === "njs") {
-                    // format method packet.
-                    var $sourceCell = $('#' + jobInfo.source);
-                    var specInfo = null;
-                    if ($sourceCell.length > 0) {
-                        if (jobType === "method") {
-                            specInfo = $sourceCell.kbaseNarrativeMethodCell('getSpecAndParameterInfo');
-                            if (specInfo) {
-                                jobList.push("['" + jobInfo.id + "', " +
-                                             "'" + this.safeJSONStringify(specInfo.methodSpec) + "', " +
-                                             "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
-                            }
+                var $sourceCell = $('#' + jobInfo.source);
+                var specInfo = null;
+                if ($sourceCell.length > 0) {
+                    if (jobType === "njs") {
+                        specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
+                        if (specInfo) {
+                            jobList.push("['" + jobInfo.id + "', " +
+                                         "'" + this.safeJSONStringify(specInfo.appSpec) + "', " +
+                                         "'" + this.safeJSONStringify(specInfo.methodSpecs) + "', " +
+                                         "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
+                        }
+                    }
+                    else {
+                        specInfo = $sourceCell.kbaseNarrativeMethodCell('getSpecAndParameterInfo');
+                        if (specInfo) {
+                            jobList.push("['" + jobInfo.id + "', " +
+                                         "'" + this.safeJSONStringify(specInfo.methodSpec) + "', " +
+                                         "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
                         }
                         else {
-                            specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
-                            if (specInfo) {
-                                jobList.push("['" + jobInfo.id + "', " +
-                                             "'" + this.safeJSONStringify(specInfo.appSpec) + "', " +
-                                             "'" + this.safeJSONStringify(specInfo.methodSpecs) + "', " +
-                                             "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
-                            }
+                            jobList.push("['" + jobInfo.id + "']");
                         }
-                        uniqueJobs[jobInfo.id]['spec'] = specInfo;
                     }
-                }
-                else {
-                    jobList.push("['" + jobInfo.id + "']");
+                    uniqueJobs[jobInfo.id]['spec'] = specInfo;
                 }
             }
 
@@ -377,7 +373,7 @@
                         return (new Date(aTime) < new Date(bTime)) ? 1 : -1;
                     else if (aTime) // if we only have one for a, sort for a
                         return 1;
-                    else            // if aTime is null, but bTime isn't, OR they're both null, then we don't care the order
+                    else            // if aTime is null, but bTime isn't, (OR they're both null), then put b first
                         return -1;
                 });
                 for (var i=0; i<jobStatus.length; i++) {
@@ -441,6 +437,7 @@
                     specType = 'methodSpec';
                     break;
                 default:
+                    specType = 'methodSpec';
                     break;
             }
 
@@ -518,13 +515,15 @@
                 $cell.kbaseNarrativeAppCell('setRunningStep', job.running_step_id);
             }
             if (job.widget_outputs && Object.keys(job.widget_outputs).length > 0) {
-                for (var key in job.widget_outputs) {
-                    if (job.widget_outputs.hasOwnProperty(key)) {
-                        if (jobType === 'njs')
+                if (jobType === 'njs') {
+                    for (var key in job.widget_outputs) {
+                        if (job.widget_outputs.hasOwnProperty(key)) {
                             $cell.kbaseNarrativeAppCell('setStepOutput', key, job.widget_outputs[key]);
-                        else
-                            $cell.kbaseNarrativeMethodCell('setOutput', job.widget_outputs[key]);
+                        }
                     }
+                }
+                else {
+                    $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : job.widget_outputs });
                 }
             }
         },

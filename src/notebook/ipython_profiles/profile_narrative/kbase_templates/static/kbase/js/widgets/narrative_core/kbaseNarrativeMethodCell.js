@@ -20,6 +20,7 @@
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
+        allowOutput: true,
 
 
         /**
@@ -161,7 +162,14 @@
          * @public
          */
         getState: function() {
-            return this.$inputWidget.getState();
+            return {
+                'runningState' : {
+                    'runState' : '',
+                    'submittedText' : '',
+                    'outputState' : this.allowOutput
+                },
+                'params' : this.$inputWidget.getState()
+            };
         },
 
         /**
@@ -170,7 +178,20 @@
          * @public
          */
         loadState: function(state) {
-            return this.$inputWidget.loadState(state);
+            // cases (for older ones)
+            // 1. state looks like: 
+            // { params: {},
+            //   runningState: {runState, 
+            //                  submittedText,
+            //                  outputState}
+            // }
+            // That's new!
+            if (state.hasOwnProperty('params') && state.hasOwnProperty('runningState')) {
+                this.allowOutput = state.runningState.outputState;
+                this.$inputWidget.loadState(state.params);
+            }
+            else 
+                this.$inputWidget.loadState(state);
         },
 
         /**
@@ -196,9 +217,10 @@
         },
 
         setOutput: function(data) {
-            console.log('Creating output cell from data');
-            console.log(data);
-            this.trigger('createMethodOutput.Narrative', { 'cellId' : this.cellId, 'result' : data });
+            if (data.cellId && this.allowOutput) {
+                this.allowOutput = false;
+                this.trigger('createOutputCell.Narrative', data);
+            }
         }
 
     });

@@ -40,8 +40,9 @@
         render: function() {
             var self = this;
             if (self.options.isInSidePanel) {
-                self.inputColClass = "col-md-6";
-                self.hintColClass  = "col-md-4";
+            	self.nameColClass  = "col-md-12";
+                self.inputColClass = "col-md-12";
+                self.hintColClass  = "col-md-12";
             }
 
             var spec = self.spec;
@@ -110,6 +111,8 @@
         addTheAddRowController: function () {
             var self = this;
             var $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
+            if (self.options.isInSidePanel)
+            	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
             var $buttonCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input").append(
                                 $('<button>').addClass("btn btn-default btn-sm")
                                 .append($('<span class="kb-parameter-data-row-add">').addClass("glyphicon glyphicon-plus"))
@@ -173,6 +176,8 @@
             }
                             
             var $nameCol = $('<div>').addClass(self.nameColClass).addClass("kb-method-parameter-name");
+            if (self.options.isInSidePanel)
+            	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
             if (showHint) { $nameCol.append(spec.ui_name); }
             var $inputCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input")
                                 .append($('<div>').css({"width":"100%","display":"inline-block"}).append($input))

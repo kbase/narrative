@@ -491,7 +491,9 @@
 
         createInfoObject: function(info) {
           return { id: info[0], name: info[1], type: info[2], save_date: info[3],
-                       version: info[4], saved_by: info[5], }; // XXX: etc.
+                       version: info[4], saved_by: info[5], 
+                       ws_id: info[6], ws_name: info[7],
+                       chsum: info[8], size: info[9], meta: info[10]};
         },
 
         // ============= end DnD ================

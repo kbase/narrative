@@ -12,6 +12,7 @@ __Changes__
 - When a long running method cell finishes (the job gets output and is marked 'done' or something similar), an output cell is generated beneath it
 - Method and app jobs should be properly deleteable again.
 - Added global 'delete cell' button back to the menu bar.
+- Made major styling and functionality changes to the 'import' panel attached to 'data'
 
 ### Version 0.3.2
 __Changes__

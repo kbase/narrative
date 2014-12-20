@@ -68,7 +68,11 @@
             	}
             	self.tabParamId = tabParamSpec.id;
             	self.tabPane = $('<div/>');
-            	self.tabPane.kbaseTabs({canDelete : true, tabs : []});
+            	if (self.options.isInSidePanel) {
+            		self.buildTabs(self.tabPane);
+            	} else {
+            		self.tabPane.kbaseTabs({canDelete : true, tabs : []});
+            	}
             	self.tabs = {};
             	self.tabParamToSpec = {};
             	var tabCount = 0;
@@ -88,6 +92,47 @@
             self._superMethod('render');
         },
         
+        buildTabs: function(tabPane) {
+            var $header = $('<div>');
+            var $body = $('<div>');
+            var tabNameToIndex = {};
+            var tabCount = 0;
+            tabPane['kbaseTabs'] = function(funcName, params) {
+            	console.log("funcName=" + funcName);
+            	console.log(params);
+            	if (funcName === 'addTab') {
+            		tabNameToIndex[params.tab] = tabCount;
+            		tabCount++;
+            		var tabHeader = $('<div>')
+                    	.addClass('kb-side-header')
+                    	//.css('width', (100/tabs.length)+'%')
+                    	.append(params.tab);
+                    $header.append(tabHeader);
+                    var tabContent = $('<div>')
+                    	.addClass('kb-side-tab')
+                    	.append(params.content);
+                    $body.append(tabContent);
+                    if (params.show) {
+                        tabHeader.addClass('active');
+                        tabContent.addClass('active');
+                    }
+            		tabHeader.click($.proxy(function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        var $headerDiv = $(event.currentTarget);
+                        if (!$headerDiv.hasClass('active')) {
+                            var idx = $headerDiv.index();
+                            $header.find('div').removeClass('active');
+                            $headerDiv.addClass('active');
+                            $body.find('div.kb-side-tab').removeClass('active');
+                            $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
+                        }
+                    }, this));
+            	}
+            };
+            tabPane.append($header).append($body);
+        },
+
         addParameterDiv: function(paramPos, paramSpec, $stepDiv, $optionsDiv, $advancedOptionsDiv, isAdvanced) {
         	var tabId = this.paramIdToTab[paramSpec.id];
         	if (tabId) {

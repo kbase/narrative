@@ -3,6 +3,16 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.3
+__Changes__
+- Long running method calls that produce job ids should now be tracked properly
+- Method cells behave closer to App cells now - once they start running, they're 'locked' if they're a long running job
+  - Long running method cells get a red ring, similar to steps inside an app
+  - The next step is to merge their code bases
+- When a long running method cell finishes (the job gets output and is marked 'done' or something similar), an output cell is generated beneath it
+- Method and app jobs should be properly deleteable again.
+- Added global 'delete cell' button back to the menu bar.
+
 ### Version 0.3.2
 __Changes__
 - Steps toward getting long-running methods (not just apps) working.

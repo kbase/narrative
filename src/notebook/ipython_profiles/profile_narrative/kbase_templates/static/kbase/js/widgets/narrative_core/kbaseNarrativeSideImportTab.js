@@ -23,6 +23,7 @@
         types: null,			// {type_name -> type_spec}
         selectedType: null,		// selected type name
         widgetPanel: null,		// div for selected type
+        widgetPanelCard1: null, // first page with importer type combobox (this page will be put on widgetPanel) 
         infoPanel: null,
         inputWidget: null,		// widget for selected type
         methodSpec: null,		// method spec-file for selected type
@@ -61,8 +62,12 @@
                 this.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
             var upperPanel = $('<div>');
-            this.widgetPanel = $('<div>');
-            this.infoPanel = $('<div>');
+            this.widgetPanel = $('<div style="margin: 50px 50px 0px 30px;">');
+            this.widgetPanelCard1 = $('<div>');
+            this.widgetPanel.append(this.widgetPanelCard1);
+            this.widgetPanelCard1.append("Use your own data or data from another data source in your narrative. First, select the type of data you wish to import.<hr>");
+            
+            this.infoPanel = $('<div style="margin: 20px 0px 0px 30px;">');
 
             this.$elem.append(upperPanel);
             this.$elem.append(this.widgetPanel);
@@ -99,7 +104,7 @@
                                     	btn.click(function() {
                                         	self.showWidget(key);                                	
                                     	});
-                                		upperPanel.append(btn);
+                                    	self.widgetPanelCard1.append(btn);
                                 	}
                                 }, this),
                                 $.proxy(function(error) {
@@ -119,7 +124,7 @@
             var self = this;
             this.selectedType = type;
         	this.widgetPanel.empty();
-        	this.widgetPanel.addClass('panel kb-func-panel kb-cell-run')
+        	//this.widgetPanel.addClass('panel kb-func-panel kb-cell-run')
         	var methodId = this.types[type]["import_method_ids"][0];
         	this.methodSpec = this.methods[methodId];
             var inputWidgetName = this.methodSpec.widgets.input;
@@ -133,7 +138,7 @@
             var $runButton = $('<button>')
                              .attr('id', this.cellId + '-run')
                              .attr('type', 'button')
-                             .attr('value', 'Run')
+                             .attr('value', 'Import')
                              .addClass('btn btn-primary btn-sm')
                              .append('Import');
             $runButton.click(
@@ -152,14 +157,26 @@
                         }
                         self.$errorModalContent.append($errorStep);
                         self.$errorModal.modal('show');
-                        return false;
                     }
+                }, this)
+            );
+            var $backButton = $('<button>')
+                             .attr('id', this.cellId + '-run')
+                             .attr('type', 'button')
+                             .attr('value', 'Back')
+                             .addClass('btn btn-primary btn-sm')
+                             .append('Back');
+            $backButton.click(
+                $.proxy(function(event) {
+                	event.preventDefault();
+                	self.back();
                 }, this)
             );
 
             var $buttons = $('<div>')
-                           .addClass('buttons pull-right')
-                           .append($runButton);
+                           .addClass('buttons')
+                           .append($runButton)
+                           .append($backButton);
 
             var $progressBar = $('<div>')
                                .attr('id', 'kb-func-progress')
@@ -188,32 +205,33 @@
             .append($('<span>')
                     .addClass('pull-right kb-func-timestamp')
                     .attr('id', 'last-run'))
-            .append($('<button>')
-                    .addClass('btn btn-default btn-xs')
-                    .attr('type', 'button')
-                    .attr('data-toggle', 'collapse')
-                    .attr('data-target', '#' + methodId)
-                    .append(buttonLabel))
             .append($('<h2>')
                     .attr('id', methodId)
-                    .addClass('collapse')
+                    .addClass('collapse in')
                     .append(methodDesc));
-
             
             this.widgetPanel
             .append($('<div>')
-                    .addClass('panel-heading')
+                    .addClass('kb-func-panel kb-cell-run')
                     .append($methodInfo))
+            .append("<hr>")
             .append($('<div>')
-                    .addClass('panel-body')
+                    //.addClass('panel-body')
                     .append($inputDiv))
             .append($('<div>')
-                    .addClass('panel-footer')
+                    //.addClass('panel kb-func-panel kb-cell-run panel-footer')
                     .css({'overflow' : 'hidden'})
-                    .append($progressBar)
+                    //.append($progressBar)
                     .append($buttons));
             
             this.inputWidget = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
+        },
+        
+        back: function() {
+        	this.stopTimer();
+        	this.infoPanel.empty();
+        	this.widgetPanel.empty();
+            this.widgetPanel.append(this.widgetPanelCard1);
         },
         
         runImport: function() {
@@ -225,7 +243,7 @@
             	var paramValue = paramValueArray[i];
             	params[paramId] = paramValue;
         	}
-        	console.log(params);
+        	//console.log(params);
         	//alert(JSON.stringify(params));
             var uploaderClient = new Transform(this.uploaderURL, {'token': self.token});
             if (self.selectedType === 'KBaseGenomes.Genome') {
@@ -241,11 +259,11 @@
             				'kb_type': 'KBaseGenomes.Genome', 
             				'in_id': params['gbkFile'], 
             				'ws_name': self.wsName, 
-            				'obj_name': params['outputObject'], 
-            				'opt_args': '{"validator":{},"transformer":{"contigset_ref":"'+self.wsName+'/'+contigsetId+'"}}'}
+            				'obj_name': params['outputObject']};
+            				//'opt_args': '{"validator":{},"transformer":{"contigset_ref":"'+self.wsName+'/'+contigsetId+'"}}'}
             		console.log(args);
     				self.showInfo("Sending data...", true);
-            		uploaderClient.upload({},
+            		uploaderClient.upload(args,
             				$.proxy(function(data) {
             					console.log(data);
             					self.waitForJob(data[1]);
@@ -273,43 +291,52 @@
         			console.log(data);
         			var state = data['state'];
         			if (state === 'completed') {  // Done
-        				clearInterval(self.timer);
+        				self.stopTimer();
         				self.showInfo("Import job is done");
         			} else if (state === 'suspended') {  // Error
-        				clearInterval(self.timer);
+        				self.stopTimer();
         				self.showError("Unexpected error");
         			} else {
         				self.showInfo("Import job has status: " + state, true);
         			}
         		}, function(error) {
-    				clearInterval(self.timer);
+    				self.stopTimer();
     				console.log(error);
         		});
         	};*/
             var jobSrv = new UserAndJobState(self.ujsURL, {'token': self.token});
         	var timeLst = function(event) {
         		jobSrv.get_job_status(jobId, function(data) {
+        			console.log(data);
         			var status = data[2];
         			var complete = data[5];
         			var wasError = data[6];
         			if (complete === 1) {
-        				clearInterval(self.timer);
+        				self.stopTimer();
         				if (wasError === 0) {
             				self.showInfo("Import job is done");
         				} else {
-            				self.showError("Error: " + status);
+            				self.showError(status);
         				}
         			} else {
         				self.showInfo("Import job has status: " + status, true);
         			}
         		}, function(data) {
-    				clearInterval(self.timer);
+        			self.stopTimer();
     				console.log(data.error.message);
         		});
         	};
         	self.timer = setInterval(timeLst, 5000);
         	timeLst();
         },
+        
+        stopTimer: function() {
+        	var self = this;
+			if (self.timer != null) {
+				clearInterval(self.timer);
+				self.timer = null;
+			}
+		},
         
         showError: function(error) {
         	console.log(error);

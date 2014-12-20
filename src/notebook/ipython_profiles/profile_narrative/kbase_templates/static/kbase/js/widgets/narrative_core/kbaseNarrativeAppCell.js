@@ -272,7 +272,6 @@
         // stepSpec - the spec from the narrative method store
         // stepHeading - something to show in front of the method title, e.g. Step 1, Step 2 ...
         renderStepDiv: function (stepId, stepSpec, stepHeading) {
-            
             var $stepPanel = $("<div>").addClass('kb-app-step-container');
             
             var $statusPanel = $('<div>');
@@ -562,8 +561,6 @@
             }
             return;
         },
-
-        
         
         /** methods for setting the app state based on the job status **/
         setRunningStep: function(stepId) {

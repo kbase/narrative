@@ -35,6 +35,10 @@ $('#kb-kernel-ref-btn').click(function(e) {
         IPython.notebook.kernel.restart();
     }
 });
+$('#kb-del-btn').click(function(e) {
+    if (IPython && IPython.notebook)
+        IPython.notebook.delete_cell();
+});
 
 (function() {
     var $dataList = $('<div>');

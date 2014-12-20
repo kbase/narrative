@@ -111,6 +111,11 @@
                             var appIds = IPython.notebook.metadata.job_ids.apps;
                             appIds = appIds.filter(function(val) { return val.id !== removeId });
                             IPython.notebook.metadata.job_ids.apps = appIds;
+
+                            var methodIds = IPython.notebook.metadata.job_ids.methods;
+                            methodIds = methodIds.filter(function(val) { return val.id !== removeId });
+                            IPython.notebook.metadata.job_ids.methods = methodIds;
+
                             this.refresh(false);
                             this.removeId = null;
                         }
@@ -249,34 +254,30 @@
                     continue;
                 var jobType = this.jobTypeFromId(jobInfo.id);
                 uniqueJobs[jobInfo.id] = { 'job' : jobInfo };
-                // if it's a "method:" job, then we need the spec.
-                if (jobType === "method" || jobType === "njs") {
-                    // format method packet.
-                    var $sourceCell = $('#' + jobInfo.source);
-                    var specInfo = null;
-                    if ($sourceCell.length > 0) {
-                        if (jobType === "method") {
-                            specInfo = $sourceCell.kbaseNarrativeMethodCell('getSpecAndParameterInfo');
-                            if (specInfo) {
-                                jobList.push("['" + jobInfo.id + "', " +
-                                             "'" + this.safeJSONStringify(specInfo.methodSpec) + "', " +
-                                             "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
-                            }
+                var $sourceCell = $('#' + jobInfo.source);
+                var specInfo = null;
+                if ($sourceCell.length > 0) {
+                    if (jobType === "njs") {
+                        specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
+                        if (specInfo) {
+                            jobList.push("['" + jobInfo.id + "', " +
+                                         "'" + this.safeJSONStringify(specInfo.appSpec) + "', " +
+                                         "'" + this.safeJSONStringify(specInfo.methodSpecs) + "', " +
+                                         "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
+                        }
+                    }
+                    else {
+                        specInfo = $sourceCell.kbaseNarrativeMethodCell('getSpecAndParameterInfo');
+                        if (specInfo) {
+                            jobList.push("['" + jobInfo.id + "', " +
+                                         "'" + this.safeJSONStringify(specInfo.methodSpec) + "', " +
+                                         "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
                         }
                         else {
-                            specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
-                            if (specInfo) {
-                                jobList.push("['" + jobInfo.id + "', " +
-                                             "'" + this.safeJSONStringify(specInfo.appSpec) + "', " +
-                                             "'" + this.safeJSONStringify(specInfo.methodSpecs) + "', " +
-                                             "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
-                            }
+                            jobList.push("['" + jobInfo.id + "']");
                         }
-                        uniqueJobs[jobInfo.id]['spec'] = specInfo;
                     }
-                }
-                else {
-                    jobList.push("['" + jobInfo.id + "']");
+                    uniqueJobs[jobInfo.id]['spec'] = specInfo;
                 }
             }
 
@@ -353,7 +354,7 @@
                 return;
             }
 
-            console.log([jobStatus, jobInfo]);
+            // console.log([jobStatus, jobInfo]);
 
             var storedIds = {};
             for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {
@@ -368,8 +369,18 @@
             if (jobStatus.length === 0 && Object.keys(storedIds).length === 0) {
                 $jobsList.append($('<div class="kb-data-loading">').append('No running jobs!'));                
             }
-
             else {
+                jobStatus.sort(function(a, b) {
+                    var aTime = jobInfo[a.job_id].job.timestamp;
+                    var bTime = jobInfo[b.job_id].job.timestamp;
+                    // if we have timestamps for both, compare them
+                    if (aTime && bTime)
+                        return (new Date(aTime) < new Date(bTime)) ? 1 : -1;
+                    else if (aTime) // if we only have one for a, sort for a
+                        return 1;
+                    else            // if aTime is null, but bTime isn't, (OR they're both null), then put b first
+                        return -1;
+                });
                 for (var i=0; i<jobStatus.length; i++) {
                     var job = jobStatus[i];
                     var info = jobInfo[job.job_id];
@@ -419,8 +430,8 @@
             // jobinfo: {
             //     job: { id, source, target, timestamp },
             //     spec: { appSpec?, methodSpec?, methodSpecs?, parameterValues }
-            // type=njs: appSpec, methodSpecs
-            // type=method: methodSpec
+            //     type=njs: appSpec, methodSpecs
+            //     type=method: methodSpec
             // }
             var specType = null;
             switch(jobType) {
@@ -431,6 +442,7 @@
                     specType = 'methodSpec';
                     break;
                 default:
+                    specType = 'methodSpec';
                     break;
             }
 
@@ -507,14 +519,26 @@
             if (job.running_step_id && jobType === 'njs') {
                 $cell.kbaseNarrativeAppCell('setRunningStep', job.running_step_id);
             }
+            else if (jobType === 'ujs' || jobType === 'method') {
+                    // assume we have 'in-progress' or 'running' vs. 'complete' or 'done'
+                var state = job.job_state.toLowerCase();
+                var submitState = 'complete';
+                if (state.indexOf('run') != -1 || state.indexOf('progress') != -1)
+                    submitState = 'running';
+                else if (state.indexOf('queue') != -1 || state.indexOf('submit') != -1)
+                    submitState = 'submitted';
+                $cell.kbaseNarrativeMethodCell('changeState', submitState);
+            }
             if (job.widget_outputs && Object.keys(job.widget_outputs).length > 0) {
-                for (var key in job.widget_outputs) {
-                    if (job.widget_outputs.hasOwnProperty(key)) {
-                        if (jobType === 'njs')
+                if (jobType === 'njs') {
+                    for (var key in job.widget_outputs) {
+                        if (job.widget_outputs.hasOwnProperty(key)) {
                             $cell.kbaseNarrativeAppCell('setStepOutput', key, job.widget_outputs[key]);
-                        else 
-                            $cell.kbaseNarrativeMethodCell('setOutput', job.widget_outputs[key]);
+                        }
                     }
+                }
+                else {
+                    $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : job.widget_outputs });
                 }
             }
         },
@@ -699,16 +723,6 @@
 
             return $btn;
         },
-
-
-
-
-
-
-
-
-
-
 
         /**
          * @method makeStatusElement

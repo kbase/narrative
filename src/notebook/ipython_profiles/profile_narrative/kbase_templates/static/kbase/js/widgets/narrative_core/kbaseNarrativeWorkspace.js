@@ -231,6 +231,10 @@
             var self = this;
             var code = '';
             var showOutput = true;
+            // if there's a job_id_output_field in the method, then it's long-running, and we shouldn't show an output cell right away.
+            // ...or maybe show a temporary one?
+            if (data.method.job_id_output_field && data.method.job_id_output_field != null)
+                showOutput = false;
             // old, pre-njs style where the methods were all living in IPython-land
             if (data.method.behavior.python_class && data.method.behavior.python_function) {
                 code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
@@ -239,7 +243,6 @@
             else if ((data.method.behavior.kb_service_method && data.method.behavior.kb_service_name) ||
                      (data.method.behavior.script_module && data.method.behavior.script_name)) {
                 code = this.buildGenericRunCommand(data);
-                showOutput = false;
             }
             else {
                 // something else!

@@ -561,8 +561,6 @@
             }
             return;
         },
-
-        
         
         /** methods for setting the app state based on the job status **/
         setRunningStep: function(stepId) {

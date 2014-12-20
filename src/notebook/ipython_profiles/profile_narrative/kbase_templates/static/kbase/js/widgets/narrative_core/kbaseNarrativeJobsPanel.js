@@ -111,6 +111,11 @@
                             var appIds = IPython.notebook.metadata.job_ids.apps;
                             appIds = appIds.filter(function(val) { return val.id !== removeId });
                             IPython.notebook.metadata.job_ids.apps = appIds;
+
+                            var methodIds = IPython.notebook.metadata.job_ids.methods;
+                            methodIds = methodIds.filter(function(val) { return val.id !== removeId });
+                            IPython.notebook.metadata.job_ids.methods = methodIds;
+
                             this.refresh(false);
                             this.removeId = null;
                         }
@@ -349,7 +354,7 @@
                 return;
             }
 
-            console.log([jobStatus, jobInfo]);
+            // console.log([jobStatus, jobInfo]);
 
             var storedIds = {};
             for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {
@@ -718,16 +723,6 @@
 
             return $btn;
         },
-
-
-
-
-
-
-
-
-
-
 
         /**
          * @method makeStatusElement

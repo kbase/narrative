@@ -358,12 +358,15 @@
                     mineSelected = [], btn.show();
                 else if ($(this).index() == 1)
                     sharedSelected = [], btn.show();
+                else if ($(this).index() == 2)
+                    publicSelected = [], btn.show();
                 else
                     btn.hide();
 
                 // reset checkboxs... for any tabs.
-                minePanel.find('.kb-import-checkbox').prop('checked', false)
-                sharedPanel.find('.kb-import-checkbox').prop('checked', false)
+                minePanel.find('.kb-import-checkbox').prop('checked', false);
+                sharedPanel.find('.kb-import-checkbox').prop('checked', false);
+                publicPanel.find('.kb-import-checkbox').prop('checked', false);
                 btn.prop('disabled', true);
             })
 

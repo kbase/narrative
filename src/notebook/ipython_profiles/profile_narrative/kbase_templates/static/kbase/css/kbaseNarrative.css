@@ -1912,8 +1912,9 @@ div[class="tooltip-inner"] {
     height: 70px;
 }
 
-.kb-overlay-footer .btn-primary {
-    margin: 20px;
+.kb-overlay-footer .btn-primary,
+.kb-overlay-footer .btn-default {
+    margin: 15px 15px 0 0;
 }
 
 

@@ -278,8 +278,33 @@
                 sharedWorkspaces = [];
 
             // model for selected objects to import
-            var mineSelected = [];
-            var sharedSelected = [];
+            var mineSelected = [],
+                sharedSelected = [];
+
+            var types = ["KBaseGenomes.Genome",
+                         "KBaseSearch.GenomeSet",
+                         "KBaseFBA.FBA",
+                         "KBaseExpression.ExpressionSample",
+                         "KBaseFBA.FBAModel",
+                         "KBaseFBA.ModelTemplate",
+                         "KBaseFBA.ReactionSensitivityAnalysis",
+                         "KBaseNarrative.Narrative",
+                         "KBaseGenomes.Pangenome",
+                         "KBaseGenomes.ContigSet",
+                         "KBaseGenomes.MetagenomeAnnotation",
+                         "KBaseAssembly.AssemblyInput",
+                         "Communities.SequenceFile",
+                         "KBaseFBA.PromConstraint",
+                         "KBaseExpression.ExpressionSeries",
+                         "KBasePhenotypes.PhenotypeSimulationSet",
+                         "KBasePhenotypes.PhenotypeSet",
+                         "KBaseBiochem.Media",
+                         "KBaseFBA.ETC",
+                         "KBaseTrees.Tree",
+                         "KBaseGenomes.GenomeComparison",
+                         "GenomeComparison.ProteomeComparison",
+                         "KBaseRegulation.Regulome",
+                         "KBaseGenomes.GenomeDomainData"];
 
             // tab panels
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
@@ -308,13 +333,14 @@
             var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
             var ws = new Workspace(this.options.workspaceURL, auth);
 
-            // add footer status container and button
+            // add footer status container and buttons
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
             var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
-            footer.append(btn);
+            var closeBtn = $('<button class="btn btn-default pull-right">Close</button>');
 
-
+            closeBtn.click(function() { self.hideOverlay(); })
+            footer.append(btn, closeBtn);
 
             // start with my data, then fetch other data
             // this is because data sets can be large and
@@ -324,6 +350,22 @@
             updateView('mine').done(function() {
                 updateView('shared');
             });
+
+            // events for changing tabs
+            $($tabs.header.find('.kb-side-header')).click(function() {
+                // reset selected models when changing tabs, if that's what is wanted
+                if ($(this).index() == 0)
+                    mineSelected = [], btn.show();
+                else if ($(this).index() == 1)
+                    sharedSelected = [], btn.show();
+                else
+                    btn.hide();
+
+                // reset checkboxs... for any tabs.
+                minePanel.find('.kb-import-checkbox').prop('checked', false)
+                sharedPanel.find('.kb-import-checkbox').prop('checked', false)
+                btn.prop('disabled', true);
+            })
 
             var narrativeNameLookup={};
 
@@ -335,7 +377,7 @@
                 return $.when(p).done(function(workspaces) {
                     if (view == 'mine') prom = getMyData(workspaces);
                     else if (view == 'shared') prom = getSharedData(workspaces);
-                    $.when(prom).done(function(filterOptions) {
+                    $.when(prom).done(function() {
                         if (view == 'mine') {
                             minePanel.rmLoading();
                             addMyFilters();
@@ -349,12 +391,16 @@
 
 
             // function used to update my data list
-            function getMyData(workspaces) {
+            function getMyData(workspaces, type) {
                 // clear view
                 var ws_ids = []
                 for (var i in workspaces) ws_ids.push(workspaces[i].id);
 
-                var p = ws.list_objects({ids: ws_ids});
+                if (type)
+                    var p = ws.list_objects({ids: ws_ids, type: type});
+                else
+                    var p = ws.list_objects({ids: ws_ids});
+
                 return $.when(p).then(function(d) {
                     // update model
                     myData = d;
@@ -371,9 +417,10 @@
                 // remove items from only current container being rendered
                 container.find('.kb-import-items').remove();
 
-                if (data.length == 0)
+                if (data.length == 0){
                     container.append('<div class="kb-import-items text-muted">No data found</div>');
-                else if (data.length-1 < end)
+                    return
+                } else if (data.length-1 < end)
                     end = data.length;
 
                 var rows = buildMyRows(data, start, end);
@@ -392,11 +439,16 @@
             }
 
             // function used to update my data list
-            function getSharedData(workspaces) {
+            function getSharedData(workspaces, type) {
                 // clear view
                 var ws_ids = []
                 for (var i in workspaces) ws_ids.push(workspaces[i].id);
-                var p = ws.list_objects({ids: ws_ids});
+
+                if (type)
+                    var p = ws.list_objects({ids: ws_ids, type: type});
+                else
+                    var p = ws.list_objects({ids: ws_ids});
+
                 return $.when(p).then(function(d) {
                     // update model
                     sharedData = d;
@@ -498,7 +550,6 @@
                         }
                     }
 
-                    console.log('selected', selected)
                     // disable/enable button
                     if (selected.length > 0) btn.prop('disabled', false);
                     else btn.prop('disabled', true);
@@ -507,17 +558,14 @@
                 // import items on button click
                 btn.unbind('click');
                 btn.click(function() {
-                    console.log('clicked!', selected)
                     if (selected.length == 0) return;
 
                     //uncheck all checkboxes, disable b
                     $('.kb-import-checkbox').prop('checked', false);
                     $(this).prop('disabled', true);
 
-                    console.log('copying objects')
                     var proms = copyObjects(selected, narWSName);
                     $.when.apply($, proms).done(function(data) {
-                        console.log('done', data)
                         importStatus.html('');
                         var status = $('<span class="text-success">done.</span>');
                         importStatus.append(status);
@@ -586,7 +634,7 @@
 
 
             function addMyFilters() {
-                var types = typeList(myData);
+                //var types = typeList(myData);
                 var wsList = myWorkspaces;
 
                 // possible filters via input
@@ -625,8 +673,12 @@
                 typeInput.change(function() {
                     type = $(this).children('option:selected').data('type');
 
-                    var filtered = filterData(myData, {type: type, ws:ws, query:query})
-                    render(filtered, minePanel, mineSelected);
+                    // request again with filted type
+                    minePanel.find('.kb-import-items').remove();
+                    minePanel.loading();
+                    getMyData(myWorkspaces, type).done(function() {
+                        minePanel.rmLoading();
+                    })
                 })
 
 
@@ -649,7 +701,7 @@
             }
 
             function addSharedFilters() {
-                var types = typeList(sharedData);
+                //var types = typeList(sharedData);
                 var wsList = sharedWorkspaces
 
                 // possible filters via input
@@ -688,8 +740,12 @@
                 typeInput.change(function() {
                     type = $(this).children('option:selected').data('type');
 
-                    var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
-                    render(filtered, sharedPanel, sharedSelected);
+                    // request again with filted type
+                    sharedPanel.find('.kb-import-items').remove();
+                    sharedPanel.loading();
+                    getSharedData(sharedWorkspaces, type).done(function() {
+                        sharedPanel.rmLoading();
+                    })
                 })
 
 

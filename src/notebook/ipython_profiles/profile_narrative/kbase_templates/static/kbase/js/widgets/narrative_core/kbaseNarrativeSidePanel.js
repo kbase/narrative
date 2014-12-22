@@ -435,12 +435,12 @@
             }
 
             // function used to update shared with me data list
-            function getPublicData(workspace) {
+            function getPublicData(workspace, template) {
                 var p = ws.list_objects({workspaces: [workspace]});
                 return $.when(p).then(function(d) {
                     // update model
                     publicData = d;
-                    render(publicData, publicPanel, publicSelected);
+                    render(publicData, publicPanel, publicSelected, template);
                 })
             }
 
@@ -448,7 +448,7 @@
             // This function takes data to render and
             // a container to put data in.
             // It produces a scrollable dataset
-            function render(data, container, selected) {
+            function render(data, container, selected, template) {
                 var start = 0, end = 9;
 
                 // remove items from only current container being rendered
@@ -460,7 +460,7 @@
                 } else if (data.length-1 < end)
                     end = data.length;
 
-                var rows = buildMyRows(data, start, end);
+                var rows = buildMyRows(data, start, end, template);
                 container.append(rows);
                 events(container, selected);
 
@@ -468,7 +468,7 @@
                 container.unbind('scroll');
                 container.on('scroll', function() {
                     if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
-                        var rows = buildMyRows(data, start, end);
+                        var rows = buildMyRows(data, start, end, template);
                         container.append(rows);
                     }
                     events(container, selected);
@@ -625,7 +625,7 @@
             }
 
 
-            function buildMyRows(data, start, end) {
+            function buildMyRows(data, start, end, template) {
 
                 // add each set of items to container to be added to DOM
                 var rows = $('<div class="kb-import-items">');
@@ -644,7 +644,10 @@
                                 ws: obj[7],
                                 relativeTime: kb.ui.relativeTime( kb.ui.getTimestamp(obj[3]) ) }
 
-                    var item = rowTemplate(item);
+                    if (template)
+                        var item = template(item);
+                    else
+                        var item = rowTemplate(item);
 
                     rows.append(item);
                 }
@@ -828,6 +831,37 @@
                 return item;
             }
 
+            function publicTemplate(obj) {
+                var item = $('<div class="kb-import-item">')
+                                .data('ref', obj.wsID+'.'+obj.id)
+                                .data('obj-name', obj.name);
+                item.append('<input type="checkbox" value="" class="pull-left kb-import-checkbox">');
+                item.append('<a class="h4" href="'+
+                                objURL(obj.module, obj.kind, obj.ws, obj.name)+
+                                '" target="_blank">'+obj.name+'</a>'+
+                            '<span class="kb-data-list-version">v'+obj.version+'</span>');
+
+                item.append('<br>');
+
+                item.append('<div class="kb-import-info">'+
+                                '<span>TYPE</span><br>'+
+                                '<b>'+obj.kind+'</b>'+
+                            '</div>');
+                var narName = obj.ws;
+                if (narrativeNameLookup[obj.ws]) {
+                    narName = narrativeNameLookup[obj.ws];
+                }
+
+                item.append('<div class="kb-import-info">'+
+                                '<span>LAST MODIFIED</span><br>'+
+                                '<b>'+obj.relativeTime+'</b>'+
+                            '</div>');
+                item.append('<br><hr>')
+
+                return item;
+            }
+
+
 
             function objURL(module, type, ws, name) {
                 var mapping = window.kbconfig.landing_page_map;
@@ -843,7 +877,7 @@
 
 
             function publicView() {
-                getPublicData('pubSEEDGenomes');
+                getPublicData('pubSEEDGenomes', publicTemplate);
 
                 var publicList = {'Genomes': 'pubSEEDGenomes',
                                   'Media': 'KBaseMedia',
@@ -868,7 +902,7 @@
                     // request again with filted type
                     publicPanel.find('.kb-import-items').remove();
                     publicPanel.loading();
-                    getPublicData(ws).done(function() {
+                    getPublicData(ws, publicTemplate).done(function() {
                         publicPanel.rmLoading();
                     })
                 })

@@ -83,7 +83,7 @@
 
             if (this.autorender) {
                 this.render();
-            } 
+            }
             else {
 
             }
@@ -96,7 +96,7 @@
          * @method
          * @private
          * Builds a very simple set of tabs.
-         * @param {Array} tabs - a list of objects where each has a 'tabName' and 'content' property. 
+         * @param {Array} tabs - a list of objects where each has a 'tabName' and 'content' property.
          * As you might expect, 'tabName' is the name of the tab that goes into the styled header,
          * and 'content' is the tab content, expected to be something that can be attached via .append()
          * @param isOuter - if true, treat these tabs as though they belong to the outer side panel,
@@ -147,7 +147,7 @@
             var self = this;
 
             this.$overlayBody = $('<div class="kb-overlay-body">');
-            this.$overlayFooter  = $('<div>'); // class="kb-overlay-footer">'); // this seems to add strange footer line in my browser
+            this.$overlayFooter  = $('<div class="kb-overlay-footer">');
             this.$overlay = $('<div>')
                             .addClass('kb-side-overlay-container')
                             .append(this.$overlayBody)
@@ -275,8 +275,33 @@
                 sharedWorkspaces = [];
 
             // model for selected objects to import
-            var mineSelected = [];
-            var sharedSelected = [];
+            var mineSelected = [],
+                sharedSelected = [],
+                publicSelected = [];
+
+            var types = ["KBaseGenomes.Genome",
+                         "KBaseSearch.GenomeSet",
+                         "KBaseFBA.FBA",
+                         "KBaseExpression.ExpressionSample",
+                         "KBaseFBA.FBAModel",
+                         "KBaseFBA.ModelTemplate",
+                         "KBaseFBA.ReactionSensitivityAnalysis",
+                         "KBaseNarrative.Narrative",
+                         "KBaseGenomes.Pangenome",
+                         "KBaseGenomes.ContigSet",
+                         "KBaseGenomes.MetagenomeAnnotation",
+                         "KBaseAssembly.AssemblyInput",
+                         "Communities.SequenceFile",
+                         "KBaseFBA.PromConstraint",
+                         "KBaseExpression.ExpressionSeries",
+                         "KBasePhenotypes.PhenotypeSimulationSet",
+                         "KBasePhenotypes.PhenotypeSet",
+                         "KBaseBiochem.Media",
+                         "KBaseTrees.Tree",
+                         "KBaseGenomes.GenomeComparison",
+                         "GenomeComparison.ProteomeComparison",
+                         "KBaseRegulation.Regulome",
+                         "KBaseGenomes.GenomeDomainData"];
 
             // tab panels
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
@@ -294,7 +319,6 @@
                     {tabName: 'Import', content: importPanel},
                 ]);
 
-            publicPanel.append('<div class="kb-import-content"><br>coming soon.</div>');
             importPanel.kbaseNarrativeSideImportTab({});
             examplePanel.kbaseNarrativeExampleDataTab({});
 
@@ -305,28 +329,45 @@
             var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
             var ws = new Workspace(this.options.workspaceURL, auth);
 
-            // add footer status container and button
+            // add footer status container and buttons
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
-            var addMineBtn = $('<button class="btn btn-primary kb-import-search" style="margin-top:0" disabled>Add to Narrative</button>');
-            minePanel.append($('<div class="row">')
-                             .append($('<div class="col-sm-4">')
-                                     .append(addMineBtn)));
+            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
+            var closeBtn = $('<button class="btn btn-default pull-right">Close</button>');
 
-            var addSharedBtn = $('<button class="btn btn-primary kb-import-search" style="margin-top:0" disabled>Add to Narrative</button>');
-            sharedPanel.append($('<div class="row">')
-                               .append($('<div class="col-sm-4">')
-                                       .append(addSharedBtn)));
-            body.append(footer);
+            closeBtn.click(function() { self.hideOverlay(); })
+            footer.append(btn, closeBtn);
 
             // start with my data, then fetch other data
-            // this is because data sets can be large and 
+            // this is because data sets can be large and
             // makes things more fluid
             minePanel.loading();
             sharedPanel.loading();
             updateView('mine').done(function() {
-                updateView('shared');
+                updateView('shared')
             });
+
+            // some placeholder for the public panel
+            publicView();
+
+            // events for changing tabs
+            $($tabs.header.find('.kb-side-header')).click(function() {
+                // reset selected models when changing tabs, if that's what is wanted
+                if ($(this).index() == 0)
+                    mineSelected = [], btn.show();
+                else if ($(this).index() == 1)
+                    sharedSelected = [], btn.show();
+                else if ($(this).index() == 2)
+                    publicSelected = [], btn.show();
+                else
+                    btn.hide();
+
+                // reset checkboxs... for any tabs.
+                minePanel.find('.kb-import-checkbox').prop('checked', false);
+                sharedPanel.find('.kb-import-checkbox').prop('checked', false);
+                publicPanel.find('.kb-import-checkbox').prop('checked', false);
+                btn.prop('disabled', true);
+            })
 
             var narrativeNameLookup={};
 
@@ -338,84 +379,100 @@
                 return $.when(p).done(function(workspaces) {
                     if (view == 'mine') prom = getMyData(workspaces);
                     else if (view == 'shared') prom = getSharedData(workspaces);
-                    $.when(prom).done(function(filterOptions) {
+                    $.when(prom).done(function() {
                         if (view == 'mine') {
-                            minePanel.rmLoading();                            
+                            minePanel.rmLoading();
                             addMyFilters();
                         } else if(view == 'shared') {
-                            sharedPanel.rmLoading();                            
+                            sharedPanel.rmLoading();
                             addSharedFilters();
                         }
                     });
                 });
             }
 
-
             // function used to update my data list
-            function getMyData(workspaces) {
-                // clear view
-                var ws_ids = []
-                for (var i in workspaces) ws_ids.push(workspaces[i].id);
+            function getMyData(workspaces, type, ws_name) {
+                var params = {};
+                if (!ws_name) {
+                    var ws_ids = [];
+                    for (var i in workspaces) ws_ids.push(workspaces[i].id);
 
-                var p = ws.list_objects({ids: ws_ids});
+                    params.ids = ws_ids;
+                } else
+                    params.workspaces = [ws_name];
+
+                if (type) params.type = type;
+
+                var p = ws.list_objects(params);
                 return $.when(p).then(function(d) {
                     // update model
                     myData = d;
-                    render(myData, minePanel, addMineBtn, mineSelected);
-                    events(minePanel, addMineBtn, mineSelected);
+                    render(myData, minePanel, mineSelected);
                 })
             }
 
-            // This function takes data to render and 
+
+            // function used to update shared with me data list
+            function getSharedData(workspaces, type, ws_name) {
+                var params = {};
+                if (!ws_name) {
+                    var ws_ids = [];
+                    for (var i in workspaces) ws_ids.push(workspaces[i].id);
+
+                    params.ids = ws_ids;
+                } else
+                    params.workspaces = [ws_name];
+
+                if (type) params.type = type;
+
+                var p = ws.list_objects(params);
+                return $.when(p).then(function(d) {
+                    // update model
+                    sharedData = d;
+                    render(sharedData, sharedPanel, sharedSelected);
+                })
+            }
+
+            // function used to update shared with me data list
+            function getPublicData(workspace, template) {
+                var p = ws.list_objects({workspaces: [workspace]});
+                return $.when(p).then(function(d) {
+                    // update model
+                    publicData = d;
+                    render(publicData, publicPanel, publicSelected, template);
+                })
+            }
+
+
+            // This function takes data to render and
             // a container to put data in.
             // It produces a scrollable dataset
-            function render(data, container, btn, selected) {
+            function render(data, container, selected, template) {
                 var start = 0, end = 9;
 
                 // remove items from only current container being rendered
                 container.find('.kb-import-items').remove();
 
-                if (data.length == 0) 
+                if (data.length == 0){
                     container.append('<div class="kb-import-items text-muted">No data found</div>');
-                else if (data.length-1 < end) 
+                    return
+                } else if (data.length-1 < end)
                     end = data.length;
 
-                var rows = buildMyRows(data, start, end);
+                var rows = buildMyRows(data, start, end, template);
                 container.append(rows);
+                events(container, selected);
 
                 // infinite scroll
                 container.unbind('scroll');
-                container.on('scroll', function() {                        
-                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {                            
-                        var rows = buildMyRows(data, start, end);
+                container.on('scroll', function() {
+                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
+                        var rows = buildMyRows(data, start, end, template);
                         container.append(rows);
                     }
-                    events(container, btn, selected);
+                    events(container, selected);
                 });
-
-                /* pagination
-                pageNext.unbind('click')
-                pageNext.click(function() {
-                    container.html('')
-                    var start = end + 1;
-                    var end = end
-                    var rows = buildMyRows(start, end);
-                    container.append(rows);
-                });*/
-            }
-
-            // function used to update my data list
-            function getSharedData(workspaces) {
-                // clear view
-                var ws_ids = []
-                for (var i in workspaces) ws_ids.push(workspaces[i].id);
-                var p = ws.list_objects({ids: ws_ids});
-                return $.when(p).then(function(d) {
-                    // update model
-                    sharedData = d;
-                    render(sharedData, sharedPanel, addSharedBtn, sharedSelected);
-                    events(sharedPanel, addSharedBtn, sharedSelected);
-                })
             }
 
             function getMyWS() {
@@ -463,7 +520,7 @@
                             }
 
                             // add to model for filter
-                            sharedWorkspaces = workspaces;                            
+                            sharedWorkspaces = workspaces;
                             return workspaces;
                         })
             }
@@ -494,7 +551,7 @@
             }
 
 
-            function events(panel, btn, selected) {
+            function events(panel, selected) {
                 panel.find('.kb-import-checkbox').unbind('change');
                 panel.find('.kb-import-checkbox').change(function(){
                     var item = $(this).parent('.kb-import-item');
@@ -507,12 +564,11 @@
                     }
                     else {
                         for (var i=0; i<selected.length; i++) {
-                            if (selected[i].ref == ref) 
+                            if (selected[i].ref == ref)
                                 selected.splice(i, 1);
                         }
                     }
 
-                    console.log('selected', selected)
                     // disable/enable button
                     if (selected.length > 0) btn.prop('disabled', false);
                     else btn.prop('disabled', true);
@@ -526,7 +582,6 @@
                     //uncheck all checkboxes, disable b
                     $('.kb-import-checkbox').prop('checked', false);
                     $(this).prop('disabled', true);
-
 
                     var proms = copyObjects(selected, narWSName);
                     $.when.apply($, proms).done(function(data) {
@@ -555,13 +610,14 @@
                     var kind = mod_type.split('.')[1];
 
                     // filter conditions
-                    if (f.query && name.toLowerCase().indexOf(f.query.toLowerCase()) == -1) 
+                    if (f.query && name.toLowerCase().indexOf(f.query.toLowerCase()) == -1)
                         continue;
-                    if (f.type && f.type.split('.')[1] != kind) 
+                    if (f.type && f.type.split('.')[1] != kind)
                         continue;
                     if (f.ws && f.ws != ws)
                         continue;
-                    
+
+
                     filteredData.push(obj);
 
                 }
@@ -569,7 +625,7 @@
             }
 
 
-            function buildMyRows(data, start, end) {
+            function buildMyRows(data, start, end, template) {
 
                 // add each set of items to container to be added to DOM
                 var rows = $('<div class="kb-import-items">');
@@ -588,9 +644,12 @@
                                 ws: obj[7],
                                 relativeTime: kb.ui.relativeTime( kb.ui.getTimestamp(obj[3]) ) }
 
-                    var item = rowTemplate(item);
+                    if (template)
+                        var item = template(item);
+                    else
+                        var item = rowTemplate(item);
 
-                    rows.append(item);  
+                    rows.append(item);
                 }
 
                 return rows;
@@ -598,7 +657,7 @@
 
 
             function addMyFilters() {
-                var types = typeList(myData);
+                //var types = typeList(myData);
                 var wsList = myWorkspaces;
 
                 // possible filters via input
@@ -616,13 +675,15 @@
 
                 // event for type dropdown
                 wsInput.change(function() {
-                    ws = $(this).children('option:selected').data('name');                    
+                    ws = $(this).children('option:selected').data('name');
 
-                    var filtered = filterData(myData, {type: type, ws:ws, query:query})
-                    render(filtered, minePanel);
-                    events(minePanel, addMineBtn, mineSelected);
+                    // request again with filted type
+                    minePanel.find('.kb-import-items').remove();
+                    minePanel.loading();
+                    getMyData(myWorkspaces, type, ws).done(function() {
+                        minePanel.rmLoading();
+                    })
                 })
-
 
                 // create type filter
                 var typeInput = $('<select class="form-control kb-import-filter">');
@@ -638,9 +699,12 @@
                 typeInput.change(function() {
                     type = $(this).children('option:selected').data('type');
 
-                    var filtered = filterData(myData, {type: type, ws:ws, query:query})
-                    render(filtered, minePanel)                                   
-                    events(minePanel, addMineBtn, mineSelected);
+                    // request again with filted type
+                    minePanel.find('.kb-import-items').remove();
+                    minePanel.loading();
+                    getMyData(myWorkspaces, type, ws).done(function() {
+                        minePanel.rmLoading();
+                    })
                 })
 
 
@@ -649,12 +713,11 @@
                 var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
                 // event for filter (search)
-                filterInput.keyup(function(e){ 
+                filterInput.keyup(function(e){
                     query = $(this).val();
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
-                    render(filtered, minePanel)  
-                    events(minePanel, addMineBtn, mineSelected);
+                    render(filtered, minePanel, mineSelected);
                 });
 
 
@@ -664,7 +727,7 @@
             }
 
             function addSharedFilters() {
-                var types = typeList(sharedData);
+                //var types = typeList(sharedData);
                 var wsList = sharedWorkspaces
 
                 // possible filters via input
@@ -684,9 +747,12 @@
                 wsInput.change(function() {
                     ws = $(this).children('option:selected').data('name');
 
-                    var filtered = filterData(sharedData, {type: type, ws:ws, query:query});
-                    render(filtered, sharedPanel);
-                    events(sharedPanel, addSharedBtn, sharedSelected);
+                    // request again with filted type
+                    sharedPanel.find('.kb-import-items').remove();
+                    sharedPanel.loading();
+                    getSharedData(sharedWorkspaces, type, ws).done(function() {
+                        sharedPanel.rmLoading();
+                    })
                 })
 
 
@@ -704,9 +770,12 @@
                 typeInput.change(function() {
                     type = $(this).children('option:selected').data('type');
 
-                    var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
-                    render(filtered, sharedPanel)
-                    events(sharedPanel, addSharedBtn, sharedSelected);
+                    // request again with filted type
+                    sharedPanel.find('.kb-import-items').remove();
+                    sharedPanel.loading();
+                    getSharedData(sharedWorkspaces, type, ws).done(function() {
+                        sharedPanel.rmLoading();
+                    })
                 })
 
 
@@ -716,11 +785,10 @@
 
                 // event for filter (search)
                 filterInput.keyup(function(e){
-                    query = $(this).val();                    
+                    query = $(this).val();
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
-                    render(filtered, sharedPanel)
-                    events(sharedPanel, addSharedBtn, sharedSelected);
+                    render(filtered, sharedPanel, sharedSelected);
                 });
 
                 // add search, type, ws filter to dom
@@ -763,6 +831,37 @@
                 return item;
             }
 
+            function publicTemplate(obj) {
+                var item = $('<div class="kb-import-item">')
+                                .data('ref', obj.wsID+'.'+obj.id)
+                                .data('obj-name', obj.name);
+                item.append('<input type="checkbox" value="" class="pull-left kb-import-checkbox">');
+                item.append('<a class="h4" href="'+
+                                objURL(obj.module, obj.kind, obj.ws, obj.name)+
+                                '" target="_blank">'+obj.name+'</a>'+
+                            '<span class="kb-data-list-version">v'+obj.version+'</span>');
+
+                item.append('<br>');
+
+                item.append('<div class="kb-import-info">'+
+                                '<span>TYPE</span><br>'+
+                                '<b>'+obj.kind+'</b>'+
+                            '</div>');
+                var narName = obj.ws;
+                if (narrativeNameLookup[obj.ws]) {
+                    narName = narrativeNameLookup[obj.ws];
+                }
+
+                item.append('<div class="kb-import-info">'+
+                                '<span>LAST MODIFIED</span><br>'+
+                                '<b>'+obj.relativeTime+'</b>'+
+                            '</div>');
+                item.append('<br><hr>')
+
+                return item;
+            }
+
+
 
             function objURL(module, type, ws, name) {
                 var mapping = window.kbconfig.landing_page_map;
@@ -776,6 +875,38 @@
                 return self.options.landingPageURL+'ws/'+ws;
             }
 
+
+            function publicView() {
+                getPublicData('pubSEEDGenomes', publicTemplate);
+
+                var publicList = [{type: 'Genomes', ws: 'pubSEEDGenomes'},
+                                  {type: 'Media', ws: 'KBaseMedia'},
+                                  {type: 'Models', ws: 'KBasePublicModelsV4'},
+                                  {type: 'RNA Seq', ws: 'KBasePublicRNASeq'}];
+
+                var wsInput = $('<select class="form-control kb-import-filter">');
+                for (var i=0; i < publicList.length; i++) {
+                    wsInput.append('<option data-name="'+publicList[i].ws+'">'+
+                                          publicList[i].type+
+                                   '</option>');
+                }
+                var wsFilter = $('<div class="col-sm-4">').append(wsInput);
+
+                var row = $('<div class="row">').append(wsFilter);
+                publicPanel.append(row);
+
+                // event for type (workspace) dropdown
+                wsInput.change(function() {
+                    var ws = $(this).children('option:selected').data('name');
+
+                    // request again with filted type
+                    publicPanel.find('.kb-import-items').remove();
+                    publicPanel.loading();
+                    getPublicData(ws, publicTemplate).done(function() {
+                        publicPanel.rmLoading();
+                    })
+                })
+            }
 
         }
     })

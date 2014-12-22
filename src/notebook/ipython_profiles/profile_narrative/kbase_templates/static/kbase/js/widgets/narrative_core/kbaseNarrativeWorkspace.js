@@ -177,9 +177,7 @@
 
             $(document).on('createOutputCell.Narrative',
                 $.proxy(function(event, data) {
-                    console.log('making output cell');
                     var cellIndex = $('#'+data.cellId).nearest('.cell').index();
-                    console.log(cellIndex);
                     this.createOutputCell(IPython.notebook.get_cell(cellIndex), 
                         {'embed' : true, 'data' : this.safeJSONStringify(data.result)});
                 }, this)

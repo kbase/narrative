@@ -392,7 +392,7 @@
                             // .mouseenter(function(){$(this).addClass('kb-data-list-obj-row-hover');})
                             // .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
 
-            // Uncomment to re-enable DnD
+            // Drag and drop
             this.addDragAndDrop($row);
 
             return $row;
@@ -418,8 +418,8 @@
                             $("#main-container").append($elt);
                             // reset width (was: 100%)
                             $elt.width(w); 
-                            return $elt; },
-                start: this.dataDragged
+                            return $elt; }
+                //start: this.dataDragged
             });
 
             // Dropping data directly onto the notebook. (As opposed to on input fields)
@@ -438,57 +438,26 @@
                     cell.render();
                     // Get object info
                     var key = $(elt).attr('kb-oid');
-                    console.debug("drop :: key:", key, "elt:", $(elt));
                     var obj = _.findWhere(self.objectList, {key: key});
-                    console.debug("drop :: key -> obj", obj, "in", self.objectList);
                     var info = self.createInfoObject(obj.info);
-                    console.debug("drop :: info=", info);
                     // Insert the narrative data cell into the div we just rendered
-                    $('#' + cell_id).kbaseNarrativeDataCell({info: info});
+                    $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
                 }
             });
-            // New-style input fields
-            $('.kb-method-parameter-input a').droppable({
-                drop: function(event, ui) {                    
-                    console.log("dropped on (new-style) input");
-                    var meta = self.draggedMeta(ui.draggable);
-                    $('.kb-data-inflight').remove(); // remove cloned element
-                    var dc_class = 'kb-parameter-data-selection';
-                    var $velt = $(this).find('span.select2-chosen');
-                    var $curval = $velt.find('span.' + dc_class);
-                    console.debug("curval=", $curval, " length=", $curval.length);
-                    var $glyph_par = $(this).parent().parent().next();
-                    if ($curval.length == 0) {
-                        // insert new
-                        $velt.append($('<span>')
-                            .addClass(dc_class)
-                            .text(meta.name));
-                        // mark as a chosen element
-                        $(this).removeClass("select2-default");
-                        $(this).parent().addClass("select2-allowclear");  
-                        var $g = $glyph_par.find(".glyphicon");
-                        console.debug("glyph: ", g);
-                        $g.removeClass("glyphicon-arrow-left");
-                        $g.addClass("glyphicon-ok");
-                        $g.addClass("kb-method-parameter-accepted-glyph");
-                        $g.removeClass()
-                    }
-                    else {
-                        // replace existing XXX: multiple?
-                        console.debug("replace [0] of ", $curval);
-                        $($curval[0]).text(meta.name);
-                    }
-                }
-            })
+
+            // Add tooltip to indicate this functionality
+            $row.attr({'data-toggle': 'tooltip',
+                       'data-placement': 'top',
+                        'title': 'Drag onto narrative &rarr;'});
+            $row.tooltip({delay: 500, html: true});
 
             return this;
         },
 
-        dataDragged: function(event, ui) {
-            console.debug("Gentlemen (?), start your dragging:", ui);
-            console.debug("helper",ui.helper);
-        },
-
+        /**
+         * Helper function to create named object attrs from
+         * list of fields returned from Workspace service.
+         */
         createInfoObject: function(info) {
           return { id: info[0], name: info[1], type: info[2], save_date: info[3],
                        version: info[4], saved_by: info[5], 

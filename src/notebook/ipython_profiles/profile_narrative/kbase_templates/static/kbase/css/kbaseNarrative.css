@@ -1634,6 +1634,9 @@ For data in KBase workspace
 .modal-body {
     max-height: 100%;
 }
+
+/* === Tooltips  === */
+
 div[class="tooltip-inner"] {
     max-width: 400px;
     white-space: pre-wrap;
@@ -1641,6 +1644,12 @@ div[class="tooltip-inner"] {
 }
 .tooltip {
     z-index: 2000 !important;
+}
+.tooltip.top .tooltip-inner {
+    background-color: #1B69B6;
+}
+.tooltip.top .tooltip-arrow {
+    border-top-color: #1B69B6;
 }
 
 .kb-data-main-panel {

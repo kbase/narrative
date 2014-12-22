@@ -879,15 +879,15 @@
             function publicView() {
                 getPublicData('pubSEEDGenomes', publicTemplate);
 
-                var publicList = {'Genomes': 'pubSEEDGenomes',
-                                  'Media': 'KBaseMedia',
-                                  'Models': 'KBasePublicModelsV4',
-                                  'RNA Seq': 'KBasePublicRNASeq'}
+                var publicList = [{type: 'Genomes', ws: 'pubSEEDGenomes'},
+                                  {type: 'Media', ws: 'KBaseMedia'},
+                                  {type: 'Models', ws: 'KBasePublicModelsV4'},
+                                  {type: 'RNA Seq', ws: 'KBasePublicRNASeq'}];
 
                 var wsInput = $('<select class="form-control kb-import-filter">');
-                for (var key in publicList) {
-                    wsInput.append('<option data-name="'+publicList[key]+'">'+
-                                          key+
+                for (var i=0; i < publicList.length; i++) {
+                    wsInput.append('<option data-name="'+publicList[i].ws+'">'+
+                                          publicList[i].type+
                                    '</option>');
                 }
                 var wsFilter = $('<div class="col-sm-4">').append(wsInput);
@@ -895,7 +895,7 @@
                 var row = $('<div class="row">').append(wsFilter);
                 publicPanel.append(row);
 
-                // event for type dropdown
+                // event for type (workspace) dropdown
                 wsInput.change(function() {
                     var ws = $(this).children('option:selected').data('name');
 

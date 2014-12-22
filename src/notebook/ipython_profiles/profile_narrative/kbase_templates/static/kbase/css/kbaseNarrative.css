@@ -335,8 +335,9 @@ p#site-title {
 }
 
 .kb-side-overlay-container {
-    min-width: 550px;
-    max-width: 800px;
+    /*min-width: 550px;
+    max-width: 800px;*/
+    width: 675px;  /* I would advise fixing this for UX sake */
     height: 620px;
     border : 1px solid #ababab;
     z-index : 9990;
@@ -1895,10 +1896,6 @@ div[class="tooltip-inner"] {
 
 /* styling for data import overlay  */
 
-.kb-side-overlay-container {
-
-}
-
 .kb-import-content {
     position:relative;
     margin: 0 0 0 20px;
@@ -1934,7 +1931,7 @@ div[class="tooltip-inner"] {
 }
 
 .kb-import-item hr {
-    width: 400px;
+    width: 85%;
     border: 2px solid #eaeaea;
 }
 
@@ -1961,7 +1958,4 @@ div[class="tooltip-inner"] {
     margin: 20px;
 }
 
-.loader {
-
-}
 

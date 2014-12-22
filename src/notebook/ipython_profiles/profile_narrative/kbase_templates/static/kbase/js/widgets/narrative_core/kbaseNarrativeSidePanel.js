@@ -83,7 +83,7 @@
 
             if (this.autorender) {
                 this.render();
-            } 
+            }
             else {
 
             }
@@ -96,7 +96,7 @@
          * @method
          * @private
          * Builds a very simple set of tabs.
-         * @param {Array} tabs - a list of objects where each has a 'tabName' and 'content' property. 
+         * @param {Array} tabs - a list of objects where each has a 'tabName' and 'content' property.
          * As you might expect, 'tabName' is the name of the tab that goes into the styled header,
          * and 'content' is the tab content, expected to be something that can be attached via .append()
          * @param isOuter - if true, treat these tabs as though they belong to the outer side panel,
@@ -147,7 +147,7 @@
             var self = this;
 
             this.$overlayBody = $('<div class="kb-overlay-body">');
-            this.$overlayFooter  = $('<div>'); // class="kb-overlay-footer">'); // this seems to add strange footer line in my browser
+            this.$overlayFooter  = $('<div class="kb-overlay-footer">');
             this.$overlay = $('<div>')
                             .addClass('kb-side-overlay-container')
                             .append(this.$overlayBody)
@@ -255,6 +255,9 @@
          * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
         dataImporter: function() {
+            // special styling for data importer
+            //this.$overlay.addClass('kb-import-container')
+
             var narWSName;
             $(document).on('setWorkspaceName.Narrative', function(e, info){
                 narWSName = info.wsId;
@@ -308,19 +311,13 @@
             // add footer status container and button
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
-            var addMineBtn = $('<button class="btn btn-primary kb-import-search" style="margin-top:0" disabled>Add to Narrative</button>');
-            minePanel.append($('<div class="row">')
-                             .append($('<div class="col-sm-4">')
-                                     .append(addMineBtn)));
+            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
+            footer.append(btn);
 
-            var addSharedBtn = $('<button class="btn btn-primary kb-import-search" style="margin-top:0" disabled>Add to Narrative</button>');
-            sharedPanel.append($('<div class="row">')
-                               .append($('<div class="col-sm-4">')
-                                       .append(addSharedBtn)));
-            body.append(footer);
+
 
             // start with my data, then fetch other data
-            // this is because data sets can be large and 
+            // this is because data sets can be large and
             // makes things more fluid
             minePanel.loading();
             sharedPanel.loading();
@@ -340,10 +337,10 @@
                     else if (view == 'shared') prom = getSharedData(workspaces);
                     $.when(prom).done(function(filterOptions) {
                         if (view == 'mine') {
-                            minePanel.rmLoading();                            
+                            minePanel.rmLoading();
                             addMyFilters();
                         } else if(view == 'shared') {
-                            sharedPanel.rmLoading();                            
+                            sharedPanel.rmLoading();
                             addSharedFilters();
                         }
                     });
@@ -361,47 +358,37 @@
                 return $.when(p).then(function(d) {
                     // update model
                     myData = d;
-                    render(myData, minePanel, addMineBtn, mineSelected);
-                    events(minePanel, addMineBtn, mineSelected);
+                    render(myData, minePanel, mineSelected);
                 })
             }
 
-            // This function takes data to render and 
+            // This function takes data to render and
             // a container to put data in.
             // It produces a scrollable dataset
-            function render(data, container, btn, selected) {
+            function render(data, container, selected) {
                 var start = 0, end = 9;
 
                 // remove items from only current container being rendered
                 container.find('.kb-import-items').remove();
 
-                if (data.length == 0) 
+                if (data.length == 0)
                     container.append('<div class="kb-import-items text-muted">No data found</div>');
-                else if (data.length-1 < end) 
+                else if (data.length-1 < end)
                     end = data.length;
 
                 var rows = buildMyRows(data, start, end);
                 container.append(rows);
+                events(container, selected);
 
                 // infinite scroll
                 container.unbind('scroll');
-                container.on('scroll', function() {                        
-                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {                            
+                container.on('scroll', function() {
+                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
                         var rows = buildMyRows(data, start, end);
                         container.append(rows);
                     }
-                    events(container, btn, selected);
+                    events(container, selected);
                 });
-
-                /* pagination
-                pageNext.unbind('click')
-                pageNext.click(function() {
-                    container.html('')
-                    var start = end + 1;
-                    var end = end
-                    var rows = buildMyRows(start, end);
-                    container.append(rows);
-                });*/
             }
 
             // function used to update my data list
@@ -413,8 +400,7 @@
                 return $.when(p).then(function(d) {
                     // update model
                     sharedData = d;
-                    render(sharedData, sharedPanel, addSharedBtn, sharedSelected);
-                    events(sharedPanel, addSharedBtn, sharedSelected);
+                    render(sharedData, sharedPanel, sharedSelected);
                 })
             }
 
@@ -463,7 +449,7 @@
                             }
 
                             // add to model for filter
-                            sharedWorkspaces = workspaces;                            
+                            sharedWorkspaces = workspaces;
                             return workspaces;
                         })
             }
@@ -494,7 +480,7 @@
             }
 
 
-            function events(panel, btn, selected) {
+            function events(panel, selected) {
                 panel.find('.kb-import-checkbox').unbind('change');
                 panel.find('.kb-import-checkbox').change(function(){
                     var item = $(this).parent('.kb-import-item');
@@ -507,7 +493,7 @@
                     }
                     else {
                         for (var i=0; i<selected.length; i++) {
-                            if (selected[i].ref == ref) 
+                            if (selected[i].ref == ref)
                                 selected.splice(i, 1);
                         }
                     }
@@ -521,15 +507,17 @@
                 // import items on button click
                 btn.unbind('click');
                 btn.click(function() {
+                    console.log('clicked!', selected)
                     if (selected.length == 0) return;
 
                     //uncheck all checkboxes, disable b
                     $('.kb-import-checkbox').prop('checked', false);
                     $(this).prop('disabled', true);
 
-
+                    console.log('copying objects')
                     var proms = copyObjects(selected, narWSName);
                     $.when.apply($, proms).done(function(data) {
+                        console.log('done', data)
                         importStatus.html('');
                         var status = $('<span class="text-success">done.</span>');
                         importStatus.append(status);
@@ -555,13 +543,13 @@
                     var kind = mod_type.split('.')[1];
 
                     // filter conditions
-                    if (f.query && name.toLowerCase().indexOf(f.query.toLowerCase()) == -1) 
+                    if (f.query && name.toLowerCase().indexOf(f.query.toLowerCase()) == -1)
                         continue;
-                    if (f.type && f.type.split('.')[1] != kind) 
+                    if (f.type && f.type.split('.')[1] != kind)
                         continue;
                     if (f.ws && f.ws != ws)
                         continue;
-                    
+
                     filteredData.push(obj);
 
                 }
@@ -590,7 +578,7 @@
 
                     var item = rowTemplate(item);
 
-                    rows.append(item);  
+                    rows.append(item);
                 }
 
                 return rows;
@@ -616,11 +604,10 @@
 
                 // event for type dropdown
                 wsInput.change(function() {
-                    ws = $(this).children('option:selected').data('name');                    
+                    ws = $(this).children('option:selected').data('name');
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
-                    render(filtered, minePanel);
-                    events(minePanel, addMineBtn, mineSelected);
+                    render(filtered, minePanel, mineSelected);
                 })
 
 
@@ -639,8 +626,7 @@
                     type = $(this).children('option:selected').data('type');
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
-                    render(filtered, minePanel)                                   
-                    events(minePanel, addMineBtn, mineSelected);
+                    render(filtered, minePanel, mineSelected);
                 })
 
 
@@ -649,12 +635,11 @@
                 var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
                 // event for filter (search)
-                filterInput.keyup(function(e){ 
+                filterInput.keyup(function(e){
                     query = $(this).val();
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
-                    render(filtered, minePanel)  
-                    events(minePanel, addMineBtn, mineSelected);
+                    render(filtered, minePanel, mineSelected);
                 });
 
 
@@ -685,8 +670,7 @@
                     ws = $(this).children('option:selected').data('name');
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query});
-                    render(filtered, sharedPanel);
-                    events(sharedPanel, addSharedBtn, sharedSelected);
+                    render(filtered, sharedPanel, sharedSelected);
                 })
 
 
@@ -705,8 +689,7 @@
                     type = $(this).children('option:selected').data('type');
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
-                    render(filtered, sharedPanel)
-                    events(sharedPanel, addSharedBtn, sharedSelected);
+                    render(filtered, sharedPanel, sharedSelected);
                 })
 
 
@@ -716,11 +699,10 @@
 
                 // event for filter (search)
                 filterInput.keyup(function(e){
-                    query = $(this).val();                    
+                    query = $(this).val();
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
-                    render(filtered, sharedPanel)
-                    events(sharedPanel, addSharedBtn, sharedSelected);
+                    render(filtered, sharedPanel, sharedSelected);
                 });
 
                 // add search, type, ws filter to dom

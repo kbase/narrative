@@ -101,9 +101,9 @@ input#search_terms{
     font-size: 1em;
     margin-top: -3px;
     background-image: url("../images/search.png");
-    background-size: 22px; 
+    background-size: 22px;
     background-repeat:no-repeat;
-    background-position:right center; 
+    background-position:right center;
     border-top-left-radius: 0px;
     border-top-right-radius: 4px;
     border-bottom-right-radius: 4px;
@@ -114,16 +114,16 @@ span#searchspan{
     width: 50%;
 }
 @media screen and (max-width: 1170px){
-    span#searchspan{width: 50%;} 
+    span#searchspan{width: 50%;}
 }
 @media screen and (max-width: 980px){
-    span#searchspan{width: 40%;} 
+    span#searchspan{width: 40%;}
 }
 @media screen and (max-width: 768px){
-    span#searchspan{width: 30%;} 
+    span#searchspan{width: 30%;}
 }
 @media screen and (max-width: 590px){
-    span#searchspan{width: 60%;}   
+    span#searchspan{width: 60%;}
 }
 
 div#notebook {
@@ -186,14 +186,14 @@ div#notebook {
 }
 
 .narrative-menu-container {
-    position: fixed; 
+    position: fixed;
     z-index: 499;
     background-color: #ffffff;
     width: 100%;
-    border-bottom: 1px solid #ababab; 
-    padding-bottom: 30px; 
-    padding-top: 10px; 
-    margin-top: -10px; 
+    border-bottom: 1px solid #ababab;
+    padding-bottom: 30px;
+    padding-top: 10px;
+    margin-top: -10px;
     margin-left: auto
 }
 
@@ -613,11 +613,11 @@ li.dataset a:visited {
     font-size: 1.2em;
 }
 
-.dialog-box ul li:first-child { 
+.dialog-box ul li:first-child {
     padding-top: 20px;
 }
 
-.dialog-box ul li:last-child {  
+.dialog-box ul li:last-child {
     border-bottom: none;
 }
 
@@ -631,7 +631,7 @@ fieldset label {
 */  margin: 0 0 3px 0;
     font-weight: bold;
     font-size: 1em;
-    
+
 }
 
 fieldset input[type="text"], fieldset select {
@@ -821,7 +821,7 @@ p span.notification{
 }
 
 .btn-default {
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);   
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
 .btn-group {
@@ -965,7 +965,7 @@ div#notebook_panel {
  */
 
 /* Somehow a bunch of classes from jQuery.dataTables aren't getting added.
- * Putting them here in the hopes they don't clobber anything else, the way 
+ * Putting them here in the hopes they don't clobber anything else, the way
  * the rest of dataTables might...
  */
 .paging_full_numbers {
@@ -1030,10 +1030,10 @@ div#notebook_panel {
 
 .kb-narr-panel-toggle {
     margin-right: 4px;
-    margin-top: -4px; 
+    margin-top: -4px;
     cursor: pointer;
     color: #888;
-    -webkit-user-select: none; /* Chrome/Safari */        
+    -webkit-user-select: none; /* Chrome/Safari */
        -moz-user-select: none; /* Firefox */
         -ms-user-select: none; /* IE10+ */
 }
@@ -1114,7 +1114,7 @@ div#notebook_panel {
     left: 300px;
     z-index: 99;
     cursor: pointer;
-    max-width: 300px;    
+    max-width: 300px;
 }
 
 .kb-function-help-popup h1 {
@@ -1205,12 +1205,12 @@ div#notebook_panel {
 
 .kb-function-cat-dim {
     background-color: #ddd !important;
-    border-color: #ddd !important;    
+    border-color: #ddd !important;
 }
 
 .kb-function-cat-dim .panel-heading {
     background-color: #ddd !important;
-    border-color: #ddd !important;    
+    border-color: #ddd !important;
 }
 
 .kb-function-toggle {
@@ -1282,11 +1282,11 @@ div#notebook_panel {
 }
 /*.kb-cell-params tr:nth-child(odd) {
     background-color: #eee;
-    border-bottom: 1px solid #ddd;    
+    border-bottom: 1px solid #ddd;
 }
 .kb-cell-params tr:nth-child(even) {
     background-color: #fff;
-    border-bottom: 1px solid #ddd;    
+    border-bottom: 1px solid #ddd;
 }*/
 
 .kb-cell-params tr:hover td, .kb-cell-params tr:hover th {
@@ -1399,7 +1399,7 @@ div#notebook_panel {
 }
 /*** styling for the jobs manager */
 .kb-jobs-title {
-    font-family: "OxygenBold", Arial, sans-serif; 
+    font-family: "OxygenBold", Arial, sans-serif;
     color: #185A85;
     font-size: 1.2em;
 }
@@ -1414,7 +1414,7 @@ div#notebook_panel {
 }
 
 .kb-jobs-info-table th {
-    font-family: "OxygenBold", Arial, sans-serif; 
+    font-family: "OxygenBold", Arial, sans-serif;
     color: #777;
     vertical-align:top;
     padding-right: 5px;
@@ -1469,7 +1469,7 @@ div#notebook_panel {
 
 /* not sure how to get text in these divs to valign middle... */
 .kb-method-parameter-name {
-   font-family: 'OxygenBold', sans-serif; 
+   font-family: 'OxygenBold', sans-serif;
    color:#777;
    text-align:right;
    vertical-align:middle;
@@ -1513,7 +1513,7 @@ div#notebook_panel {
 
 
 .kb-method-advanced-options-controller-inactive {
-   font-family: 'OxygenBold', sans-serif; 
+   font-family: 'OxygenBold', sans-serif;
    font-style: italic;
    font-size: 10pt;
    line-height: 14px;
@@ -1521,7 +1521,7 @@ div#notebook_panel {
    text-align: center;
 }
 .kb-method-advanced-options-controller {
-   font-family: 'OxygenBold', sans-serif; 
+   font-family: 'OxygenBold', sans-serif;
    cursor:pointer;
    font-style: italic;
    font-size: 10pt;
@@ -1570,7 +1570,7 @@ div#notebook_panel {
     margin: 3px;
 }
 .kb-app-step-error-mssg {
-   font-family: sans-serif; 
+   font-family: sans-serif;
    font-size: 11pt;
    line-height: 14px;
    color: #A63232;
@@ -1579,7 +1579,7 @@ div#notebook_panel {
    margin:10px;
 }
 .kb-app-step-error-heading {
-   font-family: 'OxygenBold', sans-serif; 
+   font-family: 'OxygenBold', sans-serif;
    font-size: 13pt;
    line-height: 14px;
    color: #555;
@@ -1588,7 +1588,7 @@ div#notebook_panel {
    margin-top:20px;
 }
 .kb-app-step-error-main-heading {
-   font-family: 'OxygenBold', sans-serif; 
+   font-family: 'OxygenBold', sans-serif;
    font-size: 16pt;
    line-height: 18px;
    color:#555;
@@ -1700,11 +1700,11 @@ div[class="tooltip-inner"] {
 }
 
 .kb-data-obj-name {
-    text-overflow: ellipsis; 
-    overflow:hidden; 
-    white-space: nowrap; 
-    display: inline-block; 
-    max-width: 88%; 
+    text-overflow: ellipsis;
+    overflow:hidden;
+    white-space: nowrap;
+    display: inline-block;
+    max-width: 88%;
 }
 
 .kb-data-loading {
@@ -1902,9 +1902,9 @@ div[class="tooltip-inner"] {
 .kb-import-content {
     position:relative;
     margin: 0 0 0 20px;
-    overflow-x: hidden; 
-    overflow-y: auto; 
-    height: 500px; 
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: 500px;
     display: block;
 }
 
@@ -1913,7 +1913,6 @@ div[class="tooltip-inner"] {
     width: 100%;
     bottom: 0px;
     height: 70px;
-    border: 1px solid #f5f5f5;
 }
 
 .kb-overlay-footer .btn-primary {
@@ -1955,7 +1954,7 @@ div[class="tooltip-inner"] {
 }
 
 .kb-import-info {
-    font-weight: 
+    font-weight:
 }
 
 .kb-import-status {

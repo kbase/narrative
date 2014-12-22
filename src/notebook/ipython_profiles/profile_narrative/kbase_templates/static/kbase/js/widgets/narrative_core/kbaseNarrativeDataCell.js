@@ -6,9 +6,13 @@
  * @public
  */
 
-// Viewer methods
-// --------------
+// Factory function for viewer methods
+// -----------------------------------
 
+/**
+ * Factory function to get viewer object (class)
+ * based on object 'bare_type'.
+ */
 function KBaseNarrativeViewer(o) {
   var vnames = KBaseNarrativeViewerNames;
   var name = vnames.default;
@@ -16,6 +20,7 @@ function KBaseNarrativeViewer(o) {
   if (_.has(vnames, key)) {
     name = vnames[key];
   }
+  // Return found object
   return KBaseNarrativeViewers[name];
 }
 
@@ -28,13 +33,16 @@ var KBaseNarrativeViewerNames = {
 }
 
 // Viewer functions.
+// Arguments:
+//  elt - jQuery element that the viewer should be attached to
+//  data_cell - The kbaseNarrativeDataCell widget with the data, etc.
 var KBaseNarrativeViewers = {
   /**
    * Generic viewer.
    */
-  genericViewer: function(elt, self) {
-    var o = self.obj_info;
-    var md_desc = self.shortMarkdownDesc(o);
+  genericViewer: function(elt, data_cell) {
+    var o = data_cell.obj_info;
+    var md_desc = data_cell.shortMarkdownDesc(o);
     if (!_.isEmpty(o.meta)) {
       md_desc += "\n\nMetadata: ";
       this.prev = false;
@@ -46,23 +54,23 @@ var KBaseNarrativeViewers = {
         this.prev = true;
       }); 
     }
-    self.ip_cell.edit();
-    self.ip_cell.set_text(md_desc);
-    self.ip_cell.unselect();
+    data_cell.ip_cell.edit();
+    data_cell.ip_cell.set_text(md_desc);
+    data_cell.ip_cell.unselect();
     return elt;
   },
   /**
    * Genome viewer. 
    */
-  genomeViewer: function(elt, self) {
-    var o = self.obj_info;
+  genomeViewer: function(elt, data_cell) {
+    var o = data_cell.obj_info;
     return elt.kbaseGenomeView({'id': o['id'], 'ws': o['ws_id']});
   },
   /** 
    * Species tree viewer.
    */
-  treeViewer: function(elt, self) {
-    var o = self.obj_info;
+  treeViewer: function(elt, data_cell) {
+    var o = data_cell.obj_info;
     return elt.kbaseTree({'treeID': o['id'],
                           'workspaceID': o['ws_id'],
                            'height': '1000' // need for scroll
@@ -70,8 +78,9 @@ var KBaseNarrativeViewers = {
   }
 };
 
-// Widget
-// -------
+// NarrativeDataCell widget.
+// This is the widget passed into
+// the viewer.
 
 (function($, undefined) {
     $.KBWidget({
@@ -85,6 +94,8 @@ var KBaseNarrativeViewers = {
         obj_info: null,
         // for 'method_store' service
         method_client: null,
+        // IPython cell
+        ip_cell: null,
 
         /**
          * Initialize

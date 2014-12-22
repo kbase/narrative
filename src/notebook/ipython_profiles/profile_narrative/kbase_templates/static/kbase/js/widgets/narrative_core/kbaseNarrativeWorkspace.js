@@ -175,6 +175,16 @@
                 this)
             );
 
+            $(document).on('createOutputCell.Narrative',
+                $.proxy(function(event, data) {
+                    console.log('making output cell');
+                    var cellIndex = $('#'+data.cellId).nearest('.cell').index();
+                    console.log(cellIndex);
+                    this.createOutputCell(IPython.notebook.get_cell(cellIndex), 
+                        {'embed' : true, 'data' : this.safeJSONStringify(data.result)});
+                }, this)
+            );
+
             // Initialize the data table.
             this.render();
             return this;
@@ -219,15 +229,12 @@
             this.saveCellState(data.cell);
             this.updateNarrativeDependencies();
             var self = this;
-            var callbacks = {
-                'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content); },
-                'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
-                'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-                'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
-            };
-
             var code = '';
+            var showOutput = true;
+            // if there's a job_id_output_field in the method, then it's long-running, and we shouldn't show an output cell right away.
+            // ...or maybe show a temporary one?
+            if (data.method.job_id_output_field && data.method.job_id_output_field != null)
+                showOutput = false;
             // old, pre-njs style where the methods were all living in IPython-land
             if (data.method.behavior.python_class && data.method.behavior.python_function) {
                 code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
@@ -239,8 +246,16 @@
             }
             else {
                 // something else!
-                // error for now. at some point. or something.
+                // do nothing for now.
             }
+            var callbacks = {
+                'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
+                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput); },
+                'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
+                'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
+                'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
+            };
+
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
         },
@@ -1485,7 +1500,7 @@
         /**
          * @method _handle_output
          */
-        handleOutput: function (cell, msgType, content) {
+        handleOutput: function (cell, msgType, content, showOutput) {
             // copied from outputarea.js
             var buffer = "";
             if (msgType === "stream") {
@@ -1572,7 +1587,7 @@
                     // if we found progress markers, trim processed prefix from buffer
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
-                if (result.length > 0) {
+                if (result.length > 0 && showOutput) {
                     this.createOutputCell(cell, result);
                 }
             }
@@ -1641,6 +1656,8 @@
             // Note that an empty object is not null! So if result.data = {}, it'll still do something.
             if (!isError && (!result.embed || result.data === null || result.data === undefined)) {
                 //do something.
+                console.error('Unable to create output cell from supplied data object');
+                console.error(result);
                 return;
             }
 

@@ -46,7 +46,7 @@
         	var pref = this.uuid();
             //var div = this.$elem;
         	
-            var tbl = $('<table style="border: 0px; margin: 0px; cellpadding: 0px; cellspacing: 0px;"/>');
+            var tbl = $('<table style="border: 0px; margin: 0px; cellpadding: 0px; cellspacing: 0px; width: 100%;"/>');
             //div.append(tbl);
             var tr = $('<tr/>');
             var cellCss = { 'border' : 'none', 'vertical-align' : 'middle' };
@@ -57,10 +57,12 @@
             	.addClass('form-control')
             	.css({'width' : '100%'})
             	.attr('type', 'text');
-
+            var percentTextWidth = '50px';
+            if (self.options.isInSidePanel)
+                percentTextWidth = '100px';
             this.percentText = $('<input readonly>')
             	.addClass('form-control')
-            	.css({'width' : '50px', 'padding': '0px', 'text-align': 'center'})
+            	.css({'width' : percentTextWidth, 'padding': '0px', 'text-align': 'center'})
             	.attr('type', 'text');
 
             // create a file upload button and hide it and store it
@@ -107,7 +109,7 @@
 
             var td3 = $('<td/>');
             td3.css(cellCss);
-            td3.css({'width' : '50px', 'padding' : '0px'});
+            td3.css({'width' : percentTextWidth, 'padding' : '0px'});
             tr.append(td3);
             td3.append(this.percentText);
             
@@ -120,14 +122,17 @@
             var inputColClass = "col-md-5";
             var hintColClass  = "col-md-5";
             if (self.options.isInSidePanel) {
-                var inputColClass = "col-md-6";
-                var hintColClass  = "col-md-4";
+            	nameColClass = "col-md-12";
+                inputColClass = "col-md-12";
+                hintColClass  = "col-md-12";
             }
 
             var $row = $('<div>').addClass("row kb-method-parameter-row")
             	.hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
             var $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
             	.append(spec.ui_name);
+            if (self.options.isInSidePanel)
+            	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
             var $inputCol = $('<div>').addClass(inputColClass).addClass("kb-method-parameter-input")
             	.append($('<div>').css({"width":"100%","display":"inline-block"}).append(tbl))
             	.append($('<div>').css({"display":"inline-block", "height": "34px", "vertical-align":"top"}).append($feedbackTip));
@@ -228,6 +233,7 @@
             				self.uploadIsReady = true;
             				self.isValid();
             				self.selectFileMode(true);
+        					//showShockInfo(self.shockNodeId);
             			}
             			var percent = "" + (Math.floor(info.uploaded_size * 1000 / info.file_size) / 10);
             			if (percent.indexOf('.') < 0)
@@ -241,6 +247,15 @@
             	}, function() {
             		return self.cancelUpload;
             	});
+            }
+            
+            function showShockInfo(shockNode) {
+            	shockClient.get_node(shockNode, function(data) {
+            		console.log("Info about node [" + shockNode + "]:");
+            		console.log(data);
+        		}, function(error) {
+        			console.log(error);
+        		});
             }
         },
         

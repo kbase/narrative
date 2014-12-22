@@ -34,6 +34,12 @@
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
+            if (options.workspaceids && options.workspaceids.length > 0) {
+                id = options.workspaceids[0].split('/');
+                this.options.treeID = id[1];
+                this.options.workspaceID = id[0];
+            }
+
             if (!this.options.treeID) {
                 this.renderError("No tree to render!");
             } else if (!this.options.workspaceID) {

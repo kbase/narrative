@@ -297,7 +297,6 @@
                          "KBasePhenotypes.PhenotypeSimulationSet",
                          "KBasePhenotypes.PhenotypeSet",
                          "KBaseBiochem.Media",
-                         "KBaseFBA.ETC",
                          "KBaseTrees.Tree",
                          "KBaseGenomes.GenomeComparison",
                          "GenomeComparison.ProteomeComparison",

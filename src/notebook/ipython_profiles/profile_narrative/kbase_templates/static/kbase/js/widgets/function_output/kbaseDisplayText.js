@@ -8,10 +8,12 @@
         options: {
             header: '',
             text: '',
-            error: ''
+            error: '',
+            padding: '10px 20px'
         },
         init: function(options) {
             this._super(options);
+            this.padding = options.padding;
             return this.render();
         },
         render: function() {
@@ -20,7 +22,7 @@
             // add header
             if (this.options.header !== '') {
                 main.append($('<div>')
-                    .css({'padding': '10px 20px'})
+                    .css({'padding': this.padding})
                     .append($('<h3>').text(this.options.header)));
             }
             // add text

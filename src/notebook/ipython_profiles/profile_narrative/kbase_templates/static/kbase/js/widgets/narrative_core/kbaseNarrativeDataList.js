@@ -295,7 +295,7 @@
             return this.obj_data;  
         },
         
-        renderObjectRowDiv: function(object_info) {
+        renderObjectRowDiv: function(object_info, object_key) {
             var self = this;
             // object_info:
             // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
@@ -383,6 +383,7 @@
                                                     .append($toggleAdvancedViewBtn)))));
         
             var $row = $('<div>').addClass('kb-data-list-obj-row')
+                            .attr('kb-oid', object_key)
                             .append($('<div>').addClass('row kb-data-list-obj-row-main')
                                         .append($logoDiv)
                                         .append($mainDiv))
@@ -391,7 +392,7 @@
                             // .mouseenter(function(){$(this).addClass('kb-data-list-obj-row-hover');})
                             // .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
 
-            // Uncomment to re-enable DnD
+            // Drag and drop
             this.addDragAndDrop($row);
 
             return $row;
@@ -417,108 +418,51 @@
                             $("#main-container").append($elt);
                             // reset width (was: 100%)
                             $elt.width(w); 
-                            return $elt; },
-                start: this.dataDragged
+                            return $elt; }
+                //start: this.dataDragged
             });
-            // Uncomment this to enable dropping data directly onto the 
-            // notebook. (As opposed to on input fields)
+
+            // Dropping data directly onto the notebook. (As opposed to on input fields)
             $('#notebook-container').droppable({
                 drop: function(event, ui) {
-                    console.debug("Done dragging, sucka!");
                     var elt = ui.draggable;
+                    console.debug("Dropping on notebook");
                     // find nearest cell using jquery-nearest lib.
                     var near_elt = $(elt).nearest('.cell');
                     var near_idx = IPython.notebook.find_cell_index($(near_elt).data().cell);
                     var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
                     // Add unique id attr. to cell
-                    var cell_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                        return v.toString(16);});
+                    var cell_id = self.genUUID();
                     cell.rendered = false;
                     cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
                     cell.render();
+                    // Get object info
+                    var key = $(elt).attr('kb-oid');
+                    var obj = _.findWhere(self.objectList, {key: key});
+                    var info = self.createInfoObject(obj.info);
                     // Insert the narrative data cell into the div we just rendered
-                    $('#' + cell_id).text("wtf?!");
-                    $('#' + cell_id).kbaseNarrativeDataCell(self.draggedMeta(elt));
+                    $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
                 }
             });
-            // Old-style input fields
-            // Set text fields to name of dropped object
-            $('.kb-cell-params input[type=text]').droppable({
-                drop: function(event, ui) {
-                    console.log("dropped on (old-style) input");
-                    var meta = self.draggedMeta(ui.draggable);
-                    $('.kb-data-inflight').remove(); // remove cloned element
-                    $(this).val(meta.name);
-                }
-            });
-            // New-style input fields
-            $('.kb-method-parameter-input a').droppable({
-                drop: function(event, ui) {                    
-                    console.log("dropped on (new-style) input");
-                    var meta = self.draggedMeta(ui.draggable);
-                    $('.kb-data-inflight').remove(); // remove cloned element
-                    var dc_class = 'kb-parameter-data-selection';
-                    var $velt = $(this).find('span.select2-chosen');
-                    var $curval = $velt.find('span.' + dc_class);
-                    console.debug("curval=", $curval, " length=", $curval.length);
-                    var $glyph_par = $(this).parent().parent().next();
-                    if ($curval.length == 0) {
-                        // insert new
-                        $velt.append($('<span>')
-                            .addClass(dc_class)
-                            .text(meta.name));
-                        // mark as a chosen element
-                        $(this).removeClass("select2-default");
-                        $(this).parent().addClass("select2-allowclear");  
-                        var $g = $glyph_par.find(".glyphicon");
-                        console.debug("glyph: ", g);
-                        $g.removeClass("glyphicon-arrow-left");
-                        $g.addClass("glyphicon-ok");
-                        $g.addClass("kb-method-parameter-accepted-glyph");
-                        $g.removeClass()
-                    }
-                    else {
-                        // replace existing XXX: multiple?
-                        console.debug("replace [0] of ", $curval);
-                        $($curval[0]).text(meta.name);
-                    }
-                }
-            })
+
+            // Add tooltip to indicate this functionality
+            $row.attr({'data-toggle': 'tooltip',
+                       'data-placement': 'top',
+                        'title': 'Drag onto narrative &rarr;'});
+            $row.tooltip({delay: 500, html: true});
 
             return this;
         },
 
-        dataDragged: function(event, ui) {
-            console.debug("Gentlemen (?), start your dragging:", ui);
-            console.debug("helper",ui.helper);
-            //$(ui.helper).css("z-index", 10);
-            // would like to make sure it is on top, but can't figure that out..
-        },
-
-        /** Get metadata from dragged data. */
-        draggedMeta: function(elt) {
-            var fields = ['name', 'type', 'version'];
-            var values = _.map(fields, function(f) {
-                                return $(elt).find('.kb-data-list-' + f).text()});
-            return _.object(fields, values);
-        },
-
-        dataDropped: function(event, ui) {
-            console.debug("Done dragging, sucka!");
-            var elt = ui.draggable;
-            // find nearest cell using jquery-nearest lib.
-            var near_elt = $(elt).nearest('.cell');
-            var near_idx = IPython.notebook.find_cell_index($(near_elt).data().cell);
-            var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
-            var cell_id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);});
-            cell.rendered = false;
-            cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
-            cell.render();
-            // Insert the narrative data cell into the div we just rendered
-            $('#' + cell_id).kbaseNarrativeDataCell(self.draggedMeta(elt));
+        /**
+         * Helper function to create named object attrs from
+         * list of fields returned from Workspace service.
+         */
+        createInfoObject: function(info) {
+          return { id: info[0], name: info[1], type: info[2], save_date: info[3],
+                       version: info[4], saved_by: info[5], 
+                       ws_id: info[6], ws_name: info[7],
+                       chsum: info[8], size: info[9], meta: info[10]};
         },
 
         // ============= end DnD ================
@@ -554,22 +498,24 @@
         },
         
         attachRow: function(index) {
-            if (this.objectList[index].attached) { return; }
-            if (this.objectList[index].$div) {
-                this.$mainListDiv.append(this.objectList[index].$div);
+            var obj = this.objectList[index];
+            if (obj.attached) { return; }
+            if (obj.$div) {
+                this.$mainListDiv.append(obj.$div);
             } else {
-                this.objectList[index].$div = this.renderObjectRowDiv(this.objectList[index].info);
-                this.$mainListDiv.append(this.objectList[index].$div);
+                obj.$div = this.renderObjectRowDiv(obj.info, obj.key);
+                this.$mainListDiv.append(obj.$div);
             }
-            this.objectList[index].attached = true;
+            obj.attached = true;
             this.n_objs_rendered++;
         },
+
         attachRowElement: function(row) {
             if (row.attached) { return; } // return if we are already attached
             if (row.$div) {
                 this.$mainListDiv.append(row.$div);
             } else {
-                row.$div = this.renderObjectRowDiv(row.info);
+                row.$div = this.renderObjectRowDiv(row.info, row.key);
                 this.$mainListDiv.append(row.$div);
             }
             row.attached = true;
@@ -602,11 +548,17 @@
             self.detachAllRows();
             
             if (self.objectList.length>0) {
-                for(var i=0; i<self.objectList.length; i++) {
+                for(var i=0; i < self.objectList.length; i++) {
                     // only show up to the given number
-                    if (i>=self.options.objs_to_render_to_start) {
+                    if (i >= self.options.objs_to_render_to_start) {
                         self.n_objs_rendered = i;
                         break;
+                    }
+                    // If object does not have a key, define one.
+                    // This will be used for 'id' of rendered element.
+                    // But do *not* replace an existing key.
+                    if (self.objectList[i].key == undefined) {
+                        self.objectList[i].key = self.genUUID(); 
                     }
                     self.attachRow(i);
                 }
@@ -995,6 +947,7 @@
          */
         loggedInCallback: function(event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
+            console.debug("Setting this.ws from loggedInCallback:", this.ws);
             this.isLoggedIn = true;
             this.refresh();
             return this;

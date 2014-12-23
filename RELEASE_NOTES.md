@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.4
+__Changes__
+- Redesign of the Method Gallery panel
+- Adjusted Data Panel slideout to maintain its size across each internal tab
+- Added buttons to the footer in the Data Panel slideout
+
 ### Version 0.3.3
 __Changes__
 - Long running method calls that produce job ids should now be tracked properly

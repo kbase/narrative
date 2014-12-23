@@ -145,14 +145,6 @@
                 }, this)
             );
 
-                // $header.append($('<div>')
-                //                .addClass('kb-side-header')
-                //                .css('width', (100/tabs.length)+'%')
-                //                .append(tab.tabName));
-                // $body.append($('<div>')
-                //              .addClass('kb-side-tab')
-                //              .append(tab.content));
-
             this.$methodGalleryBody = $('<div>');
             this.$methodGalleryBody.kbaseMethodGallery({sidePanel : this});
             this.$methodGallery = $('<div>')
@@ -166,8 +158,9 @@
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-play"></span>')
                            .click($.proxy(function(event) {
-                               this.trigger('hideSidePanelOverlay.Narrative');
-                               this.trigger('showSidePanelOverlay.Narrative', this.$methodGallery);
+                               this.trigger('toggleSidePanelOverlay.Narrative', this.$methodGallery);
+                               // this.trigger('hideSidePanelOverlay.Narrative');
+                               // this.trigger('showSidePanelOverlay.Narrative', this.$methodGallery);
                            }, this)));
 
             if (!NarrativeMethodStore) {
@@ -812,6 +805,12 @@
             }
         },
 
+        // Temporary pass-through for Jim's gallery widget
+        toggleOverlay: function() {
+            this.trigger('toggleSidePanelOverlay.Narrative');
+        },
+
+
 
         // //cobbled together crap. Hacked out of kbaseNarrativeSidePanel and pulled into here
         // //to create the method gallery panel.
@@ -910,15 +909,14 @@
         // },
 
         // toggleOverlay: function() {
+        //     // if (this.$overlay == undefined) {
+        //     //     this.initOverlay();
+        //     // }
 
-        //     if (this.$overlay == undefined) {
-        //         this.initOverlay();
-        //     }
-
-        //     if (this.$overlay.is(':visible'))
-        //         this.hideOverlay();
-        //     else
-        //         this.showOverlay();
+        //     // if (this.$overlay.is(':visible'))
+        //     //     this.hideOverlay();
+        //     // else
+        //     //     this.showOverlay();
         // },
 
         // showOverlay: function() {

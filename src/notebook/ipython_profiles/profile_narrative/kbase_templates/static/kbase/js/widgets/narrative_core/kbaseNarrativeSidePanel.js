@@ -178,9 +178,23 @@
             this.$narrativeDimmer.position({my: 'left top', at: 'right top', of: this.$elem});
         },
 
+        /**
+         * @method
+         * @public
+         * Also available through a trigger - 'toggleSidePanelOverlay.Narrative'
+         * The behavior here is done in three cases.
+         * 1. If the overlay is currently visible, it gets hidden.
+         * 1a. If there is a panel given, and it is different from the currently attached panel, then
+         *     the new panel is attached and the overlay is redisplayed.
+         * 2. If the overlay is currently hidden, it is shown with the given panel.
+         */
         toggleOverlay: function(panel) {
-            if (this.$overlay.is(':visible'))
+            if (this.$overlay.is(':visible')) {
                 this.hideOverlay();
+                if (panel && panel !== this.currentPanel) {
+                    this.showOverlay(panel);
+                }
+            }
             else
                 this.showOverlay(panel);
         },
@@ -190,6 +204,7 @@
                 if (panel) {
                     this.$overlay.empty();
                     this.$overlay.append(panel);
+                    this.currentPanel = panel;
                 }
                 this.$narrativeDimmer.show();
                 this.$elem.find('.kb-side-header').addClass('overlay-active');

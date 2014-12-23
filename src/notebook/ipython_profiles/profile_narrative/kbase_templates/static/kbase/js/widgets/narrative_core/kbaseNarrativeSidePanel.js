@@ -314,11 +314,11 @@
 
             // add tabs
             var $tabs = this.buildTabs([
-                    {tabName: 'My Data', content: minePanel},
-                    {tabName: 'Shared', content: sharedPanel},
-                    {tabName: 'Public', content: publicPanel},
-                    {tabName: 'Example', content: examplePanel},
-                    {tabName: 'Import', content: importPanel},
+                    {tabName: '<small>My Data</small>', content: minePanel},
+                    {tabName: '<small>Shared With Me</small>', content: sharedPanel},
+                    {tabName: '<small>Public</small>', content: publicPanel},
+                    {tabName: '<small>Example</small>', content: examplePanel},
+                    {tabName: '<small>Import</small>', content: importPanel},
                 ]);
 
             importPanel.kbaseNarrativeSideImportTab({});

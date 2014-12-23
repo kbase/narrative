@@ -233,7 +233,12 @@
             				self.uploadIsReady = true;
             				self.isValid();
             				self.selectFileMode(true);
-        					//showShockInfo(self.shockNodeId);
+            				shockClient.change_node_file_name(self.shockNodeId, file.name, function(info) {
+            					//showShockInfo(self.shockNodeId);
+            				}, function(error) {
+            	            	console.log("Error changing file name for shock node " + self.shockNodeId);
+            	    			console.log(error);
+            	    		});
             			}
             			var percent = "" + (Math.floor(info.uploaded_size * 1000 / info.file_size) / 10);
             			if (percent.indexOf('.') < 0)

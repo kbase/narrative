@@ -1943,8 +1943,9 @@ div[class="tooltip-inner"] {
 
 .kb-import-item:hover {
     background-color: #f8f8f8;
-    -webkit-box-shadow: 0px 1px 2px 1px #B5B5B5;
-    box-shadow: 0px 1px 2px 1px #B5B5B5;
+    -moz-box-shadow: 0 0 2px #aaa;
+    -webkit-box-shadow: 0 0 2px #aaa;
+    box-shadow: 0 0 2px #aaa;
 }
 
 .kb-import-item hr {
@@ -1953,7 +1954,7 @@ div[class="tooltip-inner"] {
     margin-top: 15px; /*override*/
     margin-bottom: 0;
 }
-    /*
+/*
 .kb-import-item input[type="checkbox"] {
     margin: 15px 30px 15px 0px;
 }*/

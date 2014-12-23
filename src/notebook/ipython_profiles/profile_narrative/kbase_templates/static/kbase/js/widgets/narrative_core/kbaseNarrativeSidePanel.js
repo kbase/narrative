@@ -668,9 +668,11 @@
                 panel.find('.kb-import-item').unbind('hover');
                 panel.find('.kb-import-item').hover(function() {
                     $(this).find('hr').css('visibility', 'hidden');
+                    $(this).prev('.kb-import-item').find('hr').css('visibility', 'hidden');
                     $(this).find('.kb-import-checkbox').css('opacity', '.8');
                 }, function() {
                     $(this).find('hr').css('visibility', 'visible');
+                    $(this).prev('.kb-import-item').find('hr').css('visibility', 'visible');
                     $(this).find('.kb-import-checkbox').css('opacity', '.4');
                 })
 

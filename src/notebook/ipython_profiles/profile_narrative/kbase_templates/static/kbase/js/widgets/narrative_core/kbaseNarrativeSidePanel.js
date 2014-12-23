@@ -492,7 +492,6 @@
                     proms.push( ws.list_objects(params) );
                 }
 
-
                 return $.when.apply($,proms).then(function(d) {
                     // update model
                     publicData = [].concat.apply([], arguments);
@@ -705,7 +704,7 @@
                                 module: mod_type.split('.')[0],
                                 wsID: obj[6],
                                 ws: obj[7],
-                                relativeTime: kb.ui.relativeTime( kb.ui.getTimestamp(obj[3]) ) }
+                                relativeTime: kb.ui.relativeTime( Date.parse(obj[3]) ) }
 
                     if (template)
                         var item = template(item);

@@ -19,7 +19,7 @@ function Cache() {
 
     this.put = function(service, method, params, prom) {
         var obj = {};
-        obj['service'] = service;    
+        obj['service'] = service;
         obj['method'] = method;
         obj['prom'] = prom;
         obj['params'] = params;
@@ -62,7 +62,7 @@ function WSCache() {
             }
 
         // else, use strings
-        } else { 
+        } else {
             var ws = params.ws,
                 name = params.name,
                 type = params.type;
@@ -70,7 +70,7 @@ function WSCache() {
             if (ws in c && type in c[ws] && name in c[ws][type]) {
                 return false;
             } else {
-                if ( !(ws in c) ) c[ws] = {};                    
+                if ( !(ws in c) ) c[ws] = {};
                 if ( !(type in c[ws]) ) c[ws][type] = {};
                 c[ws][type][name] = params.prom;
                 return true;
@@ -125,14 +125,14 @@ function KBCacheClient(token) {
     self.ui = new UIUtils();
 
     self.req = function(service, method, params) {
-        if (service == 'fba') { 
+        if (service == 'fba') {
             // use whatever workspace server that was configured.
             // this makes it possible to use the production workspace server
             // with the fba server.   Fixme: fix once production fba server is ready.
             params.wsurl = ws_url;
         }
 
-        // see if api call has already been made        
+        // see if api call has already been made
         var data = cache.get(service, method, params);
 
         // return the promise ojbect if it has
@@ -156,7 +156,7 @@ function KBCacheClient(token) {
     self.narrative_prom = undefined;
     self.my_narratives = false;
     self.shared_narratives = false;
-    self.public_narratives = false;        
+    self.public_narratives = false;
 
     this.getNarratives = function() {
         // if narratives have been cached, return;
@@ -203,17 +203,17 @@ function KBCacheClient(token) {
             var shared_list = data[1];
             var public_list = data[2];
 
-            var my_prom = kb.ws.list_objects({workspaces: my_list, 
+            var my_prom = kb.ws.list_objects({workspaces: my_list,
                                                type: 'KBaseNarrative.Metadata',
                                                showHidden: 1});
 
-            var shared_prom = kb.ws.list_objects({workspaces: shared_list, 
+            var shared_prom = kb.ws.list_objects({workspaces: shared_list,
                                                type: 'KBaseNarrative.Metadata',
-                                               showHidden: 1});        
+                                               showHidden: 1});
 
-            var public_prom = kb.ws.list_objects({workspaces: public_list, 
+            var public_prom = kb.ws.list_objects({workspaces: public_list,
                                                type: 'KBaseNarrative.Metadata',
-                                               showHidden: 1});        
+                                               showHidden: 1});
 
             var p = $.when(my_prom, shared_prom, public_prom).then(function(d1, d2, d3) {
                 var my_nars_ws = [];
@@ -238,7 +238,7 @@ function KBCacheClient(token) {
                     public_nars_ws.push(ws);
                 }
 
-                return [my_nars_ws, shared_nars_ws, public_nars_ws];         
+                return [my_nars_ws, shared_nars_ws, public_nars_ws];
             })
 
             return p;
@@ -252,15 +252,15 @@ function KBCacheClient(token) {
             var shared_ws = data[1];
             var public_ws = data[2];
 
-            var my_prom = kb.ws.list_objects({workspaces: mine_ws, 
+            var my_prom = kb.ws.list_objects({workspaces: mine_ws,
                                               type: 'KBaseNarrative.Narrative',
                                               showHidden: 1});
 
-            var shared_prom = kb.ws.list_objects({workspaces: shared_ws, 
+            var shared_prom = kb.ws.list_objects({workspaces: shared_ws,
                                                   type: 'KBaseNarrative.Narrative',
-                                                  showHidden: 1});        
+                                                  showHidden: 1});
 
-            var public_prom = kb.ws.list_objects({workspaces: public_ws, 
+            var public_prom = kb.ws.list_objects({workspaces: public_ws,
                                                   type: 'KBaseNarrative.Narrative',
                                                   showHidden: 1});
 
@@ -281,7 +281,7 @@ function KBCacheClient(token) {
 
             var all_proms = [my_prom, shared_prom, public_prom].concat(perm_proms)
 
-            var p = $.when.apply($, all_proms).then(function() { 
+            var p = $.when.apply($, all_proms).then(function() {
                 // fill counts now (since there's no api for this)
 
                 var mine = arguments[0];
@@ -297,16 +297,16 @@ function KBCacheClient(token) {
                 } else {
                     for (var i = 0; i<all_ws.length; i++) {
                         perms[all_ws[i]] = {'Everybody': 'r'}
-                    }                    
+                    }
                 }
 
                 $('.my-nar-count').text(mine.length);
-                $('.shared-nar-count').text(shared.length);  
-                $('.public-nar-count').text(pub.length);            
+                $('.shared-nar-count').text(shared.length);
+                $('.public-nar-count').text(pub.length);
 
-                return {my_narratives: mine, 
-                        shared_narratives: shared, 
-                        public_narratives: pub, 
+                return {my_narratives: mine,
+                        shared_narratives: shared,
+                        public_narratives: pub,
                         perms: perms};
             });
 
@@ -332,13 +332,13 @@ function KBCacheClient(token) {
             //if (prom) return prom;
 
             var p = self.ws.get_objects([{ref: ws}]);
-            //c.put({ref: ws, prom: p});            
+            //c.put({ref: ws, prom: p});
         } else {
             //var prom = c.get({ws: ws, name: name, type: 'FBA'});
-            //if (prom) return prom;            
+            //if (prom) return prom;
 
             var p = self.ws.get_objects([{workspace: ws, name: name}]);
-            //c.put({ws: ws, name:name, type: 'FBA', prom: prom});            
+            //c.put({ws: ws, name:name, type: 'FBA', prom: prom});
         }
 
         // get fba object
@@ -350,7 +350,7 @@ function KBCacheClient(token) {
                 var rxn_objs = m[0].data.modelreactions
                 var cpd_objs = m[0].data.modelcompounds
 
-                // for each reaction, get reagents and 
+                // for each reaction, get reagents and
                 // create equation by using the model compound objects
                 var eqs = self.createEQs(cpd_objs, rxn_objs, 'modelReactionReagents')
 
@@ -376,16 +376,16 @@ function KBCacheClient(token) {
     self.get_model = function(ws, name){
         if (ws && ws.indexOf('/') != -1) {
             //var prom = c.get({ref: ws});
-            //if (prom) return prom; 
+            //if (prom) return prom;
 
             var p = self.ws.get_objects([{ref: ws}]);
-            //c.put({ref: ws, prom: p}); 
+            //c.put({ref: ws, prom: p});
         } else {
             //var prom = c.get({ws: ws, name: name, type: 'Model'});
-            //if (prom) return prom; 
+            //if (prom) return prom;
 
             var p = self.ws.get_objects([{workspace: ws, name: name}]);
-            //c.put({ws: ws, name:name, type:'Model', prom:p});              
+            //c.put({ws: ws, name:name, type:'Model', prom:p});
         }
 
         var prom = $.when(p).then(function(m) {
@@ -393,7 +393,7 @@ function KBCacheClient(token) {
             var rxn_objs = m_obj.modelreactions;
             var cpd_objs = m_obj.modelcompounds
 
-            // for each reaction, get reagents and 
+            // for each reaction, get reagents and
             // create equation by using the model compound objects
             var eqs = self.createEQs(cpd_objs, rxn_objs, 'modelReactionReagents')
 
@@ -443,11 +443,11 @@ function KBCacheClient(token) {
                 var human_cpd = mapping[cpd];
                 var compart = ref.split('_')[1]
 
-                if (coef < 0) { 
-                    lhs.push( (coef == -1 ? human_cpd+'['+compart+']' 
+                if (coef < 0) {
+                    lhs.push( (coef == -1 ? human_cpd+'['+compart+']'
                                 : '('+(-1*coef)+')'+human_cpd+'['+compart+']') );
                 } else {
-                    rhs.push( (coef == 1 ? human_cpd+'['+compart+']' 
+                    rhs.push( (coef == 1 ? human_cpd+'['+compart+']'
                                 : '('+coef+')'+human_cpd+'['+compart+']')  );
                 }
             }
@@ -470,15 +470,15 @@ function KBCacheClient(token) {
         if (all) {
             var p = self.ws.list_workspace_info({});
         } else {
-            var p = self.ws.list_workspace_info({perm: 'w'});            
+            var p = self.ws.list_workspace_info({perm: 'w'});
         }
-        
+
         var prom = $.when(p).then(function(workspaces){
             var workspaces = workspaces.sort(compare)
 
             function compare(a,b) {
-                var t1 = kb.ui.getTimestamp(b[3]) 
-                var t2 = kb.ui.getTimestamp(a[3]) 
+                var t1 = Date.parse(b[3])
+                var t2 = Date.parse(a[3])
                 if (t1 < t2) return -1;
                 if (t1 > t2) return 1;
                 return 0;
@@ -528,13 +528,13 @@ function KBCacheClient(token) {
                 } else {
                     not_found.show();
                 }
-            }) 
+            })
 
             dd.find('li').click(function() {
                 dd.find('li').removeClass('active');
 
                 if (!$(this).hasClass('select-ws-dd-not-found')) {
-                    $(this).addClass('active');                    
+                    $(this).addClass('active');
 
                     var val = $(this).text();
                     input.val(val);
@@ -553,7 +553,7 @@ function KBCacheClient(token) {
 function UIUtils() {
 
     // this method will display an absolutely position notification
-    // in the app on the 'body' tag.  This is useful for api success/failure 
+    // in the app on the 'body' tag.  This is useful for api success/failure
     // notifications
     this.notify = function(text, type, keep) {
         var ele = $('<div id="notification-container">'+
@@ -593,7 +593,7 @@ function UIUtils() {
     var dayOfWeek = {0: 'Sun', 1: 'Mon', 2:'Tues',3:'Wed',
                      4:'Thurs', 5:'Fri', 6: 'Sat'};
     var months = {0: 'Jan', 1: 'Feb', 2: 'March', 3: 'April', 4: 'May',
-                  5:'June', 6: 'July', 7: 'Aug', 8: 'Sept', 9: 'Oct', 
+                  5:'June', 6: 'July', 7: 'Aug', 8: 'Sept', 9: 'Oct',
                   10: 'Nov', 11: 'Dec'};
     this.relativeTime = function(timestamp) {
         var date = new Date()
@@ -621,10 +621,10 @@ function UIUtils() {
             return hours + " hours ago"
         } else if (days == 1) {
             var d = new Date(timestamp);
-            var t = d.toLocaleTimeString().split(':');        
+            var t = d.toLocaleTimeString().split(':');
             return 'yesterday at ' + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
         } else if (days < 7) {
-            var d = new Date(timestamp);        
+            var d = new Date(timestamp);
             var day = dayOfWeek[d.getDay()]
             var t = d.toLocaleTimeString().split(':');
             return day + " at " + t[0]+':'+t[1]+' '+t[2].split(' ')[1]; //check
@@ -634,15 +634,6 @@ function UIUtils() {
         }
     }
 
-    // takes mod date time (2014-03-24T22:20:23)
-    // and returns unix (epoch) time
-    this.getTimestamp = function(datetime){
-        if (!datetime) return; 
-        var ymd = datetime.split('T')[0].split('-');
-        var hms = datetime.split('T')[1].split(':');
-        hms[2] = hms[2].split('+')[0];  
-        return Date.UTC(ymd[0],ymd[1]-1,ymd[2],hms[0],hms[1],hms[2]);  
-    }
 
     this.objTable = function(table_id, obj, keys, labels) {
         var table = $('<table class="table table-striped table-bordered" \
@@ -699,24 +690,24 @@ function UIUtils() {
 		var route;
 
                 switch (kind) {
-                    case 'FBA': 
+                    case 'FBA':
                         route = 'ws.fbas';
                         break;
-                    case 'FBAModel': 
+                    case 'FBAModel':
                         route = 'ws.mv.model';
                         break;
-                    case 'Media': 
+                    case 'Media':
                         route = 'media/';
                         break;
-                    case 'Genome': 
+                    case 'Genome':
                         route = 'genomes/';
                         break;
-                    case 'MetabolicMap': 
+                    case 'MetabolicMap':
                         route = 'ws.maps';
                         break;
-                    case 'PhenotypeSet': 
+                    case 'PhenotypeSet':
                         route = 'ws.phenotype';
-                        break; 
+                        break;
                 }
 
                 var link = '<a href="#/'+route+label+'">'+label+'</a>'
@@ -726,7 +717,7 @@ function UIUtils() {
         })
         return p;
     }
-           
+
     this.formatUsers = function(perms, mine) {
         var users = []
         for (var user in perms) {
@@ -735,7 +726,7 @@ function UIUtils() {
                 continue;
             } else if (user == USER_ID) {
                 continue;
-            } 
+            }
             users.push(user);
         }
 
@@ -751,7 +742,7 @@ function UIUtils() {
             /*if (users.slice(n).length == 1) {*/
                 share_str = users.slice(0, n).join(', ')+', '+
                         ' <a class="btn-share-with" data-users="'+users+'">+'
-                        +users.slice(n).length+' user</a>';  
+                        +users.slice(n).length+' user</a>';
             /*} else if (users.slice(2).length > 1) {
                 share_str = users.slice(0, n).join(', ')+ ', '+
                         ' <a class="btn-share-with" data-users="'+users+'"> +'
@@ -766,8 +757,8 @@ function UIUtils() {
 
 
 
-    // jQuery plugins that you can use to add and remove a 
-    // loading giff to a dom element.  This is easier to maintain, and likely less 
+    // jQuery plugins that you can use to add and remove a
+    // loading giff to a dom element.  This is easier to maintain, and likely less
     // code than using CSS classes.
     $.fn.loading = function(text, big) {
         $(this).rmLoading()
@@ -778,7 +769,7 @@ function UIUtils() {
                      '<img src="../../static/kbase/images/ajax-loader.gif"> '+text+'</p>');
             } else {
                 $(this).append('<p class="text-center text-muted loader"><br>'+
-                     '<img src="../../static/kbase/images/ajax-loader.gif"> loading...</p>')        
+                     '<img src="../../static/kbase/images/ajax-loader.gif"> loading...</p>')
             }
         } else {
             if (typeof text != 'undefined') {
@@ -786,7 +777,7 @@ function UIUtils() {
                      '<img src="../../static/kbase/images/ajax-loader.gif"> '+text+'</p>');
             } else {
                 $(this).append('<p class="text-muted loader">'+
-                     '<img src="../../static/kbase/images/ajax-loader.gif"> loading...</p>')        
+                     '<img src="../../static/kbase/images/ajax-loader.gif"> loading...</p>')
             }
 
         }
@@ -808,10 +799,10 @@ function UIUtils() {
 function getBio(type, loaderDiv, callback) {
     var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
 //    var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
-//    var kbws = new workspaceService('http://140.221.84.209:7058');    
+//    var kbws = new workspaceService('http://140.221.84.209:7058');
 
     var kbws = new Workspace('http://kbase.us/services/ws');
-    
+
     // This is not cached yet; waiting to compare performanced.
     loaderDiv.append('<div class="progress">\
           <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 3%;">\
@@ -824,7 +815,7 @@ function getBio(type, loaderDiv, callback) {
     k = 1;
     $.when(bioAJAX).done(function(d){
         if (type == 'cpds') {
-            var objs = d.compounds; 
+            var objs = d.compounds;
         } else if (type == 'rxns') {
             var objs = d.reactions;
         }
@@ -846,7 +837,7 @@ function getBio(type, loaderDiv, callback) {
                 $('.progress-bar').css('width', percent);
 
                 if (k == iterations) {
-                    $('.progress').remove();                        
+                    $('.progress').remove();
                     callback(data)
                 }
             });

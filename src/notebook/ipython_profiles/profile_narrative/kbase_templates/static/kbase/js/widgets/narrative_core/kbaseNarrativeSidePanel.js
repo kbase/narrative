@@ -495,7 +495,8 @@
 
                 return $.when.apply($,proms).then(function(d) {
                     // update model
-                    publicData = [].concat.apply([], arguments);;
+                    publicData = [].concat.apply([], arguments);
+                    console.log('publicdata', publicData)
                     render(publicData, publicPanel, publicSelected, template);
                 })
             }
@@ -942,10 +943,11 @@
                 var publicList = [{type: 'Genomes', ws: 'pubSEEDGenomes'},
                                   {type: 'Media', ws: 'KBaseMedia'},
                                   {type: 'Models', ws: 'KBasePublicModelsV4'},
-                                  {type: 'RNA Seq', ws: 'KBasePublicRNASeq'}];
+                                  {type: 'RNA Seqs', ws: 'KBasePublicRNASeq'}];
+                var selected = publicList[0];
 
                 // get initial public data;
-                ws.get_workspace_info({workspace: publicList[0].ws})
+                ws.get_workspace_info({workspace: selected.ws})
                   .done(function(d){
                       getPublicData(d, publicTemplate);
                   })
@@ -953,14 +955,16 @@
                 // filter for public objects
                 var wsInput = $('<select class="form-control kb-import-filter">');
                 for (var i=0; i < publicList.length; i++) {
-                    wsInput.append('<option data-name="'+publicList[i].ws+'">'+
+                    wsInput.append('<option data-type="'+publicList[i].type+
+                                         '" data-name="'+publicList[i].ws+'">'+
                                           publicList[i].type+
                                    '</option>');
                 }
                 var wsFilter = $('<div class="col-sm-4">').append(wsInput);
 
                 // search filter
-                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter public objects">');
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter '+
+                                    selected.type+'">');
                 var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
                 // event for filter (search)
@@ -974,21 +978,27 @@
                 var row = $('<div class="row">').append(searchFilter, wsFilter);
                 publicPanel.append(row);
 
+
                 // event for type (workspace) dropdown
                 wsInput.change(function() {
-                    var ws = $(this).children('option:selected').data('name');
+                    var active = $(this).children('option:selected');
+                    var type = active.data('type'),
+                        workspace = active.data('name');
+
+                    filterInput.attr('placeholder', 'Filter '+type);
 
                     // request again with filted type
                     publicPanel.find('.kb-import-items').remove();
                     publicPanel.loading();
 
-                    ws.get_workspace_info({workspace: ws})
+                    ws.get_workspace_info({workspace: workspace})
                       .done(function(d){
                             getPublicData(d, publicTemplate).done(function() {
                                 publicPanel.rmLoading();
                             })
                       })
-                })
+                });
+
             }
 
         }

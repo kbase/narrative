@@ -117,7 +117,11 @@ def app_state_output_into_method_output(workspace, token, wsClient, methodSpec, 
     methodOut = None
     if 'kb_service_input_mapping' in methodSpec['behavior'] or 'script_input_mapping' in methodSpec['behavior']:
         if 'kb_service_input_mapping' in methodSpec['behavior']:
-            rpcOut = json.loads(rpcOut)
+            try:
+                rpcOut = json.loads(rpcOut)
+            except Exception as err:
+                ##raise ValueError("Error parsing: " + rpcOut)
+                pass
         input = {}
         tempArgs = []
         prepare_njs_method_input(token, wsClient, workspace, methodSpec, methodInputValues, input);

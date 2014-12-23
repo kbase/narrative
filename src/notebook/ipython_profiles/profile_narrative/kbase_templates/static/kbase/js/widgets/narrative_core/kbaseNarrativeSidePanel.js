@@ -959,8 +959,19 @@
                 }
                 var wsFilter = $('<div class="col-sm-4">').append(wsInput);
 
+                // search filter
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter public objects">');
+                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
-                var row = $('<div class="row">').append(wsFilter);
+                // event for filter (search)
+                filterInput.keyup(function(e){
+                    query = $(this).val();
+
+                    var filtered = filterData(publicData, {query:query})
+                    render(filtered, publicPanel, publicSelected);
+                });
+
+                var row = $('<div class="row">').append(searchFilter, wsFilter);
                 publicPanel.append(row);
 
                 // event for type (workspace) dropdown

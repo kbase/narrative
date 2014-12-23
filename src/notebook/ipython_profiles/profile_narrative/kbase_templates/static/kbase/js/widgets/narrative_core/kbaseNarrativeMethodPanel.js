@@ -145,7 +145,22 @@
                 }, this)
             );
 
-            this.$methodGallery = $('<div>').kbaseMethodGallery({sidePanel : this});
+                // $header.append($('<div>')
+                //                .addClass('kb-side-header')
+                //                .css('width', (100/tabs.length)+'%')
+                //                .append(tab.tabName));
+                // $body.append($('<div>')
+                //              .addClass('kb-side-tab')
+                //              .append(tab.content));
+
+            this.$methodGalleryBody = $('<div>');
+            this.$methodGalleryBody.kbaseMethodGallery({sidePanel : this});
+            this.$methodGallery = $('<div>')
+                                  .append($('<div>')
+                                          .addClass('kb-side-header')
+                                          .css({'width':'100%'})
+                                          .append('Methods'))
+                                  .append(this.$methodGalleryBody);
 
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
@@ -153,12 +168,7 @@
                            .click($.proxy(function(event) {
                                this.trigger('hideSidePanelOverlay.Narrative');
                                this.trigger('showSidePanelOverlay.Narrative', this.$methodGallery);
-//                               this.toggleOverlay();
                            }, this)));
-
-            // $(document).on('hideGalleryPanelOverlay.Narrative', $.proxy(function(event) {
-            //     this.hideOverlay();
-            // }, this));
 
             if (!NarrativeMethodStore) {
                 this.showError('Unable to connect to KBase Method Store!');
@@ -803,225 +813,225 @@
         },
 
 
-        //cobbled together crap. Hacked out of kbaseNarrativeSidePanel and pulled into here
-        //to create the method gallery panel.
-        buildTabs: function(tabs) {
-            var $header = $('<div>');
-            var $body = $('<div>');
+        // //cobbled together crap. Hacked out of kbaseNarrativeSidePanel and pulled into here
+        // //to create the method gallery panel.
+        // buildTabs: function(tabs) {
+        //     var $header = $('<div>');
+        //     var $body = $('<div>');
 
-            for (var i=0; i<tabs.length; i++) {
-                var tab = tabs[i];
-                $header.append($('<div>')
-                               .addClass('kb-side-header')
-                               .css('width', (100/tabs.length)+'%')
-                               .append(tab.tabName));
-                $body.append($('<div>')
-                             .addClass('kb-side-tab')
-                             .append(tab.content));
-            }
+        //     for (var i=0; i<tabs.length; i++) {
+        //         var tab = tabs[i];
+        //         $header.append($('<div>')
+        //                        .addClass('kb-side-header')
+        //                        .css('width', (100/tabs.length)+'%')
+        //                        .append(tab.tabName));
+        //         $body.append($('<div>')
+        //                      .addClass('kb-side-tab')
+        //                      .append(tab.content));
+        //     }
 
-            // // if show, show 'em all, and trigger the class for the kb-has-hidden attribute
-            // if (show) {
-            //     this.$functionPanel.find('.panel-default').show();
-            //     this.$functionPanel.find('.kb-data-obj-name').parent().show();
-            //     this.$functionPanel.find('[kb-has-hidden]').addClass('kb-function-cat-dim');
-            // }
-            // // otherwise, remove the kb-function-cat-dim class from everything, and
-            // // show only those that do not have kb-function-dim, and hide the rest
-            // else {
-            //     this.$functionPanel.find('.panel-default').removeClass('kb-function-cat-dim');
-            //     this.$functionPanel.find('.kb-function-dim').hide();
-            //     this.$functionPanel.find('.panel:not(.kb-function-dim)').show();
-            //     this.$functionPanel.find('li:not(.kb-function-dim)').show();
-            // }
-            $header.find('div').click(function(event) {
-                event.preventDefault();
-                event.stopPropagation();
-                var $headerDiv = $(event.currentTarget);
+        //     // // if show, show 'em all, and trigger the class for the kb-has-hidden attribute
+        //     // if (show) {
+        //     //     this.$functionPanel.find('.panel-default').show();
+        //     //     this.$functionPanel.find('.kb-data-obj-name').parent().show();
+        //     //     this.$functionPanel.find('[kb-has-hidden]').addClass('kb-function-cat-dim');
+        //     // }
+        //     // // otherwise, remove the kb-function-cat-dim class from everything, and
+        //     // // show only those that do not have kb-function-dim, and hide the rest
+        //     // else {
+        //     //     this.$functionPanel.find('.panel-default').removeClass('kb-function-cat-dim');
+        //     //     this.$functionPanel.find('.kb-function-dim').hide();
+        //     //     this.$functionPanel.find('.panel:not(.kb-function-dim)').show();
+        //     //     this.$functionPanel.find('li:not(.kb-function-dim)').show();
+        //     // }
+        //     $header.find('div').click(function(event) {
+        //         event.preventDefault();
+        //         event.stopPropagation();
+        //         var $headerDiv = $(event.currentTarget);
 
-                if (!$headerDiv.hasClass('active')) {
-                    var idx = $headerDiv.index();
-                    $header.find('div').removeClass('active');
-                    $headerDiv.addClass('active');
-                    $body.find('div.kb-side-tab').removeClass('active');
-                    $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
-                }
-            });
+        //         if (!$headerDiv.hasClass('active')) {
+        //             var idx = $headerDiv.index();
+        //             $header.find('div').removeClass('active');
+        //             $headerDiv.addClass('active');
+        //             $body.find('div.kb-side-tab').removeClass('active');
+        //             $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
+        //         }
+        //     });
 
-            $header.find('div:first-child').addClass('active');
-            $body.find('div:first-child.kb-side-tab').addClass('active');
+        //     $header.find('div:first-child').addClass('active');
+        //     $body.find('div:first-child.kb-side-tab').addClass('active');
 
-            return {
-                header: $header,
-                body: $body
-            };
-        },
+        //     return {
+        //         header: $header,
+        //         body: $body
+        //     };
+        // },
 
-        initOverlay: function() {
-            var $overlayHeader = $('<div>')
-                                 .addClass('kb-side-overlay-header')
-                                 .append('Header!')
-                                 .append($('<div>')
-                                        .addClass('pull-right')
-                                        .append($('<span>')
-                                                .addClass('kb-side-overlay-close glyphicon glyphicon-remove')
-                                        .click($.proxy(function(event) {
-                                           this.toggleOverlay();
-                                        }, this))));
+        // initOverlay: function() {
+        //     var $overlayHeader = $('<div>')
+        //                          .addClass('kb-side-overlay-header')
+        //                          .append('Header!')
+        //                          .append($('<div>')
+        //                                 .addClass('pull-right')
+        //                                 .append($('<span>')
+        //                                         .addClass('kb-side-overlay-close glyphicon glyphicon-remove')
+        //                                 .click($.proxy(function(event) {
+        //                                    this.toggleOverlay();
+        //                                 }, this))));
 
-            // styling is easier if there is a class for containers
-            this.$overlayBody = $('<div class="kb-overlay-body">');
+        //     // styling is easier if there is a class for containers
+        //     this.$overlayBody = $('<div class="kb-overlay-body">');
 
-            this.$overlayFooter  = $('<div class="kb-overlay-footer">');
+        //     this.$overlayFooter  = $('<div class="kb-overlay-footer">');
 
-            this.$overlay = $('<div>')
-                            .addClass('kb-side-overlay-container')
-                            //.append($overlayHeader)
-                            .append(this.$overlayBody)
-                            .append(this.$overlayFooter);
+        //     this.$overlay = $('<div>')
+        //                     .addClass('kb-side-overlay-container')
+        //                     //.append($overlayHeader)
+        //                     .append(this.$overlayBody)
+        //                     .append(this.$overlayFooter);
 
-            $('body').append(this.$overlay);
-            this.$overlay.hide();
+        //     $('body').append(this.$overlay);
+        //     this.$overlay.hide();
 
-            this.$narrativeDimmer = $('<div>')
-                                    .addClass('kb-overlay-dimmer');
-            $('body').append(this.$narrativeDimmer);
-            this.$narrativeDimmer.hide();
-            this.updateOverlayPosition();
+        //     this.$narrativeDimmer = $('<div>')
+        //                             .addClass('kb-overlay-dimmer');
+        //     $('body').append(this.$narrativeDimmer);
+        //     this.$narrativeDimmer.hide();
+        //     this.updateOverlayPosition();
 
-            this.buildOverlay();
-        },
+        //     this.buildOverlay();
+        // },
 
-        updateOverlayPosition: function() {
-        console.log("ME IS ", this.$elem);
-        console.log("HE IS", this.$elem.closest('.kb-side-panel'));
-            this.$overlay.position({my: 'left top', at: 'right top', of: this.$elem.closest('.kb-side-panel')});
-            this.$narrativeDimmer.position({my: 'left top', at: 'right top', of: this.$elem.closest('.kb-side-panel')});
-        },
+        // updateOverlayPosition: function() {
+        // console.log("ME IS ", this.$elem);
+        // console.log("HE IS", this.$elem.closest('.kb-side-panel'));
+        //     this.$overlay.position({my: 'left top', at: 'right top', of: this.$elem.closest('.kb-side-panel')});
+        //     this.$narrativeDimmer.position({my: 'left top', at: 'right top', of: this.$elem.closest('.kb-side-panel')});
+        // },
 
-        toggleOverlay: function() {
+        // toggleOverlay: function() {
 
-            if (this.$overlay == undefined) {
-                this.initOverlay();
-            }
+        //     if (this.$overlay == undefined) {
+        //         this.initOverlay();
+        //     }
 
-            if (this.$overlay.is(':visible'))
-                this.hideOverlay();
-            else
-                this.showOverlay();
-        },
+        //     if (this.$overlay.is(':visible'))
+        //         this.hideOverlay();
+        //     else
+        //         this.showOverlay();
+        // },
 
-        showOverlay: function() {
-            if (this.$overlay) {
-                this.$narrativeDimmer.show();
-                this.$elem.find('.kb-side-header').addClass('overlay-active');
-                this.$overlay.show('slide', 'fast', $.proxy(function() {
-                }, this));
-            }
-        },
+        // showOverlay: function() {
+        //     if (this.$overlay) {
+        //         this.$narrativeDimmer.show();
+        //         this.$elem.find('.kb-side-header').addClass('overlay-active');
+        //         this.$overlay.show('slide', 'fast', $.proxy(function() {
+        //         }, this));
+        //     }
+        // },
 
-        hideOverlay: function() {
-            if (this.$overlay) {
-                this.$narrativeDimmer.hide();
-                this.$elem.find('.kb-side-header').removeClass('overlay-active');
-                this.$overlay.hide('slide', 'fast', $.proxy(function() {
-                }, this));
-            }
-        },
+        // hideOverlay: function() {
+        //     if (this.$overlay) {
+        //         this.$narrativeDimmer.hide();
+        //         this.$elem.find('.kb-side-header').removeClass('overlay-active');
+        //         this.$overlay.hide('slide', 'fast', $.proxy(function() {
+        //         }, this));
+        //     }
+        // },
 
-        /**
-         * Builds the general structure for a panel set.
-         * These are intended to start with 2 panels, but we can move from there if needed.
-         *
-         * (I'll jsdoc this up in a bit)
-         * widgets = [
-         *     {
-         *         name: kbaseNarrativeDataPanel (for instance)
-         *         params: {}
-         *     }
-         * ]
-         * @param {object} widgets
-         *
-         */
-
-
-        /**
-         * Renders the method gallery panel
-        */
-        buildOverlay: function() {
-            var narWSName;
-            $(document).on('setWorkspaceName.Narrative', function(e, info){
-                narWSName = info.wsId;
-            })
-
-            var self = this;
-            var user = $("#signin-button").kbaseLogin('session', 'user_id');
-
-            var body = this.$overlayBody;
-            var footer = this.$overlayFooter;
-
-            // models
-            var myData = [],
-                sharedData = [],
-                publicData = [];
-
-            // models for filter selections
-            var query;
-
-            // models for options in type and workspace dropdowns
-            var types = [];
-                workspaces =[];
-
-            // tab panels
-            var minePanel = $('<div class="kb-import-panel">'),
-                sharedPanel = $('<div class="kb-import-panel">'),
-                publicPanel = $('<div class="kb-import-panel">'),
-                importPanel = $('<div class="kb-import-panel">');
-                galleryPanel = $('<div class="kb-import-panel">');
-
-            // content wrapper
-            var content = $('<div class="kb-import-content">');
-
-            // add tabs
-            var $tabs = this.buildTabs([
-                    {tabName: 'Gallery', content: galleryPanel},
-                ]);
-
-            galleryPanel.kbaseMethodGallery({sidePanel : this});
-
-            body.addClass('kb-side-panel');
-            body.append($tabs.header).append($tabs.body);
-
-            // It is silly to invoke a new object for each widget
-            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
-            var ws = new Workspace(this.options.workspaceURL, auth);
+        // /**
+        //  * Builds the general structure for a panel set.
+        //  * These are intended to start with 2 panels, but we can move from there if needed.
+        //  *
+        //  * (I'll jsdoc this up in a bit)
+        //  * widgets = [
+        //  *     {
+        //  *         name: kbaseNarrativeDataPanel (for instance)
+        //  *         params: {}
+        //  *     }
+        //  * ]
+        //  * @param {object} widgets
+        //  *
+        //  */
 
 
-            // get possible types (not used)
-            /*
-            ws.list_all_types({}).done(function(res) {
-                console.log('types', res)
+        // /**
+        //  * Renders the method gallery panel
+        // */
+        // buildOverlay: function() {
+        //     var narWSName;
+        //     $(document).on('setWorkspaceName.Narrative', function(e, info){
+        //         narWSName = info.wsId;
+        //     })
 
-                var types = [];
-                for (var mod in res) {
-                    var typeNames = res[mod]
-                    for (var type in typeNames) {
-                        types.push(type);
-                    }
-                }
-                console.log('type_names', types)
-            })*/
+        //     var self = this;
+        //     var user = $("#signin-button").kbaseLogin('session', 'user_id');
+
+        //     var body = this.$overlayBody;
+        //     var footer = this.$overlayFooter;
+
+        //     // models
+        //     var myData = [],
+        //         sharedData = [],
+        //         publicData = [];
+
+        //     // models for filter selections
+        //     var query;
+
+        //     // models for options in type and workspace dropdowns
+        //     var types = [];
+        //         workspaces =[];
+
+        //     // tab panels
+        //     var minePanel = $('<div class="kb-import-panel">'),
+        //         sharedPanel = $('<div class="kb-import-panel">'),
+        //         publicPanel = $('<div class="kb-import-panel">'),
+        //         importPanel = $('<div class="kb-import-panel">');
+        //         galleryPanel = $('<div class="kb-import-panel">');
+
+        //     // content wrapper
+        //     var content = $('<div class="kb-import-content">');
+
+        //     // add tabs
+        //     var $tabs = this.buildTabs([
+        //             {tabName: 'Gallery', content: galleryPanel},
+        //         ]);
+
+        //     galleryPanel.kbaseMethodGallery({sidePanel : this});
+
+        //     body.addClass('kb-side-panel');
+        //     body.append($tabs.header).append($tabs.body);
+
+        //     // It is silly to invoke a new object for each widget
+        //     var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
+        //     var ws = new Workspace(this.options.workspaceURL, auth);
 
 
-            // add footer status container and button
-            var importStatus = $('<div class="pull-left kb-import-status">');
-            footer.append(importStatus)
+        //     // get possible types (not used)
+        //     /*
+        //     ws.list_all_types({}).done(function(res) {
+        //         console.log('types', res)
 
-            body.append(footer);
+        //         var types = [];
+        //         for (var mod in res) {
+        //             var typeNames = res[mod]
+        //             for (var type in typeNames) {
+        //                 types.push(type);
+        //             }
+        //         }
+        //         console.log('type_names', types)
+        //     })*/
 
 
-            }
+        //     // add footer status container and button
+        //     var importStatus = $('<div class="pull-left kb-import-status">');
+        //     footer.append(importStatus)
 
-        //end cobbled together crap
+        //     body.append(footer);
+
+
+        //     }
+
+        // //end cobbled together crap
     });
 })( jQuery );

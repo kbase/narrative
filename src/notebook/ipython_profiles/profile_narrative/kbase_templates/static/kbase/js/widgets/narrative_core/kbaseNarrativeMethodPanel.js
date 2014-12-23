@@ -159,8 +159,6 @@
                            .append('<span class="glyphicon glyphicon-play"></span>')
                            .click($.proxy(function(event) {
                                this.trigger('toggleSidePanelOverlay.Narrative', this.$methodGallery);
-                               // this.trigger('hideSidePanelOverlay.Narrative');
-                               // this.trigger('showSidePanelOverlay.Narrative', this.$methodGallery);
                            }, this)));
 
             if (!NarrativeMethodStore) {

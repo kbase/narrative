@@ -202,7 +202,9 @@
         showOverlay: function(panel) {
             if (this.$overlay) {
                 if (panel) {
-                    this.$overlay.empty();
+                    if (this.currentPanel)
+                        $(this.currentPanel).detach();
+//                    this.$overlay.firstChild().detach();
                     this.$overlay.append(panel);
                     this.currentPanel = panel;
                 }

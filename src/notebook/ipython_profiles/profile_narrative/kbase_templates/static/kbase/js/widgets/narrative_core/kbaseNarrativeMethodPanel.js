@@ -149,7 +149,7 @@
             this.$methodGalleryBody.kbaseMethodGallery({sidePanel : this});
             this.$methodGallery = $('<div>')
                                   .append($('<div>')
-                                          .addClass('kb-side-header')
+                                          .addClass('kb-side-header active')
                                           .css({'width':'100%'})
                                           .append('Methods'))
                                   .append(this.$methodGalleryBody);

@@ -255,6 +255,8 @@
          * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
         dataImporter: function() {
+            var maxObjFetch = 300000;
+
             var narWSName;
             $(document).on('setWorkspaceName.Narrative', function(e, info){
                 narWSName = info.wsId;
@@ -395,8 +397,11 @@
             function getMyData(workspaces, type, ws_name) {
                 var params = {};
                 if (!ws_name) {
-                    var ws_ids = [];
-                    for (var i in workspaces) ws_ids.push(workspaces[i].id);
+                    var ws_ids = [], obj_count = 0;
+                    for (var i in workspaces) {
+                        ws_ids.push(workspaces[i].id);
+                        obj_count = workspaces[i].count + obj_count;
+                    }
 
                     params.ids = ws_ids;
                 } else
@@ -404,12 +409,26 @@
 
                 if (type) params.type = type;
 
+                if (obj_count > maxObjFetch)
+                    console.error("user's object count for owned workspaces was", obj_count);
+
+                console.log('total owned data is', obj_count)
+
+                var req_count = Math.ceil(obj_count/10000);
+
+                var proms = [];
+                proms.push( ws.list_objects(params) );
+                for (var i=1; i < req_count; i++) {
+                    params.skip = 10000 * i;
+                    proms.push( ws.list_objects(params) );
+                }
+
                 var p = ws.list_objects(params);
                 return $.when(p).then(function(d) {
                     // update model
-                    myData = d;
+                    myData = [].concat.apply([], arguments);
                     render(myData, minePanel, mineSelected);
-                })
+                });
             }
 
 
@@ -417,8 +436,11 @@
             function getSharedData(workspaces, type, ws_name) {
                 var params = {};
                 if (!ws_name) {
-                    var ws_ids = [];
-                    for (var i in workspaces) ws_ids.push(workspaces[i].id);
+                    var ws_ids = [], obj_count = 0;
+                    for (var i in workspaces) {
+                        ws_ids.push(workspaces[i].id);
+                        obj_count = workspaces[i].count + obj_count;
+                    }
 
                     params.ids = ws_ids;
                 } else
@@ -426,20 +448,54 @@
 
                 if (type) params.type = type;
 
-                var p = ws.list_objects(params);
-                return $.when(p).then(function(d) {
+                if (obj_count > maxObjFetch)
+                    console.error("user's object count for shared workspaces was", obj_count);
+
+                console.log('total shared data', obj_count);
+
+                var req_count = Math.ceil(obj_count/10000);
+
+                var proms = [];
+                proms.push( ws.list_objects(params) );
+                for (var i=1; i < req_count; i++) {
+                    params.skip = 10000 * i;
+                    proms.push( ws.list_objects(params) );
+                }
+
+                return $.when.apply($, proms).then(function() {
                     // update model
-                    sharedData = d;
+                    sharedData = [].concat.apply([], arguments);
                     render(sharedData, sharedPanel, sharedSelected);
                 })
             }
 
             // function used to update shared with me data list
             function getPublicData(workspace, template) {
-                var p = ws.list_objects({workspaces: [workspace]});
-                return $.when(p).then(function(d) {
+                console.log('workspace is ', workspace)
+                var obj_count = workspace[4],
+                    ws_name = workspace[1];
+
+                if (obj_count > maxObjFetch)
+                    console.error("object count for public workspace",
+                                    ws_name, "was", obj_count);
+
+                console.log('total public data is', obj_count)
+
+                var req_count = Math.ceil(obj_count/10000);
+
+                var params = {workspaces: [ws_name]};
+
+                var proms = [];
+                proms.push( ws.list_objects(params) );
+                for (var i=1; i < req_count; i++) {
+                    params.skip = 10000 * i;
+                    proms.push( ws.list_objects(params) );
+                }
+
+
+                return $.when.apply($,proms).then(function(d) {
                     // update model
-                    publicData = d;
+                    publicData = [].concat.apply([], arguments);;
                     render(publicData, publicPanel, publicSelected, template);
                 })
             }
@@ -488,7 +544,10 @@
                                     displayName = d[i][8].narrative_nice_name;
                                 }
                                 // todo: should skip temporary narratives
-                                workspaces.push({id: d[i][0], name: d[i][1], displayName:displayName});
+                                workspaces.push({id: d[i][0],
+                                                 name: d[i][1],
+                                                 displayName: displayName,
+                                                 count: d[i][4]});
                                 narrativeNameLookup[d[i][1]] = displayName;
                             }
 
@@ -515,7 +574,10 @@
                                     displayName = d[i][8].narrative_nice_name;
                                 }
                                 // todo: should skip temporary narratives
-                                workspaces.push({id: d[i][0], name: d[i][1], displayName:displayName});
+                                workspaces.push({id: d[i][0],
+                                                 name: d[i][1],
+                                                 displayName:displayName,
+                                                 count: d[i][4]});
                                 narrativeNameLookup[d[i][1]] = displayName;
                             }
 
@@ -877,13 +939,18 @@
 
 
             function publicView() {
-                getPublicData('pubSEEDGenomes', publicTemplate);
-
                 var publicList = [{type: 'Genomes', ws: 'pubSEEDGenomes'},
                                   {type: 'Media', ws: 'KBaseMedia'},
                                   {type: 'Models', ws: 'KBasePublicModelsV4'},
                                   {type: 'RNA Seq', ws: 'KBasePublicRNASeq'}];
 
+                // get initial public data;
+                ws.get_workspace_info({workspace: publicList[0].ws})
+                  .done(function(d){
+                      getPublicData(d, publicTemplate);
+                  })
+
+                // filter for public objects
                 var wsInput = $('<select class="form-control kb-import-filter">');
                 for (var i=0; i < publicList.length; i++) {
                     wsInput.append('<option data-name="'+publicList[i].ws+'">'+
@@ -891,6 +958,7 @@
                                    '</option>');
                 }
                 var wsFilter = $('<div class="col-sm-4">').append(wsInput);
+
 
                 var row = $('<div class="row">').append(wsFilter);
                 publicPanel.append(row);
@@ -902,9 +970,13 @@
                     // request again with filted type
                     publicPanel.find('.kb-import-items').remove();
                     publicPanel.loading();
-                    getPublicData(ws, publicTemplate).done(function() {
-                        publicPanel.rmLoading();
-                    })
+
+                    ws.get_workspace_info({workspace: ws})
+                      .done(function(d){
+                            getPublicData(d, publicTemplate).done(function() {
+                                publicPanel.rmLoading();
+                            })
+                      })
                 })
             }
 

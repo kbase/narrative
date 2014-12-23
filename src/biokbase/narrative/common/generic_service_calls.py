@@ -159,12 +159,19 @@ def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, par
     wsClient = workspaceService(URLS.workspace, token = token)
     if method_job_id.startswith("method:"):
         method_job_id = method_job_id[7:]
-    appState = njsClient.check_app_state(method_job_id)
-    for stepId in appState['step_outputs']:
-        rpcOut = appState['step_outputs'][stepId]
-        appState['widget_output'] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
-    appState['job_id'] = "method:" + appState['job_id']
-    return appState
+        appState = njsClient.check_app_state(method_job_id)
+        for stepId in appState['step_outputs']:
+            rpcOut = appState['step_outputs'][stepId]
+            appState['widget_output'] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
+        appState['job_id'] = "method:" + appState['job_id']
+        return appState
+    else:
+        input = {}
+        rpcArgs = prepare_generic_method_input(token, workspace, methodSpec, methodInputValues, input);
+        output = method_job_id
+        methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, output)
+        return methodOut
+
 
 def extract_param_values(paramValues, stepId):
     ret = None

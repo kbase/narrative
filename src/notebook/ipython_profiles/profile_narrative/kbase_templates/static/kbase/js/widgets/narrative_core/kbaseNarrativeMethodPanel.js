@@ -145,17 +145,20 @@
                 }, this)
             );
 
+            this.$methodGallery = $('<div>').kbaseMethodGallery({sidePanel : this});
+
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-play"></span>')
                            .click($.proxy(function(event) {
                                this.trigger('hideSidePanelOverlay.Narrative');
-                               this.toggleOverlay();
+                               this.trigger('showSidePanelOverlay.Narrative', this.$methodGallery);
+//                               this.toggleOverlay();
                            }, this)));
 
-            $(document).on('hideGalleryPanelOverlay.Narrative', $.proxy(function(event) {
-                this.hideOverlay();
-            }, this));
+            // $(document).on('hideGalleryPanelOverlay.Narrative', $.proxy(function(event) {
+            //     this.hideOverlay();
+            // }, this));
 
             if (!NarrativeMethodStore) {
                 this.showError('Unable to connect to KBase Method Store!');

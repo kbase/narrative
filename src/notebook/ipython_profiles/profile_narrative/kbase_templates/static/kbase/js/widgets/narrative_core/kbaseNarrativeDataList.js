@@ -619,11 +619,11 @@
                                     .append($byName)
                                     .append($byType);
             
-            var $addDataBtn = $('<button>')
-                                .addClass("btn btn-warning kb-data-list-get-data-button")
-                                .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Add Data')
-                                .on('click',function() {
-                                    self.trigger('toggleSidePanelOverlay.Narrative');
+            // var $addDataBtn = $('<button>')
+            //                     .addClass("btn btn-warning kb-data-list-get-data-button")
+            //                     .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Add Data')
+            //                     .on('click',function() {
+            //                         self.trigger('toggleSidePanelOverlay.Narrative');
 
                                       // Lovely hack to make the 'Get Data' button behave like a method/app panel button.
                                     /*  self.methClient.get_method_spec({ 'ids' : ['import_genome_data_generic'] },
@@ -634,7 +634,7 @@
                                               self.showError(error);
                                           }
                                       );*/
-                                });
+                                // });
             
             
             var $openSearch = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
@@ -706,8 +706,8 @@
                         .append($openSearch)
                         .append($openSort)
                         .append($openFilter))
-                    .append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'})
-                        .append($addDataBtn));
+                    .append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'}));
+                        // .append($addDataBtn));
             
             
             self.$sortByDiv.hide();

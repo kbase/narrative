@@ -412,7 +412,7 @@
                 if (obj_count > maxObjFetch)
                     console.error("user's object count for owned workspaces was", obj_count);
 
-                console.log('total owned data is', obj_count)
+                //console.log('total owned data is', obj_count)
 
                 var req_count = Math.ceil(obj_count/10000);
 
@@ -451,7 +451,7 @@
                 if (obj_count > maxObjFetch)
                     console.error("user's object count for shared workspaces was", obj_count);
 
-                console.log('total shared data', obj_count);
+                //console.log('total shared data', obj_count);
 
                 var req_count = Math.ceil(obj_count/10000);
 
@@ -471,7 +471,6 @@
 
             // function used to update shared with me data list
             function getPublicData(workspace, template) {
-                console.log('workspace is ', workspace)
                 var obj_count = workspace[4],
                     ws_name = workspace[1];
 
@@ -479,7 +478,7 @@
                     console.error("object count for public workspace",
                                     ws_name, "was", obj_count);
 
-                console.log('total public data is', obj_count)
+                //console.log('total public data is', obj_count)
 
                 var req_count = Math.ceil(obj_count/10000);
 
@@ -495,7 +494,6 @@
                 return $.when.apply($,proms).then(function(d) {
                     // update model
                     publicData = [].concat.apply([], arguments);
-                    console.log('publicdata', publicData)
                     render(publicData, publicPanel, publicSelected, template);
                 })
             }
@@ -634,28 +632,29 @@
                     // disable/enable button
                     if (selected.length > 0) btn.prop('disabled', false);
                     else btn.prop('disabled', true);
-                });
 
-                // import items on button click
-                btn.unbind('click');
-                btn.click(function() {
-                    if (selected.length == 0) return;
+                    // import items on button click
+                    btn.unbind('click');
+                    btn.click(function() {
+                        if (selected.length == 0) return;
 
-                    //uncheck all checkboxes, disable b
-                    $('.kb-import-checkbox').prop('checked', false);
-                    $(this).prop('disabled', true);
+                        //uncheck all checkboxes, disable add button
+                        $('.kb-import-checkbox').prop('checked', false);
+                        $(this).prop('disabled', true);
 
-                    var proms = copyObjects(selected, narWSName);
-                    $.when.apply($, proms).done(function(data) {
-                        importStatus.html('');
-                        var status = $('<span class="text-success">done.</span>');
-                        importStatus.append(status);
-                        status.delay(1000).fadeOut();
+                        var proms = copyObjects(selected, narWSName);
+                        $.when.apply($, proms).done(function(data) {
+                            importStatus.html('');
+                            var status = $('<span class="text-success">done.</span>');
+                            importStatus.append(status);
+                            status.delay(1000).fadeOut();
 
-                        // update sidebar data list
-                        self.trigger('updateDataList.Narrative');
+                            // update sidebar data list
+                            self.trigger('updateDataList.Narrative');
+                        });
                     });
                 });
+
             }
 
             function filterData(data, f) {

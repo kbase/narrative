@@ -360,4 +360,30 @@ function ShockClient(params) {
 	    return promise;
     };
     
+    /**
+     * Changes file.name prop indide shock node. Use this func at the end of chunk upload.
+     */
+    self.change_node_file_name = function (shockNodeId, fileName, ret, errorCallback) {
+    	var url = self.url+'/node/' + shockNodeId;
+    	var promise = jQuery.Deferred();
+    	var fd = new FormData();
+    	fd.append('file_name', fileName);
+    	jQuery.ajax(url, {
+    		contentType: false,
+    		processData: false,
+    		data: fd,
+    		success: function(data) {
+    			ret(data);
+    			promise.resolve();
+    		},
+    		error: function(jqXHR, error){
+    			if (errorCallback)
+    				errorCallback(error);
+    			promise.resolve();
+    		},
+    		headers: self.auth_header,
+    		type: "PUT"
+    	});
+    };
+
 }

@@ -365,9 +365,9 @@
                     btn.hide();
 
                 // reset checkboxs... for any tabs.
-                minePanel.find('.kb-import-checkbox').prop('checked', false);
-                sharedPanel.find('.kb-import-checkbox').prop('checked', false);
-                publicPanel.find('.kb-import-checkbox').prop('checked', false);
+                var checkboxes = body.find('.kb-import-checkbox');
+                checkboxes.removeClass('fa-check-square-o')
+                          .addClass('fa-square-o');
                 btn.prop('disabled', true);
             })
 
@@ -612,14 +612,18 @@
 
 
             function events(panel, selected) {
-                panel.find('.kb-import-checkbox').unbind('change');
-                panel.find('.kb-import-checkbox').change(function(){
-                    var item = $(this).parent('.kb-import-item');
+                panel.find('.kb-import-item').unbind('click');
+                panel.find('.kb-import-item').click(function(){
+                    var item = $(this);
                     var ref = item.data('ref').replace(/\./g, '/');
                     var name = item.data('obj-name');
 
+                    var checkbox = $(this).find('.kb-import-checkbox');
+                    checkbox.toggleClass('fa-check-square-o')
+                            .toggleClass('fa-square-o');
+
                     // update model for selected items
-                    if ($(this).is(":checked")) {
+                    if (checkbox.hasClass('fa-check-square-o') ) {
                         selected.push({ref: ref, name: name});
                     }
                     else {
@@ -639,7 +643,8 @@
                         if (selected.length == 0) return;
 
                         //uncheck all checkboxes, disable add button
-                        $('.kb-import-checkbox').prop('checked', false);
+                        $('.kb-import-checkbox').removeClass('fa-check-square-o', false);
+                        $('.kb-import-checkbox').addClass('fa-square-o', false);
                         $(this).prop('disabled', true);
 
                         var proms = copyObjects(selected, narWSName);
@@ -652,8 +657,28 @@
                             // update sidebar data list
                             self.trigger('updateDataList.Narrative');
                         });
+
+                        selected = [];
+
+                        // um... reset events until my rendering issues are solved
+                        events(panel, selected)
                     });
                 });
+
+                panel.find('.kb-import-item').unbind('hover');
+                panel.find('.kb-import-item').hover(function() {
+                    $(this).find('hr').css('visibility', 'hidden');
+                    $(this).find('.kb-import-checkbox').css('opacity', '.8');
+                }, function() {
+                    $(this).find('hr').css('visibility', 'visible');
+                    $(this).find('.kb-import-checkbox').css('opacity', '.4');
+                })
+
+                // prevent checking when clicking link
+                panel.find('.kb-import-item a').unbind('click');
+                panel.find('.kb-import-item a').click(function(e) {
+                    e.stopPropagation();
+                })
 
             }
 
@@ -863,7 +888,7 @@
                 var item = $('<div class="kb-import-item">')
                                 .data('ref', obj.wsID+'.'+obj.id)
                                 .data('obj-name', obj.name);
-                item.append('<input type="checkbox" value="" class="pull-left kb-import-checkbox">');
+                item.append('<i class="fa fa-square-o pull-left kb-import-checkbox">');
                 item.append('<a class="h4" href="'+
                                 objURL(obj.module, obj.kind, obj.ws, obj.name)+
                                 '" target="_blank">'+obj.name+'</a>'+
@@ -896,7 +921,7 @@
                 var item = $('<div class="kb-import-item">')
                                 .data('ref', obj.wsID+'.'+obj.id)
                                 .data('obj-name', obj.name);
-                item.append('<input type="checkbox" value="" class="pull-left kb-import-checkbox">');
+                item.append('<i class="fa fa-square-o pull-left kb-import-checkbox">');
                 item.append('<a class="h4" href="'+
                                 objURL(obj.module, obj.kind, obj.ws, obj.name)+
                                 '" target="_blank">'+obj.name+'</a>'+

@@ -16,8 +16,9 @@
         wsUrl: "https://kbase.us/services/ws/",
         methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
         methClient: null,
-        uploaderURL: 'http://140.221.67.172:7778',
-        aweURL: 'http://140.221.67.172:7080',
+        //uploaderURL: 'http://140.221.67.172:7778',
+        uploaderURL: 'https://narrative-dev.kbase.us/transform',
+        //aweURL: 'http://140.221.67.172:7080',
         ujsURL: 'https://kbase.us/services/userandjobstate/',
         methods: null,			// {method_id -> method_spec}
         types: null,			// {type_name -> type_spec}

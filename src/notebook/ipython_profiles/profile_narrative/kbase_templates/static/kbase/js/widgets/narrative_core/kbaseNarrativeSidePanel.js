@@ -255,6 +255,8 @@
          * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
         dataImporter: function() {
+            var maxObjFetch = 300000;
+
             var narWSName;
             $(document).on('setWorkspaceName.Narrative', function(e, info){
                 narWSName = info.wsId;
@@ -312,11 +314,11 @@
 
             // add tabs
             var $tabs = this.buildTabs([
-                    {tabName: 'My Data', content: minePanel},
-                    {tabName: 'Shared', content: sharedPanel},
-                    {tabName: 'Public', content: publicPanel},
-                    {tabName: 'Example', content: examplePanel},
-                    {tabName: 'Import', content: importPanel},
+                    {tabName: '<small>My Data</small>', content: minePanel},
+                    {tabName: '<small>Shared With Me</small>', content: sharedPanel},
+                    {tabName: '<small>Public</small>', content: publicPanel},
+                    {tabName: '<small>Example</small>', content: examplePanel},
+                    {tabName: '<small>Import</small>', content: importPanel},
                 ]);
 
             importPanel.kbaseNarrativeSideImportTab({});
@@ -363,9 +365,9 @@
                     btn.hide();
 
                 // reset checkboxs... for any tabs.
-                minePanel.find('.kb-import-checkbox').prop('checked', false);
-                sharedPanel.find('.kb-import-checkbox').prop('checked', false);
-                publicPanel.find('.kb-import-checkbox').prop('checked', false);
+                var checkboxes = body.find('.kb-import-checkbox');
+                checkboxes.removeClass('fa-check-square-o')
+                          .addClass('fa-square-o');
                 btn.prop('disabled', true);
             })
 
@@ -395,8 +397,11 @@
             function getMyData(workspaces, type, ws_name) {
                 var params = {};
                 if (!ws_name) {
-                    var ws_ids = [];
-                    for (var i in workspaces) ws_ids.push(workspaces[i].id);
+                    var ws_ids = [], obj_count = 0;
+                    for (var i in workspaces) {
+                        ws_ids.push(workspaces[i].id);
+                        obj_count = workspaces[i].count + obj_count;
+                    }
 
                     params.ids = ws_ids;
                 } else
@@ -404,12 +409,26 @@
 
                 if (type) params.type = type;
 
+                if (obj_count > maxObjFetch)
+                    console.error("user's object count for owned workspaces was", obj_count);
+
+                //console.log('total owned data is', obj_count)
+
+                var req_count = Math.ceil(obj_count/10000);
+
+                var proms = [];
+                proms.push( ws.list_objects(params) );
+                for (var i=1; i < req_count; i++) {
+                    params.skip = 10000 * i;
+                    proms.push( ws.list_objects(params) );
+                }
+
                 var p = ws.list_objects(params);
                 return $.when(p).then(function(d) {
                     // update model
-                    myData = d;
+                    myData = [].concat.apply([], arguments);
                     render(myData, minePanel, mineSelected);
-                })
+                });
             }
 
 
@@ -417,8 +436,11 @@
             function getSharedData(workspaces, type, ws_name) {
                 var params = {};
                 if (!ws_name) {
-                    var ws_ids = [];
-                    for (var i in workspaces) ws_ids.push(workspaces[i].id);
+                    var ws_ids = [], obj_count = 0;
+                    for (var i in workspaces) {
+                        ws_ids.push(workspaces[i].id);
+                        obj_count = workspaces[i].count + obj_count;
+                    }
 
                     params.ids = ws_ids;
                 } else
@@ -426,20 +448,52 @@
 
                 if (type) params.type = type;
 
-                var p = ws.list_objects(params);
-                return $.when(p).then(function(d) {
+                if (obj_count > maxObjFetch)
+                    console.error("user's object count for shared workspaces was", obj_count);
+
+                //console.log('total shared data', obj_count);
+
+                var req_count = Math.ceil(obj_count/10000);
+
+                var proms = [];
+                proms.push( ws.list_objects(params) );
+                for (var i=1; i < req_count; i++) {
+                    params.skip = 10000 * i;
+                    proms.push( ws.list_objects(params) );
+                }
+
+                return $.when.apply($, proms).then(function() {
                     // update model
-                    sharedData = d;
+                    sharedData = [].concat.apply([], arguments);
                     render(sharedData, sharedPanel, sharedSelected);
                 })
             }
 
             // function used to update shared with me data list
             function getPublicData(workspace, template) {
-                var p = ws.list_objects({workspaces: [workspace]});
-                return $.when(p).then(function(d) {
+                var obj_count = workspace[4],
+                    ws_name = workspace[1];
+
+                if (obj_count > maxObjFetch)
+                    console.error("object count for public workspace",
+                                    ws_name, "was", obj_count);
+
+                //console.log('total public data is', obj_count)
+
+                var req_count = Math.ceil(obj_count/10000);
+
+                var params = {workspaces: [ws_name]};
+
+                var proms = [];
+                proms.push( ws.list_objects(params) );
+                for (var i=1; i < req_count; i++) {
+                    params.skip = 10000 * i;
+                    proms.push( ws.list_objects(params) );
+                }
+
+                return $.when.apply($,proms).then(function(d) {
                     // update model
-                    publicData = d;
+                    publicData = [].concat.apply([], arguments);
                     render(publicData, publicPanel, publicSelected, template);
                 })
             }
@@ -488,7 +542,10 @@
                                     displayName = d[i][8].narrative_nice_name;
                                 }
                                 // todo: should skip temporary narratives
-                                workspaces.push({id: d[i][0], name: d[i][1], displayName:displayName});
+                                workspaces.push({id: d[i][0],
+                                                 name: d[i][1],
+                                                 displayName: displayName,
+                                                 count: d[i][4]});
                                 narrativeNameLookup[d[i][1]] = displayName;
                             }
 
@@ -515,7 +572,10 @@
                                     displayName = d[i][8].narrative_nice_name;
                                 }
                                 // todo: should skip temporary narratives
-                                workspaces.push({id: d[i][0], name: d[i][1], displayName:displayName});
+                                workspaces.push({id: d[i][0],
+                                                 name: d[i][1],
+                                                 displayName:displayName,
+                                                 count: d[i][4]});
                                 narrativeNameLookup[d[i][1]] = displayName;
                             }
 
@@ -552,14 +612,18 @@
 
 
             function events(panel, selected) {
-                panel.find('.kb-import-checkbox').unbind('change');
-                panel.find('.kb-import-checkbox').change(function(){
-                    var item = $(this).parent('.kb-import-item');
+                panel.find('.kb-import-item').unbind('click');
+                panel.find('.kb-import-item').click(function(){
+                    var item = $(this);
                     var ref = item.data('ref').replace(/\./g, '/');
                     var name = item.data('obj-name');
 
+                    var checkbox = $(this).find('.kb-import-checkbox');
+                    checkbox.toggleClass('fa-check-square-o')
+                            .toggleClass('fa-square-o');
+
                     // update model for selected items
-                    if ($(this).is(":checked")) {
+                    if (checkbox.hasClass('fa-check-square-o') ) {
                         selected.push({ref: ref, name: name});
                     }
                     else {
@@ -572,28 +636,52 @@
                     // disable/enable button
                     if (selected.length > 0) btn.prop('disabled', false);
                     else btn.prop('disabled', true);
-                });
 
-                // import items on button click
-                btn.unbind('click');
-                btn.click(function() {
-                    if (selected.length == 0) return;
+                    // import items on button click
+                    btn.unbind('click');
+                    btn.click(function() {
+                        if (selected.length == 0) return;
 
-                    //uncheck all checkboxes, disable b
-                    $('.kb-import-checkbox').prop('checked', false);
-                    $(this).prop('disabled', true);
+                        //uncheck all checkboxes, disable add button
+                        $('.kb-import-checkbox').removeClass('fa-check-square-o', false);
+                        $('.kb-import-checkbox').addClass('fa-square-o', false);
+                        $(this).prop('disabled', true);
 
-                    var proms = copyObjects(selected, narWSName);
-                    $.when.apply($, proms).done(function(data) {
-                        importStatus.html('');
-                        var status = $('<span class="text-success">done.</span>');
-                        importStatus.append(status);
-                        status.delay(1000).fadeOut();
+                        var proms = copyObjects(selected, narWSName);
+                        $.when.apply($, proms).done(function(data) {
+                            importStatus.html('');
+                            var status = $('<span class="text-success">done.</span>');
+                            importStatus.append(status);
+                            status.delay(1000).fadeOut();
 
-                        // update sidebar data list
-                        self.trigger('updateDataList.Narrative');
+                            // update sidebar data list
+                            self.trigger('updateDataList.Narrative');
+                        });
+
+                        selected = [];
+
+                        // um... reset events until my rendering issues are solved
+                        events(panel, selected)
                     });
                 });
+
+                panel.find('.kb-import-item').unbind('hover');
+                panel.find('.kb-import-item').hover(function() {
+                    $(this).find('hr').css('visibility', 'hidden');
+                    $(this).prev('.kb-import-item').find('hr').css('visibility', 'hidden');
+                    $(this).find('.kb-import-checkbox').css('opacity', '.8');
+                }, function() {
+                    $(this).find('hr').css('visibility', 'visible');
+                    $(this).prev('.kb-import-item').find('hr').css('visibility', 'visible');
+                    $(this).find('.kb-import-checkbox').css('opacity', '.4');
+                })
+
+                // prevent checking when clicking link
+                panel.find('.kb-import-item a').unbind('click');
+                panel.find('.kb-import-item a').click(function(e) {
+                    e.stopPropagation();
+                })
+
             }
 
             function filterData(data, f) {
@@ -642,7 +730,7 @@
                                 module: mod_type.split('.')[0],
                                 wsID: obj[6],
                                 ws: obj[7],
-                                relativeTime: kb.ui.relativeTime( kb.ui.getTimestamp(obj[3]) ) }
+                                relativeTime: kb.ui.relativeTime( Date.parse(obj[3]) ) }
 
                     if (template)
                         var item = template(item);
@@ -802,7 +890,7 @@
                 var item = $('<div class="kb-import-item">')
                                 .data('ref', obj.wsID+'.'+obj.id)
                                 .data('obj-name', obj.name);
-                item.append('<input type="checkbox" value="" class="pull-left kb-import-checkbox">');
+                item.append('<i class="fa fa-square-o pull-left kb-import-checkbox">');
                 item.append('<a class="h4" href="'+
                                 objURL(obj.module, obj.kind, obj.ws, obj.name)+
                                 '" target="_blank">'+obj.name+'</a>'+
@@ -835,7 +923,7 @@
                 var item = $('<div class="kb-import-item">')
                                 .data('ref', obj.wsID+'.'+obj.id)
                                 .data('obj-name', obj.name);
-                item.append('<input type="checkbox" value="" class="pull-left kb-import-checkbox">');
+                item.append('<i class="fa fa-square-o pull-left kb-import-checkbox">');
                 item.append('<a class="h4" href="'+
                                 objURL(obj.module, obj.kind, obj.ws, obj.name)+
                                 '" target="_blank">'+obj.name+'</a>'+
@@ -877,35 +965,65 @@
 
 
             function publicView() {
-                getPublicData('pubSEEDGenomes', publicTemplate);
-
                 var publicList = [{type: 'Genomes', ws: 'pubSEEDGenomes'},
                                   {type: 'Media', ws: 'KBaseMedia'},
                                   {type: 'Models', ws: 'KBasePublicModelsV4'},
-                                  {type: 'RNA Seq', ws: 'KBasePublicRNASeq'}];
+                                  {type: 'RNA Seqs', ws: 'KBasePublicRNASeq'}];
+                var selected = publicList[0];
 
+                // get initial public data;
+                ws.get_workspace_info({workspace: selected.ws})
+                  .done(function(d){
+                      getPublicData(d, publicTemplate);
+                  })
+
+                // filter for public objects
                 var wsInput = $('<select class="form-control kb-import-filter">');
                 for (var i=0; i < publicList.length; i++) {
-                    wsInput.append('<option data-name="'+publicList[i].ws+'">'+
+                    wsInput.append('<option data-type="'+publicList[i].type+
+                                         '" data-name="'+publicList[i].ws+'">'+
                                           publicList[i].type+
                                    '</option>');
                 }
                 var wsFilter = $('<div class="col-sm-4">').append(wsInput);
 
-                var row = $('<div class="row">').append(wsFilter);
+                // search filter
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter '+
+                                    selected.type+'">');
+                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
+
+                // event for filter (search)
+                filterInput.keyup(function(e){
+                    query = $(this).val();
+
+                    var filtered = filterData(publicData, {query:query})
+                    render(filtered, publicPanel, publicSelected);
+                });
+
+                var row = $('<div class="row">').append(searchFilter, wsFilter);
                 publicPanel.append(row);
+
 
                 // event for type (workspace) dropdown
                 wsInput.change(function() {
-                    var ws = $(this).children('option:selected').data('name');
+                    var active = $(this).children('option:selected');
+                    var type = active.data('type'),
+                        workspace = active.data('name');
+
+                    filterInput.attr('placeholder', 'Filter '+type);
 
                     // request again with filted type
                     publicPanel.find('.kb-import-items').remove();
                     publicPanel.loading();
-                    getPublicData(ws, publicTemplate).done(function() {
-                        publicPanel.rmLoading();
-                    })
-                })
+
+                    ws.get_workspace_info({workspace: workspace})
+                      .done(function(d){
+                            getPublicData(d, publicTemplate).done(function() {
+                                publicPanel.rmLoading();
+                            })
+                      })
+                });
+
             }
 
         }

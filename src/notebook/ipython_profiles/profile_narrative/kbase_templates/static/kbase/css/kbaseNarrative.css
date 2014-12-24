@@ -1907,7 +1907,7 @@ div[class="tooltip-inner"] {
 
 .kb-import-content {
     position:relative;
-    margin: 0 0 0 20px;
+    margin: 0 0 0 15px;
     overflow-x: hidden;
     overflow-y: auto;
     height: 500px;
@@ -1937,17 +1937,38 @@ div[class="tooltip-inner"] {
 
 
 .kb-import-item {
-    margin: 0 0 20px 0px;
+    margin: 0 20px 0px 5px;
+    padding: 20px 0 0 0;
+}
+
+.kb-import-item:hover {
+    background-color: #f8f8f8;
+    -moz-box-shadow: 0 0 2px #aaa;
+    -webkit-box-shadow: 0 0 2px #aaa;
+    box-shadow: 0 0 2px #aaa;
 }
 
 .kb-import-item hr {
     width: 85%;
     border: 2px solid #eaeaea;
+    margin-top: 15px; /*override*/
+    margin-bottom: 0;
 }
-
+/*
 .kb-import-item input[type="checkbox"] {
     margin: 15px 30px 15px 0px;
+}*/
+
+.kb-import-item .kb-import-checkbox {
+    font-size: 1.5em;
+    padding: 15px 20px 15px 20px;
+    opacity: .4;
 }
+
+.kb-import-item .fa-check-square-o {
+    opacity: 1.0 !important;
+}
+
 
 .kb-import-info {
     display: inline-block;

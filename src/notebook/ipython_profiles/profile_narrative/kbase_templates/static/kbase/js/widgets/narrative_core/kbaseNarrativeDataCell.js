@@ -23,7 +23,7 @@ var KBaseNarrativeViewers = function(mclient) {
     this.method_ids = [];
     var self = this;
     // Get application types, and populate data structures
-    mclient.list_categories({'load_methods': 0, 'load_apps': 0, 'load_types': 1}, 
+    mclient.list_categories({'load_methods': 0, 'load_apps': 0, 'load_types': 1},
         function(data) {
             var aTypes = data[3];
             _.each(aTypes, function(val, key) {
@@ -45,7 +45,7 @@ var KBaseNarrativeViewers = function(mclient) {
             // and populate `specs` with the data.
             self.method_ids = _.uniq(self.method_ids);
             mclient.get_method_spec({'ids':self.method_ids},
-                function(specs) {            
+                function(specs) {
                     _.each(specs, function(value, key) {
                         console.debug("Set spec[" + value.info.id + "]");
                         self.specs[value.info.id] = value;
@@ -76,7 +76,7 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
                   case 'workspace':
                       param = o.ws_id;
                       break;
-                  default:  
+                  default:
                       console.error('Method (' + method_id + ') spec: unknown narrative system variable=' + sysProp);
               }
           }
@@ -99,15 +99,15 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
           return param;
     };
     // Variables and main method
-	var o = data_cell.obj_info;
+    var o = data_cell.obj_info;
     var method_id = this.viewers[o.bare_type];
     if (!method_id) {
         console.debug("No viewer found for type=" + o.bare_type);
         return null;
     }
     var spec = this.specs[method_id];
-	var inputParamId = spec['parameters'][0]['id'];
-	var output = {};
+	  var inputParamId = spec['parameters'][0]['id'];
+	  var output = {};
     var mappings = spec.behavior.output_mapping;
     _.each(mappings, function(mapping) {
         // Get parameter value
@@ -115,11 +115,12 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
         if (param == null) {
             console.error('Unsupported output mapping structure:', mapping);
             return null;
-        }        
+        }
         // Get transformed parameter value
         param = transform_param(o, mapping, param);
         if (param == null) {
-            console.error('Method (' + method_id + ') spec: bad transformation type=', method.target_type_transform);
+            console.error('Method (' + method_id + ') spec: bad transformation type=',
+                          method.target_type_transform);
             return null;
         }
         // Get target property
@@ -135,7 +136,7 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
     var output_widget = spec.widgets.output;
     return elt[output_widget](output);
 }
-      
+
 /**
  * Default viewer.
  *
@@ -159,7 +160,7 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
         }
         md_desc += p[0] + "=" + p[1];
         this.prev = true;
-      }); 
+      });
     }
     data_cell.ip_cell.edit();
     data_cell.ip_cell.set_text(md_desc);
@@ -167,7 +168,7 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
     return elt;
 };
 
-/** 
+/**
  * NarrativeDataCell widget.
  *
  * This is the widget passed into
@@ -221,7 +222,7 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             } else {
                 methodStoreURL = 'http://dev19.berkeley.kbase.us/narrative_method_store';
             }
-            return methodStoreURL; 
+            return methodStoreURL;
         },
 
         /**
@@ -231,21 +232,27 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
          * @return Whatever the 'viewer' function returns.
          */
         render: function() {
+            var is_default = false; // default-viewer
             var self = this;
             var $view = this.all_viewers.create_viewer(self.$elem, self);
-            if ($view === null) {
+            if (_.isNull($view)) {
                 KBaseNarrativeDefaultViewer(self.$elem, self);
+                is_default = true;
             }
             else {
                 var widget_title = $view.options.widget_title;
                 var landing_page_url_prefix = $view.options.landing_page_url_prefix;
                 var html = $(marked.parser(marked.lexer(
-                        '"' + widget_title + '" ' + self.shortMarkdownDesc(self.obj_info, landing_page_url_prefix))));
+                        self.shortMarkdownDesc(self.obj_info, landing_page_url_prefix))));
                 html.find("a[href]").not('[href^="#"]').attr("target", "_blank");
                 self.$elem.before(html);
             }
             // Make sure that we have unselected the cell
             self.ip_cell.unselect();
+            // If *not* default viewer, disable cell editing, as this will mess it up
+            if (!is_default) {
+              self.ip_cell.edit = function() { };
+            }
             // Return the rendered widget
             return this;
         },
@@ -262,12 +269,9 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
           link += "/functional-site/#/" + landing_page_url_prefix + "/" + o.ws_name + "/" + o.name;
           return "[" + o.name + "](" + link + ")"  +
                " (" + o.bare_type + "<sub>v" + o.version + "</sub>)." +
-               " Last saved: " + 
+               " Last saved: " +
                "*" + o.saved_by + "*  " + o.simple_date;
         }
 
     })
 })(jQuery);
-
-
-

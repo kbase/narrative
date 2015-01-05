@@ -8,6 +8,7 @@ __Changes__
 - Redesign of the Method Gallery panel
 - Adjusted Data Panel slideout to maintain its size across each internal tab
 - Added buttons to the footer in the Data Panel slideout
+- Adjustment to data upload panel behavior.
 
 ### Version 0.3.3
 __Changes__

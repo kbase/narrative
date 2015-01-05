@@ -326,7 +326,7 @@ p#site-title {
 
 /* left pane styling */
 #left-column {
-    width: 300px;
+    width: 380px;
     position: fixed;
     border-right: 5px solid #e0e0e0;
     top: 70px;

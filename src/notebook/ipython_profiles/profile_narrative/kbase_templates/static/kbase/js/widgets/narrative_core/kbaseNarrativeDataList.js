@@ -308,14 +308,23 @@
             var unversioned_full_type = type_module + '.' + type;
             var logo = $('<div>')
                             .addClass("kb-data-list-logo")
-                            .css({'background-color':this.logoColorLookup(type)})
-                            .append(type.substring(0,1));
+                            .css({'background-color':this.logoColorLookup(type),'cursor':'pointer'})
+                            .append(type.substring(0,1))
+                            .click(function(e) {
+                                e.stopPropagation();
+                                self.insertViewer(object_key);
+                            });
             var shortName = object_info[1]; var isShortened=false;
             if (shortName.length>this.options.max_name_length) {
                 shortName = shortName.substring(0,this.options.max_name_length-3)+'...';
                 isShortened=true;
             }
-            var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
+            var $name = $('<span>').addClass("kb-data-list-name").append(shortName)
+                            .css({'cursor':'pointer'})
+                            .click(function(e) {
+                                e.stopPropagation();
+                                self.insertViewer(object_key);
+                            });
             if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom', delay: { show: 750, hide: 0 } }); }
 
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
@@ -473,6 +482,23 @@
 
         // ============= end DnD ================
 
+        insertViewer: function(key) {
+            var self = this;
+            var cell = IPython.notebook.insert_cell_below('markdown');
+            $(cell.element).off('dblclick');
+            $(cell.element).off('keydown');
+            
+            var cell_id = self.genUUID();
+            cell.rendered = false;
+            cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
+            cell.render();
+            
+            var obj = _.findWhere(self.objectList, {key: key});
+            var info = self.createInfoObject(obj.info);
+            // Insert the narrative data cell into the div we just rendered
+            $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+        },
+        
         renderMore: function() {
             var self=this;
             if (self.objectList) {

@@ -1740,16 +1740,26 @@ div[class="tooltip-inner"] {
 
 /* data list */
 .kb-data-list-obj-row {
-    width:100%;
-    border-top-style: solid;
+    width:95%;
+    /*border-top-style: solid;
     border-top-width: thin;
-    border-top-color: #999;
+    border-top-color: #999;*/
+    
+    border-style: solid;
+    border-width: thin;
+    border-color: #fff;
+    
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #fff;
     color:#333;
     margin:2px;
     padding:4px;
+    margin-bottom: 5px;
+    
+    box-shadow: 2px 2px 2px #fff;
+    -webkit-box-shadow: 2px 2px 2px #fff;
+    moz-box-shadow: 2px 2px 2px #fff;
 }
 .kb-data-list-obj-row-main {
     width:100%;
@@ -1780,10 +1790,25 @@ div[class="tooltip-inner"] {
 
 .kb-data-list-obj-row:hover {
     /*background-color: #eee;*/
+    border-style: solid;
+    border-width: thin;
+    border-color: #999;
+    
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #FFC107;
+    
+    box-shadow: 2px 2px 2px #888888;
+    -webkit-box-shadow: 2px 2px 2px #888888;
+    moz-box-shadow: 2px 2px 2px #888888;
 }
+
+.kb-data-list-row-hr {
+    width:70%;
+    margin: 2px;
+    margin-left:15px;
+}
+
 .kb-data-list-logo {
     width:  30pt;
     height: 30pt;
@@ -1809,6 +1834,7 @@ div[class="tooltip-inner"] {
     font-weight: bold;
     white-space: nowrap;
     margin: 2px;
+    margin-left: 7px;
 }
 .kb-data-list-version {
     color:#777;
@@ -1827,6 +1853,14 @@ div[class="tooltip-inner"] {
     color:#777;
     font-size: 10pt;
     margin: 2px;
+    margin-left: 15px;
+    white-space: nowrap;
+}
+.kb-data-list-more {
+    color:#777;
+    font-size: 8pt;
+    margin: 0px;
+    padding: 0px;
     margin-left: 15px;
     white-space: nowrap;
 }

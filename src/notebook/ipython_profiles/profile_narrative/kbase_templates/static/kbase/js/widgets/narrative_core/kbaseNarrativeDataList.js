@@ -359,26 +359,29 @@
                                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                                         .append(metadataText));
 
-            var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn').hide()
+            var $toggleAdvancedViewBtn = $('<span>').addClass("kb-data-list-more")//.addClass('btn btn-default btn-xs kb-data-list-more-btn')
+                .hide()
                 .html('<span class="fa fa-ellipsis-h" style="color:#999" aria-hidden="true"/>');
             var toggleAdvanced = function() {
-                        var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
-                        if ($more.is(':visible')) {
-                            $more.slideToggle('fast');
+                        if ($moreRow.is(':visible')) {
+                            $moreRow.slideToggle('fast');
+                            $toggleAdvancedViewBtn.show();
                         } else {
                             self.getRichData(object_info,$moreRow);
-                            $more.slideToggle('fast');
+                            $moreRow.slideToggle('fast');
+                            $toggleAdvancedViewBtn.hide();
                         }
                 };
 
             var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info').css({padding:'0px',margin:'0px'})
                                 .append($('<div>').append($('<table>').css({'width':'100%'})
                                         .append($('<tr>')
-                                                .append($('<td>').css({'width':'50%'})
+                                                .append($('<td>')//.css({'width':'50%'})
                                                     .append($name).append($version).append('<br>')
-                                                    .append($type).append('<br>').append($date))
-                                                .append($('<td>').css({'vertical-align':'bottom','text-align':'right'})
+                                                    .append($type).append('<br>').append($date)
                                                     .append($toggleAdvancedViewBtn)))));
+                                                //.append($('<td>').css({'vertical-align':'bottom','text-align':'right'})
+                                                //    .append($toggleAdvancedViewBtn)))));
 
             var $row = $('<div>').addClass('kb-data-list-obj-row')
                             .attr('kb-oid', object_key)
@@ -387,14 +390,18 @@
                                         .append($mainDiv))
                             .append($moreRow)
                             // show/hide ellipses on hover, show extra info on click 
-                            .mouseenter(function(){$toggleAdvancedViewBtn.show();})
-                            .mouseleave(function(){$toggleAdvancedViewBtn.hide();})
+                            .mouseenter(function(){
+                                if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
+                            })
+                            .mouseleave(function(){ $toggleAdvancedViewBtn.hide(); })
                             .click(toggleAdvanced);
 
             // Drag and drop
             this.addDragAndDrop($row);
 
-            return $row;
+            var $rowWithHr = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr')).append($row);
+            
+            return $rowWithHr;
         },
 
         // ============= DnD ==================
@@ -449,7 +456,7 @@
             $row.attr({'data-toggle': 'tooltip',
                        'data-placement': 'top',
                         'title': 'Drag onto narrative &rarr;'});
-            $row.tooltip({delay: 100, html: true});
+            //$row.tooltip({delay: 100, html: true});
             
             return this;
         },

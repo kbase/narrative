@@ -9,12 +9,12 @@
         version: '1.0.0',
         options: {
             ws_name: null, // must be the WS name, not the WS Numeric ID
-            
+
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
             default_landing_page_url: "/functional-site/#/ws/json/", // ws_name/obj_name,
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
-            
+
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
 
@@ -22,52 +22,52 @@
             ws_max_objs_to_fetch: 75000, // this is the total limit of the number of objects before we stop trying to get more
                                          // note that if there are more objects than this, then sorts/search filters may
                                          // not show accurate results
-            
+
             objs_to_render_to_start:40, // initial number of rows to display
             objs_to_render_on_scroll:5, // number of rows to add when the user scrolls to the bottom, should be <=5, much more and
                                         // the addition of new rows becomes jerky
-            
+
             max_objs_to_prevent_filter_as_you_type_in_search:50000, //if there are more than this # of objs, user must click search
                                                                     //instead of updating as you type
-            
+
             max_objs_to_prevent_initial_sort:10000, // initial sort makes loading slower, so we can turn it off if
                                                     // there are more than this number of objects
-            
+
             max_name_length:22,
             refresh_interval:30000
         },
 
         // private variables
         mainListPanelHeight : '300px',
-        
+
         ws_name: null,
         ws: null,
         ws_last_update_timestamp: null,
         ws_obj_count: null,
-        
+
         n_objs_rendered:0,
-        
+
         ws_landing_page_map: {},
         real_name_lookup: {},
-        
+
         $searchInput: null,
         $filterTypeSelect: null,
         availableTypes:{},
-        
+
         $searchDiv: null,
         $sortByDiv: null,
         $filterTypeDiv: null,
-        
+
         $addDataButton:null,
         $controllerDiv: null,
         $mainListDiv:null,
         $loadingDiv:null,
-        
+
         methClient: null,
 
         obj_list : [],
         obj_data : {}, // old style - type_name : info
-        
+
         /**
          * @method init
          * Builds the DOM structure for the widget.
@@ -81,7 +81,7 @@
             this._super(options);
             var self = this;
             this.getLandingPageMap();  //start off this request so that we hopefully get something back right away
-            
+
             this.$controllerDiv = $('<div>');
             this.$elem.append(this.$controllerDiv);
             this.renderController();
@@ -96,7 +96,7 @@
                     }
                 });
             this.$elem.append(this.$mainListDiv);
-            
+
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
                 this.options.ws_url = window.kbconfig.urls.workspace;
@@ -105,7 +105,7 @@
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
             setInterval(function(){self.refresh();}, this.options.refresh_interval); // check if there is new data every X ms
-            
+
             // listener for refresh
             $(document).on('updateDataList.Narrative', function() {
                 self.refresh()
@@ -115,19 +115,19 @@
             if (this.options.ws_name) {
                 this.setWorkspace(this.options.ws_name);
             }
-            
+
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            
+
             return this;
         },
-        
+
         setWorkspace : function(ws_name) {
             this.ws_name = ws_name;
             //this.ws_name = "janakacore"; // for testing a bigish workspace
             //this.ws_name = "KBasePublicGenomesV4"; // for testing a very big workspace
             this.refresh();
         },
-        
+
         refresh: function() {
             var self = this;
             if (self.ws_name && self.ws) {
@@ -164,7 +164,7 @@
                     });
             } // else { we should probably do something if the user is not logged in or if the ws isn't set yet }
         },
-        
+
         refreshTimeStrings: function() {
             var self = this; var newTime; var oldTime;
             if (self.objectList) {
@@ -179,7 +179,7 @@
                 }
             }
         },
-        
+
         reloadWsData: function () {
             var self = this;
             if (self.ws_name && self.ws) {
@@ -187,11 +187,11 @@
                 self.objectList = [];
                 self.obj_data = {};
                 self.availableTypes = {};
-                        
+
                 self.getNextDataChunk(0);
             }
         },
-        
+
         getNextDataChunk: function(skip) {
             var self = this;
             self.ws.list_objects({
@@ -221,7 +221,7 @@
                             self.obj_data[typeKey]=[];
                         }
                         self.obj_data[typeKey].push(infoList[i]);
-                        
+
                         var typeName = typeKey.split('.')[1];
                         if (!(typeName in self.availableTypes)) {
                             self.availableTypes[typeName] =
@@ -232,16 +232,16 @@
                         }
                         self.availableTypes[typeName].count++;
                     }
-                    
+
                     // if we have more than 2k objects, make them hit enter to search...
                     self.$searchInput.off("input change blur");
                     self.$searchInput.on("change blur",function() { self.search(); });
                     if (self.objectList.length<=self.options.max_objs_to_prevent_filter_as_you_type_in_search) {
                         self.$searchInput.on("input",function() { self.search(); });
                     }
-                    
+
                     self.trigger('dataUpdated.Narrative');
-                    
+
                     //LOGIC: we keep trying to get more until we reach the ws_obj_count or untill the max
                     // fetch count option, UNLESS the last call returned nothing, in which case we stop.
                     //IMPORTANT NOTE: IN RARE CASES THIS DOES NOT GAURANTEE THAT WE GET ALL OBJECTS FROM
@@ -264,11 +264,11 @@
                             self.$elem.find('#nar-data-list-default-sort-option').attr('checked');
                         }
                     }
-                    
+
                     self.populateAvailableTypes();
                     self.renderList();
                     self.hideLoading();
-                }, 
+                },
                 function(error) {
                     self.$mainListDiv.show();
                     self.$mainListDiv.append("error: ");
@@ -276,9 +276,9 @@
                     console.error(error);
                     self.hideLoading();
                 });
-            
+
         },
-        
+
         getObjData: function(type, ignoreVersion) {
             if (type) {
                 var dataSet = {};
@@ -292,9 +292,9 @@
                 }
                 return dataSet;
             }
-            return this.obj_data;  
+            return this.obj_data;
         },
-        
+
         renderObjectRowDiv: function(object_info, object_key) {
             var self = this;
             // object_info:
@@ -317,7 +317,7 @@
             }
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
             if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom'}); }
-                            
+
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
             var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]));
@@ -329,7 +329,7 @@
                     metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
                 }
             }
-            
+
             var landingPageLink = this.options.default_landing_page_url +object_info[7]+ '/' + object_info[1];
             if (this.ws_landing_page_map) {
                 if (this.ws_landing_page_map[type_module]) {
@@ -340,10 +340,10 @@
                     }
                 }
             }
-            
+
             var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td');
             this.displayRealName(object_info[5],$savedByUserSpan);
-            
+
             var typeLink = '<a href="'+this.options.landing_page_url+'spec/module/'+type_module+'" target="_blank">' +type_module+"</a>.<wbr>" +
                            '<a href="'+this.options.landing_page_url+'spec/type/'+object_info[2]+'" target="_blank">' +(type_tokens[1].replace('-','&#8209;')) + '.' + type_tokens[2] + '</a>';
             var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
@@ -358,7 +358,7 @@
                                         .append("<tr><th>Full Type</th><td>"+typeLink+'</td></tr>')
                                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                                         .append(metadataText));
-            
+
             var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
                 .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
                 .on('click',function() {
@@ -372,7 +372,7 @@
                             $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
                     });
-                    
+
             var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info').css({padding:'0px',margin:'0px'})
                                 .append($('<div>').append($('<table>').css({'width':'100%'})
                                         .append($('<tr>')
@@ -381,7 +381,7 @@
                                                     .append($type).append('<br>').append($date))
                                                 .append($('<td>').css({'vertical-align':'bottom','text-align':'right'})
                                                     .append($toggleAdvancedViewBtn)))));
-        
+
             var $row = $('<div>').addClass('kb-data-list-obj-row')
                             .attr('kb-oid', object_key)
                             .append($('<div>').addClass('row kb-data-list-obj-row-main')
@@ -397,7 +397,7 @@
 
             return $row;
         },
-        
+
         // ============= DnD ==================
 
         addDragAndDrop: function($row) {
@@ -406,7 +406,7 @@
 
             // Add data drag-and-drop (jquery-ui)
             // allow data element to visually leave the left column
-            $('#left-column').css('overflow', 'visible');
+            //$('#left-column').css('overflow', 'visible');
             $row.draggable({
                 cursor: 'move',
                 containment: '#main-container',
@@ -415,9 +415,9 @@
                             var $elt = $row.clone();
                             $elt.addClass("kb-data-inflight");
                             // append to root container, to help with z-index
-                            $("#main-container").append($elt);
+                            $("#notebook-container").prepend($elt);
                             // reset width (was: 100%)
-                            $elt.width(w); 
+                            $elt.width(w);
                             return $elt; }
                 //start: this.dataDragged
             });
@@ -425,11 +425,12 @@
             // Dropping data directly onto the notebook. (As opposed to on input fields)
             $('#notebook-container').droppable({
                 drop: function(event, ui) {
-                    var elt = ui.draggable;
-                    console.debug("Dropping on notebook");
-                    // find nearest cell using jquery-nearest lib.
-                    var near_elt = $(elt).nearest('.cell');
-                    var near_idx = IPython.notebook.find_cell_index($(near_elt).data().cell);
+                    var $elt = $(ui.draggable);
+                    // Insert cell onto narrative canvas near drop point:
+                    // (a) find nearest cell using 'jquery-nearest'
+                    var $near_elt = $($elt.nearest('.cell'));
+                    // (b) map that cell back to an index, and insert before it
+                    var near_idx = IPython.notebook.find_cell_index($near_elt.data().cell);
                     var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
                     // Add unique id attr. to cell
                     var cell_id = self.genUUID();
@@ -437,7 +438,7 @@
                     cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
                     cell.render();
                     // Get object info
-                    var key = $(elt).attr('kb-oid');
+                    var key = $elt.attr('kb-oid');
                     var obj = _.findWhere(self.objectList, {key: key});
                     var info = self.createInfoObject(obj.info);
                     // Insert the narrative data cell into the div we just rendered
@@ -449,8 +450,8 @@
             $row.attr({'data-toggle': 'tooltip',
                        'data-placement': 'top',
                         'title': 'Drag onto narrative &rarr;'});
-            $row.tooltip({delay: 500, html: true});
-
+            $row.tooltip({delay: 100, html: true});
+            
             return this;
         },
 
@@ -459,10 +460,9 @@
          * list of fields returned from Workspace service.
          */
         createInfoObject: function(info) {
-          return { id: info[0], name: info[1], type: info[2], save_date: info[3],
-                       version: info[4], saved_by: info[5], 
-                       ws_id: info[6], ws_name: info[7],
-                       chsum: info[8], size: info[9], meta: info[10]};
+          return _.object(['id', 'name', 'type', 'save_date', 'version',
+                           'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
+                           'meta'], info);
         },
 
         // ============= end DnD ================
@@ -470,7 +470,7 @@
         renderMore: function() {
             var self=this;
             if (self.objectList) {
-                
+
                 if (!self.searchFilterOn) { // if search filter is off, then we just are showing everything
                     var start = self.n_objs_rendered;
                     for(var i=start; i<self.objectList.length; i++) {
@@ -496,7 +496,7 @@
                 }
             }
         },
-        
+
         attachRow: function(index) {
             var obj = this.objectList[index];
             if (obj.attached) { return; }
@@ -521,7 +521,7 @@
             row.attached = true;
             this.n_objs_rendered++;
         },
-        
+
         detachAllRows: function() {
             for (var i=0; i<this.objectList.length; i++) {
                 this.detachRow(i);
@@ -539,14 +539,14 @@
                 this.n_objs_rendered--;
             }
         },
-        
-        
+
+
         renderList: function() {
             var self = this;
             self.showLoading();
-            
+
             self.detachAllRows();
-            
+
             if (self.objectList.length>0) {
                 for(var i=0; i < self.objectList.length; i++) {
                     // only show up to the given number
@@ -558,7 +558,7 @@
                     // This will be used for 'id' of rendered element.
                     // But do *not* replace an existing key.
                     if (self.objectList[i].key == undefined) {
-                        self.objectList[i].key = self.genUUID(); 
+                        self.objectList[i].key = self.genUUID();
                     }
                     self.attachRow(i);
                 }
@@ -567,13 +567,13 @@
                 self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'})
                                          .append("This Narrative has no data yet.<br><br>Press the 'Add Data' button above to bring data into your Narrative."));
             }
-            
+
             self.hideLoading();
         },
-        
+
         renderController: function() {
             var self = this;
-            
+
             var $byDate = $('<label id="nar-data-list-default-sort-label" class="btn btn-default">').addClass('btn btn-default')
                                 .append($('<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'))
                                 .append("date")
@@ -584,18 +584,18 @@
                                         return 0;
                                     });
                                 });
-                                
+
             var $byName = $('<label class="btn btn-default">')
                                 .append($('<input type="radio" name="options" id="option2" autocomplete="off">'))
                                 .append("name")
                                 .on('click',function() {
                                     self.sortData(function(a,b) {
                                         if (a.info[1].toUpperCase() < b.info[1].toUpperCase()) return -1; // sort by name
-                                        if (a.info[1].toUpperCase() > b.info[1].toUpperCase()) return 1; 
+                                        if (a.info[1].toUpperCase() > b.info[1].toUpperCase()) return 1;
                                         return 0;
                                     });
                                 });
-                                
+
             var $byType = $('<label class="btn btn-default">')
                                 .append($('<input type="radio" name="options" id="option3" autocomplete="off">'))
                                 .append("type")
@@ -611,32 +611,22 @@
                                 .on('click',function() {
                                     self.reverseData();
                                 });
-            
+
             var $sortByGroup = $('<div data-toggle="buttons">')
                                     .addClass("btn-group btn-group-sm")
                                     .css({"margin":"2px"})
                                     .append($byDate)
                                     .append($byName)
                                     .append($byType);
-            
+
             // var $addDataBtn = $('<button>')
             //                     .addClass("btn btn-warning kb-data-list-get-data-button")
             //                     .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Add Data')
             //                     .on('click',function() {
             //                         self.trigger('toggleSidePanelOverlay.Narrative');
+            //                     });
 
-                                      // Lovely hack to make the 'Get Data' button behave like a method/app panel button.
-                                    /*  self.methClient.get_method_spec({ 'ids' : ['import_genome_data_generic'] },
-                                          function(spec) {
-                                              self.trigger('methodClicked.Narrative', spec[0]);
-                                          },
-                                          function(error) {
-                                              self.showError(error);
-                                          }
-                                      );*/
-                                // });
-            
-            
+
             var $openSearch = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
                 .html('<span class="fa fa-search" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
@@ -670,7 +660,7 @@
                         self.$filterTypeDiv.hide();
                     }
                 });
-            
+
             self.$searchInput = $('<input type="text">').addClass('form-control');
             self.$searchDiv = $('<div>').addClass("input-group").css({'margin-bottom':'10px'})
                                 .append(self.$searchInput)
@@ -686,7 +676,7 @@
                                 .append("<small>sort by: </small>")
                                 .append($sortByGroup)
                                 .append($upOrDown);
-            
+
             self.$filterTypeSelect = $('<select>').addClass("form-control")
                                         .append($('<option value="">'))
                                         .change(function() {
@@ -695,12 +685,12 @@
                                             //var textSelected   = optionSelected.text();
                                             self.filterByType(typeSelected);
                                         });
-            
+
             self.$filterTypeDiv = $('<div>').css({'margin':'3px','margin-left':'5px','margin-bottom':'10px'})
                                 .append(self.$filterTypeSelect);
-                                
-                                
-            
+
+
+
             var $header = $('<div>').addClass('row').css({'margin':'5px'})
                     .append($('<div>').addClass('col-xs-7').css({'margin':'0px','padding':'0px'})
                         .append($openSearch)
@@ -708,24 +698,24 @@
                         .append($openFilter))
                     .append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'}));
                         // .append($addDataBtn));
-            
-            
+
+
             self.$sortByDiv.hide();
             self.$searchDiv.hide();
             self.$filterTypeDiv.hide();
-            
+
             var $filterDiv = $('<div>')
                                 .append(self.$sortByDiv)
                                 .append(self.$searchDiv)
                                 .append(self.$filterTypeDiv);
-                                
+
             self.$controllerDiv.append($header).append($filterDiv);
         },
-        
+
         populateAvailableTypes: function() {
             var self = this;
             if (self.availableTypes && self.$filterTypeSelect) {
-                
+
                 var types = [];
                 for(var type in self.availableTypes) {
                     if(self.availableTypes.hasOwnProperty(type)) {
@@ -733,7 +723,7 @@
                     }
                 }
                 types.sort();
-                
+
                 self.$filterTypeSelect.empty();
                 self.$filterTypeSelect.append($('<option value="">'));
                 for(var i=0; i<types.length; i++) {
@@ -744,58 +734,58 @@
                 }
             }
         },
-        
-        
+
+
         reverseData: function() {
             var self = this;
             if (!self.objectList) { return; }
-            
+
             self.objectList.reverse();
             self.renderList();
             self.search();
-            
+
             self.hideLoading();
         },
-        
+
         sortData: function(sortfunction) {
             var self = this;
             if (!self.objectList) { return; }
             //should add spinning wait bar ....
             self.showLoading();
-            
+
             self.objectList.sort(sortfunction);
             self.renderList();
             self.search();  // always refilter on the search term search if there is something there
-            
+
             self.hideLoading();
-            
+
             // go back to the top on sort
             self.$mainListDiv.animate({
                 scrollTop:0
             }, 300); // fast = 200, slow = 600
         },
-        
-        
+
+
         currentMatch: [],
         currentTerm: '',
         searchFilterOn: false,
         n_filteredObjsRendered: null,
-        
+
         search: function(term, type) {
             var self = this;
             if (!self.objectList) { return; }
-            
+
             if (!term && self.$searchInput) {
                 term = self.$searchInput.val();
             }
-            
+
             // if type wasn't selected, then we try to get something that was set
             if (!type) {
                 if (self.$filterTypeSelect) {
                     type = self.$filterTypeSelect.find("option:selected").val();
                 }
             }
-            
+
             term = term.trim();
             if (term.length>0 || type) {
                 self.searchFilterOn = true;
@@ -815,9 +805,9 @@
                 term = term.replace(/\|/g,'\\|').replace(/\\\\\|/g,'|'); // bars are common in kb ids, so escape them unless we have \\|
                 term = term.replace(/\./g,'\\.').replace(/\\\\\./g,'.'); // dots are common in names, so we escape them, but
                                                                          // if a user writes '\\.' we assume they want the regex '.'
-                
+
                 var regex = new RegExp(term, 'i');
-                
+
                 var n_matches = 0; self.n_filteredObjsRendered = 0;
                 for(var k=0; k<self.currentMatch.length; k++) {
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
@@ -829,38 +819,38 @@
                     if (regex.test(info[1])) { match = true; } // match on name
                     else if (regex.test(info[2].split('.')[1].split('-'))) { match = true; } // match on type name
                     else if (regex.test(info[5])) { match = true; } // match on saved_by user
-                    
+
                     if (!match && info[10]) { // match on metadata values
                         for(var metaKey in info[10]) {
                             if (info[10].hasOwnProperty(metaKey)) {
                                 if (regex.test(info[10][metaKey])) { match = true; break; }
                                 else if (regex.test(metaKey+"::"+info[10][metaKey])) {
-                                    match = true; break; 
+                                    match = true; break;
                                 }
                             }
                         }
                     }
-                    
-                    
+
+
                     if (type) { // if type is defined, then our sort must also filter by the type
                         if (type !== info[2].split('-')[0].split('.')[1]) {
                             match = false; // no match if we are not the selected type!
                         }
                     }
-                    
+
                     if (match) {
                         // matches must always switch to show if they are rendered
                         if (self.currentMatch[k].$div) {
                             self.currentMatch[k].$div.show();
                         }
-                        
+
                         // todo: add check so we only show up to the number we render... switching to this will require that
                         // we revise the renderMore logic...
                         if (n_matches < self.options.objs_to_render_to_start) {
                             self.attachRowElement(self.currentMatch[k]);
                             self.n_filteredObjsRendered++;
                         }
-                        
+
                         newMatch.push(self.currentMatch[k]);
                         n_matches++;
                     }
@@ -883,19 +873,19 @@
             }
             self.currentTerm = term;
         },
-        
-        
+
+
         filterByType: function(type) {
             var self = this;
             self.search(null,type);
         },
-        
+
         getRichData: function(object_info,$moreRow) {
             var self = this;
             var $usernameTd = $moreRow.find(".kb-data-list-username-td");
             self.displayRealName(object_info[5],$usernameTd);
         },
-        
+
         showLoading : function() {
             this.$loadingDiv.show();
             this.$mainListDiv.hide();
@@ -904,12 +894,12 @@
             this.$loadingDiv.hide();
             this.$mainListDiv.show();
         },
-        
+
         displayRealName: function(username,$targetSpan) {
 	    var self = this;
 	    // todo : use globus to populate user names, but we use a hack because of globus CORS headers
 	    if (self.ws) { // make sure we are logged in and have some things
-		
+
                 if (self.real_name_lookup[username]) {
                     $targetSpan.html(self.real_name_lookup[username]+" ("+username+")");
                 } else {
@@ -933,11 +923,11 @@
                 }
 	    }
         },
-        
+
         getLandingPageMap: function() {
             this.ws_landing_page_map = window.kbconfig.landing_page_map;
         },
-        
+
         /**
          * @method loggedInCallback
          * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
@@ -965,7 +955,7 @@
             this.refresh();
             return this;
         },
-        
+
         logoColorLookup:function(type) {
             var colors = [
                             '#F44336', //red
@@ -988,7 +978,7 @@
                             '#9E9E9E', //grey
                             '#607D8B'  //blue grey
                          ];
-            
+
             // first, if there are some colors we want to catch...
             switch (type) {
                 case "Genome":
@@ -1004,7 +994,7 @@
                 case "Tree":
                     return '#795548'; //brown
             }
-            
+
             // pick one based on the characters
             var code = 0;
             for(var i=0; i<type.length; i++) {
@@ -1012,13 +1002,13 @@
             }
             return colors[ code % colors.length ];
         },
-        
-        
+
+
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
         getTimeStampStr: function (objInfoTimeStamp) {
             var date = new Date(objInfoTimeStamp);
             var seconds = Math.floor((new Date() - date) / 1000);
-            
+
             // f-ing safari, need to add extra ':' delimiter to parse the timestamp
             if (isNaN(seconds)) {
                 var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
@@ -1032,7 +1022,7 @@
                     return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
                 }
             }
-            
+
             var interval = Math.floor(seconds / 31536000);
             if (interval > 1) {
                 return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
@@ -1059,9 +1049,9 @@
             }
             return Math.floor(seconds) + " seconds ago";
         },
-        
+
         monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"],
-        
+
         genUUID: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);

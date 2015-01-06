@@ -689,9 +689,22 @@
             return [$block, topElements];
         },
 
+        /**
+         * A *REALLY* simple filter based on whether the given pattern string is present in the 
+         * method's name.
+         * Returns true if so, false if not.
+         * Doesn't care if its a method or an app, since they both have name fields at their root.
+         */
         textFilter: function(pattern, method) {
             var lcName = method.name.toLowerCase();
             return lcName.indexOf(pattern.toLowerCase()) > -1;
+        },
+
+        /**
+         * Returns true if the type is available as in input to the method, false otherwise
+         */
+        inputFilter: function(type, spec) {
+            return true;
         },
 
         /**
@@ -762,6 +775,7 @@
          * }
          */
         visualFilter: function(filterFn, fnInput) {
+            console.log(this.methodSet);
             var numHidden = 0;
             for (var methId in this.methodSet) {
                 if (!filterFn(fnInput, this.methodSet[methId])) {
@@ -817,21 +831,6 @@
                              .addClass('kb-side-tab')
                              .append(tab.content));
             }
-
-            // // if show, show 'em all, and trigger the class for the kb-has-hidden attribute
-            // if (show) {
-            //     this.$functionPanel.find('.panel-default').show();
-            //     this.$functionPanel.find('.kb-data-obj-name').parent().show();
-            //     this.$functionPanel.find('[kb-has-hidden]').addClass('kb-function-cat-dim');
-            // }
-            // // otherwise, remove the kb-function-cat-dim class from everything, and
-            // // show only those that do not have kb-function-dim, and hide the rest
-            // else {
-            //     this.$functionPanel.find('.panel-default').removeClass('kb-function-cat-dim');
-            //     this.$functionPanel.find('.kb-function-dim').hide();
-            //     this.$functionPanel.find('.panel:not(.kb-function-dim)').show();
-            //     this.$functionPanel.find('li:not(.kb-function-dim)').show();
-            // }
             $header.find('div').click(function(event) {
                 event.preventDefault();
                 event.stopPropagation();

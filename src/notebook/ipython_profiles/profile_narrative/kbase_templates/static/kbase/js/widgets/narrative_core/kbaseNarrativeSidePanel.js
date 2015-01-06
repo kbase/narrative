@@ -309,7 +309,7 @@
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
-                importPanel = $('<div class="kb-import-content kb-import-import">'),
+                importPanel = $('<div class="kb-import-content kb-import-import" style="margin: 0px">'),
                 examplePanel = $('<div class="kb-import-content">');
 
             // add tabs

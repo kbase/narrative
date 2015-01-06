@@ -88,7 +88,7 @@
             }
             var upperPanel = $('<div>');
             this.widgetPanel = $('<div>');
-            this.widgetPanelCard1 = $('<div style="margin: 30px 30px 0px 15px;">');
+            this.widgetPanelCard1 = $('<div style="margin: 30px 30px 0px 30px;">');
             this.widgetPanel.append(this.widgetPanelCard1);
             this.widgetPanelCard1.append("<div class='kb-cell-run'><h2 class='collapse in'>Use your own data or data from another data source in your narrative. First, select the type of data you wish to import.</h2></div><hr>");
             
@@ -121,7 +121,7 @@
             	.append('<div style="height: 30px">')
             	.append($('<div>').append($nextButton));
             
-            this.widgetPanelCard2 = $('<div style="display: none; margin: 0px 30px 0px 0px;">');
+            this.widgetPanelCard2 = $('<div style="display: none; margin: 0px;">');
             this.widgetPanel.append(this.widgetPanelCard2);
 
             this.infoPanel = $('<div style="margin: 20px 0px 0px 30px;">');
@@ -191,7 +191,7 @@
           var $header = null;
           var $body = null;
           var numberOfTabs = this.types[type]["import_method_ids"].length;
-          if (numberOfTabs == 1) {
+          if (numberOfTabs > 1) {
         	  var $header = $('<div>');
         	  var $body = $('<div>');
         	  this.widgetPanelCard2.append($header).append($body);
@@ -281,7 +281,7 @@
                     .addClass('collapse in')
                     .append(methodDesc));
             
-            var tab = $("<div>")
+            var tab = $('<div style="margin: 0px 30px 0px 15px;">')
                     .append($('<div>')
                     .addClass('kb-func-panel kb-cell-run')
                     .append($methodInfo))
@@ -301,7 +301,7 @@
     			var tabHeader = $('<div>')
     				.addClass('kb-side-header');
     			tabHeader.css('width', (100/numberOfTabs)+'%');
-    			tabHeader.append(params.tab);
+    			tabHeader.append($('<small>').append(params.tab));
     			$header.append(tabHeader);
     			var tabContent = $('<div>')
     				.addClass('kb-side-tab3')
@@ -371,12 +371,9 @@
             	var paramValue = paramValueArray[i];
             	params[paramId] = paramValue;
         	}
-        	//console.log(params);
-        	//alert(JSON.stringify(params));
             var uploaderClient = new Transform(this.uploaderURL, {'token': self.token});
             if (self.selectedType === 'KBaseGenomes.Genome') {
-            	var mode = methodId;
-            	if (mode === 'import_genome_gbk_file') {
+            	if (methodId === 'import_genome_gbk_file') {
             		var contigsetId = null;
             		if (params['contigObject'].length > 0) {
             			contigsetId = params['contigObject'];
@@ -400,7 +397,11 @@
                                 self.showError(error);
                             }, this)
                         );
-            	} else if (mode === 'import_transcript_file') {
+            	} else {
+            		self.showError(methodId + " import mode for Genome type is not supported yet");
+            	}
+            } else if (self.selectedType === 'Transcript') {
+            	if (methodId === 'import_transcript_file') {
             		var args = {'etype': 'Transcript.FASTA', 
             				'kb_type': 'KBaseGenomes.Genome', 
             				'in_id': params['fastaFile'], 
@@ -419,7 +420,7 @@
                             }, this)
                         );
             	} else {
-            		self.showError(mode + " import mode for Genome type is not supported yet");
+            		self.showError(methodId + " import mode for Genome type is not supported yet");
             	}
             } else if (self.selectedType === 'KBaseGenomes.ContigSet') {
             	self.showError("Support for ContigSet is coming.");

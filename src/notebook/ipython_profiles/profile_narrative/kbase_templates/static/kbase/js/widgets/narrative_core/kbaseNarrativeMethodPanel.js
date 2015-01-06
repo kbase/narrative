@@ -419,18 +419,11 @@
                                         .attr('href', this.options.methodHelpLink + method.id)));
 
             var $moreBtn = $('<span>')
-                           .addClass('btn btn-default btn-xs kb-data-list-more-btn pull-right fa fa-plus')
+                           .addClass('btn btn-default btn-xs kb-data-list-more-btn pull-right fa fa-ellipsis-h')
                            .attr('aria-hidden', 'true')
                            .css({'color' : '#999'})
                            .click(function(e) {
-                               $more.slideToggle('fast', $.proxy(function() {
-                                   if ($more.is(':visible')) {
-                                       $(this).removeClass('fa-plus').addClass('fa-minus');
-                                   }
-                                   else {
-                                       $(this).removeClass('fa-minus').addClass('fa-plus');
-                                   }
-                                }, this));
+                               $more.slideToggle('fast');
                            });
 
             var $mainDiv = $('<div>')

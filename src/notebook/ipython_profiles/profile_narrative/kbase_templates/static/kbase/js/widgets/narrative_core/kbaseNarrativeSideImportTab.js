@@ -27,8 +27,9 @@
         widgetPanelCard1: null, // first page with importer type combobox (this page will be put on widgetPanel) 
         widgetPanelCard2: null, // second page with import widget (this page will be put on widgetPanel) 
         infoPanel: null,
-        inputWidget: null,		// widget for selected type
-        methodSpec: null,		// method spec-file for selected type
+        inputWidget: null,		// {methodId -> widget for selected type}
+        tabs: null,				// mapping {methodId -> div}
+        
         init: function(options) {
             this._super(options);
             var self = this;
@@ -43,6 +44,8 @@
         
         render: function() {
         	var self = this;
+        	this.inputWidget = {};
+        	this.tabs = {};
             var errorModalId = "app-error-modal-"+ self.uuid();
             var modalLabel = "app-error-modal-lablel-"+ self.uuid();
             self.$errorModalContent = $('<div>');
@@ -84,10 +87,10 @@
                 this.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
             var upperPanel = $('<div>');
-            this.widgetPanel = $('<div style="margin: 50px 50px 0px 30px; width: 600px;">');
+            this.widgetPanel = $('<div style="margin: 0px; width: 643px;">');
             this.widgetPanelCard1 = $('<div>');
             this.widgetPanel.append(this.widgetPanelCard1);
-            this.widgetPanelCard1.append("Use your own data or data from another data source in your narrative. First, select the type of data you wish to import.<hr>");
+            this.widgetPanelCard1.append("<br>Use your own data or data from another data source in your narrative. First, select the type of data you wish to import.<hr>");
             
             var $nameDiv = $('<div>').addClass("kb-method-parameter-name").css("text-align", "left")
             	.append("DATA TYPE");
@@ -139,8 +142,10 @@
                     		}
                     		if (aTypes[key]["import_method_ids"].length > 0) {
                     			self.types[key] = aTypes[key];
-                    			var methodId = aTypes[key]["import_method_ids"][0];
-                    			methodIds.push(methodId);
+                    			for (var methodPos in aTypes[key]["import_method_ids"]) {
+                    				var methodId = aTypes[key]["import_method_ids"][methodPos];
+                    				methodIds.push(methodId);
+                    			}
                     		}
                     	}
                         self.methClient.get_method_spec({ 'ids' : methodIds },
@@ -188,13 +193,17 @@
             this.widgetPanelCard1.css('display', 'none');
         	this.widgetPanelCard2.css('display', '');
         	this.widgetPanelCard2.empty();
+        	this.buildTabs(this.widgetPanelCard2, this.types[type]["import_method_ids"].length);
         	//this.widgetPanel.addClass('panel kb-func-panel kb-cell-run')
-        	var methodId = this.types[type]["import_method_ids"][0];
-        	this.methodSpec = this.methods[methodId];
-            var inputWidgetName = this.methodSpec.widgets.input;
+        	var tabCount = 0;
+        	for (var methodPos in this.types[type]["import_method_ids"]) {
+        		
+        	var methodId = this.types[type]["import_method_ids"][methodPos];
+        	var methodSpec = this.methods[methodId];
+            var inputWidgetName = methodSpec.widgets.input;
             if (!inputWidgetName || inputWidgetName === 'null')
                 inputWidgetName = "kbaseNarrativeMethodInput";
-            var methodJson = JSON.stringify(this.methodSpec);
+            var methodJson = JSON.stringify(methodSpec);
             
             var $inputDiv = $('<div>');
 
@@ -208,7 +217,7 @@
             $runButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
-                    var v = self.inputWidget.isValid();
+                    var v = self.getInputWidget().isValid();
                     if (v.isValid) {
                     	self.runImport();
                     } else {
@@ -259,23 +268,22 @@
                                .append($('<p>')
                                        .addClass('text-success'));
 
-            var methodId = 'import-method-details-'+this.uuid();
+            var methodUuid = 'import-method-details-'+this.uuid();
             var buttonLabel = 'details';
-            var methodDesc = this.methodSpec.info.tooltip;
+            var methodDesc = methodSpec.info.tooltip;
             var $menuSpan = $('<div class="pull-right">');
             var $methodInfo = $('<div>')
                     .addClass('kb-func-desc')
-                    .append('<h1><b>' + this.methodSpec.info.name + '</b></h1>')
                     .append($menuSpan)
                     .append($('<span>')
                     .addClass('pull-right kb-func-timestamp')
                     .attr('id', 'last-run'))
             .append($('<h2>')
-                    .attr('id', methodId)
+                    .attr('id', methodUuid)
                     .addClass('collapse in')
-                    .append(methodDesc));
+                    .append("<br>" + methodDesc));
             
-            this.widgetPanelCard2
+            var tab = $("<div>")
                     .append($('<div>')
                     .addClass('kb-func-panel kb-cell-run')
                     .append($methodInfo))
@@ -289,7 +297,71 @@
                     //.append($progressBar)
                     .append($buttons));
             
-            this.inputWidget = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
+            
+            
+            this.inputWidget[methodId] = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
+            
+        	var isShown = tabCount == 0;
+        	var tabName = methodSpec.info.name;
+        	this.widgetPanelCard2.kbaseTabs('addTab', {tab: tabName, content: tab, canDelete : false, show: isShown});
+        	tabCount++;
+        	this.tabs[methodId] = tab;
+        	}
+        },
+        
+        buildTabs: function(tabPane, numberOfTabs) {
+            var $header = $('<div>');
+            var $body = $('<div>');
+            //var tabNameToIndex = {};
+            //var tabCount = 0;
+            tabPane['kbaseTabs'] = function(funcName, params) {
+            	if (funcName === 'addTab') {
+            		//tabNameToIndex[params.tab] = tabCount;
+            		//tabCount++;
+            		var tabHeader = $('<div>')
+                    	.addClass('kb-side-header');
+            		if (numberOfTabs)
+            			tabHeader.css('width', (100/numberOfTabs)+'%');
+            		tabHeader.append(params.tab);
+                    $header.append(tabHeader);
+                    var tabContent = $('<div>')
+                    	.addClass('kb-side-tab2')
+                    	.css("display", "none")
+                    	.append(params.content);
+                    $body.append(tabContent);
+                    if (params.show) {
+                        tabHeader.addClass('active');
+                        tabContent.css('display', '');
+                    }
+            		tabHeader.click($.proxy(function(event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        var $headerDiv = $(event.currentTarget);
+                        if (!$headerDiv.hasClass('active')) {
+                            var idx = $headerDiv.index();
+                            $header.find('div').removeClass('active');
+                            $headerDiv.addClass('active');
+                            $body.find('div.kb-side-tab2').css('display', 'none');
+                            $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab2').css('display', '');
+                        }
+                    }, this));
+            	}
+            };
+            tabPane.append($header).append($body);
+        },
+        
+        getSelectedTabId: function() {
+            var ret = null;
+            for (var tabId in this.tabs) {
+            	var tab = this.tabs[tabId];
+            	if (tab.is(':visible'))
+            		ret = tabId;
+            }
+            return ret;
+        },
+
+        getInputWidget: function() {
+        	return this.inputWidget[this.getSelectedTabId()];
         },
         
         back: function() {
@@ -309,10 +381,12 @@
         
         runImport: function() {
         	var self = this;
-        	var paramValueArray = self.inputWidget.getParameters();
+        	var paramValueArray = this.getInputWidget().getParameters();
         	var params = {};
-        	for(var i in self.methodSpec.parameters) {
-            	var paramId = self.methodSpec.parameters[i].id;
+        	var methodId = self.getSelectedTabId();
+        	var methodSpec = self.methods[methodId];
+        	for(var i in methodSpec.parameters) {
+            	var paramId = methodSpec.parameters[i].id;
             	var paramValue = paramValueArray[i];
             	params[paramId] = paramValue;
         	}
@@ -320,8 +394,8 @@
         	//alert(JSON.stringify(params));
             var uploaderClient = new Transform(this.uploaderURL, {'token': self.token});
             if (self.selectedType === 'KBaseGenomes.Genome') {
-            	var mode = params["mode"];
-            	if (mode === 'uploadGbk') {
+            	var mode = methodId;
+            	if (mode === 'import_genome_gbk_file') {
             		var contigsetId = null;
             		if (params['contigObject'].length > 0) {
             			contigsetId = params['contigObject'];

@@ -65,7 +65,7 @@
                     content : $analysisPanel
                 },
                 {
-                    tabName : 'Manage',
+                    tabName : 'Narratives',
                     content: $managePanel
                 },
                 {

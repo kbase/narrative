@@ -316,6 +316,9 @@
             //var tabCount = 0;
             tabPane['kbaseTabs'] = function(funcName, params) {
             	if (funcName === 'addTab') {
+            		if (numberOfTabs && numberOfTabs == 1) {
+                        $body.append(params.content);
+            		} else {
             		//tabNameToIndex[params.tab] = tabCount;
             		//tabCount++;
             		var tabHeader = $('<div>')
@@ -345,6 +348,7 @@
                             $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab2').css('display', '');
                         }
                     }, this));
+            		}
             	}
             };
             tabPane.append($header).append($body);
@@ -405,6 +409,24 @@
             		var args = {'etype': 'KBaseGenomes.GBK', 
             				'kb_type': 'KBaseGenomes.Genome', 
             				'in_id': params['gbkFile'], 
+            				'ws_name': self.wsName, 
+            				'obj_name': params['outputObject']};
+            				//'opt_args': '{"validator":{},"transformer":{"contigset_ref":"'+self.wsName+'/'+contigsetId+'"}}'}
+            		console.log(args);
+    				self.showInfo("Sending data...", true);
+            		uploaderClient.upload(args,
+            				$.proxy(function(data) {
+            					console.log(data);
+            					self.waitForJob(data[1]);
+                            }, this),
+                            $.proxy(function(error) {
+                                self.showError(error);
+                            }, this)
+                        );
+            	} else if (mode === 'import_transcript_file') {
+            		var args = {'etype': 'Transcript.FASTA', 
+            				'kb_type': 'KBaseGenomes.Genome', 
+            				'in_id': params['fastaFile'], 
             				'ws_name': self.wsName, 
             				'obj_name': params['outputObject']};
             				//'opt_args': '{"validator":{},"transformer":{"contigset_ref":"'+self.wsName+'/'+contigsetId+'"}}'}

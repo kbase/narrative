@@ -316,7 +316,7 @@
                 isShortened=true;
             }
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
-            if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom'}); }
+            if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom', delay: { show: 750, hide: 0 } }); }
 
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
@@ -456,7 +456,7 @@
             $row.attr({'data-toggle': 'tooltip',
                        'data-placement': 'top',
                         'title': 'Drag onto narrative &rarr;'});
-            //$row.tooltip({delay: 100, html: true});
+            $row.tooltip({delay: { show: 1500, hide: 0 }, html: true});
             
             return this;
         },

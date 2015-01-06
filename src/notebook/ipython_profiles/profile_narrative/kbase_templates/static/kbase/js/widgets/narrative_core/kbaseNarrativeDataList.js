@@ -741,7 +741,7 @@
                 types.sort();
 
                 self.$filterTypeSelect.empty();
-                self.$filterTypeSelect.append($('<option value="">'));
+                self.$filterTypeSelect.append($('<option value="">').append("Show All Types"));
                 for(var i=0; i<types.length; i++) {
                     var countStr = " (".concat(self.availableTypes[types[i]].count).concat(" objects)");
                     self.$filterTypeSelect.append(

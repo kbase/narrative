@@ -22,7 +22,10 @@
             methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
         services: null,
-        ignoreCategories : { 'inactive' : 1 },
+        ignoreCategories: { 'inactive' : 1 },
+        appList: null,
+        methodList: null,
+        id2Elem: {},
 
         /**
          * This private method is automatically called when the widget is initialized.
@@ -247,33 +250,44 @@
         refreshFromService: function() {
             this.showLoadingMessage("Loading KBase Methods from service...");
 
-            var methodAppCalls = [];
-            this.methClient.list_categories({'load_methods': 1, 'load_apps' : 1}, 
-                $.proxy(function(categories) {
-                    console.log(categories);
-                    // this.parseMethodsFromService(categories[0], categories[1]);
-                    // this.parseAppsFromService(categories[0], categories[2]);
-                    this.parseMethodsAndApps(categories[0], categories[1], categories[2]);
-                    this.showFunctionPanel();
-                }, this),
-
-                $.proxy(function(error) {
-                    this.showError(error);
+            var methodProm = this.methClient.list_methods_spec({},
+                $.proxy(function(methods) { 
+                    this.methodSpecs = {};
+                    for (var i=0; i<methods.length; i++) {
+                        this.methodSpecs[methods[i].info.id] = methods[i];
+                    }
                 }, this)
             );
+            var appProm = this.methClient.list_apps_spec({},
+                $.proxy(function(apps) { 
+                    this.appSpecs = {};
+                    for (var i=0; i<apps.length; i++) {
+                        this.appSpecs[apps[i].info.id] = apps[i];
+                    }
+                }, this)
+            );
+            var catProm = this.methClient.list_categories({},
+                $.proxy(function(categories) {
+                    this.categories = categories[0];
+                }, this)
+            );
+
+            $.when(methodProm, appProm, catProm).done($.proxy(function(a, b, c) {
+                console.log([this.appSpecs, this.methodSpecs, this.categories]);
+                this.parseMethodsAndApps(this.categories, this.methodSpecs, this.appSpecs);
+                this.showFunctionPanel();
+            }, this));
+
+            $.when(methodProm, appProm).fail(function(err) {
+                console.log("error'd!")
+                console.log(err);
+            });
         },
 
         parseMethodsAndApps: function(catSet, methSet, appSet) {
             var self = this;
             var triggerMethod = function(method) {
-                self.methClient.get_method_spec({ 'ids' : [method.id] },
-                    function(spec) {
-                        self.trigger('methodClicked.Narrative', spec[0]);
-                    },
-                    function(error) {
-                        self.showError(error);
-                    }
-                );
+                self.trigger('methodClicked.Narrative', method);
             };
 
             var triggerApp = function(app) {
@@ -285,21 +299,22 @@
                 var fnList = [];
                 for (var fn in fnSet) {
                     var ignoreFlag = false;
-                    for (var i=0; i<fnSet[fn].categories.length; i++) {
-                        if (self.ignoreCategories[fnSet[fn].categories[i]])
+                    for (var i=0; i<fnSet[fn].info.categories.length; i++) {
+                        if (self.ignoreCategories[fnSet[fn].info.categories[i]])
                             ignoreFlag = true;
                     }
                     if (!ignoreFlag)
                         fnList.push(fnSet[fn]);
                 }
                 fnList.sort(function(a, b) {
-                    return a.name.localeCompare(b.name);
+                    return a.info.name.localeCompare(b.info.name);
                 });
                 for (var i=0; i<fnList.length; i++) {
                     var $fnElem = self.buildMethod(icon, fnList[i], callback);
                     $fnPanel.append($fnElem);
-                    self.methodSet[fnList[i].id] = fnList[i];
-                    self.methodSet[fnList[i].id]['$elem'] = $fnElem;
+                    self.methodSet[fnList[i].info.id] = fnList[i];
+                    self.id2Elem[fnList[i].info.id] = $fnElem;
+//                    self.methodSet[fnList[i].info.id]['$elem'] = $fnElem;
                 }
                 return $fnPanel;
             };
@@ -319,65 +334,65 @@
          * --> microbes annotation
          *     --> Annotate Genome
          */
-        parseMethodsFromService: function(catSet, methSet) {
-            var self = this;
-            var triggerMethod = function(method) {
-                self.methClient.get_method_spec({ 'ids' : [method.id] },
-                    function(spec) {
-                        self.trigger('methodClicked.Narrative', spec[0]);
-                    },
-                    function(error) {
-                        self.showError(error);
-                    }
-                );
-            };
+        // parseMethodsFromService: function(catSet, methSet) {
+        //     var self = this;
+        //     var triggerMethod = function(method) {
+        //         self.methClient.get_method_spec({ 'ids' : [method.id] },
+        //             function(spec) {
+        //                 self.trigger('methodClicked.Narrative', spec[0]);
+        //             },
+        //             function(error) {
+        //                 self.showError(error);
+        //             }
+        //         );
+        //     };
 
-            var triggerApp = function(app) {
-                this.trigger('appClicked.Narrative', app);
-            };
+        //     var triggerApp = function(app) {
+        //         this.trigger('appClicked.Narrative', app);
+        //     };
 
-            // add the methods to their categories.
-            for (var method in methSet) {
-                parentList = methSet[method].categories;
-                for (var i=0; i<parentList.length; i++) {
-                    if (catSet[parentList[i]]) {
-                        if (!catSet[parentList[i]].methods) {
-                            catSet[parentList[i]].methods = [];
-                        }
-                        catSet[parentList[i]].methods.push(methSet[method]);
-                    }
-                }
-            }
-            // Make a method button for each method.
-            var accordionList = [];
-            for (var cat in catSet) {
-                if (!catSet[cat].methods || catSet[cat].methods.length == 0)
-                    continue;
-                catSet[cat].methods.sort(function(a, b) { return a.name.localeCompare(b.name); });
-                var accordion = {
-                    title : catSet[cat].name,
-                };
-                var $methodList = $('<div>');
-                for (var i=0; i<catSet[cat].methods.length; i++) {
+        //     // add the methods to their categories.
+        //     for (var method in methSet) {
+        //         parentList = methSet[method].categories;
+        //         for (var i=0; i<parentList.length; i++) {
+        //             if (catSet[parentList[i]]) {
+        //                 if (!catSet[parentList[i]].methods) {
+        //                     catSet[parentList[i]].methods = [];
+        //                 }
+        //                 catSet[parentList[i]].methods.push(methSet[method]);
+        //             }
+        //         }
+        //     }
+        //     // Make a method button for each method.
+        //     var accordionList = [];
+        //     for (var cat in catSet) {
+        //         if (!catSet[cat].methods || catSet[cat].methods.length == 0)
+        //             continue;
+        //         catSet[cat].methods.sort(function(a, b) { return a.name.localeCompare(b.name); });
+        //         var accordion = {
+        //             title : catSet[cat].name,
+        //         };
+        //         var $methodList = $('<div>');
+        //         for (var i=0; i<catSet[cat].methods.length; i++) {
 
-                    catSet[cat].methods[i].$elem = this.buildMethod(catSet[cat].methods[i], triggerMethod);
-                    $methodList.append(catSet[cat].methods[i].$elem);
-                }
-                accordion['body'] = $methodList;
-                accordionList.push(accordion);
-            }
-            this.services = catSet;
-            this.trigger('servicesUpdated.Narrative', [this.services]);
+        //             catSet[cat].methods[i].$elem = this.buildMethod(catSet[cat].methods[i], triggerMethod);
+        //             $methodList.append(catSet[cat].methods[i].$elem);
+        //         }
+        //         accordion['body'] = $methodList;
+        //         accordionList.push(accordion);
+        //     }
+        //     this.services = catSet;
+        //     this.trigger('servicesUpdated.Narrative', [this.services]);
 
-            // sort by category name
-            accordionList.sort(function(a, b) {
-                return a.title.localeCompare(b.title);
-            });
+        //     // sort by category name
+        //     accordionList.sort(function(a, b) {
+        //         return a.title.localeCompare(b.title);
+        //     });
 
-            var accElements = this.buildAccordion(accordionList);
-            this.$functionPanel.append(accElements[0]);
-            this.accordionElements = accElements[1];
-        },
+        //     var accElements = this.buildAccordion(accordionList);
+        //     this.$functionPanel.append(accElements[0]);
+        //     this.accordionElements = accElements[1];
+        // },
 
         /**
          * Creates and returns a list item containing info about the given narrative function.
@@ -403,22 +418,22 @@
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
                         .css({'white-space':'normal', 'cursor':'pointer'})
-                        .append(method.name)
+                        .append(method.info.name)
                         .click($.proxy(function(e) {
                             e.stopPropagation();
                             triggerFn(method);
                         }, this));
-            var $version = $('<span>').addClass("kb-data-list-type").append('v'+method.ver); // use type because it is a new line
+            var $version = $('<span>').addClass("kb-data-list-type").append('v'+method.info.ver); // use type because it is a new line
 
             var $more = $('<div>')
                         .addClass('kb-method-list-more-div')
                         .append($('<div>')
-                                .append(method.subtitle))
+                                .append(method.info.subtitle))
                         .append($('<div>')
                                 .append($('<a>')
                                         .append('more...')
                                         .attr('target', '_blank')
-                                        .attr('href', this.options.methodHelpLink + method.id)));
+                                        .attr('href', this.options.methodHelpLink + method.info.id)));
 
             var $moreBtn = $('<span>')
                            //.addClass('btn btn-default btn-xs kb-data-list-more-btn pull-right fa fa-ellipsis-h')

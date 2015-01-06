@@ -388,6 +388,7 @@
                         .css({ 'background-color' : this.logoColorLookup(icon) })
                         .append(icon)
                         .click($.proxy(function(e) {
+                            e.stopPropagation();
                             triggerFn(method);
                         }, this));
 
@@ -396,9 +397,10 @@
                         .css({'white-space':'normal', 'cursor':'pointer'})
                         .append(method.name)
                         .click($.proxy(function(e) {
+                            e.stopPropagation();
                             triggerFn(method);
                         }, this));
-            var $version = $('<span>').addClass("kb-data-list-version").append('v'+method.ver);
+            var $version = $('<span>').addClass("kb-data-list-type").append('v'+method.ver); // use type because it is a new line
 
             var $more = $('<div>')
                         .addClass('kb-method-list-more-div')
@@ -411,19 +413,15 @@
                                         .attr('href', this.options.methodHelpLink + method.id)));
 
             var $moreBtn = $('<span>')
-                           .addClass('btn btn-default btn-xs kb-data-list-more-btn pull-right fa fa-plus')
+                           //.addClass('btn btn-default btn-xs kb-data-list-more-btn pull-right fa fa-ellipsis-h')
+                           .addClass('kb-data-list-more fa fa-ellipsis-h')
                            .attr('aria-hidden', 'true')
-                           .css({'color' : '#999'})
-                           .click(function(e) {
+                           .css({'color' : '#999'});
+                           /* click behavior is now attached to entire row...
+                            .click(function(e) {
                                $more.slideToggle('fast', $.proxy(function() {
-                                   if ($more.is(':visible')) {
-                                       $(this).removeClass('fa-plus').addClass('fa-minus');
-                                   }
-                                   else {
-                                       $(this).removeClass('fa-minus').addClass('fa-plus');
-                                   }
                                 }, this));
-                           });
+                           });*/
 
             var $mainDiv = $('<div>')
                            .addClass('kb-data-list-info')
@@ -431,7 +429,7 @@
                            .append($name)
                            .append($('<div>')
                                    .append($version)
-                                   .append($moreBtn));
+                                   .append($moreBtn.hide()));
 
             var $newMethod = $('<table>')
                              .css({'width':'100%'})
@@ -444,9 +442,22 @@
                                              .append($mainDiv)));
 
             return $('<div>')
-                   .addClass('kb-data-list-obj-row')
-                   .append($newMethod)
-                   .append($more.hide());
+                        .append($('<hr>').addClass('kb-data-list-row-hr'))
+                        .append($('<div>')
+                               .addClass('kb-data-list-obj-row')
+                               .append($newMethod)
+                               .append($more.hide())
+                               .mouseenter(function() {
+                                    if (!$more.is(':visible')) { $moreBtn.show(); }
+                                })
+                               .mouseleave(function() { $moreBtn.hide(); })
+                               .click(function() {
+                                    $more.slideToggle('fast', $.proxy(function() {
+                                        if (!$more.is(':visible')) { $moreBtn.show(); }
+                                        else { $moreBtn.hide(); }
+                                    }, this));
+                                } ));
+                        
         },
 
         logoColorLookup:function(type) {

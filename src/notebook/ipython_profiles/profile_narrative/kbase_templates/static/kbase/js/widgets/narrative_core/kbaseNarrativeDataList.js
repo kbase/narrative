@@ -316,7 +316,7 @@
                 isShortened=true;
             }
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
-            if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom'}); }
+            if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom', delay: { show: 750, hide: 0 } }); }
 
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
@@ -359,43 +359,49 @@
                                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                                         .append(metadataText));
 
-            var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
-                .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
-                .on('click',function() {
-                        var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
-                        if ($more.is(':visible')) {
-                            $more.slideToggle('fast');
-                            $(this).html('<span class="fa fa-plus" style="color:#999" aria-hidden="true" />');
+            var $toggleAdvancedViewBtn = $('<span>').addClass("kb-data-list-more")//.addClass('btn btn-default btn-xs kb-data-list-more-btn')
+                .hide()
+                .html('<span class="fa fa-ellipsis-h" style="color:#999" aria-hidden="true"/>');
+            var toggleAdvanced = function() {
+                        if ($moreRow.is(':visible')) {
+                            $moreRow.slideToggle('fast');
+                            $toggleAdvancedViewBtn.show();
                         } else {
                             self.getRichData(object_info,$moreRow);
-                            $more.slideToggle('fast');
-                            $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
+                            $moreRow.slideToggle('fast');
+                            $toggleAdvancedViewBtn.hide();
                         }
-                    });
+                };
 
             var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info').css({padding:'0px',margin:'0px'})
                                 .append($('<div>').append($('<table>').css({'width':'100%'})
                                         .append($('<tr>')
-                                                .append($('<td>').css({'width':'50%'})
+                                                .append($('<td>')//.css({'width':'50%'})
                                                     .append($name).append($version).append('<br>')
-                                                    .append($type).append('<br>').append($date))
-                                                .append($('<td>').css({'vertical-align':'bottom','text-align':'right'})
+                                                    .append($type).append('<br>').append($date)
                                                     .append($toggleAdvancedViewBtn)))));
+                                                //.append($('<td>').css({'vertical-align':'bottom','text-align':'right'})
+                                                //    .append($toggleAdvancedViewBtn)))));
 
             var $row = $('<div>').addClass('kb-data-list-obj-row')
                             .attr('kb-oid', object_key)
                             .append($('<div>').addClass('row kb-data-list-obj-row-main')
                                         .append($logoDiv)
                                         .append($mainDiv))
-                            .append($moreRow);
-                            // The below is unnecessary, just use a kb-data-list-obj-row:hover rule instead. - Bill
-                            // .mouseenter(function(){$(this).addClass('kb-data-list-obj-row-hover');})
-                            // .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
+                            .append($moreRow)
+                            // show/hide ellipses on hover, show extra info on click 
+                            .mouseenter(function(){
+                                if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
+                            })
+                            .mouseleave(function(){ $toggleAdvancedViewBtn.hide(); })
+                            .click(toggleAdvanced);
 
             // Drag and drop
             this.addDragAndDrop($row);
 
-            return $row;
+            var $rowWithHr = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr')).append($row);
+            
+            return $rowWithHr;
         },
 
         // ============= DnD ==================
@@ -450,7 +456,7 @@
             $row.attr({'data-toggle': 'tooltip',
                        'data-placement': 'top',
                         'title': 'Drag onto narrative &rarr;'});
-            $row.tooltip({delay: 100, html: true});
+            $row.tooltip({delay: { show: 1500, hide: 0 }, html: true});
             
             return this;
         },
@@ -735,7 +741,7 @@
                 types.sort();
 
                 self.$filterTypeSelect.empty();
-                self.$filterTypeSelect.append($('<option value="">'));
+                self.$filterTypeSelect.append($('<option value="">').append("Show All Types"));
                 for(var i=0; i<types.length; i++) {
                     var countStr = " (".concat(self.availableTypes[types[i]].count).concat(" objects)");
                     self.$filterTypeSelect.append(

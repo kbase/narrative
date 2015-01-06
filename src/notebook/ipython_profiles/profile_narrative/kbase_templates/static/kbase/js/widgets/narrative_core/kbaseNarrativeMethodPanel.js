@@ -46,9 +46,10 @@
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
 
-            var $searchDiv = $('<div>')
+            this.$searchDiv = $('<div>')
                              .addClass('input-group')
                              .css({'margin-bottom' : '3px'})
+                             .hide();
 
             this.$searchInput = $('<input type="text">')
                                 .addClass('form-control')
@@ -87,8 +88,8 @@
                                                 this.$searchInput.trigger('input'); 
                                             }, this)
                                           ));
-            $searchDiv.append(this.$searchInput)
-                      .append($clearSearchBtn);
+            this.$searchDiv.append(this.$searchInput)
+                           .append($clearSearchBtn);
 
             var $ipyButtonDiv = $('<div style="margin-bottom:5px">')
                                 .append($('<button>')
@@ -108,12 +109,16 @@
                                             IPython.notebook.insert_cell_below('markdown');
                                         }));
 
+            // placeholder for apps and methods once they're loaded.
+            this.$methodList = $('<div>')
+                               .css({'height' : '300px', 'overflow-y': 'auto', 'overflow-x' : 'hidden'});
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                                   .addClass('kb-function-body')
                                   .append($ipyButtonDiv)
-                                  .append($searchDiv)
-                                  .append(this.$toggleHiddenDiv);
+                                  .append(this.$searchDiv)
+                                  .append(this.$toggleHiddenDiv)
+                                  .append(this.$methodList);
 
             // The 'loading' panel should just have a spinning gif in it.
             this.$loadingPanel = $('<div>')
@@ -145,6 +150,12 @@
                 }, this)
             );
 
+            this.addButton($('<button>')
+                           .addClass('btn btn-xs btn-default')
+                           .append('<span class="fa fa-search"></span>')
+                           .click($.proxy(function(event) {
+                               this.$searchDiv.slideToggle(400);
+                           }, this)));
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-play"></span>')
@@ -298,10 +309,7 @@
             var $methodPanel = generatePanel(catSet, methSet, 'M', triggerMethod);
             var $appPanel = generatePanel(catSet, appSet, 'A', triggerApp);
 
-            console.log(this.methodSet);
-
-            this.$functionPanel.append($appPanel);
-            this.$functionPanel.append($methodPanel);
+            this.$methodList.empty().append($appPanel).append($methodPanel);
         },
 
         /**

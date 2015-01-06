@@ -34,11 +34,13 @@
                                                     // there are more than this number of objects
 
             max_name_length:22,
-            refresh_interval:30000
+            refresh_interval:30000,
+            
+            parentControlPanel: null
         },
 
         // private variables
-        mainListPanelHeight : '300px',
+        mainListPanelHeight : '340px',
 
         ws_name: null,
         ws: null,
@@ -89,7 +91,7 @@
                                  .append('<img src="' + this.options.loadingImage + '">');
             this.$elem.append(this.$loadingDiv);
             this.$mainListDiv = $('<div>')
-                .css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':this.mainListPanelHeight})
+                .css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':this.mainListPanelHeight })
                 .on('scroll', function() {
                     if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
                         self.renderMore();
@@ -656,21 +658,14 @@
                                 .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Add Data')
                                 .on('click',function() {
                                     self.trigger('toggleSidePanelOverlay.Narrative');
-
-                                      // Lovely hack to make the 'Get Data' button behave like a method/app panel button.
-                                    /*  self.methClient.get_method_spec({ 'ids' : ['import_genome_data_generic'] },
-                                          function(spec) {
-                                              self.trigger('methodClicked.Narrative', spec[0]);
-                                          },
-                                          function(error) {
-                                              self.showError(error);
-                                          }
-                                      );*/
                                 });
 
 
-            var $openSearch = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
-                .html('<span class="fa fa-search" style="color:#666" aria-hidden="true"/>')
+            var $openSearch = $('<span>')
+                .addClass('btn btn-xs btn-default')
+                .append('<span class="fa fa-search"></span>')
+            //var $openSearch = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
+            //    .html('<span class="fa fa-search" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$searchDiv.is(':visible')) {
                         self.$searchDiv.show();
@@ -680,8 +675,12 @@
                         self.$searchDiv.hide();
                     }
                 });
-            var $openSort = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
-                .html('<span class="fa fa-sort-amount-asc" style="color:#666" aria-hidden="true"/>')
+                
+            var $openSort = $('<span>')
+                .addClass('btn btn-xs btn-default')
+                .append('<span class="fa fa-sort-amount-asc"></span>')
+            //var $openSort = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
+            //    .html('<span class="fa fa-sort-amount-asc" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$sortByDiv.is(':visible')) {
                         self.$sortByDiv.show();
@@ -691,8 +690,12 @@
                         self.$sortByDiv.hide();
                     }
                 });
-            var $openFilter = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
-                .html('<span class="fa fa-filter" style="color:#666" aria-hidden="true"/>')
+                
+            var $openFilter = $('<span>')
+                .addClass('btn btn-xs btn-default')
+                .append('<span class="fa fa-filter"></span>')
+            //var $openFilter = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
+            //    .html('<span class="fa fa-filter" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$filterTypeDiv.is(':visible')) {
                         self.$filterTypeDiv.show();
@@ -702,7 +705,6 @@
                         self.$filterTypeDiv.hide();
                     }
                 });
-
             self.$searchInput = $('<input type="text">').addClass('form-control');
             self.$searchDiv = $('<div>').addClass("input-group").css({'margin-bottom':'10px'})
                                 .append(self.$searchInput)
@@ -733,13 +735,22 @@
 
 
 
-            var $header = $('<div>').addClass('row').css({'margin':'5px'})
-                    .append($('<div>').addClass('col-xs-7').css({'margin':'0px','padding':'0px'})
+            var $header = $('<div>');
+            //.append($('<div>').addClass('col-xs-12').css({'margin':'0px','padding':'0px','text-align':'right'}));
+            if(self.options.parentControlPanel) {
+                self.options.parentControlPanel.addButtonToControlPanel($openSearch);
+                self.options.parentControlPanel.addButtonToControlPanel($openSort);
+                self.options.parentControlPanel.addButtonToControlPanel($openFilter);
+            }
+            else {
+                $header.addClass('row').css({'margin':'5px'})
+                    .append($('<div>').addClass('col-xs-12').css({'margin':'0px','padding':'0px','text-align':'right'})
                         .append($openSearch)
                         .append($openSort)
                         .append($openFilter))
-                    .append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'})
-                        .append($addDataBtn));
+                    //.append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'})
+                    //    .append($addDataBtn));
+            }
 
 
             self.$sortByDiv.hide();

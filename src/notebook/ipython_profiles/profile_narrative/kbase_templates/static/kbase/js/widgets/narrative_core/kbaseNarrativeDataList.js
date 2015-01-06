@@ -359,19 +359,17 @@
                                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                                         .append(metadataText));
 
-            var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
-                .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
-                .on('click',function() {
+            var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn').hide()
+                .html('<span class="fa fa-ellipsis-h" style="color:#999" aria-hidden="true"/>');
+            var toggleAdvanced = function() {
                         var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
                         if ($more.is(':visible')) {
                             $more.slideToggle('fast');
-                            $(this).html('<span class="fa fa-plus" style="color:#999" aria-hidden="true" />');
                         } else {
                             self.getRichData(object_info,$moreRow);
                             $more.slideToggle('fast');
-                            $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
-                    });
+                };
 
             var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info').css({padding:'0px',margin:'0px'})
                                 .append($('<div>').append($('<table>').css({'width':'100%'})
@@ -387,10 +385,11 @@
                             .append($('<div>').addClass('row kb-data-list-obj-row-main')
                                         .append($logoDiv)
                                         .append($mainDiv))
-                            .append($moreRow);
-                            // The below is unnecessary, just use a kb-data-list-obj-row:hover rule instead. - Bill
-                            // .mouseenter(function(){$(this).addClass('kb-data-list-obj-row-hover');})
-                            // .mouseleave(function(){$(this).removeClass('kb-data-list-obj-row-hover');});
+                            .append($moreRow)
+                            // show/hide ellipses on hover, show extra info on click 
+                            .mouseenter(function(){$toggleAdvancedViewBtn.show();})
+                            .mouseleave(function(){$toggleAdvancedViewBtn.hide();})
+                            .click(toggleAdvanced);
 
             // Drag and drop
             this.addDragAndDrop($row);

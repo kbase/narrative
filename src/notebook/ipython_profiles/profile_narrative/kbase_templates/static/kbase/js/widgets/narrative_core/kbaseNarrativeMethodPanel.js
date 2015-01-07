@@ -483,14 +483,14 @@
                              .css({'width':'100%'})
                              .append($('<tr>')
                                      .append($('<td>')
-                                             .css({'width':'20%'})
+                                             .css({'width':'15%'})
                                              .append($logo))
                                      .append($('<td>')
                                              // .css({'width':'80%'})
                                              .append($mainDiv)));
 
             return $('<div>')
-                        .append($('<hr>').addClass('kb-data-list-row-hr'))
+                        .append($('<hr>').addClass('kb-data-list-row-hr').css({'margin-left':'65px'}))
                         .append($('<div>')
                                .addClass('kb-data-list-obj-row')
                                .append($newMethod)

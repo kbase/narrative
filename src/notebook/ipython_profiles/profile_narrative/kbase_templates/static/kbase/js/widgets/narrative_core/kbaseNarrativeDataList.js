@@ -103,6 +103,7 @@
             this.$addDataButton = $('<span>').addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
                                     .css({'position':'absolute', bottom:'15px', right:'25px', 'z-index':'5'})
                                     .click(function() {
+                                        
                                         self.trigger('hideGalleryPanelOverlay.Narrative');
                                         self.trigger('toggleSidePanelOverlay.Narrative');
                                     });
@@ -320,7 +321,7 @@
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
             var unversioned_full_type = type_module + '.' + type;
-            var logo = $('<div>')
+            var $logo = $('<div>')
                             .addClass("kb-data-list-logo")
                             .css({'background-color':this.logoColorLookup(type),'cursor':'pointer'})
                             .append(type.substring(0,1))
@@ -344,7 +345,6 @@
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
             var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]));
-            var $logoDiv  = $('<div>').addClass('col-md-2').css({padding:'0px',margin:'0px'}).append(logo)
             var metadata = object_info[10];
             var metadataText = '';
             for(var key in metadata) {
@@ -403,14 +403,20 @@
                                                     .append($name).append($version).append('<br>')
                                                     .append($type).append('<br>').append($date)
                                                     .append($toggleAdvancedViewBtn)))));
-                                                //.append($('<td>').css({'vertical-align':'bottom','text-align':'right'})
-                                                //    .append($toggleAdvancedViewBtn)))));
 
+            var $topTable = $('<table>')
+                             .css({'width':'100%'})
+                             .append($('<tr>')
+                                     .append($('<td>')
+                                             .css({'width':'15%'})
+                                             .append($logo))
+                                     .append($('<td>')
+                                             .append($mainDiv)));
+                             
             var $row = $('<div>').addClass('kb-data-list-obj-row')
                             .attr('kb-oid', object_key)
-                            .append($('<div>').addClass('row kb-data-list-obj-row-main')
-                                        .append($logoDiv)
-                                        .append($mainDiv))
+                            .append($('<div>').addClass('kb-data-list-obj-row-main')
+                                        .append($topTable))
                             .append($moreRow)
                             // show/hide ellipses on hover, show extra info on click 
                             .mouseenter(function(){
@@ -422,7 +428,8 @@
             // Drag and drop
             this.addDragAndDrop($row);
 
-            var $rowWithHr = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr')).append($row);
+            var $rowWithHr = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr').css({'margin-left':'65px'}))
+                                .append($row);
             
             return $rowWithHr;
         },

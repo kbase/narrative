@@ -14,6 +14,7 @@ __author__ = ["William Riehl <wjriehl@lbl.gov>"]
 __version__ = "0.0.1"
 
 import os
+import json
 from biokbase.userandjobstate.client import UserAndJobState
 from biokbase.narrativejobproxy.client import NarrativeJobProxy
 from biokbase.narrative.common.url_config import URLS
@@ -122,6 +123,7 @@ class KBjobManager():
                     # 12 job_description desc,
                     # 13 Results res
                     ujs_job = self.poll_ujs_job(job_id, ujs_proxy)
+                    method_info = job
                     job = { 'job_id' : job_id, 
                             'job_state' : ujs_job[4], 
                             'running_step_id' : '', 
@@ -132,6 +134,8 @@ class KBjobManager():
                     if ujs_job[11] == 1:
                         job['job_state'] = 'error'
                         job['error'] = ujs_job[4]
+                    job_output = self.get_method_state(method_info, job_id)
+                    job['widget_outputs'] = job_output
                     job_states.append(job)
                 except Exception as e:
                     import traceback

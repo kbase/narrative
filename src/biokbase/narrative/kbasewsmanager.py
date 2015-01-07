@@ -222,8 +222,7 @@ class KBaseWSNotebookManager(NotebookManager):
             raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
         # use "ws.ws_id.obj.object_id" as the identifier
         id = "ws.%s.obj.%s" % (res['wsid'], res['objid'])
-        # Stash new narrative ID in environment
-        util.kbase_env.narrative = id
+        self._set_narrative_env(id)
         # update the mapping
         self.list_notebooks()
         return id
@@ -267,7 +266,7 @@ class KBaseWSNotebookManager(NotebookManager):
         return exists
     
     def get_name(self, notebook_id):
-        """get a notebook name, raising 404 if not found"""
+        """Get a notebook name, raising 404 if not found"""
         self.log.debug("Checking for name of Narrative %s")
         self.list_notebooks()
         try:
@@ -312,8 +311,7 @@ class KBaseWSNotebookManager(NotebookManager):
 
         last_modified = dateutil.parser.parse(wsobj['metadata']['save_date'])
         self.log.debug("Narrative successfully read" )
-        # Stash last read NB in env
-        util.kbase_env.narrative = notebook_id
+        self._set_narrative_env(notebook_id)
         return last_modified, nb
 
     # def extract_data_dependencies(self, nb):
@@ -445,8 +443,7 @@ class KBaseWSNotebookManager(NotebookManager):
         # use "ws.ws_id.obj.object_id" as the identifier
         id = "ws.%s.obj.%s" % (res['wsid'], res['objid'])
         self.mapping[id] = "%s/%s" % (res['workspace'], new_name)
-        # Stash new narrative ID in environment
-        util.kbase_env.narrative = id
+        self._set_narrative_env(id)
         return id
 
     def delete_notebook(self, notebook_id):
@@ -476,8 +473,7 @@ class KBaseWSNotebookManager(NotebookManager):
         # only the one checkpoint ID:
         checkpoint_id = u"checkpoint"
         chkpt_created = datetime.datetime.utcnow()
-        # Stash notebook ID in env
-        util.kbase_env.narrative = notebook_id
+        self._set_narrative_env(id)
         # This is a no-op for now
         # return the checkpoint info
         return { 'checkpoint_id' : checkpoint_id , 'last_modified' : chkpt_created }
@@ -505,6 +501,9 @@ class KBaseWSNotebookManager(NotebookManager):
     def info_string(self):
         return "Workspace Narrative Service with workspace endpoint at %s" % self.kbasews_uri
 
+    def _set_narrative_env(self, id_):
+        """Set the narrative id into the environment"""
+        util.kbase_env.narrative = id_
 #
 # This is code that patches the regular expressions used in the default routes
 # of tornado handlers. IPython installs handlers that recognize a UUID as the

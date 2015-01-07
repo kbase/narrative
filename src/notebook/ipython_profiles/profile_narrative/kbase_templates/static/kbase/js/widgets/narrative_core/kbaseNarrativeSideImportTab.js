@@ -20,6 +20,8 @@
         uploaderURL: 'https://narrative-dev.kbase.us/transform',
         //aweURL: 'http://140.221.67.172:7080',
         ujsURL: 'https://kbase.us/services/userandjobstate/',
+        shockURL: 'http://10.1.16.87:7078',
+        handleURL: 'http://10.1.16.87:7109',
         methods: null,			// {method_id -> method_spec}
         types: null,			// {type_name -> type_spec}
         selectedType: null,		// selected type name
@@ -154,8 +156,13 @@
                                 	for (var i in specs) {
                                 		self.methods[specs[i].info.id] = specs[i];
                                 	}
+                                	var keys = [];
                                 	for (var key in self.types) {
-                                		addItem(key);
+                                		keys.push(key);
+                                	}
+                                	keys.sort(function(a,b) {return self.types[a]["name"].localeCompare(self.types[b]["name"])});
+                                	for (var keyPos in keys) {
+                                		addItem(keys[keyPos]);                                		
                                 	}
                                     $dropdown.select2({
                                         minimumResultsForSearch: -1,
@@ -424,6 +431,68 @@
             	}
             } else if (self.selectedType === 'KBaseGenomes.ContigSet') {
             	self.showError("Support for ContigSet is coming.");
+            } else if (self.selectedType === 'ShortReads') {
+            	if (methodId === 'import_reads_fasta_file') {
+            		var refName = "test_ref_name";
+            		var args = {'etype': 'KBaseAssembly.FA', 
+            				'kb_type': 'KBaseAssembly.ReferenceAssembly', 
+            				'in_id': params['fastaFile'], 
+            				'ws_name': self.wsName, 
+            				'obj_name': params['outputObject'],
+            				'opt_args': '{"validator":{},"transformer":{"reference_name":"'+refName+'","handle_service_url":"'+self.handleURL+'","shock_url":"'+self.shockURL+'"}}'}
+            		console.log(args);
+    				self.showInfo("Sending data...", true);
+            		uploaderClient.upload(args,
+            				$.proxy(function(data) {
+            					console.log(data);
+            					self.waitForJob(data[1]);
+                            }, this),
+                            $.proxy(function(error) {
+                                self.showError(error);
+                            }, this)
+                        );
+            	} else if (methodId === 'import_reads_pe_fastq_file') {
+            		var shockNodes = params['fastqFile1'];
+            		if (params['fastqFile1'])
+            			shockNodes += params['fastqFile2'];
+            		var args = {'etype': 'KBaseAssembly.FQ', 
+            				'kb_type': 'KBaseAssembly.PairedEndLibrary', 
+            				'in_id': shockNodes, 
+            				'ws_name': self.wsName, 
+            				'obj_name': params['outputObject'],
+            				'opt_args': '{"validator":{},"transformer":{"handle_service_url":"'+self.handleURL+'","shock_url":"'+self.shockURL+'"}}'}
+            		console.log(args);
+    				self.showInfo("Sending data...", true);
+            		uploaderClient.upload(args,
+            				$.proxy(function(data) {
+            					console.log(data);
+            					self.waitForJob(data[1]);
+                            }, this),
+                            $.proxy(function(error) {
+                                self.showError(error);
+                            }, this)
+                        );
+            	} else if (methodId === 'import_reads_se_fastq_file') {
+            		var args = {'etype': 'KBaseAssembly.FQ', 
+            				'kb_type': 'KBaseAssembly.SingleEndLibrary', 
+            				'in_id': params['fastqFile'], 
+            				'ws_name': self.wsName, 
+            				'obj_name': params['outputObject'],
+            				'opt_args': '{"validator":{},"transformer":{"handle_service_url":"'+self.handleURL+'","shock_url":"'+self.shockURL+'"}}'}
+            		console.log(args);
+    				self.showInfo("Sending data...", true);
+            		uploaderClient.upload(args,
+            				$.proxy(function(data) {
+            					console.log(data);
+            					self.waitForJob(data[1]);
+                            }, this),
+                            $.proxy(function(error) {
+                                self.showError(error);
+                            }, this)
+                        );
+            	} else {
+            		self.showError(methodId + " import mode for ShortReads type is not supported yet");
+            	}
             } else {
             	self.showError("Import for [" + self.selectedType + "] type is not supported yet.");
             }

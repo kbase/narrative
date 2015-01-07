@@ -165,6 +165,7 @@
                     if (filterString) {
                         this.$searchDiv.show();
                         this.$searchInput.val(filterString);
+                        this.$searchInput.trigger('input');
                     }
                 }, this)
             );

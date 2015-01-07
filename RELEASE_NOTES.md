@@ -13,6 +13,11 @@ __Changes__
     - added an event that can be fired to auto-filter the methods and apps
     - updated the style to a more 'material' look
     - All specs are now fetched at Narrative startup. This will speed up some of the in-page population, but any apps with errors in their specs are no longer displayed in the list
+    - removed the '+/-' buttons for expanding the tooltip, replaced with '...'
+- Data list changes
+    - Added a big red '+' button to add more data
+    - updated the style to a more 'material' look
+    - removed the '+/-' buttons for showing metadata info, replaced with '...'
 
 ### Version 0.3.4
 __Changes__

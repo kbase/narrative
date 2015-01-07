@@ -267,8 +267,6 @@
             cell.rendered = false;
             cell.render();
 
-            // this.methClient.get_app_spec({'ids': [appInfo.id]}, 
-            //     $.proxy(function(appSpec) {
             this.setAppCell(cell, appSpec);
             var cellIndex = IPython.notebook.ncells() - 1;
             var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
@@ -276,7 +274,6 @@
             // The various components are HTML STRINGS, not jQuery objects.
             // This is because the cell expects a text input, not a jQuery input.
             // Yeah, I know it's ugly, but that's how it goes.
-            console.log(appSpec);
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
                               "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec) + "', 'cellId' : '" + cellId + "'});" +
@@ -284,12 +281,6 @@
             cell.set_text(cellContent);
             cell.rendered = false;
             cell.render();
-
-                // }, this),
-                // $.proxy(function(error) {
-
-                // }, this)
-//            );
         },
 
         runAppCell: function(data) {

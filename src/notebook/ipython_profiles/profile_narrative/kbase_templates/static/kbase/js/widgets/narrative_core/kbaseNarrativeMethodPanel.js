@@ -289,15 +289,16 @@
             );
 
             $.when(methodProm, appProm, catProm).done($.proxy(function(a, b, c) {
-                console.log([this.appSpecs, this.methodSpecs, this.categories]);
+                // console.log([this.appSpecs, this.methodSpecs, this.categories]);
                 this.parseMethodsAndApps(this.categories, this.methodSpecs, this.appSpecs);
                 this.showFunctionPanel();
             }, this));
 
-            $.when(methodProm, appProm).fail(function(err) {
+            $.when(methodProm, appProm).fail($.proxy(function(error) {
                 console.log("error'd!")
-                console.log(err);
-            });
+                console.log(error);
+                this.showError(error);
+            }, this));
         },
 
         parseMethodsAndApps: function(catSet, methSet, appSet) {
@@ -348,7 +349,7 @@
             this.id2Elem['app'] = appRender[1];
 
             this.$methodList.empty().append($appPanel).append($methodPanel);
-            console.log([Object.keys(this.appSpecs).length, Object.keys(this.methodSpecs).length]);
+            //console.log([Object.keys(this.appSpecs).length, Object.keys(this.methodSpecs).length]);
         },
 
         /**
@@ -586,7 +587,7 @@
                               .attr('type', 'button')
                               .addClass('btn btn-default')
                               .append(method.title)
-                              .click(function(event) { console.log(method); self.trigger('function_clicked.Narrative', method); });
+                              .click(function(event) { self.trigger('function_clicked.Narrative', method); });
 
             var $helpButton = $('<span>')
                               .addClass('glyphicon glyphicon-question-sign')
@@ -998,8 +999,8 @@
         },
 
         updateOverlayPosition: function() {
-        console.log("ME IS ", this.$elem);
-        console.log("HE IS", this.$elem.closest('.kb-side-panel'));
+        // console.log("ME IS ", this.$elem);
+        // console.log("HE IS", this.$elem.closest('.kb-side-panel'));
             this.$overlay.position({my: 'left top', at: 'right top', of: this.$elem.closest('.kb-side-panel')});
             this.$narrativeDimmer.position({my: 'left top', at: 'right top', of: this.$elem.closest('.kb-side-panel')});
         },

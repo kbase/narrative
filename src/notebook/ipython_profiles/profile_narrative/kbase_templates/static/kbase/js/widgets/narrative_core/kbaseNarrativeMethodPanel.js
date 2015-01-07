@@ -57,8 +57,8 @@
             this.$searchInput = $('<input type="text">')
                                 .addClass('form-control')
                                 .attr('Placeholder', 'Search methods')
-                                .on('input', 
-                                    $.proxy(function(e) { 
+                                .on('input',
+                                    $.proxy(function(e) {
                                         this.visualFilter(this.textFilter, this.$searchInput.val());
                                     }, this)
                                 );
@@ -297,13 +297,17 @@
             var generatePanel = function(catSet, fnSet, icon, callback) {
                 var $fnPanel = $('<div>');
                 var fnList = [];
+                var id2Elem = {};
                 for (var fn in fnSet) {
                     var ignoreFlag = false;
                     for (var i=0; i<fnSet[fn].info.categories.length; i++) {
-                        if (self.ignoreCategories[fnSet[fn].info.categories[i]])
+                        if (self.ignoreCategories[fnSet[fn].info.categories[i]]) {
                             ignoreFlag = true;
+                        }
                     }
-                    if (!ignoreFlag)
+                    if (ignoreFlag)
+                        delete fnSet[fn];
+                    else
                         fnList.push(fnSet[fn]);
                 }
                 fnList.sort(function(a, b) {
@@ -312,19 +316,29 @@
                 for (var i=0; i<fnList.length; i++) {
                     var $fnElem = self.buildMethod(icon, fnList[i], callback);
                     $fnPanel.append($fnElem);
-                    self.methodSet[fnList[i].info.id] = fnList[i];
-                    self.id2Elem[fnList[i].info.id] = $fnElem;
-//                    self.methodSet[fnList[i].info.id]['$elem'] = $fnElem;
+                    id2Elem[fnList[i].info.id] = $fnElem;
                 }
-                return $fnPanel;
+                return [$fnPanel, id2Elem];
             };
 
             this.methodSet = {};
 
-            var $methodPanel = generatePanel(catSet, methSet, 'M', triggerMethod);
-            var $appPanel = generatePanel(catSet, appSet, 'A', triggerApp);
+            var methodRender = generatePanel(catSet, methSet, 'M', triggerMethod);
+            var $methodPanel = methodRender[0];
+            this.id2Elem['method'] = methodRender[1];
+
+            var appRender = generatePanel(catSet, appSet, 'A', triggerApp);
+            var $appPanel = appRender[0];
+            this.id2Elem['app'] = appRender[1];
 
             this.$methodList.empty().append($appPanel).append($methodPanel);
+            console.log([Object.keys(this.appSpecs).length, Object.keys(this.methodSpecs).length]);
+        },
+
+        isAppSpec: function(spec) {
+            if (spec.steps)
+                return true;
+            return false;
         },
 
         /**
@@ -729,7 +743,7 @@
          * Doesn't care if its a method or an app, since they both have name fields at their root.
          */
         textFilter: function(pattern, method) {
-            var lcName = method.name.toLowerCase();
+            var lcName = method.info.name.toLowerCase();
             return lcName.indexOf(pattern.toLowerCase()) > -1;
         },
 
@@ -751,50 +765,50 @@
          * this needs to be slightly twiddled.
          * !!!
          */
-        visualFilterAccordion: function(filterFn, fnInput) {
-            var numHidden = 0;
-            for (var catId in this.services) {
-                var cat = this.services[catId];
-                if (!cat.methods || cat.methods.length === 0)
-                    continue;
+        // visualFilterAccordion: function(filterFn, fnInput) {
+        //     var numHidden = 0;
+        //     for (var catId in this.services) {
+        //         var cat = this.services[catId];
+        //         if (!cat.methods || cat.methods.length === 0)
+        //             continue;
                 
-                var numPass = 0;
-                for (var i=0; i<cat.methods.length; i++) {
-                    if (!filterFn(fnInput, cat.methods[i])) {
-                        cat.methods[i].$elem.hide();
-                        cat.methods[i].$elem.addClass('kb-function-dim');
-                        numHidden++;
-                    }
-                    else {
-                        cat.methods[i].$elem.removeClass('kb-function-dim');
-                        cat.methods[i].$elem.show();
-                        numPass++;
-                    }
-                }
-                if (numPass === 0) {
-                    this.accordionElements[cat.name].addClass('kb-function-dim');
-                    this.accordionElements[cat.name].removeAttr('kb-has-hidden');
-                    this.accordionElements[cat.name].removeClass('kb-function-cat-dim');
-                }
-                else if (numPass < cat.methods.length) {
-                    this.accordionElements[cat.name].attr('kb-has-hidden', '1');
-                    this.accordionElements[cat.name].removeClass('kb-function-dim');
-                }
-                else {
-                    this.accordionElements[cat.name].removeClass('kb-function-dim kb-function-cat-dim');
-                    this.accordionElements[cat.name].removeAttr('kb-has-hidden');
-                }
-            }
-            if (numHidden > 0) {
-                this.$numHiddenSpan.text(numHidden);
-                this.$toggleHiddenDiv.show();
-                this.toggleHiddenMethods(this.$showHideSpan.text() !== 'show');
-            }
-            else {
-                this.$toggleHiddenDiv.hide();
-                this.toggleHiddenMethods(1);
-            }
-        },
+        //         var numPass = 0;
+        //         for (var i=0; i<cat.methods.length; i++) {
+        //             if (!filterFn(fnInput, cat.methods[i])) {
+        //                 cat.methods[i].$elem.hide();
+        //                 cat.methods[i].$elem.addClass('kb-function-dim');
+        //                 numHidden++;
+        //             }
+        //             else {
+        //                 cat.methods[i].$elem.removeClass('kb-function-dim');
+        //                 cat.methods[i].$elem.show();
+        //                 numPass++;
+        //             }
+        //         }
+        //         if (numPass === 0) {
+        //             this.accordionElements[cat.name].addClass('kb-function-dim');
+        //             this.accordionElements[cat.name].removeAttr('kb-has-hidden');
+        //             this.accordionElements[cat.name].removeClass('kb-function-cat-dim');
+        //         }
+        //         else if (numPass < cat.methods.length) {
+        //             this.accordionElements[cat.name].attr('kb-has-hidden', '1');
+        //             this.accordionElements[cat.name].removeClass('kb-function-dim');
+        //         }
+        //         else {
+        //             this.accordionElements[cat.name].removeClass('kb-function-dim kb-function-cat-dim');
+        //             this.accordionElements[cat.name].removeAttr('kb-has-hidden');
+        //         }
+        //     }
+        //     if (numHidden > 0) {
+        //         this.$numHiddenSpan.text(numHidden);
+        //         this.$toggleHiddenDiv.show();
+        //         this.toggleHiddenMethods(this.$showHideSpan.text() !== 'show');
+        //     }
+        //     else {
+        //         this.$toggleHiddenDiv.hide();
+        //         this.toggleHiddenMethods(1);
+        //     }
+        // },
 
         /**
          * @method
@@ -808,27 +822,51 @@
          * }
          */
         visualFilter: function(filterFn, fnInput) {
-            console.log(this.methodSet);
+            console.log(this.id2Elem);
             var numHidden = 0;
-            for (var methId in this.methodSet) {
-                if (!filterFn(fnInput, this.methodSet[methId])) {
-                    this.methodSet[methId].$elem.hide();
-                    this.methodSet[methId].$elem.addClass('kb-function-dim');
-                    numHidden++;
+            var self = this;
+            var filterSet = function(set, type) {
+                var numHidden = 0;
+                for (var id in set) {
+                    if (!filterFn(fnInput, set[id])) {
+                        self.id2Elem[type][id].hide();
+                        self.id2Elem[type][id].addClass('kb-function-dim');
+                        // this.methodSet[methId].$elem.hide();
+                        // this.methodSet[methId].$elem.addClass('kb-function-dim');
+                        numHidden++;
+                    }
+                    else {
+                        self.id2Elem[type][id].removeClass('kb-function-dim');
+                        self.id2Elem[type][id].show();
+                    }
                 }
-                else {
-                    this.methodSet[methId].$elem.removeClass('kb-function-dim');
-                    this.methodSet[methId].$elem.show();
-                }
-            }
+                return numHidden;
+            };
+            numHidden += filterSet(self.appSpecs, 'app');
+            numHidden += filterSet(self.methodSpecs, 'method');
+
+            // do it for methods and apps - their ids are different
+            // for (var methId in this.methodSet) {
+            //     if (!filterFn(fnInput, this.methodSet[methId])) {
+            //         this.methodSet[methId].$elem.hide();
+            //         this.methodSet[methId].$elem.addClass('kb-function-dim');
+            //         numHidden++;
+            //     }
+            //     else {
+            //         this.methodSet[methId].$elem.removeClass('kb-function-dim');
+            //         this.methodSet[methId].$elem.show();
+            //     }
+            // }
+
+
             if (numHidden > 0) {
-                this.$numHiddenSpan.text(numHidden);
-                this.$toggleHiddenDiv.show();
-                this.toggleHiddenMethods(this.$showHideSpan.text() !== 'show');
+                self.$numHiddenSpan.text(numHidden);
+                self.$toggleHiddenDiv.show();
+                self.toggleHiddenMethods(self.$showHideSpan.text() !== 'show');
             }
             else {
-                this.$toggleHiddenDiv.hide();
-                this.toggleHiddenMethods(true);
+                self.$toggleHiddenDiv.hide();
+                self.toggleHiddenMethods(true);
             }
         },
 

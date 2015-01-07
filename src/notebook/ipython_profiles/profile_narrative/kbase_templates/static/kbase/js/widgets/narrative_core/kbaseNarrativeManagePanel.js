@@ -62,7 +62,7 @@
                 this.options.nms_url = window.kbconfig.urls.narrative_method_store;
             }
             
-            this.$mainPanel = $('<div>').css({'height':'300px'});
+            this.$mainPanel = $('<div>').css({'height':'600px'});
             this.body().append(this.$mainPanel);
             
             $(document).on(

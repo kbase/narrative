@@ -410,7 +410,9 @@
                             name: configJSON['name'],
                             git_commit_hash: configJSON['git_commit_hash'],
                             git_commit_time: configJSON['git_commit_time'],
-                            landing_page_map: landingPageMap };
+                            landing_page_map: landingPageMap,
+                            release_notes: configJSON['release_notes']
+                          };
     </script>
     <script src="{{ static_url("kbase/js/api/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("kbase/js/api/workspaceDeluxeClient.js") }}" type="text/javascript" charset="utf-8"></script>    

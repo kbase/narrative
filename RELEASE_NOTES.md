@@ -5,6 +5,7 @@ This is built on the IPython Notebook (more notes will follow).
 
 ### Version 0.3.5 - 1/7/2015
 __Changes__
+- Added link to release notes in 'About' dialog
 - Added separate 'Jobs' tab to side panel
 - Fixed problem with Job errors overflowing the error modal
 - Method panel changes 

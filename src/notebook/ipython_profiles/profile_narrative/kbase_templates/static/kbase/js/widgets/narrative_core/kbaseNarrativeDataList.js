@@ -104,7 +104,7 @@
                                     .css({'position':'absolute', bottom:'15px', right:'25px', 'z-index':'5'})
                                     .click(function() {
                                         self.trigger('hideGalleryPanelOverlay.Narrative');
-                                        self.trigger('showSidePanelOverlay.Narrative');
+                                        self.trigger('toggleSidePanelOverlay.Narrative');
                                     });
             var $mainListDivContainer = $('<div>').css({'position':'relative'})
                                             .append(this.$mainListDiv)
@@ -612,10 +612,10 @@
                 // todo: show an upload button or some other message if there are no elements
                 self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'})
                                          .append("This Narrative has no data yet.<br><br>")
-                                         .append($("<a>").append('Add Data')
+                                         .append($("<span>").append('Add Data').addClass('btn btn-lg kb-data-list-add-data-text-button')
                                                  .click(function() {
                                                         self.trigger('hideGalleryPanelOverlay.Narrative');
-                                                        self.trigger('showSidePanelOverlay.Narrative');
+                                                        self.trigger('toggleSidePanelOverlay.Narrative');
                                                     })));
             }
 

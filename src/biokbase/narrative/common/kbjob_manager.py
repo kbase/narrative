@@ -134,8 +134,8 @@ class KBjobManager():
                     if ujs_job[11] == 1:
                         job['job_state'] = 'error'
                         job['error'] = ujs_job[4]
-                    job_output = self.get_method_state(method_info, job_id)
-                    job['widget_outputs'] = job_output
+                    elif ujs_job[10] == 1:
+                        job['widget_outputs'] = self.get_method_state(method_info, job_id)
                     job_states.append(job)
                 except Exception as e:
                     import traceback

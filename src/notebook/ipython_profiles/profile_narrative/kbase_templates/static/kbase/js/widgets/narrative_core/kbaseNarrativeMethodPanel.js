@@ -160,6 +160,15 @@
                 }, this)
             );
 
+            $(document).on('filterMethods.Narrative',
+                $.proxy(function(e, filterString) {
+                    if (filterString) {
+                        this.$searchDiv.show();
+                        this.$searchInput.val(filterString);
+                    }
+                }, this)
+            );
+
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="fa fa-search"></span>')

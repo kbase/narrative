@@ -1778,21 +1778,26 @@ div[class="tooltip-inner"] {
     margin: 0;
 }
 
-.kb-data-list-get-data-button {
-    /*border: none;
-    border-radius: 0;
-    text-shadow: none !important;
-    box-shadow: none;
-    -webkit-box-shadow: none;
-    moz-box-shadow: none;*/
+.kb-data-list-add-data-button {
+    width:  40pt;
+    height: 40pt;
+    color:  #fff;
+    background-color: #F44336;
+    border-radius: 50%;
+    text-align: center;
+    padding-top: 10pt;
+    box-shadow: 2px 2px 4px 1px #ccc;
+    -webkit-box-shadow: 2px 2px 4px 1px #ccc;
+    moz-box-shadow: 2px 2px 4px 1px #ccc;
+}
+.kb-data-list-add-data-button:hover {
+    cursor:pointer;
+    box-shadow: 4px 4px 8px 1px #ccc;
+    -webkit-box-shadow: 4px 4px 8px 1px #ccc;
+    moz-box-shadow: 4px 4px 8px 1px #ccc;
 }
 
 .kb-data-list-obj-row:hover {
-    /*background-color: #eee;
-    border-style: solid;
-    border-width: thin;
-    border-color: #fff;*/
-    
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #FFC107;

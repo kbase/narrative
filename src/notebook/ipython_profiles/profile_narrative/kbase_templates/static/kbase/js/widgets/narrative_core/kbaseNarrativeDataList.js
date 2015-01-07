@@ -69,6 +69,8 @@
 
         obj_list : [],
         obj_data : {}, // old style - type_name : info
+        
+        
 
         /**
          * @method init
@@ -97,7 +99,17 @@
                         self.renderMore();
                     }
                 });
-            this.$elem.append(this.$mainListDiv);
+            
+            this.$addDataButton = $('<span>').addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
+                                    .css({'position':'absolute', bottom:'15px', right:'25px', 'z-index':'5'})
+                                    .click(function() {
+                                        self.trigger('hideGalleryPanelOverlay.Narrative');
+                                        self.trigger('showSidePanelOverlay.Narrative');
+                                    });
+            var $mainListDivContainer = $('<div>').css({'position':'relative'})
+                                            .append(this.$mainListDiv)
+                                            .append(this.$addDataButton);
+            this.$elem.append($mainListDivContainer);
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
@@ -599,7 +611,12 @@
             } else {
                 // todo: show an upload button or some other message if there are no elements
                 self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'})
-                                         .append("This Narrative has no data yet.<br><br>Press the 'Add Data' button above to bring data into your Narrative."));
+                                         .append("This Narrative has no data yet.<br><br>")
+                                         .append($("<a>").append('Add Data')
+                                                 .click(function() {
+                                                        self.trigger('hideGalleryPanelOverlay.Narrative');
+                                                        self.trigger('showSidePanelOverlay.Narrative');
+                                                    })));
             }
 
             self.hideLoading();

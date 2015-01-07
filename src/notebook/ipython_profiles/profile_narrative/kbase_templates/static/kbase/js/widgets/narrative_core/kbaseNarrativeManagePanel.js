@@ -417,7 +417,11 @@
             
             $narDiv.append($('<table>').css({'width':'100%'}).append($('<tr>').append($dataCol).append($ctrCol)));
             $narDiv.append($shareContainer);
-            return $narDiv;
+            
+            var $narDivContainer = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr'))
+                                        .append($narDiv);
+            
+            return $narDivContainer;
         },
         
         

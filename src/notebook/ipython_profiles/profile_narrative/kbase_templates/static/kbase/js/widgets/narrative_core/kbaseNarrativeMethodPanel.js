@@ -22,7 +22,7 @@
             methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
         services: null,
-        ignoreCategories: { 'inactive' : 1 },
+        ignoreCategories: { 'inactive' : 1, 'importers' : 1 },
         appList: null,
         methodList: null,
         id2Elem: {},
@@ -59,7 +59,12 @@
                                 .attr('Placeholder', 'Search methods')
                                 .on('input',
                                     $.proxy(function(e) {
-                                        this.visualFilter(this.textFilter, this.$searchInput.val());
+                                        var txt = this.$searchInput.val().trim().toLowerCase();
+                                        if (txt.indexOf("type:") === 0) {
+                                            this.visualFilter(this.inputTypeFilter, txt.substring(5));
+                                        }
+                                        else
+                                            this.visualFilter(this.textFilter, txt);
                                     }, this)
                                 );
             this.$numHiddenSpan = $('<span>0</span>');
@@ -91,13 +96,14 @@
                                                 this.$searchInput.trigger('input'); 
                                             }, this)
                                           ));
+
             this.$searchDiv.append(this.$searchInput)
                            .append($clearSearchBtn);
 
             var $ipyButtonDiv = $('<div style="margin-bottom:5px">')
                                 .append($('<button>')
                                         .addClass('btn btn-warning')
-                                        .append($('<span style="color:#fff; font-weight:bold">')
+                                        .append($('<span style="color:#fff">')
                                                 .addClass('fa fa-terminal')
                                                 .append(' Code Cell'))
                                         .click(function(event) {
@@ -105,7 +111,7 @@
                                         }))
                                 .append($('<button>')
                                         .addClass('btn btn-warning pull-right')
-                                        .append($('<span style="color:#fff; font-weight:bold">')
+                                        .append($('<span style="color:#fff">')
                                                 .addClass('fa fa-paragraph')
                                                 .append(' Text Cell'))
                                         .click(function(event) {
@@ -119,8 +125,9 @@
             this.$functionPanel = $('<div>')
                                   .addClass('kb-function-body')
                                   .append($ipyButtonDiv)
-                                  .append(this.$searchDiv)
-                                  .append(this.$toggleHiddenDiv)
+                                  .append($('<div>')
+                                          .append(this.$searchDiv)
+                                          .append(this.$toggleHiddenDiv))
                                   .append(this.$methodList);
 
             // The 'loading' panel should just have a spinning gif in it.
@@ -217,7 +224,6 @@
                                 .append($('<div>').append(this.help.$helpLinkout))
                                 .append($('<h2>').append('Click to hide'));
             $('body').append(this.help.$helpPanel);
-
         },
 
         /**
@@ -333,12 +339,6 @@
 
             this.$methodList.empty().append($appPanel).append($methodPanel);
             console.log([Object.keys(this.appSpecs).length, Object.keys(this.methodSpecs).length]);
-        },
-
-        isAppSpec: function(spec) {
-            if (spec.steps)
-                return true;
-            return false;
         },
 
         /**
@@ -750,8 +750,34 @@
         /**
          * Returns true if the type is available as in input to the method, false otherwise
          */
-        inputFilter: function(type, spec) {
-            return true;
+        inputTypeFilter: function(type, spec) {
+            var methodFilter = function(type, spec) {
+                for (var i=0; i<spec.parameters.length; i++) {
+                    var p = spec.parameters[i];
+                    if (p.text_options && p.text_options.valid_ws_types && p.text_options.valid_ws_types.length > 0) {
+                        var validTypes = p.text_options.valid_ws_types;
+                        for (var j=0; j<validTypes.length; j++) {
+                            if (validTypes[j].toLowerCase().indexOf(type) !== -1)
+                                return true;
+                        }
+                    }
+                }
+                return false;
+            };
+            if (spec.steps) {
+                // ignoring apps right now
+                for (var i=0; i<spec.steps.length; i++) {
+                    var methodSpec = this.methodSpecs[spec.steps[i].method_id];
+                    if (!methodSpec || methodSpec === undefined || methodSpec === null) {
+//                        console.error('missing spec for ' + spec.steps[i].method_id);
+                    }
+                    else if (methodFilter(type, methodSpec))
+                        return true;
+                }
+                return false;
+            } else {
+                return methodFilter(type, spec);
+            }
         },
 
         /**
@@ -822,17 +848,17 @@
          * }
          */
         visualFilter: function(filterFn, fnInput) {
-            console.log(this.id2Elem);
             var numHidden = 0;
             var self = this;
+            filterFn = $.proxy(filterFn, this);
             var filterSet = function(set, type) {
                 var numHidden = 0;
                 for (var id in set) {
                     if (!filterFn(fnInput, set[id])) {
                         self.id2Elem[type][id].hide();
                         self.id2Elem[type][id].addClass('kb-function-dim');
-                        // this.methodSet[methId].$elem.hide();
-                        // this.methodSet[methId].$elem.addClass('kb-function-dim');
+                        // self.methodSet[methId].$elem.hide();
+                        // self.methodSet[methId].$elem.addClass('kb-function-dim');
                         numHidden++;
                     }
                     else {
@@ -842,8 +868,9 @@
                 }
                 return numHidden;
             };
-            numHidden += filterSet(self.appSpecs, 'app');
-            numHidden += filterSet(self.methodSpecs, 'method');
+
+            numHidden += filterSet(this.appSpecs, 'app');
+            numHidden += filterSet(this.methodSpecs, 'method');
 
             // do it for methods and apps - their ids are different
             // for (var methId in this.methodSet) {
@@ -860,13 +887,13 @@
 
 
             if (numHidden > 0) {
-                self.$numHiddenSpan.text(numHidden);
-                self.$toggleHiddenDiv.show();
-                self.toggleHiddenMethods(self.$showHideSpan.text() !== 'show');
+                this.$numHiddenSpan.text(numHidden);
+                this.$toggleHiddenDiv.show();
+                this.toggleHiddenMethods(this.$showHideSpan.text() !== 'show');
             }
             else {
-                self.$toggleHiddenDiv.hide();
-                self.toggleHiddenMethods(true);
+                this.$toggleHiddenDiv.hide();
+                this.toggleHiddenMethods(true);
             }
         },
 

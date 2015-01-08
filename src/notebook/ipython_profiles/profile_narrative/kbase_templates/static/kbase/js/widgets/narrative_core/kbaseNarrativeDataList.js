@@ -33,7 +33,7 @@
             max_objs_to_prevent_initial_sort:10000, // initial sort makes loading slower, so we can turn it off if
                                                     // there are more than this number of objects
 
-            max_name_length:22,
+            max_name_length:33,
             refresh_interval:30000,
             
             parentControlPanel: null
@@ -309,6 +309,26 @@
             return this.obj_data;
         },
 
+        $currentSelectedRow : null,
+        selectedObject: null,
+        setSelected: function($selectedRow, object_info) {
+            var self = this;
+            if (self.$currentSelectedRow) {
+                self.$currentSelectedRow.removeClass('kb-data-list-obj-row-selected');
+            }
+            if (object_info[0]===self.selectedObject) {
+                self.$currentSelectedRow = null;
+                self.selectedObject = null;
+                self.trigger('removeFilterMethods.Narrative');
+            } else {
+                $selectedRow.addClass('kb-data-list-obj-row-selected');
+                self.$currentSelectedRow = $selectedRow;
+                self.selectedObject = object_info[0];
+                self.trigger('filterMethods.Narrative','type:'+object_info[2].split('-')[0].split('.')[1]);
+            }
+        },
+        
+        
         renderObjectRowDiv: function(object_info, object_key) {
             var self = this;
             // object_info:
@@ -390,14 +410,19 @@
                 .hide()
                 .html('<span class="fa fa-ellipsis-h" style="color:#999" aria-hidden="true"/>');
             var toggleAdvanced = function() {
-                        if ($moreRow.is(':visible')) {
-                            $moreRow.slideToggle('fast');
-                            $toggleAdvancedViewBtn.show();
-                        } else {
-                            self.getRichData(object_info,$moreRow);
-                            $moreRow.slideToggle('fast');
-                            $toggleAdvancedViewBtn.hide();
-                        }
+                    if (self.selectedObject == object_info[0] && $moreRow.is(':visible')) {
+                        // assume selection handling occurs before this is called
+                        // so if we are now selected and the moreRow is visible, leave it...
+                        return;
+                    }
+                    if ($moreRow.is(':visible')) {
+                        $moreRow.slideUp('fast');
+                        $toggleAdvancedViewBtn.show();
+                    } else {
+                        self.getRichData(object_info,$moreRow);
+                        $moreRow.slideDown('fast');
+                        $toggleAdvancedViewBtn.hide();
+                    }
                 };
 
             var $mainDiv  = $('<div>').addClass('kb-data-list-info').css({padding:'0px',margin:'0px'})
@@ -424,7 +449,11 @@
                                 if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
                             })
                             .mouseleave(function(){ $toggleAdvancedViewBtn.hide(); })
-                            .click(toggleAdvanced);
+                            .click(
+                                    function() {
+                                        self.setSelected($(this),object_info);
+                                        toggleAdvanced();
+                                    });
 
             // Drag and drop
             this.addDragAndDrop($row);

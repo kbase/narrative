@@ -169,6 +169,14 @@
                     }
                 }, this)
             );
+            
+            $(document).on('removeFilterMethods.Narrative',
+                $.proxy(function(e) {
+                    this.$searchDiv.hide();
+                    this.$searchInput.val('');
+                    this.$searchInput.trigger('input');
+                }, this)
+            );
 
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')

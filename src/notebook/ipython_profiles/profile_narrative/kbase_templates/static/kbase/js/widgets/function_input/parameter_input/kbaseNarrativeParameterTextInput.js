@@ -617,6 +617,9 @@
             }
 
             if (this.rowInfo.length===1) {
+                if (this.allow_multiple) {
+                    return [this.rowInfo[0].$input.val()];
+                }
                 return this.rowInfo[0].$input.val();
             }
             var value = [];

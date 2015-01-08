@@ -1578,7 +1578,7 @@
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
                 if (result.length > 0) {
-                    if (showOutput === "app") {
+                    if (showOutput === "app" && window.kbconfig && window.kbconfig.mode === "debug") {
                         if (!cell.metadata[this.KB_CELL].stackTrace)
                             cell.metadata[this.KB_CELL].stackTrace = [];
                         // try to parse the result as JSON - if so, then it's a final result and we just

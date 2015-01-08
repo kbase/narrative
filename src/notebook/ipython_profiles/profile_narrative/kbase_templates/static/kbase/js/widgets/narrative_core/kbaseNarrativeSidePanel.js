@@ -973,7 +973,7 @@
 
 
             function publicView() {
-                var publicList = [{type: 'Genomes', ws: 'pubSEEDGenomes'},
+                var publicList = [{type: 'Genomes', ws: 'KBasePublicGenomesV4'},
                                   {type: 'Media', ws: 'KBaseMedia'},
                                   {type: 'Models', ws: 'KBasePublicModelsV4'},
                                   {type: 'RNA Seqs', ws: 'KBasePublicRNASeq'}];

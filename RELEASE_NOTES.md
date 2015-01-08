@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.5
+__Changes__
+- Import tab on GetData side panel allows now to upload genome from GBK file, transcriptomes from Fasta and short reads from Fasta and Fastq
+- Viewers can be open for main data types by dragging objects from Data panel to narrative 
+- States of long running methods calling services are now shown on Job panel and Job panel waits for 'Done' state before show output widget
+
 ### Version 0.3.4
 __Changes__
 - Redesign of the Method Gallery panel

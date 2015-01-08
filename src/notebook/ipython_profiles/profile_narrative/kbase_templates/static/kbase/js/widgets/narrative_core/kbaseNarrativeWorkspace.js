@@ -245,6 +245,7 @@
             else {
                 // something else!
                 // do nothing for now.
+                code = this.buildGenericRunCommand(data);
             }
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },

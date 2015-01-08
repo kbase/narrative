@@ -58,6 +58,10 @@
             this.$runButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
+
+                    if (!this.checkMethodRun())
+                        return;
+
                     this.submittedText = 'submitted on ' + this.readableTimestamp();
                     this.trigger('runCell.Narrative', { 
                         cell: IPython.notebook.get_selected_cell(),
@@ -67,19 +71,6 @@
                     this.changeState('submitted');
                 }, this)
             );
-
-            // this.$deleteButton = $('<button>')
-            //                     .attr('id', this.cellId + '-delete')
-            //                     .attr('type', 'button')
-            //                     .attr('value', 'Delete')
-            //                     .addClass('btn btn-default btn-sm')
-            //                     .append('Delete');
-            // this.$deleteButton.click(
-            //     $.proxy(function(event) {
-            //         event.preventDefault();
-            //         this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
-            //     }, this)
-            // );
 
             var $buttons = $('<div>')
                            .addClass('buttons pull-right')
@@ -238,6 +229,73 @@
                         break;
                 }
             }
+        },
+
+
+        isValid : function() {
+            var v = this.$inputWidget.isValid();
+            if (!v.isValid) {
+                return {
+                    isValid: v.isValid,
+                    errormsg: v.errormssgs,
+                };
+            }
+        },
+        
+        /*
+         * This function is invoked every time we run app. This is the difference between it
+         * and getAllParameterValues/getParameterValue which could be invoked many times before running 
+         * (e.g. when widget is rendered). 
+         */
+        prepareDataBeforeRun: function() {
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++)
+                    var v = this.inputSteps[i].widget.prepareDataBeforeRun();
+            }
+        },
+
+        /* locks inputs and updates display properties to reflect the running state
+            returns true if everything is valid and we can start, false if there were errors
+        */
+        checkMethodRun: function() {
+            var v = this.isValid();
+            if (!v.isValid) {
+                console.error('invalid method start');
+                console.error(v);
+                return false;
+            }
+
+            // if (ignoreValidCheck) {
+            //     //code
+            // } else {
+            //     var v = self.isValid();
+            //     if (!v.isValid) {
+            //         var errorCount = 1;
+            //         self.$errorModalContent.empty();
+            //         for(var k=0; k<v.stepErrors.length; k++) {
+            //             var $errorStep = $('<div>');
+            //             $errorStep.append($('<div>').addClass("kb-app-step-error-heading").append('Errors in Step '+v.stepErrors[k].stepNum+':'));
+            //             for (var e=0; e<v.stepErrors[k].errormssgs.length; e++) {
+            //                 $errorStep.append($('<div>').addClass("kb-app-step-error-mssg").append('['+errorCount+']: ' + v.stepErrors[k].errormssgs[e]));
+            //                 errorCount = errorCount+1;
+            //             }
+            //             self.$errorModalContent.append($errorStep);
+            //         }
+            //         self.$errorModal.modal('show');
+            //         return false;
+            //     }
+            // }
+            // self.prepareDataBeforeRun();
+            // self.$submitted.show();
+            // self.$runButton.hide();
+            // self.$stopButton.show();
+            // if (this.inputSteps) {
+            //     for(var i=0; i<this.inputSteps.length; i++) {
+            //         this.inputSteps[i].widget.lockInputs();
+            //     }
+            // }
+            // this.state.runningState.appRunState = "running";
+            return true;
         },
 
         /**

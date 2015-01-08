@@ -20,6 +20,9 @@ __Changes__
     - Added a big red '+' button to add more data.
     - Updated the style to a more 'material' look.
     - Removed the '+/-' buttons for showing metadata info, replaced with '...'
+- Import tab on GetData side panel allows now to upload genome from GBK file, transcriptomes from Fasta and short reads from Fasta and Fastq
+- Viewers can be open for main data types by drag-n-drop objects from Data panel to narrative 
+- States of long running methods calling services are now shown on Job panel and Job panel waits for 'Done' state before show output widget
 
 ### Version 0.3.4
 __Changes__

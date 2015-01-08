@@ -580,12 +580,12 @@
                     }
                 }
                 else if (jobStatus.error) {
-                    errorText = jobStatus.error;
+                    errorText = $('<div style="width:485px; word-wrap:break-word;">').append(jobStatus.error);
                     errorType = "Runtime";
                 }
                 else if (Object.keys(jobStatus.step_errors).length !== 0) {
                     errorType = "Runtime";
-                    errorText = $('<div>');
+                    errorText = $('<div style="width:485px; word-wrap:break-word;">');
                     for (var stepId in jobStatus.step_errors) {
                         if (jobStatus.step_errors.hasOwnProperty(stepId)) {
                             // contort that into the method name

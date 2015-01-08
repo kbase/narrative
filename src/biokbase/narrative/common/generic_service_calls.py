@@ -316,6 +316,8 @@ def build_args_njs(paramValue, paramMapping, workspace):
     if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
         targetTrans = paramMapping['target_type_transform']
     paramValue = transform_value(paramValue, workspace, targetTrans)
+    if not isinstance(paramValue, basestring):
+        paramValue = json.dumps(paramValue)
     ret['label'] = targetProp
     ret['value'] = paramValue
     return ret

@@ -37,6 +37,7 @@
             this.options.method = this.options.method.replace(/\n/g, '');
             this.method = JSON.parse(this.options.method);
             this.cellId = this.options.cellId;
+            this.initErrorModal();
             this.render();
             return this;
         },
@@ -231,17 +232,6 @@
             }
         },
 
-
-        isValid : function() {
-            var v = this.$inputWidget.isValid();
-            if (!v.isValid) {
-                return {
-                    isValid: v.isValid,
-                    errormsg: v.errormssgs,
-                };
-            }
-        },
-        
         /*
          * This function is invoked every time we run app. This is the difference between it
          * and getAllParameterValues/getParameterValue which could be invoked many times before running 
@@ -258,10 +248,15 @@
             returns true if everything is valid and we can start, false if there were errors
         */
         checkMethodRun: function() {
-            var v = this.isValid();
+            var v = this.$inputWidget.isValid();
             if (!v.isValid) {
-                console.error('invalid method start');
-                console.error(v);
+                this.$errorModalContent.empty();
+                for (var i=0; i<v.errormssgs.length; i++) {
+                    this.$errorModalContent.append($('<div>')
+                                                   .addClass("kb-app-step-error-mssg")
+                                                   .append('['+(i+1)+']: ' + v.errormssgs[i]));
+                }
+                this.$errorModal.modal('show');
                 return false;
             }
 
@@ -296,6 +291,25 @@
             // }
             // this.state.runningState.appRunState = "running";
             return true;
+        },
+
+        initErrorModal: function() {
+            // var errorModalId = "app-error-modal-"+ this.genUUID();
+            // var modalLabel = "app-error-modal-lablel-"+ this.genUUID();
+            this.$errorModalContent = $('<div>');
+            this.$errorModal =  $('<div tabindex="-1" role="dialog" aria-hidden="true">').addClass("modal fade");
+            this.$errorModal.append(
+                $('<div>').addClass('modal-dialog').append(
+                    $('<div>').addClass('modal-content').append(
+                        $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" >Problems exist in your parameter settings.</h4>')
+                    ).append(
+                       $('<div>').addClass('modal-body').append(this.$errorModalContent)
+                    ).append(
+                        $('<div>').addClass('modal-footer').append(
+                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
+                    )
+                ));
+            this.$elem.append(this.$errorModal);
         },
 
         /**

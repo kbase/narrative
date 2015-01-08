@@ -162,7 +162,7 @@ def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, par
         appState = njsClient.check_app_state(method_job_id)
         for stepId in appState['step_outputs']:
             rpcOut = appState['step_outputs'][stepId]
-            appState['widget_output'] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
+            appState['widget_outputs'] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
         appState['job_id'] = "method:" + appState['job_id']
         return appState
     else:
@@ -316,6 +316,8 @@ def build_args_njs(paramValue, paramMapping, workspace):
     if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
         targetTrans = paramMapping['target_type_transform']
     paramValue = transform_value(paramValue, workspace, targetTrans)
+    if not isinstance(paramValue, basestring):
+        paramValue = json.dumps(paramValue)
     ret['label'] = targetProp
     ret['value'] = paramValue
     return ret

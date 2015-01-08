@@ -1,5 +1,5 @@
 {
-    "config": "prod", 
+    "config": "prod",
     "dev": {
         "awe": "http://140.221.67.185:7080", 
         "cdmi": "https://kbase.us/services/cdmi_api/", 
@@ -25,6 +25,7 @@
     }, 
     "git_commit_hash": "bfbb9a8", 
     "git_commit_time": "Wed Nov 12 15:34:42 2014 -0800", 
+    "mode": "debug",
     "name": "KBase Narrative", 
     "prod": {
         "awe": "http://140.221.67.185:7080", 
@@ -47,5 +48,6 @@
         "workspace": "https://kbase.us/services/ws", 
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
-    "version": "v0.3.4"
+    "version": "v0.3.5",
+    "release_notes": "https://github.com/kbase/narrative/blob/develop/RELEASE_NOTES.md"
 }

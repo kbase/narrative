@@ -45,15 +45,19 @@
                     name : 'kbaseNarrativeManagePanel',
                     params : { autopopulate: true }
                 },
+            ]);
+
+            this.$narrativesWidget = manageWidgets['kbaseNarrativeAppsPanel'];
+            var $managePanel = manageWidgets['panelSet'];
+
+            var jobsWidget = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeJobsPanel',
                     params : { autopopulate: false }
                 }
             ]);
-
-            this.$narrativesWidget = manageWidgets['kbaseNarrativeAppsPanel'];
-            this.$jobsWidget = manageWidgets['kbaseNarrativeJobsPanel'];
-            var $managePanel = manageWidgets['panelSet'];
+            this.$jobsWidget = jobsWidget['kbaseNarrativeJobsPanel'];
+            var $jobsPanel = jobsWidget['panelSet'];
 
             var $tabs = this.buildTabs([
                 {
@@ -61,8 +65,12 @@
                     content : $analysisPanel
                 },
                 {
-                    tabName : 'Manage',
+                    tabName : 'Narratives',
                     content: $managePanel
+                },
+                {
+                    tabName : 'Jobs',
+                    content: $jobsPanel
                 }
             ], true);
 
@@ -309,7 +317,7 @@
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
-                importPanel = $('<div class="kb-import-content kb-import-import">'),
+                importPanel = $('<div class="kb-import-content kb-import-import" style="margin: 0px">'),
                 examplePanel = $('<div class="kb-import-content">');
 
             // add tabs
@@ -965,7 +973,7 @@
 
 
             function publicView() {
-                var publicList = [{type: 'Genomes', ws: 'pubSEEDGenomes'},
+                var publicList = [{type: 'Genomes', ws: 'KBasePublicGenomesV4'},
                                   {type: 'Media', ws: 'KBaseMedia'},
                                   {type: 'Models', ws: 'KBasePublicModelsV4'},
                                   {type: 'RNA Seqs', ws: 'KBasePublicRNASeq'}];

@@ -127,6 +127,8 @@ narrative.init = function() {
                           .append('<b>Version:</b> ' + window.kbconfig.version);
         if (window.kbconfig.git_commit_hash && window.kbconfig.git_commit_time)
             $versionDiv.append('<br><b>Git Commit:</b> ' + window.kbconfig.git_commit_hash + ' -- ' + window.kbconfig.git_commit_time);
+        if (window.kbconfig.release_notes)
+            $versionDiv.append('<br>View release notes on <a href="' + window.kbconfig.release_notes + '" target="_blank">Github</a>');
 
         // not used, but left in as legacy if we go back to it.
         // $versionInfo = window.kbconfig.name + '<br>' + window.kbconfig.version;

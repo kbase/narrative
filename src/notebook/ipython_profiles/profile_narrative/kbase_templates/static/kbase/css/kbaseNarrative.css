@@ -294,7 +294,7 @@ p#site-title {
 
 #content-column {
     height: 100%;
-    margin-left: 300px;
+    margin-left: 380px;
 }
 
 #workspace {
@@ -326,7 +326,7 @@ p#site-title {
 
 /* left pane styling */
 #left-column {
-    width: 300px;
+    width: 380px;
     position: fixed;
     border-right: 5px solid #e0e0e0;
     top: 70px;
@@ -1740,13 +1740,8 @@ div[class="tooltip-inner"] {
 
 /* data list */
 .kb-data-list-obj-row {
+    transition: all 0.1s ease;
     width:95%;
-    /*border-top-style: solid;
-    border-top-width: thin;
-    border-top-color: #999;
-    border-style: solid;
-    border-width: thin;
-    border-color: #fff;*/
     
     border-left-style: solid;
     border-left-width: 5px;
@@ -1760,6 +1755,27 @@ div[class="tooltip-inner"] {
     -webkit-box-shadow: 1px 1px 1px 1px #fff;
     moz-box-shadow: 1px 1px 1px 1px #fff;
 }
+
+.kb-data-list-obj-row:hover {
+    border-left-style: solid;
+    border-left-width: 5px;
+    border-left-color: #4BB856;
+    
+    box-shadow: 1px 1px 1px 1px #aaa;
+    -webkit-box-shadow: 1px 1px 1px 1px #aaa;
+    moz-box-shadow: 1px 1px 1px 1px #aaa;
+}
+
+.kb-data-list-obj-row-selected {
+    border-left-style: solid;
+    border-left-width: 5px;
+    border-left-color: #4BB856;
+    box-shadow: 1px 1px 1px 1px #aaa;
+    -webkit-box-shadow: 1px 1px 1px 1px #aaa;
+    moz-box-shadow: 1px 1px 1px 1px #aaa;
+}
+
+
 .kb-data-list-obj-row-main {
     width:100%;
     margin:0px;
@@ -1778,34 +1794,48 @@ div[class="tooltip-inner"] {
     margin: 0;
 }
 
-.kb-data-list-get-data-button {
-    /*border: none;
-    border-radius: 0;
-    text-shadow: none !important;
-    box-shadow: none;
-    -webkit-box-shadow: none;
-    moz-box-shadow: none;*/
+.kb-data-list-add-data-button {
+    transition: all 0.4s ease;
+    width:  40pt;
+    height: 40pt;
+    color:  #fff;
+    background-color: #F44336;
+    border-radius: 50%;
+    text-align: center;
+    padding-top: 10pt;
+    box-shadow: 2px 2px 4px 1px #ccc;
+    -webkit-box-shadow: 2px 2px 4px 1px #ccc;
+    moz-box-shadow: 2px 2px 4px 1px #ccc;
+}
+.kb-data-list-add-data-button:hover {
+    cursor:pointer;
+    box-shadow: 4px 4px 8px 1px #ccc;
+    -webkit-box-shadow: 4px 4px 8px 1px #ccc;
+    moz-box-shadow: 4px 4px 8px 1px #ccc;
 }
 
-.kb-data-list-obj-row:hover {
-    /*background-color: #eee;
-    border-style: solid;
-    border-width: thin;
-    border-color: #fff;*/
-    
-    border-left-style: solid;
-    border-left-width: 5px;
-    border-left-color: #FFC107;
-    
-    box-shadow: 1px 1px 1px 1px #888888;
-    -webkit-box-shadow: 1px 1px 1px 1px #888888;
-    moz-box-shadow: 1px 1px 1px 1px #888888;
+.kb-data-list-add-data-text-button {
+    transition: all 0.4s ease;
+    color:  #fff;
+    background-color: #F44336;
+    text-align: center;
+    border-radius: 0%;
+    box-shadow: 2px 2px 4px 1px #ccc;
+    -webkit-box-shadow: 2px 2px 4px 1px #ccc;
+    moz-box-shadow: 2px 2px 4px 1px #ccc;
 }
+.kb-data-list-add-data-text-button:hover {
+    cursor:pointer;
+    color:  #fff;
+    box-shadow: 4px 4px 8px 1px #ccc;
+    -webkit-box-shadow: 4px 4px 8px 1px #ccc;
+    moz-box-shadow: 4px 4px 8px 1px #ccc;
+}
+
 
 .kb-data-list-row-hr {
     width:70%;
     margin: 2px;
-    margin-left:15px;
 }
 
 .kb-data-list-logo {
@@ -1833,27 +1863,30 @@ div[class="tooltip-inner"] {
     font-weight: bold;
     white-space: nowrap;
     margin: 2px;
-    margin-left: 7px;
 }
+
 .kb-data-list-version {
     color:#777;
     font-size: 9pt;
     font-style: italic;
     white-space: nowrap;
     margin: 2px;
+    cursor:default;
 }
 .kb-data-list-type {
     color:#777;
     font-size: 10pt;
     margin: 2px;
-    margin-left: 15px;
+    margin-left: 10px;
+    cursor:default;
 }
 .kb-data-list-date {
     color:#777;
     font-size: 10pt;
     margin: 2px;
-    margin-left: 15px;
+    margin-left: 10px;
     white-space: nowrap;
+    cursor:default;
 }
 .kb-data-list-more {
     color:#777;

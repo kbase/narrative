@@ -1759,8 +1759,17 @@ div[class="tooltip-inner"] {
 .kb-data-list-obj-row:hover {
     border-left-style: solid;
     border-left-width: 5px;
-    border-left-color: #FFC107;
+    border-left-color: #4BB856;
     
+    box-shadow: 1px 1px 1px 1px #aaa;
+    -webkit-box-shadow: 1px 1px 1px 1px #aaa;
+    moz-box-shadow: 1px 1px 1px 1px #aaa;
+}
+
+.kb-data-list-obj-row-selected {
+    border-left-style: solid;
+    border-left-width: 5px;
+    border-left-color: #FFC107;
     box-shadow: 1px 1px 1px 1px #aaa;
     -webkit-box-shadow: 1px 1px 1px 1px #aaa;
     moz-box-shadow: 1px 1px 1px 1px #aaa;
@@ -1855,6 +1864,7 @@ div[class="tooltip-inner"] {
     white-space: nowrap;
     margin: 2px;
 }
+
 .kb-data-list-version {
     color:#777;
     font-size: 9pt;

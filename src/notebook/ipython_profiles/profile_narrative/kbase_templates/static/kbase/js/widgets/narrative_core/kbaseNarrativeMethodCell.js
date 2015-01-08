@@ -54,7 +54,7 @@
                              .attr('id', this.cellId + '-run')
                              .attr('type', 'button')
                              .attr('value', 'Run')
-                             .addClass('btn btn-primary btn-sm')
+                             .addClass('kb-method-run')
                              .append('Run');
             this.$runButton.click(
                 $.proxy(function(event) {
@@ -74,7 +74,7 @@
             );
 
             var $buttons = $('<div>')
-                           .addClass('buttons pull-right')
+                           .addClass('buttons pull-left')
                            // .append(this.$deleteButton)
                            .append(this.$submitted)
                            .append(this.$runButton);

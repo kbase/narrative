@@ -293,11 +293,11 @@
             var self = this;
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content); },
+                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, "app"); },
                 'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
                 'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
                 'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
-            }
+            };
 
             var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
@@ -1577,8 +1577,24 @@
                     // if we found progress markers, trim processed prefix from buffer
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
-                if (result.length > 0 && showOutput) {
-                    this.createOutputCell(cell, result);
+                if (result.length > 0) {
+                    if (showOutput === "app" && window.kbconfig && window.kbconfig.mode === "debug") {
+                        if (!cell.metadata[this.KB_CELL].stackTrace)
+                            cell.metadata[this.KB_CELL].stackTrace = [];
+                        // try to parse the result as JSON - if so, then it's a final result and we just
+                        // need the 'data' field
+                        try {
+                            var data = JSON.parse(result);
+                            if (data && typeof data === 'object')
+                                cell.metadata[this.KB_CELL].stackTrace.push(data.data);
+                        }
+                        catch (err) {
+                            // it's NOT JSON, and we should just append it.
+                            cell.metadata[this.KB_CELL].stackTrace.push(result);
+                        }
+                    }
+                    else if (showOutput)
+                        this.createOutputCell(cell, result);
                 }
             }
         },

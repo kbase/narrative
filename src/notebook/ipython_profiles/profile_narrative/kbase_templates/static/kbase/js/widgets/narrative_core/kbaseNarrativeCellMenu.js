@@ -24,6 +24,23 @@
                                 'margin' : '0'
                          });
 
+            if (window.kbconfig && window.kbconfig.mode === "debug") {
+                this.addMenuItem({
+                    icon: 'fa fa-code',
+                    text: 'View Job Submission',
+                    action: function() {
+                        var metadata = IPython.notebook.get_selected_cell().metadata;
+                        var stackTrace = [];
+                        if (metadata['kb-cell'] && metadata['kb-cell']['stackTrace'])
+                            stackTrace = metadata['kb-cell']['stackTrace'];
+                        console.log(stackTrace);
+                        var cell = IPython.notebook.insert_cell_below('code');
+                        cell.set_text('job_info=' + stackTrace[3] + '\njob_info');
+                        IPython.notebook.get_selected_cell().execute();
+                    }
+                });
+            }
+
             this.addMenuItem({
                 icon: 'fa fa-arrow-up',
                 text: 'Move Cell Up',

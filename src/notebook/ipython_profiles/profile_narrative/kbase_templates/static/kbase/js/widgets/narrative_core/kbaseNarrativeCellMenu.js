@@ -35,7 +35,7 @@
                             stackTrace = metadata['kb-cell']['stackTrace'];
                         console.log(stackTrace);
                         var cell = IPython.notebook.insert_cell_below('code');
-                        cell.set_text('from pprint import pprint\ntrace=' + stackTrace[3] + '\npprint(trace)');
+                        cell.set_text('trace=' + stackTrace[3] + '\ntrace');
                         IPython.notebook.get_selected_cell().execute();
                     }
                 });

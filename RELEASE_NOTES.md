@@ -23,6 +23,7 @@ __Changes__
 - Import tab on GetData side panel allows now to upload genome from GBK file, transcriptomes from Fasta and short reads from Fasta and Fastq
 - Viewers can be open for main data types by drag-n-drop objects from Data panel to narrative 
 - States of long running methods calling services are now shown on Job panel and Job panel waits for 'Done' state before show output widget
+- Added a 'debug' viewer to the apps. After starting an app's run, click on the gear menu in the app cell and select 'View Job Submission'. This will both emit the returned kernel messages from that app run into your browser's Javascript console, and it will create and run a code cell that will show you the object that gets set to the Job Service.
 
 ### Version 0.3.4
 __Changes__

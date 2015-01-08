@@ -62,7 +62,7 @@
                 this.options.nms_url = window.kbconfig.urls.narrative_method_store;
             }
             
-            this.$mainPanel = $('<div>').css({'height':'300px'});
+            this.$mainPanel = $('<div>').css({'height':'600px'});
             this.body().append(this.$mainPanel);
             
             $(document).on(
@@ -417,7 +417,11 @@
             
             $narDiv.append($('<table>').css({'width':'100%'}).append($('<tr>').append($dataCol).append($ctrCol)));
             $narDiv.append($shareContainer);
-            return $narDiv;
+            
+            var $narDivContainer = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr'))
+                                        .append($narDiv);
+            
+            return $narDivContainer;
         },
         
         

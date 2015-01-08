@@ -45,15 +45,19 @@
                     name : 'kbaseNarrativeManagePanel',
                     params : { autopopulate: true }
                 },
+            ]);
+
+            this.$narrativesWidget = manageWidgets['kbaseNarrativeAppsPanel'];
+            var $managePanel = manageWidgets['panelSet'];
+
+            var jobsWidget = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeJobsPanel',
                     params : { autopopulate: false }
                 }
             ]);
-
-            this.$narrativesWidget = manageWidgets['kbaseNarrativeAppsPanel'];
-            this.$jobsWidget = manageWidgets['kbaseNarrativeJobsPanel'];
-            var $managePanel = manageWidgets['panelSet'];
+            this.$jobsWidget = jobsWidget['kbaseNarrativeJobsPanel'];
+            var $jobsPanel = jobsWidget['panelSet'];
 
             var $tabs = this.buildTabs([
                 {
@@ -61,8 +65,12 @@
                     content : $analysisPanel
                 },
                 {
-                    tabName : 'Manage',
+                    tabName : 'Narratives',
                     content: $managePanel
+                },
+                {
+                    tabName : 'Jobs',
+                    content: $jobsPanel
                 }
             ], true);
 

@@ -108,7 +108,7 @@
                                     });
             var $mainListDivContainer = $('<div>').css({'position':'relative'})
                                             .append(this.$mainListDiv)
-                                            .append(this.$addDataButton);
+                                            .append(this.$addDataButton.hide());
             this.$elem.append($mainListDivContainer);
 
             if (window.kbconfig && window.kbconfig.urls) {
@@ -320,7 +320,7 @@
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
             var unversioned_full_type = type_module + '.' + type;
-            var logo = $('<div>')
+            var $logo = $('<div>')
                             .addClass("kb-data-list-logo")
                             .css({'background-color':this.logoColorLookup(type),'cursor':'pointer'})
                             .append(type.substring(0,1))
@@ -343,8 +343,8 @@
 
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
+            
             var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]));
-            var $logoDiv  = $('<div>').addClass('col-md-2').css({padding:'0px',margin:'0px'}).append(logo)
             var metadata = object_info[10];
             var metadataText = '';
             for(var key in metadata) {
@@ -352,7 +352,11 @@
                     metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
                 }
             }
-
+            if (type==='Genome') {
+                if (metadata.hasOwnProperty('Name')) {
+                    $type.text(type+': '+metadata['Name']);
+                }
+            }
             var landingPageLink = this.options.default_landing_page_url +object_info[7]+ '/' + object_info[1];
             if (this.ws_landing_page_map) {
                 if (this.ws_landing_page_map[type_module]) {
@@ -396,21 +400,24 @@
                         }
                 };
 
-            var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info').css({padding:'0px',margin:'0px'})
-                                .append($('<div>').append($('<table>').css({'width':'100%'})
-                                        .append($('<tr>')
-                                                .append($('<td>')//.css({'width':'50%'})
-                                                    .append($name).append($version).append('<br>')
-                                                    .append($type).append('<br>').append($date)
-                                                    .append($toggleAdvancedViewBtn)))));
-                                                //.append($('<td>').css({'vertical-align':'bottom','text-align':'right'})
-                                                //    .append($toggleAdvancedViewBtn)))));
+            var $mainDiv  = $('<div>').addClass('kb-data-list-info').css({padding:'0px',margin:'0px'})
+                                .append($name).append($version).append('<br>')
+                                .append($type).append('<br>').append($date)
+                                .append($toggleAdvancedViewBtn);
 
+            var $topTable = $('<table>')
+                             .css({'width':'100%'})
+                             .append($('<tr>')
+                                     .append($('<td>')
+                                             .css({'width':'15%'})
+                                             .append($logo))
+                                     .append($('<td>')
+                                             .append($mainDiv)));
+                             
             var $row = $('<div>').addClass('kb-data-list-obj-row')
                             .attr('kb-oid', object_key)
-                            .append($('<div>').addClass('row kb-data-list-obj-row-main')
-                                        .append($logoDiv)
-                                        .append($mainDiv))
+                            .append($('<div>').addClass('kb-data-list-obj-row-main')
+                                        .append($topTable))
                             .append($moreRow)
                             // show/hide ellipses on hover, show extra info on click 
                             .mouseenter(function(){
@@ -422,7 +429,11 @@
             // Drag and drop
             this.addDragAndDrop($row);
 
-            var $rowWithHr = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr')).append($row);
+            var $rowWithHr = $('<div>')
+                                .append($('<hr>')
+                                            .addClass('kb-data-list-row-hr')
+                                            .css({'margin-left':'65px'}))
+                                .append($row);
             
             return $rowWithHr;
         },
@@ -608,6 +619,7 @@
                     }
                     self.attachRow(i);
                 }
+                this.$addDataButton.show();
             } else {
                 // todo: show an upload button or some other message if there are no elements
                 self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'})
@@ -681,8 +693,6 @@
             var $openSearch = $('<span>')
                 .addClass('btn btn-xs btn-default')
                 .append('<span class="fa fa-search"></span>')
-            //var $openSearch = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
-            //    .html('<span class="fa fa-search" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$searchDiv.is(':visible')) {
                         self.$searchDiv.show();
@@ -696,8 +706,6 @@
             var $openSort = $('<span>')
                 .addClass('btn btn-xs btn-default')
                 .append('<span class="fa fa-sort-amount-asc"></span>')
-            //var $openSort = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
-            //    .html('<span class="fa fa-sort-amount-asc" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$sortByDiv.is(':visible')) {
                         self.$sortByDiv.show();
@@ -711,8 +719,6 @@
             var $openFilter = $('<span>')
                 .addClass('btn btn-xs btn-default')
                 .append('<span class="fa fa-filter"></span>')
-            //var $openFilter = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
-            //    .html('<span class="fa fa-filter" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
                     if(!self.$filterTypeDiv.is(':visible')) {
                         self.$filterTypeDiv.show();
@@ -743,17 +749,13 @@
                                         .change(function() {
                                             var optionSelected = $(this).find("option:selected");
                                             var typeSelected  = optionSelected.val();
-                                            //var textSelected   = optionSelected.text();
                                             self.filterByType(typeSelected);
                                         });
 
             self.$filterTypeDiv = $('<div>').css({'margin':'3px','margin-left':'5px','margin-bottom':'10px'})
                                 .append(self.$filterTypeSelect);
 
-
-
             var $header = $('<div>');
-            //.append($('<div>').addClass('col-xs-12').css({'margin':'0px','padding':'0px','text-align':'right'}));
             if(self.options.parentControlPanel) {
                 self.options.parentControlPanel.addButtonToControlPanel($openSearch);
                 self.options.parentControlPanel.addButtonToControlPanel($openSort);
@@ -765,8 +767,6 @@
                         .append($openSearch)
                         .append($openSort)
                         .append($openFilter))
-                    //.append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'})
-                    //    .append($addDataBtn));
             }
 
 
@@ -793,14 +793,25 @@
                     }
                 }
                 types.sort();
-
+                
                 self.$filterTypeSelect.empty();
-                self.$filterTypeSelect.append($('<option value="">').append("Show All Types"));
+                var runningCount = 0;
                 for(var i=0; i<types.length; i++) {
-                    var countStr = " (".concat(self.availableTypes[types[i]].count).concat(" objects)");
+                    runningCount += self.availableTypes[types[i]].count;
+                    var countStr = '';
+                    if(self.availableTypes[types[i]].count==1) {
+                        countStr = " (".concat(self.availableTypes[types[i]].count).concat(" object)");
+                    } else {
+                        countStr = " (".concat(self.availableTypes[types[i]].count).concat(" objects)");
+                    }
                     self.$filterTypeSelect.append(
                         $('<option value="'+self.availableTypes[types[i]].type+'">')
                             .append(self.availableTypes[types[i]].type + countStr));
+                }
+                if (runningCount==1) {
+                    self.$filterTypeSelect.prepend($('<option value="">').append("Show All Types ("+runningCount+" object)"));
+                } else {
+                    self.$filterTypeSelect.prepend($('<option value="">').append("Show All Types ("+runningCount+" objects)"));
                 }
             }
         },

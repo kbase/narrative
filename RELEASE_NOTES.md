@@ -3,10 +3,25 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
-### Version 0.3.5
+### Version 0.3.5 - 1/7/2015
 __Changes__
+- Added link to release notes in 'About' dialog.
+- Removed old links from the Navbar menu.
+- Added separate 'Jobs' tab to side panel.
+- Fixed problem with Job errors overflowing the error modal.
+- Method panel changes 
+    - The magnifying glass button should now toggle the search input.
+    - Added a 'type:_objecttype_' filter on methods and apps. This filters by their parameters. E.g. putting 'type:genome' or 'type:KBaseGenomes.Genome' in there will only show methods/apps that have a genome as a parameter.
+    - Added an event that can be fired to auto-filter the methods and apps.
+    - Updated the style to a more 'material' look.
+    - All specs are now fetched at Narrative startup. This will speed up some of the in-page population, but any apps with errors in their specs are no longer displayed in the list.
+    - Removed the '+/-' buttons for expanding the tooltip, replaced with '...'
+- Data list changes
+    - Added a big red '+' button to add more data.
+    - Updated the style to a more 'material' look.
+    - Removed the '+/-' buttons for showing metadata info, replaced with '...'
 - Import tab on GetData side panel allows now to upload genome from GBK file, transcriptomes from Fasta and short reads from Fasta and Fastq
-- Viewers can be open for main data types by dragging objects from Data panel to narrative 
+- Viewers can be open for main data types by drag-n-drop objects from Data panel to narrative 
 - States of long running methods calling services are now shown on Job panel and Job panel waits for 'Done' state before show output widget
 
 ### Version 0.3.4

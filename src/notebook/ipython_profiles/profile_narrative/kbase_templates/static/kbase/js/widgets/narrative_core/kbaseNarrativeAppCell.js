@@ -158,7 +158,7 @@
             this.$runButton = $('<button>')
                               .attr('type', 'button')
                               .attr('value', 'Run')
-                              .addClass('btn btn-success btn-sm')
+                              .addClass('kb-app-run')
                               .append('Run')
                               .click(
                                   $.proxy(function(event) {
@@ -220,7 +220,7 @@
             }
 
             var $buttons = $('<div>')
-                           .addClass('buttons pull-right')
+                           .addClass('buttons pull-left')
                            .append(this.$runButton)
                            //.append(this.$stopButton)
                            //.append(this.$stateDebugBtn)

@@ -7,8 +7,15 @@ div#notebook {
     overflow-y: auto;
 }
 
+.cell {
+    border-radius: 0;
+    border:0;
+    border-left: 5px solid #fff;
+}
 .cell.selected {
-    border: #ababab solid;
+    border-radius: 0;
+    border:0;
+    border-left: 5px solid #4BB856;
 }
 
 /**
@@ -1351,10 +1358,12 @@ div#notebook_panel {
 
 .kb-func-panel {
   border-color: #bce8f1;
+  border-radius: 1px;
 }
 
 .kb-func-panel > .panel-heading {
   color: #31708f;
+  border-radius: 1px;
   background-color: #d9edf7;
   border-color: #bce8f1;
   padding: 5px 10px;
@@ -1378,12 +1387,13 @@ div#notebook_panel {
 .kb-func-panel .panel-footer {
     /*background-color: #fff;
     border-top: none; */
-    padding: 2px 15px;
+    /*padding: 2px 15px;*/
 }
 
 /** output cell styling */
 .kb-cell-output .panel .panel-heading {
     padding: 5px 10px;
+    border-radius: 1px;
 }
 
 .rendered_html .kb-cell-output ul {
@@ -1452,7 +1462,7 @@ div#notebook_panel {
 }
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
 .kb-method-parameter-row-hover {
-   background:#eee;
+   background:#F5F5F5;
 }
 
 .kb-method-parameter-row-error {
@@ -1538,7 +1548,9 @@ div#notebook_panel {
 /** App styling */
 
 .kb-app-panel {
-    border: 15px solid #dddddd;
+    border:0;
+    border-top: 1px solid #CECECE;
+    border-radius: 1px;
 }
 
 .app-panel-heading {
@@ -1557,6 +1569,10 @@ div#notebook_panel {
 }
 .kb-app-step-container {
     margin-top: 6px;
+}
+.kb-app-panel > .panel-footer {
+    border: 0;
+    border-radius: 1px;
 }
 
 .kb-app-func-panel {
@@ -1619,6 +1635,38 @@ div#notebook_panel {
   50% { opacity: 0.7; }
   100% { opacity: 1.0; }
 }
+
+button.kb-app-run {
+    background-color: #2196F3;
+    border-radius: 1px;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 13px;
+    box-shadow: 1px 1px 1px #ccc;
+    -webkit-box-shadow: 1px 1px 1px #ccc;
+    moz-box-shadow: 1px 1px 1px #ccc;
+}
+button.kb-app-run:hover {
+    background-color: #1E88E5;;
+}
+
+
+button.kb-method-run {
+    background-color: #2196F3;
+    border-radius: 1px;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 13px;
+    box-shadow: 1px 1px 1px #ccc;
+    -webkit-box-shadow: 1px 1px 1px #ccc;
+    moz-box-shadow: 1px 1px 1px #ccc;
+}
+button.kb-method-run:hover {
+    background-color: #1E88E5;;
+}
+
 
 /***********
  * END of kbaseNarrFunc.css

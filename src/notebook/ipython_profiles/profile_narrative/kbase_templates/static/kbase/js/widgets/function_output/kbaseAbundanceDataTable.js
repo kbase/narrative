@@ -29,24 +29,12 @@
 
 	    kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
 	        container.empty();
-		console.log(data);
-		var main = $('<div>');
-		var table_opts = {
-		    "sPaginationType": "full_numbers",
-		    "iDisplayLength": 10,
-		    "aoColumns": [],
-		    "aaData": [],
-		    "oLanguage": {
-			"sSearch": "Search annotations:",
-			"sEmptyTable": "No annotations found."
-		    }
-		};
 		// parse data
 		if (data.length == 0) {
 		    var msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
-		    main.append($('<p>').css({'padding': '10px 20px'}).text(msg));
+		    container.append('<div><p>'+msg+'>/p></div>');
 		} else {
-		    var biom = data[0];
+		    var biom = data[0]['data'];
 		    var matrix = [];
 		    var tdata = [];
 		    // get matrix
@@ -56,31 +44,39 @@
 			matrix = biom['data'];
 		    }
 		    // get column names
-		    table_opts["aaData"][0] = {sTitle: "Annotation", mData: "annot"};
+		    var clength = biom['columns'].length + 1;
+		    var cnames = new Array(clength)
+		    cnames[0] = {sTitle: "Annotation"};
 		    for (var c = 0; c < biom['columns'].length; c++) {
-			table_opts["aaData"][c+1] = {
-			    sTitle: biom['columns'][c]['id'],
-			    mData: biom['columns'][c]['id']
-			};
+			cnames[c+1] = {sTitle: biom['columns'][c]['id']};
 		    }
 		    // add values
+		    var tdata = new Array(matrix.length);
 		    for (var r = 0; r < matrix.length; r++) {
-			tdata[r] = {};
-			tdata[r]['annot'] = biom['rows'][r]['id'];
+			tdata[r] = new Array(clength);
+			tdata[r][0] = biom['rows'][r]['id'];
 			for (var c = 0; c < matrix[r].length; c++) {
 			    var value = matrix[r][c];
 			    if (! value) {
 				value = 0;
 			    }
-			    tdata[r][ biom['columns'][c]['id'] ] = value;
+			    tdata[r][c+1] = value
 			}
 		    }
 		    // create table
-		    main.append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'_table" class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
-		    var abundtable = $('#'+pref+'_table').dataTable(table_opts);
-		    abundtable.fnAddData(tdata);		    
+		    var table_opts = {
+                        "sPaginationType": "full_numbers",
+                        "iDisplayLength": 10,
+                        "aoColumns": cnames,
+                        "aaData": tdata,
+                        "oLanguage": {
+                            "sSearch": "Search annotations:",
+                            "sEmptyTable": "No annotations found."
+                        }
+                    };
+		    container.append('<div><table cellpadding="0" cellspacing="0" border="0" id="'+pref+'_table" class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/></div>');
+		    $('#'+pref+'_table').dataTable(table_opts);
 		}
-		container.append(main);
 	    }, function(data) {
 		container.empty();
 		var main = $('<div>');

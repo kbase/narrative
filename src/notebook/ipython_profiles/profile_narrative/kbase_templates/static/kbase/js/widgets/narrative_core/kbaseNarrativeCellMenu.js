@@ -27,7 +27,7 @@
             if (window.kbconfig && window.kbconfig.mode === "debug") {
                 this.addMenuItem({
                     icon: 'fa fa-code',
-                    text: 'View Stack Trace',
+                    text: 'View Job Submission',
                     action: function() {
                         var metadata = IPython.notebook.get_selected_cell().metadata;
                         var stackTrace = [];

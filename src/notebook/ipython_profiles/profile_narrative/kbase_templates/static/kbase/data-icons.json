@@ -1,4 +1,6 @@
 {
     "DEFAULT": "dna",
-    "ContigSet": "contigs"
+    "ContigSet": "contigs",
+    "Genome": "genome",
+    "Network": "network"
 }

@@ -329,6 +329,10 @@
                     {tabName: '<small>Import</small>', content: importPanel},
                 ]);
 
+            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
+            var selectedPublicItems = [];
+
+            publicPanel.kbaseNarrativeSidePublicTab({addToNarrativeButton: btn, selectedItems: selectedPublicItems});
             importPanel.kbaseNarrativeSideImportTab({});
             examplePanel.kbaseNarrativeExampleDataTab({});
 
@@ -342,7 +346,6 @@
             // add footer status container and buttons
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
-            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
             var closeBtn = $('<button class="btn btn-default pull-right">Close</button>');
 
             closeBtn.click(function() { self.hideOverlay(); })
@@ -358,7 +361,7 @@
             });
 
             // some placeholder for the public panel
-            publicView();
+            //publicView();
 
             // events for changing tabs
             $($tabs.header.find('.kb-side-header')).click(function() {

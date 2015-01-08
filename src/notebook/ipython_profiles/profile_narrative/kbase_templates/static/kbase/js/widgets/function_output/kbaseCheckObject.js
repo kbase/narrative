@@ -1,9 +1,9 @@
 /**
- * KBase widget to display workspace object JSON.
+ * KBase widget to display if workspace object exists.
  */
 (function($, undefined) {
     $.KBWidget({
-        name: 'DataDump',
+        name: 'CheckObject',
         version: '1.0.0',
         options: {
 	    id: null,
@@ -25,14 +25,21 @@
 
 	    container.empty();
 	    container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
+	    console.log(self.options);
 
-	    kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
+	    kbws.get_object_info([{ref: self.options.ws+"/"+self.options.id}], 0, function(data) {
 	        container.empty();
+		console.log(data);
 		var main = $('<div>');
-		var str = JSON.stringify(data, undefined, 2);
+		var msg = "";
+		if (data.length > 0) {
+		    msg = "Object "+self.options.id+" sucessfully created in workspace "+self.options.ws;
+		} else {
+		    msg = "[Error] Object "+self.options.id+" not created in workspace "+self.options.ws;
+		}
 		main.append($('<p>')
 		    .css({'padding': '10px 20px'})
-                    .append($('<pre>').text(str)));
+                    .text(msg));
 		container.append(main);
 	    }, function(data) {
 		container.empty();

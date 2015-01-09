@@ -104,7 +104,7 @@
                                     .css({'position':'absolute', bottom:'15px', right:'25px', 'z-index':'5'})
                                     .click(function() {
                                         self.trigger('hideGalleryPanelOverlay.Narrative');
-                                        self.trigger('toggleSidePanelOverlay.Narrative');
+                                        self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);
                                     });
             var $mainListDivContainer = $('<div>').css({'position':'relative'})
                                             .append(this.$mainListDiv)

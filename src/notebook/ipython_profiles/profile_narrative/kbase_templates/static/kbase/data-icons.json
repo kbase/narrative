@@ -1,0 +1,10 @@
+{
+    "DEFAULT": "dna",
+    "ContigSet": "contigs",
+    "Genome": "genome",
+    "Network": "network",
+    "ExpressionSample": "expression",
+    "ExpressionSeries": "expression",
+    "FBA": "fba",
+    "FBAModel": "fba"
+}

@@ -4,6 +4,7 @@
 * [Deployment][]
 * [Logging][]
 * [Source][]
+* [Data Icons][]
 
 # Introduction
 [Contents][]
@@ -20,6 +21,9 @@
 
 # Source
 [Contents][]
-
 {{src.md}}
 {{src2.md}}
+
+# Data Icons
+[Contents][]
+{{data_icons.md}}

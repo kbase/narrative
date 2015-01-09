@@ -163,13 +163,11 @@
             if (this.ws_name)
                 this.trigger('workspaceUpdated.Narrative', this.ws_name);
 
-            this.$testPanel = $('<div>I am a test panel. Foo, bar, baz, etc.</div>');
-
             this.dataImporter();
 
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
-                           .append('<span class="glyphicon glyphicon-play"></span>')
+                           .append('<span class="fa fa-arrow-right"></span>')
                            .click($.proxy(function(event) {
                                this.trigger('hideGalleryPanelOverlay.Narrative');
                                this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
@@ -1320,7 +1318,6 @@
                 })
             }
 
-
             // This function takes data to render and
             // a container to put data in.
             // It produces a scrollable dataset
@@ -1341,10 +1338,12 @@
                 events(container, selected);
 
                 // infinite scroll
+                var currentPos = end;
                 container.unbind('scroll');
                 container.on('scroll', function() {
                     if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
-                        var rows = buildMyRows(data, start, end, template);
+                        currentPos = currentPos+end;
+                        var rows = buildMyRows(data, currentPos, end, template);
                         container.append(rows);
                     }
                     events(container, selected);
@@ -1554,6 +1553,9 @@
                                 ws: obj[7],
                                 relativeTime: kb.ui.relativeTime( Date.parse(obj[3]) ) }
 
+                    if (item.module=='KBaseNarrative') {
+                        continue;
+                    }
                     if (template)
                         var item = template(item);
                     else

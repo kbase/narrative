@@ -6,13 +6,15 @@ This is built on the IPython Notebook (more notes will follow).
 ### Version 0.3.6 - 1/9/2015
 __Changes__
 - Removed text/code cell buttons from method panel - they've now migrated to the lower right side of the page.
-- Started restyling various elements to match the new style guide
+- Started restyling various elements to match the new style guide (colors, shadows, etc.)
 - Inserted (better) icons than just letters for data objects
-- Removed 
-
-### Version 0.3.6 - 1/9/2015
-__Changes__
 - Public data tab on side panel was redesigned. Genome mode using search API is now the only supported mode there.
+- Method cell changes
+    - Fixed problem where starting a long-running method would immediately show an output cell with broken results
+    - Fixed problem when submitting a method with numerical value inputs
+    - Fixed problem when submitting a method with multiple possible output types for a single parameter
+    - Fixed problem where method cell parameters were not being properly validated before sending the job
+- Added document that details app failure points
 
 ### Version 0.3.5 - 1/7/2015
 __Changes__

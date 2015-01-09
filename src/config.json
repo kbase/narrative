@@ -19,7 +19,8 @@
         "trees": "http://140.221.67.152:7047", 
         "update_profile": "https://gologin.kbase.us/account/UpdateProfile", 
         "uploader": "http://kbase.us/services/docs/uploader/uploader.html", 
-        "user_and_job_state": "http://kbase.us/services/userandjobstate", 
+        "user_and_job_state": "http://kbase.us/services/userandjobstate",
+        "user_profile": "http://dev19.berkeley.kbase.us/services/user_profile/rpc", 
         "workspace": "http://dev04.berkeley.kbase.us:7058", 
         "ws_browser": "http://narrative.kbase.us/functional-site/#/ws"
     }, 
@@ -44,7 +45,8 @@
         "trees": "https://kbase.us/services/trees", 
         "update_profile": "https://gologin.kbase.us/account/UpdateProfile", 
         "uploader": "http://kbase.us/services/docs/uploader/uploader.html", 
-        "user_and_job_state": "https://kbase.us/services/userandjobstate", 
+        "user_and_job_state": "https://kbase.us/services/userandjobstate",
+        "user_profile": "https://kbase.us/services/user_profile/rpc", 
         "workspace": "https://kbase.us/services/ws", 
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 

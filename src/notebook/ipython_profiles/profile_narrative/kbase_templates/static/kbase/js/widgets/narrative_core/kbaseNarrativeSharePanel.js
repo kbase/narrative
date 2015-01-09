@@ -25,7 +25,8 @@
         
         options: {
             ws_url: "https://kbase.us/services/ws",
-            user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",  // !!should not be hardcoded!!
+            user_profile_url: "https://kbase.us/services/user_profile/rpc",
+            user_page_link:"/functional-site/#/people/",
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             ws_name_or_id: null,
             max_name_length: 35,
@@ -34,6 +35,7 @@
         },
         
         ws:null, // workspace client
+        user_profile:null, //user_profile client
         
         $mainPanel:null,
         $notificationPanel:null,
@@ -44,6 +46,7 @@
             // always overwrite based on kbconfig
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.ws_url = window.kbconfig.urls.workspace;
+                this.options.user_profile_url = window.kbconfig.urls.user_profile;
             }
             
             this.$notificationPanel = $('<div>');
@@ -67,15 +70,17 @@
         },
 
         my_user_id: null,
-        /* handle login and logout */
+        
         loggedInCallback: function(event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
+            this.user_profile = new UserProfile(this.options.user_profile_url, auth);
             this.my_user_id = auth.user_id;
             this.refresh();
             return this;
         },
         loggedOutCallback: function(event, auth) {
             this.ws = null;
+            this.user_profile = null;
             this.my_user_id = null;
             this.refresh();
             return this;
@@ -108,30 +113,26 @@
                                 self.ws_permissions = [];
                                 self.user_data = {};
                                 
+                                var usernameList = [self.my_user_id];
                                 var usernames = self.my_user_id + ",";
                                 for(var u in perm) {
                                     if (perm.hasOwnProperty(u)) {
                                         if (u!=='*') {
                                             self.ws_permissions.push([u,perm[u]]);
                                             usernames += u+',';
+                                            usernameList.push(u);
                                         }
                                     }
                                 }
-                                $.ajax({
-                                    type: "GET",
-                                    url: self.options.user_name_fetch_url + usernames + "&token="+self._attributes.auth.token,
-                                    dataType:"json",
-                                    crossDomain : true,
-                                    success: function(data,res,jqXHR) {
-                                        if (data.error) { console.error(data); }
-                                        else { self.user_data = data.data; }
+                                self.user_profile.lookup_globus_user(usernameList,
+                                    function(data) {
+                                        self.user_data = data;
                                         self.render();
                                     },
-                                    error: function(jqXHR, textStatus, errorThrown) {
-                                        console.error(errorThrown);
+                                    function(error) {
+                                        console.error(error);
                                         self.render();
-                                    }
-                                });
+                                    });
                             },
                             function(error){self.reportError(error);}
                             );
@@ -218,7 +219,7 @@ WORKSPACE INFO
                 } else if (self.ws_info[5]==='r' || self.ws_info[6]==='r') { // either you can read it, or it is globally readable
                     status="You can view this Narrative, but you cannot edit or share it.";
                 } 
-                var display = self.renderUserIconAndName(self.my_user_id);
+                var display = self.renderUserIconAndName(self.my_user_id,null,true);
                 $meDiv.append(display[0],display[1]);
                 $meDiv.append($('<div>').css({'margin-top':'10px'}).append(status));
                 self.$mainPanel.append($meDiv);
@@ -358,7 +359,7 @@ WORKSPACE INFO
                             if (self.ws_permissions[i][1]==='w') { $select.append('can edit'); }
                             if (self.ws_permissions[i][1]==='a') { $select.append('can edit/share'); }
                         }
-                        var user_display = self.renderUserIconAndName(self.ws_permissions[i][0]);
+                        var user_display = self.renderUserIconAndName(self.ws_permissions[i][0],null,true);
                         $tbl.append(
                             $('<tr>')
                                 .append($('<td>')
@@ -375,54 +376,60 @@ WORKSPACE INFO
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input, placeholder) {
             var self = this;
-            var noMatchesFoundStr = "Enter a user name";//"no users found";
+            var noMatchesFoundStr = "Search by Name or Username";//"no users found";
             $input.select2({
                 matcher: self.select2Matcher,
                 formatNoMatches: noMatchesFoundStr,
                 placeholder:placeholder,
                 allowClear: true,
                 multiple: true,
-                /*tokenSeparators:[' ',','],
-                createSearchChoice: function(term) {
-                    return {id:term, text:term};
-                },*/
                 query: function (query) {
                     
                     var term = query.term.trim();
                     var results = [];
                     
                     if (term.length>=2) {
-                        $.ajax({
-                            type: "GET",
-                            url: self.options.user_name_fetch_url + term + "&token="+self._attributes.auth.token,
-                            dataType:"json",
-                            crossDomain : true,
-                            success: function(data,res,jqXHR) {
-                               // console.log(data);
-                                if (data.data) {
-                                    if (data.data[term]) {
-                                        results.push({id:term,text:data.data[term].fullName, found:true})
+                        self.user_profile.filter_users({filter:term},
+                            function(users) {
+                                if (users.length>0) {
+                                    for (var k=0; k<users.length; k++) {
+                                        results.push({id:users[k].username, text:users[k].realname, found:true});
+                                    }
+                                    query.callback({results:results});
+                                } else {
+                                    // no matches in our profile, see if there was a globus match...
+                                    term = term.toLowerCase();
+                                    if(!/[^a-z0-9]/.test(term) ) {
+                                        self.user_profile.lookup_globus_user([term],
+                                            function(data) {
+                                                if (data.hasOwnProperty(term)) {
+                                                    results.push({id:term, text:data[term].fullName, found:false});
+                                                } else {
+                                                    results.push({id:term, text:term, found:false});
+                                                }
+                                                query.callback({results:results});
+                                            },
+                                            function(error) {
+                                                // something went really wrong
+                                                console.error(error);
+                                                self.render();
+                                                results.push({id:term, text:term, found:false});
+                                                query.callback({results:results});
+                                            });
+                                    } else {
+                                        results.push({id:term, text:term, found:false});
                                         query.callback({results:results});
-                                        return;
                                     }
                                 }
-                                results.push({id:term,text:term})
-                                query.callback({results:results});
                             },
-                            error: function(jqXHR, textStatus, errorThrown) {
-                                results.push({id:term,text:term})
-                                console.error(errorThrown);
+                            function(error) {
+                                results.push({id:term,text:term, found:false});
+                                console.error(error);
                                 query.callback({results:results}); 
-                            }
-                        });
+                            });
                     } else {
                        query.callback({results:results}); 
                     }
-                    
-                    // paginate results
-                    //var pageSize = self.options.wsObjSelectPageSize;
-                    //query.callback({results:data.results.slice((query.page-1)*pageSize, query.page*pageSize),
-                    //            more:data.results.length >= query.page*pageSize });
                 },
                 
                 formatSelection: function(object, container) {
@@ -484,7 +491,7 @@ WORKSPACE INFO
             '#607D8B'  //blue grey
         ],
         
-        renderUserIconAndName: function(username, realName) {
+        renderUserIconAndName: function(username, realName, turnOnLink) {
             var code = 0;
             for(var i=0; i<username.length; i++) {
                 code += username.charCodeAt(i);
@@ -508,6 +515,11 @@ WORKSPACE INFO
             }
             var $name =  $("<span>").css({'color':userColor, 'white-space':'nowrap'}).append(shortName);
             if (isShortened) { $name.tooltip({title:userString, placement:'bottom'}); }
+            
+            if (turnOnLink) {
+                $name =  $('<a href="'+this.options.user_page_link+username+'" target="_blank">').append(
+                            $("<span>").css({'color':userColor, 'white-space':'nowrap'}).append(shortName));
+            }
             return [$span,$name];
         }
         

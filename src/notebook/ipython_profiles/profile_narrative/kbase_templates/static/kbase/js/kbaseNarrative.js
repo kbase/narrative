@@ -6,41 +6,43 @@
  */
 "use strict";
 
-$('#kb-save-btn').click(function(e) {
-    if (IPython && IPython.notebook) {
-        var narrName = IPython.notebook.notebook_name;
-        // we do not allow users to leave thier narratives untitled
-        if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
-            IPython.save_widget.rename_notebook("Please name your Narrative before saving.", false);
-        } else {
-            IPython.notebook.save_checkpoint();
-        }
-    }
-});
-$('#kb-narr-name #name').click(function(e) {
-    if (IPython && IPython.save_widget) {
-        IPython.save_widget.rename_notebook("Rename your Narrative.", true);
-        var narrName = IPython.notebook.notebook_name;
-        // this code needs to move to the save widget since rename_notebook is async!!
-        //$('#kb-narr-name #name').text(narrName);
-    }
-});
-$('#kb-kernel-int-btn').click(function(e) {
-    if (IPython && IPython.notebook && IPython.notebook.kernel) {
-        IPython.notebook.kernel.interrupt();
-    }
-});
-$('#kb-kernel-ref-btn').click(function(e) {
-    if (IPython && IPython.notebook && IPython.notebook.kernel) {
-        IPython.notebook.kernel.restart();
-    }
-});
-$('#kb-del-btn').click(function(e) {
-    if (IPython && IPython.notebook)
-        IPython.notebook.delete_cell();
-});
-
 (function() {
+
+    // bind menubar buttons
+    $('#kb-save-btn').click(function(e) {
+        if (IPython && IPython.notebook) {
+            var narrName = IPython.notebook.notebook_name;
+            // we do not allow users to leave thier narratives untitled
+            if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
+                IPython.save_widget.rename_notebook("Please name your Narrative before saving.", false);
+            } else {
+                IPython.notebook.save_checkpoint();
+            }
+        }
+    });
+    $('#kb-narr-name #name').click(function(e) {
+        if (IPython && IPython.save_widget) {
+            IPython.save_widget.rename_notebook("Rename your Narrative.", true);
+            var narrName = IPython.notebook.notebook_name;
+            // this code needs to move to the save widget since rename_notebook is async!!
+            //$('#kb-narr-name #name').text(narrName);
+        }
+    });
+    $('#kb-kernel-int-btn').click(function(e) {
+        if (IPython && IPython.notebook && IPython.notebook.kernel) {
+            IPython.notebook.kernel.interrupt();
+        }
+    });
+    $('#kb-kernel-ref-btn').click(function(e) {
+        if (IPython && IPython.notebook && IPython.notebook.kernel) {
+            IPython.notebook.kernel.restart();
+        }
+    });
+    $('#kb-del-btn').click(function(e) {
+        if (IPython && IPython.notebook)
+            IPython.notebook.delete_cell();
+    });
+
     var $dataList = $('<div>');
     var $shareWidget = $dataList["kbaseNarrativeSharePanel"]({});
     $('#kb-share-btn').popover({ 
@@ -65,6 +67,10 @@ $('#kb-del-btn').click(function(e) {
             return $dataList;
         }
     });
+
+    $('#kb-add-code-cell').click(function() { IPython.notebook.insert_cell_below('code'); })
+    $('#kb-add-md-cell').click(function() { IPython.notebook.insert_cell_below('markdown'); })
+
 })();
 
 /**

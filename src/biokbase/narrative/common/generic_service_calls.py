@@ -282,7 +282,7 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
         workspaceName = ''
         objectType = ''
         isWorkspaceId = 0
-        if isScript and (paramId is not None) and (paramId in paramToSpecs) and (paramValue is not None) and (len(paramValue) > 0):
+        if isScript and (paramId is not None) and (paramId in paramToSpecs) and (paramValue is not None) and (len(str(paramValue)) > 0):
             paramSpec = paramToSpecs[paramId]
             types = []
             is_output_name = False
@@ -296,8 +296,11 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
                 if len(types) == 1:
                     objectType = types[0]
                 else:
-                    objectType = wsClient.get_object_info_new({'objects' : [{'ref': workspace + "/" + paramValue}]})[0][2]
-                    objectType = objectType[0:objectType.index('-')]
+                    try:
+                        objectType = wsClient.get_object_info_new({'objects' : [{'ref': workspace + "/" + paramValue}]})[0][2]
+                        objectType = objectType[0:objectType.index('-')]
+                    except:
+                        objectType = types[0]
                 workspaceName = workspace
                 isWorkspaceId = 1
                 if not is_output_name:
@@ -316,6 +319,11 @@ def build_args_njs(paramValue, paramMapping, workspace):
     if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
         targetTrans = paramMapping['target_type_transform']
     paramValue = transform_value(paramValue, workspace, targetTrans)
+    if isinstance(paramValue, basestring):
+        ret['is_json'] = 0
+    else:
+        paramValue = json.dumps(paramValue)
+        ret['is_json'] = 1
     ret['label'] = targetProp
     ret['value'] = paramValue
     return ret

@@ -100,31 +100,12 @@
             this.$searchDiv.append(this.$searchInput)
                            .append($clearSearchBtn);
 
-            var $ipyButtonDiv = $('<div style="margin-bottom:5px">')
-                                .append($('<button>')
-                                        .addClass('btn btn-warning')
-                                        .append($('<span style="color:#fff">')
-                                                .addClass('fa fa-terminal')
-                                                .append(' Code Cell'))
-                                        .click(function(event) {
-                                            IPython.notebook.insert_cell_below('code');
-                                        }))
-                                .append($('<button>')
-                                        .addClass('btn btn-warning pull-right')
-                                        .append($('<span style="color:#fff">')
-                                                .addClass('fa fa-paragraph')
-                                                .append(' Text Cell'))
-                                        .click(function(event) {
-                                            IPython.notebook.insert_cell_below('markdown');
-                                        }));
-
             // placeholder for apps and methods once they're loaded.
             this.$methodList = $('<div>')
                                .css({'height' : '300px', 'overflow-y': 'auto', 'overflow-x' : 'hidden'});
             // Make a function panel for everything to sit inside.
             this.$functionPanel = $('<div>')
                                   .addClass('kb-function-body')
-                                  .append($ipyButtonDiv)
                                   .append($('<div>')
                                           .append(this.$searchDiv)
                                           .append(this.$toggleHiddenDiv))

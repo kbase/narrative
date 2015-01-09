@@ -163,8 +163,6 @@
             if (this.ws_name)
                 this.trigger('workspaceUpdated.Narrative', this.ws_name);
 
-            this.$testPanel = $('<div>I am a test panel. Foo, bar, baz, etc.</div>');
-
             this.dataImporter();
 
             this.addButton($('<button>')

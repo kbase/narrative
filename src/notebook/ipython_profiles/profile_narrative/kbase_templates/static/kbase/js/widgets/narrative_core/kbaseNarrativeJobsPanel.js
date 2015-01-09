@@ -626,7 +626,7 @@
         },
 
         makeJobClearButton: function(jobStatus, jobInfo) {
-            var removeText = "Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?";
+            var removeText = "Deleting this job will remove it from your Narrative. Any already generated data will be retained. Continue?";
             var warningText = "This job appears to have fallen into an error state and is no longer running on KBase servers.";
 
             return $('<span data-toggle="tooltip" title="Remove Job" data-placement="left">')
@@ -644,7 +644,7 @@
                        if (jobStatus && jobStatus.job_state) {
                            var status = jobStatus.job_state.toLowerCase();
                            if (status === 'queued' || status === 'running' || status === 'in-progress') {
-                               warningText = "This job is currently running on KBase servers! Removing it will prevent your App from updating, though data is currently being generated and may still appear in your Narrative.";
+                               warningText = "This job is currently running on KBase servers! Removing it will attempt to stop the running job.";
                            }
                            else if (status === 'completed') {
                                warningText = "This job has completed running. You may safely remove it without affecting your Narrative.";

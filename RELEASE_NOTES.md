@@ -5,6 +5,7 @@ This is built on the IPython Notebook (more notes will follow).
 
 ### Version 0.3.6 - 1/9/2015
 __Changes__
+- Changed install.sh - now it requires an existing Python virtual environment for installation
 - Removed text/code cell buttons from method panel - they've now migrated to the lower right side of the page.
 - Started restyling various elements to match the new style guide (colors, shadows, etc.)
 - Inserted (better) icons than just letters for data objects

@@ -2,5 +2,9 @@
     "DEFAULT": "dna",
     "ContigSet": "contigs",
     "Genome": "genome",
-    "Network": "network"
+    "Network": "network",
+    "ExpressionSample": "expression",
+    "ExpressionSeries": "expression",
+    "FBA": "fba",
+    "FBAModel": "fba"
 }

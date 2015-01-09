@@ -16,7 +16,7 @@ $.KBWidget({
         var fbas = options.ids;
         var workspaces = options.workspaces;
         
-        if ('fbaDdata' in options) {
+        if ('fbaData' in options) {
             return render(options);
         } else {
             var container = this.$elem;

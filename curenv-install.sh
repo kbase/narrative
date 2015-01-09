@@ -13,7 +13,6 @@ function log () {
   now=`date '+%Y-%m-%d %H:%M:%S'`
     echo "$now [install_narrative] $1" >> $logfile
 }
-
 function console () {
   now=`date '+%Y-%m-%d %H:%M:%S'`
   echo "$now [install_narrative] $1"
@@ -68,7 +67,6 @@ fi
 
 # Setup IPython inside virtualenv
 # -------------------------------
-
 if [ "$force_ipython" -o ! -e ipython ]
 then
     console "Installing IPython branch $ipython_branch"
@@ -86,7 +84,6 @@ fi
 
 # Install narrative code
 # ----------------------
-
 console "Installing biokbase"
 log "Installing requirements from src/requirements.txt with 'pip'"
 pip install -r src/requirements.txt >> ${logfile} 2>&1
@@ -98,7 +95,6 @@ cd ..
 
 # Set up the run_notebook script
 # ------------------------------
-
 console "Installing scripts"
 i=0
 while read s

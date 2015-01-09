@@ -3,6 +3,85 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.5 - 1/7/2015
+__Changes__
+- Added link to release notes in 'About' dialog.
+- Removed old links from the Navbar menu.
+- Added separate 'Jobs' tab to side panel.
+- Fixed problem with Job errors overflowing the error modal.
+- Method panel changes 
+    - The magnifying glass button should now toggle the search input.
+    - Added a 'type:_objecttype_' filter on methods and apps. This filters by their parameters. E.g. putting 'type:genome' or 'type:KBaseGenomes.Genome' in there will only show methods/apps that have a genome as a parameter.
+    - Added an event that can be fired to auto-filter the methods and apps.
+    - Updated the style to a more 'material' look.
+    - All specs are now fetched at Narrative startup. This will speed up some of the in-page population, but any apps with errors in their specs are no longer displayed in the list.
+    - Removed the '+/-' buttons for expanding the tooltip, replaced with '...'
+- Data list changes
+    - Added a big red '+' button to add more data.
+    - Updated the style to a more 'material' look.
+    - Removed the '+/-' buttons for showing metadata info, replaced with '...'
+- Import tab on GetData side panel allows now to upload genome from GBK file, transcriptomes from Fasta and short reads from Fasta and Fastq
+- Viewers can be open for main data types by drag-n-drop objects from Data panel to narrative 
+- States of long running methods calling services are now shown on Job panel and Job panel waits for 'Done' state before show output widget
+- Added a 'debug' viewer to the apps. After starting an app's run, click on the gear menu in the app cell and select 'View Job Submission'. This will both emit the returned kernel messages from that app run into your browser's Javascript console, and it will create and run a code cell that will show you the object that gets set to the Job Service.
+
+### Version 0.3.4
+__Changes__
+- Redesign of the Method Gallery panel
+- Adjusted Data Panel slideout to maintain its size across each internal tab
+- Added buttons to the footer in the Data Panel slideout
+- Adjustment to data upload panel behavior.
+
+### Version 0.3.3
+__Changes__
+- Long running method calls that produce job ids should now be tracked properly
+- Method cells behave closer to App cells now - once they start running, they're 'locked' if they're a long running job
+  - Long running method cells get a red ring, similar to steps inside an app
+  - The next step is to merge their code bases
+- When a long running method cell finishes (the job gets output and is marked 'done' or something similar), an output cell is generated beneath it
+- Method and app jobs should be properly deleteable again.
+- Added global 'delete cell' button back to the menu bar.
+- Made major styling and functionality changes to the 'import' panel attached to 'data'
+
+### Version 0.3.2
+__Changes__
+- Steps toward getting long-running methods (not just apps) working.
+- Modified job panel to consume method jobs
+- Method jobs still do not correctly populate their end results.
+
+### Version 0.3.1
+__Changes__
+- Changed some text in the data panel, and what appears in the introductory markdown cell in a new Narrative
+- Fixed an issue with infinite scrolling under the "My Data" and "Public" data tabs
+
+### Version 0.3.0
+__Changes__
+- Added Method Gallery for browing methods and apps and viewing information
+- Added a manual Narrative Shutdown button (under the 'about' button)
+- Integrated code cells and IPython kernel management
+- Added prototype Narrative Management panel
+
+### Version 0.2.2
+__Changes__
+- Restyled Jobs panel, added better management controls, added ability to see Job error statuses
+- Added first pass at data importer
+
+### Version 0.2.1
+__Changes__
+- More improvements to logging - includes more details like user's IP address, Narrative machine, etc.
+- Changed data panel to be able to draw data from all other Narratives and Workspaces
+- Stubs in place for importing data into your Narrative
+- Changed paradigm to one narrative/one workspace for simplicity
+
+### Version 0.2.0
+__Changes__
+- Switched to semantic versioning - www.semver.org
+- Began massive changes to the UI
+- Improved logging of events and method/app running
+- Introduced App interface
+- Added a Job management panel for tracking App status
+- Switched to fetching lists of Methods and Apps from a centralized method store
+
 ### Release 9/25/2014
 __Changes__
 - Fixed a bug that prevented a few Narrative functions from working if the

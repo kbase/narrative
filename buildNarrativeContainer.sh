@@ -6,6 +6,9 @@ DS=$( date +%Y%m%d%H )
 NAR_NAME="kbase/narrative"
 NAR_BASE="base2.0"
 
+# Start by updating the config file to include the current git commit hash and timestamp
+src/scripts/kb-git-version -f src/config.json
+
 # For everything else to flow right, the container needs to be built from one level above the narrative directory.
 # It needs these files, so temporarily copy them outside.
 cd ..

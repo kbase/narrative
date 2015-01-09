@@ -62,6 +62,13 @@ server {
 	     content_by_lua 'proxymgr:set_proxy()';
 
 	}
+    location /narrative_shutdown {
+         default_type 'application/json';
+         allow 127.0.0.1;
+
+         set $uri_base '/narrative_shutdown';
+         content_by_lua 'proxymgr:narrative_shutdown()';
+    }
 
 	location /narrative/ {
 	     default_type 'text/plain';

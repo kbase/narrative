@@ -29,10 +29,6 @@
         init: function(options) {
             this._super(options);
 
-            // figure out all types from the method
-            var method = this.options.method;
-            var params = method.properties.parameters;
-
             this.$genomeIdTable = this.makeGenomeIdTable();
             this.addGenomeIdRow();
 

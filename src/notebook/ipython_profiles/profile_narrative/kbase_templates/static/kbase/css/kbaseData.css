@@ -12,16 +12,19 @@ div[class="tooltip-inner"] {
 .tooltip {
     z-index: 2000 !important;
 }
+
 .kb-data-main-panel {
     height: 100%;
+    margin-bottom: 5px;
+    max-height: 425px;
 }
 
 #kb-ws {
-    background-color: #fff;
+/*    background-color: #fff;
     width: 100%;
     padding-bottom: 5px;
     height: 425px !important;
-}
+*/}
 
 #data-tabs {
     height: 375px !important;

@@ -1446,7 +1446,10 @@ div#notebook_panel {
     border-bottom: none;
 }
 
-
+.kb-jobs-error-modal {
+    width: 485px;
+    word-wrap: break-word;
+}
 
 /** new method parameter styling **/
 .kb-method-parameter-panel {

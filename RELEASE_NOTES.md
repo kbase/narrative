@@ -3,6 +3,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.6 - 1/9/2015
+__Changes__
+- Public data tab on side panel was redesigned. Genome mode using search API is now the only supported mode there.
+
 ### Version 0.3.5 - 1/7/2015
 __Changes__
 - Added link to release notes in 'About' dialog.

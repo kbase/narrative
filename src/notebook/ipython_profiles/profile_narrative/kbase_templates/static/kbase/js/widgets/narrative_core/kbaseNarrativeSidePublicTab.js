@@ -26,6 +26,7 @@
         },
         genomesWorkspace: 'KBasePublicGenomesV4',
         mainListPanelHeight: '430px',
+        maxNameLength: 60,
         totalPanel: null,
         resultPanel: null,
         objectList: null,
@@ -60,19 +61,23 @@
             }
             var typeFilter = $('<div class="col-sm-3">').append(typeInput);
             var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter data">').css(mrg);
-            var searchFilter = $('<div class="col-sm-7">').append(filterInput);
-            var searchButton = $('<button>').attr('type', 'button').addClass('btn btn-primary kb-import-search').css(mrg).append('Search');
+            filterInput.keyup(function(e){
+            	self.searchAndRender(typeInput.val(), filterInput.val());
+            });
+
+            var searchFilter = $('<div class="col-sm-9">').append(filterInput);
+            /*var searchButton = $('<button>').attr('type', 'button').addClass('btn btn-primary kb-import-search').css(mrg).append('Search');
             searchButton.click(
             		$.proxy(function(event) {
             			event.preventDefault();
             			self.searchAndRender(typeInput.val(), filterInput.val());
             		}, this)
             );
-            var buttonFilter = $('<div class="col-sm-2">').append(searchButton);
+            var buttonFilter = $('<div class="col-sm-2">').append(searchButton);*/
             
-            var header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'}).append(typeFilter, searchFilter, buttonFilter);
+            var header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'}).append(typeFilter).append(searchFilter);
             self.$elem.append(header);
-            self.totalPanel = $('<div>');
+            self.totalPanel = $('<div>').css({'margin': '0px 0px 0px 10px'});
             self.$elem.append(self.totalPanel);
             self.resultPanel = $('<div>')
             	.css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':this.mainListPanelHeight })
@@ -82,19 +87,33 @@
             		}
             	});
             self.$elem.append(self.resultPanel);
+			self.searchAndRender(typeInput.val(), filterInput.val());
             return this;
         },
 
         searchAndRender: function(category, query) {
         	var self = this;
+        	if (query) {
+        		query = query.trim();
+        		if (query.length == 0) {
+        			query = '*';
+        		} else if (query.indexOf('"') < 0) {
+        			var parts = query.split(/\s+/);
+        			for (var i in parts)
+        				if (parts[i].indexOf('*', parts[i] - 1) < 0)
+        					parts[i] = parts[i] + '*';
+        			query = parts.join(' ');
+        		}
+        	} else {
+        		query = '*';
+        	}
+        	if (self.currentQuery && self.currentQuery === query)
+        		return;
+        	//console.log("Sending query: " + query);
         	self.totalPanel.empty();
         	self.resultPanel.empty();
+        	self.totalPanel.append($('<span>').addClass("kb-data-list-type").append('<img src="'+this.loadingImage+'"/> searching...'));
             self.objectList = [];
-        	if (!query)
-        		return;
-        	query = query.trim();
-        	if (query.length == 0)
-        		return;
         	self.currentCategory = category;
         	self.currentQuery = query;
         	self.currentPage = 0;
@@ -107,7 +126,12 @@
         renderMore: function() {
         	var self = this;
         	self.currentPage++;
-        	self.search(self.currentCategory, self.currentQuery, self.itemsPerPage, self.currentPage, function(data) {
+        	self.search(self.currentCategory, self.currentQuery, self.itemsPerPage, self.currentPage, function(query, data) {
+        		if (query !== self.currentQuery) {
+        			//console.log("Skip results for: " + query);
+        			return;
+        		}
+        		self.totalPanel.empty();
         		//console.log(data);
         		if (!self.totalResults) {
         			self.totalResults = data.totalResults;
@@ -131,12 +155,14 @@
         				self.attachRow(self.objectList.length - 1);
         			}
         		}
-        		self.totalPanel.empty();
-        		self.totalPanel.append($('<div>').css({'margin': '0px 0px 0px 10px'})
-        				.append($('<span>').addClass("kb-data-list-type")
-        				.append("Total results: " + data.totalResults + " (" + self.objectList.length + " shown)")));
+        		self.totalPanel.append($('<span>').addClass("kb-data-list-type")
+        				.append("Total results: " + data.totalResults + " (" + self.objectList.length + " shown)"));
         	}, function(error) {
-        		console.log(error);
+        		//console.log(error);
+        		if (self.objectList.length == 0) {
+        			self.totalPanel.empty();
+        			self.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
+        		}
         	});
         },
         
@@ -159,7 +185,7 @@
         	var promise = jQuery.Deferred();
         	jQuery.ajax(url, {
         		success: function (data) {
-        			ret(data);
+        			ret(query, data);
         			promise.resolve();
         		},
         		error: function(jqXHR, error){
@@ -167,7 +193,7 @@
     					errorCallback(error);
         			promise.resolve();
         		},
-        		headers: self.auth_header,
+        		headers: {},
         		type: "GET"
         	});
         	
@@ -194,7 +220,7 @@
                             $(this).html('<img src="'+self.loadingImage+'">');
                             
                             var thisBtn = this;
-                            var targetName = object.name.replace(/[^a-zA-Z0-9|.-_]/g,'_');
+                            var targetName = object.name.replace(/[^a-zA-Z0-9|\.\-_]/g,'_');
                             //console.log(object.name + " -> " + targetName);
                             self.wsClient.copy_object({
                                 to:   {ref: self.wsName + "/" + targetName},
@@ -210,32 +236,28 @@
                             
                         }));
             
-            var shortName = object.name; var isShortened=false;
-            /*if (shortName.length>this.options.max_name_length) {
-                shortName = shortName.substring(0,this.options.max_name_length-3)+'...';
+            var shortName = object.name; 
+            var isShortened=false;
+            if (shortName.length>this.maxNameLength) {
+                shortName = shortName.substring(0,this.maxNameLength-3)+'...';
                 isShortened=true;
-            }*/
-            var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
+            }
+            var landingPageLink = this.options.default_landing_page_url + object.ws + '/' + object.id;
+            var ws_landing_page_map = window.kbconfig.landing_page_map;
+            if (ws_landing_page_map && ws_landing_page_map[type_module] && ws_landing_page_map[type_module][type]) {
+            	landingPageLink = this.options.landing_page_url +
+            			ws_landing_page_map[type_module][type] + "/" + object.ws + '/' + object.id;
+            }
+            var $name = $('<span>').addClass("kb-data-list-name").append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
             if (isShortened) { $name.tooltip({title:object.name, placement:'bottom'}); }
            
-            var metadata = object.metadata;
+            /*var metadata = object.metadata;
             var metadataText = '';
             for(var key in metadata) {
                 if (metadata.hasOwnProperty(key)) {
-                    metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
+                    metadataText += '<tr><td>'+ key +'</td><td>'+ metadata[key] + '</td></tr>';
                 }
             }
-            
-            var landingPageLink = this.options.default_landing_page_url + object.ws + '/' + object.id;
-            if (this.ws_landing_page_map) {
-                if (this.ws_landing_page_map[type_module]) {
-                    if (this.ws_landing_page_map[type_module][type]) {
-                        landingPageLink = this.options.landing_page_url +
-                            this.ws_landing_page_map[type_module][type] + "/" + object.ws + '/' + object.id;
-                    }
-                }
-            }
-            
             var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
                                 .append($('<div>').css({'text-align':'center','margin':'5pt'})
                                             .append('<a href="'+landingPageLink+'" target="_blank">'+
@@ -245,7 +267,6 @@
                                 .append(
                                     $('<table style="width=100%">')
                                         .append(metadataText));
-            
             var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
                 .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
                 .on('click',function() {
@@ -257,14 +278,15 @@
                             $more.slideToggle('fast');
                             $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
-                    });
+                    });*/
                     
             var titleElement = $('<span>').css({'margin':'10px'}).append($name).append('<br>');
             for (var key in object.metadata) {
-            	var value = $('<span>').addClass("kb-data-list-type").append(object.metadata[key]);
+            	var value = $('<span>').addClass("kb-data-list-type").append('&nbsp;&nbsp;' + key + ':&nbsp;' + object.metadata[key]);
             	titleElement.append(value);
             }
             var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info')
+            			.css({'padding-left': '0px'})
             			.append($('<table>')
                              .css({'width':'100%'})
                              .append($('<tr>')

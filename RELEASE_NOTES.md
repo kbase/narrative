@@ -3,6 +3,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.6 - 1/9/2015
+__Changes__
+- Removed text/code cell buttons from method panel - they've now migrated to the lower right side of the page.
+- Started restyling various elements to match the new style guide
+- Inserted (better) icons than just letters for data objects
+- Removed 
+
 ### Version 0.3.5 - 1/7/2015
 __Changes__
 - Added link to release notes in 'About' dialog.

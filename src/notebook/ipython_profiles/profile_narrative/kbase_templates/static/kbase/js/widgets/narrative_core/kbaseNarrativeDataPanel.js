@@ -1141,6 +1141,7 @@
                     {tabName: '<small>Import</small>', content: importPanel},
                 ]);
 
+            publicPanel.kbaseNarrativeSidePublicTab({});
             importPanel.kbaseNarrativeSideImportTab({});
             examplePanel.kbaseNarrativeExampleDataTab({});
 
@@ -1170,7 +1171,8 @@
             });
 
             // some placeholder for the public panel
-            publicView();
+            // it was substituted by kbaseNarrativeSidePublicTab.js file
+            //publicView();
 
             // events for changing tabs
             $($tabs.header.find('.kb-side-header')).click(function() {
@@ -1179,8 +1181,6 @@
                     mineSelected = [], btn.show();
                 else if ($(this).index() == 1)
                     sharedSelected = [], btn.show();
-                else if ($(this).index() == 2)
-                    publicSelected = [], btn.show();
                 else
                     btn.hide();
 

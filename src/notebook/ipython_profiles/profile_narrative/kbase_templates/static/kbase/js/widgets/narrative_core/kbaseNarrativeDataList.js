@@ -35,7 +35,7 @@
 
             max_name_length:22,
             refresh_interval:30000,
-            
+
             parentControlPanel: null
         },
 
@@ -69,8 +69,8 @@
 
         obj_list : [],
         obj_data : {}, // old style - type_name : info
-        
-        
+
+
 
         /**
          * @method init
@@ -99,7 +99,7 @@
                         self.renderMore();
                     }
                 });
-            
+
             this.$addDataButton = $('<span>').addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
                                     .css({'position':'absolute', bottom:'15px', right:'25px', 'z-index':'5'})
                                     .click(function() {
@@ -111,10 +111,16 @@
                                             .append(this.$addDataButton.hide());
             this.$elem.append($mainListDivContainer);
 
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
-                this.options.ws_url = window.kbconfig.urls.workspace;
+            if (window.kbconfig === undefined || window.kbconfig.urls === undefined ||
+                window.kbconfig.data_icons === undefined) {
+              // bail out now
+              alert("Failed to load base configuration! Aborting narrative now.");
+              window.location = "/"; //XXX: Need to load the error page!!
             }
+            this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+            this.options.ws_url = window.kbconfig.urls.workspace;
+            this.data_icons = window.kbconfig.data_icons;
+
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
@@ -320,10 +326,19 @@
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
             var unversioned_full_type = type_module + '.' + type;
+            var logo_name = "";
+            if (_.has(this.data_icons, type)) {
+              logo_name = this.data_icons[type];
+            }
+            else {
+              logo_name = this.data_icons['DEFAULT'];
+            }
+            var logo_url = "static/kbase/images/data-icons/" + logo_name + ".png";
             var $logo = $('<div>')
                             .addClass("kb-data-list-logo")
-                            .css({'background-color':this.logoColorLookup(type),'cursor':'pointer'})
-                            .append(type.substring(0,1))
+                            .css({'background-image': 'url(' + logo_url + ')',
+                                  'background-color':this.logoColorLookup(type),'cursor':'pointer'})
+                            //.append(type.substring(0,1))
                             .click(function(e) {
                                 e.stopPropagation();
                                 self.insertViewer(object_key);
@@ -343,7 +358,7 @@
 
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
-            
+
             var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]));
             var metadata = object_info[10];
             var metadataText = '';
@@ -413,13 +428,13 @@
                                              .append($logo))
                                      .append($('<td>')
                                              .append($mainDiv)));
-                             
+
             var $row = $('<div>').addClass('kb-data-list-obj-row')
                             .attr('kb-oid', object_key)
                             .append($('<div>').addClass('kb-data-list-obj-row-main')
                                         .append($topTable))
                             .append($moreRow)
-                            // show/hide ellipses on hover, show extra info on click 
+                            // show/hide ellipses on hover, show extra info on click
                             .mouseenter(function(){
                                 if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
                             })
@@ -434,7 +449,7 @@
                                             .addClass('kb-data-list-row-hr')
                                             .css({'margin-left':'65px'}))
                                 .append($row);
-            
+
             return $rowWithHr;
         },
 
@@ -491,7 +506,7 @@
                        'data-placement': 'top',
                         'title': 'Drag onto narrative &rarr;'});
             $row.tooltip({delay: { show: 1500, hide: 0 }, html: true});
-            
+
             return this;
         },
 
@@ -512,18 +527,18 @@
             var cell = IPython.notebook.insert_cell_below('markdown');
             $(cell.element).off('dblclick');
             $(cell.element).off('keydown');
-            
+
             var cell_id = self.genUUID();
             cell.rendered = false;
             cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
             cell.render();
-            
+
             var obj = _.findWhere(self.objectList, {key: key});
             var info = self.createInfoObject(obj.info);
             // Insert the narrative data cell into the div we just rendered
             $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
         },
-        
+
         renderMore: function() {
             var self=this;
             if (self.objectList) {
@@ -702,7 +717,7 @@
                         self.$searchDiv.hide();
                     }
                 });
-                
+
             var $openSort = $('<span>')
                 .addClass('btn btn-xs btn-default')
                 .append('<span class="fa fa-sort-amount-asc"></span>')
@@ -715,7 +730,7 @@
                         self.$sortByDiv.hide();
                     }
                 });
-                
+
             var $openFilter = $('<span>')
                 .addClass('btn btn-xs btn-default')
                 .append('<span class="fa fa-filter"></span>')
@@ -793,7 +808,7 @@
                     }
                 }
                 types.sort();
-                
+
                 self.$filterTypeSelect.empty();
                 var runningCount = 0;
                 for(var i=0; i<types.length; i++) {

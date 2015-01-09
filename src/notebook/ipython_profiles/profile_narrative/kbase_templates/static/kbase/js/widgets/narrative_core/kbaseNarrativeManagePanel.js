@@ -403,7 +403,7 @@
                                                 var $share = $('<div>');
                                                 // just use the share panel, max height is practically unlimited because we are already
                                                 // in a scrollable pane
-                                                $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'220px'});
+                                                $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
                                                 $shareContainer.append($share);
                                             }
                                         }));

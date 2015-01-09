@@ -37,6 +37,7 @@
             this.options.method = this.options.method.replace(/\n/g, '');
             this.method = JSON.parse(this.options.method);
             this.cellId = this.options.cellId;
+            this.initErrorModal();
             this.render();
             return this;
         },
@@ -53,11 +54,15 @@
                              .attr('id', this.cellId + '-run')
                              .attr('type', 'button')
                              .attr('value', 'Run')
-                             .addClass('btn btn-primary btn-sm')
+                             .addClass('kb-method-run')
                              .append('Run');
             this.$runButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
+
+                    if (!this.checkMethodRun())
+                        return;
+
                     this.submittedText = 'submitted on ' + this.readableTimestamp();
                     this.trigger('runCell.Narrative', { 
                         cell: IPython.notebook.get_selected_cell(),
@@ -68,21 +73,8 @@
                 }, this)
             );
 
-            // this.$deleteButton = $('<button>')
-            //                     .attr('id', this.cellId + '-delete')
-            //                     .attr('type', 'button')
-            //                     .attr('value', 'Delete')
-            //                     .addClass('btn btn-default btn-sm')
-            //                     .append('Delete');
-            // this.$deleteButton.click(
-            //     $.proxy(function(event) {
-            //         event.preventDefault();
-            //         this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
-            //     }, this)
-            // );
-
             var $buttons = $('<div>')
-                           .addClass('buttons pull-right')
+                           .addClass('buttons pull-left')
                            // .append(this.$deleteButton)
                            .append(this.$submitted)
                            .append(this.$runButton);
@@ -238,6 +230,86 @@
                         break;
                 }
             }
+        },
+
+        /*
+         * This function is invoked every time we run app. This is the difference between it
+         * and getAllParameterValues/getParameterValue which could be invoked many times before running 
+         * (e.g. when widget is rendered). 
+         */
+        prepareDataBeforeRun: function() {
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++)
+                    var v = this.inputSteps[i].widget.prepareDataBeforeRun();
+            }
+        },
+
+        /* locks inputs and updates display properties to reflect the running state
+            returns true if everything is valid and we can start, false if there were errors
+        */
+        checkMethodRun: function() {
+            var v = this.$inputWidget.isValid();
+            if (!v.isValid) {
+                this.$errorModalContent.empty();
+                for (var i=0; i<v.errormssgs.length; i++) {
+                    this.$errorModalContent.append($('<div>')
+                                                   .addClass("kb-app-step-error-mssg")
+                                                   .append('['+(i+1)+']: ' + v.errormssgs[i]));
+                }
+                this.$errorModal.modal('show');
+                return false;
+            }
+
+            // if (ignoreValidCheck) {
+            //     //code
+            // } else {
+            //     var v = self.isValid();
+            //     if (!v.isValid) {
+            //         var errorCount = 1;
+            //         self.$errorModalContent.empty();
+            //         for(var k=0; k<v.stepErrors.length; k++) {
+            //             var $errorStep = $('<div>');
+            //             $errorStep.append($('<div>').addClass("kb-app-step-error-heading").append('Errors in Step '+v.stepErrors[k].stepNum+':'));
+            //             for (var e=0; e<v.stepErrors[k].errormssgs.length; e++) {
+            //                 $errorStep.append($('<div>').addClass("kb-app-step-error-mssg").append('['+errorCount+']: ' + v.stepErrors[k].errormssgs[e]));
+            //                 errorCount = errorCount+1;
+            //             }
+            //             self.$errorModalContent.append($errorStep);
+            //         }
+            //         self.$errorModal.modal('show');
+            //         return false;
+            //     }
+            // }
+            // self.prepareDataBeforeRun();
+            // self.$submitted.show();
+            // self.$runButton.hide();
+            // self.$stopButton.show();
+            // if (this.inputSteps) {
+            //     for(var i=0; i<this.inputSteps.length; i++) {
+            //         this.inputSteps[i].widget.lockInputs();
+            //     }
+            // }
+            // this.state.runningState.appRunState = "running";
+            return true;
+        },
+
+        initErrorModal: function() {
+            // var errorModalId = "app-error-modal-"+ this.genUUID();
+            // var modalLabel = "app-error-modal-lablel-"+ this.genUUID();
+            this.$errorModalContent = $('<div>');
+            this.$errorModal =  $('<div tabindex="-1" role="dialog" aria-hidden="true">').addClass("modal fade");
+            this.$errorModal.append(
+                $('<div>').addClass('modal-dialog').append(
+                    $('<div>').addClass('modal-content').append(
+                        $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" >Problems exist in your parameter settings.</h4>')
+                    ).append(
+                       $('<div>').addClass('modal-body').append(this.$errorModalContent)
+                    ).append(
+                        $('<div>').addClass('modal-footer').append(
+                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
+                    )
+                ));
+            this.$elem.append(this.$errorModal);
         },
 
         /**

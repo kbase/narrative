@@ -76,7 +76,8 @@
                                     {
                                         ws_name: this.ws_name,
                                         ws_url: this.options.workspaceURL,
-                                        loadingImage: this.options.loadingImage
+                                        loadingImage: this.options.loadingImage,
+                                        parentControlPanel: this
                                     });
             
             $(document).on(
@@ -201,6 +202,10 @@
 
 
             // return this;
+        },
+        
+        addButtonToControlPanel: function($btn) {
+            this.addButton($btn);
         },
 
         /**

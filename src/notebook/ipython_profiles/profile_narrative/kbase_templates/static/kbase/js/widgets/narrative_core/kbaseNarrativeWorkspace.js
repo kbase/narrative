@@ -245,6 +245,7 @@
             else {
                 // something else!
                 // do nothing for now.
+                code = this.buildGenericRunCommand(data);
             }
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
@@ -258,7 +259,7 @@
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
         },
 
-        buildAppCell: function(appInfo) {
+        buildAppCell: function(appSpec) {
             var cell = IPython.notebook.insert_cell_below('markdown');
             this.removeCellEditFunction(cell);
 
@@ -267,28 +268,20 @@
             cell.rendered = false;
             cell.render();
 
-            this.methClient.get_app_spec({'ids': [appInfo.id]}, 
-                $.proxy(function(appSpec) {
-                    this.setAppCell(cell, appSpec[0]);
-                    var cellIndex = IPython.notebook.ncells() - 1;
-                    var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
+            this.setAppCell(cell, appSpec);
+            var cellIndex = IPython.notebook.ncells() - 1;
+            var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
 
-                    // The various components are HTML STRINGS, not jQuery objects.
-                    // This is because the cell expects a text input, not a jQuery input.
-                    // Yeah, I know it's ugly, but that's how it goes.
-                    var cellContent = "<div id='" + cellId + "'></div>" +
-                                      "\n<script>" +
-                                      "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec[0]) + "', 'cellId' : '" + cellId + "'});" +
-                                      "</script>";
-                    cell.set_text(cellContent);
-                    cell.rendered = false;
-                    cell.render();
-
-                }, this),
-                $.proxy(function(error) {
-
-                }, this)
-            );
+            // The various components are HTML STRINGS, not jQuery objects.
+            // This is because the cell expects a text input, not a jQuery input.
+            // Yeah, I know it's ugly, but that's how it goes.
+            var cellContent = "<div id='" + cellId + "'></div>" +
+                              "\n<script>" +
+                              "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec) + "', 'cellId' : '" + cellId + "'});" +
+                              "</script>";
+            cell.set_text(cellContent);
+            cell.rendered = false;
+            cell.render();
         },
 
         runAppCell: function(data) {
@@ -301,11 +294,11 @@
             var self = this;
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content); },
+                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, "app"); },
                 'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
                 'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
                 'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
-            }
+            };
 
             var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
@@ -1586,8 +1579,24 @@
                     // if we found progress markers, trim processed prefix from buffer
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
-                if (result.length > 0 && showOutput) {
-                    this.createOutputCell(cell, result);
+                if (result.length > 0) {
+                    if (showOutput === "app" && window.kbconfig && window.kbconfig.mode === "debug") {
+                        if (!cell.metadata[this.KB_CELL].stackTrace)
+                            cell.metadata[this.KB_CELL].stackTrace = [];
+                        // try to parse the result as JSON - if so, then it's a final result and we just
+                        // need the 'data' field
+                        try {
+                            var data = JSON.parse(result);
+                            if (data && typeof data === 'object')
+                                cell.metadata[this.KB_CELL].stackTrace.push(data.data);
+                        }
+                        catch (err) {
+                            // it's NOT JSON, and we should just append it.
+                            cell.metadata[this.KB_CELL].stackTrace.push(result);
+                        }
+                    }
+                    else if (showOutput)
+                        this.createOutputCell(cell, result);
                 }
             }
         },

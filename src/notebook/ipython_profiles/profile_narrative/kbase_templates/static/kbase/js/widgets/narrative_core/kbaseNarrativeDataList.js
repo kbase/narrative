@@ -711,12 +711,13 @@
                                     .append($byName)
                                     .append($byType);
 
-            var $addDataBtn = $('<button>')
-                                .addClass("btn btn-warning kb-data-list-get-data-button")
-                                .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Add Data')
-                                .on('click',function() {
-                                    self.trigger('toggleSidePanelOverlay.Narrative');
-                                });
+            // var $addDataBtn = $('<button>')
+            //                     .addClass("btn btn-warning kb-data-list-get-data-button")
+            //                     .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Add Data')
+            //                     .on('click',function() {
+            //                         self.trigger('toggleSidePanelOverlay.Narrative');
+            //                     });
+
 
 
             var $openSearch = $('<span>')

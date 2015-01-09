@@ -305,6 +305,7 @@
         },
 
         buildAppCommand: function(appSpec, methodSpecs, parameters) {
+            console.log([appSpec, methodSpecs, parameters]);
             var appSpecJSON = this.safeJSONStringify(appSpec);
             var methodSpecJSON = this.safeJSONStringify(methodSpecs);
             var paramsJSON = this.safeJSONStringify(parameters);

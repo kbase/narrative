@@ -1,144 +1,128 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# Script to build/install narrative
+# in a current, existing virtual environment.
 
-installPath=`pwd`
-venv="narrative-venv"
-branch="1.x"
-commit="" 
-profile_name="narrative"
-# set to your python
+ipython_branch=1.x
 PYTHON=python2.7
 
-while :
-do
+# clear log
+logfile=`pwd`/install.log
+cat /dev/null > $logfile
+
+function log () {
+  now=`date '+%Y-%m-%d %H:%M:%S'`
+    echo "$now [install_narrative] $1" >> $logfile
+}
+function console () {
+  now=`date '+%Y-%m-%d %H:%M:%S'`
+  echo "$now [install_narrative] $1"
+}
+
+function usage () {
+    printf "usage: $0 [optons]\n"
+    printf "options:\n"
+    printf "  --ipython: force install of IPython even if ipython/ dir exists\n"
+    exit 0
+}
+
+# Arg parsing
+# -----------
+
+force_ipython=''
+no_venv=''
+while [ $# -gt 0 ]; do
     case $1 in
-        -h | --help | -\?)
-            printf "usage: $0 [{-p | --install_path} root_install_path] [{-v | --virtual_env} environment_name] [{-c | commit_id} git_commit_id] [{-n | --name} profile_name]\n"
-            printf "   p : this is an existing absolute path where you would like the virtualenv directory created inside, \n"
-            printf "       e.g. /home/user/my_virtualenv_area\n"
-            printf "       defaults to the current working directory\n"
-            printf "   v : the name of the virtualenv\n"
-            printf "       e.g. /home/user/my_virtualenv_area/my_venv\n"
-            printf "       defaults to 'narrative-venv'\n"
-            printf "   b : the name of the branch of ipython to use\n"
-            printf "       e.g. master\n"
-            printf "       defaults to '1.x'\n"
-            printf "   c : use this git commit id to checkout code\n"
-            printf "       only used if defined, defaults to empty string\n"
-            printf "   n : the name of the profile, e.g. narrative_mongo\n"
-            printf "       the default is ${profile_name}\n"
-            exit 0
-            exit 0
-            ;;
-        -p | --install_path)
-            printf "Using $2 as the base directory for installation...\n"
-            installPath=$2
-            shift 2
-            ;;
-        -v | --virtualenv)
-            printf "Virtual environment will be created under $2...\n"
-            venv=$2
-            shift 2
-            ;;
-        -b | --branch)
-            printf "Using branch $2...\n"
-            branch=$2
-            shift 2
-            ;;
-        -c | --commit_id)
-            printf "Using commit $2...\n"
-            commit=$2
-            shift 2
-            ;;
-        -n | --name)
-            printf "Using profile name $2...\n"
-            profile_name=$2
-            shift 2
-            ;;
-        -*|--*) # Unrecognized option
-            printf "WARN: Unknown option (ignored): $1\n" >&2
-            shift
-            ;;
-        *)  # no more options. Stop while loop
-            break
-            ;;
+        -h) usage;;
+        --help) usage;;
+        --ipython) force_ipython=1;;
+        --no-venv) no_venv=1;
     esac
+    shift
 done
 
-# Make sure that the necessary dependencies for installing the notebook in a virtualenv are available
-dependency_commands="python virtualenv git"
+console "Install: complete log in: $logfile"
 
-# Exit if we are missing a dependency
-for dcommand in $dependency_commands; do
-  if ! hash "$dcommand" >/dev/null 2>&1; then
-    printf "Command not found in PATH: %s\n" "$dcommand\n" >&2
-    exit 1
-  fi
-done
-
-
-printf "Creating virtual environment $venv...\n"
-virtualenv --python=$PYTHON --system-site-packages $installPath/$venv
-
-printf "Pulling ipython branch $branch from github...\n"
-git clone https://github.com/ipython/ipython.git -b $branch
-# pull this fork until an issue is resolved
-#git clone https://github.com/mlhenderson/ipython.git
-
-# Move into the ipython git directory to run the install
-cd ipython
-
-if [ -n "$commit" ]; then
-    printf "Pulling commit $commit...\n"
-    git checkout $commit
+# Setup virtualenv
+# ----------------
+if [ "x$VIRTUAL_ENV" = x ]; then
+  console 'ERROR: No Python virtual environment detected! Please activate one first.
+  The easiest way to use virtual environments is with the virtualenvwrapper package. See:
+  https://virtualenvwrapper.readthedocs.org/en/latest/install.html#basic-installation'
+  exit 1
 fi
 
-printf "Installing ipython into the virtual environment $venv...\n"
-source $installPath/$venv/bin/activate
-$PYTHON setup.py install
+# Setup IPython inside virtualenv
+# -------------------------------
+if [ "$force_ipython" -o ! -e ipython ]
+then
+    console "Installing IPython branch $ipython_branch"
+    if [ -e ipython ]; then
+        console "Option --ipython given, replacing existing ipython/ dir"
+        /bin/rm -rf ipython
+        log "Removed old ipython/ dir"
+    fi
+    log "Cloning IPython branch ${ipython_branch}"
+    git clone https://github.com/ipython/ipython.git -b ${ipython_branch}
+fi
+# Always install
+log "Installing IPython using $PYTHON"
+console "Installing IPython from directory 'ipython'"
+cd ipython
+${PYTHON} setup.py install >> ${logfile} 2>&1
+cd ..
+hash -r
+maj_ver=`ipython -V | cut -f1 -d'.'`
+if [ $maj_ver != 1 ]; then
+  ip_ver=`ipython -V`
+  console "IPython version ($ip_ver) is wrong: Abort"
+  log "IPython version ($ip_ver) is wrong! Abort."
+  exit 1
+fi
+
+# Install narrative code
+# ----------------------
+console "Installing biokbase"
+log "Installing requirements from src/requirements.txt with 'pip'"
+pip install -r src/requirements.txt >> ${logfile} 2>&1
+if [ $? -ne 0 ]; then
+  console "pip install failed: please examine install.log"
+  exit 1
+fi
+log "Running local 'setup.py'"
+cd src
+${PYTHON} setup.py install >> ${logfile} 2>&1
+log "Done installing biokbase."
 cd ..
 
-# Delete "security" directory that is generated IPython at runtime, it can
-# cause odd permission issues in runtime container
-rm -rf "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/notebook/ipython_profiles/profile_narrative/security"
+# Install IPython again (!)
+log "Installing IPython no. 2"
+cd ipython
+${PYTHON} setup.py install >> ${logfile} 2>&1
+cd ..
 
-#printf "Installing 'biokbase' package into the virtual environment $venv... \n"
-#cd src/biokbase
-#$PYTHON setup.py install
-#cd ../..
-cp -R "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/biokbase" $installPath/$venv/lib/${PYTHON}/site-packages/
+# Set up the run_notebook script
+# ------------------------------
+console "Installing scripts"
+tgt="kbase-narrative"
+i=0
+while read s
+do
+	echo $s
+	if [ $i = 0 ]
+    then
+		echo d=`pwd`
+		echo e=$(dirname `which python`)
+		i=1
+	fi
+done < run_notebook.tmpl > $tgt
+d=$(dirname `which python`)
+chmod 0755 $tgt
+log "Putting new $tgt command under $d"
+/bin/mv $tgt $d
+log "Done installing scripts"
 
-printf "Creating start script for ipython notebook...\n"
-
-printf 'source %s/bin/activate
-export NARRATIVEDIR=%s
-export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
-
-cp $NARRATIVEDIR/config.json $IPYTHONDIR/profile_narrative/kbase_templates/static/kbase/
-python $NARRATIVEDIR/biokbase/narrative/common/service_root.py -f $IPYTHONDIR/profile_narrative/kbase_templates/static/kbase/services.json
-
-ipython $* --NotebookManager.notebook_dir=~/.narrative --profile=%s
-' "$installPath/$venv" "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src" "$profile_name" &> $installPath/$venv/bin/run_notebook.sh
-
-chmod +x $installPath/$venv/bin/run_notebook.sh
-
-printf "Creating start script for KBase narrative running behind reverse proxy server"
-
-printf '#!/bin/bash
-source %s/bin/activate
-export NARRATIVEDIR=%s
-export HOME=/tmp
-export MPLCONFIGDIR=/tmp
-export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
-
-cp $NARRATIVEDIR/config.json $IPYTHONDIR/profile_narrative/kbase_templates/static/kbase
-python $NARRATIVEDIR/biokbase/narrative/common/service_root.py -f $IPYTHONDIR/profile_narrative/kbase_templates/static/kbase/services.json
-
-ipython notebook --profile=narrative --NotebookApp.base_project_url="/narrative" --NotebookApp.base_kernel_url="/narrative" --NotebookApp.open_browser="False" --ip="*"
-' "$installPath/$venv" "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src" &> $installPath/$venv/bin/run_magellan_narrative.sh
-
-chmod +x $installPath/$venv/bin/run_magellan_narrative.sh
-
-printf "Cleaning up after install.sh script...\n"
-rm -rf ipython
-
-printf "Done.\n"
+if [ $created_venv = 1 ]; then
+  console "You MUST activate the new virtual environment before running the Narrative"
+  console "Run: source $venv/bin/activate"
+fi
+console "Done. Run the narrative with the command: $tgt"

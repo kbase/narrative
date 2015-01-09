@@ -176,7 +176,7 @@
                            }, this)));
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
-                           .append('<span class="glyphicon glyphicon-play"></span>')
+                           .append('<span class="fa fa-arrow-right"></span>')
                            .click($.proxy(function(event) {
                                this.trigger('toggleSidePanelOverlay.Narrative', this.$methodGallery);
                            }, this)));

@@ -1320,7 +1320,6 @@
                 })
             }
 
-
             // This function takes data to render and
             // a container to put data in.
             // It produces a scrollable dataset
@@ -1341,10 +1340,12 @@
                 events(container, selected);
 
                 // infinite scroll
+                var currentPos = end;
                 container.unbind('scroll');
                 container.on('scroll', function() {
                     if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
-                        var rows = buildMyRows(data, start, end, template);
+                        currentPos = currentPos+end;
+                        var rows = buildMyRows(data, currentPos, end, template);
                         container.append(rows);
                     }
                     events(container, selected);
@@ -1554,6 +1555,9 @@
                                 ws: obj[7],
                                 relativeTime: kb.ui.relativeTime( Date.parse(obj[3]) ) }
 
+                    if (item.module=='KBaseNarrative') {
+                        continue;
+                    }
                     if (template)
                         var item = template(item);
                     else

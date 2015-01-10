@@ -16,7 +16,7 @@
         },
         token: null,
         wsName: null,
-        searchUrlPrefix: 'http://kbase.us/services/search/getResults',
+        searchUrlPrefix: 'https://kbase.us/services/search/getResults',
         loadingImage: "static/kbase/images/ajax-loader.gif",
         wsUrl: "https://kbase.us/services/ws/",
         wsClient: null,

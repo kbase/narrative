@@ -20,11 +20,11 @@
         loadingImage: "static/kbase/images/ajax-loader.gif",
         wsUrl: "https://kbase.us/services/ws/",
         wsClient: null,
-        categories: ['genomes'],
-        categoryToName: {  // search API category -> UI name
-        	'genomes': 'Genomes'
+        categories: ['genomes', 'media'],
+        categoryDescr: {  // search API category -> {}
+        	'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV4',search:true},
+        	'media': {name:'Media',type:'KBaseBiochem.Media', ws:'KBaseMedia',search:false}
         },
-        genomesWorkspace: 'KBasePublicGenomesV4',
         mainListPanelHeight: '430px',
         maxNameLength: 60,
         totalPanel: null,
@@ -56,24 +56,19 @@
             var typeInput = $('<select class="form-control kb-import-filter">').css(mrg);
             for (var catPos in self.categories) {
             	var cat = self.categories[catPos];
-            	var catName = self.categoryToName[cat];
+            	var catName = self.categoryDescr[cat].name;
                 typeInput.append('<option value="'+cat+'">'+catName+'</option>');
             }
             var typeFilter = $('<div class="col-sm-3">').append(typeInput);
             var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter data">').css(mrg);
-            filterInput.keyup(function(e){
+            typeInput.change(function() {
+            	self.searchAndRender(typeInput.val(), filterInput.val());
+            });
+            filterInput.keyup(function(e) {
             	self.searchAndRender(typeInput.val(), filterInput.val());
             });
 
             var searchFilter = $('<div class="col-sm-9">').append(filterInput);
-            /*var searchButton = $('<button>').attr('type', 'button').addClass('btn btn-primary kb-import-search').css(mrg).append('Search');
-            searchButton.click(
-            		$.proxy(function(event) {
-            			event.preventDefault();
-            			self.searchAndRender(typeInput.val(), filterInput.val());
-            		}, this)
-            );
-            var buttonFilter = $('<div class="col-sm-2">').append(searchButton);*/
             
             var header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'}).append(typeFilter).append(searchFilter);
             self.$elem.append(header);
@@ -107,7 +102,7 @@
         	} else {
         		query = '*';
         	}
-        	if (self.currentQuery && self.currentQuery === query)
+        	if (self.currentQuery && self.currentQuery === query && category === self.currentCategory)
         		return;
         	//console.log("Sending query: " + query);
         	self.totalPanel.empty();
@@ -118,52 +113,93 @@
         	self.currentQuery = query;
         	self.currentPage = 0;
         	self.totalResults = null;
-        	//var query = 'coli';
-        	//var category = 'genomes';
         	self.renderMore();
         },
         
         renderMore: function() {
         	var self = this;
-        	self.currentPage++;
-        	self.search(self.currentCategory, self.currentQuery, self.itemsPerPage, self.currentPage, function(query, data) {
-        		if (query !== self.currentQuery) {
-        			//console.log("Skip results for: " + query);
+        	var cat = self.categoryDescr[self.currentCategory];
+        	if (!cat.search) {
+        		if (self.currentPage > 0)
         			return;
-        		}
-        		self.totalPanel.empty();
-        		//console.log(data);
-        		if (!self.totalResults) {
-        			self.totalResults = data.totalResults;
-        		}
-        		if (self.currentCategory === 'genomes') {
-        			for (var i in data.items) {
-        				var id = data.items[i].genome_id;
-        				var name = data.items[i].scientific_name;
-        				var domain = data.items[i].domain;
-        				//self.options.addToNarrativeButton.prop('disabled', false);
-        				self.objectList.push({
-        					$div: null,
-        					info: null,
-        					id: id,
-        					name: name,
-        					metadata: {'Domain': domain},
-        					ws: self.genomesWorkspace,
-        					type: 'KBaseGenomes.Genome-1.0',
-        					attached: false
-        				});
-        				self.attachRow(self.objectList.length - 1);
-        			}
-        		}
-        		self.totalPanel.append($('<span>').addClass("kb-data-list-type")
-        				.append("Total results: " + data.totalResults + " (" + self.objectList.length + " shown)"));
-        	}, function(error) {
-        		//console.log(error);
-        		if (self.objectList.length == 0) {
+            	self.currentPage++;
+            	var type = cat.type;
+            	var ws = cat.ws;
+            	self.wsClient.list_objects({workspaces: [ws], type: type, includeMetadata: 1}, function(data) {
+            		//console.log(data);
+            		var query = self.currentQuery.replace(/[\*]/g,' ').trim().toLowerCase();
+            		for (var i in data) {
+            			var info = data[i];
+                        // object_info:
+                        // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+                        // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+                        // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+                        // [9] : int size // [10] : usermeta meta
+            			var name = info[1];
+            			if (name.toLowerCase().indexOf(query) == -1)
+            				continue;
+            			self.objectList.push({
+    						$div: null,
+    						info: info,
+    						id: name,
+    						name: name,
+    						metadata: {'Size': info[9]},
+    						ws: cat.ws,
+    						type: cat.type,
+    						attached: false
+    					});
+    					self.attachRow(self.objectList.length - 1);
+            		}
+            		data.totalResults = self.objectList.length;
         			self.totalPanel.empty();
-        			self.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
-        		}
-        	});
+        			self.totalPanel.append($('<span>').addClass("kb-data-list-type")
+        					.append("Total results: " + data.totalResults));
+            	}, function(error) {
+        			//console.log(error);
+    				self.totalPanel.empty();
+    				self.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
+                });
+        	} else {
+            	self.currentPage++;
+        		self.search(self.currentCategory, self.currentQuery, self.itemsPerPage, self.currentPage, function(query, data) {
+        			if (query !== self.currentQuery) {
+        				//console.log("Skip results for: " + query);
+        				return;
+        			}
+        			self.totalPanel.empty();
+        			//console.log(data);
+        			if (!self.totalResults) {
+        				self.totalResults = data.totalResults;
+        			}
+        			if (self.currentCategory === 'genomes') {
+        				for (var i in data.items) {
+        					var id = data.items[i].genome_id;
+        					var name = data.items[i].scientific_name;
+        					var domain = data.items[i].domain;
+        					//self.options.addToNarrativeButton.prop('disabled', false);
+        					self.objectList.push({
+        						$div: null,
+        						info: null,
+        						id: id,
+        						name: name,
+        						metadata: {'Domain': domain},
+        						ws: cat.ws,
+        						type: cat.type,
+        						attached: false
+        					});
+        					self.attachRow(self.objectList.length - 1);
+        				}
+        			}
+        			self.totalPanel.append($('<span>').addClass("kb-data-list-type")
+        					.append("Total results: " + data.totalResults + " (" + self.objectList.length + " shown)"));
+        		}, function(error) {
+        			//console.log(error);
+        			if (self.objectList.length == 0) {
+        				self.totalPanel.empty();
+        				self.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
+        			}
+        		});
+        	}
         },
         
         attachRow: function(index) {
@@ -202,11 +238,6 @@
 
         renderObjectRowDiv: function(object) {
             var self = this;
-            // object_info:
-            // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-            // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-            // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-            // [9] : int size // [10] : usermeta meta
             var type_tokens = object.type.split('.')
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];

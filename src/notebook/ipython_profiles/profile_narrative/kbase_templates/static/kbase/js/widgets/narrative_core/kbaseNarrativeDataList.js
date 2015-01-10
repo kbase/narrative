@@ -187,6 +187,10 @@
                     });
             } // else { we should probably do something if the user is not logged in or if the ws isn't set yet }
         },
+        
+        refreshSpecificObject: function() {
+            
+        },
 
         refreshTimeStrings: function() {
             var self = this; var newTime; var oldTime;
@@ -379,7 +383,47 @@
                                         .append($('<span>').addClass('fa fa-history').css(css))
                                         .click(function(e) {
                                             e.stopPropagation(); $alertContainer.empty();
-                                            $alertContainer.append('Coming soon');
+                                            
+                                            if (self.ws_name && self.ws) {
+                                                self.ws.get_object_history({ref:object_info[6]+"/"+object_info[0]},
+                                                    function(history) {
+                                                        history.reverse();
+                                                        var $tbl = $('<table>').css({'width':'100%'});
+                                                        for(var k=0; k<history.length;k++) {
+                                                            var $revertBtn = $('<button>').append('v'+history[k][4]).addClass('kb-data-list-btn');
+                                                            if (k==0) {
+                                                                $revertBtn.tooltip({title:'Current Version', 'container':'body',placement:'bottom'});
+                                                            } else {
+                                                                var revertRef = {wsid:history[k][6], objid:history[k][0], ver:history[k][4]};
+                                                                $revertBtn.tooltip({title:'Revert to this version?', 'container':'body',placement:'bottom'})
+                                                                    .click(function() {
+                                                                        self.ws.revert_object(revertRef,
+                                                                            function(reverted_obj_info) {
+                                                                                self.refresh();
+                                                                            }, function(error) {
+                                                                                console.error(error);
+                                                                                $alertContainer.empty();
+                                                                                $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                            });
+                                                                    })
+                                                            }
+                                                            $tbl.append($('<tr>')
+                                                                        .append($('<td>').append($revertBtn))
+                                                                        .append($('<td>').append('Saved by '+history[k][5]+'<br>'+self.getTimeStampStr(history[k][3])))
+                                                                        .append($('<td>').append($('<span>').css({margin:'4px'}).addClass('fa fa-info pull-right'))
+                                                                                 .tooltip({title:history[k][2]+'<br>'+history[k][8]+'<br>'+history[k][9]+' bytes', container:'body',html:true,placement:'bottom'}))
+                                                                                );
+                                                        }
+                                                        $alertContainer.append($tbl);
+                                                    },
+                                                    function(error) {
+                                                        console.error(error);
+                                                        $alertContainer.empty();
+                                                        $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                    });
+                                            }
+                                            
+                                            
                                         });
                                         
             var $openProvenance = $('<span>')

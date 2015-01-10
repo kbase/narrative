@@ -1129,7 +1129,7 @@
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
                 importPanel = $('<div class="kb-import-content kb-import-import">'),
                 examplePanel = $('<div class="kb-import-content">');
-
+                
             // add tabs
             var $tabs = this.buildTabs([
                     {tabName: '<small>My Data</small>', content: minePanel},
@@ -1138,7 +1138,17 @@
                     {tabName: '<small>Example</small>', content: examplePanel},
                     {tabName: '<small>Import</small>', content: importPanel},
                 ]);
-
+            
+            
+            // hack to keep search on top
+            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'430px'});
+            minePanel.append($mineScrollPanel);
+            
+            var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'430px'});
+            sharedPanel.append($sharedScrollPanel);
+            
+            
+            
             publicPanel.kbaseNarrativeSidePublicTab({});
             importPanel.kbaseNarrativeSideImportTab({});
             examplePanel.kbaseNarrativeExampleDataTab({});
@@ -1156,7 +1166,9 @@
             var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
             var closeBtn = $('<button class="btn btn-default pull-right">Close</button>');
 
-            closeBtn.click(function() { self.hideOverlay(); })
+            closeBtn.click(function() {
+                self.trigger('hideSidePanelOverlay.Narrative');
+            })
             footer.append(btn, closeBtn);
 
             // start with my data, then fetch other data
@@ -1247,7 +1259,7 @@
                 return $.when(p).then(function(d) {
                     // update model
                     myData = [].concat.apply([], arguments);
-                    render(myData, minePanel, mineSelected);
+                    render(myData, $mineScrollPanel, mineSelected);
                 });
             }
 
@@ -1285,7 +1297,7 @@
                 return $.when.apply($, proms).then(function() {
                     // update model
                     sharedData = [].concat.apply([], arguments);
-                    render(sharedData, sharedPanel, sharedSelected);
+                    render(sharedData, $sharedScrollPanel, sharedSelected);
                 })
             }
 
@@ -1361,6 +1373,8 @@
                                 var displayName = d[i][1];
                                 if (d[i][8].narrative_nice_name) {
                                     displayName = d[i][8].narrative_nice_name;
+                                } else {
+                                    continue; // skip corrupted narratives
                                 }
                                 // todo: should skip temporary narratives
                                 workspaces.push({id: d[i][0],
@@ -1391,8 +1405,9 @@
                                 var displayName = d[i][1];
                                 if (d[i][8].narrative_nice_name) {
                                     displayName = d[i][8].narrative_nice_name;
+                                } else {
+                                    continue; // skip corrupted narratives
                                 }
-                                // todo: should skip temporary narratives
                                 workspaces.push({id: d[i][0],
                                                  name: d[i][1],
                                                  displayName:displayName,
@@ -1629,7 +1644,7 @@
                     query = $(this).val();
 
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
-                    render(filtered, minePanel, mineSelected);
+                    render(filtered, $mineScrollPanel, mineSelected);
                 });
 
 
@@ -1700,7 +1715,7 @@
                     query = $(this).val();
 
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
-                    render(filtered, sharedPanel, sharedSelected);
+                    render(filtered, $sharedScrollPanel, sharedSelected);
                 });
 
                 // add search, type, ws filter to dom

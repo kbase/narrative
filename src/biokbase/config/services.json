@@ -1,5 +1,5 @@
 {
-    "config": "prod",
+    "config": "prod", 
     "dev": {
         "awe": "http://140.221.67.185:7080", 
         "cdmi": "https://kbase.us/services/cdmi_api/", 
@@ -7,7 +7,7 @@
         "genomeCmp": "http://dev06.berkeley.kbase.us:8283/jsonrpc", 
         "glamm": "http://140.221.84.217:7040/glamm/#", 
         "invocation": "https://kbase.us/services/invocation", 
-        "job_service": "http://dev06.berkeley.kbase.us:8200", 
+        "job_service": "http://140.221.66.246:7080", 
         "landing_pages": "http://narrative.kbase.us/functional-site/#/", 
         "log_proxy_host": "172.17.42.1", 
         "log_proxy_port": 32001, 
@@ -19,37 +19,33 @@
         "trees": "http://140.221.67.152:7047", 
         "update_profile": "https://gologin.kbase.us/account/UpdateProfile", 
         "uploader": "http://kbase.us/services/docs/uploader/uploader.html", 
-        "user_and_job_state": "http://kbase.us/services/userandjobstate",
-        "user_profile": "http://dev19.berkeley.kbase.us/services/user_profile/rpc", 
+        "user_and_job_state": "http://kbase.us/services/userandjobstate", 
         "workspace": "http://dev04.berkeley.kbase.us:7058", 
         "ws_browser": "http://narrative.kbase.us/functional-site/#/ws"
     }, 
     "git_commit_hash": "bfbb9a8", 
     "git_commit_time": "Wed Nov 12 15:34:42 2014 -0800", 
-    "mode": "debug",
     "name": "KBase Narrative", 
     "prod": {
         "awe": "http://140.221.67.185:7080", 
         "fba": "https://kbase.us/services/fba_model_services/", 
         "genomeCmp": "https://kbase.us/services/genome_comparison/jsonrpc", 
         "invocation": "https://kbase.us/services/invocation", 
-        "job_service": "http://narrative-dev.kbase.us:8200", 
+        "job_service": "http://140.221.66.246:7080", 
         "landing_pages": "/functional-site/#/", 
         "log_proxy_host": "172.17.42.1", 
         "log_proxy_port": 32001, 
         "login": "https://kbase.us/services/authorization/Sessions/Login", 
-        "narrative_job_proxy": "http://narrative-dev.kbase.us:7068",
+        "narrative_job_proxy": "http://140.221.67.225:8088", 
         "narrative_method_store": "https://kbase.us/services/narrative_method_store/rpc", 
         "protein_info": "https://kbase.us/services/protein_info_service", 
         "reset_password": "https://gologin.kbase.us/ResetPassword", 
         "trees": "https://kbase.us/services/trees", 
         "update_profile": "https://gologin.kbase.us/account/UpdateProfile", 
         "uploader": "http://kbase.us/services/docs/uploader/uploader.html", 
-        "user_and_job_state": "https://kbase.us/services/userandjobstate",
-        "user_profile": "https://kbase.us/services/user_profile/rpc", 
+        "user_and_job_state": "https://kbase.us/services/userandjobstate", 
         "workspace": "https://kbase.us/services/ws", 
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
-    "version": "v0.3.6",
-    "release_notes": "https://github.com/kbase/narrative/blob/develop/RELEASE_NOTES.md"
+    "version": "v0.3.0"
 }

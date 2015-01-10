@@ -24,7 +24,7 @@
         enabled: true,
         isOutputName: false,
         required: true,
-        validDataObjectList: null,
+        validDataObjectList: [],
         allow_multiple:false,
         
         $rowsContainer: null,
@@ -159,7 +159,7 @@
                         self.isUsingSelect2 = true;
                         $input =$('<input id="' + form_id + '" type="text" style="width:100%" />')
                                     .on("change",function() { self.isValid() });
-                        this.validDataObjectList = [];
+                        //this.validDataObjectList = []; - why was this here? ...
                     }
                 }
             }
@@ -301,12 +301,8 @@
                 formatNoMatches: noMatchesFoundStr,
                 placeholder:placeholder,
                 allowClear: true,
-                //multiple: true,
-                //maximumSelectionSize:1,
                 query: function (query) {
-                    
                     var data = {results:[]};
-                    
                     // populate the names from our valid data object list
                     if (self.validDataObjectList) {
                         for(var i=0; i<self.validDataObjectList.length; i++){
@@ -621,6 +617,9 @@
             }
 
             if (this.rowInfo.length===1) {
+                if (this.allow_multiple) {
+                    return [this.rowInfo[0].$input.val()];
+                }
                 return this.rowInfo[0].$input.val();
             }
             var value = [];

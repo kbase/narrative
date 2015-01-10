@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="{{ static_url("custom/custom.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrative.css") }}" type="text/css" />
-    <link rel="stylesheet" href="{{ static_url("kbase/js/ui-common/ext/font-awesome/4.1.0/css/font-awesome.min.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/js/ui-common/ext/font-awesome/4.2.0/css/font-awesome.min.css") }}" type="text/css" />
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
 
     <script src="{{ static_url("components/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -272,7 +272,7 @@
                         <span class="fa fa-navicon"></span>
                     </button>
                     <ul class="dropdown-menu" role="menu" aria-labelledby="kb-nav-menu">
-                        <li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li>
+                        <!-- li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li -->
                         <li><a href="/functional-site/#/search/?q=*">Search Data</a></li>
                         <li role="presentation" class="divider"></li>
                         <li><a target="_blank" href="kbase.us/for-users/narrative-quick-start/">Narrative Tutorial</a></li>
@@ -365,8 +365,8 @@
     <script>
         var configJSON = $.parseJSON(
             $.ajax({
-                url: "{{ static_url('kbase/config.json') }}", 
-                async: false, 
+                url: "{{ static_url('kbase/config.json') }}",
+                async: false,
                 dataType: 'json'
             }).responseText
         );
@@ -377,6 +377,13 @@
                 dataType: 'json'
             }).responseText
         );
+        var dataIcons = $.parseJSON(
+          $.ajax({
+            url: "{{ static_url('kbase/data-icons.json') }}",
+            async: false,
+            dataType: 'json'
+          }).responseText
+        );
         window.kbconfig = { urls: configJSON[configJSON['config']],
                             version: configJSON['version'],
                             name: configJSON['name'],
@@ -384,11 +391,12 @@
                             git_commit_time: configJSON['git_commit_time'],
                             landing_page_map: landingPageMap,
                             release_notes: configJSON['release_notes'],
-                            mode: configJSON['mode']
+                            mode: configJSON['mode'],
+                            data_icons: dataIcons,
                           };
     </script>
     <script src="{{ static_url("kbase/js/api/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ static_url("kbase/js/api/workspaceDeluxeClient.js") }}" type="text/javascript" charset="utf-8"></script>    
+    <script src="{{ static_url("kbase/js/api/workspaceDeluxeClient.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("kbase/js/api/fbaModelServices.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("kbase/js/api/userandjobstate.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("kbase/js/api/NarrativeMethodStore.js") }}" type="text/javascript" charset="utf-8"></script>

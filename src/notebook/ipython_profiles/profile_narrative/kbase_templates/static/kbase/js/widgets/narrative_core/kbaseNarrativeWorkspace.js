@@ -245,6 +245,7 @@
             else {
                 // something else!
                 // do nothing for now.
+                code = this.buildGenericRunCommand(data);
             }
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
@@ -304,6 +305,7 @@
         },
 
         buildAppCommand: function(appSpec, methodSpecs, parameters) {
+            console.log([appSpec, methodSpecs, parameters]);
             var appSpecJSON = this.safeJSONStringify(appSpec);
             var methodSpecJSON = this.safeJSONStringify(methodSpecs);
             var paramsJSON = this.safeJSONStringify(parameters);

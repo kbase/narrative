@@ -13,6 +13,7 @@
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
             default_landing_page_url: "/functional-site/#/ws/json/", // ws_name/obj_name,
+            
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
 
             loadingImage: 'static/kbase/images/ajax-loader.gif',
@@ -33,9 +34,9 @@
             max_objs_to_prevent_initial_sort:10000, // initial sort makes loading slower, so we can turn it off if
                                                     // there are more than this number of objects
 
-            max_name_length:22,
+            max_name_length:33,
             refresh_interval:30000,
-            
+
             parentControlPanel: null
         },
 
@@ -63,15 +64,16 @@
         $addDataButton:null,
         $controllerDiv: null,
         $mainListDiv:null,
+        mainListId:null,
         $loadingDiv:null,
 
         methClient: null,
 
         obj_list : [],
         obj_data : {}, // old style - type_name : info
-        
-        
 
+
+    
         /**
          * @method init
          * Builds the DOM structure for the widget.
@@ -92,29 +94,36 @@
             this.$loadingDiv = $('<div>').addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">');
             this.$elem.append(this.$loadingDiv);
-            this.$mainListDiv = $('<div>')
+            this.mainListId=this.genUUID();
+            this.$mainListDiv = $('<div id='+this.mainListId+'>')
                 .css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':this.mainListPanelHeight })
                 .on('scroll', function() {
                     if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
                         self.renderMore();
                     }
                 });
-            
+
             this.$addDataButton = $('<span>').addClass('kb-data-list-add-data-button fa fa-plus fa-2x')
                                     .css({'position':'absolute', bottom:'15px', right:'25px', 'z-index':'5'})
                                     .click(function() {
                                         self.trigger('hideGalleryPanelOverlay.Narrative');
-                                        self.trigger('toggleSidePanelOverlay.Narrative');
+                                        self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);
                                     });
             var $mainListDivContainer = $('<div>').css({'position':'relative'})
                                             .append(this.$mainListDiv)
                                             .append(this.$addDataButton.hide());
             this.$elem.append($mainListDivContainer);
 
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
-                this.options.ws_url = window.kbconfig.urls.workspace;
+            if (window.kbconfig === undefined || window.kbconfig.urls === undefined ||
+                window.kbconfig.data_icons === undefined) {
+              // bail out now
+              alert("Failed to load base configuration! Aborting narrative now.");
+              window.location = "/"; //XXX: Need to load the error page!!
             }
+            this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+            this.options.ws_url = window.kbconfig.urls.workspace;
+            this.data_icons = window.kbconfig.data_icons;
+
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
@@ -177,6 +186,10 @@
                         self.hideLoading();
                     });
             } // else { we should probably do something if the user is not logged in or if the ws isn't set yet }
+        },
+        
+        refreshSpecificObject: function() {
+            
         },
 
         refreshTimeStrings: function() {
@@ -309,6 +322,211 @@
             return this.obj_data;
         },
 
+        $currentSelectedRow : null,
+        selectedObject: null,
+        setSelected: function($selectedRow, object_info) {
+            var self = this;
+            if (self.$currentSelectedRow) {
+                self.$currentSelectedRow.removeClass('kb-data-list-obj-row-selected');
+            }
+            if (object_info[0]===self.selectedObject) {
+                self.$currentSelectedRow = null;
+                self.selectedObject = null;
+                self.trigger('removeFilterMethods.Narrative');
+            } else {
+                $selectedRow.addClass('kb-data-list-obj-row-selected');
+                self.$currentSelectedRow = $selectedRow;
+                self.selectedObject = object_info[0];
+                self.trigger('filterMethods.Narrative','type:'+object_info[2].split('-')[0].split('.')[1]);
+            }
+        },
+        
+        
+        addDataControls: function(object_info, $alertContainer) {
+            var self = this;
+            var $btnToolbar = $('<span>')
+                                        .addClass('btn-toolbar')
+                                        .attr('role', 'toolbar');
+            
+            var btnClasses = "btn btn-xs btn-default";
+            var css = {'color':'#888'};
+            
+                                /*.append($('<div>').css({'text-align':'center','margin':'5pt'})
+                                            .append('<a href="'+landingPageLink+'" target="_blank">'+
+                                                        'explore data</a>&nbsp&nbsp|&nbsp&nbsp')
+                                            .append('<a href="'+this.options.landing_page_url+'objgraphview/'+object_info[7] +'/'+object_info[1] +'" target="_blank">'+
+                                                        'view provenance</a><br>'))*/
+            
+            var $openLandingPage = $('<span>')
+                                        .tooltip({title:'Explore data', 'container':'#'+this.mainListId})
+                                        .addClass(btnClasses)
+                                        .append($('<span>').addClass('fa fa-binoculars').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty();
+                                            var typeTokens = object_info[2].split('-')[0].split('.');
+                                            var landingPageLink = self.options.default_landing_page_url +object_info[7]+ '/' + object_info[1];
+                                            if (self.ws_landing_page_map) {
+                                                if (self.ws_landing_page_map[typeTokens[0]]) {
+                                                    if (self.ws_landing_page_map[typeTokens[0]][typeTokens[1]]) {
+                                                        landingPageLink = self.options.landing_page_url +
+                                                            self.ws_landing_page_map[typeTokens[0]][typeTokens[1]] + "/" +
+                                                            object_info[7]+ '/' + object_info[1];
+                                                    }
+                                                }
+                                            }
+                                            window.open(landingPageLink);
+                                        });
+                                        
+            var $openHistory = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'View history to revert changes', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-history').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty();
+                                            
+                                            if (self.ws_name && self.ws) {
+                                                self.ws.get_object_history({ref:object_info[6]+"/"+object_info[0]},
+                                                    function(history) {
+                                                        history.reverse();
+                                                        var $tbl = $('<table>').css({'width':'100%'});
+                                                        for(var k=0; k<history.length;k++) {
+                                                            var $revertBtn = $('<button>').append('v'+history[k][4]).addClass('kb-data-list-btn');
+                                                            if (k==0) {
+                                                                $revertBtn.tooltip({title:'Current Version', 'container':'body',placement:'bottom'});
+                                                            } else {
+                                                                var revertRef = {wsid:history[k][6], objid:history[k][0], ver:history[k][4]};
+                                                                $revertBtn.tooltip({title:'Revert to this version?', 'container':'body',placement:'bottom'})
+                                                                    .click(function() {
+                                                                        self.ws.revert_object(revertRef,
+                                                                            function(reverted_obj_info) {
+                                                                                self.refresh();
+                                                                            }, function(error) {
+                                                                                console.error(error);
+                                                                                $alertContainer.empty();
+                                                                                $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                            });
+                                                                    })
+                                                            }
+                                                            $tbl.append($('<tr>')
+                                                                        .append($('<td>').append($revertBtn))
+                                                                        .append($('<td>').append('Saved by '+history[k][5]+'<br>'+self.getTimeStampStr(history[k][3])))
+                                                                        .append($('<td>').append($('<span>').css({margin:'4px'}).addClass('fa fa-info pull-right'))
+                                                                                 .tooltip({title:history[k][2]+'<br>'+history[k][8]+'<br>'+history[k][9]+' bytes', container:'body',html:true,placement:'bottom'}))
+                                                                                );
+                                                        }
+                                                        $alertContainer.append($tbl);
+                                                    },
+                                                    function(error) {
+                                                        console.error(error);
+                                                        $alertContainer.empty();
+                                                        $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                    });
+                                            }
+                                            
+                                            
+                                        });
+                                        
+            var $openProvenance = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'View data provenance and relationships', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty();
+                                            window.open(self.options.landing_page_url+'objgraphview/'+object_info[7]+'/'+object_info[1]);
+                                        });
+            var $download = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'Export / Download data', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-download').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty();
+                                            $alertContainer.append('Coming soon');
+                                        });
+            
+            var $rename = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'Rename data', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-font').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty();
+                                            var $newNameInput = $('<input type="text">').addClass('form-control').val(object_info[1]);
+                                            $alertContainer.append($('<div>')
+                                                .append($('<div>').append("Warning: Apps using the old name may break."))
+                                                .append($('<div>').append($newNameInput))
+                                                .append($('<button>').addClass('kb-data-list-btn')
+                                                            .append('Rename')
+                                                            .click(function() {
+                                                                if (self.ws_name && self.ws) {
+                                                                    self.ws.rename_object({
+                                                                            obj: {ref:object_info[6]+"/"+object_info[0]},
+                                                                            new_name: $newNameInput.val()
+                                                                        },
+                                                                        function(renamed_info) {
+                                                                            self.refresh();
+                                                                        },
+                                                                        function(error) {
+                                                                            console.error(error);
+                                                                            $alertContainer.empty();
+                                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                        });
+                                                                }
+                                                            }))
+                                                .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                            .append('Cancel')
+                                                            .click(function() {$alertContainer.empty();} )));
+                                        });
+            var $delete = $('<span>')   
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'Delete data'})
+                                        .append($('<span>').addClass('fa fa-trash-o').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation();
+                                            $alertContainer.empty();
+                                            $alertContainer.append($('<div>')
+                                                .append($('<span>').append('Are you sure?'))
+                                                .append($('<button>').addClass('kb-data-list-btn')
+                                                            .append('Delete')
+                                                            .click(function() {
+                                                                if (self.ws_name && self.ws) {
+                                                                    self.ws.rename_object({
+                                                                            obj: {ref:object_info[6]+"/"+object_info[0]},
+                                                                            new_name: object_info[1].split('-deleted-')[0] + "-deleted-"+(new Date()).getTime()
+                                                                        },
+                                                                        function(renamed_info) {
+                                                                            self.ws.delete_objects([{ref:object_info[6]+"/"+object_info[0]}],
+                                                                                function() {
+                                                                                    self.refresh();
+                                                                                },
+                                                                                function(error) {
+                                                                                    console.error(error);
+                                                                                    $alertContainer.empty();
+                                                                                    $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                                });
+                                                                        },
+                                                                        function(error) {
+                                                                            console.error(error);
+                                                                            $alertContainer.empty();
+                                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                        });
+                                                                }
+                                                            }))
+                                                .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                            .append('Cancel')
+                                                            .click(function() {$alertContainer.empty();} )));
+                                        });
+            
+            $btnToolbar
+                .append($openLandingPage)
+                .append($openHistory)
+                .append($openProvenance)
+                .append($download)
+                .append($rename)
+                .append($delete);
+            
+            return $btnToolbar;
+        },
+        
+        
         renderObjectRowDiv: function(object_info, object_key) {
             var self = this;
             // object_info:
@@ -320,10 +538,19 @@
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
             var unversioned_full_type = type_module + '.' + type;
+            var logo_name = "";
+            if (_.has(this.data_icons, type)) {
+              logo_name = this.data_icons[type];
+            }
+            else {
+              logo_name = this.data_icons['DEFAULT'];
+            }
+            var logo_url = "static/kbase/images/data-icons/" + logo_name + ".png";
             var $logo = $('<div>')
                             .addClass("kb-data-list-logo")
-                            .css({'background-color':this.logoColorLookup(type),'cursor':'pointer'})
-                            .append(type.substring(0,1))
+                            .css({'background-image': 'url(' + logo_url + ')',
+                                  'background-color':this.logoColorLookup(type),'cursor':'pointer'})
+                            //.append(type.substring(0,1))
                             .click(function(e) {
                                 e.stopPropagation();
                                 self.insertViewer(object_key);
@@ -343,7 +570,7 @@
 
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
-            
+
             var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]));
             var metadata = object_info[10];
             var metadataText = '';
@@ -357,30 +584,18 @@
                     $type.text(type+': '+metadata['Name']);
                 }
             }
-            var landingPageLink = this.options.default_landing_page_url +object_info[7]+ '/' + object_info[1];
-            if (this.ws_landing_page_map) {
-                if (this.ws_landing_page_map[type_module]) {
-                    if (this.ws_landing_page_map[type_module][type]) {
-                        landingPageLink = this.options.landing_page_url +
-                            this.ws_landing_page_map[type_module][type] + "/" +
-                            object_info[7]+ '/' + object_info[1];
-                    }
-                }
-            }
 
             var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td');
             this.displayRealName(object_info[5],$savedByUserSpan);
 
+            var $alertDiv = $('<div>').css({'text-align':'center','margin':'10px'});
             var typeLink = '<a href="'+this.options.landing_page_url+'spec/module/'+type_module+'" target="_blank">' +type_module+"</a>.<wbr>" +
                            '<a href="'+this.options.landing_page_url+'spec/type/'+object_info[2]+'" target="_blank">' +(type_tokens[1].replace('-','&#8209;')) + '.' + type_tokens[2] + '</a>';
             var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
                                 .append($('<div>').css({'text-align':'center','margin':'5pt'})
-                                            .append('<a href="'+landingPageLink+'" target="_blank">'+
-                                                        'explore data</a>&nbsp&nbsp|&nbsp&nbsp')
-                                            .append('<a href="'+this.options.landing_page_url+'objgraphview/'+object_info[7] +'/'+object_info[1] +'" target="_blank">'+
-                                                        'view provenance</a><br>'))
+                                            .append(self.addDataControls(object_info,$alertDiv)).append($alertDiv))
                                 .append(
-                                    $('<table style="width=100%">')
+                                    $('<table style="width:100%;">')
                                         .append("<tr><th>Permament Id</th><td>" +object_info[6]+ "/" +object_info[0]+ "/" +object_info[4] + '</td></tr>')
                                         .append("<tr><th>Full Type</th><td>"+typeLink+'</td></tr>')
                                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
@@ -390,51 +605,61 @@
                 .hide()
                 .html('<span class="fa fa-ellipsis-h" style="color:#999" aria-hidden="true"/>');
             var toggleAdvanced = function() {
-                        if ($moreRow.is(':visible')) {
-                            $moreRow.slideToggle('fast');
-                            $toggleAdvancedViewBtn.show();
-                        } else {
-                            self.getRichData(object_info,$moreRow);
-                            $moreRow.slideToggle('fast');
-                            $toggleAdvancedViewBtn.hide();
-                        }
+                    if (self.selectedObject == object_info[0] && $moreRow.is(':visible')) {
+                        // assume selection handling occurs before this is called
+                        // so if we are now selected and the moreRow is visible, leave it...
+                        return;
+                    }
+                    if ($moreRow.is(':visible')) {
+                        $moreRow.slideUp('fast');
+                        $toggleAdvancedViewBtn.show();
+                    } else {
+                        self.getRichData(object_info,$moreRow);
+                        $moreRow.slideDown('fast');
+                        $toggleAdvancedViewBtn.hide();
+                    }
                 };
 
             var $mainDiv  = $('<div>').addClass('kb-data-list-info').css({padding:'0px',margin:'0px'})
                                 .append($name).append($version).append('<br>')
                                 .append($type).append('<br>').append($date)
-                                .append($toggleAdvancedViewBtn);
+                                .append($toggleAdvancedViewBtn)
+                                .click(
+                                    function() {
+                                        self.setSelected($(this).closest('.kb-data-list-obj-row'),object_info);
+                                        toggleAdvanced();
+                                    });
 
             var $topTable = $('<table>')
-                             .css({'width':'100%'})
+                             .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
                              .append($('<tr>')
                                      .append($('<td>')
                                              .css({'width':'15%'})
                                              .append($logo))
                                      .append($('<td>')
                                              .append($mainDiv)));
-                             
+
             var $row = $('<div>').addClass('kb-data-list-obj-row')
                             .attr('kb-oid', object_key)
                             .append($('<div>').addClass('kb-data-list-obj-row-main')
                                         .append($topTable))
                             .append($moreRow)
-                            // show/hide ellipses on hover, show extra info on click 
+                            // show/hide ellipses on hover, show extra info on click
                             .mouseenter(function(){
                                 if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
                             })
-                            .mouseleave(function(){ $toggleAdvancedViewBtn.hide(); })
-                            .click(toggleAdvanced);
+                            .mouseleave(function(){ $toggleAdvancedViewBtn.hide(); });
+                            
 
             // Drag and drop
-            this.addDragAndDrop($row);
+            this.addDragAndDrop($topTable);
 
             var $rowWithHr = $('<div>')
                                 .append($('<hr>')
                                             .addClass('kb-data-list-row-hr')
                                             .css({'margin-left':'65px'}))
                                 .append($row);
-            
+
             return $rowWithHr;
         },
 
@@ -491,7 +716,7 @@
                        'data-placement': 'top',
                         'title': 'Drag onto narrative &rarr;'});
             $row.tooltip({delay: { show: 1500, hide: 0 }, html: true});
-            
+
             return this;
         },
 
@@ -512,18 +737,18 @@
             var cell = IPython.notebook.insert_cell_below('markdown');
             $(cell.element).off('dblclick');
             $(cell.element).off('keydown');
-            
+
             var cell_id = self.genUUID();
             cell.rendered = false;
             cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
             cell.render();
-            
+
             var obj = _.findWhere(self.objectList, {key: key});
             var info = self.createInfoObject(obj.info);
             // Insert the narrative data cell into the div we just rendered
             $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
         },
-        
+
         renderMore: function() {
             var self=this;
             if (self.objectList) {
@@ -682,12 +907,13 @@
                                     .append($byName)
                                     .append($byType);
 
-            var $addDataBtn = $('<button>')
-                                .addClass("btn btn-warning kb-data-list-get-data-button")
-                                .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Add Data')
-                                .on('click',function() {
-                                    self.trigger('toggleSidePanelOverlay.Narrative');
-                                });
+            // var $addDataBtn = $('<button>')
+            //                     .addClass("btn btn-warning kb-data-list-get-data-button")
+            //                     .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Add Data')
+            //                     .on('click',function() {
+            //                         self.trigger('toggleSidePanelOverlay.Narrative');
+            //                     });
+
 
 
             var $openSearch = $('<span>')
@@ -702,7 +928,7 @@
                         self.$searchDiv.hide();
                     }
                 });
-                
+
             var $openSort = $('<span>')
                 .addClass('btn btn-xs btn-default')
                 .append('<span class="fa fa-sort-amount-asc"></span>')
@@ -715,7 +941,7 @@
                         self.$sortByDiv.hide();
                     }
                 });
-                
+
             var $openFilter = $('<span>')
                 .addClass('btn btn-xs btn-default')
                 .append('<span class="fa fa-filter"></span>')
@@ -793,7 +1019,7 @@
                     }
                 }
                 types.sort();
-                
+
                 self.$filterTypeSelect.empty();
                 var runningCount = 0;
                 for(var i=0; i<types.length; i++) {

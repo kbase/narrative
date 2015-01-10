@@ -16,6 +16,7 @@ __Changes__
     - Fixed problem when submitting a method with multiple possible output types for a single parameter
     - Fixed problem where method cell parameters were not being properly validated before sending the job
 - Added document that details app failure points
+- Data list supports deleting, renaming, reverting objects
 
 ### Version 0.3.5 - 1/7/2015
 __Changes__

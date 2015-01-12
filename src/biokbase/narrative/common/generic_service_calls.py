@@ -275,7 +275,11 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
             if paramId is not None:
                 input[paramId] = paramValue
         if paramValue is None:
-            raise ValueError("Value is not defined in input mapping: " + json.dumps(mapping))
+            # might be dangerous!  but instead of throwing an error, null is an accepted value state because
+            # optional text fields left empty with no defaults can be set to null.  If this is the case, then
+            # we omit this value entirely from what is sent
+            continue
+            #raise ValueError("Value is not defined in input mapping: " + json.dumps(mapping))
         paramSpec = None
         if paramId is not None:
             paramSpec = paramToSpecs[paramId]

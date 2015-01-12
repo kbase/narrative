@@ -382,7 +382,7 @@
             if (self.selectedType === 'KBaseGenomes.Genome') {
             	if (methodId === 'import_genome_gbk_file') {
             		var contigsetId = null;
-            		if (params['contigObject'].length > 0) {
+            		if (params['contigObject'] && params['contigObject'].length > 0) {
             			contigsetId = params['contigObject'];
             		} else {
             			contigsetId = params['outputObject'] + '.contigset';
@@ -453,7 +453,7 @@
                         );
             	} else if (methodId === 'import_reads_pe_fastq_file') {
             		var shockNodes = params['fastqFile1'];
-            		if (params['fastqFile1'])
+            		if (params['fastqFile2'] && params['fastqFile2'].length > 0)
             			shockNodes += params['fastqFile2'];
             		var args = {'etype': 'KBaseAssembly.FQ', 
             				'kb_type': 'KBaseAssembly.PairedEndLibrary', 
@@ -530,6 +530,7 @@
         			if (complete === 1) {
         				self.stopTimer();
         				if (wasError === 0) {
+                            self.trigger('updateDataList.Narrative');
             				self.showInfo("Import job is done");
         				} else {
             				self.showError(status);

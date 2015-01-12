@@ -201,7 +201,7 @@
                 
                 self.$narPanel = $('<div>'); //.css({'margin':'10px'});
                 self.$mainPanel.append(self.$narPanel);
-                self.renderPanel();
+                //self.renderPanel();
             }
         },
         
@@ -377,7 +377,6 @@
                     .append($('<a href="'+narRef+'" target="_blank">').append(nameText).append($priv)));
             var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
             if(data.ws_info[2]===this._attributes.auth.user_id) {
-                $usrNameSpan.html();
             } else {
                 $dataCol.append($usrNameSpan).append('<br>');
                 this.displayRealName(data.ws_info[2], $usrNameSpan);
@@ -490,10 +489,9 @@
         real_name_lookup: {},
         displayRealName: function(username,$targetSpan) {
 	    var self = this;
-	    // todo : use globus to populate user names, but we use a hack because of globus CORS headers
 	    if (self.ws) { // make sure we are logged in and have some things
 		
-                if (self.real_name_lookup[username]) {
+                if (self.real_name_lookup[username] && self.real_name_lookup[username] !=="...") {
                     $targetSpan.html(self.real_name_lookup[username]+" ("+username+")");
                 } else {
                     self.real_name_lookup[username] = "..."; // set a temporary value so we don't search again

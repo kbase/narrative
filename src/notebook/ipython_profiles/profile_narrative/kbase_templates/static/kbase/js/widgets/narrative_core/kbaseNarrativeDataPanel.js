@@ -1615,7 +1615,7 @@
                 // create type filter
                 var typeInput = $('<select class="form-control kb-import-filter">');
                 typeInput.append('<option>All types...</option>');
-                for (var i=1; i < types.length-1; i++) {
+                for (var i=0; i < types.length; i++) {
                     typeInput.append('<option data-type="'+types[i]+'">'+
                                           types[i].split('.')[1]+
                                      '</option>');
@@ -1686,7 +1686,7 @@
                 // create type filter
                 var typeInput = $('<select class="form-control kb-import-filter">');
                 typeInput.append('<option>All types...</option>');
-                for (var i=1; i < types.length-1; i++) {
+                for (var i=0; i < types.length; i++) {
                     typeInput.append('<option data-type="'+types[i]+'">'+
                                           types[i].split('.')[1]+
                                      '</option>');

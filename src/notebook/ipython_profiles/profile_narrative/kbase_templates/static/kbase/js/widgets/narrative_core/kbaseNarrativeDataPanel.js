@@ -131,35 +131,7 @@
 
             // initialize the importer
             this.dataImporter();
-            /**
-             * Get the landing page map.
-             * First, try getting it from /functional-site/landing_page_map.json.
-             * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
-             
-            $.ajax({
-                url: '/functional-site/landing_page_map.json',
-                async: true,
-                dataType: 'json',
-                success: $.proxy(function(response) {
-                    this.landingPageMap = response;
-                }, this),
-                error: $.proxy(function(error) {
-                    this.dbg("Unable to get standard landing page map, looking for backup...");
-                    $.ajax({
-                        url: '/static/kbase/js/widgets/landing_page_map.json',
-                        async: true,
-                        dataType: 'json',
-                        success: $.proxy(function(response) {
-                            this.landingPageMap = response;
-                        }, this),
-                        error: $.proxy(function(error) {
-                            this.dbg("Unable to get any landing page map! Landing pages mapping unavailable...");
-                            this.landingPageMap = null;
-                        }, this)
-                    })
-                }, this)
-            });*/
-            
+
             if (this.ws_name)
                 this.trigger('workspaceUpdated.Narrative', this.ws_name);
 
@@ -174,32 +146,6 @@
                            }, this)));
             
             return this;
-            
-            
-            
-            // /**
-            //  * This should be triggered whenever something clicks on a data info button (or just
-            //  * wants the info modal to appear).
-            //  */
-            // $(document).on(
-            //     'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
-            //         this.showInfoModal(workspace, id);
-            //     }, 
-            //     this)
-            // );
-
-            // $(document).on(
-            //     'updateNarrativeDataTab.Narrative', $.proxy(function(e) {
-            //         this.refreshNarrativeTab();
-            //     },
-            //     this)
-            // );
-
-            // this.createStructure()
-            //     .createMessages();
-
-
-            // return this;
         },
         
         addButtonToControlPanel: function($btn) {
@@ -1615,7 +1561,7 @@
                 // create type filter
                 var typeInput = $('<select class="form-control kb-import-filter">');
                 typeInput.append('<option>All types...</option>');
-                for (var i=1; i < types.length-1; i++) {
+                for (var i=0; i < types.length; i++) {
                     typeInput.append('<option data-type="'+types[i]+'">'+
                                           types[i].split('.')[1]+
                                      '</option>');
@@ -1686,7 +1632,7 @@
                 // create type filter
                 var typeInput = $('<select class="form-control kb-import-filter">');
                 typeInput.append('<option>All types...</option>');
-                for (var i=1; i < types.length-1; i++) {
+                for (var i=0; i < types.length; i++) {
                     typeInput.append('<option data-type="'+types[i]+'">'+
                                           types[i].split('.')[1]+
                                      '</option>');

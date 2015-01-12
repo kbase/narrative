@@ -852,7 +852,7 @@
                                          .append($("<span>").append('Add Data').addClass('btn btn-lg kb-data-list-add-data-text-button')
                                                  .click(function() {
                                                         self.trigger('hideGalleryPanelOverlay.Narrative');
-                                                        self.trigger('toggleSidePanelOverlay.Narrative');
+                                                        self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);
                                                     })));
             }
 

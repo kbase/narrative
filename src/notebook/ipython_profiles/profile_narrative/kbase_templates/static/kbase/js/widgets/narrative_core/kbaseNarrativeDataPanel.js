@@ -382,13 +382,13 @@
             // add footer status container and buttons
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
-            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
-            var closeBtn = $('<button class="btn btn-default pull-right">Close</button>');
+            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>').css({'margin':'10px'});
+            var closeBtn = $('<button class="btn btn-default pull-right">Close</button>').css({'margin':'10px'});
 
             closeBtn.click(function() {
                 self.trigger('hideSidePanelOverlay.Narrative');
             })
-            footer.append(btn, closeBtn);
+            footer.append(closeBtn, btn);
 
             // start with my data, then fetch other data
             // this is because data sets can be large and
@@ -474,6 +474,11 @@
                 return $.when(p).then(function(d) {
                     // update model
                     myData = [].concat.apply([], arguments);
+                    myData.sort(function(a,b) {
+                            if (a[3] > b[3]) return -1; // sort by name
+                            if (a[3] < b[3]) return 1;
+                            return 0;
+                        });
                     render(myData, $mineScrollPanel, mineSelected);
                 });
             }
@@ -512,6 +517,13 @@
                 return $.when.apply($, proms).then(function() {
                     // update model
                     sharedData = [].concat.apply([], arguments);
+                    
+                    sharedData.sort(function(a,b) {
+                            if (a[3] > b[3]) return -1; // sort by name
+                            if (a[3] < b[3]) return 1;
+                            return 0;
+                        });
+                    
                     render(sharedData, $sharedScrollPanel, sharedSelected);
                 })
             }
@@ -557,6 +569,7 @@
                                     if (d[i][8].is_temporary === 'true') { continue; }
                                 }
                                 var displayName = d[i][1];
+                                if (!d[i][8].narrative) { continue; }
                                 if (d[i][8].narrative_nice_name) {
                                     displayName = d[i][8].narrative_nice_name;
                                 } else {
@@ -572,6 +585,13 @@
 
                             // add to model for filter
                             myWorkspaces = workspaces;
+                            
+                            // sort by name
+                            myWorkspaces.sort(function(a,b) {
+                                    if (a.displayName.toUpperCase() < b.displayName.toUpperCase()) return -1; // sort by name
+                                    if (a.displayName.toUpperCase() > b.displayName.toUpperCase()) return 1;
+                                    return 0;
+                                });
                             return workspaces;
                         })
             }
@@ -588,6 +608,7 @@
                                 if (d[i][8].is_temporary) {
                                     if (d[i][8].is_temporary === 'true') { continue; }
                                 }
+                                if (!d[i][8].narrative) { continue; }
                                 var displayName = d[i][1];
                                 if (d[i][8].narrative_nice_name) {
                                     displayName = d[i][8].narrative_nice_name;
@@ -603,6 +624,11 @@
 
                             // add to model for filter
                             sharedWorkspaces = workspaces;
+                            sharedWorkspaces.sort(function(a,b) {
+                                    if (a.displayName.toUpperCase() < b.displayName.toUpperCase()) return -1; // sort by name
+                                    if (a.displayName.toUpperCase() > b.displayName.toUpperCase()) return 1;
+                                    return 0;
+                                });
                             return workspaces;
                         })
             }
@@ -782,7 +808,7 @@
                 // create workspace filter
                 var wsInput = $('<select class="form-control kb-import-filter">');
                 wsInput.append('<option>All narratives...</option>');
-                for (var i=1; i < wsList.length-1; i++) {
+                for (var i=0; i < wsList.length; i++) {
                     wsInput.append('<option data-id="'+[i].id+'" data-name="'+wsList[i].name+'">'+
                                           wsList[i].displayName+
                                    '</option>');
@@ -850,7 +876,7 @@
                 // create workspace filter
                 var wsInput = $('<select class="form-control kb-import-filter">');
                 wsInput.append('<option>All narratives...</option>');
-                for (var i=1; i < wsList.length-1; i++) {
+                for (var i=0; i < wsList.length; i++) {
                     wsInput.append('<option data-id="'+wsList[i].id+'" data-name="'+wsList[i].name+'">'+
                                           wsList[i].displayName+
                                     '</option>');

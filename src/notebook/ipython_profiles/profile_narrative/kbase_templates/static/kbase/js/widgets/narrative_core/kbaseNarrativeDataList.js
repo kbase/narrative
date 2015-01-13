@@ -630,7 +630,7 @@
                                         toggleAdvanced();
                                     });
 
-            var $topTable = $('<table>')
+            var $topTable = $('<table>').attr('kb-oid', object_key)
                              .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
                              .append($('<tr>')
                                      .append($('<td>')
@@ -640,7 +640,6 @@
                                              .append($mainDiv)));
 
             var $row = $('<div>').addClass('kb-data-list-obj-row')
-                            .attr('kb-oid', object_key)
                             .append($('<div>').addClass('kb-data-list-obj-row-main')
                                         .append($topTable))
                             .append($moreRow)

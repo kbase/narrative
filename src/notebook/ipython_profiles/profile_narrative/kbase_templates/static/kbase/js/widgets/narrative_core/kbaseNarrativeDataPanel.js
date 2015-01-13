@@ -781,7 +781,8 @@
                                 module: mod_type.split('.')[0],
                                 wsID: obj[6],
                                 ws: obj[7],
-                                relativeTime: kb.ui.relativeTime( Date.parse(obj[3]) ) }
+                                info: obj, // we need to have this all on hand!
+                                relativeTime: getTimeStampStr(obj[3])} //use the same one as in data list for consistencey  kb.ui.relativeTime( Date.parse(obj[3]) ) }
 
                     if (item.module=='KBaseNarrative') {
                         continue;
@@ -941,8 +942,10 @@
                                 .data('ref', obj.wsID+'.'+obj.id)
                                 .data('obj-name', obj.name);
                 item.append('<i class="fa fa-square-o pull-left kb-import-checkbox">');
+                var linkUrl = objURL(obj.module, obj.kind, obj.ws, obj.name);
+                //console.log(linkUrl);
                 item.append('<a class="h4" href="'+
-                                objURL(obj.module, obj.kind, obj.ws, obj.name)+
+                                linkUrl+
                                 '" target="_blank">'+obj.name+'</a>'+
                             '<span class="kb-data-list-version">v'+obj.version+'</span>');
 
@@ -961,6 +964,10 @@
                                 '<b>'+narName+'<b>'+   //<a class="" href="'+wsURL(obj.ws)+'">'
                             '</div>');
                 item.append('<div class="kb-import-info">'+
+                                '<span>MODIFIED BY</span><br>'+
+                                '<b>'+obj.info[5]+'<b>'+   //<a class="" href="'+wsURL(obj.ws)+'">'
+                            '</div>');
+                item.append('<div class="kb-import-info">'+
                                 '<span>LAST MODIFIED</span><br>'+
                                 '<b>'+obj.relativeTime+'</b>'+
                             '</div>');
@@ -971,15 +978,62 @@
 
             function objURL(module, type, ws, name) {
                 var mapping = window.kbconfig.landing_page_map;
-                if (mapping[module])
+                if (mapping[module] && mapping[module][type]) {
                     return self.options.landingPageURL+mapping[module][type]+'/'+ws+'/'+name;
-                else
-                    return self.options.landingPageURL+"ws/json/"+ws+'/'+name;
+                }
+                return self.options.landingPageURL+'ws/json/'+ws+'/'+name;
             }
 
             function wsURL(ws) {
                 return self.options.landingPageURL+'ws/'+ws;
             }
+            
+            // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
+            function getTimeStampStr(objInfoTimeStamp) {
+                var date = new Date(objInfoTimeStamp);
+                var seconds = Math.floor((new Date() - date) / 1000);
+    
+                // f-ing safari, need to add extra ':' delimiter to parse the timestamp
+                if (isNaN(seconds)) {
+                    var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
+                    var newTimestamp = tokens[0] + '+'+tokens[0].substr(0,2) + ":" + tokens[1].substr(2,2);
+                    date = new Date(newTimestamp);
+                    seconds = Math.floor((new Date() - date) / 1000);
+                    if (isNaN(seconds)) {
+                        // just in case that didn't work either, then parse without the timezone offset, but
+                        // then just show the day and forget the fancy stuff...
+                        date = new Date(tokens[0]);
+                        return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                    }
+                }
+    
+                var interval = Math.floor(seconds / 31536000);
+                if (interval > 1) {
+                    return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                }
+                interval = Math.floor(seconds / 2592000);
+                if (interval > 1) {
+                    if (interval<4) {
+                        return interval + " months ago";
+                    } else {
+                        return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                    }
+                }
+                interval = Math.floor(seconds / 86400);
+                if (interval > 1) {
+                    return interval + " days ago";
+                }
+                interval = Math.floor(seconds / 3600);
+                if (interval > 1) {
+                    return interval + " hours ago";
+                }
+                interval = Math.floor(seconds / 60);
+                if (interval > 1) {
+                    return interval + " minutes ago";
+                }
+                return Math.floor(seconds) + " seconds ago";
+            };
+            
         }
     });
 

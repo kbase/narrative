@@ -149,7 +149,10 @@
          * @public
          */
         getParameters: function() {
-            return this.$inputWidget.getParameters();
+            if (this.$inputWidget)
+                return this.$inputWidget.getParameters();
+            else
+                return null;
         },
 
         /**

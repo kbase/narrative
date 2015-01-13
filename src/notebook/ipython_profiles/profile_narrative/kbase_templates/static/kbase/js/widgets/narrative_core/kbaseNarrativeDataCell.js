@@ -135,10 +135,10 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
         output[mapping.target_property] = param;
     });
     output.widget_title = spec.info.name;
-    output.landing_page_url_prefix = this.landing_page_urls[method_id];
+    output.landing_page_url_prefix = this.landing_page_urls[o.bare_type];
     var output_widget = spec.widgets.output;
     return elt[output_widget](output);
-}
+};
 
 /**
  * Default viewer.
@@ -149,26 +149,21 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
  */
 var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
     var o = data_cell.obj_info;
-    var lp_prefix = kb_g_viewers.landing_page_urls[o.bare_type];
-    if (lp_prefix === undefined) {
-        lp_prefix = "";
-    }
-    var md_desc = data_cell.shortMarkdownDesc(o, lp_prefix);
-    if (!_.isEmpty(o.meta)) {
-      md_desc += "\n\nMetadata: ";
+    var md_desc = '';
+    if (_.isEmpty(o.meta)) {
+        md_desc += "No metadata";
+    } else {
+      md_desc += "Metadata\n";
       this.prev = false;
       _.each(_.pairs(o.meta), function(p) {
         if (this.prev) {
-          md_desc += ", ";
+          md_desc += "\n";
         }
-        md_desc += p[0] + "=" + p[1];
+        md_desc += p[0] + ": " + p[1];
         this.prev = true;
       });
     }
-    data_cell.ip_cell.edit();
-    data_cell.ip_cell.set_text(md_desc);
-    data_cell.ip_cell.unselect();
-    return elt;
+    return elt.append($('<pre>').append(md_desc));
 };
 
 /**
@@ -207,12 +202,13 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             if (kb_g_viewers == null) {
 		// we have to wait until the type/method specs are loaded the first time
 		var self = this;
+		
 		var done = function() {
-		    console.debug("kbaseNarrativeDataCell.init.done");
+		    console.debug("kbaseNarrativeDataCell.init.done with load");
+		    kb_g_viewers = this.all_viewers;
 		    self.render(options.info);
 		}
-                kb_g_viewers = new KBaseNarrativeViewers(this.method_client,done);
-		this.all_viewers = kb_g_viewers;
+		this.all_viewers = new KBaseNarrativeViewers(this.method_client,done);
             } else {
 		// if they are already loaded, we can just grab it and render
 		this.all_viewers = kb_g_viewers;
@@ -246,21 +242,68 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
          * @return Whatever the 'viewer' function returns.
          */
         render: function() {
+            var $label = $('<span>').addClass('label label-info').append('Data');
+            var baseClass = 'kb-cell-output';
+            var panelClass = 'panel-default';
+            var headerClass = 'kb-out-desc'; 
+
             var is_default = false; // default-viewer
             var self = this;
-            var $view = this.all_viewers.create_viewer(self.$elem, self);
+            var widgetTitleElem = $('<b>');
+            var mainPanel = $('<div>');
+            var $menuSpan = $('<span style="margin-left:5px">');
+            this.$timestamp = $('<span>')
+            	.addClass('pull-right kb-func-timestamp');
+            this.$timestamp.append($('<span>')
+                    .append(this.readableTimestamp(self.obj_info.save_date)));
+            this.$timestamp.append($menuSpan);
+            var $headerInfo = $('<span>')
+            	.addClass(headerClass)
+            	.append(widgetTitleElem)
+            	.append(this.$timestamp);
+            var $body = $('<div>')
+            	.addClass(baseClass)
+            	.append($('<div>')
+                    .addClass('panel ' + panelClass)
+                    .append($('<div>')
+                            .addClass('panel-heading')
+                            .append($label)
+                            .append($headerInfo))
+                    .append($('<div>')
+                            .addClass('panel-body')
+                            .append(mainPanel)));
+            self.$elem.append($body);
+            $menuSpan.kbaseNarrativeCellMenu();
+            var $view = this.all_viewers.create_viewer(mainPanel, self);
+
+            var landing_page_url_prefix = null;
+            var type_tokens = self.obj_info.type.split('.')
+            var type_module = type_tokens[0];
+            var type = type_tokens[1].split('-')[0];
+            var ws_landing_page_map = window.kbconfig.landing_page_map;
+            if (ws_landing_page_map && ws_landing_page_map[type_module] && ws_landing_page_map[type_module][type]) {
+            	landing_page_url_prefix = ws_landing_page_map[type_module][type];
+            }
+            var widget_title = '';
             if (_.isNull($view)) {
-                KBaseNarrativeDefaultViewer(self.$elem, self);
+                KBaseNarrativeDefaultViewer(mainPanel, self);
+                widget_title = 'View ' + type;
                 is_default = true;
             }
             else {
-                var widget_title = $view.options.widget_title;
-                var landing_page_url_prefix = $view.options.landing_page_url_prefix;
-                var html = $(marked.parser(marked.lexer(
-                        self.shortMarkdownDesc(self.obj_info, landing_page_url_prefix))));
-                html.find("a[href]").not('[href^="#"]').attr("target", "_blank");
-                self.$elem.before(html);
+                widget_title = $view.options.widget_title;
+                if (!landing_page_url_prefix)
+                	landing_page_url_prefix = $view.options.landing_page_url_prefix;
+                //var html = $(marked.parser(marked.lexer(
+                //        self.shortMarkdownDesc(self.obj_info, landing_page_url_prefix))));
+                //console.log(html);
+                //html.find("a[href]").not('[href^="#"]').attr("target", "_blank");
             }
+            if (!landing_page_url_prefix)
+            	landing_page_url_prefix = 'ws/json';
+            widgetTitleElem.append(widget_title);
+            widgetTitleElem.append('&nbsp;<a href="'+self.shortMarkdownDesc(self.obj_info, 
+            		landing_page_url_prefix)+'" target="_blank">'+self.obj_info.name+'</a>');
             // Make sure that we have unselected the cell
             self.ip_cell.unselect();
             // If *not* default viewer, disable cell editing, as this will mess it up
@@ -281,10 +324,36 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             link += window.location.host;
           }
           link += "/functional-site/#/" + landing_page_url_prefix + "/" + o.ws_name + "/" + o.name;
-          return "[" + o.name + "](" + link + ")"  +
-               " (" + o.bare_type + "<sub>v" + o.version + "</sub>)." +
-               " Last saved: " +
-               "*" + o.saved_by + "*  " + o.simple_date;
+          return link;
+               //"[" + o.name + "](" + link + ")"  +
+               //" (" + o.bare_type + "<sub>v" + o.version + "</sub>)." +
+               //" Last saved: " +
+               //"*" + o.saved_by + "*  " + o.simple_date;
+        },
+
+        /**
+         * Converts a timestamp to a simple string.
+         * Do this American style - HH:MM:SS MM/DD/YYYY
+         *
+         * @param {string} timestamp - a timestamp in number of milliseconds since the epoch.
+         * @return {string} a human readable timestamp
+         */
+        readableTimestamp: function(timestamp) {
+            var format = function(x) {
+                if (x < 10)
+                    x = '0' + x;
+                return x;
+            };
+
+            var d = new Date(timestamp);
+            var hours = format(d.getHours());
+            var minutes = format(d.getMinutes());
+            var seconds = format(d.getSeconds());
+            var month = d.getMonth()+1;
+            var day = format(d.getDate());
+            var year = d.getFullYear();
+
+            return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         }
 
     })

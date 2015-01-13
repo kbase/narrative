@@ -151,8 +151,7 @@
         getParameters: function() {
             if (this.$inputWidget)
                 return this.$inputWidget.getParameters();
-            else
-                return null;
+            return null;
         },
 
         /**
@@ -203,6 +202,8 @@
          * Currently supports "input", "submitted", "running", or "complete".
          */
         changeState: function(runState) {
+            if (!this.$cellPanel)
+                return;
             if (this.runState !== runState) {
                 this.runState = runState.toLowerCase();
                 switch(this.runState) {

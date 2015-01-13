@@ -184,7 +184,7 @@
             var type = type_tokens[1].split('-')[0];
             
             var $addDiv =
-                $('<div>').addClass('col-md-2').append(
+                $('<div>').append(
                     $('<button>').addClass('btn btn-default')
                         .append($('<span>').addClass('fa fa-chevron-circle-left').append(' Add'))
                         .on('click',function() { // probably should move action outside of render func, but oh well
@@ -214,7 +214,7 @@
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
             if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom'}); }
            
-            var metadata = object_info[10];
+            /*var metadata = object_info[10];
             var metadataText = '';
             for(var key in metadata) {
                 if (metadata.hasOwnProperty(key)) {
@@ -255,19 +255,35 @@
                             $more.slideToggle('fast');
                             $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
-                    });
+                    });*/
+            var $topTable = $('<table>')
+                                 .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
+                                 .append($('<tr>')
+                                         .append($('<td>')
+                                                 .css({'width':'90px'})
+                                                .append($addDiv))
+                                         .append($('<td>')
+                                                 .css({'width':'50px'})
+                                                 .append($('<span>')
+                                            		 	.addClass("kb-data-list-logo")
+                                            		 	.css({'background-color':this.logoColorLookup(type)})
+                                            		 	.append(type.substring(0,1))))
+                                         .append($('<td>')
+                                                 .append($name)));
+	    
+	    var $row = $('<div>')
+                                .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
+                                //.addClass('kb-data-list-obj-row')
+                                .append($('<div>').addClass('kb-data-list-obj-row-main')
+                                            .append($topTable))
+                                // show/hide ellipses on hover, show extra info on click
+                                /*.mouseenter(function(){
+                                    $addDiv.show();
+                                })
+                                .mouseleave(function(){
+                                    $addDiv.hide();
+                                });*/
                     
-            var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info')
-                                .append($('<span>')
-                                            .addClass("kb-data-list-logo")
-                                            .css({'background-color':this.logoColorLookup(type)})
-                                            .append(type.substring(0,1)))
-                                .append($('<span>').css({'margin':'10px'}).append($name));
-        
-            var $row = $('<div>').css({'margin':'5px'}).append(
-                            $('<div>').addClass('row kb-data-list-obj-row-main')
-                                .append($addDiv)
-                                .append($mainDiv));
             return $row;
         },
         

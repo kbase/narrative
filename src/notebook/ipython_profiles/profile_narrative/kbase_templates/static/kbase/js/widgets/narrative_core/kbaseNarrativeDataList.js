@@ -571,7 +571,8 @@
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
 
-            var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]));
+            
+            var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]) + ' by '+object_info[5]);
             var metadata = object_info[10];
             var metadataText = '';
             for(var key in metadata) {

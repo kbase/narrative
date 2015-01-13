@@ -5,7 +5,9 @@ This is built on the IPython Notebook (more notes will follow).
 
 ### Version 0.3.8 - 1/13/2015
 __Changes__
-- Drag and drop data and data viewer bug fixes
+- Drag and drop data and data viewer bug fixes.
+- Position of a queued job should now be tracked in the job panel.
+- The Narrative object metadata now tracks the number of each type of cell in that Narrative. Method and App cells are further tracked by their id.
 
 ### Version 0.3.7 - 1/12/2015
 __Changes__

@@ -20,7 +20,7 @@ EXPOSE 8888
 ADD ./narrative /kb/dev_container/narrative
 ADD ./narrative/kbase-logdb.conf /tmp/kbase-logdb.conf
 RUN apt-get install -y python-virtualenv python-thrift python-yaml python-paramiko
-RUN cd /kb/dev_container/narrative; /bin/bash install.sh -p /kb/deployment/services narrative
+RUN cd /kb/dev_container/narrative; /bin/bash old-install.sh -p /kb/deployment/services narrative
 RUN cd /tmp/narrative
 
 # Setup the container to automatically run a script that uses the narrative_mongo profile
@@ -30,5 +30,3 @@ CMD ["kbasetest"]
 ENTRYPOINT ["/bin/bash", "/kb/deployment/services/narrative-venv/bin/run_magellan_narrative.sh"]
 RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_profiles /tmp/narrative; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
 USER nobody
-# CMD /bin/bash /kb/deployment/services/narrative-venv/bin/run_notebook.sh notebook --ip='*' --NotebookApp.password='sha1:89e8b3c3b94f:34c04b4f82d4f5442094cbf73204333 176be148a' --NotebookApp.open_browser='False'
-

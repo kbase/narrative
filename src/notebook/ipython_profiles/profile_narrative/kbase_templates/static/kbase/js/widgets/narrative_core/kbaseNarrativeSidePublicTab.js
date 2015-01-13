@@ -307,7 +307,7 @@
             var type = type_tokens[1].split('-')[0];
             
             var $addDiv =
-                $('<div>').addClass('col-md-2').append(
+                $('<div>').append(
                     $('<button>').addClass('btn btn-default')
                         .append($('<span>').addClass('fa fa-chevron-circle-left').append(' Add'))
                         .on('click',function() { // probably should move action outside of render func, but oh well
@@ -374,33 +374,73 @@
                             $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
                     });*/
-                    
-            var titleElement = $('<span>').css({'margin':'10px'}).append($name);
+            var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
+            var btnClasses = "btn btn-xs btn-default";
+            var css = {'color':'#888'};
+            var $openLandingPage = $('<span>')
+                                        // tooltips showing behind pullout, need to fix!
+                                        //.tooltip({title:'Explore data', 'container':'#'+this.mainListId})
+                                        .addClass(btnClasses)
+                                        .append($('<span>').addClass('fa fa-binoculars').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation();
+                                            window.open(landingPageLink);
+                                        });
+                                        
+            var $openProvenance = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        //.tooltip({title:'View data provenance and relationships', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation();
+                                            window.open(self.options.landing_page_url+'objgraphview/'+object.ws+'/'+object.id);
+                                        });
+            $btnToolbar.append($openLandingPage).append($openProvenance);
+		
+            var titleElement = $('<span>').css({'margin':'10px'}).append($btnToolbar.hide()).append($name);
             for (var key in object.metadata) {
             	var value = $('<span>').addClass("kb-data-list-type").append('&nbsp;&nbsp;' + key + ':&nbsp;' + object.metadata[key]);
             	titleElement.append('<br>').append(value);
             }
-            var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info')
-            			.css({'padding-left': '0px'})
-            			.append($('<table>')
-                             .css({'width':'100%'})
-                             .append($('<tr>')
-                                     .append($('<td>')
-                                             .css({'width':'5%'})
-                                             .append(
-                                            		 $('<span>')
+            
+	    var $topTable = $('<table>')
+                                 .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
+                                 .append($('<tr>')
+                                         .append($('<td>')
+                                                 .css({'width':'90px'})
+                                                .append($addDiv.hide()))
+                                         .append($('<td>')
+                                                 .css({'width':'50px'})
+                                                 .append($('<span>')
                                             		 	.addClass("kb-data-list-logo")
                                             		 	.css({'background-color':this.logoColorLookup(type)})
-                                            		 	.append(type.substring(0,1)))
-                                      )
-                                      .append($('<td>').append(titleElement))
-                              )
-                         );
-            var $row = $('<div>').css({'margin':'5px'}).append(
-                            $('<div>').addClass('row kb-data-list-obj-row-main')
-                                .append($addDiv)
-                                .append($mainDiv));
-            return $row;
+                                            		 	.append(type.substring(0,1))))
+                                         .append($('<td>')
+                                                 .append(titleElement)));
+	    
+	    var $row = $('<div>')
+                                .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
+                                //.addClass('kb-data-list-obj-row')
+                                .append($('<div>').addClass('kb-data-list-obj-row-main')
+                                            .append($topTable))
+                                // show/hide ellipses on hover, show extra info on click
+                                .mouseenter(function(){
+                                    //if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
+                                    $addDiv.show();
+                                    $btnToolbar.show();
+                                })
+                                .mouseleave(function(){
+                                    //$toggleAdvancedViewBtn.hide();
+                                    $addDiv.hide();
+                                    $btnToolbar.hide();
+                                });
+                            
+            var $rowWithHr = $('<div>')
+                                    .append($('<hr>')
+                                                .addClass('kb-data-list-row-hr')
+                                                .css({'margin-left':'155px'}))
+                                    .append($row);
+            return $rowWithHr;
         },
 
         showError: function(error) {

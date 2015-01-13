@@ -367,6 +367,55 @@ class KBaseWSNotebookManager(NotebookManager):
     #                     continue
     #     return list(deps)
 
+    def extract_cell_info(self, nb):
+        """
+        This is an internal method that returns, as a dict, how many kb-method, 
+        kb-app, and IPython cells exist in the notebook object.
+
+        For app and method cells, it counts them based on their method/app ids
+
+        In the end, it returns a dict like this:
+        {
+            'method': {
+                'my_method' : 2,
+                'your_method' : 1
+            },
+            'app': {
+                'my app' : 3
+            },
+            'ipython': {
+                'code' : 5,
+                'markdown' : 6
+            }
+        }
+        """
+        cell_types = {'method' : {}, 'app' : {}, 'ipython' : {'markdown': 0, 'code': 0}}
+        for wksheet in nb.get('worksheets'):
+            for cell in wksheet.get('cells'):
+                meta = cell['metadata']
+                if 'kb-cell' in meta:  
+                    t = None
+                    # It's a KBase cell! So, either an app or method.
+                    if 'app' in meta['kb-cell']:
+                        t = 'app'
+                    elif 'method' in meta['kb-cell']:
+                        t = 'method'
+                    else:
+                        continue
+                    try:
+                        count = 1
+                        app_id = meta['kb-cell'][t]['info']['id']
+                        if app_id in cell_types[t]:
+                            count = cell_types[t][app_id] + 1
+                        cell_types[t][app_id] = count
+                    except KeyError:
+                        continue
+                else:
+                    t = cell['cell_type']
+                    cell_types['ipython'][t] = cell_types['ipython'][t] + 1
+        return cell_types
+
+
     def write_notebook_object(self, nb, notebook_id=None):
         """Save an existing notebook object by notebook_id."""
         self.log.debug("writing Narrative %s." % notebook_id)
@@ -411,55 +460,82 @@ class KBaseWSNotebookManager(NotebookManager):
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
         
-        ## new approach, step 1: update current ws metadata
+
+        # First, init wsid and wsobj, since they'll be used later
+        wsid = ''         # the workspace id
+        wsobj = dict()    # the workspace object
+
+        # Figure out the workspace and object ids. If we have a notebook_id, get it from there
+        # otherwise, figure out the workspace id from the metadata.
+        if notebook_id:
+            m = self.ws_regex.match(notebook_id)
+        else:
+            m = None
+
+        # After this logic wsid is guaranteed to get set. 
+        # The objid of wsobj might not, but that's fine! The workspace will just assign a new id if so.
+        if m:
+            # wsid, objid = ws.XXX.obj.YYY
+            wsid = m.group('wsid')
+            wsobj['objid'] = m.group('objid')
+        elif nb.metadata.ws_name == homews:
+            wsid = homews_id
+            #wsobj['name'] = new_name
+        else:
+            wsid = ws_util.get_wsid(nb.metadata.ws_name)
+            #wsobj['name'] = new_name
+
+        # With that set, update the workspace metadata with the new info.
         try:
             updated_metadata = {
                 "is_temporary":"false",
                 "narrative_nice_name":nb.metadata.name
             };
-            ws_util.alter_workspace_metadata(wsclient, notebook_id, updated_metadata)
+            ws_util.alter_workspace_metadata(wsclient, None, updated_metadata, ws_id=wsid)
         except Exception as e:
-            raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
+            raise web.HTTPError(500, u'Error saving Narrative: %s, %s' % (e.__str__(), wsid))
         
-        ## new approach, step 2: save ws object
+        # Now we can save the Narrative object.
         try:
             # 'wsobj' = the ObjectSaveData type from the workspace client
             # requires type, data (the Narrative typed object), provenance,
             # optionally, user metadata
             #
             # requires ONE AND ONLY ONE of objid (existing object id, number) or name (string)
-            wsobj = { 
-                      'type' : self.ws_type,
-                      'data' : nb,
-                      'provenance' : [
-                        {
-                            'service' : 'narrative',
-                            'description': 'saved through the narrative interface'
-                        }
-                        ],
-                      'meta' : nb.metadata.copy(),
-                    }
+            wsobj.update({ 'type' : self.ws_type,
+                           'data' : nb,
+                           'provenance' : [
+                               {
+                                   'service' : 'narrative',
+                                   'description': 'saved through the narrative interface'
+                               }
+                           ],
+                           'meta' : nb.metadata.copy(),
+                        })
             # We flatten the data_dependencies array into a json string so that the
             # workspace service will accept it
             wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
             wsobj['meta']['job_ids'] = json.dumps(wsobj['meta']['job_ids'])
+            wsobj['meta']['methods'] = json.dumps(self.extract_cell_info(nb))
 
-            # If we're given a notebook id, try to parse it for the save parameters
-            if notebook_id:
-                m = self.ws_regex.match(notebook_id)
-            else:
-                m = None
+            # # ------
+            # # If we're given a notebook id, try to parse it for the save parameters
+            # if notebook_id:
+            #     m = self.ws_regex.match(notebook_id)
+            # else:
+            #     m = None
 
-            if m:
-                # wsid, objid = ws.XXX.obj.YYY
-                wsid = m.group('wsid')
-                wsobj['objid'] = m.group('objid')
-            elif nb.metadata.ws_name == homews:
-                wsid = homews_id
-                #wsobj['name'] = new_name
-            else:
-                wsid = ws_util.get_wsid(nb.metadata.ws_name)
-                #wsobj['name'] = new_name
+            # if m:
+            #     # wsid, objid = ws.XXX.obj.YYY
+            #     wsid = m.group('wsid')
+            #     wsobj['objid'] = m.group('objid')
+            # elif nb.metadata.ws_name == homews:
+            #     wsid = homews_id
+            #     #wsobj['name'] = new_name
+            # else:
+            #     wsid = ws_util.get_wsid(nb.metadata.ws_name)
+            #     #wsobj['name'] = new_name
+            # # --------
 
             self.log.debug("calling ws_util.put_wsobj")
             res = ws_util.put_wsobj(wsclient, wsid, wsobj)

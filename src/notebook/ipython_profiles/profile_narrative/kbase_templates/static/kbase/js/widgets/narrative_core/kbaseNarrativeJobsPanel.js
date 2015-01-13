@@ -465,6 +465,7 @@
 
             var status = "Unknown";
             var started = "Unknown";
+            var position = null;
             var task = null;
 
             // don't know nothing about no job!
@@ -481,7 +482,6 @@
                 if (job.job_state) {
                     status = job.job_state.charAt(0).toUpperCase() + job.job_state.substring(1);
                 }
-
                 if (jobType === "njs") {
                     var stepId = job.running_step_id;
                     if (stepId) {
@@ -489,6 +489,8 @@
                         task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
                     }
                 }
+                if (job.position && job.position > 0)
+                    position = job.position;
             }
             if (jobInfo && jobInfo.job && jobInfo.job.timestamp) {
                 started = this.makePrettyTimestamp(jobInfo.job.timestamp);
@@ -497,6 +499,8 @@
                              .append(this.makeInfoRow('Status', status));
             if (task !== null)
                 $infoTable.append(this.makeInfoRow('Task', task));
+            if (position !== null)
+                $infoTable.append(this.makeInfoRow('Queue Position', position));
             $infoTable.append(this.makeInfoRow('Started', started));
 
 

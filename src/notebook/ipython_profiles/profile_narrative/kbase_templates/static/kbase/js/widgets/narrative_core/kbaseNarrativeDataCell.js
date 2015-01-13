@@ -16,7 +16,7 @@ kb_g_viewers = null;
  * Parameters:
  *  mclient - Method store client
  */
-var KBaseNarrativeViewers = function(mclient) {
+var KBaseNarrativeViewers = function(mclient, done) {
     this.viewers = {};
     this.landing_page_urls = {};
     this.specs = {};
@@ -50,6 +50,9 @@ var KBaseNarrativeViewers = function(mclient) {
                         console.debug("Set spec[" + value.info.id + "]");
                         self.specs[value.info.id] = value;
                     });
+		    if (done) {
+			done();
+		    }
                 },
                 function(error) {
                     console.error("get_method_spec:",error);
@@ -202,11 +205,22 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             this.ip_cell = options.cell;
             this._initMethodStoreClient();
             if (kb_g_viewers == null) {
-                kb_g_viewers = new KBaseNarrativeViewers(this.method_client);
-            }
-            this.all_viewers = kb_g_viewers;
-            console.debug("kbaseNarrativeDataCell.init.done");
-            return this.render(options.info);
+		// we have to wait until the type/method specs are loaded the first time
+		var self = this;
+		var done = function() {
+		    console.debug("kbaseNarrativeDataCell.init.done");
+		    self.render(options.info);
+		}
+                kb_g_viewers = new KBaseNarrativeViewers(this.method_client,done);
+		this.all_viewers = kb_g_viewers;
+            } else {
+		// if they are already loaded, we can just grab it and render
+		this.all_viewers = kb_g_viewers;
+		console.debug("kbaseNarrativeDataCell.init.done");
+		this.render(options.info);
+	    }
+            
+            return this; 
         },
 
         _initMethodStoreClient: function() {

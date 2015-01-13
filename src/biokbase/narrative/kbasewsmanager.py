@@ -389,27 +389,35 @@ class KBaseWSNotebookManager(NotebookManager):
             }
         }
         """
-        cell_types = {'method' : {}, 'app' : {}, 'ipython' : {'markdown': 0, 'code': 0}}
+        cell_types = {'method' : {}, 
+                      'app' : {}, 
+                      'output': 0,
+                      'ipython' : {'markdown': 0, 'code': 0}}
         for wksheet in nb.get('worksheets'):
             for cell in wksheet.get('cells'):
                 meta = cell['metadata']
                 if 'kb-cell' in meta:  
                     t = None
                     # It's a KBase cell! So, either an app or method.
-                    if 'app' in meta['kb-cell']:
-                        t = 'app'
-                    elif 'method' in meta['kb-cell']:
-                        t = 'method'
+                    if 'type' in meta['kb-cell'] and meta['kb-cell']['type'] == 'function_output':
+                        cell_types['output'] = cell_types['output'] + 1
                     else:
-                        continue
-                    try:
-                        count = 1
-                        app_id = meta['kb-cell'][t]['info']['id']
-                        if app_id in cell_types[t]:
-                            count = cell_types[t][app_id] + 1
-                        cell_types[t][app_id] = count
-                    except KeyError:
-                        continue
+                        if 'app' in meta['kb-cell']:
+                            t = 'app'
+                        elif 'method' in meta['kb-cell']:
+                            t = 'method'
+                        else:
+                            # that should cover our cases
+                            continue
+                        if t is not None:
+                            try:
+                                count = 1
+                                app_id = meta['kb-cell'][t]['info']['id']
+                                if app_id in cell_types[t]:
+                                    count = cell_types[t][app_id] + 1
+                                cell_types[t][app_id] = count
+                            except KeyError:
+                                continue
                 else:
                     t = cell['cell_type']
                     cell_types['ipython'][t] = cell_types['ipython'][t] + 1

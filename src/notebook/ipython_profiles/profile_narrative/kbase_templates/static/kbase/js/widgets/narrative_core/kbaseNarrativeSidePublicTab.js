@@ -20,10 +20,18 @@
         loadingImage: "static/kbase/images/ajax-loader.gif",
         wsUrl: "https://kbase.us/services/ws/",
         wsClient: null,
-        categories: ['genomes', 'media'],
+        categories: ['genomes', 'metagenomes', 'media', 'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations', 
+                     'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'],
         categoryDescr: {  // search API category -> {}
         	'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV4',search:true},
-        	'media': {name:'Media',type:'KBaseBiochem.Media', ws:'KBaseMedia',search:false}
+        	'metagenomes': {name: 'Metagenomes',type:'KBaseCommunities.Metagenome',ws:'KBasePublicMetagenomes',search:true},
+        	'media': {name:'Media',type:'KBaseBiochem.Media',ws:'KBaseMedia',search:false},
+        	'gwas_populations': {name:'GWAS Populations',type:'KBaseGwasData.GwasPopulation',ws:'KBasePublicGwasDataV2',search:true},
+        	'gwas_population_kinships': {name:'GWAS Population Kinships',type:'KBaseGwasData.GwasPopulationKinship',ws:'KBasePublicGwasDataV2',search:true},
+        	'gwas_population_variations': {name:'GWAS Population Variations',type:'KBaseGwasData.GwasPopulationVariation',ws:'KBasePublicGwasDataV2',search:true},
+        	'gwas_top_variations': {name:'GWAS Top Variations',type:'KBaseGwasData.GwasTopVariations',ws:'KBasePublicGwasDataV2',search:true},
+        	'gwas_population_traits': {name:'GWAS Population Traits',type:'KBaseGwasData.GwasPopulationTrait',ws:'KBasePublicGwasDataV2',search:true},
+        	'gwas_gene_lists': {name:'GWAS Gene Lists',type:'KBaseGwasData.GwasGeneList',ws:'KBasePublicGwasDataV2',search:true}
         },
         mainListPanelHeight: '430px',
         maxNameLength: 60,
@@ -95,7 +103,7 @@
         		} else if (query.indexOf('"') < 0) {
         			var parts = query.split(/\s+/);
         			for (var i in parts)
-        				if (parts[i].indexOf('*', parts[i] - 1) < 0)
+        				if (parts[i].indexOf('*', parts[i].length - 1) < 0)
         					parts[i] = parts[i] + '*';
         			query = parts.join(' ');
         		}
@@ -167,7 +175,6 @@
         				return;
         			}
         			self.totalPanel.empty();
-        			//console.log(data);
         			if (!self.totalResults) {
         				self.totalResults = data.totalResults;
         			}
@@ -176,13 +183,70 @@
         					var id = data.items[i].genome_id;
         					var name = data.items[i].scientific_name;
         					var domain = data.items[i].domain;
-        					//self.options.addToNarrativeButton.prop('disabled', false);
+        					var contigs = data.items[i].num_contigs
+        					var genes = data.items[i].num_cds
         					self.objectList.push({
         						$div: null,
         						info: null,
         						id: id,
         						name: name,
-        						metadata: {'Domain': domain},
+        						metadata: {'Domain': domain, 'Contigs': contigs, 'Genes': genes},
+        						ws: cat.ws,
+        						type: cat.type,
+        						attached: false
+        					});
+        					self.attachRow(self.objectList.length - 1);
+        				}
+        			} else if (self.currentCategory === 'metagenomes') {
+        				for (var i in data.items) {
+        					var id = data.items[i].object_name;
+        					var name = data.items[i].metagenome_name;
+        					var project = data.items[i].project_name;
+        					var sample = data.items[i].sample_name;
+        					self.objectList.push({
+        						$div: null,
+        						info: null,
+        						id: id,
+        						name: name,
+        						metadata: {'Project': project, 'Sample': sample},
+        						ws: cat.ws,
+        						type: cat.type,
+        						attached: false
+        					});
+        					self.attachRow(self.objectList.length - 1);
+        				}
+        			} else {
+        				for (var i in data.items) {
+        					var id = data.items[i].object_name;
+        					var name = data.items[i].object_name;
+        					var metadata = {};
+        					if (self.currentCategory === 'gwas_populations') {
+        						metadata['Genome'] = data.items[i].kbase_genome_name;
+        						metadata['Source'] = data.items[i].source_genome_name;
+        					} else if (self.currentCategory === 'gwas_population_kinships') {
+        						metadata['Genome'] = data.items[i].kbase_genome_name;
+        						metadata['Source'] = data.items[i].source_genome_name;
+        					} else if (self.currentCategory === 'gwas_population_variations') {
+        						metadata['Originator'] = data.items[i].originator;
+        						metadata['Assay'] = data.items[i].assay;
+        					} else if (self.currentCategory === 'gwas_top_variations') {
+        						metadata['Trait'] = data.items[i].trait_name;
+        						metadata['Ontology'] = data.items[i].trait_ontology_id;
+        						metadata['Genome'] = data.items[i].kbase_genome_name;
+        					} else if (self.currentCategory === 'gwas_population_traits') {
+        						metadata['Trait'] = data.items[i].trait_name;
+        						metadata['Ontology'] = data.items[i].trait_ontology_id;
+        						metadata['Genome'] = data.items[i].kbase_genome_name;
+        					} else if (self.currentCategory === 'gwas_gene_lists') {
+        						metadata['Genes'] = data.items[i].gene_count;
+        						metadata['SNPs'] = data.items[i].gene_snp_count;
+        					}
+        					self.objectList.push({
+        						$div: null,
+        						info: null,
+        						id: id,
+        						name: name,
+        						metadata: metadata,
         						ws: cat.ws,
         						type: cat.type,
         						attached: false
@@ -311,10 +375,10 @@
                         }
                     });*/
                     
-            var titleElement = $('<span>').css({'margin':'10px'}).append($name).append('<br>');
+            var titleElement = $('<span>').css({'margin':'10px'}).append($name);
             for (var key in object.metadata) {
             	var value = $('<span>').addClass("kb-data-list-type").append('&nbsp;&nbsp;' + key + ':&nbsp;' + object.metadata[key]);
-            	titleElement.append(value);
+            	titleElement.append('<br>').append(value);
             }
             var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info')
             			.css({'padding-left': '0px'})

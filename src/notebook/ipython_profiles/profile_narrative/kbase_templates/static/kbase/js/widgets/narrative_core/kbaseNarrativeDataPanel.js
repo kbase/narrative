@@ -988,6 +988,7 @@
                 return self.options.landingPageURL+'ws/'+ws;
             }
             
+            var monthLookup = ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"];
             // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
             function getTimeStampStr(objInfoTimeStamp) {
                 var date = new Date(objInfoTimeStamp);
@@ -1003,20 +1004,20 @@
                         // just in case that didn't work either, then parse without the timezone offset, but
                         // then just show the day and forget the fancy stuff...
                         date = new Date(tokens[0]);
-                        return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                        return monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
                     }
                 }
     
                 var interval = Math.floor(seconds / 31536000);
                 if (interval > 1) {
-                    return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                    return monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
                 }
                 interval = Math.floor(seconds / 2592000);
                 if (interval > 1) {
                     if (interval<4) {
                         return interval + " months ago";
                     } else {
-                        return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                        return monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
                     }
                 }
                 interval = Math.floor(seconds / 86400);

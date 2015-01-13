@@ -3,6 +3,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.8 - 1/13/2015
+__Changes__
+- Drag and drop data and data viewer bug fixes
+
 ### Version 0.3.7 - 1/12/2015
 __Changes__
 - Fix for int, float and array types of input sending to NJS

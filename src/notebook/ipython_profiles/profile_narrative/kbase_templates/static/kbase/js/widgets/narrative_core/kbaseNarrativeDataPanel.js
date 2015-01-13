@@ -742,7 +742,10 @@
 
                 for (var i=start; i< (start+end); i++) {
                     var obj = data[i];
-
+                    // some logic is not right
+                    if (!obj) {
+                        continue;
+                    }
                     var mod_type = obj[2].split('-')[0];
                     var item = {id: obj[0],
                                 name: obj[1],
@@ -828,11 +831,9 @@
                 // event for filter (search)
                 filterInput.keyup(function(e){
                     query = $(this).val();
-
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, $mineScrollPanel, mineSelected);
                 });
-
 
                 // add search, type, ws filter to dom
                 var row = $('<div class="row">').append(searchFilter, typeFilter, wsFilter);
@@ -909,8 +910,6 @@
                 sharedPanel.prepend(row);
             }
 
-
-
             function rowTemplate(obj) {
                 var item = $('<div class="kb-import-item">')
                                 .data('ref', obj.wsID+'.'+obj.id)
@@ -944,110 +943,16 @@
                 return item;
             }
 
-            function publicTemplate(obj) {
-                var item = $('<div class="kb-import-item">')
-                                .data('ref', obj.wsID+'.'+obj.id)
-                                .data('obj-name', obj.name);
-                item.append('<i class="fa fa-square-o pull-left kb-import-checkbox">');
-                item.append('<a class="h4" href="'+
-                                objURL(obj.module, obj.kind, obj.ws, obj.name)+
-                                '" target="_blank">'+obj.name+'</a>'+
-                            '<span class="kb-data-list-version">v'+obj.version+'</span>');
-
-                item.append('<br>');
-
-                item.append('<div class="kb-import-info">'+
-                                '<span>TYPE</span><br>'+
-                                '<b>'+obj.kind+'</b>'+
-                            '</div>');
-                var narName = obj.ws;
-                if (narrativeNameLookup[obj.ws]) {
-                    narName = narrativeNameLookup[obj.ws];
-                }
-
-                item.append('<div class="kb-import-info">'+
-                                '<span>LAST MODIFIED</span><br>'+
-                                '<b>'+obj.relativeTime+'</b>'+
-                            '</div>');
-                item.append('<br><hr>')
-
-                return item;
-            }
-
-
-
             function objURL(module, type, ws, name) {
                 var mapping = window.kbconfig.landing_page_map;
                 if (mapping[module])
                     return self.options.landingPageURL+mapping[module][type]+'/'+ws+'/'+name;
                 else
-                    console.error('could not find a landing page mapping for', module);
+                    return self.options.landingPageURL+"ws/json/"+ws+'/'+name;
             }
 
             function wsURL(ws) {
                 return self.options.landingPageURL+'ws/'+ws;
-            }
-
-
-            function publicView() {
-                var publicList = [{type: 'Genomes', ws: 'pubSEEDGenomes'},
-                                  {type: 'Media', ws: 'KBaseMedia'},
-                                  {type: 'Models', ws: 'KBasePublicModelsV4'},
-                                  {type: 'RNA Seqs', ws: 'KBasePublicRNASeq'}];
-                var selected = publicList[0];
-
-                // get initial public data;
-                ws.get_workspace_info({workspace: selected.ws})
-                  .done(function(d){
-                      getPublicData(d, publicTemplate);
-                  })
-
-                // filter for public objects
-                var wsInput = $('<select class="form-control kb-import-filter">');
-                for (var i=0; i < publicList.length; i++) {
-                    wsInput.append('<option data-type="'+publicList[i].type+
-                                         '" data-name="'+publicList[i].ws+'">'+
-                                          publicList[i].type+
-                                   '</option>');
-                }
-                var wsFilter = $('<div class="col-sm-4">').append(wsInput);
-
-                // search filter
-                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter '+
-                                    selected.type+'">');
-                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
-
-                // event for filter (search)
-                filterInput.keyup(function(e){
-                    query = $(this).val();
-
-                    var filtered = filterData(publicData, {query:query})
-                    render(filtered, publicPanel, publicSelected);
-                });
-
-                var row = $('<div class="row">').append(searchFilter, wsFilter);
-                publicPanel.append(row);
-
-
-                // event for type (workspace) dropdown
-                wsInput.change(function() {
-                    var active = $(this).children('option:selected');
-                    var type = active.data('type'),
-                        workspace = active.data('name');
-
-                    filterInput.attr('placeholder', 'Filter '+type);
-
-                    // request again with filted type
-                    publicPanel.find('.kb-import-items').remove();
-                    publicPanel.loading();
-
-                    ws.get_workspace_info({workspace: workspace})
-                      .done(function(d){
-                            getPublicData(d, publicTemplate).done(function() {
-                                publicPanel.rmLoading();
-                            })
-                      })
-                });
             }
         }
     });

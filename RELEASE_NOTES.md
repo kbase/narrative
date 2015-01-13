@@ -8,6 +8,8 @@ __Changes__
 - Fix for int, float and array types of input sending to NJS
 - Fix for empty parameter values in import tab
 - Support was added into public data for meta-genomes and 6 types of GWAS
+- Fixed 'Add Data' button in a new Narrative - should properly open the data overlay now
+- Updated layout and styling of Method Gallery overlay to be closer to the mockup
 
 ### Version 0.3.6 - 1/9/2015
 __Changes__

@@ -158,8 +158,8 @@
             this.$overlayFooter  = $('<div class="kb-overlay-footer">');
             this.$overlay = $('<div>')
                             .addClass('kb-side-overlay-container')
-                            .append(this.$overlayBody)
-                            .append(this.$overlayFooter);
+                            //.append(this.$overlayBody)
+                            //.append(this.$overlayFooter);
 
             $('body').append(this.$overlay);
             this.$overlay.hide();

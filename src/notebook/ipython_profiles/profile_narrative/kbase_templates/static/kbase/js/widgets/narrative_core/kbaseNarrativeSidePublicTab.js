@@ -16,16 +16,25 @@
         },
         token: null,
         wsName: null,
-        searchUrlPrefix: 'http://kbase.us/services/search/getResults',
+        searchUrlPrefix: 'https://kbase.us/services/search/getResults',
         loadingImage: "static/kbase/images/ajax-loader.gif",
         wsUrl: "https://kbase.us/services/ws/",
         wsClient: null,
-        categories: ['genomes'],
-        categoryToName: {  // search API category -> UI name
-        	'genomes': 'Genomes'
+        categories: ['genomes', 'metagenomes', 'media', 'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations', 
+                     'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'],
+        categoryDescr: {  // search API category -> {}
+        	'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV4',search:true},
+        	'metagenomes': {name: 'Metagenomes',type:'KBaseCommunities.Metagenome',ws:'KBasePublicMetagenomes',search:true},
+        	'media': {name:'Media',type:'KBaseBiochem.Media',ws:'KBaseMedia',search:false},
+        	'gwas_populations': {name:'GWAS Populations',type:'KBaseGwasData.GwasPopulation',ws:'KBasePublicGwasDataV2',search:true},
+        	'gwas_population_kinships': {name:'GWAS Population Kinships',type:'KBaseGwasData.GwasPopulationKinship',ws:'KBasePublicGwasDataV2',search:true},
+        	'gwas_population_variations': {name:'GWAS Population Variations',type:'KBaseGwasData.GwasPopulationVariation',ws:'KBasePublicGwasDataV2',search:true},
+        	'gwas_top_variations': {name:'GWAS Top Variations',type:'KBaseGwasData.GwasTopVariations',ws:'KBasePublicGwasDataV2',search:true},
+        	'gwas_population_traits': {name:'GWAS Population Traits',type:'KBaseGwasData.GwasPopulationTrait',ws:'KBasePublicGwasDataV2',search:true},
+        	'gwas_gene_lists': {name:'GWAS Gene Lists',type:'KBaseGwasData.GwasGeneList',ws:'KBasePublicGwasDataV2',search:true}
         },
-        genomesWorkspace: 'KBasePublicGenomesV4',
         mainListPanelHeight: '430px',
+        maxNameLength: 60,
         totalPanel: null,
         resultPanel: null,
         objectList: null,
@@ -55,24 +64,23 @@
             var typeInput = $('<select class="form-control kb-import-filter">').css(mrg);
             for (var catPos in self.categories) {
             	var cat = self.categories[catPos];
-            	var catName = self.categoryToName[cat];
+            	var catName = self.categoryDescr[cat].name;
                 typeInput.append('<option value="'+cat+'">'+catName+'</option>');
             }
             var typeFilter = $('<div class="col-sm-3">').append(typeInput);
             var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter data">').css(mrg);
-            var searchFilter = $('<div class="col-sm-7">').append(filterInput);
-            var searchButton = $('<button>').attr('type', 'button').addClass('btn btn-primary kb-import-search').css(mrg).append('Search');
-            searchButton.click(
-            		$.proxy(function(event) {
-            			event.preventDefault();
-            			self.searchAndRender(typeInput.val(), filterInput.val());
-            		}, this)
-            );
-            var buttonFilter = $('<div class="col-sm-2">').append(searchButton);
+            typeInput.change(function() {
+            	self.searchAndRender(typeInput.val(), filterInput.val());
+            });
+            filterInput.keyup(function(e) {
+            	self.searchAndRender(typeInput.val(), filterInput.val());
+            });
+
+            var searchFilter = $('<div class="col-sm-9">').append(filterInput);
             
-            var header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'}).append(typeFilter, searchFilter, buttonFilter);
+            var header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'}).append(typeFilter).append(searchFilter);
             self.$elem.append(header);
-            self.totalPanel = $('<div>');
+            self.totalPanel = $('<div>').css({'margin': '0px 0px 0px 10px'});
             self.$elem.append(self.totalPanel);
             self.resultPanel = $('<div>')
             	.css({'overflow-x' : 'hidden', 'overflow-y':'auto', 'height':this.mainListPanelHeight })
@@ -82,62 +90,180 @@
             		}
             	});
             self.$elem.append(self.resultPanel);
+			self.searchAndRender(typeInput.val(), filterInput.val());
             return this;
         },
 
         searchAndRender: function(category, query) {
         	var self = this;
+        	if (query) {
+        		query = query.trim();
+        		if (query.length == 0) {
+        			query = '*';
+        		} else if (query.indexOf('"') < 0) {
+        			var parts = query.split(/\s+/);
+        			for (var i in parts)
+        				if (parts[i].indexOf('*', parts[i].length - 1) < 0)
+        					parts[i] = parts[i] + '*';
+        			query = parts.join(' ');
+        		}
+        	} else {
+        		query = '*';
+        	}
+        	if (self.currentQuery && self.currentQuery === query && category === self.currentCategory)
+        		return;
+        	//console.log("Sending query: " + query);
         	self.totalPanel.empty();
         	self.resultPanel.empty();
+        	self.totalPanel.append($('<span>').addClass("kb-data-list-type").append('<img src="'+this.loadingImage+'"/> searching...'));
             self.objectList = [];
-        	if (!query)
-        		return;
-        	query = query.trim();
-        	if (query.length == 0)
-        		return;
         	self.currentCategory = category;
         	self.currentQuery = query;
         	self.currentPage = 0;
         	self.totalResults = null;
-        	//var query = 'coli';
-        	//var category = 'genomes';
         	self.renderMore();
         },
         
         renderMore: function() {
         	var self = this;
-        	self.currentPage++;
-        	self.search(self.currentCategory, self.currentQuery, self.itemsPerPage, self.currentPage, function(data) {
-        		//console.log(data);
-        		if (!self.totalResults) {
-        			self.totalResults = data.totalResults;
-        		}
-        		if (self.currentCategory === 'genomes') {
-        			for (var i in data.items) {
-        				var id = data.items[i].genome_id;
-        				var name = data.items[i].scientific_name;
-        				var domain = data.items[i].domain;
-        				//self.options.addToNarrativeButton.prop('disabled', false);
-        				self.objectList.push({
-        					$div: null,
-        					info: null,
-        					id: id,
-        					name: name,
-        					metadata: {'Domain': domain},
-        					ws: self.genomesWorkspace,
-        					type: 'KBaseGenomes.Genome-1.0',
-        					attached: false
-        				});
-        				self.attachRow(self.objectList.length - 1);
+        	var cat = self.categoryDescr[self.currentCategory];
+        	if (!cat.search) {
+        		if (self.currentPage > 0)
+        			return;
+            	self.currentPage++;
+            	var type = cat.type;
+            	var ws = cat.ws;
+            	self.wsClient.list_objects({workspaces: [ws], type: type, includeMetadata: 1}, function(data) {
+            		//console.log(data);
+            		var query = self.currentQuery.replace(/[\*]/g,' ').trim().toLowerCase();
+            		for (var i in data) {
+            			var info = data[i];
+                        // object_info:
+                        // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+                        // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+                        // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+                        // [9] : int size // [10] : usermeta meta
+            			var name = info[1];
+            			if (name.toLowerCase().indexOf(query) == -1)
+            				continue;
+            			self.objectList.push({
+    						$div: null,
+    						info: info,
+    						id: name,
+    						name: name,
+    						metadata: {'Size': info[9]},
+    						ws: cat.ws,
+    						type: cat.type,
+    						attached: false
+    					});
+    					self.attachRow(self.objectList.length - 1);
+            		}
+            		data.totalResults = self.objectList.length;
+        			self.totalPanel.empty();
+        			self.totalPanel.append($('<span>').addClass("kb-data-list-type")
+        					.append("Total results: " + data.totalResults));
+            	}, function(error) {
+        			//console.log(error);
+    				self.totalPanel.empty();
+    				self.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
+                });
+        	} else {
+            	self.currentPage++;
+        		self.search(self.currentCategory, self.currentQuery, self.itemsPerPage, self.currentPage, function(query, data) {
+        			if (query !== self.currentQuery) {
+        				//console.log("Skip results for: " + query);
+        				return;
         			}
-        		}
-        		self.totalPanel.empty();
-        		self.totalPanel.append($('<div>').css({'margin': '0px 0px 0px 10px'})
-        				.append($('<span>').addClass("kb-data-list-type")
-        				.append("Total results: " + data.totalResults + " (" + self.objectList.length + " shown)")));
-        	}, function(error) {
-        		console.log(error);
-        	});
+        			self.totalPanel.empty();
+        			if (!self.totalResults) {
+        				self.totalResults = data.totalResults;
+        			}
+        			if (self.currentCategory === 'genomes') {
+        				for (var i in data.items) {
+        					var id = data.items[i].genome_id;
+        					var name = data.items[i].scientific_name;
+        					var domain = data.items[i].domain;
+        					var contigs = data.items[i].num_contigs
+        					var genes = data.items[i].num_cds
+        					self.objectList.push({
+        						$div: null,
+        						info: null,
+        						id: id,
+        						name: name,
+        						metadata: {'Domain': domain, 'Contigs': contigs, 'Genes': genes},
+        						ws: cat.ws,
+        						type: cat.type,
+        						attached: false
+        					});
+        					self.attachRow(self.objectList.length - 1);
+        				}
+        			} else if (self.currentCategory === 'metagenomes') {
+        				for (var i in data.items) {
+        					var id = data.items[i].object_name;
+        					var name = data.items[i].metagenome_name;
+        					var project = data.items[i].project_name;
+        					var sample = data.items[i].sample_name;
+        					self.objectList.push({
+        						$div: null,
+        						info: null,
+        						id: id,
+        						name: name,
+        						metadata: {'Project': project, 'Sample': sample},
+        						ws: cat.ws,
+        						type: cat.type,
+        						attached: false
+        					});
+        					self.attachRow(self.objectList.length - 1);
+        				}
+        			} else {
+        				for (var i in data.items) {
+        					var id = data.items[i].object_name;
+        					var name = data.items[i].object_name;
+        					var metadata = {};
+        					if (self.currentCategory === 'gwas_populations') {
+        						metadata['Genome'] = data.items[i].kbase_genome_name;
+        						metadata['Source'] = data.items[i].source_genome_name;
+        					} else if (self.currentCategory === 'gwas_population_kinships') {
+        						metadata['Genome'] = data.items[i].kbase_genome_name;
+        						metadata['Source'] = data.items[i].source_genome_name;
+        					} else if (self.currentCategory === 'gwas_population_variations') {
+        						metadata['Originator'] = data.items[i].originator;
+        						metadata['Assay'] = data.items[i].assay;
+        					} else if (self.currentCategory === 'gwas_top_variations') {
+        						metadata['Trait'] = data.items[i].trait_name;
+        						metadata['Ontology'] = data.items[i].trait_ontology_id;
+        						metadata['Genome'] = data.items[i].kbase_genome_name;
+        					} else if (self.currentCategory === 'gwas_population_traits') {
+        						metadata['Trait'] = data.items[i].trait_name;
+        						metadata['Ontology'] = data.items[i].trait_ontology_id;
+        						metadata['Genome'] = data.items[i].kbase_genome_name;
+        					} else if (self.currentCategory === 'gwas_gene_lists') {
+        						metadata['Genes'] = data.items[i].gene_count;
+        						metadata['SNPs'] = data.items[i].gene_snp_count;
+        					}
+        					self.objectList.push({
+        						$div: null,
+        						info: null,
+        						id: id,
+        						name: name,
+        						metadata: metadata,
+        						ws: cat.ws,
+        						type: cat.type,
+        						attached: false
+        					});
+        					self.attachRow(self.objectList.length - 1);
+        				}
+        			}
+        			self.totalPanel.append($('<span>').addClass("kb-data-list-type")
+        					.append("Total results: " + data.totalResults + " (" + self.objectList.length + " shown)"));
+        		}, function(error) {
+        			//console.log(error);
+        			if (self.objectList.length == 0) {
+        				self.totalPanel.empty();
+        				self.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
+        			}
+        		});
+        	}
         },
         
         attachRow: function(index) {
@@ -159,7 +285,7 @@
         	var promise = jQuery.Deferred();
         	jQuery.ajax(url, {
         		success: function (data) {
-        			ret(data);
+        			ret(query, data);
         			promise.resolve();
         		},
         		error: function(jqXHR, error){
@@ -167,7 +293,7 @@
     					errorCallback(error);
         			promise.resolve();
         		},
-        		headers: self.auth_header,
+        		headers: {},
         		type: "GET"
         	});
         	
@@ -176,11 +302,6 @@
 
         renderObjectRowDiv: function(object) {
             var self = this;
-            // object_info:
-            // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-            // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-            // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-            // [9] : int size // [10] : usermeta meta
             var type_tokens = object.type.split('.')
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
@@ -194,7 +315,7 @@
                             $(this).html('<img src="'+self.loadingImage+'">');
                             
                             var thisBtn = this;
-                            var targetName = object.name.replace(/[^a-zA-Z0-9|.-_]/g,'_');
+                            var targetName = object.name.replace(/[^a-zA-Z0-9|\.\-_]/g,'_');
                             //console.log(object.name + " -> " + targetName);
                             self.wsClient.copy_object({
                                 to:   {ref: self.wsName + "/" + targetName},
@@ -210,32 +331,28 @@
                             
                         }));
             
-            var shortName = object.name; var isShortened=false;
-            /*if (shortName.length>this.options.max_name_length) {
-                shortName = shortName.substring(0,this.options.max_name_length-3)+'...';
+            var shortName = object.name; 
+            var isShortened=false;
+            if (shortName.length>this.maxNameLength) {
+                shortName = shortName.substring(0,this.maxNameLength-3)+'...';
                 isShortened=true;
-            }*/
-            var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
+            }
+            var landingPageLink = this.options.default_landing_page_url + object.ws + '/' + object.id;
+            var ws_landing_page_map = window.kbconfig.landing_page_map;
+            if (ws_landing_page_map && ws_landing_page_map[type_module] && ws_landing_page_map[type_module][type]) {
+            	landingPageLink = this.options.landing_page_url +
+            			ws_landing_page_map[type_module][type] + "/" + object.ws + '/' + object.id;
+            }
+            var $name = $('<span>').addClass("kb-data-list-name").append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
             if (isShortened) { $name.tooltip({title:object.name, placement:'bottom'}); }
            
-            var metadata = object.metadata;
+            /*var metadata = object.metadata;
             var metadataText = '';
             for(var key in metadata) {
                 if (metadata.hasOwnProperty(key)) {
-                    metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
+                    metadataText += '<tr><td>'+ key +'</td><td>'+ metadata[key] + '</td></tr>';
                 }
             }
-            
-            var landingPageLink = this.options.default_landing_page_url + object.ws + '/' + object.id;
-            if (this.ws_landing_page_map) {
-                if (this.ws_landing_page_map[type_module]) {
-                    if (this.ws_landing_page_map[type_module][type]) {
-                        landingPageLink = this.options.landing_page_url +
-                            this.ws_landing_page_map[type_module][type] + "/" + object.ws + '/' + object.id;
-                    }
-                }
-            }
-            
             var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
                                 .append($('<div>').css({'text-align':'center','margin':'5pt'})
                                             .append('<a href="'+landingPageLink+'" target="_blank">'+
@@ -245,7 +362,6 @@
                                 .append(
                                     $('<table style="width=100%">')
                                         .append(metadataText));
-            
             var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
                 .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
                 .on('click',function() {
@@ -257,14 +373,15 @@
                             $more.slideToggle('fast');
                             $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
-                    });
+                    });*/
                     
-            var titleElement = $('<span>').css({'margin':'10px'}).append($name).append('<br>');
+            var titleElement = $('<span>').css({'margin':'10px'}).append($name);
             for (var key in object.metadata) {
-            	var value = $('<span>').addClass("kb-data-list-type").append(object.metadata[key]);
-            	titleElement.append(value);
+            	var value = $('<span>').addClass("kb-data-list-type").append('&nbsp;&nbsp;' + key + ':&nbsp;' + object.metadata[key]);
+            	titleElement.append('<br>').append(value);
             }
             var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info')
+            			.css({'padding-left': '0px'})
             			.append($('<table>')
                              .css({'width':'100%'})
                              .append($('<tr>')

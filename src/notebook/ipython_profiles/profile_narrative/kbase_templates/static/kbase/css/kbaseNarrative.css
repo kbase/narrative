@@ -1884,6 +1884,35 @@ div[class="tooltip-inner"] {
 }
 
 
+/* buttons */
+.kb-data-list-btn {
+    background-color: #2196F3;
+    border-radius: 1px;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    font-size: 13px;
+    box-shadow: 1px 1px 3px #aaa;
+    margin: 5px;
+}
+.kb-data-list-btn:hover {
+    background-color: #1E88E5;;
+}
+
+.kb-data-list-cancel-btn {
+    background-color: #F5F5F5;
+    border-radius: 1px;
+    color: #888;
+    border: none;
+    padding: 5px 10px;
+    font-size: 13px;
+    box-shadow: 1px 1px 3px #aaa;
+    margin: 5px;
+}
+.kb-data-list-cancel-btn:hover {
+    background-color: #CECECE;;
+}
+
 .kb-data-list-row-hr {
     width:70%;
     margin: 2px;

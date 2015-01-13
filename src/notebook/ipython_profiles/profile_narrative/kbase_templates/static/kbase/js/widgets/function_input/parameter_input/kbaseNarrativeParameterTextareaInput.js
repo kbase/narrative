@@ -127,6 +127,7 @@
                 return { isValid: true, errormssgs:[]}; // do not validate if disabled
             }
             var p= self.getParameterValue();
+	    if (p===null) { return { isValid: true, errormssgs:[]}; }
             var errorDetected = false;
             var errorMessages = [];
             if(p instanceof Array) {
@@ -222,6 +223,11 @@
          */
         getParameterValue: function() {
             var value = this.$elem.find("#"+this.spec.id).val();
+	    if (this.spec.optional === 1) {
+		if (value.trim().length===0) {
+		    return null;
+		}
+	    }
             return value;
         }
         

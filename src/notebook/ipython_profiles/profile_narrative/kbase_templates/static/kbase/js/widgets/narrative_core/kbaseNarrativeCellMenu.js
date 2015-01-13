@@ -35,8 +35,13 @@
                             stackTrace = metadata['kb-cell']['stackTrace'];
                         console.log(stackTrace);
                         var cell = IPython.notebook.insert_cell_below('code');
-                        cell.set_text('job_info=' + stackTrace[3] + '\njob_info');
-                        IPython.notebook.get_selected_cell().execute();
+                        if (stackTrace instanceof Array) {
+                            cell.set_text('job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info');
+                            IPython.notebook.get_selected_cell().execute();                            
+                        }
+                        else {
+                            cell.set_text('job_info=' + stackTrace);
+                        }
                     }
                 });
             }

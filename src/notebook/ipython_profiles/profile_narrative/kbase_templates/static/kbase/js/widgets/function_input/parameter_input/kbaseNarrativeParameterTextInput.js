@@ -385,12 +385,14 @@
                 return { isValid: true, errormssgs:[]}; // do not validate if disabled
             }
             var p= self.getParameterValue();
+            if (p===null) { return { isValid: true, errormssgs:[]}; }
             var errorDetected = false;
             var errorMessages = [];
             if(p instanceof Array) {
             } else { p = [p]; }
             for(var i=0; i<p.length; i++) {
                 var errorDetectedHere = false;
+                if (p[i]===null) { continue; }
                 pVal = p[i].trim();
                 // if it is a required field and not empty, keep the required icon around but we have an error (only for the first element)
                 if (pVal==='' && self.required && i===0) {
@@ -614,6 +616,27 @@
                 this.rowInfo[0].$input.val().length === 0 &&
                 this.spec.optional === 1) {
 //                this.setParameterValue(this.generateRandomOutputString());
+            }
+            
+            // if this is optional, and not filled out, then we return null
+            if (this.spec.optional === 1) {
+                if (this.rowInfo.length===1) {
+                    if (this.rowInfo[0].$input.val().trim().length===0) {
+                        return null; // return null since this is optional an no values are set
+                    }
+                    if (this.allow_multiple) {
+                        return [this.rowInfo[0].$input.val()];
+                    }
+                    return this.rowInfo[0].$input.val();
+                }
+                var value = [];
+                for(var i=0; i<this.rowInfo.length; i++) {
+                    if (this.rowInfo[0].$input.val().trim().length>0) {
+                        value.push(this.rowInfo[i].$input.val()); // only push the value if it is not empty
+                    }
+                }
+                if (value.length===0) { return null; } // return null since this is optional and nothing was set
+                return value;
             }
 
             if (this.rowInfo.length===1) {

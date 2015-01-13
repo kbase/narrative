@@ -275,15 +275,21 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
             if paramId is not None:
                 input[paramId] = paramValue
         if paramValue is None:
-            raise ValueError("Value is not defined in input mapping: " + json.dumps(mapping))
-        stepParam = build_args_njs(paramValue, mapping, workspace)
+            # might be dangerous!  but instead of throwing an error, null is an accepted value state because
+            # optional text fields left empty with no defaults can be set to null.  If this is the case, then
+            # we omit this value entirely from what is sent
+            continue
+            #raise ValueError("Value is not defined in input mapping: " + json.dumps(mapping))
+        paramSpec = None
+        if paramId is not None:
+            paramSpec = paramToSpecs[paramId]
+        stepParam = build_args_njs(paramValue, mapping, workspace, paramSpec)
         stepParam['step_source'] = ''
         isInput = 0
         workspaceName = ''
         objectType = ''
         isWorkspaceId = 0
-        if isScript and (paramId is not None) and (paramId in paramToSpecs) and (paramValue is not None) and (len(str(paramValue)) > 0):
-            paramSpec = paramToSpecs[paramId]
+        if isScript and (paramSpec is not None) and (paramValue is not None) and (len(str(paramValue)) > 0):
             types = []
             is_output_name = False
             if 'text_options' in paramSpec:
@@ -310,7 +316,7 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
         stepParams.append(stepParam)
     return stepParams
 
-def build_args_njs(paramValue, paramMapping, workspace):
+def build_args_njs(paramValue, paramMapping, workspace, paramSpec):
     targetProp = None
     targetTrans = "none"
     ret = {}
@@ -319,13 +325,24 @@ def build_args_njs(paramValue, paramMapping, workspace):
     if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
         targetTrans = paramMapping['target_type_transform']
     paramValue = transform_value(paramValue, workspace, targetTrans)
-    if isinstance(paramValue, basestring):
-        ret['is_json'] = 0
+    njsType = 'string'
+    if paramSpec is not None:
+        if 'allow_multiple' in paramSpec and paramSpec['allow_multiple'] == 1:
+            njsType = 'array'
+            paramValue = json.dumps(paramValue)
+        else:
+            if 'text_options' in paramSpec:
+                textOptions = paramSpec['text_options']
+                if 'validate_as' in textOptions:
+                    type = textOptions['validate_as']
+                    if type == 'int' or type == 'float':
+                        njsType = type
+            paramValue = str(paramValue)
     else:
-        paramValue = json.dumps(paramValue)
-        ret['is_json'] = 1
+        paramValue = str(paramValue)        
     ret['label'] = targetProp
     ret['value'] = paramValue
+    ret['type'] = njsType
     return ret
 
 def is_script_method(methodSpec):

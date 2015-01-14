@@ -43,6 +43,8 @@ body {
 
 /* header styling */
 
+
+
 .notebook_app .navbar-kbase {
     webkit-box-shadow: none;
     box-shadow: none;
@@ -142,25 +144,50 @@ div#notebook {
     padding: 8px;
 }
 
+/* Top bar nav buttons
+   --------------------------
+*/
 .kb-nav-btn {
+    background-color: #FFF;
     padding: 1px 7px;
     font-size: 24px;
     border: none;
     text-shadow: none !important;
-    box-shadow: none;
-    -webkit-box-shadow: none;
-    moz-box-shadow: none;
     margin: 0;
+    box-shadow: 0 0 3px #CECECE;
+    margin-right: 5px;
 }
-
+#kb-nav-menu { /* don't add shadows here */
+  box-shadow: none;
+}
 .kb-nav-btn > div {
     color: #666 !important;
 }
-
 .kb-nav-btn .kb-nav-btn-txt {
     font-size: 10pt;
     margin-top: -5px;
 }
+.navbar-right .fa::before { /* color nav icons */
+  color: #2196F3;
+}
+.navbar-right .kb-nav-btn:hover {
+  background-color: #F5F5F5;
+}
+#kb-ipy-menu { /* restore rounded corners */
+  border-radius: 4px !important;
+  margin-right: 0;
+}
+.btn-xs { /* don't use drop-shadow on profile menu */
+  border: 0;
+  box-shadow: none;
+  -webkit-box-shadow: none;
+  moz-box-shadow: none;
+  font-size: 18px;
+}
+.btn-xs .glyphicon-user { /* also resize user btn */
+  padding: 14px 5px 14px 5px;
+}
+/* -------------------------- */
 
 #kb-narr-name {
     font-style: italic;
@@ -1792,7 +1819,7 @@ div[class="tooltip-inner"] {
 /* data list */
 .kb-data-list-obj-row {
     transition: all 0.1s ease;
-    
+
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #fff;
@@ -1800,7 +1827,7 @@ div[class="tooltip-inner"] {
     margin:2px;
     padding:4px;
     margin-bottom: 5px;
-    
+
     box-shadow: 1px 1px 1px 1px #fff;
     -webkit-box-shadow: 1px 1px 1px 1px #fff;
     moz-box-shadow: 1px 1px 1px 1px #fff;
@@ -1810,7 +1837,7 @@ div[class="tooltip-inner"] {
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #4BB856;
-    
+
     box-shadow: 1px 1px 1px 1px #aaa;
     -webkit-box-shadow: 1px 1px 1px 1px #aaa;
     moz-box-shadow: 1px 1px 1px 1px #aaa;
@@ -1857,6 +1884,17 @@ div[class="tooltip-inner"] {
     -webkit-box-shadow: 2px 2px 4px 1px #ccc;
     moz-box-shadow: 2px 2px 4px 1px #ccc;
 }
+/* specialize buttons that hover over narrative */
+#kb-add-code-cell, #kb-add-md-cell {
+  box-shadow: #CECECE 2px 2px 1px;
+  height: 40px;
+  width: 40px;
+  background-color: rgba(128,128,128,0.5);
+  font-size: 1.2em;
+}
+#kb-add-code-cell { right: 100px; }
+#kb-add-md-cell { margin-right: 20px; }
+
 .kb-data-list-add-data-button:hover {
     cursor:pointer;
     box-shadow: 4px 4px 8px 1px #ccc;
@@ -2133,5 +2171,3 @@ div[class="tooltip-inner"] {
 .kb-import-status {
     margin: 20px;
 }
-
-

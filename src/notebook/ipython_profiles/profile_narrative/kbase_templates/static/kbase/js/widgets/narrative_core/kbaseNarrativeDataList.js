@@ -784,6 +784,9 @@
                         if (self.n_objs_rendered >= start+self.options.objs_to_render_on_scroll) {
                             break;
                         }
+                        if (self.objectList[i].key == undefined) {
+                            self.objectList[i].key = self.genUUID();
+                        }
                         self.attachRow(i);
                     }
                     //console.log('showing '+ self.n_objs_rendered + ' of ' + self.objectList.length);

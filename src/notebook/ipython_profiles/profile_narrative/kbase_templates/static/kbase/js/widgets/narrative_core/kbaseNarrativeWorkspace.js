@@ -200,6 +200,8 @@
          */
         buildMethodCell: function(method) {
             var cell = IPython.notebook.insert_cell_below('markdown');
+            cell.celltoolbar.hide();
+            
             // make this a function input cell, as opposed to an output cell
             this.setMethodCell(cell, method);
 
@@ -266,6 +268,7 @@
 
         buildAppCell: function(appSpec) {
             var cell = IPython.notebook.insert_cell_below('markdown');
+            cell.celltoolbar.hide();
             this.removeCellEditFunction(cell);
 
             var tempContent = '<img src="' + this.options.loadingImage + '">';
@@ -327,6 +330,7 @@
          */
         buildFunctionCell: function(method) {
             var cell = IPython.notebook.insert_cell_below('markdown');
+            cell.celltoolbar.hide();
             // make this a function input cell, as opposed to an output cell
             this.setFunctionCell(cell, method);
 
@@ -1817,7 +1821,7 @@
          */
         addOutputCell: function(currentIndex, widget) {
             var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
-
+            cell.celltoolbar.hide();
             this.setOutputCell(cell, widget);
             this.removeCellEditFunction(cell);
 
@@ -1826,6 +1830,7 @@
 
         addErrorCell: function(currentIndex) {
             var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
+            cell.celltoolbar.hide();
             this.setErrorCell(cell);
             this.removeCellEditFunction(cell);
             return cell;

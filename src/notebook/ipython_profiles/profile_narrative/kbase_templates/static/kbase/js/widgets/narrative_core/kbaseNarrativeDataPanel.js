@@ -38,9 +38,8 @@
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: "https://kbase.us/services/ws",
             wsBrowserURL: "/functional-site/#/ws/",
-            landingPageURL: "/functional-site/#/",
-            uploaderURL: "//kbase.us/services/docs/uploader/uploader.html",
-            defaultLandingPage: "/functional-site/#/ws/json/", // ws_name/obj_name
+            landing_page_url: "/functional-site/#/", // !! always include trailing slash
+            default_landing_page_url: "/functional-site/#/ws/json/", // ws_name/obj_name,
             container: null,
             ws_name: null,
         },
@@ -64,7 +63,6 @@
             }
 
             if (window.kbconfig && window.kbconfig.urls) {
-                this.options.uploaderURL = window.kbconfig.urls.uploader;
                 this.options.workspaceURL = window.kbconfig.urls.workspace;
                 this.options.wsBrowserURL = window.kbconfig.urls.ws_browser;
                 this.options.landingPageURL = window.kbconfig.urls.landing_pages;
@@ -298,6 +296,7 @@
          * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
         dataImporter: function() {
+            var self = this;
             var maxObjFetch = 300000;
 
             var narWSName;
@@ -388,7 +387,8 @@
             closeBtn.click(function() {
                 self.trigger('hideSidePanelOverlay.Narrative');
             })
-            footer.append(closeBtn, btn);
+            footer.append(closeBtn);
+            //footer.append(btn);
 
             // start with my data, then fetch other data
             // this is because data sets can be large and
@@ -400,7 +400,7 @@
             });
 
             // events for changing tabs
-            $($tabs.header.find('.kb-side-header')).click(function() {
+            /*$($tabs.header.find('.kb-side-header')).click(function() {
                 // reset selected models when changing tabs, if that's what is wanted
                 if ($(this).index() == 0)
                     mineSelected = [], btn.show();
@@ -414,10 +414,9 @@
                 checkboxes.removeClass('fa-check-square-o')
                           .addClass('fa-square-o');
                 btn.prop('disabled', true);
-            })
+            })*/
 
             var narrativeNameLookup={};
-
             this.$overlayPanel = $('<div>').append(body).append(footer);
 
             function updateView(view) {
@@ -442,7 +441,7 @@
 
             // function used to update my data list
             function getMyData(workspaces, type, ws_name) {
-                var params = {};
+                var params = {includeMetadata:1};
                 if (!ws_name) {
                     var ws_ids = [], obj_count = 0;
                     for (var i in workspaces) {
@@ -486,7 +485,7 @@
 
             // function used to update shared with me data list
             function getSharedData(workspaces, type, ws_name) {
-                var params = {};
+                var params = {includeMetadata:1};
                 if (!ws_name) {
                     var ws_ids = [], obj_count = 0;
                     for (var i in workspaces) {
@@ -532,7 +531,7 @@
             // a container to put data in.
             // It produces a scrollable dataset
             function render(data, container, selected, template) {
-                var start = 0, end = 9;
+                var start = 0, end = 30;
 
                 // remove items from only current container being rendered
                 container.find('.kb-import-items').remove();
@@ -746,15 +745,30 @@
                     var kind = mod_type.split('.')[1];
 
                     // filter conditions
-                    if (f.query && name.toLowerCase().indexOf(f.query.toLowerCase()) == -1)
-                        continue;
-                    if (f.type && f.type.split('.')[1] != kind)
-                        continue;
-                    if (f.ws && f.ws != ws)
-                        continue;
-
-
-                    filteredData.push(obj);
+                    if (f.query) {
+                        //query filter
+                        var query = f.query.toLowerCase();
+                        if (name.toLowerCase().indexOf(query) >= 0) {
+                            filteredData.push(obj);
+                        } else if (kind.toLowerCase().indexOf(query)>=0) {
+                            filteredData.push(obj);
+                        } else if (obj[5].toLowerCase().indexOf(query)>=0) {
+                            filteredData.push(obj);
+                        }
+                    } else if (f.type) {
+                        //type filter
+                        if (f.type.split('.')[1] === kind) {
+                            filteredData.push(obj);
+                        }
+                    } else if (f.ws) {
+                        // workspace filter
+                        if (f.ws === ws) {
+                            filteredData.push(obj);
+                        }
+                    } else {
+                        // no filter is on, so add it
+                        filteredData.push(obj);
+                    }
 
                 }
                 return filteredData;
@@ -852,7 +866,7 @@
 
 
                 // create filter (search)
-                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter data">');
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
                 var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
                 // event for filter (search)
@@ -921,7 +935,7 @@
 
 
                 // create filter (search)
-                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter objects">');
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
                 var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
                 // event for filter (search)
@@ -938,7 +952,200 @@
             }
 
             function rowTemplate(obj) {
-                var item = $('<div class="kb-import-item">')
+                var object_info = obj.info;
+                // object_info:
+                // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+                // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+                // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+                // [9] : int size // [10] : usermeta meta
+                var type_tokens = object_info[2].split('.')
+                var type_module = type_tokens[0];
+                var type = type_tokens[1].split('-')[0];
+                var unversioned_full_type = type_module + '.' + type;
+                var logo_name = "";
+                /*if (_.has(self.data_icons, type)) {
+                    logo_name = this.data_icons[type];
+                }
+                else {
+                    logo_name = self.data_icons['DEFAULT'];
+                }
+                var logo_url = "static/kbase/images/data-icons/" + logo_name + ".png";
+                var $logo = $('<div>')
+                                    .addClass("kb-data-list-logo");
+                                    .css({'background-image': 'url(' + logo_url + ')',
+                                          'background-color':this.logoColorLookup(type),'cursor':'default'});*/
+                var landingPageLink = self.options.default_landing_page_url + object_info[7] + '/' + object_info[1];
+                                            var ws_landing_page_map = window.kbconfig.landing_page_map;
+                                            if (ws_landing_page_map && ws_landing_page_map[type_module] && ws_landing_page_map[type_module][type]) {
+                                                landingPageLink = self.options.landing_page_url +
+                                                                ws_landing_page_map[type_module][type] + "/" + object_info[7] + '/' + object_info[1];
+                                            }
+                 var $logo = $('<span>')
+                                .addClass("kb-data-list-logo")
+                                .css({'background-color':self.logoColorLookup(type)})
+                                .append(type.substring(0,1));
+                
+                var shortName = object_info[1]; var isShortened=false;
+                if (shortName.length>50) {
+                    shortName = shortName.substring(0,50)+'...';
+                    isShortened=true;
+                }
+                var $name = $('<span>').addClass("kb-data-list-name").append('<a href="'+landingPageLink+'" target="_blank">'+shortName+'</a>'); // TODO: make link!!
+                if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom', delay: { show: 750, hide: 0 } }); }
+
+                var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
+                var $type = $('<span>').addClass("kb-data-list-type").append(type);
+
+                var $date = $('<span>').addClass("kb-data-list-date").append(getTimeStampStr(object_info[3]) + ' by '+object_info[5]);
+                var metadata = object_info[10];
+                var metadataText = '';
+                for(var key in metadata) {
+                    if (metadata.hasOwnProperty(key)) {
+                        metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
+                    }
+                }
+                if (type==='Genome') {
+                    if (metadata.hasOwnProperty('Name')) {
+                        $type.text(type+': '+metadata['Name']);
+                    }
+                }
+
+                var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td').append(object_info[5]);
+                //this.displayRealName(object_info[5],$savedByUserSpan);
+
+                var typeLink = 'type';//'<a href="'+this.options.landing_page_url+'spec/module/'+type_module+'" target="_blank">' +type_module+"</a>.<wbr>" +
+                //                '<a href="'+this.options.landing_page_url+'spec/type/'+object_info[2]+'" target="_blank">' +(type_tokens[1].replace('-','&#8209;')) + '.' + type_tokens[2] + '</a>';
+                var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
+                                .append(
+                                    $('<table style="width:100%;">')
+                                        .append("<tr><th>Permament Id</th><td>" +object_info[6]+ "/" +object_info[0]+ "/" +object_info[4] + '</td></tr>')
+                                        .append("<tr><th>Full Type</th><td>"+typeLink+'</td></tr>')
+                                        .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
+                                        .append(metadataText));
+
+                var $toggleAdvancedViewBtn = $('<span>').addClass("kb-data-list-more")//.addClass('btn btn-default btn-xs kb-data-list-more-btn')
+                    .hide()
+                    .html('<span class="fa fa-ellipsis-h" style="color:#999" aria-hidden="true"/>');
+                var toggleAdvanced = function() {
+                        if ($moreRow.is(':visible')) {
+                            $moreRow.slideUp('fast');
+                            $toggleAdvancedViewBtn.show();
+                        } else {
+                            $moreRow.slideDown('fast');
+                            $toggleAdvancedViewBtn.hide();
+                        }
+                    };
+    
+                var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
+                var btnClasses = "btn btn-xs btn-default";
+                var css = {'color':'#888'};
+                var $openLandingPage = $('<span>')
+                                        // tooltips showing behind pullout, need to fix!
+                                        //.tooltip({title:'Explore data', 'container':'#'+this.mainListId})
+                                        .addClass(btnClasses)
+                                        .append($('<span>').addClass('fa fa-binoculars').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation();
+                                            window.open(landingPageLink);
+                                        });
+                                        
+                var $openProvenance = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        //.tooltip({title:'View data provenance and relationships', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation();
+                                            window.open(self.options.landing_page_url+'objgraphview/'+object_info[7]+'/'+object_info[1]);
+                                        });
+                $btnToolbar.append($openLandingPage).append($openProvenance);
+    
+    
+    
+                var $mainDiv  = $('<div>').addClass('kb-data-list-info').css({padding:'0px',margin:'0px'})
+                                    .append($btnToolbar)
+                                    .append($name).append($version).append('<br>')
+                                    .append($type).append('<br>').append($date)
+                                    .append($toggleAdvancedViewBtn)
+                                    //.click(
+                                    //    function() {
+                                    //        toggleAdvanced();
+                                    //    });
+    
+    
+                var $addDiv =
+                    $('<div>').append(
+                        $('<button>').addClass('btn btn-default')
+                            .append($('<span>').addClass('fa fa-chevron-circle-left').append(' Add'))
+                            .on('click',function() { // probably should move action outside of render func, but oh well
+                                $(this).attr("disabled","disabled");
+                                $(this).html('<img src="'+self.options.loadingImage+'">');
+                                
+                                var thisBtn = this;
+                                var targetName = object_info[1];
+                                //console.log(object.name + " -> " + targetName);
+                                ws.copy_object({
+                                    to:   {ref: self.ws_name + "/" + targetName},
+                                    from: {ref: object_info[6] +   "/" + object_info[0]} },
+                                    function (info) {
+                                        $(thisBtn).html('Added');
+                                        self.trigger('updateDataList.Narrative');
+                                    },
+                                    function(error) {
+                                        $(thisBtn).html('Error');
+                                        console.error(error);
+                                    });
+                                
+                            }));
+    
+    
+                var $topTable = $('<table>')
+                                 .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
+                                 .append($('<tr>')
+                                         .append($('<td>')
+                                                 .css({'width':'90px'})
+                                                .append($addDiv.hide()))
+                                         .append($('<td>')
+                                                 .css({'width':'50px'})
+                                                 .append($logo))
+                                         .append($('<td>')
+                                                 .append($mainDiv)));
+    
+                var $row = $('<div>')
+                                .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
+                                //.addClass('kb-data-list-obj-row')
+                                .append($('<div>').addClass('kb-data-list-obj-row-main')
+                                            .append($topTable))
+                                .append($moreRow)
+                                // show/hide ellipses on hover, show extra info on click
+                                .mouseenter(function(){
+                                    //if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
+                                    $addDiv.show();
+                                    $btnToolbar.show();
+                                })
+                                .mouseleave(function(){
+                                    //$toggleAdvancedViewBtn.hide();
+                                    $addDiv.hide();
+                                    $btnToolbar.hide();
+                                });
+                            
+                var $rowWithHr = $('<div>').data('ref', obj.wsID+'.'+obj.id)
+                                .data('obj-name', obj.name)
+                                    .append($('<hr>')
+                                                .addClass('kb-data-list-row-hr')
+                                                .css({'margin-left':'150px'}))
+                                    .append($row);
+    
+    
+                //item.append('<i class="fa fa-square-o pull-left kb-import-checkbox">');
+                return $rowWithHr;
+            
+                
+                
+                
+               
+                
+                
+                /*var item = $('<div class="kb-import-item">')
                                 .data('ref', obj.wsID+'.'+obj.id)
                                 .data('obj-name', obj.name);
                 item.append('<i class="fa fa-square-o pull-left kb-import-checkbox">');
@@ -973,8 +1180,17 @@
                             '</div>');
                 item.append('<br><hr>')
 
-                return item;
+                return item;*/
             }
+            
+            
+            
+            
+            
+            
+            
+            
+            
 
             function objURL(module, type, ws, name) {
                 var mapping = window.kbconfig.landing_page_map;
@@ -1034,8 +1250,55 @@
                 }
                 return Math.floor(seconds) + " seconds ago";
             };
-            
+        },
+        
+        logoColorLookup:function(type) {
+            var colors = [
+                            '#F44336', //red
+                            '#E91E63', //pink
+                            '#9C27B0', //purple
+                            '#673AB7', //deep purple
+                            '#3F51B5', //indigo
+                            '#2196F3', //blue
+                            '#03A9F4', //light blue
+                            '#00BCD4', //cyan
+                            '#009688', //teal
+                            '#4CAF50', //green
+                            '#8BC34A', //lime green
+                            '#CDDC39', //lime
+                            '#FFEB3B', //yellow
+                            '#FFC107', //amber
+                            '#FF9800', //orange
+                            '#FF5722', //deep orange
+                            '#795548', //brown
+                            '#9E9E9E', //grey
+                            '#607D8B'  //blue grey
+                         ];
+
+            // first, if there are some colors we want to catch...
+            switch (type) {
+                case "Genome":
+                    return '#2196F3'; //blue
+                case "FBAModel":
+                    return '#4CAF50'; //green
+                case "FBA":
+                    return '#F44336'; //red
+                case "ContigSet":
+                    return '#FF9800'; //orange
+                case "ProteomeComparison":
+                    return '#3F51B5'; //indigo
+                case "Tree":
+                    return '#795548'; //brown
+            }
+
+            // pick one based on the characters
+            var code = 0;
+            for(var i=0; i<type.length; i++) {
+                code += type.charCodeAt(i);
+            }
+            return colors[ code % colors.length ];
         }
+        
     });
 
 })( jQuery );

@@ -21,11 +21,11 @@
             methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
             methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
-        services: null,
         ignoreCategories: { 'inactive' : 1, 'importers' : 1 },
-        appList: null,
-        methodList: null,
         id2Elem: {},
+        methodSpecs: {},  // id -> spec
+        appSpecs: {},     // id -> spec
+        categories: {},   // id -> category info
 
         /**
          * This private method is automatically called when the widget is initialized.
@@ -133,13 +133,13 @@
                                  .append(this.$loadingPanel)
                                  .append(this.$errorPanel));
 
-            $(document).on('hasFunction.Narrative', 
-                $.proxy(function(e, service, method, callback) {
-                    if (callback) {
-                        callback(this.hasFunction(service, method));
-                    }
-                }, this)
-            );
+            // $(document).on('hasFunction.Narrative', 
+            //     $.proxy(function(e, service, method, callback) {
+            //         if (callback) {
+            //             callback(this.hasFunction(service, method));
+            //         }
+            //     }, this)
+            // );
 
             $(document).on('filterMethods.Narrative',
                 $.proxy(function(e, filterString) {
@@ -156,6 +156,37 @@
                     this.$searchDiv.hide();
                     this.$searchInput.val('');
                     this.$searchInput.trigger('input');
+                }, this)
+            );
+
+            /* 'request' should be expected to be an object like this:
+             * {
+             *      apps: [list, of, app, ids],
+             *      methods: [list, of, method, ids]
+             * }
+             * 
+             * Either the apps or methods key can exist, or not and will be searched
+             * appropriately.
+             *
+             * This will pass to the callback a similar structure:
+             * {
+             *      apps: {
+             *         id: { spec },
+             *         id: { spec }
+             *      },
+             *      methods: {
+             *         id: { spec },
+             *         id: { spec }
+             *      }
+             * }
+             * 
+             * If a spec isn't found, then it won't appear in the return values.
+             */
+            $(document).on('getFunctionSpecs.Narrative',
+                $.proxy(function(e, specSet, callback) {
+                    if (callback) {
+                        callback(this.getFunctionSpecs(specSet));
+                    }
                 }, this)
             );
 
@@ -346,73 +377,6 @@
         },
 
         /**
-         * To do: handle category subsetting.
-         * E.g.:
-         * microbes
-         * --> microbes annotation
-         *     --> Annotate Genome
-         */
-        // parseMethodsFromService: function(catSet, methSet) {
-        //     var self = this;
-        //     var triggerMethod = function(method) {
-        //         self.methClient.get_method_spec({ 'ids' : [method.id] },
-        //             function(spec) {
-        //                 self.trigger('methodClicked.Narrative', spec[0]);
-        //             },
-        //             function(error) {
-        //                 self.showError(error);
-        //             }
-        //         );
-        //     };
-
-        //     var triggerApp = function(app) {
-        //         this.trigger('appClicked.Narrative', app);
-        //     };
-
-        //     // add the methods to their categories.
-        //     for (var method in methSet) {
-        //         parentList = methSet[method].categories;
-        //         for (var i=0; i<parentList.length; i++) {
-        //             if (catSet[parentList[i]]) {
-        //                 if (!catSet[parentList[i]].methods) {
-        //                     catSet[parentList[i]].methods = [];
-        //                 }
-        //                 catSet[parentList[i]].methods.push(methSet[method]);
-        //             }
-        //         }
-        //     }
-        //     // Make a method button for each method.
-        //     var accordionList = [];
-        //     for (var cat in catSet) {
-        //         if (!catSet[cat].methods || catSet[cat].methods.length == 0)
-        //             continue;
-        //         catSet[cat].methods.sort(function(a, b) { return a.name.localeCompare(b.name); });
-        //         var accordion = {
-        //             title : catSet[cat].name,
-        //         };
-        //         var $methodList = $('<div>');
-        //         for (var i=0; i<catSet[cat].methods.length; i++) {
-
-        //             catSet[cat].methods[i].$elem = this.buildMethod(catSet[cat].methods[i], triggerMethod);
-        //             $methodList.append(catSet[cat].methods[i].$elem);
-        //         }
-        //         accordion['body'] = $methodList;
-        //         accordionList.push(accordion);
-        //     }
-        //     this.services = catSet;
-        //     this.trigger('servicesUpdated.Narrative', [this.services]);
-
-        //     // sort by category name
-        //     accordionList.sort(function(a, b) {
-        //         return a.title.localeCompare(b.title);
-        //     });
-
-        //     var accElements = this.buildAccordion(accordionList);
-        //     this.$functionPanel.append(accElements[0]);
-        //     this.accordionElements = accElements[1];
-        // },
-
-        /**
          * Creates and returns a list item containing info about the given narrative function.
          * Clicking the function anywhere outside the help (?) button will trigger a 
          * function_clicked.Narrative event. Clicking the help (?) button will trigger a 
@@ -483,22 +447,65 @@
                                              .append($mainDiv)));
 
             return $('<div>')
-                        .append($('<hr>').addClass('kb-data-list-row-hr').css({'margin-left':'65px'}))
-                        .append($('<div>')
-                               .addClass('kb-data-list-obj-row')
-                               .append($newMethod)
-                               .append($more.hide())
-                               .mouseenter(function() {
+                   .append($('<hr>').addClass('kb-data-list-row-hr').css({'margin-left':'65px'}))
+                   .append($('<div>')
+                           .addClass('kb-data-list-obj-row')
+                           .append($newMethod)
+                           .append($more.hide())
+                           .mouseenter(function() {
+                                if (!$more.is(':visible')) { $moreBtn.show(); }
+                           })
+                           .mouseleave(function() { $moreBtn.hide(); })
+                           .click(function() {
+                                $more.slideToggle('fast', $.proxy(function() {
                                     if (!$more.is(':visible')) { $moreBtn.show(); }
-                                })
-                               .mouseleave(function() { $moreBtn.hide(); })
-                               .click(function() {
-                                    $more.slideToggle('fast', $.proxy(function() {
-                                        if (!$more.is(':visible')) { $moreBtn.show(); }
-                                        else { $moreBtn.hide(); }
-                                    }, this));
-                                } ));
+                                    else { $moreBtn.hide(); }
+                                }, this));
+                           } ));
                         
+        },
+
+        /* 'request' should be expected to be an object like this:
+         * {
+         *      apps: [list, of, app, ids],
+         *      methods: [list, of, method, ids]
+         * }
+         * 
+         * Either the apps or methods key can exist, or not and will be searched
+         * appropriately.
+         *
+         * This will pass to the callback a similar structure:
+         * {
+         *      apps: {
+         *         id: { spec },
+         *         id: { spec }
+         *      },
+         *      methods: {
+         *         id: { spec },
+         *         id: { spec }
+         *      }
+         * }
+         * 
+         * If a spec isn't found, then it won't appear in the return values.
+         */
+        getFunctionSpecs: function(specSet) {
+            var results = {};
+            if (specSet.apps && specSet.apps instanceof Array) {
+                results.apps = {};
+                for (var i=0; i<specSet.apps.length; i++) {
+                    if (this.appSpecs[specSet.apps[i]])
+                        results.apps[specSet.apps[i]] = this.appSpecs[specSet.apps[i]];
+                }
+            }
+            if (specSet.methods && specSet.methods instanceof Array) {
+                results.methods = {};
+                for (var i=0; i<specSet.methods.length; i++) {
+                    if (this.methodSpecs[specSet.methods[i]])
+                        results.methods[specSet.methods[i]] = this.methodSpecs[specSet.apps[i]];
+                }
+            }
+            console.log(results);
+            return results;
         },
 
         logoColorLookup:function(type) {
@@ -549,15 +556,15 @@
          * @param {string} method - the name of the method to test
          * @return {boolean} true if the call exists, false otherwise
          */
-        hasFunction: function(service, method) {
-            if (!this.services)
-                return true;
+        // hasFunction: function(service, method) {
+        //     if (!this.services)
+        //         return true;
 
-            console.debug("looking up '" + service + "'.'" + method + "'");
-            if (this.services.hasOwnProperty(service))
-                return this.services[service].hasOwnProperty(method);
-            return false;
-        },
+        //     console.debug("looking up '" + service + "'.'" + method + "'");
+        //     if (this.services.hasOwnProperty(service))
+        //         return this.services[service].hasOwnProperty(method);
+        //     return false;
+        // },
 
 
         /**
@@ -574,27 +581,27 @@
          * @param {object} method - the method object returned from the kernel.
          * @private
          */
-        addFunction: function(method) {
-            var self = this;
-            var $funcButton = $('<button>')
-                              .attr('type', 'button')
-                              .addClass('btn btn-default')
-                              .append(method.title)
-                              .click(function(event) { self.trigger('function_clicked.Narrative', method); });
+        // addFunction: function(method) {
+        //     var self = this;
+        //     var $funcButton = $('<button>')
+        //                       .attr('type', 'button')
+        //                       .addClass('btn btn-default')
+        //                       .append(method.title)
+        //                       .click(function(event) { self.trigger('function_clicked.Narrative', method); });
 
-            var $helpButton = $('<span>')
-                              .addClass('glyphicon glyphicon-question-sign')
-                              .css({'float': 'right', 
-                                    'cursor': 'pointer',
-                                    'font-size': '14pt',
-                                    'color': '#0064b6'})
-                              .click(function(event) { self.showHelpPopup(method); });
+        //     var $helpButton = $('<span>')
+        //                       .addClass('glyphicon glyphicon-question-sign')
+        //                       .css({'float': 'right', 
+        //                             'cursor': 'pointer',
+        //                             'font-size': '14pt',
+        //                             'color': '#0064b6'})
+        //                       .click(function(event) { self.showHelpPopup(method); });
 
-            this.$functionList.append($('<li>')
-                                        .append($funcButton)
-                                        .append($helpButton)
-                                     );
-        },
+        //     this.$functionList.append($('<li>')
+        //                                 .append($funcButton)
+        //                                 .append($helpButton)
+        //                              );
+        // },
 
         /**
          * Shows a loading spinner or message on top of the panel.
@@ -785,62 +792,6 @@
         },
 
         /**
-         * For each method, run it through filterFn. If it returns something truthy,
-         * it passes, if it returns something faily, it fails.
-         *
-         * If it passes, do nothing. If it fails, dim it out.
-         *
-         * So we need a handle on the functions. No big.
-         * !!! THIS IS OLD - We aren't using the accordion style before February, so 
-         * this needs to be slightly twiddled.
-         * !!!
-         */
-        // visualFilterAccordion: function(filterFn, fnInput) {
-        //     var numHidden = 0;
-        //     for (var catId in this.services) {
-        //         var cat = this.services[catId];
-        //         if (!cat.methods || cat.methods.length === 0)
-        //             continue;
-                
-        //         var numPass = 0;
-        //         for (var i=0; i<cat.methods.length; i++) {
-        //             if (!filterFn(fnInput, cat.methods[i])) {
-        //                 cat.methods[i].$elem.hide();
-        //                 cat.methods[i].$elem.addClass('kb-function-dim');
-        //                 numHidden++;
-        //             }
-        //             else {
-        //                 cat.methods[i].$elem.removeClass('kb-function-dim');
-        //                 cat.methods[i].$elem.show();
-        //                 numPass++;
-        //             }
-        //         }
-        //         if (numPass === 0) {
-        //             this.accordionElements[cat.name].addClass('kb-function-dim');
-        //             this.accordionElements[cat.name].removeAttr('kb-has-hidden');
-        //             this.accordionElements[cat.name].removeClass('kb-function-cat-dim');
-        //         }
-        //         else if (numPass < cat.methods.length) {
-        //             this.accordionElements[cat.name].attr('kb-has-hidden', '1');
-        //             this.accordionElements[cat.name].removeClass('kb-function-dim');
-        //         }
-        //         else {
-        //             this.accordionElements[cat.name].removeClass('kb-function-dim kb-function-cat-dim');
-        //             this.accordionElements[cat.name].removeAttr('kb-has-hidden');
-        //         }
-        //     }
-        //     if (numHidden > 0) {
-        //         this.$numHiddenSpan.text(numHidden);
-        //         this.$toggleHiddenDiv.show();
-        //         this.toggleHiddenMethods(this.$showHideSpan.text() !== 'show');
-        //     }
-        //     else {
-        //         this.$toggleHiddenDiv.hide();
-        //         this.toggleHiddenMethods(1);
-        //     }
-        // },
-
-        /**
          * @method
          * @public
          * Expects this.methodSet to be an associative array, like this:
@@ -876,20 +827,6 @@
             numHidden += filterSet(this.appSpecs, 'app');
             numHidden += filterSet(this.methodSpecs, 'method');
 
-            // do it for methods and apps - their ids are different
-            // for (var methId in this.methodSet) {
-            //     if (!filterFn(fnInput, this.methodSet[methId])) {
-            //         this.methodSet[methId].$elem.hide();
-            //         this.methodSet[methId].$elem.addClass('kb-function-dim');
-            //         numHidden++;
-            //     }
-            //     else {
-            //         this.methodSet[methId].$elem.removeClass('kb-function-dim');
-            //         this.methodSet[methId].$elem.show();
-            //     }
-            // }
-
-
             if (numHidden > 0) {
                 this.$numHiddenSpan.text(numHidden);
                 this.$toggleHiddenDiv.show();
@@ -920,227 +857,5 @@
         toggleOverlay: function() {
             this.trigger('toggleSidePanelOverlay.Narrative');
         },
-
-
-
-        // //cobbled together crap. Hacked out of kbaseNarrativeSidePanel and pulled into here
-        // //to create the method gallery panel.
-        // buildTabs: function(tabs) {
-        //     var $header = $('<div>');
-        //     var $body = $('<div>');
-
-        //     for (var i=0; i<tabs.length; i++) {
-        //         var tab = tabs[i];
-        //         $header.append($('<div>')
-        //                        .addClass('kb-side-header')
-        //                        .css('width', (100/tabs.length)+'%')
-        //                        .append(tab.tabName));
-        //         $body.append($('<div>')
-        //                      .addClass('kb-side-tab')
-        //                      .append(tab.content));
-        //     }
-
-        //     // // if show, show 'em all, and trigger the class for the kb-has-hidden attribute
-        //     // if (show) {
-        //     //     this.$functionPanel.find('.panel-default').show();
-        //     //     this.$functionPanel.find('.kb-data-obj-name').parent().show();
-        //     //     this.$functionPanel.find('[kb-has-hidden]').addClass('kb-function-cat-dim');
-        //     // }
-        //     // // otherwise, remove the kb-function-cat-dim class from everything, and
-        //     // // show only those that do not have kb-function-dim, and hide the rest
-        //     // else {
-        //     //     this.$functionPanel.find('.panel-default').removeClass('kb-function-cat-dim');
-        //     //     this.$functionPanel.find('.kb-function-dim').hide();
-        //     //     this.$functionPanel.find('.panel:not(.kb-function-dim)').show();
-        //     //     this.$functionPanel.find('li:not(.kb-function-dim)').show();
-        //     // }
-        //     $header.find('div').click(function(event) {
-        //         event.preventDefault();
-        //         event.stopPropagation();
-        //         var $headerDiv = $(event.currentTarget);
-
-        //         if (!$headerDiv.hasClass('active')) {
-        //             var idx = $headerDiv.index();
-        //             $header.find('div').removeClass('active');
-        //             $headerDiv.addClass('active');
-        //             $body.find('div.kb-side-tab').removeClass('active');
-        //             $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
-        //         }
-        //     });
-
-        //     $header.find('div:first-child').addClass('active');
-        //     $body.find('div:first-child.kb-side-tab').addClass('active');
-
-        //     return {
-        //         header: $header,
-        //         body: $body
-        //     };
-        // },
-
-        // initOverlay: function() {
-        //     var $overlayHeader = $('<div>')
-        //                          .addClass('kb-side-overlay-header')
-        //                          .append('Header!')
-        //                          .append($('<div>')
-        //                                 .addClass('pull-right')
-        //                                 .append($('<span>')
-        //                                         .addClass('kb-side-overlay-close glyphicon glyphicon-remove')
-        //                                 .click($.proxy(function(event) {
-        //                                    this.toggleOverlay();
-        //                                 }, this))));
-
-        //     // styling is easier if there is a class for containers
-        //     this.$overlayBody = $('<div class="kb-overlay-body">');
-
-        //     this.$overlayFooter  = $('<div class="kb-overlay-footer">');
-
-        //     this.$overlay = $('<div>')
-        //                     .addClass('kb-side-overlay-container')
-        //                     //.append($overlayHeader)
-        //                     .append(this.$overlayBody)
-        //                     .append(this.$overlayFooter);
-
-        //     $('body').append(this.$overlay);
-        //     this.$overlay.hide();
-
-        //     this.$narrativeDimmer = $('<div>')
-        //                             .addClass('kb-overlay-dimmer');
-        //     $('body').append(this.$narrativeDimmer);
-        //     this.$narrativeDimmer.hide();
-        //     this.updateOverlayPosition();
-
-        //     this.buildOverlay();
-        // },
-
-        // updateOverlayPosition: function() {
-        // console.log("ME IS ", this.$elem);
-        // console.log("HE IS", this.$elem.closest('.kb-side-panel'));
-        //     this.$overlay.position({my: 'left top', at: 'right top', of: this.$elem.closest('.kb-side-panel')});
-        //     this.$narrativeDimmer.position({my: 'left top', at: 'right top', of: this.$elem.closest('.kb-side-panel')});
-        // },
-
-        // toggleOverlay: function() {
-        //     // if (this.$overlay == undefined) {
-        //     //     this.initOverlay();
-        //     // }
-
-        //     // if (this.$overlay.is(':visible'))
-        //     //     this.hideOverlay();
-        //     // else
-        //     //     this.showOverlay();
-        // },
-
-        // showOverlay: function() {
-        //     if (this.$overlay) {
-        //         this.$narrativeDimmer.show();
-        //         this.$elem.find('.kb-side-header').addClass('overlay-active');
-        //         this.$overlay.show('slide', 'fast', $.proxy(function() {
-        //         }, this));
-        //     }
-        // },
-
-        // hideOverlay: function() {
-        //     if (this.$overlay) {
-        //         this.$narrativeDimmer.hide();
-        //         this.$elem.find('.kb-side-header').removeClass('overlay-active');
-        //         this.$overlay.hide('slide', 'fast', $.proxy(function() {
-        //         }, this));
-        //     }
-        // },
-
-        // /**
-        //  * Builds the general structure for a panel set.
-        //  * These are intended to start with 2 panels, but we can move from there if needed.
-        //  *
-        //  * (I'll jsdoc this up in a bit)
-        //  * widgets = [
-        //  *     {
-        //  *         name: kbaseNarrativeDataPanel (for instance)
-        //  *         params: {}
-        //  *     }
-        //  * ]
-        //  * @param {object} widgets
-        //  *
-        //  */
-
-
-        // /**
-        //  * Renders the method gallery panel
-        // */
-        // buildOverlay: function() {
-        //     var narWSName;
-        //     $(document).on('setWorkspaceName.Narrative', function(e, info){
-        //         narWSName = info.wsId;
-        //     })
-
-        //     var self = this;
-        //     var user = $("#signin-button").kbaseLogin('session', 'user_id');
-
-        //     var body = this.$overlayBody;
-        //     var footer = this.$overlayFooter;
-
-        //     // models
-        //     var myData = [],
-        //         sharedData = [],
-        //         publicData = [];
-
-        //     // models for filter selections
-        //     var query;
-
-        //     // models for options in type and workspace dropdowns
-        //     var types = [];
-        //         workspaces =[];
-
-        //     // tab panels
-        //     var minePanel = $('<div class="kb-import-panel">'),
-        //         sharedPanel = $('<div class="kb-import-panel">'),
-        //         publicPanel = $('<div class="kb-import-panel">'),
-        //         importPanel = $('<div class="kb-import-panel">');
-        //         galleryPanel = $('<div class="kb-import-panel">');
-
-        //     // content wrapper
-        //     var content = $('<div class="kb-import-content">');
-
-        //     // add tabs
-        //     var $tabs = this.buildTabs([
-        //             {tabName: 'Gallery', content: galleryPanel},
-        //         ]);
-
-        //     galleryPanel.kbaseMethodGallery({sidePanel : this});
-
-        //     body.addClass('kb-side-panel');
-        //     body.append($tabs.header).append($tabs.body);
-
-        //     // It is silly to invoke a new object for each widget
-        //     var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
-        //     var ws = new Workspace(this.options.workspaceURL, auth);
-
-
-        //     // get possible types (not used)
-        //     /*
-        //     ws.list_all_types({}).done(function(res) {
-        //         console.log('types', res)
-
-        //         var types = [];
-        //         for (var mod in res) {
-        //             var typeNames = res[mod]
-        //             for (var type in typeNames) {
-        //                 types.push(type);
-        //             }
-        //         }
-        //         console.log('type_names', types)
-        //     })*/
-
-
-        //     // add footer status container and button
-        //     var importStatus = $('<div class="pull-left kb-import-status">');
-        //     footer.append(importStatus)
-
-        //     body.append(footer);
-
-
-        //     }
-
-        // //end cobbled together crap
     });
 })( jQuery );

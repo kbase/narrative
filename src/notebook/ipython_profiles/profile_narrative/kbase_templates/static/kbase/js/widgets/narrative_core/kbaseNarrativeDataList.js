@@ -72,7 +72,7 @@
         obj_list : [],
         obj_data : {}, // old style - type_name : info
 
-
+        my_user_id: null,
     
         /**
          * @method init
@@ -572,6 +572,14 @@
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
 
             var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]));
+            var $byUser = $('<span>').addClass("kb-data-list-edit-by");
+            if (object_info[5] !== self.my_user_id) {
+                $byUser.append(' by '+object_info[5])
+                    .click(function(e) {
+                        e.stopPropagation();
+                        window.open(self.options.landing_page_url+'people/'+object_info[5]);
+                    });
+            }
             var metadata = object_info[10];
             var metadataText = '';
             for(var key in metadata) {
@@ -622,7 +630,7 @@
 
             var $mainDiv  = $('<div>').addClass('kb-data-list-info').css({padding:'0px',margin:'0px'})
                                 .append($name).append($version).append('<br>')
-                                .append($type).append('<br>').append($date)
+                                .append($type).append('<br>').append($date).append($byUser)
                                 .append($toggleAdvancedViewBtn)
                                 .click(
                                     function() {
@@ -694,19 +702,28 @@
                     // (a) find nearest cell using 'jquery-nearest'
                     var $near_elt = $($elt.nearest('.cell'));
                     // (b) map that cell back to an index, and insert before it
+
+
                     var near_idx = IPython.notebook.find_cell_index($near_elt.data().cell);
-                    var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
-                    // Add unique id attr. to cell
-                    var cell_id = self.genUUID();
-                    cell.rendered = false;
-                    cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
-                    cell.render();
-                    // Get object info
+
+                    // var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
+                    // // Add unique id attr. to cell
+                    // var cell_id = self.genUUID();
+                    // cell.rendered = false;
+                    // cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
+                    // cell.render();
+                    // // Get object info
                     var key = $elt.attr('kb-oid');
                     var obj = _.findWhere(self.objectList, {key: key});
+                    console.debug('drag-n-drop: key=' + key, obj);
                     var info = self.createInfoObject(obj.info);
-                    // Insert the narrative data cell into the div we just rendered
-                    $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+                    // // Insert the narrative data cell into the div we just rendered
+                    // $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+                    self.trigger('createViewerCell.Narrative', {
+                        'nearCellIdx': near_idx,
+                        'widget': 'kbaseNarrativeDataCell',
+                        'info' : info
+                    });
                 }
             });
 
@@ -733,19 +750,27 @@
 
         insertViewer: function(key) {
             var self = this;
-            var cell = IPython.notebook.insert_cell_below('markdown');
+            var cell = IPython.notebook.get_selected_cell();
+            var near_idx = IPython.notebook.find_cell_index(cell);
             $(cell.element).off('dblclick');
             $(cell.element).off('keydown');
 
-            var cell_id = self.genUUID();
-            cell.rendered = false;
-            cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
-            cell.render();
+            //var cell_id = self.genUUID();
+            //cell.rendered = false;
+            //cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
+            //cell.render();
 
             var obj = _.findWhere(self.objectList, {key: key});
+            console.debug('insertViewer: key=' + key, obj);
             var info = self.createInfoObject(obj.info);
             // Insert the narrative data cell into the div we just rendered
-            $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+            //$('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+            self.trigger('createViewerCell.Narrative', {
+                'nearCellIdx': near_idx,
+                'widget': 'kbaseNarrativeDataCell',
+                'info' : info
+            });
+            
         },
 
         renderMore: function() {
@@ -1207,10 +1232,10 @@
 	    if (self.ws) { // make sure we are logged in and have some things
 
                 if (self.real_name_lookup[username]) {
-                    $targetSpan.html(self.real_name_lookup[username]+" ("+username+")");
+                    $targetSpan.html(self.real_name_lookup[username]+' (<a href="'+self.options.landing_page_url+'people/'+username+'" target="_blank">'+username+"</a>)");
                 } else {
                     self.real_name_lookup[username] = "..."; // set a temporary value so we don't search again
-                    $targetSpan.html(username);
+                    $targetSpan.html('<a href="'+self.options.landing_page_url+'people/'+username+'" target="_blank">'+username+"</a>");
                     $.ajax({
                             type: "GET",
                             url: self.options.user_name_fetch_url + username + "&token="+self._attributes.auth.token,
@@ -1219,7 +1244,7 @@
                             success: function(data,res,jqXHR) {
                                 if (username in data['data'] && data['data'][username]['fullName']) {
                                     self.real_name_lookup[username] = data['data'][username]['fullName'];
-                                    $targetSpan.html(self.real_name_lookup[username]+" ("+username+")");
+                                    $targetSpan.html(self.real_name_lookup[username]+' (<a href="'+self.options.landing_page_url+'people/'+username+'" target="_blank">'+username+"</a>)");
                                 }
                             },
                             error: function(jqXHR, textStatus, errorThrown) {
@@ -1243,7 +1268,8 @@
          */
         loggedInCallback: function(event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
-            console.debug("Setting this.ws from loggedInCallback:", this.ws);
+            //this.user_profile = new UserProfile(this.options.user_profile_url, auth);
+            this.my_user_id = auth.user_id;
             this.isLoggedIn = true;
             this.refresh();
             return this;
@@ -1258,6 +1284,7 @@
         loggedOutCallback: function(event, auth) {
             this.ws = null;
             this.isLoggedIn = false;
+            this.my_user_id = null;
             this.refresh();
             return this;
         },

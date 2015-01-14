@@ -36,10 +36,18 @@
                 case 'error':
                     this.renderErrorOutputCell();
                     break;
+                case 'viewer':
+                    this.renderViewerCell();
+                    break;
                 default:
                     this.renderErrorOutputCell();
                     break;
             }
+        },
+
+        renderViewerCell: function() {
+            var $label = $('<span>').addClass('label label-info').append('Viewer');
+            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label);            
         },
 
         renderMethodOutputCell: function() {

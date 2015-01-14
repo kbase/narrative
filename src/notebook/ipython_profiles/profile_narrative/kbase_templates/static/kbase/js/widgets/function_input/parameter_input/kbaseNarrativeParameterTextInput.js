@@ -572,6 +572,7 @@
          * specific parameter values based on the App spec, so we need a way to do this.
          */
         setParameterValue: function(value) {
+            if (value===null) { return; }
             if(value instanceof Array) {
             } else { value = [value]; }
             

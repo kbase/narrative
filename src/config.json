@@ -29,7 +29,7 @@
     "mode": "debug",
     "name": "KBase Narrative", 
     "prod": {
-        "awe": "http://140.221.67.185:7080", 
+        "awe": "https://kbase.us/services/awe-api", 
         "fba": "https://kbase.us/services/fba_model_services/", 
         "genomeCmp": "https://kbase.us/services/genome_comparison/jsonrpc", 
         "invocation": "https://kbase.us/services/invocation", 

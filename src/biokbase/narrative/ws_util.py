@@ -84,7 +84,7 @@ def get_wsid(wsclient, workspace):
             raise e
     return( ws_meta[0])
 
-def alter_workspace_metadata(wsclient, ref, new_metadata={}):
+def alter_workspace_metadata(wsclient, ref, new_metadata={}, ws_id=None):
     """
     This is just a wrapper for the workspace get_objects call.
 
@@ -99,12 +99,15 @@ def alter_workspace_metadata(wsclient, ref, new_metadata={}):
     if type is not specified then an extra lookup for object metadata
     is required, this can be shortcut by passing in the object type
     """
-    match = ws_regex.match( ref)
-    if not match:
-        raise BadWorkspaceID("%s does not match workspace ID format ws.{workspace id}.obj.{object id}" % ws_id)
-    ws = match.group(1)
+    if ws_id is None and ref is not None:
+        match = ws_regex.match(ref)
+        if not match:
+            raise BadWorkspaceID("%s does not match workspace ID format ws.{workspace id}.obj.{object id}" % ws_id)
+        ws_id = match.group(1)
+    elif ws_id is None and ref is None:
+        raise BadWorkspaceID("No workspace id or object reference given!")
     
-    wsclient.alter_workspace_metadata({'wsi':{'id':ws}, 'new':new_metadata})
+    wsclient.alter_workspace_metadata({'wsi':{'id':ws_id}, 'new':new_metadata})
     
     
 def get_wsobj(wsclient, ws_id, objtype=None):

@@ -74,7 +74,7 @@
         	var cellStyle = "border:none; vertical-align:middle;";
             var inputDiv = "<div class='kb-cell-params'>" +
             		"<b>Target genome set object name:</b> " + this.options.genomeSetName + "<br>" +
-            		"<font size='-1'>(you can leave some genome fields blank if you don't need them anymore)</font><br>"+
+            		"<font size='-1'>(genome fields may be left blank if they are not needed)</font><br>"+
             		"<table id='gnms" + this.pref + "' class='table'>" +
         			"<tr style='" + cellStyle + "'>" + 
             		"<td style='" + cellStyle + "'><b>Genome set description</b></td>" +

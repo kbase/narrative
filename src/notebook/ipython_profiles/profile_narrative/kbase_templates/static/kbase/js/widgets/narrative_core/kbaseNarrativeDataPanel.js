@@ -996,7 +996,16 @@
                 var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
                 var $type = $('<span>').addClass("kb-data-list-type").append(type);
 
-                var $date = $('<span>').addClass("kb-data-list-date").append(getTimeStampStr(object_info[3]) + ' by '+object_info[5]);
+                var $date = $('<span>').addClass("kb-data-list-date").append(getTimeStampStr(object_info[3]));
+                var $byUser = $('<span>').addClass("kb-data-list-edit-by");
+                if (object_info[5] !== self.my_user_id) {
+                    $byUser.append(' by '+object_info[5])
+                        .click(function(e) {
+                            e.stopPropagation();
+                            window.open(self.options.landing_page_url+'people/'+object_info[5]);
+                        });
+                }
+                
                 var metadata = object_info[10];
                 var metadataText = '';
                 for(var key in metadata) {
@@ -1010,31 +1019,36 @@
                     }
                 }
 
-                var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td').append(object_info[5]);
+                var narName = obj.ws;
+                if (narrativeNameLookup[obj.ws]) {
+                    narName = narrativeNameLookup[obj.ws];
+                }
+                var $narName = $('<span>').addClass("kb-data-list-narrative").append(narName);
+                //var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td').append(object_info[5]);
                 //this.displayRealName(object_info[5],$savedByUserSpan);
 
-                var typeLink = 'type';//'<a href="'+this.options.landing_page_url+'spec/module/'+type_module+'" target="_blank">' +type_module+"</a>.<wbr>" +
+                //var typeLink = '<a href="'+this.options.landing_page_url+'spec/module/'+type_module+'" target="_blank">' +type_module+"</a>.<wbr>" +
                 //                '<a href="'+this.options.landing_page_url+'spec/type/'+object_info[2]+'" target="_blank">' +(type_tokens[1].replace('-','&#8209;')) + '.' + type_tokens[2] + '</a>';
-                var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
-                                .append(
-                                    $('<table style="width:100%;">')
-                                        .append("<tr><th>Permament Id</th><td>" +object_info[6]+ "/" +object_info[0]+ "/" +object_info[4] + '</td></tr>')
-                                        .append("<tr><th>Full Type</th><td>"+typeLink+'</td></tr>')
-                                        .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
-                                        .append(metadataText));
+                //var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
+                //                .append(
+                //                    $('<table style="width:100%;">')
+                //                        .append("<tr><th>Permament Id</th><td>" +object_info[6]+ "/" +object_info[0]+ "/" +object_info[4] + '</td></tr>')
+                //                        .append("<tr><th>Full Type</th><td>"+typeLink+'</td></tr>')
+                //                        .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
+                //                        .append(metadataText));
 
-                var $toggleAdvancedViewBtn = $('<span>').addClass("kb-data-list-more")//.addClass('btn btn-default btn-xs kb-data-list-more-btn')
-                    .hide()
-                    .html('<span class="fa fa-ellipsis-h" style="color:#999" aria-hidden="true"/>');
-                var toggleAdvanced = function() {
-                        if ($moreRow.is(':visible')) {
-                            $moreRow.slideUp('fast');
-                            $toggleAdvancedViewBtn.show();
-                        } else {
-                            $moreRow.slideDown('fast');
-                            $toggleAdvancedViewBtn.hide();
-                        }
-                    };
+                //var $toggleAdvancedViewBtn = $('<span>').addClass("kb-data-list-more")//.addClass('btn btn-default btn-xs kb-data-list-more-btn')
+                //    .hide()
+                //    .html('<span class="fa fa-ellipsis-h" style="color:#999" aria-hidden="true"/>');
+                //var toggleAdvanced = function() {
+                //        if ($moreRow.is(':visible')) {
+                //            $moreRow.slideUp('fast');
+                //            $toggleAdvancedViewBtn.show();
+                //        } else {
+                //            $moreRow.slideDown('fast');
+                //            $toggleAdvancedViewBtn.hide();
+                //        }
+                //    };
     
                 var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
                 var btnClasses = "btn btn-xs btn-default";
@@ -1064,8 +1078,8 @@
                 var $mainDiv  = $('<div>').addClass('kb-data-list-info').css({padding:'0px',margin:'0px'})
                                     .append($btnToolbar)
                                     .append($name).append($version).append('<br>')
-                                    .append($type).append('<br>').append($date)
-                                    .append($toggleAdvancedViewBtn)
+                                    .append($type).append('<br>').append($narName).append('<br>').append($date).append($byUser);
+                                    //.append($toggleAdvancedViewBtn)
                                     //.click(
                                     //    function() {
                                     //        toggleAdvanced();
@@ -1115,7 +1129,7 @@
                                 //.addClass('kb-data-list-obj-row')
                                 .append($('<div>').addClass('kb-data-list-obj-row-main')
                                             .append($topTable))
-                                .append($moreRow)
+                                //.append($moreRow)
                                 // show/hide ellipses on hover, show extra info on click
                                 .mouseenter(function(){
                                     //if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }

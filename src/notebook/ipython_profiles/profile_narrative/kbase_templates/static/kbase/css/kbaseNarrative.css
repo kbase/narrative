@@ -2016,6 +2016,18 @@ div[class="tooltip-inner"] {
 .kb-data-list-edit-by:hover {
     color:#444;
 }
+.kb-data-list-narrative {
+    color:#777;
+    font-size: 10pt;
+    margin: 2px;
+    margin-left: 10px;
+    /* cursor:pointer; */
+}
+.kb-data-list-narrative:hover {
+    /* narrative btn isn't a link yet, so don't highlight
+     *color:#444;*/
+}
+
 .kb-data-list-more {
     color:#777;
     font-size: 8pt;

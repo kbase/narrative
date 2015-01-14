@@ -251,13 +251,8 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
 
             var is_default = false; // default-viewer
             var self = this;
-            var widgetTitleElem = $('<b>');
+            var widgetTitleElem = self.$elem.closest('.kb-cell-output').find('.panel').find('.panel-heading').find('.kb-out-desc').find('b');
             var mainPanel = $('<div>');
-            self.$elem.append($('<div>')
-                    .addClass('panel-heading')
-                    .append($('<span>')
-                        	.addClass(headerClass)
-                        	.append(widgetTitleElem)));
             self.$elem.append(mainPanel);
             var $view = this.all_viewers.create_viewer(mainPanel, self);
 
@@ -282,15 +277,10 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             }
             if (!landing_page_url_prefix)
             	landing_page_url_prefix = 'ws/json';
+            widgetTitleElem.empty();
             widgetTitleElem.append(widget_title);
             widgetTitleElem.append('&nbsp;<a href="'+self.shortMarkdownDesc(self.obj_info, 
             		landing_page_url_prefix)+'" target="_blank">'+self.obj_info.name+'</a>');
-            // Make sure that we have unselected the cell
-            //self.ip_cell.unselect();
-            // If *not* default viewer, disable cell editing, as this will mess it up
-            //if (!is_default) {
-            //  self.ip_cell.edit = function() { };
-            //}
             // Return the rendered widget
             return this;
         },
@@ -306,10 +296,6 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
           }
           link += "/functional-site/#/" + landing_page_url_prefix + "/" + o.ws_name + "/" + o.name;
           return link;
-               //"[" + o.name + "](" + link + ")"  +
-               //" (" + o.bare_type + "<sub>v" + o.version + "</sub>)." +
-               //" Last saved: " +
-               //"*" + o.saved_by + "*  " + o.simple_date;
         },
 
         /**

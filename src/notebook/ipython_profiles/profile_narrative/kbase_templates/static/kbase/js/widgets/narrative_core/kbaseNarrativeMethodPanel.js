@@ -211,12 +211,6 @@
                            .click($.proxy(function(event) {
                                this.trigger('toggleSidePanelOverlay.Narrative', this.$methodGallery);
                            }, this)));
-            this.addButton($('<button>')
-                           .addClass('btn btn-xs btn-default')
-                           .append('<span class="fa fa-beer"></span>')
-                           .click($.proxy(function(event) {
-                               this.trigger('getFunctionSpecs.Narrative', [{'apps':['build_fba_model']}, function(results) { console.log(results); }]);
-                           }, this)));
 
             if (!NarrativeMethodStore) {
                 this.showError('Unable to connect to KBase Method Store!');

@@ -15,11 +15,11 @@
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             exampleWsId: 2901, // designed to be a workspace with just a handful of objects
             exampleTypeOrder: [
-                {name:'AssemblyInput', displayName: "Example Assembly Inputs", header:'Read data configured for sequence assembly.'},
-                {name:'ContigSet', displayName: "Example Contig Sets", header:'A set of DNA sequences'},
-                {name:'Genome', displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
-                {name:'FBAModel', displayName: "Example FBAModels", header:'A metabolic model of an organism'},
-                {name:'Media', displayName: "Example Media", header:'Specification of an environmental condition'}
+                {name:['AssemblyInput','SingleEndLibrary','PairedEndLibrary','ReferenceAssembly'], displayName: "Example Sequence Assembly Inputs", header:'Various types of read data configured for sequence assembly.'},
+                {name:['ContigSet'], displayName: "Example Contig Sets", header:'A set of DNA sequences'},
+                {name:['Genome'], displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
+                {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
+                {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'}
                 ]
             
         },
@@ -114,17 +114,15 @@
             var typeDivs = {};
             for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
                 var typeInfo = self.options.exampleTypeOrder[t];
-                var name = typeInfo.name;
-                if (typeInfo.displayName) {
-                    name = typeInfo.displayName;
-                }
                 var $tc = $('<div>')
                             .append($('<div>').css({'margin':'15px'})
                                 .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
-                                        .append(name))
+                                        .append(typeInfo.displayName))
                                 .append($('<div>').css({'margin':'4px','color':'#555'})
                                         .append(typeInfo.header)));
-                typeDivs[typeInfo.name] = $tc;
+                for(var k=0; k<typeInfo.name.length; k++) {
+                    typeDivs[typeInfo.name[k]] = $tc;
+                }
             }
             var $tc = $('<div>')
                             .append($('<div>').css({'margin':'15px'})
@@ -135,6 +133,11 @@
             typeDivs['other.types'] = $tc;
             
             var hasOthers = false;
+            self.objectList.sort(function(a,b) {
+                                        if (a.info[2].toUpperCase() > b.info[2].toUpperCase()) return -1; // sort by type
+                                        if (a.info[2].toUpperCase() < b.info[2].toUpperCase()) return 1;
+                                        return 0;
+                                    });
             for (var k=0; k<self.objectList.length; k++) {
                 var obj = self.objectList[k];
                 var typeName = obj.info[2].split('-')[0].split('.')[1];
@@ -147,7 +150,7 @@
             }
             
             for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
-                self.$mainPanel.append(typeDivs[self.options.exampleTypeOrder[t].name]);
+                self.$mainPanel.append(typeDivs[self.options.exampleTypeOrder[t].name[0]]);
             }
             if (hasOthers) {
                 self.$mainPanel.append(typeDivs['other.types']);
@@ -213,15 +216,21 @@
             }*/
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
             if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom'}); }
+            var $type = $('<span>').addClass("kb-data-list-type").append(type);
            
-            /*var metadata = object_info[10];
+            var metadata = object_info[10];
             var metadataText = '';
             for(var key in metadata) {
                 if (metadata.hasOwnProperty(key)) {
                     metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
                 }
             }
-            
+            if (type==='Genome') {
+                if (metadata.hasOwnProperty('Name')) {
+                    $type.html('Genome: '+metadata['Name']);
+                }
+            }
+            /*
             var landingPageLink = this.options.default_landing_page_url +object_info[7]+ '/' + object_info[1];
             if (this.ws_landing_page_map) {
                 if (this.ws_landing_page_map[type_module]) {
@@ -269,7 +278,7 @@
                                             		 	.css({'background-color':this.logoColorLookup(type)})
                                             		 	.append(type.substring(0,1))))
                                          .append($('<td>')
-                                                 .append($name)));
+                                                 .append($name).append('<br>').append($type)));
 	    
 	    var $row = $('<div>')
                                 .css({margin:'2px',padding:'4px','margin-bottom': '5px'})

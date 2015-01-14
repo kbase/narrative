@@ -80,7 +80,6 @@
             
             $(document).on(
                 'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-                    console.log('data panel -- setting ws to ' + info.wsId);
                     this.ws_name = info.wsId;
                     this.narrWs = info.narrController;
                     this.dataListWidget.setWorkspace(this.ws_name);
@@ -359,8 +358,10 @@
             
             // hack to keep search on top
             var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'430px'});
+            setLoading($mineScrollPanel);
             minePanel.append($mineScrollPanel);
             var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'430px'});
+            setLoading($sharedScrollPanel);
             sharedPanel.append($sharedScrollPanel);
             
             // Setup the panels that are defined by widgets
@@ -393,28 +394,9 @@
             // start with my data, then fetch other data
             // this is because data sets can be large and
             // makes things more fluid
-            minePanel.loading();
-            sharedPanel.loading();
             updateView('mine').done(function() {
                 updateView('shared')
             });
-
-            // events for changing tabs
-            /*$($tabs.header.find('.kb-side-header')).click(function() {
-                // reset selected models when changing tabs, if that's what is wanted
-                if ($(this).index() == 0)
-                    mineSelected = [], btn.show();
-                else if ($(this).index() == 1)
-                    sharedSelected = [], btn.show();
-                else
-                    btn.hide();
-
-                // reset checkboxs... for any tabs.
-                var checkboxes = body.find('.kb-import-checkbox');
-                checkboxes.removeClass('fa-check-square-o')
-                          .addClass('fa-square-o');
-                btn.prop('disabled', true);
-            })*/
 
             var narrativeNameLookup={};
             this.$overlayPanel = $('<div>').append(body).append(footer);
@@ -429,10 +411,8 @@
                     else if (view == 'shared') prom = getSharedData(workspaces);
                     $.when(prom).done(function() {
                         if (view == 'mine') {
-                            minePanel.rmLoading();
                             addMyFilters();
                         } else if(view == 'shared') {
-                            sharedPanel.rmLoading();
                             addSharedFilters();
                         }
                     });
@@ -441,6 +421,10 @@
 
             // function used to update my data list
             function getMyData(workspaces, type, ws_name) {
+                if (workspaces.length==0) {
+                    render([], $mineScrollPanel, mineSelected);
+                    return [];
+                }
                 var params = {includeMetadata:1};
                 if (!ws_name) {
                     var ws_ids = [], obj_count = 0;
@@ -485,6 +469,10 @@
 
             // function used to update shared with me data list
             function getSharedData(workspaces, type, ws_name) {
+                if (workspaces.length==0) {
+                    render([], $mineScrollPanel, mineSelected);
+                    return null;
+                }
                 var params = {includeMetadata:1};
                 if (!ws_name) {
                     var ws_ids = [], obj_count = 0;
@@ -534,10 +522,10 @@
                 var start = 0, end = 30;
 
                 // remove items from only current container being rendered
-                container.find('.kb-import-items').remove();
+                container.empty();
 
                 if (data.length == 0){
-                    container.append('<div class="kb-import-items text-muted">No data found</div>');
+                    container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
                     return
                 } else if (data.length-1 < end)
                     end = data.length;
@@ -819,6 +807,10 @@
 
                 // possible filters via input
                 var type, ws, query;
+                
+                // create filter (search)
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
+                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
                 // create workspace filter
                 var wsInput = $('<select class="form-control kb-import-filter">');
@@ -833,13 +825,10 @@
                 // event for type dropdown
                 wsInput.change(function() {
                     ws = $(this).children('option:selected').data('name');
-
+                    filterInput.val('');
                     // request again with filted type
-                    minePanel.find('.kb-import-items').remove();
-                    minePanel.loading();
-                    getMyData(myWorkspaces, type, ws).done(function() {
-                        minePanel.rmLoading();
-                    })
+                    setLoading($mineScrollPanel);
+                    getMyData(myWorkspaces, type, ws);
                 })
 
                 // create type filter
@@ -855,23 +844,18 @@
                 // event for type dropdown
                 typeInput.change(function() {
                     type = $(this).children('option:selected').data('type');
-
+                    filterInput.val('');
                     // request again with filted type
-                    minePanel.find('.kb-import-items').remove();
-                    minePanel.loading();
-                    getMyData(myWorkspaces, type, ws).done(function() {
-                        minePanel.rmLoading();
-                    })
+                    //minePanel.loading(); // loading puts the loading image in the wrong place..
+                    setLoading($mineScrollPanel);
+                    getMyData(myWorkspaces, type, ws);
                 })
 
-
-                // create filter (search)
-                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
-                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
                 // event for filter (search)
                 filterInput.keyup(function(e){
                     query = $(this).val();
+                    setLoading($mineScrollPanel);
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, $mineScrollPanel, mineSelected);
                 });
@@ -887,7 +871,11 @@
 
                 // possible filters via input
                 var type, ws, query;
-
+                
+                // create filter (search)
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
+                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
+                
                 // create workspace filter
                 var wsInput = $('<select class="form-control kb-import-filter">');
                 wsInput.append('<option>All narratives...</option>');
@@ -900,14 +888,11 @@
 
                 // event for type dropdown
                 wsInput.change(function() {
+                    filterInput.val('');
                     ws = $(this).children('option:selected').data('name');
-
                     // request again with filted type
-                    sharedPanel.find('.kb-import-items').remove();
-                    sharedPanel.loading();
-                    getSharedData(sharedWorkspaces, type, ws).done(function() {
-                        sharedPanel.rmLoading();
-                    })
+                    setLoading($sharedScrollPanel);
+                    getSharedData(sharedWorkspaces, type, ws);
                 })
 
 
@@ -924,24 +909,18 @@
                 // event for type dropdown
                 typeInput.change(function() {
                     type = $(this).children('option:selected').data('type');
+                    filterInput.val('');
 
                     // request again with filted type
-                    sharedPanel.find('.kb-import-items').remove();
-                    sharedPanel.loading();
-                    getSharedData(sharedWorkspaces, type, ws).done(function() {
-                        sharedPanel.rmLoading();
-                    })
+                    setLoading($sharedScrollPanel);
+                    getSharedData(sharedWorkspaces, type, ws);
                 })
 
 
-                // create filter (search)
-                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
-                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
                 // event for filter (search)
                 filterInput.keyup(function(e){
                     query = $(this).val();
-
                     var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
                     render(filtered, $sharedScrollPanel, sharedSelected);
                 });
@@ -1149,63 +1128,16 @@
                                                 .css({'margin-left':'150px'}))
                                     .append($row);
     
-    
-                //item.append('<i class="fa fa-square-o pull-left kb-import-checkbox">');
                 return $rowWithHr;
-            
-                
-                
-                
-               
-                
-                
-                /*var item = $('<div class="kb-import-item">')
-                                .data('ref', obj.wsID+'.'+obj.id)
-                                .data('obj-name', obj.name);
-                item.append('<i class="fa fa-square-o pull-left kb-import-checkbox">');
-                var linkUrl = objURL(obj.module, obj.kind, obj.ws, obj.name);
-                //console.log(linkUrl);
-                item.append('<a class="h4" href="'+
-                                linkUrl+
-                                '" target="_blank">'+obj.name+'</a>'+
-                            '<span class="kb-data-list-version">v'+obj.version+'</span>');
-
-                item.append('<br>');
-
-                item.append('<div class="kb-import-info">'+
-                                '<span>TYPE</span><br>'+
-                                '<b>'+obj.kind+'</b>'+
-                            '</div>');
-                var narName = obj.ws;
-                if (narrativeNameLookup[obj.ws]) {
-                    narName = narrativeNameLookup[obj.ws];
-                }
-                item.append('<div class="kb-import-info">'+
-                                '<span>NARRATIVE</span><br>'+
-                                '<b>'+narName+'<b>'+   //<a class="" href="'+wsURL(obj.ws)+'">'
-                            '</div>');
-                item.append('<div class="kb-import-info">'+
-                                '<span>MODIFIED BY</span><br>'+
-                                '<b>'+obj.info[5]+'<b>'+   //<a class="" href="'+wsURL(obj.ws)+'">'
-                            '</div>');
-                item.append('<div class="kb-import-info">'+
-                                '<span>LAST MODIFIED</span><br>'+
-                                '<b>'+obj.relativeTime+'</b>'+
-                            '</div>');
-                item.append('<br><hr>')
-
-                return item;*/
             }
             
+            // the existing .loading() .rmLoading() puts the loading icon in the wrong place
+            function setLoading($container) {
+                $container.empty();
+                $container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'})
+                                  .append('<img src="' + self.options.loadingImage + '">'));
+            }
             
-            
-            
-            
-            
-            
-            
-            
-
             function objURL(module, type, ws, name) {
                 var mapping = window.kbconfig.landing_page_map;
                 if (mapping[module] && mapping[module][type]) {

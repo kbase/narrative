@@ -30,7 +30,7 @@ body {
 	z-index: 1001;
 }
 
-html { 
+html {
 	background-color: #a2a2a2;
 	/*border: 1px solid #000;*/
 	padding: 0;
@@ -114,9 +114,9 @@ input#search_terms{
     font-size: 1em;
     margin-top: -3px;
     background-image: url("../images/search.png");
-    background-size: 22px; 
+    background-size: 22px;
     background-repeat:no-repeat;
-    background-position:right center; 
+    background-position:right center;
     border-top-left-radius: 0px;
 	border-top-right-radius: 4px;
 	border-bottom-right-radius: 4px;
@@ -127,16 +127,16 @@ span#searchspan{
     width: 50%;
 }
 @media screen and (max-width: 1170px){
-    span#searchspan{width: 50%;} 
+    span#searchspan{width: 50%;}
 }
 @media screen and (max-width: 980px){
-    span#searchspan{width: 40%;} 
+    span#searchspan{width: 40%;}
 }
 @media screen and (max-width: 768px){
-    span#searchspan{width: 30%;} 
+    span#searchspan{width: 30%;}
 }
 @media screen and (max-width: 590px){
-    span#searchspan{width: 60%;}   
+    span#searchspan{width: 60%;}
 }
 
 div#notebook {
@@ -161,18 +161,18 @@ div#notebook {
 	position: relative;
 	padding-left: 3px;
 	padding-bottom: 10px;
-	margin: 0 0 10px 0; 
+	margin: 0 0 10px 0;
 }
 
 .narrative-menu-container {
-	position: fixed; 
+	position: fixed;
 	z-index: 499;
 	background-color: #ffffff;
 	width: 100%;
-	border-bottom: 1px solid #ababab; 
-	padding-bottom: 30px; 
-	padding-top: 10px; 
-	margin-top: -10px; 
+	border-bottom: 1px solid #ababab;
+	padding-bottom: 30px;
+	padding-top: 10px;
+	margin-top: -10px;
 	margin-left: auto
 }
 
@@ -211,7 +211,7 @@ p#site-title {
 }
 /*
 nav {
-	padding: 26px 0 0 0;  
+	padding: 26px 0 0 0;
 }
 
 nav ul {
@@ -220,15 +220,15 @@ nav ul {
 
 nav ul li {
 	display: inline;
-	font: 18px 'RobotoBlack', Arial, sans-serif; 
-	font-weight: normal; 
+	font: 18px 'RobotoBlack', Arial, sans-serif;
+	font-weight: normal;
 	color: #686868;
 	padding: 11px 7px;
 	margin: 0 15px;
 }
 
 nav ul li.selected {
-	background-color: #F78F1E;	
+	background-color: #F78F1E;
 	color: #fff;
 }
 */
@@ -521,11 +521,11 @@ li.dataset a:visited {
 	font-size: 1.2em;
 }
 
-.dialog-box ul li:first-child {	
+.dialog-box ul li:first-child {
 	padding-top: 20px;
 }
 
-.dialog-box ul li:last-child {	
+.dialog-box ul li:last-child {
 	border-bottom: none;
 }
 
@@ -539,7 +539,7 @@ fieldset label {
 */	margin: 0 0 3px 0;
 	font-weight: bold;
 	font-size: 1em;
-	
+
 }
 
 fieldset input[type="text"], fieldset select {
@@ -729,7 +729,7 @@ p span.notification{
 }
 
 .btn-default {
-	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);	
+	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
 .btn-group {

@@ -315,7 +315,10 @@
                             $(this).html('<img src="'+self.loadingImage+'">');
                             
                             var thisBtn = this;
-                            var targetName = object.name.replace(/[^a-zA-Z0-9|\.\-_]/g,'_');
+                            var targetName = object.name;
+                            if (!isNaN(targetName))
+                            	targetName = self.categoryDescr[self.currentCategory].type.split('.')[1] + ' ' + targetName;
+                            var targetName = targetName.replace(/[^a-zA-Z0-9|\.\-_]/g,'_');
                             //console.log(object.name + " -> " + targetName);
                             self.wsClient.copy_object({
                                 to:   {ref: self.wsName + "/" + targetName},
@@ -346,34 +349,6 @@
             var $name = $('<span>').addClass("kb-data-list-name").append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
             if (isShortened) { $name.tooltip({title:object.name, placement:'bottom'}); }
            
-            /*var metadata = object.metadata;
-            var metadataText = '';
-            for(var key in metadata) {
-                if (metadata.hasOwnProperty(key)) {
-                    metadataText += '<tr><td>'+ key +'</td><td>'+ metadata[key] + '</td></tr>';
-                }
-            }
-            var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
-                                .append($('<div>').css({'text-align':'center','margin':'5pt'})
-                                            .append('<a href="'+landingPageLink+'" target="_blank">'+
-                                                        'explore data</a>&nbsp&nbsp|&nbsp&nbsp')
-                                            .append('<a href="'+this.options.landing_page_url+'objgraphview/'+object.ws + '/' + object.id +'" target="_blank">'+
-                                                        'view provenance</a><br>'))
-                                .append(
-                                    $('<table style="width=100%">')
-                                        .append(metadataText));
-            var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
-                .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
-                .on('click',function() {
-                        var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
-                        if ($more.is(':visible')) {
-                            $more.slideToggle('fast');
-                            $(this).html('<span class="fa fa-plus" style="color:#999" aria-hidden="true" />');
-                        } else {
-                            $more.slideToggle('fast');
-                            $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
-                        }
-                    });*/
             var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
             var btnClasses = "btn btn-xs btn-default";
             var css = {'color':'#888'};

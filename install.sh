@@ -121,8 +121,8 @@ log "Putting new $tgt command under $d"
 /bin/mv $tgt $d
 log "Done installing scripts"
 
-if [ $created_venv = 1 ]; then
-  console "You MUST activate the new virtual environment before running the Narrative"
-  console "Run: source $venv/bin/activate"
-fi
+#if [ $created_venv = 1 ]; then
+#  console "You MUST activate the new virtual environment before running the Narrative"
+#  console "Run: source $venv/bin/activate"
+#fi
 console "Done. Run the narrative with the command: $tgt"

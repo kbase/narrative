@@ -3,6 +3,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.9 - 1/14/2015
+__Changes__
+- Restyled menu bar buttons - 'about' button is now under the dropdown menu on the upper left of the screen, removed the global 'delete cell' button (for now!)
+- Restyled code and markdown cell buttons in the lower right corner of the page
+- Added a debug message that appears in the browser's Javascript console whenever an app/method object is sent to the NJS
+- App and Method specs should be globally available to all elements on the page from the method panel
+- Various styling adjustments on the data panel overlay
+- The 'more' button under each app and method in the methods panel should now link to an external manual page
+
 ### Version 0.3.8 - 1/13/2015
 __Changes__
 - Drag and drop data and data viewer bug fixes.

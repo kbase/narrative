@@ -1792,7 +1792,6 @@ div[class="tooltip-inner"] {
 /* data list */
 .kb-data-list-obj-row {
     transition: all 0.1s ease;
-    width:95%;
     
     border-left-style: solid;
     border-left-width: 5px;

@@ -19,6 +19,7 @@ kb_g_viewers = null;
 var KBaseNarrativeViewers = function(mclient, done) {
     this.viewers = {};
     this.landing_page_urls = {};
+    this.type_names = {};
     this.specs = {};
     this.method_ids = [];
     var self = this;
@@ -35,10 +36,11 @@ var KBaseNarrativeViewers = function(mclient, done) {
                     var mid = val.view_method_ids[0];
                     self.viewers[key] = mid;
                     self.landing_page_urls[key] = val.landing_page_url_prefix;
+                    self.type_names[key] = val.name;
                     self.method_ids.push(mid);
                 }
                 else {
-                    console.warn("No output types for: " + key);
+                    //console.warn("No output types for: " + key);
                 }
             });
             // Get method specs from all method_ids associated with some type in the previous loop
@@ -47,12 +49,12 @@ var KBaseNarrativeViewers = function(mclient, done) {
             mclient.get_method_spec({'ids':self.method_ids},
                 function(specs) {
                     _.each(specs, function(value, key) {
-                        console.debug("Set spec[" + value.info.id + "]");
+                        //console.debug("Set spec[" + value.info.id + "]");
                         self.specs[value.info.id] = value;
                     });
-		    if (done) {
-			done();
-		    }
+                    if (done) {
+                        done();
+                    }
                 },
                 function(error) {
                     console.error("get_method_spec:",error);
@@ -105,7 +107,7 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
     var o = data_cell.obj_info;
     var method_id = this.viewers[o.bare_type];
     if (!method_id) {
-        console.debug("No viewer found for type=" + o.bare_type);
+        //console.debug("No viewer found for type=" + o.bare_type);
         return null;
     }
     var spec = this.specs[method_id];
@@ -134,7 +136,7 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
         // Set target property to transformed parameter value
         output[mapping.target_property] = param;
     });
-    output.widget_title = spec.info.name;
+    output.widget_title = this.type_names[o.bare_type];  //spec.info.name;
     output.landing_page_url_prefix = this.landing_page_urls[o.bare_type];
     var output_widget = spec.widgets.output;
     return elt[output_widget](output);
@@ -180,7 +182,7 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
         version: '0.0.1',
         options: {
             info: null, // object info
-            cell: null, // IPython cell
+            cell: null  // IPython cell
         },
         obj_info: null,
         // for 'method_store' service
@@ -192,7 +194,7 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
          * Initialize
          */
         init: function(options) {
-            console.debug("kbaseNarrativeDataCell.init.start");
+            //console.debug("kbaseNarrativeDataCell.init.start");
             this._super(options);
             this.obj_info = options.info;
             this.obj_info.bare_type = /[^-]*/.exec(this.obj_info.type);
@@ -204,7 +206,7 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
 		var self = this;
 		
 		var done = function() {
-		    console.debug("kbaseNarrativeDataCell.init.done with load");
+		    //console.debug("kbaseNarrativeDataCell.init.done with load");
 		    kb_g_viewers = this.all_viewers;
 		    self.render(options.info);
 		}
@@ -212,7 +214,7 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             } else {
 		// if they are already loaded, we can just grab it and render
 		this.all_viewers = kb_g_viewers;
-		console.debug("kbaseNarrativeDataCell.init.done");
+		//console.debug("kbaseNarrativeDataCell.init.done");
 		this.render(options.info);
 	    }
             
@@ -251,29 +253,12 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             var self = this;
             var widgetTitleElem = $('<b>');
             var mainPanel = $('<div>');
-            var $menuSpan = $('<span style="margin-left:5px">');
-            this.$timestamp = $('<span>')
-            	.addClass('pull-right kb-func-timestamp');
-            this.$timestamp.append($('<span>')
-                    .append(this.readableTimestamp(self.obj_info.save_date)));
-            this.$timestamp.append($menuSpan);
-            var $headerInfo = $('<span>')
-            	.addClass(headerClass)
-            	.append(widgetTitleElem)
-            	.append(this.$timestamp);
-            var $body = $('<div>')
-            	.addClass(baseClass)
-            	.append($('<div>')
-                    .addClass('panel ' + panelClass)
-                    .append($('<div>')
-                            .addClass('panel-heading')
-                            .append($label)
-                            .append($headerInfo))
-                    .append($('<div>')
-                            .addClass('panel-body')
-                            .append(mainPanel)));
-            self.$elem.append($body);
-            $menuSpan.kbaseNarrativeCellMenu();
+            self.$elem.append($('<div>')
+                    .addClass('panel-heading')
+                    .append($('<span>')
+                        	.addClass(headerClass)
+                        	.append(widgetTitleElem)));
+            self.$elem.append(mainPanel);
             var $view = this.all_viewers.create_viewer(mainPanel, self);
 
             var landing_page_url_prefix = null;
@@ -287,17 +272,13 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             var widget_title = '';
             if (_.isNull($view)) {
                 KBaseNarrativeDefaultViewer(mainPanel, self);
-                widget_title = 'View ' + type;
+                widget_title = type;
                 is_default = true;
             }
             else {
                 widget_title = $view.options.widget_title;
                 if (!landing_page_url_prefix)
                 	landing_page_url_prefix = $view.options.landing_page_url_prefix;
-                //var html = $(marked.parser(marked.lexer(
-                //        self.shortMarkdownDesc(self.obj_info, landing_page_url_prefix))));
-                //console.log(html);
-                //html.find("a[href]").not('[href^="#"]').attr("target", "_blank");
             }
             if (!landing_page_url_prefix)
             	landing_page_url_prefix = 'ws/json';
@@ -305,11 +286,11 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             widgetTitleElem.append('&nbsp;<a href="'+self.shortMarkdownDesc(self.obj_info, 
             		landing_page_url_prefix)+'" target="_blank">'+self.obj_info.name+'</a>');
             // Make sure that we have unselected the cell
-            self.ip_cell.unselect();
+            //self.ip_cell.unselect();
             // If *not* default viewer, disable cell editing, as this will mess it up
-            if (!is_default) {
-              self.ip_cell.edit = function() { };
-            }
+            //if (!is_default) {
+            //  self.ip_cell.edit = function() { };
+            //}
             // Return the rendered widget
             return this;
         },

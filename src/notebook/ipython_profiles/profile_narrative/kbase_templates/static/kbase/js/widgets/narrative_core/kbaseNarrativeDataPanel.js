@@ -745,15 +745,30 @@
                     var kind = mod_type.split('.')[1];
 
                     // filter conditions
-                    if (f.query && name.toLowerCase().indexOf(f.query.toLowerCase()) == -1)
-                        continue;
-                    if (f.type && f.type.split('.')[1] != kind)
-                        continue;
-                    if (f.ws && f.ws != ws)
-                        continue;
-
-
-                    filteredData.push(obj);
+                    if (f.query) {
+                        //query filter
+                        var query = f.query.toLowerCase();
+                        if (name.toLowerCase().indexOf(query) >= 0) {
+                            filteredData.push(obj);
+                        } else if (kind.toLowerCase().indexOf(query)>=0) {
+                            filteredData.push(obj);
+                        } else if (obj[5].toLowerCase().indexOf(query)>=0) {
+                            filteredData.push(obj);
+                        }
+                    } else if (f.type) {
+                        //type filter
+                        if (f.type.split('.')[1] === kind) {
+                            filteredData.push(obj);
+                        }
+                    } else if (f.ws) {
+                        // workspace filter
+                        if (f.ws === ws) {
+                            filteredData.push(obj);
+                        }
+                    } else {
+                        // no filter is on, so add it
+                        filteredData.push(obj);
+                    }
 
                 }
                 return filteredData;
@@ -851,7 +866,7 @@
 
 
                 // create filter (search)
-                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter data">');
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
                 var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
                 // event for filter (search)
@@ -920,7 +935,7 @@
 
 
                 // create filter (search)
-                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter objects">');
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
                 var searchFilter = $('<div class="col-sm-4">').append(filterInput);
 
                 // event for filter (search)

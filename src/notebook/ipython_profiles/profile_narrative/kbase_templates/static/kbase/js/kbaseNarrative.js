@@ -221,7 +221,6 @@ narrative.init = function() {
                                                     .append($firstShutdownBtn))
                                             .append($reallyShutdownPanel))));
 
-//    var $versionBtn = $('<a href="#">About</a>')
     $('#kb-about-btn').click(function(event) {
                           event.preventDefault();
                           event.stopPropagation();
@@ -231,7 +230,6 @@ narrative.init = function() {
                           }
                       });
 
-//    $('#kb-version-stamp').empty().append($versionBtn);
     $('#notebook').append($versionModal);
     $('[data-toggle="tooltip"]').tooltip()
     /*
@@ -240,12 +238,22 @@ narrative.init = function() {
     var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
 
     var curCell = null;
-    $([IPython.events]).on('select.Cell', function(event, data) {
-        if (curCell && data.cell != this.curCell)
+    var showIPythonCellToolbar = function(cell) {
+        // hide the previously selected cell's toolbar
+        if (curCell && cell != curCell)
             curCell.celltoolbar.hide();
-        curCell = data.cell;
+        curCell = cell;
+        // show the new one
         if (!curCell.metadata['kb-cell'])
-            curCell.celltoolbar.show();
+            curCell.celltoolbar.show();        
+    };
+
+    $([IPython.events]).on('select.Cell', function(event, data) {
+        showIPythonCellToolbar(data.cell);
+    });
+
+    $([IPython.events]).on('create.Cell', function(event, data) {
+        showIPythonCellToolbar(data.cell);
     });
 
     /*

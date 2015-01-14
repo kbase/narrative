@@ -183,6 +183,11 @@
                 }, this)
             );
 
+            $(document).on('createViewerCell.Narrative',
+                $.proxy(function(event, data) {
+                    this.createViewerCell(data.nearCellIdx, data, data.widget);
+                }, this)
+            );
             // Initialize the data table.
             this.render();
             return this;
@@ -1633,6 +1638,30 @@
                 this.trigger('registerMethod.Narrative', jobInfo);
         },
 
+
+        createViewerCell: function(cellIndex, data, widget) {
+            var cell = this.addOutputCell(cellIndex, widget);
+            var title = "Data Viewer";
+            var type = "viewer";
+
+            var uuid = this.uuidgen();
+            var outCellId = 'kb-cell-out-' + uuid;
+            var outputData = '{"data":' + this.safeJSONStringify(data) + ', ' + 
+                               '"type":"' + type + '", ' +
+                               '"widget":"' + widget + '", ' +
+                               '"cellId":"' + outCellId + '", ' +
+                               '"title":"' + title + '", ' +
+                               '"time":' + this.getTimestamp() + '}'; 
+
+            cellText = '<div id="' + outCellId + '"></div>\n' +
+                       '<script>' +
+                       '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
+                       '</script>';
+            cell.set_text(cellText);
+            cell.rendered = false; // force a render
+            cell.render();
+        },
+
         /**
          * Result is an object with this structure:
          * cell = the invoking function cell.
@@ -1641,7 +1670,7 @@
          * data - the object to be passed in to the widget
          * embed - if true, then embed the widget and render it.
          */
-        createOutputCell: function(cell, result, isError) {
+        createOutputCell: function(cell, result, isError, widget) {
             if (typeof result === 'string' && !isError) {
                 // try to parse it as JSON.
                 // if we fail, then it's not something we can deal with and shouldn't

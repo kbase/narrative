@@ -695,19 +695,27 @@
                     // (a) find nearest cell using 'jquery-nearest'
                     var $near_elt = $($elt.nearest('.cell'));
                     // (b) map that cell back to an index, and insert before it
+
+
                     var near_idx = IPython.notebook.find_cell_index($near_elt.data().cell);
-                    var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
-                    // Add unique id attr. to cell
-                    var cell_id = self.genUUID();
-                    cell.rendered = false;
-                    cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
-                    cell.render();
-                    // Get object info
+
+                    // var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
+                    // // Add unique id attr. to cell
+                    // var cell_id = self.genUUID();
+                    // cell.rendered = false;
+                    // cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
+                    // cell.render();
+                    // // Get object info
                     var key = $elt.attr('kb-oid');
                     var obj = _.findWhere(self.objectList, {key: key});
                     var info = self.createInfoObject(obj.info);
-                    // Insert the narrative data cell into the div we just rendered
-                    $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+                    // // Insert the narrative data cell into the div we just rendered
+                    // $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+                    self.trigger('createViewerCell.Narrative', {
+                        'nearCellIdx': near_idx,
+                        'widget': 'kbaseNarrativeDataCell',
+                        'info' : info
+                    });
                 }
             });
 

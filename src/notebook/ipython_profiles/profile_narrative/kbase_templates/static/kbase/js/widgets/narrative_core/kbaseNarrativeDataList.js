@@ -708,6 +708,7 @@
                     // // Get object info
                     var key = $elt.attr('kb-oid');
                     var obj = _.findWhere(self.objectList, {key: key});
+                    console.debug('drag-n-drop: key=' + key, obj);
                     var info = self.createInfoObject(obj.info);
                     // // Insert the narrative data cell into the div we just rendered
                     // $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
@@ -742,19 +743,27 @@
 
         insertViewer: function(key) {
             var self = this;
-            var cell = IPython.notebook.insert_cell_below('markdown');
+            var cell = IPython.notebook.get_selected_cell();
+            var near_idx = IPython.notebook.find_cell_index(cell);
             $(cell.element).off('dblclick');
             $(cell.element).off('keydown');
 
-            var cell_id = self.genUUID();
-            cell.rendered = false;
-            cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
-            cell.render();
+            //var cell_id = self.genUUID();
+            //cell.rendered = false;
+            //cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
+            //cell.render();
 
             var obj = _.findWhere(self.objectList, {key: key});
+            console.debug('insertViewer: key=' + key, obj);
             var info = self.createInfoObject(obj.info);
             // Insert the narrative data cell into the div we just rendered
-            $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+            //$('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+            self.trigger('createViewerCell.Narrative', {
+                'nearCellIdx': near_idx,
+                'widget': 'kbaseNarrativeDataCell',
+                'info' : info
+            });
+            
         },
 
         renderMore: function() {

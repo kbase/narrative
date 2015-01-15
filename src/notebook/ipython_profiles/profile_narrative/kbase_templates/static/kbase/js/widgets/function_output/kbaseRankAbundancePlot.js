@@ -13,7 +13,7 @@
 	            top: "10",
 	            order: "average"
         },
-	    ws_url: "https://kbase.us/services/ws/",
+	    ws_url: window.kbconfig.urls.workspace,
 	    loading_image: "static/kbase/images/ajax-loader.gif",
         
 	    init: function(options) {

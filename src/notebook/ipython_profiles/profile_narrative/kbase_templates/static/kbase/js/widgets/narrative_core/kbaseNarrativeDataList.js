@@ -13,7 +13,7 @@
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
             default_landing_page_url: "/functional-site/#/ws/json/", // ws_name/obj_name,
-            
+
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
 
             loadingImage: 'static/kbase/images/ajax-loader.gif',
@@ -73,7 +73,7 @@
         obj_data : {}, // old style - type_name : info
 
         my_user_id: null,
-    
+
         /**
          * @method init
          * Builds the DOM structure for the widget.
@@ -185,11 +185,21 @@
                         console.error(error);
                         self.hideLoading();
                     });
-            } // else { we should probably do something if the user is not logged in or if the ws isn't set yet }
+            }
+            else {
+              // XXX: We should probably DO something
+              var where = "kbaseNarrativeDataList.refresh";
+              if (!self.ws) {
+                KBError(where, "workspace not connected");
+              }
+              else {
+                KBError(where, "workspace name is empty");
+              }
+            }
         },
-        
+
         refreshSpecificObject: function() {
-            
+
         },
 
         refreshTimeStrings: function() {
@@ -276,6 +286,9 @@
                     //OBJECTS DUE TO A BUG IN THE WORKSPACE THAT INCLUDES OLD VERSIONS AND DELETED VERSIONS
                     //BEFORE FILTERING OUT THE NUMBER - A BETTER TEMP FIX WOULD BE TO LIMIT THE NUMBER OF
                     //RECURSIONS TO 2 or 3 MAYBE...
+                    //BUT WHATEVER YOU DO PLEASE REMEMBER TO USE CAPITAL LETTERS EXTENSIVELY
+                    //OTHERWISE PEOPLE MIGHT NOT NOTICE WHAT YOU ARE SAYING AND THAT WOULD
+                    //BE EXTREMELY ANNOYING!!!! SERIOUSLY!!!
                     if (self.objectList.length < self.ws_obj_count
                             && self.objectList.length < self.options.ws_max_objs_to_fetch
                             && infoList.length>0) {
@@ -297,6 +310,8 @@
                     self.hideLoading();
                 },
                 function(error) {
+                    KBError("kbaseNarrativeDataList.getNextDataChunk",
+                            error.error.message);
                     self.$mainListDiv.show();
                     self.$mainListDiv.append("error: ");
                     self.$mainListDiv.append(error.error.message);
@@ -340,23 +355,23 @@
                 self.trigger('filterMethods.Narrative','type:'+object_info[2].split('-')[0].split('.')[1]);
             }
         },
-        
-        
+
+
         addDataControls: function(object_info, $alertContainer) {
             var self = this;
             var $btnToolbar = $('<span>')
                                         .addClass('btn-toolbar')
                                         .attr('role', 'toolbar');
-            
+
             var btnClasses = "btn btn-xs btn-default";
             var css = {'color':'#888'};
-            
+
                                 /*.append($('<div>').css({'text-align':'center','margin':'5pt'})
                                             .append('<a href="'+landingPageLink+'" target="_blank">'+
                                                         'explore data</a>&nbsp&nbsp|&nbsp&nbsp')
                                             .append('<a href="'+this.options.landing_page_url+'objgraphview/'+object_info[7] +'/'+object_info[1] +'" target="_blank">'+
                                                         'view provenance</a><br>'))*/
-            
+
             var $openLandingPage = $('<span>')
                                         .tooltip({title:'Explore data', 'container':'#'+this.mainListId})
                                         .addClass(btnClasses)
@@ -376,14 +391,14 @@
                                             }
                                             window.open(landingPageLink);
                                         });
-                                        
+
             var $openHistory = $('<span>')
                                         .addClass(btnClasses).css(css)
                                         .tooltip({title:'View history to revert changes', 'container':'body'})
                                         .append($('<span>').addClass('fa fa-history').css(css))
                                         .click(function(e) {
                                             e.stopPropagation(); $alertContainer.empty();
-                                            
+
                                             if (self.ws_name && self.ws) {
                                                 self.ws.get_object_history({ref:object_info[6]+"/"+object_info[0]},
                                                     function(history) {
@@ -423,10 +438,10 @@
                                                         $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
                                                     });
                                             }
-                                            
-                                            
+
+
                                         });
-                                        
+
             var $openProvenance = $('<span>')
                                         .addClass(btnClasses).css(css)
                                         .tooltip({title:'View data provenance and relationships', 'container':'body'})
@@ -443,7 +458,7 @@
                                             e.stopPropagation(); $alertContainer.empty();
                                             $alertContainer.append('Coming soon');
                                         });
-            
+
             var $rename = $('<span>')
                                         .addClass(btnClasses).css(css)
                                         .tooltip({title:'Rename data', 'container':'body'})
@@ -476,7 +491,7 @@
                                                             .append('Cancel')
                                                             .click(function() {$alertContainer.empty();} )));
                                         });
-            var $delete = $('<span>')   
+            var $delete = $('<span>')
                                         .addClass(btnClasses).css(css)
                                         .tooltip({title:'Delete data'})
                                         .append($('<span>').addClass('fa fa-trash-o').css(css))
@@ -515,7 +530,7 @@
                                                             .append('Cancel')
                                                             .click(function() {$alertContainer.empty();} )));
                                         });
-            
+
             $btnToolbar
                 .append($openLandingPage)
                 .append($openHistory)
@@ -523,11 +538,11 @@
                 .append($download)
                 .append($rename)
                 .append($delete);
-            
+
             return $btnToolbar;
         },
-        
-        
+
+
         renderObjectRowDiv: function(object_info, object_key) {
             var self = this;
             // object_info:
@@ -657,7 +672,7 @@
                                 if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
                             })
                             .mouseleave(function(){ $toggleAdvancedViewBtn.hide(); });
-                            
+
 
             // Drag and drop
             this.addDragAndDrop($topTable);
@@ -771,7 +786,7 @@
                 'widget': 'kbaseNarrativeDataCell',
                 'info' : info
             });
-            
+
         },
 
         renderMore: function() {

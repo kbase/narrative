@@ -211,3 +211,13 @@ g_log = get_logger()
 # If no handlers, initialize them
 if not g_log.handlers:
     init_handlers()
+
+class NarrativeUIError(object):
+    """Created by Narrative UI javascript on an error.
+    """
+    ui_log = get_logger("narrative_ui")
+    def __init__(self, is_fatal, where="unknown location", what="unknown condition"):
+        info = {"function": where, "msg": what}
+        msg = format_event("ui.error", info)
+        log_method = (self.ui_log.error, self.ui_log.critical)[is_fatal]
+        log_method(msg)

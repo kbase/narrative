@@ -24,4 +24,4 @@ log "Generate services dynamically from $svcjson"
 python $NARRATIVEDIR/biokbase/narrative/common/service_root.py -f $svcjson
 
 log "Start notebook"
-ipython notebook $* --NotebookManager.notebook_dir=~/.narrative --profile=narrative
+ipython notebook $* --ip=0.0.0.0 --NotebookManager.notebook_dir=~/.narrative --profile=narrative

@@ -15,11 +15,11 @@
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             exampleWsId: 2901, // designed to be a workspace with just a handful of objects
             exampleTypeOrder: [
-                {name:'AssemblyInput', displayName: "Example Assembly Inputs", header:'Read data configured for sequence assembly.'},
-                {name:'ContigSet', displayName: "Example Contig Sets", header:'A set of DNA sequences'},
-                {name:'Genome', displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
-                {name:'FBAModel', displayName: "Example FBAModels", header:'A metabolic model of an organism'},
-                {name:'Media', displayName: "Example Media", header:'Specification of an environmental condition'}
+                {name:['AssemblyInput','SingleEndLibrary','PairedEndLibrary','ReferenceAssembly'], displayName: "Example Sequence Assembly Inputs", header:'Various types of read data configured for sequence assembly.'},
+                {name:['ContigSet'], displayName: "Example Contig Sets", header:'A set of DNA sequences'},
+                {name:['Genome'], displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
+                {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
+                {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'}
                 ]
             
         },
@@ -114,17 +114,15 @@
             var typeDivs = {};
             for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
                 var typeInfo = self.options.exampleTypeOrder[t];
-                var name = typeInfo.name;
-                if (typeInfo.displayName) {
-                    name = typeInfo.displayName;
-                }
                 var $tc = $('<div>')
                             .append($('<div>').css({'margin':'15px'})
                                 .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
-                                        .append(name))
+                                        .append(typeInfo.displayName))
                                 .append($('<div>').css({'margin':'4px','color':'#555'})
                                         .append(typeInfo.header)));
-                typeDivs[typeInfo.name] = $tc;
+                for(var k=0; k<typeInfo.name.length; k++) {
+                    typeDivs[typeInfo.name[k]] = $tc;
+                }
             }
             var $tc = $('<div>')
                             .append($('<div>').css({'margin':'15px'})
@@ -135,6 +133,11 @@
             typeDivs['other.types'] = $tc;
             
             var hasOthers = false;
+            self.objectList.sort(function(a,b) {
+                                        if (a.info[2].toUpperCase() > b.info[2].toUpperCase()) return -1; // sort by type
+                                        if (a.info[2].toUpperCase() < b.info[2].toUpperCase()) return 1;
+                                        return 0;
+                                    });
             for (var k=0; k<self.objectList.length; k++) {
                 var obj = self.objectList[k];
                 var typeName = obj.info[2].split('-')[0].split('.')[1];
@@ -147,7 +150,7 @@
             }
             
             for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
-                self.$mainPanel.append(typeDivs[self.options.exampleTypeOrder[t].name]);
+                self.$mainPanel.append(typeDivs[self.options.exampleTypeOrder[t].name[0]]);
             }
             if (hasOthers) {
                 self.$mainPanel.append(typeDivs['other.types']);
@@ -184,7 +187,7 @@
             var type = type_tokens[1].split('-')[0];
             
             var $addDiv =
-                $('<div>').addClass('col-md-2').append(
+                $('<div>').append(
                     $('<button>').addClass('btn btn-default')
                         .append($('<span>').addClass('fa fa-chevron-circle-left').append(' Add'))
                         .on('click',function() { // probably should move action outside of render func, but oh well
@@ -213,6 +216,7 @@
             }*/
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
             if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom'}); }
+            var $type = $('<span>').addClass("kb-data-list-type").append(type);
            
             var metadata = object_info[10];
             var metadataText = '';
@@ -221,7 +225,12 @@
                     metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
                 }
             }
-            
+            if (type==='Genome') {
+                if (metadata.hasOwnProperty('Name')) {
+                    $type.html('Genome: '+metadata['Name']);
+                }
+            }
+            /*
             var landingPageLink = this.options.default_landing_page_url +object_info[7]+ '/' + object_info[1];
             if (this.ws_landing_page_map) {
                 if (this.ws_landing_page_map[type_module]) {
@@ -255,19 +264,35 @@
                             $more.slideToggle('fast');
                             $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
-                    });
+                    });*/
+            var $topTable = $('<table>')
+                                 .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
+                                 .append($('<tr>')
+                                         .append($('<td>')
+                                                 .css({'width':'90px'})
+                                                .append($addDiv))
+                                         .append($('<td>')
+                                                 .css({'width':'50px'})
+                                                 .append($('<span>')
+                                            		 	.addClass("kb-data-list-logo")
+                                            		 	.css({'background-color':this.logoColorLookup(type)})
+                                            		 	.append(type.substring(0,1))))
+                                         .append($('<td>')
+                                                 .append($name).append('<br>').append($type)));
+	    
+	    var $row = $('<div>')
+                                .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
+                                //.addClass('kb-data-list-obj-row')
+                                .append($('<div>').addClass('kb-data-list-obj-row-main')
+                                            .append($topTable))
+                                // show/hide ellipses on hover, show extra info on click
+                                /*.mouseenter(function(){
+                                    $addDiv.show();
+                                })
+                                .mouseleave(function(){
+                                    $addDiv.hide();
+                                });*/
                     
-            var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info')
-                                .append($('<span>')
-                                            .addClass("kb-data-list-logo")
-                                            .css({'background-color':this.logoColorLookup(type)})
-                                            .append(type.substring(0,1)))
-                                .append($('<span>').css({'margin':'10px'}).append($name));
-        
-            var $row = $('<div>').css({'margin':'5px'}).append(
-                            $('<div>').addClass('row kb-data-list-obj-row-main')
-                                .append($addDiv)
-                                .append($mainDiv));
             return $row;
         },
         

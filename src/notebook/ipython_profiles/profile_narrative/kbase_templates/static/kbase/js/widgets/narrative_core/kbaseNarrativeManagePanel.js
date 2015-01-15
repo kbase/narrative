@@ -62,7 +62,7 @@
                 this.options.nms_url = window.kbconfig.urls.narrative_method_store;
             }
             
-            this.$mainPanel = $('<div>').css({'height':'300px'});
+            this.$mainPanel = $('<div>').css({'height':'600px'});
             this.body().append(this.$mainPanel);
             
             $(document).on(
@@ -201,7 +201,7 @@
                 
                 self.$narPanel = $('<div>'); //.css({'margin':'10px'});
                 self.$mainPanel.append(self.$narPanel);
-                self.renderPanel();
+                //self.renderPanel();
             }
         },
         
@@ -377,7 +377,6 @@
                     .append($('<a href="'+narRef+'" target="_blank">').append(nameText).append($priv)));
             var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
             if(data.ws_info[2]===this._attributes.auth.user_id) {
-                $usrNameSpan.html();
             } else {
                 $dataCol.append($usrNameSpan).append('<br>');
                 this.displayRealName(data.ws_info[2], $usrNameSpan);
@@ -403,7 +402,7 @@
                                                 var $share = $('<div>');
                                                 // just use the share panel, max height is practically unlimited because we are already
                                                 // in a scrollable pane
-                                                $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'220px'});
+                                                $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
                                                 $shareContainer.append($share);
                                             }
                                         }));
@@ -417,7 +416,11 @@
             
             $narDiv.append($('<table>').css({'width':'100%'}).append($('<tr>').append($dataCol).append($ctrCol)));
             $narDiv.append($shareContainer);
-            return $narDiv;
+            
+            var $narDivContainer = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr'))
+                                        .append($narDiv);
+            
+            return $narDivContainer;
         },
         
         
@@ -486,10 +489,9 @@
         real_name_lookup: {},
         displayRealName: function(username,$targetSpan) {
 	    var self = this;
-	    // todo : use globus to populate user names, but we use a hack because of globus CORS headers
 	    if (self.ws) { // make sure we are logged in and have some things
 		
-                if (self.real_name_lookup[username]) {
+                if (self.real_name_lookup[username] && self.real_name_lookup[username] !=="...") {
                     $targetSpan.html(self.real_name_lookup[username]+" ("+username+")");
                 } else {
                     self.real_name_lookup[username] = "..."; // set a temporary value so we don't search again

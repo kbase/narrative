@@ -84,6 +84,7 @@ def _method_call(meth, method_spec_json, param_values_json):
         steps = []
         methodId = methodSpec['info']['id']
         app = { 'name' : 'App wrapper for method ' + methodId,'steps' : steps }
+        meth.debug(json.dumps(app))
         steps.append(create_app_step(workspace, token, wsClient, methodSpec, paramValues, methodId, True))
         njsClient = NarrativeJobService(service.URLS.job_service, token = token)
         appState = njsClient.run_app(app)
@@ -92,15 +93,24 @@ def _method_call(meth, method_spec_json, param_values_json):
         methodOut = {'job_id': jobId}
     else:
         input = {}
-        rpcArgs = prepare_generic_method_input(token, workspace, methodSpec, paramValues, input);
+        output = None
         behavior = methodSpec['behavior']
-        url = behavior['kb_service_url']
-        serviceName = behavior['kb_service_name']
-        methodName = behavior['kb_service_method']
-        if serviceName:
-            methodName = serviceName + '.' + methodName
-        genericClient = GenericService(url = url, token = token)
-        output = genericClient.call_method(methodName, rpcArgs)
+        if 'kb_service_input_mapping' in behavior:
+            rpcArgs = prepare_generic_method_input(token, workspace, methodSpec, paramValues, input);
+            url = behavior['kb_service_url']
+            serviceName = behavior['kb_service_name']
+            methodName = behavior['kb_service_method']
+            if serviceName:
+                methodName = serviceName + '.' + methodName
+            genericClient = GenericService(url = url, token = token)
+            output = genericClient.call_method(methodName, rpcArgs)
+        else:
+            parameters = methodSpec['parameters']
+            for paramPos in range(0, len(parameters)):
+                param = parameters[paramPos]
+                paramId = param['id']
+                paramValue = paramValues[paramPos]
+                input[paramId] = paramValue
         methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, output)
         if 'job_id_output_field' in methodSpec:
             jobIdField = methodSpec['job_id_output_field']

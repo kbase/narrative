@@ -50,6 +50,17 @@ class="notebook_app"
     </div>
 
     <div id="content-column">
+        <span id="kb-add-code-cell" 
+              class="kb-data-list-add-data-button fa fa-terminal fa-2x" 
+              style="position:fixed; bottom:15px; right:75px; z-index:5"
+              data-toggle="tooltip" data-placement="top" Title="Add Code Cell"></span>
+        <span id="kb-add-md-cell" 
+              class="kb-data-list-add-data-button fa fa-paragraph fa-2x" 
+              style="position:fixed; bottom:15px; right:10px; z-index:5"
+              data-toggle="tooltip" data-placement="top" Title="Add Markdown Cell"></span>
+
+
+
 <!--         <div id="menubar-container" class="narrative-menu-container pull-left">
             <div id="menubar">
                 <div class="navbar">
@@ -247,6 +258,8 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseShockFileUploader.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/api/transformClient.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/api/aweClient.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/api/userProfileClient.js") }}" type="text/javascript" charset="utf-8"></script>
+
 
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNarrativeMethodInput.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -259,6 +272,7 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/kbaseJobWatcher.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeSideImportTab.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeSidePublicTab.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeExampleDataTab.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeCellMenu.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -334,6 +348,9 @@ class="notebook_app"
 <script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbmanhattan/js/manhattan.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseDataDump.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseCheckObject.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseAbundanceDataTable.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <!-- <in development> Phylogenetic tree widget code -->
 <script src="{{ static_url("knhxtree/js/menu.js") }}" type="text/javascript" charset="utf-8"></script>

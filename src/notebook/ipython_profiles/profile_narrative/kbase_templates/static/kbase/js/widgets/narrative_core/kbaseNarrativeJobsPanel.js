@@ -465,6 +465,7 @@
 
             var status = "Unknown";
             var started = "Unknown";
+            var position = null;
             var task = null;
 
             // don't know nothing about no job!
@@ -481,7 +482,6 @@
                 if (job.job_state) {
                     status = job.job_state.charAt(0).toUpperCase() + job.job_state.substring(1);
                 }
-
                 if (jobType === "njs") {
                     var stepId = job.running_step_id;
                     if (stepId) {
@@ -489,6 +489,8 @@
                         task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
                     }
                 }
+                if (job.position && job.position > 0)
+                    position = job.position;
             }
             if (jobInfo && jobInfo.job && jobInfo.job.timestamp) {
                 started = this.makePrettyTimestamp(jobInfo.job.timestamp);
@@ -497,6 +499,8 @@
                              .append(this.makeInfoRow('Status', status));
             if (task !== null)
                 $infoTable.append(this.makeInfoRow('Task', task));
+            if (position !== null)
+                $infoTable.append(this.makeInfoRow('Queue Position', position));
             $infoTable.append(this.makeInfoRow('Started', started));
 
 
@@ -580,12 +584,12 @@
                     }
                 }
                 else if (jobStatus.error) {
-                    errorText = jobStatus.error;
+                    errorText = $('<div class="kb-jobs-error-modal">').append(jobStatus.error);
                     errorType = "Runtime";
                 }
                 else if (Object.keys(jobStatus.step_errors).length !== 0) {
                     errorType = "Runtime";
-                    errorText = $('<div>');
+                    errorText = $('<div class="kb-jobs-error-modal">');
                     for (var stepId in jobStatus.step_errors) {
                         if (jobStatus.step_errors.hasOwnProperty(stepId)) {
                             // contort that into the method name
@@ -626,7 +630,7 @@
         },
 
         makeJobClearButton: function(jobStatus, jobInfo) {
-            var removeText = "Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?";
+            var removeText = "Deleting this job will remove it from your Narrative. Any already generated data will be retained. Continue?";
             var warningText = "This job appears to have fallen into an error state and is no longer running on KBase servers.";
 
             return $('<span data-toggle="tooltip" title="Remove Job" data-placement="left">')
@@ -644,7 +648,7 @@
                        if (jobStatus && jobStatus.job_state) {
                            var status = jobStatus.job_state.toLowerCase();
                            if (status === 'queued' || status === 'running' || status === 'in-progress') {
-                               warningText = "This job is currently running on KBase servers! Removing it will prevent your App from updating, though data is currently being generated and may still appear in your Narrative.";
+                               warningText = "This job is currently running on KBase servers! Removing it will attempt to stop the running job.";
                            }
                            else if (status === 'completed') {
                                warningText = "This job has completed running. You may safely remove it without affecting your Narrative.";

@@ -7,8 +7,15 @@ div#notebook {
     overflow-y: auto;
 }
 
+.cell {
+    border-radius: 0;
+    border:0;
+    border-left: 5px solid #fff;
+}
 .cell.selected {
-    border: #ababab solid;
+    border-radius: 0;
+    border:0;
+    border-left: 5px solid #4BB856;
 }
 
 /**
@@ -35,6 +42,8 @@ body {
 }
 
 /* header styling */
+
+
 
 .notebook_app .navbar-kbase {
     webkit-box-shadow: none;
@@ -135,25 +144,50 @@ div#notebook {
     padding: 8px;
 }
 
+/* Top bar nav buttons
+   --------------------------
+*/
 .kb-nav-btn {
+    background-color: #FFF;
     padding: 1px 7px;
     font-size: 24px;
     border: none;
     text-shadow: none !important;
-    box-shadow: none;
-    -webkit-box-shadow: none;
-    moz-box-shadow: none;
     margin: 0;
+    box-shadow: 0 0 3px #CECECE;
+    margin-right: 5px;
 }
-
+#kb-nav-menu { /* don't add shadows here */
+  box-shadow: none;
+}
 .kb-nav-btn > div {
     color: #666 !important;
 }
-
 .kb-nav-btn .kb-nav-btn-txt {
     font-size: 10pt;
     margin-top: -5px;
 }
+.navbar-right .fa::before { /* color nav icons */
+  color: #2196F3;
+}
+.navbar-right .kb-nav-btn:hover {
+  background-color: #F5F5F5;
+}
+#kb-ipy-menu { /* restore rounded corners */
+  border-radius: 4px !important;
+  margin-right: 0;
+}
+.btn-xs { /* don't use drop-shadow on profile menu */
+  border: 0;
+  box-shadow: none;
+  -webkit-box-shadow: none;
+  moz-box-shadow: none;
+  font-size: 18px;
+}
+.btn-xs .glyphicon-user { /* also resize user btn */
+  padding: 14px 5px 14px 5px;
+}
+/* -------------------------- */
 
 #kb-narr-name {
     font-style: italic;
@@ -294,7 +328,7 @@ p#site-title {
 
 #content-column {
     height: 100%;
-    margin-left: 300px;
+    margin-left: 380px;
 }
 
 #workspace {
@@ -326,7 +360,7 @@ p#site-title {
 
 /* left pane styling */
 #left-column {
-    width: 300px;
+    width: 380px;
     position: fixed;
     border-right: 5px solid #e0e0e0;
     top: 70px;
@@ -1351,10 +1385,12 @@ div#notebook_panel {
 
 .kb-func-panel {
   border-color: #bce8f1;
+  border-radius: 1px;
 }
 
 .kb-func-panel > .panel-heading {
   color: #31708f;
+  border-radius: 1px;
   background-color: #d9edf7;
   border-color: #bce8f1;
   padding: 5px 10px;
@@ -1378,12 +1414,13 @@ div#notebook_panel {
 .kb-func-panel .panel-footer {
     /*background-color: #fff;
     border-top: none; */
-    padding: 2px 15px;
+    /*padding: 2px 15px;*/
 }
 
 /** output cell styling */
 .kb-cell-output .panel .panel-heading {
     padding: 5px 10px;
+    border-radius: 1px;
 }
 
 .rendered_html .kb-cell-output ul {
@@ -1436,7 +1473,10 @@ div#notebook_panel {
     border-bottom: none;
 }
 
-
+.kb-jobs-error-modal {
+    width: 485px;
+    word-wrap: break-word;
+}
 
 /** new method parameter styling **/
 .kb-method-parameter-panel {
@@ -1452,7 +1492,7 @@ div#notebook_panel {
 }
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
 .kb-method-parameter-row-hover {
-   background:#eee;
+   background:#F5F5F5;
 }
 
 .kb-method-parameter-row-error {
@@ -1538,7 +1578,9 @@ div#notebook_panel {
 /** App styling */
 
 .kb-app-panel {
-    border: 15px solid #dddddd;
+    border:0;
+    border-top: 1px solid #CECECE;
+    border-radius: 1px;
 }
 
 .app-panel-heading {
@@ -1557,6 +1599,10 @@ div#notebook_panel {
 }
 .kb-app-step-container {
     margin-top: 6px;
+}
+.kb-app-panel > .panel-footer {
+    border: 0;
+    border-radius: 1px;
 }
 
 .kb-app-func-panel {
@@ -1619,6 +1665,38 @@ div#notebook_panel {
   50% { opacity: 0.7; }
   100% { opacity: 1.0; }
 }
+
+button.kb-app-run {
+    background-color: #2196F3;
+    border-radius: 1px;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 13px;
+    box-shadow: 1px 1px 1px #ccc;
+    -webkit-box-shadow: 1px 1px 1px #ccc;
+    moz-box-shadow: 1px 1px 1px #ccc;
+}
+button.kb-app-run:hover {
+    background-color: #1E88E5;;
+}
+
+
+button.kb-method-run {
+    background-color: #2196F3;
+    border-radius: 1px;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 13px;
+    box-shadow: 1px 1px 1px #ccc;
+    -webkit-box-shadow: 1px 1px 1px #ccc;
+    moz-box-shadow: 1px 1px 1px #ccc;
+}
+button.kb-method-run:hover {
+    background-color: #1E88E5;;
+}
+
 
 /***********
  * END of kbaseNarrFunc.css
@@ -1740,17 +1818,41 @@ div[class="tooltip-inner"] {
 
 /* data list */
 .kb-data-list-obj-row {
-    width:100%;
-    border-top-style: solid;
-    border-top-width: thin;
-    border-top-color: #999;
+    transition: all 0.1s ease;
+
     border-left-style: solid;
     border-left-width: 5px;
     border-left-color: #fff;
     color:#333;
     margin:2px;
     padding:4px;
+    margin-bottom: 5px;
+
+    box-shadow: 1px 1px 1px 1px #fff;
+    -webkit-box-shadow: 1px 1px 1px 1px #fff;
+    moz-box-shadow: 1px 1px 1px 1px #fff;
 }
+
+.kb-data-list-obj-row:hover {
+    border-left-style: solid;
+    border-left-width: 5px;
+    border-left-color: #4BB856;
+
+    box-shadow: 1px 1px 1px 1px #aaa;
+    -webkit-box-shadow: 1px 1px 1px 1px #aaa;
+    moz-box-shadow: 1px 1px 1px 1px #aaa;
+}
+
+.kb-data-list-obj-row-selected {
+    border-left-style: solid;
+    border-left-width: 5px;
+    border-left-color: #4BB856;
+    box-shadow: 1px 1px 1px 1px #aaa;
+    -webkit-box-shadow: 1px 1px 1px 1px #aaa;
+    moz-box-shadow: 1px 1px 1px 1px #aaa;
+}
+
+
 .kb-data-list-obj-row-main {
     width:100%;
     margin:0px;
@@ -1769,21 +1871,90 @@ div[class="tooltip-inner"] {
     margin: 0;
 }
 
-.kb-data-list-get-data-button {
-    /*border: none;
-    border-radius: 0;
-    text-shadow: none !important;
-    box-shadow: none;
-    -webkit-box-shadow: none;
-    moz-box-shadow: none;*/
+.kb-data-list-add-data-button {
+    transition: all 0.4s ease;
+    width:  40pt;
+    height: 40pt;
+    color:  #fff;
+    background-color: #F44336;
+    border-radius: 50%;
+    text-align: center;
+    padding-top: 10pt;
+    box-shadow: 2px 2px 4px 1px #ccc;
+    -webkit-box-shadow: 2px 2px 4px 1px #ccc;
+    moz-box-shadow: 2px 2px 4px 1px #ccc;
+}
+/* specialize buttons that hover over narrative */
+#kb-add-code-cell, #kb-add-md-cell {
+  box-shadow: #CECECE 2px 2px 1px;
+  height: 40px;
+  width: 40px;
+  background-color: rgba(128,128,128,0.5);
+  font-size: 1.2em;
+}
+#kb-add-code-cell { right: 100px; }
+#kb-add-md-cell { margin-right: 20px; }
+
+.kb-data-list-add-data-button:hover {
+    cursor:pointer;
+    box-shadow: 4px 4px 8px 1px #ccc;
+    -webkit-box-shadow: 4px 4px 8px 1px #ccc;
+    moz-box-shadow: 4px 4px 8px 1px #ccc;
 }
 
-.kb-data-list-obj-row:hover {
-    /*background-color: #eee;*/
-    border-left-style: solid;
-    border-left-width: 5px;
-    border-left-color: #FFC107;
+.kb-data-list-add-data-text-button {
+    transition: all 0.4s ease;
+    color:  #fff;
+    background-color: #F44336;
+    text-align: center;
+    border-radius: 0%;
+    box-shadow: 2px 2px 4px 1px #ccc;
+    -webkit-box-shadow: 2px 2px 4px 1px #ccc;
+    moz-box-shadow: 2px 2px 4px 1px #ccc;
 }
+.kb-data-list-add-data-text-button:hover {
+    cursor:pointer;
+    color:  #fff;
+    box-shadow: 4px 4px 8px 1px #ccc;
+    -webkit-box-shadow: 4px 4px 8px 1px #ccc;
+    moz-box-shadow: 4px 4px 8px 1px #ccc;
+}
+
+
+/* buttons */
+.kb-data-list-btn {
+    background-color: #2196F3;
+    border-radius: 1px;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    font-size: 13px;
+    box-shadow: 1px 1px 3px #aaa;
+    margin: 5px;
+}
+.kb-data-list-btn:hover {
+    background-color: #1E88E5;;
+}
+
+.kb-data-list-cancel-btn {
+    background-color: #F5F5F5;
+    border-radius: 1px;
+    color: #888;
+    border: none;
+    padding: 5px 10px;
+    font-size: 13px;
+    box-shadow: 1px 1px 3px #aaa;
+    margin: 5px;
+}
+.kb-data-list-cancel-btn:hover {
+    background-color: #CECECE;;
+}
+
+.kb-data-list-row-hr {
+    width:70%;
+    margin: 2px;
+}
+
 .kb-data-list-logo {
     width:  30pt;
     height: 30pt;
@@ -1810,23 +1981,46 @@ div[class="tooltip-inner"] {
     white-space: nowrap;
     margin: 2px;
 }
+
 .kb-data-list-version {
     color:#777;
     font-size: 9pt;
     font-style: italic;
     white-space: nowrap;
     margin: 2px;
+    cursor:default;
 }
 .kb-data-list-type {
     color:#777;
     font-size: 10pt;
     margin: 2px;
-    margin-left: 15px;
+    margin-left: 10px;
+    cursor:default;
 }
 .kb-data-list-date {
     color:#777;
     font-size: 10pt;
     margin: 2px;
+    margin-left: 10px;
+    white-space: nowrap;
+    cursor:default;
+}
+.kb-data-list-edit-by {
+    color:#777;
+    font-size: 10pt;
+    margin: 2px;
+    margin-left: 0px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.kb-data-list-edit-by:hover {
+    color:#444;
+}
+.kb-data-list-more {
+    color:#777;
+    font-size: 8pt;
+    margin: 0px;
+    padding: 0px;
     margin-left: 15px;
     white-space: nowrap;
 }
@@ -1988,5 +2182,3 @@ div[class="tooltip-inner"] {
 .kb-import-status {
     margin: 20px;
 }
-
-

@@ -3,6 +3,66 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.9 - 1/14/2015
+__Changes__
+- Restyled menu bar buttons - 'about' button is now under the dropdown menu on the upper left of the screen, removed the global 'delete cell' button (for now!)
+- Restyled code and markdown cell buttons in the lower right corner of the page
+- Added a debug message that appears in the browser's Javascript console whenever an app/method object is sent to the NJS
+- App and Method specs should be globally available to all elements on the page from the method panel
+- Various styling adjustments on the data panel overlay
+- The 'more' button under each app and method in the methods panel should now link to an external manual page
+
+### Version 0.3.8 - 1/13/2015
+__Changes__
+- Drag and drop data and data viewer bug fixes.
+- Position of a queued job should now be tracked in the job panel.
+- The Narrative object metadata now tracks the number of each type of cell in that Narrative. Method and App cells are further tracked by their id.
+
+### Version 0.3.7 - 1/12/2015
+__Changes__
+- Fix for int, float and array types of input sending to NJS
+- Fix for empty parameter values in import tab
+- Support was added into public data for meta-genomes and 6 types of GWAS
+- Fixed 'Add Data' button in a new Narrative - should properly open the data overlay now
+- Updated layout and styling of Method Gallery overlay to be closer to the mockup
+
+### Version 0.3.6 - 1/9/2015
+__Changes__
+- Changed install.sh - now it requires an existing Python virtual environment for installation
+- Removed text/code cell buttons from method panel - they've now migrated to the lower right side of the page.
+- Started restyling various elements to match the new style guide (colors, shadows, etc.)
+- Inserted (better) icons than just letters for data objects
+- Public data tab on side panel was redesigned. Genome mode using search API is now the only supported mode there.
+- Method cell changes
+    - Fixed problem where starting a long-running method would immediately show an output cell with broken results
+    - Fixed problem when submitting a method with numerical value inputs
+    - Fixed problem when submitting a method with multiple possible output types for a single parameter
+    - Fixed problem where method cell parameters were not being properly validated before sending the job
+- Added document that details app failure points
+- Data list supports deleting, renaming, reverting objects
+
+### Version 0.3.5 - 1/7/2015
+__Changes__
+- Added link to release notes in 'About' dialog.
+- Removed old links from the Navbar menu.
+- Added separate 'Jobs' tab to side panel.
+- Fixed problem with Job errors overflowing the error modal.
+- Method panel changes 
+    - The magnifying glass button should now toggle the search input.
+    - Added a 'type:_objecttype_' filter on methods and apps. This filters by their parameters. E.g. putting 'type:genome' or 'type:KBaseGenomes.Genome' in there will only show methods/apps that have a genome as a parameter.
+    - Added an event that can be fired to auto-filter the methods and apps.
+    - Updated the style to a more 'material' look.
+    - All specs are now fetched at Narrative startup. This will speed up some of the in-page population, but any apps with errors in their specs are no longer displayed in the list.
+    - Removed the '+/-' buttons for expanding the tooltip, replaced with '...'
+- Data list changes
+    - Added a big red '+' button to add more data.
+    - Updated the style to a more 'material' look.
+    - Removed the '+/-' buttons for showing metadata info, replaced with '...'
+- Import tab on GetData side panel allows now to upload genome from GBK file, transcriptomes from Fasta and short reads from Fasta and Fastq
+- Viewers can be open for main data types by drag-n-drop objects from Data panel to narrative 
+- States of long running methods calling services are now shown on Job panel and Job panel waits for 'Done' state before show output widget
+- Added a 'debug' viewer to the apps. After starting an app's run, click on the gear menu in the app cell and select 'View Job Submission'. This will both emit the returned kernel messages from that app run into your browser's Javascript console, and it will create and run a code cell that will show you the object that gets set to the Job Service.
+
 ### Version 0.3.4
 __Changes__
 - Redesign of the Method Gallery panel

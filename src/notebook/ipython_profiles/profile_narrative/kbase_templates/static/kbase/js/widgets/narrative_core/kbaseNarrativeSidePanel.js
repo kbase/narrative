@@ -45,15 +45,19 @@
                     name : 'kbaseNarrativeManagePanel',
                     params : { autopopulate: true }
                 },
+            ]);
+
+            this.$narrativesWidget = manageWidgets['kbaseNarrativeAppsPanel'];
+            var $managePanel = manageWidgets['panelSet'];
+
+            var jobsWidget = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeJobsPanel',
                     params : { autopopulate: false }
                 }
             ]);
-
-            this.$narrativesWidget = manageWidgets['kbaseNarrativeAppsPanel'];
-            this.$jobsWidget = manageWidgets['kbaseNarrativeJobsPanel'];
-            var $managePanel = manageWidgets['panelSet'];
+            this.$jobsWidget = jobsWidget['kbaseNarrativeJobsPanel'];
+            var $jobsPanel = jobsWidget['panelSet'];
 
             var $tabs = this.buildTabs([
                 {
@@ -61,24 +65,28 @@
                     content : $analysisPanel
                 },
                 {
-                    tabName : 'Manage',
+                    tabName : 'Narratives',
                     content: $managePanel
+                },
+                {
+                    tabName : 'Jobs',
+                    content: $jobsPanel
                 }
             ], true);
 
             this.$elem.addClass('kb-side-panel');
             this.$elem.append($tabs.header).append($tabs.body);
 
-            $(document).on('showSidePanelOverlay.Narrative', $.proxy(function(event) {
-                this.showOverlay();
+            $(document).on('showSidePanelOverlay.Narrative', $.proxy(function(event, panel) {
+                this.showOverlay(panel);
             }, this));
 
-            $(document).on('hideSidePanelOverlay.Narrative', $.proxy(function(event) {
-                this.hideOverlay();
+            $(document).on('hideSidePanelOverlay.Narrative', $.proxy(function(event, panel) {
+                this.hideOverlay(panel);
             }, this));
 
-            $(document).on('toggleSidePanelOverlay.Narrative', $.proxy(function(event) {
-                this.toggleOverlay();
+            $(document).on('toggleSidePanelOverlay.Narrative', $.proxy(function(event, panel) {
+                this.toggleOverlay(panel);
             }, this));
 
             if (this.autorender) {
@@ -150,9 +158,8 @@
             this.$overlayFooter  = $('<div class="kb-overlay-footer">');
             this.$overlay = $('<div>')
                             .addClass('kb-side-overlay-container')
-                            .append(this.$overlayBody)
-                            .append(this.$overlayFooter);
-
+                            //.append(this.$overlayBody)
+                            //.append(this.$overlayFooter);
 
             $('body').append(this.$overlay);
             this.$overlay.hide();
@@ -171,7 +178,7 @@
             });
 
             // putting this here for now, just for testing
-            this.dataImporter();
+            // this.dataImporter();
         },
 
         updateOverlayPosition: function() {
@@ -179,15 +186,36 @@
             this.$narrativeDimmer.position({my: 'left top', at: 'right top', of: this.$elem});
         },
 
-        toggleOverlay: function() {
-            if (this.$overlay.is(':visible'))
+        /**
+         * @method
+         * @public
+         * Also available through a trigger - 'toggleSidePanelOverlay.Narrative'
+         * The behavior here is done in three cases.
+         * 1. If the overlay is currently visible, it gets hidden.
+         * 1a. If there is a panel given, and it is different from the currently attached panel, then
+         *     the new panel is attached and the overlay is redisplayed.
+         * 2. If the overlay is currently hidden, it is shown with the given panel.
+         */
+        toggleOverlay: function(panel) {
+            if (this.$overlay.is(':visible')) {
                 this.hideOverlay();
+                if (panel && panel !== this.currentPanel) {
+                    this.showOverlay(panel);
+                }
+            }
             else
-                this.showOverlay();
+                this.showOverlay(panel);
         },
 
-        showOverlay: function() {
+        showOverlay: function(panel) {
             if (this.$overlay) {
+                if (panel) {
+                    if (this.currentPanel)
+                        $(this.currentPanel).detach();
+//                    this.$overlay.firstChild().detach();
+                    this.$overlay.append(panel);
+                    this.currentPanel = panel;
+                }
                 this.$narrativeDimmer.show();
                 this.$elem.find('.kb-side-header').addClass('overlay-active');
                 this.$overlay.show('slide', 'fast', $.proxy(function() {
@@ -309,7 +337,7 @@
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
-                importPanel = $('<div class="kb-import-content kb-import-import">'),
+                importPanel = $('<div class="kb-import-content kb-import-import" style="margin: 0px">'),
                 examplePanel = $('<div class="kb-import-content">');
 
             // add tabs
@@ -321,6 +349,10 @@
                     {tabName: '<small>Import</small>', content: importPanel},
                 ]);
 
+            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
+            var selectedPublicItems = [];
+
+            publicPanel.kbaseNarrativeSidePublicTab({addToNarrativeButton: btn, selectedItems: selectedPublicItems});
             importPanel.kbaseNarrativeSideImportTab({});
             examplePanel.kbaseNarrativeExampleDataTab({});
 
@@ -334,7 +366,6 @@
             // add footer status container and buttons
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
-            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>');
             var closeBtn = $('<button class="btn btn-default pull-right">Close</button>');
 
             closeBtn.click(function() { self.hideOverlay(); })
@@ -350,7 +381,7 @@
             });
 
             // some placeholder for the public panel
-            publicView();
+            //publicView();
 
             // events for changing tabs
             $($tabs.header.find('.kb-side-header')).click(function() {
@@ -965,7 +996,7 @@
 
 
             function publicView() {
-                var publicList = [{type: 'Genomes', ws: 'pubSEEDGenomes'},
+                var publicList = [{type: 'Genomes', ws: 'KBasePublicGenomesV4'},
                                   {type: 'Media', ws: 'KBaseMedia'},
                                   {type: 'Models', ws: 'KBasePublicModelsV4'},
                                   {type: 'RNA Seqs', ws: 'KBasePublicRNASeq'}];

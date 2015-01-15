@@ -161,3 +161,22 @@ class KBjobManager():
         token = os.environ['KB_AUTH_TOKEN']
         workspace = os.environ['KB_WORKSPACE_ID']
         return _method_get_state(workspace, token, URLS, self, method_info[0], method_info[1], method_job_id)
+
+    def delete_jobs(self, job_list):
+        """
+        Delete all jobs in the list. They may belong to different services based on their prefix, currently
+        either 'njs', 'method', or 'ujs'.
+        """
+        deletion_status = dict()
+        for job_id in job_list:
+            if job.startswith('njs:'):
+                # delete from njs
+                is_deleted = True
+            elif job.startswith('method:'):
+                # delete from njs_wrapper
+                is_deleted = True
+            elif job.startswith('ujs:'):
+                # delete from ujs (njs_wrapper?)
+                is_deleted = True
+            deletion_status[job_id] = is_deleted
+        return json.dumps(deletion_status)

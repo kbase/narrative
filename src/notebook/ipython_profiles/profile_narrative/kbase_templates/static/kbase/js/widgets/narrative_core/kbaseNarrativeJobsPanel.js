@@ -369,8 +369,6 @@
                 return;
             }
 
-            // console.log([jobStatus, jobInfo]);
-
             var storedIds = {};
             for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {
                 storedIds[IPython.notebook.metadata.job_ids.methods[i].id] = IPython.notebook.metadata.job_ids.methods[i];
@@ -427,9 +425,16 @@
                     console.error('An error occurred while trying to delete a job');
                     return;
                 }
-                var buffer = content.data;
+                var result = content.data;
+                try {
+                    buffer = JSON.parse(buffer);
+                }
+                catch(err) {
+                    // ignore and return. assume it failed.
+                    return;
+                }
 
-                if (buffer === "success") {
+                if (buffer[jobId] === true) {
                     // successfully nuked it on the back end, now wipe it out on the front end.
                     var appIds = IPython.notebook.metadata.job_ids.apps;
                     appIds = appIds.filter(function(val) { return val.id !== removeId });
@@ -462,6 +467,7 @@
                 }, this)
             };
 
+            IPython.notebook.execute(deleteJobCmd, callbacks, {store_history: false, silent: true});
         },
 
         renderJob: function(job, jobInfo) {

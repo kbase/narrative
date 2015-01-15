@@ -12,7 +12,7 @@
 	            x_axis: "1",
 	            y_axis: "2"
         },
-	    ws_url: "https://kbase.us/services/ws/",
+	    ws_url: window.kbconfig.urls.workspace,
 	    loading_image: "static/kbase/images/ajax-loader.gif",
         
 	    init: function(options) {

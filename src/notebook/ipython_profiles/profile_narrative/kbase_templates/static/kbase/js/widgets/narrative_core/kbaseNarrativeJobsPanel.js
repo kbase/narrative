@@ -38,20 +38,24 @@
                 }, this)
             );
 
-            // DOM structure setup here.
-            // After this, just need to update the function list
+            $(document).on('cancelJobCell.Narrative', $.proxy(
+                function(e, cellId, callback) {
+                    // Find job based on cellId
+                    var job = this.findJobFromSource(cellId);
+                    console.log(['found job', job]);
 
-            /* There's a few bits here.
-             * 1. It's all in a Bootstrap Panel scaffold.
-             * 2. The panel-body section contains the core of the widget:
-             *    a. loading panel (just a blank thing with a spinning gif)
-             *    b. error panel
-             *    c. actual function widget setup.
-             *
-             * So, initialize the scaffold, bind the three core pieces in the
-             * panel-body, make sure the right one is being shown at the start,
-             * and off we go.
-             */
+                    // If we can't find the job, then it's not being tracked, so we
+                    // should just assume it's gone already and return true to the callback.
+                    if (job === null && callback)
+                        callback(true);
+                    else if (job !== null) {
+                        // try to cancel it.
+                        var isCanceled = this.openJobDeletePrompt(job.id);
+                        if (callback)
+                            callback(isCanceled);
+                    }
+                }, this)
+            );
 
             var $refreshBtn = $('<button>')
                               .addClass('btn btn-xs btn-default')
@@ -106,18 +110,8 @@
                     name : 'Delete Job',
                     type : 'danger',
                     callback : $.proxy(function(e, $prompt) {
-                        var removeId = this.removeId;
-                        if (removeId) {
-                            var appIds = IPython.notebook.metadata.job_ids.apps;
-                            appIds = appIds.filter(function(val) { return val.id !== removeId });
-                            IPython.notebook.metadata.job_ids.apps = appIds;
-
-                            var methodIds = IPython.notebook.metadata.job_ids.methods;
-                            methodIds = methodIds.filter(function(val) { return val.id !== removeId });
-                            IPython.notebook.metadata.job_ids.methods = methodIds;
-
-                            this.refresh(false);
-                            this.removeId = null;
+                        if (this.removeId) {
+                            this.deleteJob(this.removeId);
                         }
                         $prompt.closePrompt();
                     }, this)
@@ -142,6 +136,27 @@
             }
 
             return this;
+        },
+
+        /**
+         * If there is a job (method or app) associated with the given
+         * cell id (it's source), then this will find it.
+         * Returns the job object from the Narrative's metadata, or null
+         * if nothing is found.
+         * @private
+         * @method
+         */
+        findJobFromSource: function(cellId) {
+            if (IPython.notebook.metadata.job_ids) {
+                for (var type in IPython.notebook.metadata.job_ids) {
+                    var jobList = IPython.notebook.metadata.job_ids[type];
+                    for (var i=0; i<jobList.length; i++) {
+                        if (jobList[i].source === cellId)
+                            return jobList[i];
+                    }
+                }
+            }
+            return null;
         },
 
         /**
@@ -397,6 +412,58 @@
             this.$jobsPanel.empty().append($jobsList);
         },
 
+        /**
+         * Attempts to delete a job in the backend (by making a kernel call - this lets the kernel decide
+         * what kind of job it is and how to stop/delete it).
+         * When it gets a response, it then clears the job from the Jobs list.
+         */
+        deleteJob: function(jobId) {
+            var deleteJobCmd = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
+                               'jm = KBjobManager()\n' +
+                               'print jm.delete_jobs([' + jobId + '])\n';
+
+            var deleteResponse = function(msgType, content, jobId) {
+                if (msgType != 'stream') {
+                    console.error('An error occurred while trying to delete a job');
+                    return;
+                }
+                var buffer = content.data;
+
+                if (buffer === "success") {
+                    // successfully nuked it on the back end, now wipe it out on the front end.
+                    var appIds = IPython.notebook.metadata.job_ids.apps;
+                    appIds = appIds.filter(function(val) { return val.id !== removeId });
+                    IPython.notebook.metadata.job_ids.apps = appIds;
+
+                    var methodIds = IPython.notebook.metadata.job_ids.methods;
+                    methodIds = methodIds.filter(function(val) { return val.id !== removeId });
+                    IPython.notebook.metadata.job_ids.methods = methodIds;
+
+                    this.refresh(false);
+                    this.removeId = null;
+                }
+            };
+
+            var callbacks = {
+                'output' : function(msgType, content) { 
+                    deleteResponse(msgType, content, jobId);
+                },
+                'execute_reply' : $.proxy(function(content) { 
+                    this.handleCallback('execute_reply', content); 
+                }, this),
+                'clear_output' : $.proxy(function(content) { 
+                    this.handleCallback('clear_output', content); 
+                }, this),
+                'set_next_input' : $.proxy(function(content) { 
+                    this.handleCallback('set_next_input', content); 
+                }, this),
+                'input_request' : $.proxy(function(content) { 
+                    this.handleCallback('input_request', content); 
+                }, this)
+            };
+
+        },
+
         renderJob: function(job, jobInfo) {
             var getStepSpec = function(id, spec) {
                 for (var i=0; i<spec.steps.length; i++) {
@@ -514,17 +581,19 @@
             var source = jobInfo.job.source;
             var jobType = this.jobTypeFromId(jobInfo.job.id)
             if (!source)
-                return; // don't do anything if we can't find the cell. it might have been deleted.
+                return; // don't do anything if we don't know the source cell. it might have been deleted.
 
             var $cell = $('#' + source);
             if (!$cell)
                 return; // don't do anything if we can't find the running cell, either.
 
+            // if it's running and an NJS job, then it's in an app cell
             if (job.running_step_id && jobType === 'njs') {
                 $cell.kbaseNarrativeAppCell('setRunningStep', job.running_step_id);
             }
+            // if it's a ujs or method job, then it's a method cell
             else if (jobType === 'ujs' || jobType === 'method') {
-                    // assume we have 'in-progress' or 'running' vs. 'complete' or 'done'
+                // assume we have 'in-progress' or 'running' vs. 'complete' or 'done'
                 var state = job.job_state.toLowerCase();
                 var submitState = 'complete';
                 if (state.indexOf('run') != -1 || state.indexOf('progress') != -1)
@@ -533,6 +602,7 @@
                     submitState = 'submitted';
                 $cell.kbaseNarrativeMethodCell('changeState', submitState);
             }
+            // if we have outputs, those need to be passed along
             if (job.widget_outputs && Object.keys(job.widget_outputs).length > 0) {
                 if (jobType === 'njs') {
                     for (var key in job.widget_outputs) {
@@ -543,6 +613,12 @@
                 }
                 else {
                     $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : job.widget_outputs });
+                }
+            }
+            // and if it's an error, then we need to signal the cell
+            if (job.job_state === "error" || (job.step_errors && Object.keys(job.step_errors).length !== 0)) {
+                if (jobType === 'njs') {
+                    $cell.kbaseNarrativeAppCell('setErrorState', true);
                 }
             }
         },
@@ -629,10 +705,31 @@
             return $errBtn;
         },
 
-        makeJobClearButton: function(jobStatus, jobInfo) {
+        openJobDeletePrompt: function(jobId, jobState) {
+            if (!jobId)
+                return;
+
             var removeText = "Deleting this job will remove it from your Narrative. Any already generated data will be retained. Continue?";
             var warningText = "This job appears to have fallen into an error state and is no longer running on KBase servers.";
 
+            if (jobState) {
+                jobState = jobState.toLowerCase();
+                var jobState = jobState.toLowerCase();
+                if (jobState === 'queued' || jobState === 'running' || jobState === 'in-progress') {
+                    warningText = "This job is currently running on KBase servers! Removing it will attempt to stop the running job.";
+                }
+                else if (jobState === 'completed') {
+                    warningText = "This job has completed running. You may safely remove it without affecting your Narrative.";
+                }
+            }
+            this.$jobsModalBody.empty().append(warningText + '<br><br>' + removeText);
+            this.$jobsModalTitle.empty().html('Remove Job?');
+            this.removeId = jobId;
+
+            this.$jobsModal.openPrompt();
+        },
+
+        makeJobClearButton: function(jobStatus, jobInfo) {
             return $('<span data-toggle="tooltip" title="Remove Job" data-placement="left">')
                    .addClass('btn-xs kb-data-list-more-btn pull-right fa fa-times')
                    .css({'cursor':'pointer'})
@@ -644,21 +741,7 @@
                         * 3. the job is in an error state.
                         * 4. the job is running
                         */
-                       var id = jobStatus.job_id;
-                       if (jobStatus && jobStatus.job_state) {
-                           var status = jobStatus.job_state.toLowerCase();
-                           if (status === 'queued' || status === 'running' || status === 'in-progress') {
-                               warningText = "This job is currently running on KBase servers! Removing it will attempt to stop the running job.";
-                           }
-                           else if (status === 'completed') {
-                               warningText = "This job has completed running. You may safely remove it without affecting your Narrative.";
-                           }
-                       }
-                       this.$jobsModalBody.empty().append(warningText + '<br><br>' + removeText);
-                       this.$jobsModalTitle.empty().html('Remove Job?');
-                       this.removeId = id;
-
-                       this.$jobsModal.openPrompt();
+                       this.openJobDeletePrompt(jobStatus.job_id, jobStatus.job_state);
                    }, this))
                    .tooltip();
         },

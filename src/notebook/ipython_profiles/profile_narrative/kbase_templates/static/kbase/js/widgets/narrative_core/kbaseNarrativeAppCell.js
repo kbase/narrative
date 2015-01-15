@@ -194,9 +194,10 @@
             //We cannot stop a method from running, so this button for now is gone.
             this.$stopButton = $('<button>')
                               .attr('type', 'button')
-                              .attr('value', 'Stop')
-                              .addClass('btn btn-warning btn-sm')
-                              .append('Stop')
+                              .attr('value', 'Cancel')
+                              .addClass('kb-app-run kb-app-cancel')
+                              .append('Cancel')
+                              .css({'margin-right':'5px'})
                               .click(
                                   $.proxy(function(event) {
                                       self.stopAppRun();
@@ -204,7 +205,7 @@
                               )
                               .hide();
             
-            this.$submitted = $('<span>').addClass("pull-right kb-func-timestamp").hide();
+            this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
 
             var appInfo = this.appSpec.info.name;
             this.$methodPanel = $('<div>')
@@ -222,7 +223,7 @@
             var $buttons = $('<div>')
                            .addClass('buttons pull-left')
                            .append(this.$runButton)
-                           //.append(this.$stopButton)
+                           .append(this.$stopButton)
                            //.append(this.$stateDebugBtn)
                            .append(this.$submitted);
 
@@ -369,7 +370,6 @@
             return;
         },
         
-        
         isValid : function() {
             var isValidRet = {isValid:true, stepErrors:[]}
             if (this.inputSteps) {
@@ -440,18 +440,27 @@
         /* unlocks inputs and updates display properties to reflect the not running state */
         stopAppRun: function() {
             var self = this;
-            self.$stopButton.hide();
-            self.$runButton.show();
-            if (this.inputSteps) {
-                for(var i=0; i<this.inputSteps.length; i++) {
-                    this.inputSteps[i].widget.unlockInputs();
+            // trigger a cancel job action
+            // if that returns something truthy (i.e. auto canceled, or user chose to cancel),
+            // then continue and reset the state to input.
+            // otherwise, bail.
+
+            this.trigger('cancelJobCell.Narrative', [this.cellId, $.proxy(function(isCanceled) {
+                if (isCanceled) {
+                    self.$stopButton.hide();
+                    self.$runButton.show();
+                    if (this.inputSteps) {
+                        for(var i=0; i<this.inputSteps.length; i++) {
+                            this.inputSteps[i].widget.unlockInputs();
+                            this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                        }
+                    }
+                    this.setErrorState(false);
+                    this.$submitted.hide();
+                    this.state.runningState.appRunState = "input";                    
                 }
-            }
-            this.$submitted.hide();
-            this.state.runningState.appRunState = "input";
+            }, this)]);
         },
-        
-        
         
         /**
          * DO NOT USE!!  use getAllParameterValues instead from now on...
@@ -588,6 +597,16 @@
             }
         },
         
+        setErrorState: function(isError) {
+            if (isError) {
+                this.state.runningState.appRunState = "error";
+                this.$elem.find('.kb-app-panel').addClass('kb-app-error');
+            }
+            else {
+                this.$elem.find('.kb-app-panel').removeClass('kb-app-error');                
+            }
+        },
+
         /* optional state parameter, if null then no state is set on the widget */
         setStepOutput: function(stepId, output, state) {
             if (this.inputStepLookup) {

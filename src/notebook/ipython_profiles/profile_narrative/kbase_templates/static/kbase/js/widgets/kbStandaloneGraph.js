@@ -407,7 +407,7 @@
 	    var fivenumbers = [];
 	    var min = data[0].data[0];
 	    var max = data[0].data[0];
-	    
+	   
 	    for (var i=0;i<data.length;i++) {
 		data[i].data = data[i].data.sort(function (a, b) {
 		    return a - b;
@@ -415,8 +415,8 @@
 		if (data[i].data[0] < min) {
 		    min = data[i].data[0];
 		}
-		if (data[i].data[data[i].length - 1] > max) {
-		    max = data[i].data[data[i].length - 1];
+		if (data[i].data[data[i].data.length - 1] > max) {
+		    max = data[i].data[data[i].data.length - 1];
 		}
 		fivenumbers[i] = [];
 		fivenumbers[i]['min'] = data[i].data[0];

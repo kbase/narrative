@@ -945,6 +945,7 @@
 
             var $openSearch = $('<span>')
                 .addClass('btn btn-xs btn-default')
+                .tooltip({title:'Search data in narrative', 'container':'body', delay: { "show": 400, "hide": 50 }})
                 .append('<span class="fa fa-search"></span>')
                 .on('click',function() {
                     if(!self.$searchDiv.is(':visible')) {
@@ -958,6 +959,7 @@
 
             var $openSort = $('<span>')
                 .addClass('btn btn-xs btn-default')
+                .tooltip({title:'Sort data list', 'container':'body', delay: { "show": 400, "hide": 50 }})
                 .append('<span class="fa fa-sort-amount-asc"></span>')
                 .on('click',function() {
                     if(!self.$sortByDiv.is(':visible')) {
@@ -971,6 +973,7 @@
 
             var $openFilter = $('<span>')
                 .addClass('btn btn-xs btn-default')
+                .tooltip({title:'Filter data by type', 'container':'body', delay: { "show": 400, "hide": 50 }})
                 .append('<span class="fa fa-filter"></span>')
                 .on('click',function() {
                     if(!self.$filterTypeDiv.is(':visible')) {

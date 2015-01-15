@@ -136,6 +136,7 @@
 
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
+                           .tooltip({title:'Hide / Show data browser', 'container':'body', delay: { "show": 400, "hide": 50 }})
                            .append('<span class="fa fa-arrow-right"></span>')
                            .click($.proxy(function(event) {
                                this.trigger('hideGalleryPanelOverlay.Narrative');

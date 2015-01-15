@@ -121,32 +121,38 @@ EndpointTester.prototype.test = function(url) {
  */
 var _kb_failed_once = false;
 var KBFail = function(is_fatal, where, what) {
-  if (!IPython || !IPython.notebook) {
-    return false;
-  }
-  var code = "";
-  if (_kb_failed_once == false) {
-    code += "from biokbase.narrative.common import kblogging\n";
-    _kb_failed_once = true;
-  }
-  code += "kblogging.NarrativeUIError(";
-  if (is_fatal) {
-    code += "True,";
-  }
-  else {
-    code += "False,";
-  }
-  if (where) {
-    code += 'where="' + where + '"';
-  }
-  if (what) {
-    if (where) { code += ", "; }
-    code += 'what="' + what + '"';
-  }
-  code += ")\n";
-  // Log the failure
-  IPython.notebook.kernel.execute(code);
-  return true;
+    if (!IPython || !IPython.notebook || !IPython.notebook.kernel) {
+        return false;
+    }
+    var code = "";
+    if (_kb_failed_once == false) {
+        code += "from biokbase.narrative.common import kblogging\n";
+        _kb_failed_once = true;
+    }
+    code += "kblogging.NarrativeUIError(";
+    if (is_fatal) {
+        code += "True,";
+    }
+    else {
+        code += "False,";
+    }
+    if (where) {
+        code += 'where="' + where + '"';
+    }
+    if (what) {
+        if (where) { code += ", "; }
+        code += 'what="' + what + '"';
+    }
+    code += ")\n";
+    // Log the failure
+    if (IPython.notebook.kernel.shell_channel.readyState !== 1) {
+        setTimeout( function() { IPython.notebook.kernel.execute(code, null, {store_history: false}); }, 500 );
+    }
+    else {
+        IPython.notebook.kernel.execute(code, null, {store_history: false});
+    }
+    
+    return true;
 }
 /**
  * Syntactic sugar for logging error vs. fatal error.

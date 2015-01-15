@@ -352,13 +352,217 @@
             }
         },
         
+        addDataControls: function(object_info, $alertContainer, ws_info) {
+            var self = this;
+            var $btnToolbar = $('<span>')
+                                        .addClass('btn-toolbar')
+                                        .attr('role', 'toolbar');
+            
+            var btnClasses = "btn btn-xs btn-default";
+            var css = {'color':'#888'};
+                                        
+            var $openHistory = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'View narrative history to revert changes', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-history').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty(); $alertContainer.show();
+                                            
+                                            if (self.ws_name && self.ws) {
+                                                self.ws.get_object_history({ref:object_info[6]+"/"+object_info[0]},
+                                                    function(history) {
+                                                        console.log(history);
+                                                        history.reverse();
+                                                        $alertContainer.append($('<div>')
+                                                            .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                                        .append('Hide History')
+                                                                        .click(function() {$alertContainer.empty();} )));
+                                                        var $tbl = $('<table>').css({'width':'100%'});
+                                                        for(var k=0; k<history.length;k++) {
+                                                            var $revertBtn = $('<button>').append('v'+history[k][4]).addClass('kb-data-list-btn');
+                                                            if (k==0) {
+                                                                $revertBtn.tooltip({title:'Current Version', 'container':'body',placement:'bottom'});
+                                                            } else if(history[k][4]==1) {
+                                                                $revertBtn.tooltip({title:'Cannot revert to first unsaved version', 'container':'body',placement:'bottom'});
+                                                            } else {
+                                                                var revertRef = {wsid:history[k][6], objid:history[k][0], ver:history[k][4]};
+                                                                (function(revertRefLocal) {
+                                                                    $revertBtn.tooltip({title:'Revert to this version?',placement:'bottom'})
+                                                                        .click(function() {
+                                                                            self.ws.revert_object(revertRefLocal,
+                                                                                function(reverted_obj_info) {
+                                                                                    // update the workspace info with the specified name
+                                                                                    self.ws.alter_workspace_metadata({
+                                                                                        wsi:{id:ws_info[0]},
+                                                                                        new:{'narrative_nice_name':reverted_obj_info[10].name}},
+                                                                                        function() {
+                                                                                            self.refresh();
+                                                                                        },
+                                                                                        function(error) {
+                                                                                            console.error(error);
+                                                                                            $alertContainer.empty();
+                                                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Narrative reverted, but a minor data update error occured."+error.error.message));
+                                                                                        });
+                                                                                }, function(error) {
+                                                                                    console.error(error);
+                                                                                    $alertContainer.empty();
+                                                                                    $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                                });
+                                                                        }); })(revertRef);
+                                                            }
+                                                            
+                                                            var summary = '';
+                                                            console.log(history[k][4],history[k][10])
+                                                            if (history[k][10].methods) {
+                                                                var content = JSON.parse(history[k][10].methods);
+                                                                var summaryCounts = [];
+                                                                var appCount=0; var methodCount=0;
+                                                                for(var a in content.app) {
+                                                                    if (content.app.hasOwnProperty(a)) {
+                                                                        appCount+= content.app[a];
+                                                                    }
+                                                                }
+                                                                if (appCount===1) { summaryCounts.push('1 App'); }
+                                                                else if (appCount>1) { summaryCounts.push(appCount+' Apps');}
+                                                                
+                                                                for(var m in content.method) {
+                                                                    if (content.method.hasOwnProperty(m)) {
+                                                                        methodCount+= content.method[m];
+                                                                    }
+                                                                }
+                                                                if (methodCount===1) { summaryCounts.push('1 Method'); }
+                                                                else if (methodCount>1) { summaryCounts.push(methodCount+' Methods');}
+                                                                
+                                                                if (content.ipython.code ===1) { summaryCounts.push('1 Code Cell'); }
+                                                                else if (content.ipython.code >1) { summaryCounts.push(content.ipython.code + ' Code Cells'); }
+                                                                
+                                                                if (content.ipython.markdown ===1) { summaryCounts.push('1 Markdown Cell'); }
+                                                                else if (content.ipython.markdown >1) { summaryCounts.push(content.ipython.markdown + ' Markdown Cells'); }
+                                                                
+                                                                if (content.output ===1) { summaryCounts.push('1 Output Cell'); }
+                                                                else if (content.output >1) { summaryCounts.push(content.output + ' Output Cells'); }
+                                                                
+                                                                if (summaryCounts.length>0) {
+                                                                    summary = '<br>'+summaryCounts.join(', ');
+                                                                } else {
+                                                                    summary = '<br>Empty Narrative';
+                                                                }
+                                                            }
+                                                            $tbl.append($('<tr>')
+                                                                        .append($('<td>').append($revertBtn))
+                                                                        .append($('<td>').append(self.getTimeStampStr(history[k][3]) + ' by ' + history[k][5] + summary))
+                                                                        .append($('<td>').append($('<span>').css({margin:'4px'}).addClass('fa fa-info pull-right'))
+                                                                                 .tooltip({title:history[k][2]+'<br>'+history[k][10].name+'<br>'+history[k][8]+'<br>'+history[k][9]+' bytes', container:'body',html:true,placement:'bottom'}))
+                                                                                );
+                                                        }
+                                                        $alertContainer.append($tbl);
+                                                    },
+                                                    function(error) {
+                                                        console.error(error);
+                                                        $alertContainer.empty();
+                                                        $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                    });
+                                            }
+                                        });
+                                        
+            /*var $openProvenance = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'View data provenance and relationships', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty();
+                                            window.open(self.options.landing_page_url+'objgraphview/'+object_info[7]+'/'+object_info[1]);
+                                        });*/
+            /*var $download = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'Export / Download data', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-download').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty();
+                                            $alertContainer.append('Coming soon');
+                                        });*/
+            
+            var $copy = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'Copy Narrative and Data', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-copy').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty(); $alertContainer.show();
+                                            var $newNameInput = $('<input type="text">').addClass('form-control').val(object_info[1]);
+                                            $alertContainer.append($('<div>')
+                                                .append($('<div>').append("Enter a name for the new Narrative"))
+                                                .append($('<div>').append($newNameInput))
+                                                .append($('<button>').addClass('kb-data-list-btn')
+                                                            .append('Copy')
+                                                            .click(function() {
+                                                                $(this).disable().prop('disabled', true);;
+                                                                if (self.ws_name && self.ws) {
+                                                                    self.ws.clone_workspace({
+                                                                            obj: {ref:object_info[6]+"/"+object_info[0]},
+                                                                            new_name: $newNameInput.val()
+                                                                        },
+                                                                        function(renamed_info) {
+                                                                            self.refresh();
+                                                                        },
+                                                                        function(error) {
+                                                                            console.error(error);
+                                                                            $alertContainer.empty();
+                                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                        });
+                                                                }
+                                                            }))
+                                                .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                            .append('Cancel')
+                                                            .click(function() {$alertContainer.empty();} )));
+                                        });
+            var $delete = $('<span>')   
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'Delete Narrative', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-trash-o').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation();
+                                            $alertContainer.empty(); $alertContainer.show();
+                                            $alertContainer.append($('<div>')
+                                                .append($('<span>').append('Are you sure?'))
+                                                .append($('<button>').addClass('kb-data-list-btn')
+                                                            .append('Delete')
+                                                            .click(function() {
+                                                                if (self.ws_name && self.ws) {
+                                                                    self.ws.delete_workspace({ id: object_info[6] },
+                                                                        function() {
+                                                                            // TODO: check if we have deleted the current workspace, if so we should
+                                                                            // redirect to the ui narrativemanager/start page
+                                                                            self.refresh();
+                                                                        },
+                                                                        function(error) {
+                                                                            console.error(error);
+                                                                            $alertContainer.empty();
+                                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                        });
+                                                                }
+                                                            }))
+                                                .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                            .append('Cancel')
+                                                            .click(function() {$alertContainer.empty();} )));
+                                        });
+            
+            $btnToolbar
+                .append($openHistory)
+                //.append($openProvenance)
+                //.append($download)
+                //.append($copy)
+                .append($delete);
+            
+            return $btnToolbar;
+        },
+        
         
         renderNarrativeDiv: function(data) {
             var $narDiv = $('<div>').addClass('kb-data-list-obj-row');
             
             var $tbl = $('<table>').css({'width':'100%'});
             var $dataCol = $('<td>').css({'text-align':'left'});
-            var $ctrCol = $('<td>').css({'text-align':'right'});
+            var $ctrCol = $('<td>').css({'text-align':'right','vertical-align':'top', 'width':'140px'});
             
             var narRef = "ws."+data.ws_info[0]+".obj."+data.nar_info[0];
             var nameText = narRef;
@@ -383,8 +587,11 @@
             }
             $dataCol.append($('<span>').addClass('kb-data-list-type').append(this.getTimeStampStr(data.nar_info[3])));
             
-            var $shareContainer = $('<div>').hide();
             var self = this;
+            var $alertContainer=$('<div>').addClass('kb-data-list-more-div').css({'text-align':'center','margin':'10px'});
+            var $btnToolbar = self.addDataControls(data.nar_info,$alertContainer, data.ws_info);
+            $ctrCol.append($btnToolbar);
+            var $shareContainer = $('<div>').hide();
             this.ws.get_permissions({id:data.ws_info[0]},
                 function(perm) {
                     var shareCount = 0;
@@ -394,27 +601,33 @@
                             shareCount++;
                         }
                     }
-                    $ctrCol.append($('<span>').addClass('fa fa-share-alt').css({'color':'#777','cursor':'pointer'})
-                                        .append(' '+shareCount)
-                                        .on('click',function() {
-                                            $shareContainer.slideToggle('fast');
-                                            if($shareContainer.is(':empty')) {
-                                                var $share = $('<div>');
-                                                // just use the share panel, max height is practically unlimited because we are already
-                                                // in a scrollable pane
-                                                $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
-                                                $shareContainer.append($share);
-                                            }
-                                        }));
+                    // should really put this in the addDatacontrols; so refactor at some point!
+                    $btnToolbar.append(
+                        $('<span>')   
+                            .addClass('btn btn-xs btn-default').css({'color':'#888'})
+                            .tooltip({title:'View share settings', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-share-alt').css({'color':'#888'})
+                                            .append(' '+shareCount)
+                                            .on('click',function() {
+                                                $alertContainer.hide();
+                                                $shareContainer.slideToggle('fast');
+                                                if($shareContainer.is(':empty')) {
+                                                    var $share = $('<div>');
+                                                    // just use the share panel, max height is practically unlimited because we are already
+                                                    // in a scrollable pane
+                                                    $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
+                                                    $shareContainer.append($share);
+                                                }
+                                            })));
                 },
                 function(error) {
                     console.error('error getting permissions for manage panel');
                     console.error(error);
                 });
             
-            
-            
-            $narDiv.append($('<table>').css({'width':'100%'}).append($('<tr>').append($dataCol).append($ctrCol)));
+            $narDiv.append($('<table>').css({'width':'100%'})
+                           .append($('<tr>').append($dataCol).append($ctrCol)));
+            $narDiv.append($alertContainer);
             $narDiv.append($shareContainer);
             
             var $narDivContainer = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr'))

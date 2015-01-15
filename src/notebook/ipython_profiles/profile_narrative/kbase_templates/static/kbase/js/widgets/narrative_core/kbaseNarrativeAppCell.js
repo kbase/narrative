@@ -19,7 +19,7 @@
             cellId: null,
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             methodStoreURL: 'https://kbase.us/services/narrative_method_store',
-            
+
             appHelpLink: '/functional-site/#/narrativestore/app/',
             methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
@@ -31,15 +31,15 @@
         methodSpecs: null,
         inputSteps: null,
         inputStepLookup: null,
-        
+
         $runButton: null,
         $stopButton: null,
-        
+
         $errorModal: null,
         $errorModalContent:null,
-        
+
         state: null,
-        
+
         /**
          * @private
          * @method
@@ -48,7 +48,7 @@
          * TODO: add checks and failures for this.
          *
          * This renders by calling fetchMethodInfo, which grabs all the specs
-         * for the intermediate steps, then renders the whole mess and 
+         * for the intermediate steps, then renders the whole mess and
          * refreshes to update with jobs and results and such.
          *
          */
@@ -78,13 +78,14 @@
             this.initErrorModal();
 
             this.fetchMethodInfo();
-            
+
             return this;
         },
 
         fetchMethodInfo: function() {
-            if (!this.appSpec.steps || this.appSpec.steps.length === 0) {
-                this.showError('App "' + this.appSpec.info.name + '" has no steps!');
+          if (!this.appSpec.steps || this.appSpec.steps.length === 0) {
+            KBError("App::" + this.appSpec.info.name, "has no steps");
+            this.showError('App "' + this.appSpec.info.name + '" has no steps!');
             }
             // get the list of method ids
             var methodIds = [];
@@ -97,6 +98,7 @@
                     this.render(specs);
                 }, this),
                 $.proxy(function(error) {
+                    KBError('get_method_spec', error);
                     this.showError(error);
                 }, this)
             );
@@ -147,7 +149,7 @@
                 parameterValues: this.getAllParameterValues()
             };
         },
-        
+
         /**
          * Renders this cell and its contained input widget.
          */
@@ -163,12 +165,12 @@
                               .click(
                                   $.proxy(function(event) {
                                       self.$submitted.html("submitted on "+this.readableTimestamp(new Date().getTime()));
-                                      
+
                                       var isGood = self.startAppRun();
                                       if (!isGood) { return; }
-                                    
+
                                       event.preventDefault();
-                                      this.trigger('runApp.Narrative', { 
+                                      this.trigger('runApp.Narrative', {
                                           cell: IPython.notebook.get_selected_cell(),
                                           appSpec: this.appSpec,
                                           methodSpecs: this.methodSpecs,
@@ -190,7 +192,7 @@
                                       }
                                   );
 
-            
+
             //We cannot stop a method from running, so this button for now is gone.
             this.$stopButton = $('<button>')
                               .attr('type', 'button')
@@ -230,14 +232,14 @@
             var $appSubtitleDiv = $("<div>")
                                         .addClass('kb-app-panel-description')
                                         .append(this.appSpec.info.subtitle);
-            
+
             var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, "")
             var $appHeaderDiv = $("<div>")
                                         .addClass('kb-app-panel-header')
                                         .append(headerCleaned);
 
             var $menuSpan = $('<div class="pull-right">');
-            
+
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
                              .append($menuSpan)
@@ -261,10 +263,10 @@
             $menuSpan.kbaseNarrativeCellMenu();
             //now we link the step parameters together that are linked
             this.linkStepsTogether();
-            
+
             // then we show the result
             this.$elem.empty().append($cellPanel);
-            
+
             // finally, we refresh so that our drop down or other boxes can be populated
             this.refresh();
         },
@@ -274,11 +276,11 @@
         // stepHeading - something to show in front of the method title, e.g. Step 1, Step 2 ...
         renderStepDiv: function (stepId, stepSpec, stepHeading) {
             var $stepPanel = $("<div>").addClass('kb-app-step-container');
-            
+
             var $statusPanel = $('<div>');
             var $outputPanel = $('<div>');
-            
-            
+
+
             var $inputWidgetDiv = $("<div>");
             var methodId = stepSpec.info.id + '-step-details-' + this.genUUID();
             var buttonLabel = 'details';
@@ -328,12 +330,12 @@
             var inputStepData = {id:stepId ,methodId: stepSpec.info.id, widget:inputWidget, $stepContainer:$stepPanel, $statusPanel:$statusPanel, $outputPanel:$outputPanel, outputWidgetName:outputWidgetName }
             this.inputSteps.push(inputStepData);
             this.inputStepLookup[stepId] = inputStepData;
-            
+
             this.state.step[stepId] = { };
-            
+
             return $stepPanel;
         },
-        
+
         linkStepsTogether: function() {
             var self = this;
             if(this.appSpec && this.inputSteps) {
@@ -386,11 +388,11 @@
             }
             return isValidRet;
         },
-        
+
         /*
          * This function is invoked every time we run app. This is the difference between it
-         * and getAllParameterValues/getParameterValue which could be invoked many times before running 
-         * (e.g. when widget is rendered). 
+         * and getAllParameterValues/getParameterValue which could be invoked many times before running
+         * (e.g. when widget is rendered).
          */
         prepareDataBeforeRun: function() {
             if (this.inputSteps) {
@@ -419,6 +421,7 @@
                             errorCount = errorCount+1;
                         }
                         self.$errorModalContent.append($errorStep);
+                        KBError("App::" + this.appSpec.info.name, "errors=" + errorCount);
                     }
                     self.$errorModal.modal('show');
                     return false;
@@ -436,7 +439,7 @@
             this.state.runningState.appRunState = "running";
             return true;
         },
-        
+
         /* unlocks inputs and updates display properties to reflect the not running state */
         stopAppRun: function() {
             var self = this;
@@ -468,8 +471,8 @@
         getParameters: function() {
             return this.getAllParameterValues();
         },
-        
-        
+
+
         /**
          * returns structure that preserves method/parameter ordering in original spec
          * [
@@ -538,7 +541,7 @@
                     }
                 }
             }
-            
+
             // if we were in the running state before, set the values
             if (state.runningState) {
                 if (state.runningState.runningStep) {
@@ -553,7 +556,7 @@
                     }
                 }
             }
-            
+
             // set the output state (we do this last so that in case we run into an error, we still show that we are running)
             if (this.inputSteps && state.step) {
                 for(var i=0; i<this.inputSteps.length; i++) {
@@ -570,7 +573,7 @@
             }
             return;
         },
-        
+
         /** methods for setting the app state based on the job status **/
         setRunningStep: function(stepId) {
             if (this.inputSteps) {
@@ -583,7 +586,7 @@
                 }
             }
         },
-        
+
         updateStepStatus: function(stepId, status) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
@@ -618,9 +621,9 @@
                     // clear the output panel, and assume we are no longer running this step
                     this.inputStepLookup[stepId].$outputPanel.empty();
                     this.inputStepLookup[stepId].$stepContainer.removeClass("kb-app-step-running");
-                    
+
                     var widgetName = this.inputStepLookup[stepId].outputWidgetName;
-                    var $outputWidget = $('<div>'); 
+                    var $outputWidget = $('<div>');
                     var widget;
                     if (widgetName !== "kbaseDefaultNarrativeOutput")
                         widget = $outputWidget[widgetName](output);
@@ -629,19 +632,19 @@
                     if (state) {
                         widget.loadState(state);
                     }
-                    
-                    var header = '<span class="kb-out-desc">Output</span><span class="pull-right kb-func-timestamp">' + 
+
+                    var header = '<span class="kb-out-desc">Output</span><span class="pull-right kb-func-timestamp">' +
                                     this.readableTimestamp(new Date().getTime()) +
                                     '</span>';
-        
+
                     var $outputCell = $("<div>").addClass("kb-cell-output").css({"padding-top":"5px","padding-bottom":"5px"}).append(
                                             $('<div>').addClass("panel panel-default")
                                                 .append($('<div>').addClass("panel-heading").append(header))
                                                 .append($('<div>').addClass("panel-body").append($outputWidget))
                                             );
-        
+
                     this.inputStepLookup[stepId].$outputPanel.append($outputCell);
-                    
+
                     this.inputStepLookup[stepId].outputWidget = widget;
                     var objCopy = $.extend(true, {}, output);
                     this.state.step[stepId].outputState = {
@@ -650,7 +653,7 @@
                 }
             }
         },
-        
+
         setStepError: function(stepId, error) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
@@ -659,9 +662,9 @@
                 }
             }
         },
-        
+
         /** end methods for setting the app state based on the job status **/
-        
+
         initErrorModal: function() {
             var self=this;
             var errorModalId = "app-error-modal-"+ self.genUUID();
@@ -681,7 +684,7 @@
                 ));
             self.$elem.append(self.$errorModal);
         },
-        
+
         /**
          * Refreshes the input widget according to its own method.
          */
@@ -692,14 +695,14 @@
                 }
             }
         },
-        
+
         genUUID: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
         },
-        
+
          /**
          * Converts a timestamp to a simple string.
          * Do this American style - HH:MM:SS MM/DD/YYYY

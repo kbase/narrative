@@ -423,7 +423,7 @@
             // function used to update my data list
             function getMyData(workspaces, type, ws_name) {
                 if (workspaces.length==0) {
-                    render([], $mineScrollPanel, mineSelected);
+                    render([], $mineScrollPanel, {});
                     return [];
                 }
                 var params = {includeMetadata:1};
@@ -471,7 +471,7 @@
             // function used to update shared with me data list
             function getSharedData(workspaces, type, ws_name) {
                 if (workspaces.length==0) {
-                    render([], $mineScrollPanel, mineSelected);
+                    render([], $sharedScrollPanel, {});
                     return null;
                 }
                 var params = {includeMetadata:1};
@@ -527,7 +527,7 @@
 
                 if (data.length == 0){
                     container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
-                    return
+                    return;
                 } else if (data.length-1 < end)
                     end = data.length;
 
@@ -535,6 +535,11 @@
                 container.append(rows);
                 events(container, selected);
 
+                if (rows.children().length==0) {
+                    container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
+                    return;
+                }
+                
                 // infinite scroll
                 var currentPos = end;
                 container.unbind('scroll');

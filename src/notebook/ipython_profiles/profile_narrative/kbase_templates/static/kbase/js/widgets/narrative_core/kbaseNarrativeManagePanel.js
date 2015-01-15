@@ -380,23 +380,25 @@
                                                         var $tbl = $('<table>').css({'width':'100%'});
                                                         for(var k=0; k<history.length;k++) {
                                                             var $revertBtn = $('<button>').append('v'+history[k][4]).addClass('kb-data-list-btn');
-                                                            /*if (k==0) {
+                                                            if (k==0) {
                                                                 $revertBtn.tooltip({title:'Current Version', 'container':'body',placement:'bottom'});
+                                                            } else if(history[k][4]==1) {
+                                                                $revertBtn.tooltip({title:'Cannot revert to first unsaved version', 'container':'body',placement:'bottom'});
                                                             } else {
                                                                 var revertRef = {wsid:history[k][6], objid:history[k][0], ver:history[k][4]};
-                                                                $revertBtn.tooltip({title:'Revert to this version?', 'container':'body',placement:'bottom'})
-                                                                    .click(function() {
-                                                                        self.ws.revert_object(revertRef,
-                                                                            function(reverted_obj_info) {
-                                                                                console.log('REVERTED',reverted_obj_info);
-                                                                                self.refresh();
-                                                                            }, function(error) {
-                                                                                console.error(error);
-                                                                                $alertContainer.empty();
-                                                                                $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
-                                                                            });
-                                                                    });
-                                                            }*/
+                                                                (function(revertRefLocal) {
+                                                                    $revertBtn.tooltip({title:'Revert to this version?', 'container':'body',placement:'bottom'})
+                                                                        .click(function() {
+                                                                            self.ws.revert_object(revertRefLocal,
+                                                                                function(reverted_obj_info) {
+                                                                                    self.refresh();
+                                                                                }, function(error) {
+                                                                                    console.error(error);
+                                                                                    $alertContainer.empty();
+                                                                                    $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                                });
+                                                                        }); })(revertRef);
+                                                            }
                                                             
                                                             var summary = '';
                                                             console.log(history[k][4],history[k][10])
@@ -435,7 +437,6 @@
                                                                     summary = '<br>Empty Narrative';
                                                                 }
                                                             }
-                                                            
                                                             $tbl.append($('<tr>')
                                                                         .append($('<td>').append($revertBtn))
                                                                         .append($('<td>').append(self.getTimeStampStr(history[k][3]) + ' by ' + history[k][5] + summary))
@@ -451,8 +452,6 @@
                                                         $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
                                                     });
                                             }
-                                            
-                                            
                                         });
                                         
             /*var $openProvenance = $('<span>')
@@ -535,7 +534,6 @@
                                         });
             
             $btnToolbar
-                //.append($openLandingPage)
                 .append($openHistory)
                 //.append($openProvenance)
                 //.append($download)

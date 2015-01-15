@@ -395,17 +395,18 @@
                                                                 $revertBtn.tooltip({title:'Current Version', 'container':'body',placement:'bottom'});
                                                             } else {
                                                                 var revertRef = {wsid:history[k][6], objid:history[k][0], ver:history[k][4]};
-                                                                $revertBtn.tooltip({title:'Revert to this version?', 'container':'body',placement:'bottom'})
-                                                                    .click(function() {
-                                                                        self.ws.revert_object(revertRef,
-                                                                            function(reverted_obj_info) {
-                                                                                self.refresh();
-                                                                            }, function(error) {
-                                                                                console.error(error);
-                                                                                $alertContainer.empty();
-                                                                                $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
-                                                                            });
-                                                                    })
+                                                                (function(revertRefLocal) {
+                                                                    $revertBtn.tooltip({title:'Revert to this version?', 'container':'body',placement:'bottom'})
+                                                                        .click(function() {
+                                                                            self.ws.revert_object(revertRefLocal,
+                                                                                function(reverted_obj_info) {
+                                                                                    self.refresh();
+                                                                                }, function(error) {
+                                                                                    console.error(error);
+                                                                                    $alertContainer.empty();
+                                                                                    $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                                });
+                                                                        }); })(revertRef);
                                                             }
                                                             $tbl.append($('<tr>')
                                                                         .append($('<td>').append($revertBtn))

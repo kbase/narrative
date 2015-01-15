@@ -352,7 +352,7 @@
             }
         },
         
-        addDataControls: function(object_info, $alertContainer) {
+        addDataControls: function(object_info, $alertContainer, ws_info) {
             var self = this;
             var $btnToolbar = $('<span>')
                                         .addClass('btn-toolbar')
@@ -387,11 +387,22 @@
                                                             } else {
                                                                 var revertRef = {wsid:history[k][6], objid:history[k][0], ver:history[k][4]};
                                                                 (function(revertRefLocal) {
-                                                                    $revertBtn.tooltip({title:'Revert to this version?', 'container':'body',placement:'bottom'})
+                                                                    $revertBtn.tooltip({title:'Revert to this version?',placement:'bottom'})
                                                                         .click(function() {
                                                                             self.ws.revert_object(revertRefLocal,
                                                                                 function(reverted_obj_info) {
-                                                                                    self.refresh();
+                                                                                    // update the workspace info with the specified name
+                                                                                    self.ws.alter_workspace_metadata({
+                                                                                        wsi:{id:ws_info[0]},
+                                                                                        new:{'narrative_nice_name':reverted_obj_info[10].name}},
+                                                                                        function() {
+                                                                                            self.refresh();
+                                                                                        },
+                                                                                        function(error) {
+                                                                                            console.error(error);
+                                                                                            $alertContainer.empty();
+                                                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Narrative reverted, but a minor data update error occured."+error.error.message));
+                                                                                        });
                                                                                 }, function(error) {
                                                                                     console.error(error);
                                                                                     $alertContainer.empty();
@@ -441,7 +452,7 @@
                                                                         .append($('<td>').append($revertBtn))
                                                                         .append($('<td>').append(self.getTimeStampStr(history[k][3]) + ' by ' + history[k][5] + summary))
                                                                         .append($('<td>').append($('<span>').css({margin:'4px'}).addClass('fa fa-info pull-right'))
-                                                                                 .tooltip({title:history[k][2]+'<br>'+history[k][8]+'<br>'+history[k][9]+' bytes', container:'body',html:true,placement:'bottom'}))
+                                                                                 .tooltip({title:history[k][2]+'<br>'+history[k][10].name+'<br>'+history[k][8]+'<br>'+history[k][9]+' bytes', container:'body',html:true,placement:'bottom'}))
                                                                                 );
                                                         }
                                                         $alertContainer.append($tbl);
@@ -519,6 +530,8 @@
                                                                 if (self.ws_name && self.ws) {
                                                                     self.ws.delete_workspace({ id: object_info[6] },
                                                                         function() {
+                                                                            // TODO: check if we have deleted the current workspace, if so we should
+                                                                            // redirect to the ui narrativemanager/start page
                                                                             self.refresh();
                                                                         },
                                                                         function(error) {
@@ -576,7 +589,7 @@
             
             var self = this;
             var $alertContainer=$('<div>').addClass('kb-data-list-more-div').css({'text-align':'center','margin':'10px'});
-            var $btnToolbar = self.addDataControls(data.nar_info,$alertContainer);
+            var $btnToolbar = self.addDataControls(data.nar_info,$alertContainer, data.ws_info);
             $ctrCol.append($btnToolbar);
             var $shareContainer = $('<div>').hide();
             this.ws.get_permissions({id:data.ws_info[0]},
@@ -611,8 +624,6 @@
                     console.error('error getting permissions for manage panel');
                     console.error(error);
                 });
-            
-            
             
             $narDiv.append($('<table>').css({'width':'100%'})
                            .append($('<tr>').append($dataCol).append($ctrCol)));

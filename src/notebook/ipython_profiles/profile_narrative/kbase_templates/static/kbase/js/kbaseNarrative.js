@@ -145,13 +145,14 @@ var KBFail = function(is_fatal, where, what) {
     }
     code += ")\n";
     // Log the failure
-    if (IPython.notebook.kernel.shell_channel.readyState !== 1) {
+    try {
+        IPython.notebook.kernel.execute(code, null, {store_history: false});        
+    }
+    catch (err) {
+        // wait half a second and try one more time.
+        console.log(err);
         setTimeout( function() { IPython.notebook.kernel.execute(code, null, {store_history: false}); }, 500 );
-    }
-    else {
-        IPython.notebook.kernel.execute(code, null, {store_history: false});
-    }
-    
+    }    
     return true;
 }
 /**

@@ -36,20 +36,24 @@ init_service(name=NAME, desc="KBase Transform Service Calls", version=VERSION)
 
 
 @method(name="Assy to ContigSet")
-def _assy_to_cs(meth, input_assyfile):
+def _assy_to_cs(meth, input_assyfile, output_contigset):
     """Makes a call to the app service
 
-    :param input_assyfile: The App Spec
+    :param input_assyfile: the KBaseFile.AssemblyFile to convert
     :type input_assyfile: kbtypes.Unicode
-    :ui_name input_assyfile: The App Spec
+    :ui_name input_assyfile: assembly file
+    :param output_contigset: the name for the output ContigSet
+    :type output_contigset: kbtypes.Unicode
+    :ui_name output_contigset: output ContigSet name
     :rtype: kbtypes.Unicode
     :return: running job info
     """
     token, workspace = meth.token, meth.workspace_id
     meth.debug(input_assyfile)
+    meth.debug(output_contigset)
 #     appSpec = json.loads(app_spec_json)
 #     paramValues = json.loads(param_values_json)
-# 
+#
 #     methIdToSpec = json.loads(correct_method_specs_json(method_specs_json))
 
     # raise ValueError("========\nExternal=" + method_specs_json +
@@ -61,7 +65,8 @@ def _assy_to_cs(meth, input_assyfile):
 
     # raise ValueError("App sending to NJS: " + json.dumps(app))
 #     meth.debug(json.dumps(app))
-#     njsClient = NarrativeJobService(service.URLS.__dict__['job_service'], token=token)
+#     njsClient = NarrativeJobService(service.URLS.__dict__['job_service'],
+#         token=token)
 #     appState = njsClient.run_app(app)
 
     # assuming we get a job ID out of this, do the following:

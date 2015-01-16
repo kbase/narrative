@@ -616,6 +616,12 @@
         
         
         renderNarrativeDiv: function(data) {
+            
+            var isCurrent = false;
+            if(this.ws_name === data.ws_info[1]) {
+                isCurrent = true;
+            }
+            
             var $narDiv = $('<div>').addClass('kb-data-list-obj-row');
             
             var $tbl = $('<table>').css({'width':'100%'});
@@ -634,9 +640,14 @@
                 $priv.addClass('fa fa-pencil').prop('title','you can edit');
             }
             
-            $dataCol.append(
-                $('<div>').addClass('kb-data-list-name').css({'white-space':'normal', 'cursor':'pointer'})
-                    .append($('<a href="'+narRef+'" target="_blank">').append(nameText).append($priv)));
+            var $nameLink =  $('<a href="'+narRef+'" target="_blank">');
+            if (isCurrent) {
+                 $nameLink.append($('<span>').addClass('fa fa-circle').css({'margin-right':'3px','color':'#4BB856'})
+                                    .tooltip({title:'You are viewing this Narrative now'}));
+            }
+            $nameLink.append(nameText).append($priv);
+            
+            $dataCol.append($('<div>').addClass('kb-data-list-name').css({'white-space':'normal', 'cursor':'pointer'}).append($nameLink));
             var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
             if(data.ws_info[2]===this._attributes.auth.user_id) {
             } else {
@@ -712,8 +723,7 @@
                             },
                             function(info) {
                                 // info.ws_info   info.nar_info
-                                console.log('created new narrative!');
-                                console.log(info);
+                                console.log('created new narrative!',info);
                                 var newWsId = info.nar_info[6];
                                 var newNarId = info.nar_info[0];
                                 $newNarrativeLink.empty().append('<a href="ws.'+newWsId+'.obj.'+newNarId+'" target="_blank">Open your new Narrative.</a>');

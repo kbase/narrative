@@ -7,6 +7,11 @@ This is built on the IPython Notebook (more notes will follow).
 __Changes__
 - Narrative panel supports copy/delete/history/revert of narratives.
 - Narrative panel shows apps/methods/description (if exists) for each narrative.
+- Links to LP for genomes and genes were added in Proteome Comparison widget.
+- 'Download as JSON' button was added for objects in narrative data list.
+- Links to LP were added for genes in genome viewer.
+- ContigSet viewer was added.
+- Plant genomes were added into public data tab (and GWAS types were removed).
 
 ### Version 0.3.9 - 1/14/2015
 __Changes__

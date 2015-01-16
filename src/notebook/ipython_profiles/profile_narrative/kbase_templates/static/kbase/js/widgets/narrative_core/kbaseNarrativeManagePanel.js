@@ -63,7 +63,7 @@
                 this.options.nms_url = window.kbconfig.urls.narrative_method_store;
             }
             
-            this.$mainPanel = $('<div>').css({'height':'600px'});
+            this.$mainPanel = $('<div>')//.css({'height':'600px'});
             this.body().append(this.$mainPanel);
             
             $(document).on(
@@ -424,6 +424,7 @@
                                                                         }); })(revertRef);
                                                             }
                                                             var summary = self.getNarSummary(history[k]);
+                                                            if (summary) { summary = '<br>'+summary; }
                                                             $tbl.append($('<tr>')
                                                                         .append($('<td>').append($revertBtn))
                                                                         .append($('<td>').append(self.getTimeStampStr(history[k][3]) + ' by ' + history[k][5] + summary))
@@ -771,52 +772,76 @@
         
         getNarContent: function(nar_info) {
             var self = this;
+            console.log(nar_info);
+            
+            var specsToLookup = {apps:[],methods:[]};
             if (nar_info[10].methods) {
                 var content = JSON.parse(nar_info[10].methods);
                 var apps = []; var methods = [];
                 var appCount=0; var methodCount=0;
                 for(var a in content.app) {
                     if (content.app.hasOwnProperty(a)) {
-                        var link = '<a href="'+self.options.landing_page_url+'narrativestore/app/'+a+'" target="_blank">'+a+'</a>';
-                        apps.push({link:link,name:a,count:content.app[a]});
+                        apps.push({name:a,count:content.app[a]});
+                        specsToLookup.apps.push(a);
                     }
                 }
                 for(var m in content.method) {
                     if (content.method.hasOwnProperty(m)) {
-                        var link = '<a href="'+self.options.landing_page_url+'narrativestore/app/'+m+'" target="_blank">'+m+'</a>';
-                        methods.push({link:link,name:m,count:content.method[m]});
+                        methods.push({name:m,count:content.method[m]});
+                        specsToLookup.methods.push(m);
                     }
                 }
             }
-        
-            // sort here
             
             if ((apps.length + methods.length) ===0) {
+                if (nar_info[10].description) {
+                    $container.append('<br><b>Description</b><br><div style="text-align:left;">'+nar_info[10].description+'</div>');
+                }
                 return "<br>No Apps or Methods in this Narrative.<br>";
             }
-            var $container = $('<div>').css({'width':'100%'});
-            if (apps.length>0) {
-                $container.append('<br><b>Apps</b><br>');
-                var $apptbl = $('<table>').css({'width':'100%'});
-                for(var k=0; k<apps.length; k++) {
-                    $apptbl.append($('<tr>')
-                            .append($('<td>').append(apps[k].link))
-                            .append($('<td>').append(apps[k].count)));
-                }
-                $container.append($apptbl);
-            }
             
-            if (methods.length>0) {
-                $container.append('<br><b>Methods</b><br>');
-                var $methodtbl = $('<table>').css({'width':'100%'});
-                for(var k=0; k<methods.length; k++) {
-                    $methodtbl.append($('<tr>')
-                            .append($('<td>').append(methods[k].link))
-                            .append($('<td>').append(methods[k].count)));
-                }
-                $container.append($methodtbl);
+            var $container = $('<div>').css({'width':'100%'});
+            if (!self.appMethodSpecRef) {
+                self.trigger('getFunctionSpecs.Narrative', [specsToLookup,
+                        function(specLookup) {
+                            //todo: sort here based on counts or name?
+                            //console.log(specLookup);
+                            if (nar_info[10].description) {
+                                $container.append('<br><b>Description</b><br><div style="text-align:left;">'+nar_info[10].description+'</div>');
+                            }
+                            
+                            if (apps.length>0) {
+                                $container.append('<br><b>Apps</b><br>');
+                                var $apptbl = $('<table>').css({'width':'100%'});
+                                for(var k=0; k<apps.length; k++) {
+                                    var link = '<a href="'+self.options.landing_page_url+'narrativestore/app/'+apps[k].name+'" target="_blank">'+apps[k].name+'</a>';
+                                    if (specLookup.apps[apps[k].name]) {
+                                        link = '<a href="'+self.options.landing_page_url+'narrativestore/app/'+apps[k].name+'" target="_blank">'+specLookup.apps[apps[k].name].info.name+'</a>';
+                                    }
+                                    $apptbl.append($('<tr>')
+                                            .append($('<td>').append(link))
+                                            .append($('<td>').append(apps[k].count)));
+                                }
+                                $container.append($apptbl);
+                            }
+                            
+                            if (methods.length>0) {
+                                $container.append('<br><b>Methods</b><br>');
+                                var $methodtbl = $('<table>').css({'width':'100%'});
+                                for(var k=0; k<methods.length; k++) {
+                                    var link = '<a href="'+self.options.landing_page_url+'narrativestore/method/'+methods[k].name+'" target="_blank">'+methods[k].name+'</a>';
+                                    if (specLookup.methods[methods[k].name]) {
+                                        link = '<a href="'+self.options.landing_page_url+'narrativestore/method/'+methods[k].name+'" target="_blank">'+specLookup.methods[methods[k].name].info.name+'</a>';
+                                    }
+                                    $methodtbl.append($('<tr>')
+                                            .append($('<td>').append(link))
+                                            .append($('<td>').append(methods[k].count)));
+                                }
+                                $container.append($methodtbl);
+                            }
+                            $container.append('<br>');
+                        }]);
             }
-            $container.append('<br>');
             return $container;
         },
         

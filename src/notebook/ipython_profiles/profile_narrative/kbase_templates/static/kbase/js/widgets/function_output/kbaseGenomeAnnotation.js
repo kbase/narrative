@@ -251,7 +251,7 @@
             			$('#'+tabId).append('<table class="table table-striped table-bordered" \
             					style="margin-left: auto; margin-right: auto;" id="'+tabId+'-table"/>');
             			var elemLabels = ['Gene ID', 'Contig name', 'Gene start', 'Strand', 'Gene length', "Gene type", "Function", "Annotations"];
-            			var elemData = [geneId, '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>', geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
+            			var elemData = ['<a href="/functional-site/#/genes/'+self.ws_name+'/'+self.ws_id+'/'+geneId+'" target="_blank">'+geneId+'</a>', '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>', geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
             			var elemTable = $('#'+tabId+'-table');
             			for (var i=0; i<elemData.length; i++) {
             				if (elemLabels[i] === 'Function') {

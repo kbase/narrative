@@ -442,8 +442,7 @@ end
 -- 1. A valid KBase auth token is given in the cookie given by auth_cookie_name
 -- 2. The user specified by that cookie is shutting down their own Narrative instance
 narrative_shutdown = function(self)
-    local uri_key_rx = ngx.var.uri_base .. "/(" .. key_regex .. ")"
-    local uri_value_rx = ngx.var.uri_base .. "/" .. key_regex .. "/" .. "(" .. val_regex .. ")$"
+    local uri_key_rx = ngx.var.uri_base.."/("..key_regex..")"
     local method = ngx.req.get_method()
     local response = {}
     if method == "GET" then
@@ -451,48 +450,58 @@ narrative_shutdown = function(self)
     elseif method == "DELETE" then
         local session_id, err = get_session()
         if session_id then
-            local uri_base = ngx.var.uri_base
-            local name = string.match(ngx.var.uri, uri_key_rx)
-            if name then
-                if name == session_id then
-                    local target, flags = proxy_map:get(name)
+            local key = string.match(ngx.var.uri, uri_key_rx)
+            if key then
+                if key == session_id then
+                    local target = session_map:get(key)
                     if target == nil then
                         ngx.status = ngx.HTTP_NOT_FOUND
+                        response = "Session does not exist: "..key
                     else
-                        response = "Reaping container"
-                        proxy_state:set(name, false)
-                        ngx.log(ngx.NOTICE, "Manual shutdown by user: " .. name)
-                        local success, err = pcall( notemgr.remove_notebook, name)
-                        if success then
-                            proxy_map:delete(name)
-                            proxy_state:delete(name)
-                            proxy_last:delete(name)
-                            proxy_last_ip:delete(name)
-                            ngx.log( ngx.INFO, "notebook removed")
-                        elseif string.find(err, "does not exist") then
-                            ngx.log( ngx.INFO, "notebook nonexistent - removing references")
-                            proxy_map:delete(name)
-                            proxy_state:delete(name)
-                            proxy_last_ip:delete(name)
-                            proxy_last:delete(name)
+                        local dock_lock = locklib:new(M.lock_name, lock_opts)
+                        local session = notemgr:split(target)
+                        id = session[2]
+                        -- lock docker map before read/write
+                        elapsed, err = dock_lock:lock(id)
+                        if elapsed then -- lock worked
+                            response = "Reaping container"
+                            ngx.log(ngx.NOTICE, "Manual shutdown of "..id.." by user "..key)
+                            local ok, err = pcall(notemgr.remove_notebook, id)
+                            if ok then
+                                docker_map:delete(id)
+                                session_map:delete(key)
+                                ngx.log(ngx.INFO, "Notebook "..id.." removed")
+                            elseif string.find(err, "does not exist") then
+                                docker_map:delete(id)
+                                session_map:delete(key)
+                                ngx.log(ngx.WARN, "Notebook "..id.." nonexistent - removing references")
+                            else
+                                ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+                                ngx.log(ngx.ERR, "Error: "..err)
+                                response = "Error: "..err
+                            end
+                            dock_lock:unlock() -- unlock if it worked
+                        else
+                            ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+                            ngx.log(ngx.ERR, "Error: "..err)
+                            response = "Error: "..err
                         end
                     end
                 else
                     ngx.status = ngx.HTTP_UNAUTHORIZED
-                    ngx.log(ngx.WARN, "Unauthorized user " .. session_id .. " attempting to shutdown a Narrative owned by " .. key)
+                    ngx.log(ngx.WARN, "Unauthorized user "..session_id.." attempting to shutdown a Narrative owned by "..key)
                     response = "You do not have permission to shut down this Narrative"
-                    ngx.say(json.encode(response))
                 end
             else
-                response = "No key specified"
                 ngx.status = ngx.HTTP_NOT_FOUND
+                response = "No key specified"
             end
-            ngx.say(json.encode(response))
         else
+            ngx.status = ngx.HTTP_UNAUTHORIZED
             ngx.log(ngx.WARN, "Unauthorized user attempting to shutdown a Narrative")
             response = "Must provide user credentials to shutdown a running server!"
-            ngx.say(json.encode(response))
         end
+        ngx.say(json.encode(response))
     else
         ngx.exit(ngx.HTTP_METHOD_NOT_IMPLEMENTED)
     end

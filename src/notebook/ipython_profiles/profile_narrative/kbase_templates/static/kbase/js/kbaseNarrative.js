@@ -303,7 +303,7 @@ narrative.init = function() {
         curCell = cell;
         // show the new one
         if (!curCell.metadata['kb-cell'])
-            curCell.celltoolbar.show();        
+            curCell.celltoolbar.show();
     };
 
     $([IPython.events]).on('select.Cell', function(event, data) {
@@ -312,6 +312,10 @@ narrative.init = function() {
 
     $([IPython.events]).on('create.Cell', function(event, data) {
         showIPythonCellToolbar(data.cell);
+    });
+
+    $([IPython.events]).on('delete.Cell', function(event, data) {
+        showIPythonCellToolbar(IPython.notebook.get_selected_cell());
     });
 
     /*

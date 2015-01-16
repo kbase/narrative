@@ -382,6 +382,10 @@
                                                             .append($('<button>').addClass('kb-data-list-cancel-btn')
                                                                         .append('Hide History')
                                                                         .click(function() {$alertContainer.empty();} )));
+                                                        var isCurrent = false;
+                                                        if(self.ws_name === ws_info[1]) {
+                                                            isCurrent = true;
+                                                        }
                                                         var $tbl = $('<table>').css({'width':'100%'});
                                                         for(var k=0; k<history.length;k++) {
                                                             var $revertBtn = $('<button>').append('v'+history[k][4]).addClass('kb-data-list-btn');
@@ -401,7 +405,11 @@
                                                                                         wsi:{id:ws_info[0]},
                                                                                         new:{'narrative_nice_name':reverted_obj_info[10].name}},
                                                                                         function() {
-                                                                                            self.refresh();
+                                                                                            if (isCurrent) {
+                                                                                                window.location.reload();
+                                                                                            } else {
+                                                                                                self.refresh();
+                                                                                            }
                                                                                         },
                                                                                         function(error) {
                                                                                             console.error(error);

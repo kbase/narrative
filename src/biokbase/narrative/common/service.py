@@ -710,7 +710,9 @@ class LifecycleLogger(LifecycleObserver):
 
     def started(self, params):
         # note: quote params so the logging can handle spaces inside them
-        pstr = str(params).replace('"', '\\"')  # escape embedded quotes
+        #pstr = str(params).replace('"', '\\"')  # escape embedded quotes
+        pstr = str(params).replace('"', "'")  # change dbl to single quotes
+        pstr = pstr.replace('\\','') # eliminate dbl-backslashes
         self._write(logging.INFO, "func.begin", {'params': pstr})
         self._start_time = time.time()
 

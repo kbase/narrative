@@ -1555,7 +1555,7 @@
                 });
 
                 errorBlob.traceback = errTb;
-                this.createErrorCell(cell, JSON.stringify(errorBlob));
+                this.createOutputCell(cell, '{"error" :' + JSON.stringify(errorBlob) + '}', true);
 
             }
             this.showCellProgress(cell, "DONE", 0, 0);

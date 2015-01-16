@@ -12,6 +12,7 @@ sychan@lbl.gov
 """
 import logging
 import os
+import sys
 import urllib
 import re
 import IPython.html.services.notebooks.handlers

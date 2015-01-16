@@ -540,11 +540,10 @@
                     var cell = cells[i];
                     if (this.isFunctionCell(cell)) {
                         var method = cell.metadata[this.KB_CELL].method;
-                        var inputWidget = this.defaultInputWidget;
                         // legacy cells.
                         if (method.properties) {
                             var inputWidget = method.properties.widgets.input || this.defaultInputWidget;
-
+    
                             if (fullRender) {
                                 cell.rendered = false;
                                 cell.render();

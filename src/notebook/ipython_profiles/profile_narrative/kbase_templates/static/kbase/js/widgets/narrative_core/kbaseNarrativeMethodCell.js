@@ -134,7 +134,6 @@
 
             this.$cellPanel = $('<div>')
                               .addClass('panel kb-func-panel kb-cell-run')
-                              .attr('id', this.options.cellId)
                               .append($('<div>')
                                       .addClass('panel-heading')
                                       .append($methodInfo))
@@ -310,36 +309,6 @@
                 return false;
             }
 
-            // if (ignoreValidCheck) {
-            //     //code
-            // } else {
-            //     var v = self.isValid();
-            //     if (!v.isValid) {
-            //         var errorCount = 1;
-            //         self.$errorModalContent.empty();
-            //         for(var k=0; k<v.stepErrors.length; k++) {
-            //             var $errorStep = $('<div>');
-            //             $errorStep.append($('<div>').addClass("kb-app-step-error-heading").append('Errors in Step '+v.stepErrors[k].stepNum+':'));
-            //             for (var e=0; e<v.stepErrors[k].errormssgs.length; e++) {
-            //                 $errorStep.append($('<div>').addClass("kb-app-step-error-mssg").append('['+errorCount+']: ' + v.stepErrors[k].errormssgs[e]));
-            //                 errorCount = errorCount+1;
-            //             }
-            //             self.$errorModalContent.append($errorStep);
-            //         }
-            //         self.$errorModal.modal('show');
-            //         return false;
-            //     }
-            // }
-            // self.prepareDataBeforeRun();
-            // self.$submitted.show();
-            // self.$runButton.hide();
-            // self.$stopButton.show();
-            // if (this.inputSteps) {
-            //     for(var i=0; i<this.inputSteps.length; i++) {
-            //         this.inputSteps[i].widget.lockInputs();
-            //     }
-            // }
-            // this.state.runningState.appRunState = "running";
             return true;
         },
 

@@ -250,7 +250,7 @@
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(method) + "'});" +
+                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
                               "</script>";
 
             cell.set_text(cellContent);

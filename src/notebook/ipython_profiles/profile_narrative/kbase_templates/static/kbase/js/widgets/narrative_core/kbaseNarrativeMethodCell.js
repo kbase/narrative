@@ -73,11 +73,25 @@
                 }, this)
             );
 
+            this.$stopButton = $('<button>')
+                              .attr('type', 'button')
+                              .attr('value', 'Cancel')
+                              .addClass('kb-app-run kb-app-cancel')
+                              .append('Cancel')
+                              .css({'margin-right':'5px'})
+                              .click(
+                                  $.proxy(function(event) {
+                                      self.stopRunning();
+                                  }, this)
+                              )
+                              .hide();
+
             var $buttons = $('<div>')
                            .addClass('buttons pull-left')
                            // .append(this.$deleteButton)
                            .append(this.$submitted)
-                           .append(this.$runButton);
+                           .append(this.$runButton)
+                           .append(this.$stopButton);
 
 
             var $progressBar = $('<div>')
@@ -198,6 +212,19 @@
 
         /**
          * @method
+         * This sends a trigger to the jobs panel to stop any running jobs. If the callback is
+         * truthy, this resets the cell to an input state.
+         */
+        stopRunning: function() {
+            this.trigger('cancelJobCell.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
+                if (isCanceled) {
+                    this.changeState('input');
+                }
+            }, this)]);            
+        },
+
+        /**
+         * @method
          * Updates the method cell's state.
          * Currently supports "input", "submitted", "running", or "complete".
          */
@@ -209,25 +236,40 @@
                 switch(this.runState) {
                     case 'submitted':
                         this.$cellPanel.removeClass('kb-app-step-running');
+                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$submitted.html(this.submittedText).show();
                         this.$runButton.hide();
+                        this.$stopButton.show();
                         this.$inputWidget.lockInputs();
                         break;
                     case 'complete':
                         this.$cellPanel.removeClass('kb-app-step-running');
+                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$submitted.html(this.submittedText).show();
                         this.$runButton.hide();
+                        this.$stopButton.hide();
                         this.$inputWidget.lockInputs();
                         // maybe unlock? show a 'last run' box?
                         break;
                     case 'running':
                         this.$submitted.html(this.submittedText).show();
+                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$cellPanel.addClass('kb-app-step-running');
                         this.$runButton.hide();
+                        this.$stopButton.show();
                         this.$inputWidget.lockInputs();
+                        break;
+                    case 'error':
+                        this.$submitted.html(this.submittedText).show();
+                        this.$cellPanel.addClass('kb-app-step-running');
+                        this.$runButton.hide();
+                        this.$stopButton.show();
+                        this.$inputWidget.lockInputs();
+                        this.$elem.find('.kb-app-panel').addClass('kb-app-error');
                         break;
                     default:
                         this.$cellPanel.removeClass('kb-app-step-running');
+                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$submitted.hide();
                         this.$runButton.show();
                         this.$inputWidget.unlockInputs();

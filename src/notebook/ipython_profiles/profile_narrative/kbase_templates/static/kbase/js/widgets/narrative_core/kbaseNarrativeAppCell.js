@@ -442,7 +442,6 @@
 
         /* unlocks inputs and updates display properties to reflect the not running state */
         stopAppRun: function() {
-            var self = this;
             // trigger a cancel job action
             // if that returns something truthy (i.e. auto canceled, or user chose to cancel),
             // then continue and reset the state to input.
@@ -450,8 +449,8 @@
 
             this.trigger('cancelJobCell.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
                 if (isCanceled) {
-                    self.$stopButton.hide();
-                    self.$runButton.show();
+                    this.$stopButton.hide();
+                    this.$runButton.show();
                     if (this.inputSteps) {
                         for(var i=0; i<this.inputSteps.length; i++) {
                             this.inputSteps[i].widget.unlockInputs();
@@ -612,12 +611,13 @@
             state = state.toLowerCase();
             if (state === 'error')
                 this.setErrorState(true);
-            else if (state === 'done') {
+            else if (state === 'complete') {
                 for (var i=0; i<this.inputSteps.length; i++) {
                     this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
                 }
                 this.state.runningState.runningStep = null;
                 this.state.runningState.appRunState = state;
+                this.$stopButton.hide();
             }
         },
 

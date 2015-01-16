@@ -597,6 +597,10 @@
         updateCell: function(job, jobInfo) {
             var source = jobInfo.job.source;
             var jobType = this.jobTypeFromId(jobInfo.job.id)
+
+            var state = '';
+            if (job.job_state)
+                state = job.job_state.toLowerCase();
             
             console.log([job, jobInfo]);
             // don't do anything if we don't know the source cell. it might have been deleted.
@@ -615,7 +619,6 @@
             // if it's a ujs or method job, then it's a method cell
             else if (jobType === 'ujs' || jobType === 'method') {
                 // assume we have 'in-progress' or 'running' vs. 'complete' or 'done'
-                var state = job.job_state.toLowerCase();
                 var submitState = 'complete';
                 if (state.indexOf('run') != -1 || state.indexOf('progress') != -1)
                     submitState = 'running';
@@ -637,15 +640,15 @@
                 }
             }
             // if it's an error, then we need to signal the cell
-            if (job.job_state === "error" || (job.step_errors && Object.keys(job.step_errors).length !== 0)) {
+            if (state === "error" || (job.step_errors && Object.keys(job.step_errors).length !== 0)) {
                 if (jobType === 'njs') {
                     $cell.kbaseNarrativeAppCell('setRunningState', 'error');
                 }
             }
             // ...and if it's done, we need to signal that, too. Note that it can be both (i.e. done with errors)
-            if (job.job_state.indexOf('complete') !== -1 || job.job_state.indexOf('done') !== -1) {
+            if (state.indexOf('complete') !== -1 || state.indexOf('done') !== -1) {
                 if (jobType === 'njs') {
-                    $cell.kbaseNarrativeAppCell('setRunningState', 'done');
+                    $cell.kbaseNarrativeAppCell('setRunningState', 'complete');
                 }
             }
         },

@@ -418,41 +418,12 @@
         deleteJob: function(jobId) {
             var deleteJobCmd = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                'jm = KBjobManager()\n' +
-                               'print jm.delete_jobs([' + jobId + '])\n';
-
-            var deleteResponse = function(msgType, content, jobId) {
-                if (msgType != 'stream') {
-                    console.error('An error occurred while trying to delete a job');
-                    return;
-                }
-                var result = content.data;
-                try {
-                    buffer = JSON.parse(buffer);
-                }
-                catch(err) {
-                    // ignore and return. assume it failed.
-                    return;
-                }
-
-                if (buffer[jobId] === true) {
-                    // successfully nuked it on the back end, now wipe it out on the front end.
-                    var appIds = IPython.notebook.metadata.job_ids.apps;
-                    appIds = appIds.filter(function(val) { return val.id !== removeId });
-                    IPython.notebook.metadata.job_ids.apps = appIds;
-
-                    var methodIds = IPython.notebook.metadata.job_ids.methods;
-                    methodIds = methodIds.filter(function(val) { return val.id !== removeId });
-                    IPython.notebook.metadata.job_ids.methods = methodIds;
-
-                    this.refresh(false);
-                    this.removeId = null;
-                }
-            };
+                               'print jm.delete_jobs(["' + jobId + '"])\n';
 
             var callbacks = {
-                'output' : function(msgType, content) { 
-                    deleteResponse(msgType, content, jobId);
-                },
+                'output' : $.proxy(function(msgType, content) {
+                    this.deleteResponse(msgType, content, jobId);
+                }, this),
                 'execute_reply' : $.proxy(function(content) { 
                     this.handleCallback('execute_reply', content); 
                 }, this),
@@ -467,7 +438,37 @@
                 }, this)
             };
 
-            IPython.notebook.execute(deleteJobCmd, callbacks, {store_history: false, silent: true});
+            IPython.notebook.kernel.execute(deleteJobCmd, callbacks, {store_history: false, silent: true});
+        },
+
+        deleteResponse: function(msgType, content, jobId) {
+            if (msgType != 'stream') {
+                console.error('An error occurred while trying to delete a job');
+                return;
+            }
+            var result = content.data;
+            try {
+                result = JSON.parse(result);
+            }
+            catch(err) {
+                // ignore and return. assume it failed.
+                return;
+            }
+
+            console.log(result);
+            if (result[jobId] === true) {
+                // successfully nuked it on the back end, now wipe it out on the front end.
+                var appIds = IPython.notebook.metadata.job_ids.apps;
+                appIds = appIds.filter(function(val) { return val.id !== jobId });
+                IPython.notebook.metadata.job_ids.apps = appIds;
+
+                var methodIds = IPython.notebook.metadata.job_ids.methods;
+                methodIds = methodIds.filter(function(val) { return val.id !== jobId });
+                IPython.notebook.metadata.job_ids.methods = methodIds;
+
+                this.refresh(false);
+                this.removeId = null;
+            }
         },
 
         renderJob: function(job, jobInfo) {

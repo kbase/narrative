@@ -169,13 +169,13 @@ class KBjobManager():
         """
         deletion_status = dict()
         for job_id in job_list:
-            if job.startswith('njs:'):
+            if job_id.startswith('njs:'):
                 # delete from njs
                 is_deleted = True
-            elif job.startswith('method:'):
+            elif job_id.startswith('method:'):
                 # delete from njs_wrapper
                 is_deleted = True
-            elif job.startswith('ujs:'):
+            elif job_id.startswith('ujs:'):
                 # delete from ujs (njs_wrapper?)
                 is_deleted = True
             deletion_status[job_id] = is_deleted

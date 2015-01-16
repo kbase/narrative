@@ -12,7 +12,7 @@
 
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/ws/json/", // ws_name/obj_name,
+            default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
 
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
 

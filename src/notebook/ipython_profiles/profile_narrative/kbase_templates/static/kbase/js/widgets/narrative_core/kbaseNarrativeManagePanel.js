@@ -38,6 +38,7 @@
             ws_url: "https://kbase.us/services/ws",
             nms_url: "https://kbase.us/services/narrative_method_store/rpc",
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
+            landing_page_url: "/functional-site/#/", // !! always include trailing slash
             ws_name: null,
             nar_name: null,
         },
@@ -376,12 +377,15 @@
                                             if (self.ws_name && self.ws) {
                                                 self.ws.get_object_history({ref:object_info[6]+"/"+object_info[0]},
                                                     function(history) {
-                                                        console.log(history);
                                                         history.reverse();
                                                         $alertContainer.append($('<div>')
                                                             .append($('<button>').addClass('kb-data-list-cancel-btn')
                                                                         .append('Hide History')
                                                                         .click(function() {$alertContainer.empty();} )));
+                                                        var isCurrent = false;
+                                                        if(self.ws_name === ws_info[1]) {
+                                                            isCurrent = true;
+                                                        }
                                                         var $tbl = $('<table>').css({'width':'100%'});
                                                         for(var k=0; k<history.length;k++) {
                                                             var $revertBtn = $('<button>').append('v'+history[k][4]).addClass('kb-data-list-btn');
@@ -401,7 +405,11 @@
                                                                                         wsi:{id:ws_info[0]},
                                                                                         new:{'narrative_nice_name':reverted_obj_info[10].name}},
                                                                                         function() {
-                                                                                            self.refresh();
+                                                                                            if (isCurrent) {
+                                                                                                window.location.reload();
+                                                                                            } else {
+                                                                                                self.refresh();
+                                                                                            }
                                                                                         },
                                                                                         function(error) {
                                                                                             console.error(error);
@@ -417,7 +425,6 @@
                                                             }
                                                             
                                                             var summary = '';
-                                                            console.log(history[k][4],history[k][10])
                                                             if (history[k][10].methods) {
                                                                 var content = JSON.parse(history[k][10].methods);
                                                                 var summaryCounts = [];
@@ -508,7 +515,6 @@
                                         var id = new Date().getTime();
                                         var ws_name = self.my_user_id + ":" + id;
                                         
-                                        console.log(ws_name,newMeta);
                                         self.ws.clone_workspace({
                                                     wsi: {id:ws_info[0]},
                                                     workspace: ws_name,
@@ -565,17 +571,26 @@
                                         .click(function(e) {
                                             e.stopPropagation();
                                             $alertContainer.empty(); $alertContainer.show();
+                                            
+                                            var warningMsg = 'Are you sure?'; var isCurrent = false;
+                                            if(self.ws_name === ws_info[1]) {
+                                                isCurrent = true;
+                                                warningMsg = 'Warning - you are currently viewing this Narrative!<br>You will be redirected to another Narrative if deleted.  Are you sure?';
+                                            }
+                                            
                                             $alertContainer.append($('<div>')
-                                                .append($('<span>').append('Are you sure?'))
+                                                .append($('<div>').append(warningMsg))
                                                 .append($('<button>').addClass('kb-data-list-btn')
                                                             .append('Delete')
                                                             .click(function() {
                                                                 if (self.ws_name && self.ws) {
                                                                     self.ws.delete_workspace({ id: object_info[6] },
                                                                         function() {
-                                                                            // TODO: check if we have deleted the current workspace, if so we should
-                                                                            // redirect to the ui narrativemanager/start page
-                                                                            self.refresh();
+                                                                            if (isCurrent) {
+                                                                                window.location.replace(self.options.landing_page_url+'narrativemanager/start');
+                                                                            } else {
+                                                                                self.refresh();
+                                                                            }
                                                                         },
                                                                         function(error) {
                                                                             console.error(error);

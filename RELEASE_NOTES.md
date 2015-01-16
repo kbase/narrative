@@ -12,6 +12,7 @@ __Changes__
 - Links to LP were added for genes in genome viewer.
 - ContigSet viewer was added.
 - Plant genomes were added into public data tab (and GWAS types were removed).
+- Fixed problem where error cells were not being shown properly.
 
 ### Version 0.3.9 - 1/14/2015
 __Changes__

@@ -365,7 +365,7 @@
                                         .attr('role', 'toolbar');
             
             var btnClasses = "btn btn-xs btn-default";
-            var css = {'color':'#888'};
+            var css = {'color':'#888', 'margin':'0px'};
                                         
             var $openHistory = $('<span>')
                                         .addClass(btnClasses).css(css)
@@ -423,8 +423,8 @@
                                                                                 });
                                                                         }); })(revertRef);
                                                             }
-                                                            
-                                                            var summary = '';
+                                                            var summary = self.getNarSummary(history[k]);
+                                                            //var summary = '';
                                                             if (history[k][10].methods) {
                                                                 var content = JSON.parse(history[k][10].methods);
                                                                 var summaryCounts = [];
@@ -616,6 +616,7 @@
         
         
         renderNarrativeDiv: function(data) {
+            var self = this;
             
             var isCurrent = false;
             if(this.ws_name === data.ws_info[1]) {
@@ -625,8 +626,10 @@
             var $narDiv = $('<div>').addClass('kb-data-list-obj-row');
             
             var $tbl = $('<table>').css({'width':'100%'});
-            var $dataCol = $('<td>').css({'text-align':'left'});
-            var $ctrCol = $('<td>').css({'text-align':'right','vertical-align':'top', 'width':'140px'});
+            var $dataCol = $('<td>').css({'text-align':'left','vertical-align':'top'});
+            var $ctrCol = $('<td>').css({'text-align':'right','vertical-align':'top', 'width':'80px'});
+            var $ctrContent = $('<div>').css({'min-height':'60px'});
+            $ctrCol.append($ctrContent);
             
             var narRef = "ws."+data.ws_info[0]+".obj."+data.nar_info[0];
             var nameText = narRef;
@@ -654,13 +657,15 @@
                 $dataCol.append($usrNameSpan).append('<br>');
                 this.displayRealName(data.ws_info[2], $usrNameSpan);
             }
+            var summary = this.getNarSummary(data.nar_info);
+            if (summary) { summary += '<br>'; }
+            $dataCol.append($('<span>').addClass('kb-data-list-type').append(summary));
             $dataCol.append($('<span>').addClass('kb-data-list-type').append(this.getTimeStampStr(data.nar_info[3])));
             
-            var self = this;
-            var $alertContainer=$('<div>').addClass('kb-data-list-more-div').css({'text-align':'center','margin':'10px'});
-            var $btnToolbar = self.addDataControls(data.nar_info,$alertContainer, data.ws_info);
-            $ctrCol.append($btnToolbar);
+            var $alertContainer=$('<div>').addClass('kb-data-list-more-div').css({'text-align':'center','margin':'5px'}).hide();
             var $shareContainer = $('<div>').hide();
+            var $shareToolbar = $('<span>').addClass('btn-toolbar').attr('role', 'toolbar');
+            $ctrContent.append($shareToolbar);
             this.ws.get_permissions({id:data.ws_info[0]},
                 function(perm) {
                     var shareCount = 0;
@@ -671,35 +676,41 @@
                         }
                     }
                     // should really put this in the addDatacontrols; so refactor at some point!
-                    $btnToolbar.append(
-                        $('<span>')   
-                            .addClass('btn btn-xs btn-default').css({'color':'#888'})
-                            .tooltip({title:'View share settings', 'container':'body'})
-                                        .append($('<span>').addClass('fa fa-share-alt').css({'color':'#888'})
-                                            .append(' '+shareCount)
-                                            .on('click',function() {
-                                                $alertContainer.hide();
-                                                $shareContainer.slideToggle('fast');
-                                                if($shareContainer.is(':empty')) {
-                                                    var $share = $('<div>');
-                                                    // just use the share panel, max height is practically unlimited because we are already
-                                                    // in a scrollable pane
-                                                    $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
-                                                    $shareContainer.append($share);
-                                                }
-                                            })));
+                    $shareToolbar.append(
+                            $('<span>')   
+                                .addClass('btn btn-xs btn-default').css({'color':'#888', 'margin':'0px'})
+                                .tooltip({title:'View share settings', 'container':'body'})
+                                            .append($('<span>').addClass('fa fa-share-alt').css({'color':'#888','margin':'0px','font-size':'10pt'})
+                                                .append(' '+shareCount)
+                                                .on('click',function() {
+                                                    $alertContainer.hide();
+                                                    $shareContainer.slideToggle('fast');
+                                                    if($shareContainer.is(':empty')) {
+                                                        var $share = $('<div>');
+                                                        // just use the share panel, max height is practically unlimited because we are already
+                                                        // in a scrollable pane
+                                                        $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
+                                                        $shareContainer.append($share);
+                                                    }
+                                                })));
                 },
                 function(error) {
                     console.error('error getting permissions for manage panel');
                     console.error(error);
                 });
             
+            var $btnToolbar = self.addDataControls(data.nar_info,$alertContainer, data.ws_info);
+            $ctrContent.append($btnToolbar.hide());
+            
             $narDiv.append($('<table>').css({'width':'100%'})
                            .append($('<tr>').append($dataCol).append($ctrCol)));
             $narDiv.append($alertContainer);
             $narDiv.append($shareContainer);
+            $narDiv
+                .mouseenter(function(){ $btnToolbar.show(); })
+                .mouseleave(function(){ $btnToolbar.hide(); });
             
-            var $narDivContainer = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr'))
+            var $narDivContainer = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr').css({'margin-left':'15px'}))
                                         .append($narDiv);
             
             return $narDivContainer;
@@ -740,6 +751,45 @@
             return $btn;
         },
         
+        getNarSummary : function(nar_info) {
+            var summary = '';
+            if (nar_info[10].methods) {
+                var content = JSON.parse(nar_info[10].methods);
+                var summaryCounts = [];
+                var appCount=0; var methodCount=0;
+                for(var a in content.app) {
+                    if (content.app.hasOwnProperty(a)) {
+                        appCount+= content.app[a];
+                    }
+                }
+                if (appCount===1) { summaryCounts.push('1 App'); }
+                else if (appCount>1) { summaryCounts.push(appCount+' Apps');}
+                                                            
+                for(var m in content.method) {
+                    if (content.method.hasOwnProperty(m)) {
+                        methodCount+= content.method[m];
+                    }
+                }
+                if (methodCount===1) { summaryCounts.push('1 Method'); }
+                else if (methodCount>1) { summaryCounts.push(methodCount+' Methods');}
+                                                            
+                if (content.ipython.code ===1) { summaryCounts.push('1 Code Cell'); }
+                else if (content.ipython.code >1) { summaryCounts.push(content.ipython.code + ' Code Cells'); }
+                                                            
+                if (content.ipython.markdown ===1) { summaryCounts.push('1 Markdown Cell'); }
+                else if (content.ipython.markdown >1) { summaryCounts.push(content.ipython.markdown + ' Markdown Cells'); }
+                                                            
+                if (content.output ===1) { summaryCounts.push('1 Output Cell'); }
+                else if (content.output >1) { summaryCounts.push(content.output + ' Output Cells'); }
+                                                            
+                if (summaryCounts.length>0) {
+                    summary = summaryCounts.join(', ');
+                } else {
+                    summary = 'Empty Narrative';
+                }
+            }
+            return summary;
+        },
         
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
         getTimeStampStr: function (objInfoTimeStamp) {

@@ -70,7 +70,7 @@
             // initialize the state
             this.state = {
                     runningState: {
-                        appRunState: "input", // could be 'input' || 'running' || something else?
+                        appRunState: "input", // could be 'input' || 'running' || 'error' || 'done', something else?
                         runningStep: null
                     },
                     step: { }
@@ -518,6 +518,10 @@
             return this.state;
         },
 
+        getRunningState: function() {
+            return this.state.runningState.appRunState;
+        },
+
         /**
          * @method
          * Passes along the state to its contained input widget.
@@ -553,6 +557,10 @@
                     }
                     if (state.runningState.appRunState === "running") {
                         this.startAppRun();
+                    }
+                    else if (state.runningState.appRunState === "done") {
+                        this.$submitted.show();
+                        this.$runButton.hide();                        
                     }
                 }
             }
@@ -600,6 +608,19 @@
             }
         },
         
+        setRunningState: function(state) {
+            state = state.toLowerCase();
+            if (state === 'error')
+                this.setErrorState(true);
+            else if (state === 'done') {
+                for (var i=0; i<this.inputSteps.length; i++) {
+                    this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                }
+                this.state.runningState.runningStep = null;
+                this.state.runningState.appRunState = state;
+            }
+        },
+
         setErrorState: function(isError) {
             if (isError) {
                 this.state.runningState.appRunState = "error";

@@ -236,6 +236,10 @@
             }
         },
 
+        getRunningState: function() {
+            return this.runState;
+        },
+
         /*
          * This function is invoked every time we run app. This is the difference between it
          * and getAllParameterValues/getParameterValue which could be invoked many times before running 

@@ -39,7 +39,7 @@
             );
 
             $(document).on('cancelJobCell.Narrative', $.proxy(
-                function(e, cellId, callback) {
+                function(e, cellId, showPrompt, callback) {
                     // Find job based on cellId
                     var job = this.findJobFromSource(cellId);
                     console.log(['found job', job]);
@@ -49,10 +49,10 @@
                     if (job === null && callback)
                         callback(true);
                     else if (job !== null) {
-                        // try to cancel it.
-                        var isCanceled = this.openJobDeletePrompt(job.id);
-                        if (callback)
-                            callback(isCanceled);
+                        if (showPrompt)
+                            this.openJobDeletePrompt(job.id, null, callback);
+                        else 
+                            this.deleteJob(job.id, callback);
                     }
                 }, this)
             );
@@ -415,14 +415,16 @@
          * what kind of job it is and how to stop/delete it).
          * When it gets a response, it then clears the job from the Jobs list.
          */
-        deleteJob: function(jobId) {
+        deleteJob: function(jobId, callback) {
             var deleteJobCmd = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                'jm = KBjobManager()\n' +
                                'print jm.delete_jobs(["' + jobId + '"])\n';
 
             var callbacks = {
                 'output' : $.proxy(function(msgType, content) {
-                    this.deleteResponse(msgType, content, jobId);
+                    var response = this.deleteResponse(msgType, content, jobId);
+                    if (callback)
+                        callback(response);
                 }, this),
                 'execute_reply' : $.proxy(function(content) { 
                     this.handleCallback('execute_reply', content); 
@@ -452,10 +454,9 @@
             }
             catch(err) {
                 // ignore and return. assume it failed.
-                return;
+                return false;
             }
 
-            console.log(result);
             if (result[jobId] === true) {
                 // successfully nuked it on the back end, now wipe it out on the front end.
                 var appIds = IPython.notebook.metadata.job_ids.apps;
@@ -469,6 +470,7 @@
                 this.refresh(false);
                 this.removeId = null;
             }
+            return result[jobId];
         },
 
         renderJob: function(job, jobInfo) {
@@ -583,16 +585,25 @@
             return $jobDiv;
         },
 
-
+        /**
+         * @method
+         * Updates the status of the cell the given job is associated with.
+         * 'job' = the response from the server about the job. Contains info from the job service
+         * 'jobInfo' = the info we know about the running job: its id, associated cell, etc.
+         */
         updateCell: function(job, jobInfo) {
             var source = jobInfo.job.source;
             var jobType = this.jobTypeFromId(jobInfo.job.id)
+            
+            console.log([job, jobInfo]);
+            // don't do anything if we don't know the source cell. it might have been deleted.
             if (!source)
-                return; // don't do anything if we don't know the source cell. it might have been deleted.
+                return;
 
             var $cell = $('#' + source);
+            // don't do anything if we can't find the running cell, either.
             if (!$cell)
-                return; // don't do anything if we can't find the running cell, either.
+                return;
 
             // if it's running and an NJS job, then it's in an app cell
             if (job.running_step_id && jobType === 'njs') {
@@ -622,10 +633,16 @@
                     $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : job.widget_outputs });
                 }
             }
-            // and if it's an error, then we need to signal the cell
+            // if it's an error, then we need to signal the cell
             if (job.job_state === "error" || (job.step_errors && Object.keys(job.step_errors).length !== 0)) {
                 if (jobType === 'njs') {
-                    $cell.kbaseNarrativeAppCell('setErrorState', true);
+                    $cell.kbaseNarrativeAppCell('setRunningState', 'error');
+                }
+            }
+            // ...and if it's done, we need to signal that, too. Note that it can be both (i.e. done with errors)
+            if (job.job_state.indexOf('complete') !== -1 || job.job_state.indexOf('done') !== -1) {
+                if (jobType === 'njs') {
+                    $cell.kbaseNarrativeAppCell('setRunningState', 'done');
                 }
             }
         },
@@ -712,7 +729,7 @@
             return $errBtn;
         },
 
-        openJobDeletePrompt: function(jobId, jobState) {
+        openJobDeletePrompt: function(jobId, jobState, callback) {
             if (!jobId)
                 return;
 

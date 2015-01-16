@@ -13,6 +13,7 @@ __Changes__
 - ContigSet viewer was added.
 - Plant genomes were added into public data tab (and GWAS types were removed).
 - Fixed problem where error cells were not being shown properly.
+- Added several widgets to support communities apps and methods.
 
 ### Version 0.3.9 - 1/14/2015
 __Changes__

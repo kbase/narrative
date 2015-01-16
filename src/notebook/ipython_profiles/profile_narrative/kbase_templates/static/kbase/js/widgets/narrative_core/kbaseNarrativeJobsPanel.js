@@ -113,6 +113,9 @@
                         if (this.removeId) {
                             this.deleteJob(this.removeId);
                         }
+                        if (this.deleteCallback)
+                            this.deleteCallback(true);
+                        this.deleteCallback = null;
                         $prompt.closePrompt();
                     }, this)
                 }
@@ -750,6 +753,7 @@
             this.$jobsModalTitle.empty().html('Remove Job?');
             this.removeId = jobId;
 
+            this.deleteCallback = callback;
             this.$jobsModal.openPrompt();
         },
 

@@ -448,7 +448,7 @@
             // then continue and reset the state to input.
             // otherwise, bail.
 
-            this.trigger('cancelJobCell.Narrative', [this.cellId, $.proxy(function(isCanceled) {
+            this.trigger('cancelJobCell.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
                 if (isCanceled) {
                     self.$stopButton.hide();
                     self.$runButton.show();
@@ -625,6 +625,9 @@
             if (isError) {
                 this.state.runningState.appRunState = "error";
                 this.$elem.find('.kb-app-panel').addClass('kb-app-error');
+                this.$runButton.hide();
+                this.$stopButton.show();
+                this.$submitted.show();
             }
             else {
                 this.$elem.find('.kb-app-panel').removeClass('kb-app-error');                

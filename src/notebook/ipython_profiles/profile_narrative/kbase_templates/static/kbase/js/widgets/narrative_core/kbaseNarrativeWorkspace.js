@@ -1343,11 +1343,6 @@
                             //         break;
                             // }
                         }
-                        // if (okayToDelete) {
-                        //     // try to kill the job.
-                        //     var cellId = $(cell.element).find('div[id^=kb-cell-]').attr('id');
-                        //     this.trigger('cancelJobCell.Narrative', cellId, false);
-                        // }
                     }
                     else {
                         IPython.notebook.delete_cell(index);

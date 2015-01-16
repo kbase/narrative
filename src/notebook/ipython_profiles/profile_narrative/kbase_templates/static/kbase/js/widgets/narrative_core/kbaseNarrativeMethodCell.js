@@ -366,7 +366,8 @@
          * Refreshes the input widget according to its own method.
          */
         refresh: function() {
-            this.$inputWidget.refresh();
+            if (this.$inputWidget)
+                this.$inputWidget.refresh();
         },
 
         genUUID: function() {

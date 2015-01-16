@@ -19,9 +19,8 @@
             ws_name: null,
             job_id: null
         },
-        jobSrvUrl: "https://kbase.us/services/userandjobstate/",
         loadingImage: "static/kbase/images/ajax-loader.gif",
-        wsUrl: "https://kbase.us/services/ws/",
+        wsUrl: window.kbconfig.urls.workspace,
         timer: null,
 
         init: function(options) {
@@ -42,9 +41,6 @@
             var self = this;
         	var pref = this.uuid();
 
-
-            var wsUrl = 'https://kbase.us/services/ws/';
-	    
             var container = this.$elem;
             if (self.token == null) {
             	container.empty();
@@ -83,11 +79,12 @@
             		////////////////////////////// Overview Tab //////////////////////////////
             		$('#'+pref+'overview').append('<table class="table table-striped table-bordered" \
             				style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-            		var overviewLabels = ['Id', 'Name', 'Domain', 'Genetic code', 'Source', "Source id", "GC", "Taxonomy", "Size"];
+            		var overviewLabels = ['KBase ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size"];
             		var tax = gnm.taxonomy;
             		if (tax == null)
             			tax = '';
-            		var overviewData = [gnm.id, gnm.scientific_name, gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gnm.gc_content, tax, gnm.dna_size];
+            		var overviewData = [gnm.id, '<a href="/functional-site/#/genomes/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>', 
+            		                    gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gnm.gc_content, tax, gnm.dna_size];
             		var overviewTable = $('#'+pref+'overview-table');
             		for (var i=0; i<overviewData.length; i++) {
             			if (overviewLabels[i] === 'Taxonomy') {
@@ -254,7 +251,7 @@
             			$('#'+tabId).append('<table class="table table-striped table-bordered" \
             					style="margin-left: auto; margin-right: auto;" id="'+tabId+'-table"/>');
             			var elemLabels = ['Gene ID', 'Contig name', 'Gene start', 'Strand', 'Gene length', "Gene type", "Function", "Annotations"];
-            			var elemData = [geneId, '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>', geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
+            			var elemData = ['<a href="/functional-site/#/genes/'+self.ws_name+'/'+self.ws_id+'/'+geneId+'" target="_blank">'+geneId+'</a>', '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>', geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
             			var elemTable = $('#'+tabId+'-table');
             			for (var i=0; i<elemData.length; i++) {
             				if (elemLabels[i] === 'Function') {
@@ -320,7 +317,7 @@
             	});            	
             };
 
-            if (self.job_id) {
+            /*if (self.job_id) {
             	container.empty();
                 var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.token});
             	var panel = $('<div class="loader-table"/>');
@@ -355,9 +352,9 @@
             	};
             	self.timer = setInterval(timeLst, 5000);
             	timeLst();
-            } else {
-            	ready();
-            }
+            } else {*/
+            ready();
+            //}
             return this;
         },
         

@@ -81,15 +81,20 @@
             return this;
         },
 
+        
+        my_user_id: null,
+        
         loggedInCallback: function(event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
             this.manager = new NarrativeManager({ws_url:this.options.ws_url, nms_url:this.options.nms_url},auth);
+            this.my_user_id = auth.user_id;
             this.refresh();
             return this;
         },
         loggedOutCallback: function(event, auth) {
             this.ws = null;
             this.manager=null;
+            this.my_user_id = null;
             this.refresh();
             return this;
         },
@@ -483,39 +488,77 @@
                                         });*/
             
             var $copy = $('<span>')
-                                        .addClass(btnClasses).css(css)
-                                        .tooltip({title:'Copy Narrative and Data', 'container':'body'})
-                                        .append($('<span>').addClass('fa fa-copy').css(css))
-                                        .click(function(e) {
-                                            e.stopPropagation(); $alertContainer.empty(); $alertContainer.show();
-                                            var $newNameInput = $('<input type="text">').addClass('form-control').val(object_info[1]);
-                                            $alertContainer.append($('<div>')
-                                                .append($('<div>').append("Enter a name for the new Narrative"))
-                                                .append($('<div>').append($newNameInput))
-                                                .append($('<button>').addClass('kb-data-list-btn')
-                                                            .append('Copy')
-                                                            .click(function() {
-                                                                $(this).disable().prop('disabled', true);;
-                                                                if (self.ws_name && self.ws) {
-                                                                    self.ws.clone_workspace({
-                                                                            obj: {ref:object_info[6]+"/"+object_info[0]},
-                                                                            new_name: $newNameInput.val()
-                                                                        },
-                                                                        function(renamed_info) {
-                                                                            self.refresh();
-                                                                        },
-                                                                        function(error) {
-                                                                            console.error(error);
-                                                                            $alertContainer.empty();
-                                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
-                                                                        });
+                .addClass(btnClasses).css(css)
+                .tooltip({title:'Copy Narrative and Data', 'container':'body'})
+                .append($('<span>').addClass('fa fa-copy').css(css))
+                .click(function(e) {
+                    e.stopPropagation(); $alertContainer.empty(); $alertContainer.show();
+                    var $newNameInput = $('<input type="text">').addClass('form-control').val(ws_info[8].narrative_nice_name+ ' - Copy');
+                    $alertContainer.append(
+                        $('<div>').append(
+                            $('<div>').append("Enter a name for the new Narrative"))
+                                .append($('<div>').append($newNameInput))
+                                .append($('<button>').addClass('kb-data-list-btn')
+                                    .append('Copy')
+                                    .click(function() {
+                                        $(this).prop("disabled",true);
+                                        var newMeta = ws_info[8];
+                                        newMeta['narrative_nice_name'] = $newNameInput.val();
+                                        
+                                        var id = new Date().getTime();
+                                        var ws_name = self.my_user_id + ":" + id;
+                                        
+                                        console.log(ws_name,newMeta);
+                                        self.ws.clone_workspace({
+                                                    wsi: {id:ws_info[0]},
+                                                    workspace: ws_name,
+                                                    meta: newMeta
+                                                },
+                                                function(new_ws_info) {
+                                                    var new_narrative_ref = new_ws_info[0]+"/"+new_ws_info[8].narrative;
+                                                    // ok, a lot of work just to update the narrative name in the 
+                                                    self.ws.get_objects([{ref:new_narrative_ref}],
+                                                        function(data) {
+                                                            data = data[0]; // only one thing should be returned
+                                                            var new_nar_metadata = data.info[10];
+                                                            new_nar_metadata.name = newMeta['narrative_nice_name'];
+                                                            data.data.metadata.name = newMeta['narrative_nice_name'];
+                                                            self.ws.save_objects({id:new_ws_info[0],objects:[
+                                                                {
+                                                                    type:data.info[2],
+                                                                    data:data.data,
+                                                                    provenance:data.provenance,
+                                                                    name:data.info[1],
+                                                                    meta:new_nar_metadata
                                                                 }
-                                                            }))
-                                                .append($('<button>').addClass('kb-data-list-cancel-btn')
-                                                            .append('Cancel')
-                                                            .click(function() {$alertContainer.empty();} )));
-                                        });
-            var $delete = $('<span>')   
+                                                                ]},
+                                                                function(info) {
+                                                                    console.log('copying complete',info);
+                                                                    self.refresh();
+                                                                },
+                                                                function(error) {
+                                                                    console.error(error);
+                                                                    $alertContainer.empty();
+                                                                    $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on rename."+error.error.message));
+                                                                });
+                                                        },
+                                                        function(error) {
+                                                            console.error(error);
+                                                            $alertContainer.empty();
+                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on rename."+error.error.message));
+                                                        })
+                                                },
+                                                function(error) {
+                                                    console.error(error);
+                                                    $alertContainer.empty();
+                                                    $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                });
+                                        }))
+                                .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                    .append('Cancel')
+                                    .click(function() {$alertContainer.empty();} )));
+                });
+            var $delete = $('<span>') 
                                         .addClass(btnClasses).css(css)
                                         .tooltip({title:'Delete Narrative', 'container':'body'})
                                         .append($('<span>').addClass('fa fa-trash-o').css(css))
@@ -550,7 +593,7 @@
                 .append($openHistory)
                 //.append($openProvenance)
                 //.append($download)
-                //.append($copy)
+                .append($copy)
                 .append($delete);
             
             return $btnToolbar;

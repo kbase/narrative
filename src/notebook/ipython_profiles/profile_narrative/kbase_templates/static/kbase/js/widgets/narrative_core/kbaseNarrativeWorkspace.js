@@ -178,9 +178,54 @@
                     this.createViewerCell(data.nearCellIdx, data, data.widget);
                 }, this)
             );
+
+            this.initDeleteCellModal();
             // Initialize the data table.
             this.render();
             return this;
+        },
+
+        initDeleteCellModal: function() {
+            this.$deleteCellModalBody = $('<div>');
+
+            var buttonList = [
+                {
+                    name : 'Cancel',
+                    type : 'default',
+                    callback : function(e, $prompt) {
+                        this.cellToDelete = null;
+                        $prompt.closePrompt();
+                    },
+                },
+                {
+                    name : 'Delete',
+                    type : 'danger',
+                    callback : $.proxy(function(e, $prompt) {
+                        if (this.cellToDelete !== undefined && this.cellToDelete !== null) {
+                            var cell = IPython.notebook.get_cell(this.cellToDelete);
+                            var removeId = $(cell.element).find('[id^=kb-cell-]').attr('id');
+                            this.trigger('cancelJobCell.Narrative', removeId, false);
+                            IPython.notebook.delete_cell(this.cellToDelete);
+                            this.cellToDelete = null;
+                        }
+                        $prompt.closePrompt();
+                    }, this)
+                }
+            ];
+            this.$deleteCellModal = $('<div>').kbasePrompt({
+                title : 'Delete Cell and Job?',
+                body : this.$deleteCellModalBody,
+                controls : buttonList
+            });
+        },
+
+        showDeleteCellModal: function(index, cell, message) {
+            if (cell && cell.metadata[this.KB_CELL]) {
+                this.cellToDelete = index;
+                if (message)
+                    this.$deleteCellModalBody.empty().html(message);
+                this.$deleteCellModal.openPrompt();
+            }
         },
         
         /**
@@ -1249,7 +1294,6 @@
             if (index !== undefined && index !== null) {
                 var cell = IPython.notebook.get_cell(index);
                 if (cell) {
-                    var okayToDelete = false;
                     // if it's a kbase method or app cell, trigger a popup
                     if (cell.metadata[this.KB_CELL]) {
                         widget = null; // default is app cell
@@ -1261,8 +1305,10 @@
                         if (widget)
                             state = $(cell.element).find('div[id^=kb-cell-]')[widget]('getRunningState');
 
-                        if (state === 'input')
-                            okayToDelete = true;
+                        if (state === 'input') {
+                            IPython.notebook.delete_cell(index);
+                            return;
+                        }
                         else {
                             // if it's running, say so, and say it'll stop and delete the job
                             // if it's done, say it'll clear the associated job, but won't delete data
@@ -1271,8 +1317,7 @@
                             var stateWarning = 'Deleting this cell will also delete any associated job. ' +
                                                'Any generated data will be retained. Continue?';
 
-                            console.log(stateWarning);
-                            okayToDelete = true;
+                            this.showDeleteCellModal(index, cell, stateWarning);
                             // switch(state) {
                             //     case 'running':
                             //         // set some text
@@ -1298,17 +1343,15 @@
                             //         break;
                             // }
                         }
-                        if (okayToDelete) {
-                            // try to kill the job.
-                            var cellId = $(cell.element).find('div[id^=kb-cell-]').attr('id');
-                            this.trigger('cancelJobCell.Narrative', cellId, false);
-                        }
+                        // if (okayToDelete) {
+                        //     // try to kill the job.
+                        //     var cellId = $(cell.element).find('div[id^=kb-cell-]').attr('id');
+                        //     this.trigger('cancelJobCell.Narrative', cellId, false);
+                        // }
                     }
                     else {
-                        okayToDelete = true;
-                    }
-                    if (okayToDelete)
                         IPython.notebook.delete_cell(index);
+                    }
                 }
             }
         },

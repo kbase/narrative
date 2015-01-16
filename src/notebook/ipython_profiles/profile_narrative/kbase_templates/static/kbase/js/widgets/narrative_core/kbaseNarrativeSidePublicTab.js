@@ -20,18 +20,20 @@
         loadingImage: "static/kbase/images/ajax-loader.gif",
         wsUrl: "https://kbase.us/services/ws/",
         wsClient: null,
-        categories: ['genomes', 'metagenomes', 'media', 'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations', 
-                     'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'],
+        categories: ['genomes', 'metagenomes', 'media', 'plant_gnms'
+                     /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations', 
+                     'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'*/ ],
         categoryDescr: {  // search API category -> {}
         	'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV4',search:true},
         	'metagenomes': {name: 'Metagenomes',type:'KBaseCommunities.Metagenome',ws:'KBasePublicMetagenomes',search:true},
         	'media': {name:'Media',type:'KBaseBiochem.Media',ws:'KBaseMedia',search:false},
-        	'gwas_populations': {name:'GWAS Populations',type:'KBaseGwasData.GwasPopulation',ws:'KBasePublicGwasDataV2',search:true},
+        	'plant_gnms': {name:'Plant Genomes',type:'KBaseGenomes.Genome',ws:'PlantCSGenomes',search:false}
+        	/*'gwas_populations': {name:'GWAS Populations',type:'KBaseGwasData.GwasPopulation',ws:'KBasePublicGwasDataV2',search:true},
         	'gwas_population_kinships': {name:'GWAS Population Kinships',type:'KBaseGwasData.GwasPopulationKinship',ws:'KBasePublicGwasDataV2',search:true},
         	'gwas_population_variations': {name:'GWAS Population Variations',type:'KBaseGwasData.GwasPopulationVariation',ws:'KBasePublicGwasDataV2',search:true},
         	'gwas_top_variations': {name:'GWAS Top Variations',type:'KBaseGwasData.GwasTopVariations',ws:'KBasePublicGwasDataV2',search:true},
         	'gwas_population_traits': {name:'GWAS Population Traits',type:'KBaseGwasData.GwasPopulationTrait',ws:'KBasePublicGwasDataV2',search:true},
-        	'gwas_gene_lists': {name:'GWAS Gene Lists',type:'KBaseGwasData.GwasGeneList',ws:'KBasePublicGwasDataV2',search:true}
+        	'gwas_gene_lists': {name:'GWAS Gene Lists',type:'KBaseGwasData.GwasGeneList',ws:'KBasePublicGwasDataV2',search:true}*/
         },
         mainListPanelHeight: '430px',
         maxNameLength: 60,
@@ -144,6 +146,17 @@
                         // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
                         // [9] : int size // [10] : usermeta meta
             			var name = info[1];
+            			var metadata = {};
+            			if (self.currentCategory === 'media') {
+            				metadata['Size'] = info[9];
+            			} else if (self.currentCategory === 'plant_gnms') {
+            				if (info[10].Name) {
+            					metadata['ID'] = name;
+            					name = info[10].Name;
+            				}
+            				metadata['Source'] = info[10].Source;
+            				metadata['Genes'] = info[10]['Number features'];
+            			}
             			if (name.toLowerCase().indexOf(query) == -1)
             				continue;
             			self.objectList.push({
@@ -151,7 +164,7 @@
     						info: info,
     						id: name,
     						name: name,
-    						metadata: {'Size': info[9]},
+    						metadata: metadata,
     						ws: cat.ws,
     						type: cat.type,
     						attached: false
@@ -215,7 +228,7 @@
         					});
         					self.attachRow(self.objectList.length - 1);
         				}
-        			} else {
+        			} /*else {
         				for (var i in data.items) {
         					var id = data.items[i].object_name;
         					var name = data.items[i].object_name;
@@ -253,7 +266,7 @@
         					});
         					self.attachRow(self.objectList.length - 1);
         				}
-        			}
+        			}*/
         			self.totalPanel.append($('<span>').addClass("kb-data-list-type")
         					.append("Total results: " + data.totalResults + " (" + self.objectList.length + " shown)"));
         		}, function(error) {

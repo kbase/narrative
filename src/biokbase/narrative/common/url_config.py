@@ -7,7 +7,7 @@ class Struct:
         self.__dict__.update(args)
 
     def get_url(self, key):
-        self._dict__.get(key)
+        self.__dict__.get(key)
 
 try:
     nar_path = os.environ["NARRATIVEDIR"]

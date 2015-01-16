@@ -1504,7 +1504,7 @@ div#notebook_panel {
    font-family: 'OxygenBold', sans-serif;
    font-weight: bold;
    font-size: 9pt;
-   color:#d44950;
+   color:#F44336;
 }
 
 
@@ -1537,11 +1537,11 @@ div#notebook_panel {
 }
 
 .kb-method-parameter-required-glyph {
-   color: #d44950;
+   color: #F44336;
    margin-left:7px;
 }
 .kb-method-parameter-accepted-glyph {
-   color: #5cb85c;
+   color: #4BB856;
    margin-left:7px;
 }
 

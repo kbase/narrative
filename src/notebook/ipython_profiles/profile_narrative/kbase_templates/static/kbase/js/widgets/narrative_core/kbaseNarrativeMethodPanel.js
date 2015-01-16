@@ -501,7 +501,7 @@
                 results.methods = {};
                 for (var i=0; i<specSet.methods.length; i++) {
                     if (this.methodSpecs[specSet.methods[i]])
-                        results.methods[specSet.methods[i]] = this.methodSpecs[specSet.apps[i]];
+                        results.methods[specSet.methods[i]] = this.methodSpecs[specSet.methods[i]];
                 }
             }
             console.log(results);

@@ -184,8 +184,13 @@
                                 .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
             var $hintCol  = $('<div>').addClass(self.hintColClass).addClass("kb-method-parameter-hint");
             var uuidForRemoval = self.genUUID(); var $removalButton=null;
-            if(showHint) { $hintCol.append(spec.short_hint); }
-            else {
+            if(showHint) {
+                $hintCol.append(spec.short_hint);
+                if (spec.description) {
+                    $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
+                                    .tooltip({title:spec.description, html:true}));
+                }
+            } else {
                 $removalButton = $('<button>').addClass("btn btn-default btn-sm")
                                 .append($('<span class="kb-parameter-data-row-remove">').addClass("glyphicon glyphicon-remove"))
                                 .append(" remove "+spec.ui_name)
@@ -572,6 +577,7 @@
          * specific parameter values based on the App spec, so we need a way to do this.
          */
         setParameterValue: function(value) {
+            if (value===null) { return; }
             if(value instanceof Array) {
             } else { value = [value]; }
             

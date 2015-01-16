@@ -19,7 +19,8 @@
                 {name:['ContigSet'], displayName: "Example Contig Sets", header:'A set of DNA sequences'},
                 {name:['Genome'], displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
                 {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
-                {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'}
+                {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'},
+                {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data Sets", header:'Sets of WGS and amplicon metagenomes'}
                 ]
             
         },

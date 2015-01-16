@@ -38,6 +38,7 @@
             ws_url: "https://kbase.us/services/ws",
             nms_url: "https://kbase.us/services/narrative_method_store/rpc",
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
+            landing_page_url: "/functional-site/#/", // !! always include trailing slash
             ws_name: null,
             nar_name: null,
         },
@@ -62,7 +63,7 @@
                 this.options.nms_url = window.kbconfig.urls.narrative_method_store;
             }
             
-            this.$mainPanel = $('<div>').css({'height':'600px'});
+            this.$mainPanel = $('<div>')//.css({'height':'600px'});
             this.body().append(this.$mainPanel);
             
             $(document).on(
@@ -81,15 +82,20 @@
             return this;
         },
 
+        
+        my_user_id: null,
+        
         loggedInCallback: function(event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
             this.manager = new NarrativeManager({ws_url:this.options.ws_url, nms_url:this.options.nms_url},auth);
+            this.my_user_id = auth.user_id;
             this.refresh();
             return this;
         },
         loggedOutCallback: function(event, auth) {
             this.ws = null;
             this.manager=null;
+            this.my_user_id = null;
             this.refresh();
             return this;
         },
@@ -352,19 +358,252 @@
             }
         },
         
+        addDataControls: function(object_info, $alertContainer, ws_info) {
+            var self = this;
+            var $btnToolbar = $('<span>')
+                                        .addClass('btn-toolbar')
+                                        .attr('role', 'toolbar');
+            
+            var btnClasses = "btn btn-xs btn-default";
+            var css = {'color':'#888', 'margin':'0px'};
+                                        
+            var $openHistory = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'View narrative history to revert changes', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-history').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty(); $alertContainer.show();
+                                            
+                                            if (self.ws_name && self.ws) {
+                                                self.ws.get_object_history({ref:object_info[6]+"/"+object_info[0]},
+                                                    function(history) {
+                                                        history.reverse();
+                                                        $alertContainer.append($('<div>')
+                                                            .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                                        .append('Hide History')
+                                                                        .click(function() {$alertContainer.empty();} )));
+                                                        var isCurrent = false;
+                                                        if(self.ws_name === ws_info[1]) {
+                                                            isCurrent = true;
+                                                        }
+                                                        var $tbl = $('<table>').css({'width':'100%'});
+                                                        for(var k=0; k<history.length;k++) {
+                                                            var $revertBtn = $('<button>').append('v'+history[k][4]).addClass('kb-data-list-btn');
+                                                            if (k==0) {
+                                                                $revertBtn.tooltip({title:'Current Version', 'container':'body',placement:'bottom'});
+                                                            } else if(history[k][4]==1) {
+                                                                $revertBtn.tooltip({title:'Cannot revert to first unsaved version', 'container':'body',placement:'bottom'});
+                                                            } else {
+                                                                var revertRef = {wsid:history[k][6], objid:history[k][0], ver:history[k][4]};
+                                                                (function(revertRefLocal) {
+                                                                    $revertBtn.tooltip({title:'Revert to this version?',placement:'bottom'})
+                                                                        .click(function() {
+                                                                            self.ws.revert_object(revertRefLocal,
+                                                                                function(reverted_obj_info) {
+                                                                                    // update the workspace info with the specified name
+                                                                                    self.ws.alter_workspace_metadata({
+                                                                                        wsi:{id:ws_info[0]},
+                                                                                        new:{'narrative_nice_name':reverted_obj_info[10].name}},
+                                                                                        function() {
+                                                                                            if (isCurrent) {
+                                                                                                window.location.reload();
+                                                                                            } else {
+                                                                                                self.refresh();
+                                                                                            }
+                                                                                        },
+                                                                                        function(error) {
+                                                                                            console.error(error);
+                                                                                            $alertContainer.empty();
+                                                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Narrative reverted, but a minor data update error occured."+error.error.message));
+                                                                                        });
+                                                                                }, function(error) {
+                                                                                    console.error(error);
+                                                                                    $alertContainer.empty();
+                                                                                    $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                                });
+                                                                        }); })(revertRef);
+                                                            }
+                                                            var summary = self.getNarSummary(history[k]);
+                                                            if (summary) { summary = '<br>'+summary; }
+                                                            $tbl.append($('<tr>')
+                                                                        .append($('<td>').append($revertBtn))
+                                                                        .append($('<td>').append(self.getTimeStampStr(history[k][3]) + ' by ' + history[k][5] + summary))
+                                                                        .append($('<td>').append($('<span>').css({margin:'4px'}).addClass('fa fa-info pull-right'))
+                                                                                 .tooltip({title:history[k][2]+'<br>'+history[k][10].name+'<br>'+history[k][8]+'<br>'+history[k][9]+' bytes', container:'body',html:true,placement:'bottom'}))
+                                                                                );
+                                                        }
+                                                        $alertContainer.append($tbl);
+                                                    },
+                                                    function(error) {
+                                                        console.error(error);
+                                                        $alertContainer.empty();
+                                                        $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                    });
+                                            }
+                                        });
+                                        
+            /*var $openProvenance = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'View data provenance and relationships', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty();
+                                            window.open(self.options.landing_page_url+'objgraphview/'+object_info[7]+'/'+object_info[1]);
+                                        });*/
+            /*var $download = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'Export / Download data', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-download').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation(); $alertContainer.empty();
+                                            $alertContainer.append('Coming soon');
+                                        });*/
+            
+            var $copy = $('<span>')
+                .addClass(btnClasses).css(css)
+                .tooltip({title:'Copy Narrative and Data', 'container':'body'})
+                .append($('<span>').addClass('fa fa-copy').css(css))
+                .click(function(e) {
+                    e.stopPropagation(); $alertContainer.empty(); $alertContainer.show();
+                    var $newNameInput = $('<input type="text">').addClass('form-control').val(ws_info[8].narrative_nice_name+ ' - Copy');
+                    $alertContainer.append(
+                        $('<div>').append(
+                            $('<div>').append("Enter a name for the new Narrative"))
+                                .append($('<div>').append($newNameInput))
+                                .append($('<button>').addClass('kb-data-list-btn')
+                                    .append('Copy')
+                                    .click(function() {
+                                        $(this).prop("disabled",true);
+                                        var newMeta = ws_info[8];
+                                        newMeta['narrative_nice_name'] = $newNameInput.val();
+                                        
+                                        var id = new Date().getTime();
+                                        var ws_name = self.my_user_id + ":" + id;
+                                        
+                                        self.ws.clone_workspace({
+                                                    wsi: {id:ws_info[0]},
+                                                    workspace: ws_name,
+                                                    meta: newMeta
+                                                },
+                                                function(new_ws_info) {
+                                                    var new_narrative_ref = new_ws_info[0]+"/"+new_ws_info[8].narrative;
+                                                    // ok, a lot of work just to update the narrative name in the 
+                                                    self.ws.get_objects([{ref:new_narrative_ref}],
+                                                        function(data) {
+                                                            data = data[0]; // only one thing should be returned
+                                                            var new_nar_metadata = data.info[10];
+                                                            new_nar_metadata.name = newMeta['narrative_nice_name'];
+                                                            data.data.metadata.name = newMeta['narrative_nice_name'];
+                                                            self.ws.save_objects({id:new_ws_info[0],objects:[
+                                                                {
+                                                                    type:data.info[2],
+                                                                    data:data.data,
+                                                                    provenance:data.provenance,
+                                                                    name:data.info[1],
+                                                                    meta:new_nar_metadata
+                                                                }
+                                                                ]},
+                                                                function(info) {
+                                                                    console.log('copying complete',info);
+                                                                    self.refresh();
+                                                                },
+                                                                function(error) {
+                                                                    console.error(error);
+                                                                    $alertContainer.empty();
+                                                                    $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on rename."+error.error.message));
+                                                                });
+                                                        },
+                                                        function(error) {
+                                                            console.error(error);
+                                                            $alertContainer.empty();
+                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on rename."+error.error.message));
+                                                        })
+                                                },
+                                                function(error) {
+                                                    console.error(error);
+                                                    $alertContainer.empty();
+                                                    $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                });
+                                        }))
+                                .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                    .append('Cancel')
+                                    .click(function() {$alertContainer.empty();} )));
+                });
+            var $delete = $('<span>') 
+                                        .addClass(btnClasses).css(css)
+                                        .tooltip({title:'Delete Narrative', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-trash-o').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation();
+                                            $alertContainer.empty(); $alertContainer.show();
+                                            
+                                            var warningMsg = 'Are you sure?'; var isCurrent = false;
+                                            if(self.ws_name === ws_info[1]) {
+                                                isCurrent = true;
+                                                warningMsg = 'Warning - you are currently viewing this Narrative!<br>You will be redirected to another Narrative if deleted.  Are you sure?';
+                                            }
+                                            
+                                            $alertContainer.append($('<div>')
+                                                .append($('<div>').append(warningMsg))
+                                                .append($('<button>').addClass('kb-data-list-btn')
+                                                            .append('Delete')
+                                                            .click(function() {
+                                                                if (self.ws_name && self.ws) {
+                                                                    self.ws.delete_workspace({ id: object_info[6] },
+                                                                        function() {
+                                                                            if (isCurrent) {
+                                                                                window.location.replace(self.options.landing_page_url+'narrativemanager/start');
+                                                                            } else {
+                                                                                self.refresh();
+                                                                            }
+                                                                        },
+                                                                        function(error) {
+                                                                            console.error(error);
+                                                                            $alertContainer.empty();
+                                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                        });
+                                                                }
+                                                            }))
+                                                .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                            .append('Cancel')
+                                                            .click(function() {$alertContainer.empty();} )));
+                                        });
+            
+            $btnToolbar
+                .append($openHistory)
+                //.append($openProvenance)
+                //.append($download)
+                .append($copy)
+                .append($delete);
+            
+            return $btnToolbar;
+        },
+        
         
         renderNarrativeDiv: function(data) {
+            var self = this;
+            
+            var isCurrent = false;
+            if(this.ws_name === data.ws_info[1]) {
+                isCurrent = true;
+            }
+            
             var $narDiv = $('<div>').addClass('kb-data-list-obj-row');
             
             var $tbl = $('<table>').css({'width':'100%'});
-            var $dataCol = $('<td>').css({'text-align':'left'});
-            var $ctrCol = $('<td>').css({'text-align':'right'});
+            var $dataCol = $('<td>').css({'text-align':'left','vertical-align':'top'});
+            var $ctrCol = $('<td>').css({'text-align':'right','vertical-align':'top', 'width':'80px'});
+            var $ctrContent = $('<div>').css({'min-height':'60px'});
+            $ctrCol.append($ctrContent);
+            
+            var $alertContainer=$('<div>').addClass('kb-data-list-more-div').css({'text-align':'center','margin':'5px'}).hide();
             
             var narRef = "ws."+data.ws_info[0]+".obj."+data.nar_info[0];
             var nameText = narRef;
             if (data.nar_info[10].name) {
                 nameText = data.nar_info[10].name;
             }
+            var $version = $('<span>').addClass("kb-data-list-version").append('v'+data.nar_info[4]);
             var $priv = $('<span>').css({'color':'#999','margin-left':'8px'}).prop('data-toggle','tooltip').prop('data-placement','right');
              if (data.ws_info[5]==='r') {
                 $priv.addClass('fa fa-lock').prop('title','read-only');
@@ -372,19 +611,39 @@
                 $priv.addClass('fa fa-pencil').prop('title','you can edit');
             }
             
-            $dataCol.append(
-                $('<div>').addClass('kb-data-list-name').css({'white-space':'normal', 'cursor':'pointer'})
-                    .append($('<a href="'+narRef+'" target="_blank">').append(nameText).append($priv)));
+            var $nameLink =  $('<a href="'+narRef+'" target="_blank">');
+            if (isCurrent) {
+                 $nameLink.append($('<span>').addClass('fa fa-circle').css({'margin-right':'3px','color':'#4BB856'})
+                                    .tooltip({title:'You are viewing this Narrative now'}));
+            }
+            $nameLink.append(nameText).append($version).append($priv);
+            
+            $dataCol.append($('<div>').addClass('kb-data-list-name').css({'white-space':'normal', 'cursor':'pointer'}).append($nameLink));
             var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
             if(data.ws_info[2]===this._attributes.auth.user_id) {
             } else {
                 $dataCol.append($usrNameSpan).append('<br>');
                 this.displayRealName(data.ws_info[2], $usrNameSpan);
             }
+            var summary = this.getNarSummary(data.nar_info);
+            if (summary) {
+                $dataCol.append($('<span>').addClass('kb-data-list-narinfo').append(summary)
+                                .click(
+                                    function() {
+                                        $alertContainer.empty(); $alertContainer.show();
+                                        $alertContainer.append($('<div>')
+                                                            .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                                        .append('Hide Narrative Info')
+                                                                        .click(function() {$alertContainer.empty();} )));
+                                        $alertContainer.append(self.getNarContent(data.nar_info));
+                                    })
+                                .append('<br>'));
+            }
             $dataCol.append($('<span>').addClass('kb-data-list-type').append(this.getTimeStampStr(data.nar_info[3])));
             
             var $shareContainer = $('<div>').hide();
-            var self = this;
+            var $shareToolbar = $('<span>').addClass('btn-toolbar').attr('role', 'toolbar');
+            $ctrContent.append($shareToolbar);
             this.ws.get_permissions({id:data.ws_info[0]},
                 function(perm) {
                     var shareCount = 0;
@@ -394,30 +653,42 @@
                             shareCount++;
                         }
                     }
-                    $ctrCol.append($('<span>').addClass('fa fa-share-alt').css({'color':'#777','cursor':'pointer'})
-                                        .append(' '+shareCount)
-                                        .on('click',function() {
-                                            $shareContainer.slideToggle('fast');
-                                            if($shareContainer.is(':empty')) {
-                                                var $share = $('<div>');
-                                                // just use the share panel, max height is practically unlimited because we are already
-                                                // in a scrollable pane
-                                                $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
-                                                $shareContainer.append($share);
-                                            }
-                                        }));
+                    // should really put this in the addDatacontrols; so refactor at some point!
+                    $shareToolbar.append(
+                            $('<span>')   
+                                .addClass('btn btn-xs btn-default').css({'color':'#888', 'margin':'0px'})
+                                .tooltip({title:'View share settings', 'container':'body'})
+                                            .append($('<span>').addClass('fa fa-share-alt').css({'color':'#888','margin':'0px','font-size':'10pt'})
+                                                .append(' '+shareCount)
+                                                .on('click',function() {
+                                                    $alertContainer.hide();
+                                                    $shareContainer.slideToggle('fast');
+                                                    if($shareContainer.is(':empty')) {
+                                                        var $share = $('<div>');
+                                                        // just use the share panel, max height is practically unlimited because we are already
+                                                        // in a scrollable pane
+                                                        $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
+                                                        $shareContainer.append($share);
+                                                    }
+                                                })));
                 },
                 function(error) {
                     console.error('error getting permissions for manage panel');
                     console.error(error);
                 });
             
+            var $btnToolbar = self.addDataControls(data.nar_info,$alertContainer, data.ws_info);
+            $ctrContent.append($btnToolbar.hide());
             
-            
-            $narDiv.append($('<table>').css({'width':'100%'}).append($('<tr>').append($dataCol).append($ctrCol)));
+            $narDiv.append($('<table>').css({'width':'100%'})
+                           .append($('<tr>').append($dataCol).append($ctrCol)));
+            $narDiv.append($alertContainer);
             $narDiv.append($shareContainer);
+            $narDiv
+                .mouseenter(function(){ $btnToolbar.show(); })
+                .mouseleave(function(){ $btnToolbar.hide(); });
             
-            var $narDivContainer = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr'))
+            var $narDivContainer = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr').css({'margin-left':'15px'}))
                                         .append($narDiv);
             
             return $narDivContainer;
@@ -441,8 +712,7 @@
                             },
                             function(info) {
                                 // info.ws_info   info.nar_info
-                                console.log('created new narrative!');
-                                console.log(info);
+                                console.log('created new narrative!',info);
                                 var newWsId = info.nar_info[6];
                                 var newNarId = info.nar_info[0];
                                 $newNarrativeLink.empty().append('<a href="ws.'+newWsId+'.obj.'+newNarId+'" target="_blank">Open your new Narrative.</a>');
@@ -459,6 +729,121 @@
             return $btn;
         },
         
+        getNarSummary : function(nar_info) {
+            var summary = '';
+            if (nar_info[10].methods) {
+                var content = JSON.parse(nar_info[10].methods);
+                var summaryCounts = [];
+                var appCount=0; var methodCount=0;
+                for(var a in content.app) {
+                    if (content.app.hasOwnProperty(a)) {
+                        appCount+= content.app[a];
+                    }
+                }
+                if (appCount===1) { summaryCounts.push('1 App'); }
+                else if (appCount>1) { summaryCounts.push(appCount+' Apps');}
+                                                            
+                for(var m in content.method) {
+                    if (content.method.hasOwnProperty(m)) {
+                        methodCount+= content.method[m];
+                    }
+                }
+                if (methodCount===1) { summaryCounts.push('1 Method'); }
+                else if (methodCount>1) { summaryCounts.push(methodCount+' Methods');}
+                                                            
+                if (content.output ===1) { summaryCounts.push('1 Result'); }
+                else if (content.output >1) { summaryCounts.push(content.output + ' Results'); }
+                
+                if (content.ipython.code ===1) { summaryCounts.push('1 Code Cell'); }
+                else if (content.ipython.code >1) { summaryCounts.push(content.ipython.code + ' Code Cells'); }
+                                                            
+                if (content.ipython.markdown ===1) { summaryCounts.push('1 Md Cell'); }
+                else if (content.ipython.markdown >1) { summaryCounts.push(content.ipython.markdown + ' Md Cells'); }
+                                                            
+                                                            
+                if (summaryCounts.length>0) {
+                    summary = summaryCounts.join(', ');
+                } else {
+                    summary = 'Empty Narrative';
+                }
+            }
+            return summary;
+        },
+        
+        getNarContent: function(nar_info) {
+            var self = this;
+            console.log(nar_info);
+            
+            var specsToLookup = {apps:[],methods:[]};
+            if (nar_info[10].methods) {
+                var content = JSON.parse(nar_info[10].methods);
+                var apps = []; var methods = [];
+                var appCount=0; var methodCount=0;
+                for(var a in content.app) {
+                    if (content.app.hasOwnProperty(a)) {
+                        apps.push({name:a,count:content.app[a]});
+                        specsToLookup.apps.push(a);
+                    }
+                }
+                for(var m in content.method) {
+                    if (content.method.hasOwnProperty(m)) {
+                        methods.push({name:m,count:content.method[m]});
+                        specsToLookup.methods.push(m);
+                    }
+                }
+            }
+            
+            if ((apps.length + methods.length) ===0) {
+                if (nar_info[10].description) {
+                    $container.append('<br><b>Description</b><br><div style="text-align:left;">'+nar_info[10].description+'</div>');
+                }
+                return "<br>No Apps or Methods in this Narrative.<br>";
+            }
+            
+            var $container = $('<div>').css({'width':'100%'});
+            if (!self.appMethodSpecRef) {
+                self.trigger('getFunctionSpecs.Narrative', [specsToLookup,
+                        function(specLookup) {
+                            //todo: sort here based on counts or name?
+                            //console.log(specLookup);
+                            if (nar_info[10].description) {
+                                $container.append('<br><b>Description</b><br><div style="text-align:left;">'+nar_info[10].description+'</div>');
+                            }
+                            
+                            if (apps.length>0) {
+                                $container.append('<br><b>Apps</b><br>');
+                                var $apptbl = $('<table>').css({'width':'100%'});
+                                for(var k=0; k<apps.length; k++) {
+                                    var link = '<a href="'+self.options.landing_page_url+'narrativestore/app/'+apps[k].name+'" target="_blank">'+apps[k].name+'</a>';
+                                    if (specLookup.apps[apps[k].name]) {
+                                        link = '<a href="'+self.options.landing_page_url+'narrativestore/app/'+apps[k].name+'" target="_blank">'+specLookup.apps[apps[k].name].info.name+'</a>';
+                                    }
+                                    $apptbl.append($('<tr>')
+                                            .append($('<td>').append(link))
+                                            .append($('<td>').append(apps[k].count)));
+                                }
+                                $container.append($apptbl);
+                            }
+                            
+                            if (methods.length>0) {
+                                $container.append('<br><b>Methods</b><br>');
+                                var $methodtbl = $('<table>').css({'width':'100%'});
+                                for(var k=0; k<methods.length; k++) {
+                                    var link = '<a href="'+self.options.landing_page_url+'narrativestore/method/'+methods[k].name+'" target="_blank">'+methods[k].name+'</a>';
+                                    if (specLookup.methods[methods[k].name]) {
+                                        link = '<a href="'+self.options.landing_page_url+'narrativestore/method/'+methods[k].name+'" target="_blank">'+specLookup.methods[methods[k].name].info.name+'</a>';
+                                    }
+                                    $methodtbl.append($('<tr>')
+                                            .append($('<td>').append(link))
+                                            .append($('<td>').append(methods[k].count)));
+                                }
+                                $container.append($methodtbl);
+                            }
+                            $container.append('<br>');
+                        }]);
+            }
+            return $container;
+        },
         
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
         getTimeStampStr: function (objInfoTimeStamp) {

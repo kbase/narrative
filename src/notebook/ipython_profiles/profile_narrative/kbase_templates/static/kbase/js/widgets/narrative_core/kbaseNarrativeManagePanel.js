@@ -424,42 +424,6 @@
                                                                         }); })(revertRef);
                                                             }
                                                             var summary = self.getNarSummary(history[k]);
-                                                            //var summary = '';
-                                                            if (history[k][10].methods) {
-                                                                var content = JSON.parse(history[k][10].methods);
-                                                                var summaryCounts = [];
-                                                                var appCount=0; var methodCount=0;
-                                                                for(var a in content.app) {
-                                                                    if (content.app.hasOwnProperty(a)) {
-                                                                        appCount+= content.app[a];
-                                                                    }
-                                                                }
-                                                                if (appCount===1) { summaryCounts.push('1 App'); }
-                                                                else if (appCount>1) { summaryCounts.push(appCount+' Apps');}
-                                                                
-                                                                for(var m in content.method) {
-                                                                    if (content.method.hasOwnProperty(m)) {
-                                                                        methodCount+= content.method[m];
-                                                                    }
-                                                                }
-                                                                if (methodCount===1) { summaryCounts.push('1 Method'); }
-                                                                else if (methodCount>1) { summaryCounts.push(methodCount+' Methods');}
-                                                                
-                                                                if (content.ipython.code ===1) { summaryCounts.push('1 Code Cell'); }
-                                                                else if (content.ipython.code >1) { summaryCounts.push(content.ipython.code + ' Code Cells'); }
-                                                                
-                                                                if (content.ipython.markdown ===1) { summaryCounts.push('1 Markdown Cell'); }
-                                                                else if (content.ipython.markdown >1) { summaryCounts.push(content.ipython.markdown + ' Markdown Cells'); }
-                                                                
-                                                                if (content.output ===1) { summaryCounts.push('1 Output Cell'); }
-                                                                else if (content.output >1) { summaryCounts.push(content.output + ' Output Cells'); }
-                                                                
-                                                                if (summaryCounts.length>0) {
-                                                                    summary = '<br>'+summaryCounts.join(', ');
-                                                                } else {
-                                                                    summary = '<br>Empty Narrative';
-                                                                }
-                                                            }
                                                             $tbl.append($('<tr>')
                                                                         .append($('<td>').append($revertBtn))
                                                                         .append($('<td>').append(self.getTimeStampStr(history[k][3]) + ' by ' + history[k][5] + summary))
@@ -631,11 +595,14 @@
             var $ctrContent = $('<div>').css({'min-height':'60px'});
             $ctrCol.append($ctrContent);
             
+            var $alertContainer=$('<div>').addClass('kb-data-list-more-div').css({'text-align':'center','margin':'5px'}).hide();
+            
             var narRef = "ws."+data.ws_info[0]+".obj."+data.nar_info[0];
             var nameText = narRef;
             if (data.nar_info[10].name) {
                 nameText = data.nar_info[10].name;
             }
+            var $version = $('<span>').addClass("kb-data-list-version").append('v'+data.nar_info[4]);
             var $priv = $('<span>').css({'color':'#999','margin-left':'8px'}).prop('data-toggle','tooltip').prop('data-placement','right');
              if (data.ws_info[5]==='r') {
                 $priv.addClass('fa fa-lock').prop('title','read-only');
@@ -648,7 +615,7 @@
                  $nameLink.append($('<span>').addClass('fa fa-circle').css({'margin-right':'3px','color':'#4BB856'})
                                     .tooltip({title:'You are viewing this Narrative now'}));
             }
-            $nameLink.append(nameText).append($priv);
+            $nameLink.append(nameText).append($version).append($priv);
             
             $dataCol.append($('<div>').addClass('kb-data-list-name').css({'white-space':'normal', 'cursor':'pointer'}).append($nameLink));
             var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
@@ -658,11 +625,21 @@
                 this.displayRealName(data.ws_info[2], $usrNameSpan);
             }
             var summary = this.getNarSummary(data.nar_info);
-            if (summary) { summary += '<br>'; }
-            $dataCol.append($('<span>').addClass('kb-data-list-type').append(summary));
+            if (summary) {
+                $dataCol.append($('<span>').addClass('kb-data-list-narinfo').append(summary)
+                                .click(
+                                    function() {
+                                        $alertContainer.empty(); $alertContainer.show();
+                                        $alertContainer.append($('<div>')
+                                                            .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                                        .append('Hide Narrative Info')
+                                                                        .click(function() {$alertContainer.empty();} )));
+                                        $alertContainer.append(self.getNarContent(data.nar_info));
+                                    })
+                                .append('<br>'));
+            }
             $dataCol.append($('<span>').addClass('kb-data-list-type').append(this.getTimeStampStr(data.nar_info[3])));
             
-            var $alertContainer=$('<div>').addClass('kb-data-list-more-div').css({'text-align':'center','margin':'5px'}).hide();
             var $shareContainer = $('<div>').hide();
             var $shareToolbar = $('<span>').addClass('btn-toolbar').attr('role', 'toolbar');
             $ctrContent.append($shareToolbar);
@@ -773,14 +750,15 @@
                 if (methodCount===1) { summaryCounts.push('1 Method'); }
                 else if (methodCount>1) { summaryCounts.push(methodCount+' Methods');}
                                                             
+                if (content.output ===1) { summaryCounts.push('1 Result'); }
+                else if (content.output >1) { summaryCounts.push(content.output + ' Results'); }
+                
                 if (content.ipython.code ===1) { summaryCounts.push('1 Code Cell'); }
                 else if (content.ipython.code >1) { summaryCounts.push(content.ipython.code + ' Code Cells'); }
                                                             
-                if (content.ipython.markdown ===1) { summaryCounts.push('1 Markdown Cell'); }
-                else if (content.ipython.markdown >1) { summaryCounts.push(content.ipython.markdown + ' Markdown Cells'); }
+                if (content.ipython.markdown ===1) { summaryCounts.push('1 Md Cell'); }
+                else if (content.ipython.markdown >1) { summaryCounts.push(content.ipython.markdown + ' Md Cells'); }
                                                             
-                if (content.output ===1) { summaryCounts.push('1 Output Cell'); }
-                else if (content.output >1) { summaryCounts.push(content.output + ' Output Cells'); }
                                                             
                 if (summaryCounts.length>0) {
                     summary = summaryCounts.join(', ');
@@ -789,6 +767,57 @@
                 }
             }
             return summary;
+        },
+        
+        getNarContent: function(nar_info) {
+            var self = this;
+            if (nar_info[10].methods) {
+                var content = JSON.parse(nar_info[10].methods);
+                var apps = []; var methods = [];
+                var appCount=0; var methodCount=0;
+                for(var a in content.app) {
+                    if (content.app.hasOwnProperty(a)) {
+                        var link = '<a href="'+self.options.landing_page_url+'narrativestore/app/'+a+'" target="_blank">'+a+'</a>';
+                        apps.push({link:link,name:a,count:content.app[a]});
+                    }
+                }
+                for(var m in content.method) {
+                    if (content.method.hasOwnProperty(m)) {
+                        var link = '<a href="'+self.options.landing_page_url+'narrativestore/app/'+m+'" target="_blank">'+m+'</a>';
+                        methods.push({link:link,name:m,count:content.method[m]});
+                    }
+                }
+            }
+        
+            // sort here
+            
+            if ((apps.length + methods.length) ===0) {
+                return "<br>No Apps or Methods in this Narrative.<br>";
+            }
+            var $container = $('<div>').css({'width':'100%'});
+            if (apps.length>0) {
+                $container.append('<br><b>Apps</b><br>');
+                var $apptbl = $('<table>').css({'width':'100%'});
+                for(var k=0; k<apps.length; k++) {
+                    $apptbl.append($('<tr>')
+                            .append($('<td>').append(apps[k].link))
+                            .append($('<td>').append(apps[k].count)));
+                }
+                $container.append($apptbl);
+            }
+            
+            if (methods.length>0) {
+                $container.append('<br><b>Methods</b><br>');
+                var $methodtbl = $('<table>').css({'width':'100%'});
+                for(var k=0; k<methods.length; k++) {
+                    $methodtbl.append($('<tr>')
+                            .append($('<td>').append(methods[k].link))
+                            .append($('<td>').append(methods[k].count)));
+                }
+                $container.append($methodtbl);
+            }
+            $container.append('<br>');
+            return $container;
         },
         
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site

@@ -90,6 +90,11 @@
                                 .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
                 var $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
                                 .append(spec.short_hint);
+                if (spec.description) {
+                    $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
+                                    .tooltip({title:spec.description, html:true}));
+                }
+                                
                 $row.append($nameCol).append($inputCol).append($hintCol);
                 
                 var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();

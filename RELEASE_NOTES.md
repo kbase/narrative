@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.10 - 1/16/2015
+__Changes__
+- Narrative panel supports copy/delete/history/revert of narratives.
+- Narrative panel shows apps/methods/description (if exists) for each narrative.
+
 ### Version 0.3.9 - 1/14/2015
 __Changes__
 - Restyled menu bar buttons - 'about' button is now under the dropdown menu on the upper left of the screen, removed the global 'delete cell' button (for now!)

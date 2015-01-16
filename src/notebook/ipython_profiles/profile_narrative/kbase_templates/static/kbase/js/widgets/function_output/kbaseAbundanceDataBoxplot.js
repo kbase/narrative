@@ -3,7 +3,7 @@
  */
 (function($, undefined) {
     $.KBWidget({
-            name: 'AbundanceDataTable',
+            name: 'AbundanceDataBoxplot',
             version: '1.0.0',
             options: {
 	            id: null,
@@ -37,53 +37,44 @@
 		        } else {
 		            var biom = data[0]['data'];
 		            var matrix = [];
-		            var tdata = [];
+		            var colnum = biom['columns'].length;
+		            var rownum = biom['rows'].length;
 		            // get matrix
 		            if (biom['matrix_type'] == 'sparse') {
 			            matrix = self.sparse2dense(biom['data'], biom['shape'][0], biom['shape'][1]);
 		            } else {
 			            matrix = biom['data'];
 		            }
-		            // get column names
-		            var clength = biom['columns'].length + 1;
-		            var cnames = new Array(clength)
-		            cnames[0] = "Annotation";
-		            for (var c = 0; c < biom['columns'].length; c++) {
+		            // build data
+		            var divdata = new Array(colnum);
+		            var colors = GooglePalette(colnum);
+		            // names
+		            for (var c = 0; c < colnum; c++) {
 		                if (self.options.name == 0) {
-			                cnames[c+1] = biom['columns'][c]['id'];
-		                } else {
-		                    cnames[c+1] = biom['columns'][c]['name'];
-		                }
-		            }
-		            // add values
-		            var tdata = new Array(matrix.length);
-		            for (var r = 0; r < matrix.length; r++) {
-			            tdata[r] = new Array(clength);
-			            tdata[r][0] = biom['rows'][r]['id'];
-			            for (var c = 0; c < matrix[r].length; c++) {
-			                var value = matrix[r][c];
-			                if (! value) {
-				                value = "0";
-			                }
-			                tdata[r][c+1] = value
-			            }
-		            }
-			        // TABLE
-                    var tlen = 0;
-	    		    if (window.hasOwnProperty('rendererTable') && rendererTable.length) {
-				        tlen = rendererTable.length;
-			        }
-	   		        container.append("<div id='outputTable"+tlen+"' style='width: 95%;'></div>");
-	   		        var tableTest = standaloneTable.create({index: tlen});
-	  		        tableTest.settings.target = document.getElementById("outputTable"+tlen);
-	    		    tableTest.settings.data = { header: cnames, data: tdata };
-			        tableTest.settings.filter = { 0: { type: "text" } };
-			        var mw = [ 120 ];
-			        for (var i=1; i<cnames.length; i++) {
-				        mw.push(130);
-			        }
-			        tableTest.settings.minwidths = mw;
-			        tableTest.render(tlen);
+		                    divdata[c] = {'name': biom['columns'][c]['id'], 'data': [], 'fill': colors[c]};
+	                    } else {
+	                        divdata[c] = {'name': biom['columns'][c]['name'], 'data': [], 'fill': colors[c]};
+	                    }
+	                }
+		            // values
+		            for (var r = 0; r < rownum; r++) {
+		                for (var c = 0; c < colnum; c++) {
+		                    divdata[c]['data'].push(matrix[r][c]);
+	                    }
+	                }
+                    // DEVIATION PLOT
+			        var glen = 0;
+                    if (window.hasOwnProperty('rendererGraph') && rendererGraph.length) {
+                        glen = rendererGraph.length;
+                    }
+			        container.append("<div id='outputGraph"+glen+"' style='width: 95%;'></div>");
+                    var devTest = standaloneGraph.create({index: glen});
+			        devTest.settings.target = document.getElementById("outputGraph"+glen);
+                    devTest.settings.data = divdata;
+                    devTest.settings.show_legend = true;
+			        devTest.settings.height = 400;
+			        devTest.settings.type = "deviation";
+                    devTest.render(glen);
 		        }
 	        }, function(data) {
 		        container.empty();

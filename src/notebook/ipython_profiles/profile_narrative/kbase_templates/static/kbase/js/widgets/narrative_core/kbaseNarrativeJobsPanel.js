@@ -351,7 +351,10 @@
             var type = isApp ? 'apps' : 'methods';
             IPython.notebook.metadata.job_ids[type].push(jobInfo);
             // put a stub in the job states
-            this.jobStates[jobInfo.id] = {'status' : null, $elem : 'null', 'sourceCell' : jobInfo.source};
+            this.jobStates[jobInfo.id] = {'status' : null, 
+                                          '$elem' : 'null', 
+                                          'source' : jobInfo.source,
+                                          'id' : jobInfo.id };
             this.source2Job[jobInfo.source] = jobInfo.id;
             this.refresh();
             IPython.notebook.save_checkpoint();
@@ -574,7 +577,7 @@
             else {
                 // sort our set of jobs.
                 var sortedJobs = Object.keys(this.jobStates);
-                sortedJobs.sort(function(a, b) {
+                sortedJobs.sort($.proxy(function(a, b) {
                     var aTime = this.jobStates[a].timestamp;
                     var bTime = this.jobStates[b].timestamp;
                     // if we have timestamps for both, compare them
@@ -584,7 +587,7 @@
                         return 1;
                     else            // if aTime is null, but bTime isn't, (OR they're both null), then put b first
                         return -1;
-                });
+                }, this));
 
                 for (var i=0; i<sortedJobs.length; i++) {
                     var jobId = sortedJobs[i];
@@ -683,13 +686,17 @@
                 status = this.makeJobErrorButton(fetchedJobStatus, jobInfo, 'Error');
                 $jobDiv.addClass('kb-jobs-error');
             }
+            else if (status === 'Deleted') {
+                status = this.makeJobErrorButton(fetchedJobStatus, jobInfo, 'Deleted');
+                $jobDiv.addClass('kb-jobs-error');                
+            }
             else if (fetchedJobStatus && fetchedJobStatus.step_errors && Object.keys(fetchedJobStatus.step_errors).length !== 0) {
                 var $errBtn = this.makeJobErrorButton(fetchedJobStatus, jobInfo);
                 status = $('<span>').append(status + ' ')
                                     .append($errBtn);
             }
             else {
-                if (jobType === "njs") {
+                if (jobType === "njs" && fetchedJobStatus) {
                     var stepId = fetchedJobStatus.running_step_id;
                     if (stepId) {
                         var stepSpec = getStepSpec(stepId, jobInfo.spec.appSpec);

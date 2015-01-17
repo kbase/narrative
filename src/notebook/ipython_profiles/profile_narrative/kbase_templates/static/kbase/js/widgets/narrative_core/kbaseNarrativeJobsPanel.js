@@ -420,7 +420,7 @@
                 jobInfo[jobId] = {'state' : jobState};
 
                 // if the job's incomplete, we have to go get it.
-                var jobIncomplete = (jobState.status !== 'completed' && jobState.status !== 'error' && jobState.status !== 'done')
+                var jobIncomplete = (jobState.status !== 'completed' && jobState.status !== 'error' && jobState.status !== 'done' && jobState.status !== 'deleted')
                 // 2. The type dictates what cell it came from and how to deal with the inputs.
                 var jobType = this.jobTypeFromId(jobId);
                 var specInfo = null;

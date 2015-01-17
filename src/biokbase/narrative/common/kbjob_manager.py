@@ -163,7 +163,7 @@ class KBjobManager():
         workspace = os.environ['KB_WORKSPACE_ID']
         return _method_get_state(workspace, token, URLS, self, method_info[0], method_info[1], method_job_id)
 
-    def delete_jobs(self, job_list):
+    def delete_jobs(self, job_list, as_json=False):
         """
         Delete all jobs in the list. They may belong to different services based on their prefix, currently
         either 'njs', 'method', or 'ujs'.
@@ -189,4 +189,7 @@ class KBjobManager():
                 if (not status == 'success') and ('was marked for deletion' not in status):
                     is_deleted = False
             deletion_status[job_id] = is_deleted
-        return json.dumps(deletion_status)
+        if as_json:
+            import json
+            deletion_status = json.dumps(deletion_status)
+        return deletion_status

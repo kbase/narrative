@@ -61,8 +61,6 @@
                     // Find job based on cellId
                     var job = this.source2Job[cellId];
 
-                    console.log(['found job', job]);
-
                     // If we can't find the job, then it's not being tracked, so we
                     // should just assume it's gone already and return true to the callback.
                     if (job === undefined && callback)
@@ -415,17 +413,13 @@
                 var jobState = this.jobStates[jobId];
 
                 jobInfo[jobId] = {'state' : jobState};
-                // get specs. we need them to render, regardless
-                // ...but if we don't have a source cell, we have to skip it.
-                if (!jobState.source)
-                    continue;
 
                 // if the job's incomplete, we have to go get it.
-                var jobIncomplete = (jobState.status !== 'complete' && jobState.status !== 'error' && jobState.status !== 'done')
+                var jobIncomplete = (jobState.status !== 'completed' && jobState.status !== 'error' && jobState.status !== 'done')
                 // 2. The type dictates what cell it came from and how to deal with the inputs.
                 var jobType = this.jobTypeFromId(jobId);
-                var $sourceCell = $('#' + jobState.source);
                 var specInfo = null;
+                var $sourceCell = $('#' + jobState.source);
                 if ($sourceCell.length > 0) {  // if the source cell is there (kind of a jQuery trick).
                     // if it's an NJS job, then it's an App cell, so fetch all that info.
                     if (jobType === "njs") {
@@ -453,8 +447,12 @@
                     }
                     jobInfo[jobId]['spec'] = specInfo;
                 }
+                else
+                    this.jobStates[jobId].status = 'error';
             }
 
+            console.log(['REFRESH: looking up ' + jobParamList.length]);
+            console.log(['REFRESH: jobstates:', this.jobStates]);
 
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
@@ -554,7 +552,7 @@
                 return;
             }
 
-            console.log([fetchedJobStatus, jobInfo]);
+            console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
 
             // var storedIds = {};
             // for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {
@@ -603,39 +601,10 @@
                 }
             }
             this.$jobsPanel.empty().append($jobsList);
-
-
-
-
-            //     jobStatus.sort(function(a, b) {
-            //         var aTime = jobInfo[a.job_id].job.timestamp;
-            //         var bTime = jobInfo[b.job_id].job.timestamp;
-            //         // if we have timestamps for both, compare them
-            //         if (aTime && bTime)
-            //             return (new Date(aTime) < new Date(bTime)) ? 1 : -1;
-            //         else if (aTime) // if we only have one for a, sort for a
-            //             return 1;
-            //         else            // if aTime is null, but bTime isn't, (OR they're both null), then put b first
-            //             return -1;
-            //     });
-            //     for (var i=0; i<jobStatus.length; i++) {
-            //         var job = jobStatus[i];
-            //         var info = jobInfo[job.job_id];
-            //         $jobsList.append(this.renderJob(job, info));
-            //         this.updateCell(job, info);
-            //         delete storedIds[job.job_id];
-            //     }
-            //     for (var missingId in storedIds) {
-            //         if (storedIds.hasOwnProperty(missingId)) {
-            //             $jobsList.append(this.renderJob(null, {'job': storedIds[missingId]}));
-            //         }
-            //     }
-            // }
-            // this.$jobsPanel.empty().append($jobsList);
         },
 
 
-        renderJob: function(jobInfo, job) {
+        renderJob: function(jobInfo, fetchedJobStatus) {
             var getStepSpec = function(id, spec) {
                 for (var i=0; i<spec.steps.length; i++) {
                     if (id === spec.steps[i].step_id)
@@ -700,35 +669,33 @@
                                .append(jobId));
 
             var status = "Unknown";
+            if (this.jobStates[jobId])
+                status = this.jobStates[jobId].status.charAt(0).toUpperCase() + 
+                         this.jobStates[jobId].status.substring(1);
             var started = "Unknown";
             var position = null;
             var task = null;
 
             // don't know nothing about no job!
-            if (!job || job.error) {
-                status = this.makeJobErrorButton(job, jobInfo, 'Error');
+            if (status === 'Suspend' || status === 'Error' || status === 'Unknown') {
+                status = this.makeJobErrorButton(fetchedJobStatus, jobInfo, 'Error');
                 $jobDiv.addClass('kb-jobs-error');
             }
-            else if (job.step_errors && Object.keys(job.step_errors).length !== 0) {
-                var $errBtn = this.makeJobErrorButton(job, jobInfo);
-                status = $('<span>').append(job.job_state.charAt(0).toUpperCase() + job.job_state.substring(1) + ' ')
+            else if (fetchedJobStatus && fetchedJobStatus.step_errors && Object.keys(fetchedJobStatus.step_errors).length !== 0) {
+                var $errBtn = this.makeJobErrorButton(fetchedJobStatus, jobInfo);
+                status = $('<span>').append(status + ' ')
                                     .append($errBtn);
             }
             else {
-                if (job.job_state) {
-                    status = job.job_state.charAt(0).toUpperCase() + job.job_state.substring(1);
-                    // UPDATE this.jobStates HERE
-                    this.jobStates[jobId].status = job.job_state;
-                }
                 if (jobType === "njs") {
-                    var stepId = job.running_step_id;
+                    var stepId = fetchedJobStatus.running_step_id;
                     if (stepId) {
                         var stepSpec = getStepSpec(stepId, jobInfo.spec.appSpec);
                         task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
                     }
                 }
-                if (job.position && job.position > 0)
-                    position = job.position;
+                if (fetchedJobStatus && fetchedJobStatus.position && fetchedJobStatus.position > 0)
+                    position = fetchedJobStatus.position;
             }
             if (jobInfo && jobInfo.state && jobInfo.state.timestamp) {
                 started = this.makePrettyTimestamp(jobInfo.state.timestamp);
@@ -762,7 +729,6 @@
             if (job.job_state)
                 state = job.job_state.toLowerCase();
             
-            console.log([job, jobInfo]);
             // don't do anything if we don't know the source cell. it might have been deleted.
             if (!source)
                 return;
@@ -855,12 +821,12 @@
                  */
                 if (!jobStatus && jobInfo) {
                     if (!jobInfo.state.source) {
-                        errorText = "This job is not associated with an App Cell.";
-                        errorType = "Unknown App Cell";
+                        errorText = "This job is not associated with a Running Cell.";
+                        errorType = "Unknown Cell";
                     }
                     else if ($('#' + jobInfo.state.source).length === 0) {
                         errorText = "The App Cell associated with this job can no longer be found in your Narrative.";
-                        errorType = "Missing App Cell";
+                        errorType = "Missing Cell";
                     }
                 }
                 else if (jobStatus.error) {

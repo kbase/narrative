@@ -12,7 +12,7 @@
         	addToNarrativeButton: null,
         	selectedItems: null,
         	landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/ws/json/" // ws_name/obj_name,
+            default_landing_page_url: "/functional-site/#/json/" // ws_name/obj_name,
         },
         token: null,
         wsName: null,

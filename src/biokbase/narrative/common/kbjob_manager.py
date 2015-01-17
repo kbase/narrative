@@ -17,6 +17,7 @@ import os
 import json
 from biokbase.userandjobstate.client import UserAndJobState
 from biokbase.narrativejobproxy.client import NarrativeJobProxy
+from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.narrative.common.url_config import URLS
 import biokbase.auth
 from biokbase.narrative.common.generic_service_calls import _app_get_state
@@ -86,7 +87,7 @@ class KBjobManager():
         Polls a list of job ids on behalf of the narrativejoblistener
         account and returns the results
         """
-        job_states = list()
+        job_states = dict()
         ujs_proxy = self.__proxy_client()
 
         for job in jobs:
@@ -96,16 +97,16 @@ class KBjobManager():
 
             if job_id.startswith('method:'):
                 try:
-                    job_states.append(self.get_method_state(job, job_id))
+                    job_states[job_id] = self.get_method_state(job, job_id)
                 except Exception as e:
                     import traceback
-                    job_states.append({'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
+                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
             elif job_id.startswith('njs:'):
                 try:
-                    job_states.append(self.get_app_state(job, job_id))
+                    job_states[job_id] = self.get_app_state(job, job_id)
                 except Exception as e:
                     import traceback
-                    job_states.append({'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
+                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
             else:
                 try:
                     # 0  job_id job,
@@ -136,10 +137,10 @@ class KBjobManager():
                         job['error'] = ujs_job[4]
                     elif ujs_job[10] == 1:
                         job['widget_outputs'] = self.get_method_state(method_info, job_id)
-                    job_states.append(job)
+                    job_states[job_id] = job
                 except Exception as e:
                     import traceback
-                    job_states.append({'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
+                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
         if as_json:
             import json
             job_states = json.dumps(job_states)
@@ -161,3 +162,34 @@ class KBjobManager():
         token = os.environ['KB_AUTH_TOKEN']
         workspace = os.environ['KB_WORKSPACE_ID']
         return _method_get_state(workspace, token, URLS, self, method_info[0], method_info[1], method_job_id)
+
+    def delete_jobs(self, job_list, as_json=False):
+        """
+        Delete all jobs in the list. They may belong to different services based on their prefix, currently
+        either 'njs', 'method', or 'ujs'.
+        """
+        deletion_status = dict()
+        for job_id in job_list:
+            app_id = None
+            if job_id.startswith('njs:'):
+                # delete from njs
+                is_deleted = True
+                app_id = job_id[4:]
+            elif job_id.startswith('method:'):
+                # delete from njs_wrapper
+                is_deleted = True
+                app_id = job_id[7:]
+            else:
+                # delete from ujs (njs_wrapper?)
+                is_deleted = False
+            if app_id is not None:
+                token = os.environ['KB_AUTH_TOKEN']
+                njsClient = NarrativeJobService(URLS.job_service, token = token)
+                status = njsClient.delete_app(app_id)
+                if (not status == 'success') and ('was marked for deletion' not in status):
+                    is_deleted = False
+            deletion_status[job_id] = is_deleted
+        if as_json:
+            import json
+            deletion_status = json.dumps(deletion_status)
+        return deletion_status

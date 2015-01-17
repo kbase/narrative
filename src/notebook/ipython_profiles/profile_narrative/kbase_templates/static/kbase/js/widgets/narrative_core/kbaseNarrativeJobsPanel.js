@@ -451,8 +451,8 @@
                     this.jobStates[jobId].status = 'error';
             }
 
-            console.log(['REFRESH: looking up ' + jobParamList.length]);
-            console.log(['REFRESH: jobstates:', this.jobStates]);
+            // console.log(['REFRESH: looking up ' + jobParamList.length]);
+            // console.log(['REFRESH: jobstates:', this.jobStates]);
 
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
@@ -552,7 +552,7 @@
                 return;
             }
 
-            console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
+            // console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
 
             // var storedIds = {};
             // for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {

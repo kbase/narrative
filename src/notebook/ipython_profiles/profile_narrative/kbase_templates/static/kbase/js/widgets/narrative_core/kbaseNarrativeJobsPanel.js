@@ -59,17 +59,17 @@
             $(document).on('cancelJobCell.Narrative', $.proxy(
                 function(e, cellId, showPrompt, callback) {
                     // Find job based on cellId
-                    var job = this.source2Job[cellId];
+                    var jobId = this.source2Job[cellId];
 
                     // If we can't find the job, then it's not being tracked, so we
                     // should just assume it's gone already and return true to the callback.
-                    if (job === undefined && callback)
+                    if (jobId === undefined && callback)
                         callback(true);
-                    else if (job !== undefined) {
+                    else if (jobId !== undefined) {
                         if (showPrompt)
-                            this.openJobDeletePrompt(job.id, null, callback);
+                            this.openJobDeletePrompt(jobId, null, callback);
                         else 
-                            this.deleteJob(job.id, callback);
+                            this.deleteJob(jobId, callback);
                     }
                 }, this)
             );
@@ -233,7 +233,7 @@
         deleteJob: function(jobId, callback) {
             var deleteJobCmd = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                'jm = KBjobManager()\n' +
-                               'print jm.delete_jobs(["' + jobId + '"])\n';
+                               'print jm.delete_jobs(["' + jobId + '"], as_json=True)\n';
 
             var callbacks = {
                 'output' : $.proxy(function(msgType, content) {
@@ -269,31 +269,33 @@
             }
             catch(err) {
                 // ignore and return. assume it failed.
-                return false;
+                // I guess we don't really care if it fails, though, the user just wants that job to be outro'd.
+                // Comment this out for now, until we make some sensible error popup or something.
+                // return false;
             }
 
-            if (result[jobId] === true) {
-                // successfully nuked it on the back end, now wipe it out on the front end.
+            // if (result[jobId] === true) {
+            // successfully nuked it on the back end, now wipe it out on the front end.
 
-                // first, wipe the metadata
-                var appIds = IPython.notebook.metadata.job_ids.apps;
-                appIds = appIds.filter(function(val) { return val.id !== jobId });
-                IPython.notebook.metadata.job_ids.apps = appIds;
+            // first, wipe the metadata
+            var appIds = IPython.notebook.metadata.job_ids.apps;
+            appIds = appIds.filter(function(val) { return val.id !== jobId });
+            IPython.notebook.metadata.job_ids.apps = appIds;
 
-                // ...and from the method list
-                var methodIds = IPython.notebook.metadata.job_ids.methods;
-                methodIds = methodIds.filter(function(val) { return val.id !== jobId });
-                IPython.notebook.metadata.job_ids.methods = methodIds;
+            // ...and from the method list
+            var methodIds = IPython.notebook.metadata.job_ids.methods;
+            methodIds = methodIds.filter(function(val) { return val.id !== jobId });
+            IPython.notebook.metadata.job_ids.methods = methodIds;
 
-                // remove it from the 'cache' in this jobs panel
-                delete this.source2Job[this.jobStates[jobId]];
-                delete this.jobStates[jobId];
-                this.refresh(false);
+            // remove it from the 'cache' in this jobs panel
+            delete this.source2Job[this.jobStates[jobId].source];
+            delete this.jobStates[jobId];
+            this.refresh(false);
 
-                // nuke the removeId
-                this.removeId = null;
-            }
-            return result[jobId];
+            // nuke the removeId
+            this.removeId = null;
+            return true;
+            // return result[jobId];
         },
 
         /**

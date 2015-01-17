@@ -17,6 +17,7 @@ import os
 import json
 from biokbase.userandjobstate.client import UserAndJobState
 from biokbase.narrativejobproxy.client import NarrativeJobProxy
+from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.narrative.common.url_config import URLS
 import biokbase.auth
 from biokbase.narrative.common.generic_service_calls import _app_get_state
@@ -169,14 +170,23 @@ class KBjobManager():
         """
         deletion_status = dict()
         for job_id in job_list:
+            app_id = None
             if job_id.startswith('njs:'):
                 # delete from njs
                 is_deleted = True
+                app_id = job_id[4:]
             elif job_id.startswith('method:'):
                 # delete from njs_wrapper
                 is_deleted = True
-            elif job_id.startswith('ujs:'):
+                app_id = job_id[7:]
+            else:
                 # delete from ujs (njs_wrapper?)
-                is_deleted = True
+                is_deleted = False
+            if app_id is not None:
+                token = os.environ['KB_AUTH_TOKEN']
+                njsClient = NarrativeJobService(URLS.job_service, token = token)
+                status = njsClient.delete_app(app_id)
+                if (not status == 'success') and ('was marked for deletion' not in status):
+                    is_deleted = False
             deletion_status[job_id] = is_deleted
         return json.dumps(deletion_status)

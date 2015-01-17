@@ -734,6 +734,7 @@
             var source = jobInfo.state.source;
             var jobType = this.jobTypeFromId(jobInfo.state.id)
 
+            // console.log(['UPDATE_CELL', job, jobInfo]);
             var state = '';
             if (job.job_state)
                 state = job.job_state.toLowerCase();
@@ -841,6 +842,10 @@
                 else if (jobStatus.error) {
                     errorText = $('<div class="kb-jobs-error-modal">').append(jobStatus.error);
                     errorType = "Runtime";
+                }
+                else if (btnText === 'Deleted') {
+                    errorText = "This job has already been deleted from KBase Servers.";
+                    errorType = "Invalid Job";
                 }
                 else if (Object.keys(jobStatus.step_errors).length !== 0) {
                     errorType = "Runtime";

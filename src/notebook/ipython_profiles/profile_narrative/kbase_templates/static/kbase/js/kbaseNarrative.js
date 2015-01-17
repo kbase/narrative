@@ -260,7 +260,7 @@ narrative.init = function() {
             curCell.celltoolbar.hide();
         curCell = cell;
         // show the new one
-        if (!curCell.metadata['kb-cell'])
+        if (curCell && !curCell.metadata['kb-cell'])
             curCell.celltoolbar.show();
     };
 

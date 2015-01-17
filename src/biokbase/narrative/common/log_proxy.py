@@ -357,7 +357,7 @@ class Handler(object):
     EXTRACT_META = {
         'session': 'session_id',
         'narrative': 'narr',
-        'client_ip': 'client.ip',
+        'client_ip': 'client_ip',
         'user': 'user'}
 
     def _get_record_meta(self, record):
@@ -375,7 +375,7 @@ class MongoDBHandler(Handler):
             g_log.error("Bad input to 'handle_read': {}".format(err))
             return
         kbrec.record.update(meta)
-        kbrec.record.update(self._get_record_meta())
+        kbrec.record.update(self._get_record_meta(kbrec.record))
         self._coll.insert(kbrec.record)
 
 class SyslogHandler(Handler):

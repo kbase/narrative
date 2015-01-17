@@ -14,6 +14,7 @@ from collections import deque
 import json
 import logging
 import os
+import re
 import sys
 import time
 import traceback
@@ -179,13 +180,13 @@ def get_func_info(fn):
             typeobj = eval(desc.strip())
             return_['type'] = typeobj
 
-        # :input_widget - the default visualization widget for this method. 
+        # :input_widget - the default visualization widget for this method.
         # Should be the name as it's invoked in Javascript.
         elif line.startswith(":input_widget"):
             _1, _2, widget = line.split(":", 2)
             return_['input_widget'] = widget.strip()
 
-        # :output_widget - the visualization widget for this method. 
+        # :output_widget - the visualization widget for this method.
         # Should be the name as it's invoked in Javascript.
         elif line.startswith(":output_widget"):
             _1, _2, widget = line.split(":", 2)
@@ -402,7 +403,7 @@ class Service(trt.HasTraits):
 
 class LifecycleSubject(object):
     """Contains the current status of a running process.
-    
+
     The basic model is that a process is in a 'stage', which is
     an integer starting at 1 and less than or equal to the total
     number of stages. Stages and total numbers of stages can
@@ -453,7 +454,7 @@ class LifecycleSubject(object):
         if not self._done:
             self._done = True
             self._event('done')
-        
+
     def error(self, code, err):
         """Done with process due to an error.
         Idempotent.
@@ -497,7 +498,7 @@ class LifecycleSubject(object):
             self._event('register_app', app_id)
 
     # get/set 'stage' property
-    
+
     @property
     def stage(self):
         return self._stage
@@ -513,13 +514,13 @@ class LifecycleSubject(object):
                              .format(value, self._stages))
         self._stage = value
         self._event('stage', self._stage, self._stages, '')
-        
+
     # get/set 'stages' (number of stages) property
 
     @property
     def stages(self):
         return self._stages
-        
+
     @stages.setter
     def stages(self, value):
         if not isinstance(value, int):
@@ -534,22 +535,22 @@ class LifecycleSubject(object):
 
 class LifecycleObserver(object):
     """Interface that defines the lifecycle events of a service,
-    in terms of callbacks. These callbacks will be used by the 
+    in terms of callbacks. These callbacks will be used by the
     :class:`IpService` to communicate with the IPython kernel,
-    but they can also be extended to perform service-specific actions.    
+    but they can also be extended to perform service-specific actions.
     """
     def started(self, params):
         """Called before execution starts"""
         pass
-        
+
     def stage(self, num, total, name):
         """Called for stage changes"""
         pass
-        
+
     def done(self):
         """Called on successful completion"""
         pass
-        
+
     def error(self, code, err):
         """Called on fatal error"""
         pass
@@ -604,7 +605,7 @@ class LifecycleHistory(LifecycleObserver):
         self._hist.append(tuple(self._t + [dur, self._p]))
         if len(self._hist) > self._maxlen:
             self._hist.popleft()
-    
+
     def error(self, code, err):
         """Called on fatal error"""
         pass
@@ -710,8 +711,13 @@ class LifecycleLogger(LifecycleObserver):
 
     def started(self, params):
         # note: quote params so the logging can handle spaces inside them
-        pstr = str(params).replace('"', '\\"')  # escape embedded quotes
-        self._write(logging.INFO, "func.begin", {'params': pstr})
+        #pstr = str(params).replace('"', '\\"')  # escape embedded quotes
+        pstr = str(params).replace('"', "'")  # change dbl to single quotes
+        pstr = pstr.replace('\\','') # eliminate dbl-backslashes
+        pstr = pstr.replace("\'", "'") # and so on? yeesh!
+        # now extract actual params
+        psets = ','.join(re.findall('{\s*\'stepId\'.*?\]', pstr))
+        self._write(logging.INFO, "func.begin", {'params': psets})
         self._start_time = time.time()
 
     def done(self):
@@ -745,7 +751,7 @@ class LifecycleLogger(LifecycleObserver):
 
 class ServiceMethod(trt.HasTraits, LifecycleSubject):
     """A method of a service.
-    
+
     Defines some metadata and a function, using :meth:`set_func`,
     to run the service. Call the class instance like a function
     to execute the service in its wrapped mode.
@@ -982,7 +988,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
                      'a dict or None': 'object',
                      'a float': 'number',
                      'a boolean': 'boolean'}
-                             
+
     def as_json_schema(self, formatted=False, **kw):
         d = {
             'title': self.name,
@@ -1038,7 +1044,7 @@ def method(name=None):
     """Decorator function for creating new services.
 
     Example usage::
-    
+
         @method(name="MyMethod")
         def my_service(method, arg1, arg2, etc.):
             pass # method body goes here

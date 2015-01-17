@@ -1588,6 +1588,10 @@ div#notebook_panel {
     border-radius: 1px;
 }
 
+.kb-app-error {
+    background-color: #F2DEDE;
+}
+
 .app-panel-heading {
     padding-top: 20px;
 }
@@ -1683,7 +1687,13 @@ button.kb-app-run {
     moz-box-shadow: 1px 1px 1px #ccc;
 }
 button.kb-app-run:hover {
-    background-color: #1E88E5;;
+    background-color: #1E88E5;
+}
+button.kb-app-run.kb-app-cancel {
+    background-color: #F44336;
+}
+button.kb-app-run.kb-app-cancel:hover {
+    background-color: #E53935;
 }
 
 

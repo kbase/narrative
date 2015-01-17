@@ -73,12 +73,24 @@
                 }, this)
             );
 
+            this.$stopButton = $('<button>')
+                              .attr('type', 'button')
+                              .attr('value', 'Cancel')
+                              .addClass('kb-app-run kb-app-cancel')
+                              .append('Cancel')
+                              .css({'margin-right':'5px'})
+                              .click(
+                                  $.proxy(function(event) {
+                                      this.stopRunning();
+                                  }, this)
+                              )
+                              .hide();
+
             var $buttons = $('<div>')
                            .addClass('buttons pull-left')
-                           // .append(this.$deleteButton)
-                           .append(this.$submitted)
-                           .append(this.$runButton);
-
+                           .append(this.$runButton)
+                           .append(this.$stopButton)
+                           .append(this.$submitted);
 
             var $progressBar = $('<div>')
                                .attr('id', 'kb-func-progress')
@@ -120,7 +132,6 @@
 
             this.$cellPanel = $('<div>')
                               .addClass('panel kb-func-panel kb-cell-run')
-                              .attr('id', this.options.cellId)
                               .append($('<div>')
                                       .addClass('panel-heading')
                                       .append($methodInfo))
@@ -130,7 +141,6 @@
                               .append($('<div>')
                                       .addClass('panel-footer')
                                       .css({'overflow' : 'hidden'})
-                                      .append($progressBar)
                                       .append($buttons));
 
             $menuSpan.kbaseNarrativeCellMenu();
@@ -198,6 +208,19 @@
 
         /**
          * @method
+         * This sends a trigger to the jobs panel to stop any running jobs. If the callback is
+         * truthy, this resets the cell to an input state.
+         */
+        stopRunning: function() {
+            this.trigger('cancelJobCell.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
+                if (isCanceled) {
+                    this.changeState('input');
+                }
+            }, this)]);            
+        },
+
+        /**
+         * @method
          * Updates the method cell's state.
          * Currently supports "input", "submitted", "running", or "complete".
          */
@@ -209,31 +232,51 @@
                 switch(this.runState) {
                     case 'submitted':
                         this.$cellPanel.removeClass('kb-app-step-running');
+                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$submitted.html(this.submittedText).show();
                         this.$runButton.hide();
+                        this.$stopButton.hide();
                         this.$inputWidget.lockInputs();
                         break;
                     case 'complete':
                         this.$cellPanel.removeClass('kb-app-step-running');
+                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$submitted.html(this.submittedText).show();
                         this.$runButton.hide();
+                        this.$stopButton.hide();
                         this.$inputWidget.lockInputs();
                         // maybe unlock? show a 'last run' box?
                         break;
                     case 'running':
                         this.$submitted.html(this.submittedText).show();
+                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$cellPanel.addClass('kb-app-step-running');
                         this.$runButton.hide();
+                        this.$stopButton.show();
                         this.$inputWidget.lockInputs();
+                        break;
+                    case 'error':
+                        this.$submitted.html(this.submittedText).show();
+                        this.$cellPanel.addClass('kb-app-step-running');
+                        this.$runButton.hide();
+                        this.$stopButton.show();
+                        this.$inputWidget.lockInputs();
+                        this.$elem.find('.kb-app-panel').addClass('kb-app-error');
                         break;
                     default:
                         this.$cellPanel.removeClass('kb-app-step-running');
+                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$submitted.hide();
                         this.$runButton.show();
+                        this.$stopButton.hide();
                         this.$inputWidget.unlockInputs();
                         break;
                 }
             }
+        },
+
+        getRunningState: function() {
+            return this.runState;
         },
 
         /*
@@ -264,36 +307,6 @@
                 return false;
             }
 
-            // if (ignoreValidCheck) {
-            //     //code
-            // } else {
-            //     var v = self.isValid();
-            //     if (!v.isValid) {
-            //         var errorCount = 1;
-            //         self.$errorModalContent.empty();
-            //         for(var k=0; k<v.stepErrors.length; k++) {
-            //             var $errorStep = $('<div>');
-            //             $errorStep.append($('<div>').addClass("kb-app-step-error-heading").append('Errors in Step '+v.stepErrors[k].stepNum+':'));
-            //             for (var e=0; e<v.stepErrors[k].errormssgs.length; e++) {
-            //                 $errorStep.append($('<div>').addClass("kb-app-step-error-mssg").append('['+errorCount+']: ' + v.stepErrors[k].errormssgs[e]));
-            //                 errorCount = errorCount+1;
-            //             }
-            //             self.$errorModalContent.append($errorStep);
-            //         }
-            //         self.$errorModal.modal('show');
-            //         return false;
-            //     }
-            // }
-            // self.prepareDataBeforeRun();
-            // self.$submitted.show();
-            // self.$runButton.hide();
-            // self.$stopButton.show();
-            // if (this.inputSteps) {
-            //     for(var i=0; i<this.inputSteps.length; i++) {
-            //         this.inputSteps[i].widget.lockInputs();
-            //     }
-            // }
-            // this.state.runningState.appRunState = "running";
             return true;
         },
 
@@ -320,7 +333,8 @@
          * Refreshes the input widget according to its own method.
          */
         refresh: function() {
-            this.$inputWidget.refresh();
+            if (this.$inputWidget)
+                this.$inputWidget.refresh();
         },
 
         genUUID: function() {

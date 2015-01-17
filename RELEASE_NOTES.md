@@ -16,6 +16,7 @@ __Changes__
 - Refactored Jobs panel to only look up jobs that are incomplete (e.g. not 'error', 'completed', 'done', or 'deleted')
 - Toolbars should only appear over IPython cells now (KBase cells have their own menus)
 - Styled app/method control buttons to be closer to the style guide / mockup.
+- Logging of apps and methods is substantially less ugly and made from fewer backslashes.
 
 ### Version 0.3.10 - 1/16/2015
 __Changes__

@@ -283,6 +283,7 @@
             else if ((data.method.behavior.kb_service_method && data.method.behavior.kb_service_name) ||
                      (data.method.behavior.script_module && data.method.behavior.script_name)) {
                 code = this.buildGenericRunCommand(data);
+                showOutput = false;
             }
             else {
                 // something else!

@@ -1149,7 +1149,7 @@
                 if (mapping[module] && mapping[module][type]) {
                     return self.options.landingPageURL+mapping[module][type]+'/'+ws+'/'+name;
                 }
-                return self.options.landingPageURL+'ws/json/'+ws+'/'+name;
+                return self.options.landingPageURL+'json/'+ws+'/'+name;
             }
 
             function wsURL(ws) {

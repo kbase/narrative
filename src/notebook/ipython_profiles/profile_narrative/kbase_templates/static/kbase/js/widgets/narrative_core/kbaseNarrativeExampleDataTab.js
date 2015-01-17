@@ -11,7 +11,7 @@
             ws_name: null, // must be the WS name, not the WS Numeric ID
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/ws/json/", // ws_name/obj_name,
+            default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             exampleWsId: 2901, // designed to be a workspace with just a handful of objects
             exampleTypeOrder: [

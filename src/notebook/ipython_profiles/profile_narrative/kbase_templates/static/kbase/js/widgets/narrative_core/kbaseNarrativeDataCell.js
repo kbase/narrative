@@ -276,7 +276,7 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
                 	landing_page_url_prefix = $view.options.landing_page_url_prefix;
             }
             if (!landing_page_url_prefix)
-            	landing_page_url_prefix = 'ws/json';
+            	landing_page_url_prefix = 'json';
             widgetTitleElem.empty();
             widgetTitleElem.append(widget_title);
             widgetTitleElem.append('&nbsp;<a href="'+self.shortMarkdownDesc(self.obj_info, 

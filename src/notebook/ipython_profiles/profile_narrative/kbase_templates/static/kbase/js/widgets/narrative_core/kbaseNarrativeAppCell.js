@@ -70,7 +70,7 @@
             // initialize the state
             this.state = {
                     runningState: {
-                        appRunState: "input", // could be 'input' || 'running' || something else?
+                        appRunState: "input", // could be 'input' || 'running' || 'error' || 'done', something else?
                         runningStep: null
                     },
                     step: { }
@@ -196,17 +196,18 @@
             //We cannot stop a method from running, so this button for now is gone.
             this.$stopButton = $('<button>')
                               .attr('type', 'button')
-                              .attr('value', 'Stop')
-                              .addClass('btn btn-warning btn-sm')
-                              .append('Stop')
+                              .attr('value', 'Cancel')
+                              .addClass('kb-app-run kb-app-cancel')
+                              .append('Cancel')
+                              .css({'margin-right':'5px'})
                               .click(
                                   $.proxy(function(event) {
                                       self.stopAppRun();
                                   }, this)
                               )
                               .hide();
-
-            this.$submitted = $('<span>').addClass("pull-right kb-func-timestamp").hide();
+            
+            this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
 
             var appInfo = this.appSpec.info.name;
             this.$methodPanel = $('<div>')
@@ -224,7 +225,7 @@
             var $buttons = $('<div>')
                            .addClass('buttons pull-left')
                            .append(this.$runButton)
-                           //.append(this.$stopButton)
+                           .append(this.$stopButton)
                            //.append(this.$stateDebugBtn)
                            .append(this.$submitted);
 
@@ -370,8 +371,7 @@
             }
             return;
         },
-
-
+        
         isValid : function() {
             var isValidRet = {isValid:true, stepErrors:[]}
             if (this.inputSteps) {
@@ -442,20 +442,28 @@
 
         /* unlocks inputs and updates display properties to reflect the not running state */
         stopAppRun: function() {
-            var self = this;
-            self.$stopButton.hide();
-            self.$runButton.show();
-            if (this.inputSteps) {
-                for(var i=0; i<this.inputSteps.length; i++) {
-                    this.inputSteps[i].widget.unlockInputs();
+            // trigger a cancel job action
+            // if that returns something truthy (i.e. auto canceled, or user chose to cancel),
+            // then continue and reset the state to input.
+            // otherwise, bail.
+
+            this.trigger('cancelJobCell.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
+                if (isCanceled) {
+                    this.$stopButton.hide();
+                    this.$runButton.show();
+                    if (this.inputSteps) {
+                        for(var i=0; i<this.inputSteps.length; i++) {
+                            this.inputSteps[i].widget.unlockInputs();
+                            this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                        }
+                    }
+                    this.setErrorState(false);
+                    this.$submitted.hide();
+                    this.state.runningState.appRunState = "input";                    
                 }
-            }
-            this.$submitted.hide();
-            this.state.runningState.appRunState = "input";
+            }, this)]);
         },
-
-
-
+        
         /**
          * DO NOT USE!!  use getAllParameterValues instead from now on...
          */
@@ -509,6 +517,10 @@
             return this.state;
         },
 
+        getRunningState: function() {
+            return this.state.runningState.appRunState;
+        },
+
         /**
          * @method
          * Passes along the state to its contained input widget.
@@ -544,6 +556,10 @@
                     }
                     if (state.runningState.appRunState === "running") {
                         this.startAppRun();
+                    }
+                    else if (state.runningState.appRunState === "done") {
+                        this.$submitted.show();
+                        this.$runButton.hide();                        
                     }
                 }
             }
@@ -588,6 +604,33 @@
                                             );
                     this.inputStepLookup[stepId].$statusPanel.append($statusCell);
                 }
+            }
+        },
+        
+        setRunningState: function(state) {
+            state = state.toLowerCase();
+            if (state === 'error')
+                this.setErrorState(true);
+            else if (state === 'complete') {
+                for (var i=0; i<this.inputSteps.length; i++) {
+                    this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                }
+                this.state.runningState.runningStep = null;
+                this.state.runningState.appRunState = state;
+                this.$stopButton.hide();
+            }
+        },
+
+        setErrorState: function(isError) {
+            if (isError) {
+                this.state.runningState.appRunState = "error";
+                this.$elem.find('.kb-app-panel').addClass('kb-app-error');
+                this.$runButton.hide();
+                this.$stopButton.show();
+                this.$submitted.show();
+            }
+            else {
+                this.$elem.find('.kb-app-panel').removeClass('kb-app-error');                
             }
         },
 

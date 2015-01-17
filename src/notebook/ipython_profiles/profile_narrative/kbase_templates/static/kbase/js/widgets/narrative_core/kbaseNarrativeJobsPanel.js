@@ -14,6 +14,24 @@
         $appsList: null,
         $methodsList: null,
 
+        /* when populated, should have the structure:
+         * {
+         *    jobId: { id: <str>,
+                       status : <str>, 
+                       source : <id of source cell>,
+                       $elem : element of rendered job info,
+                       timestamp: <str> }
+         * }
+         */
+        jobStates: {},
+
+        /* when populated should have structure:
+         * {
+         *    sourceId : jobId
+         * }
+         */
+        source2Job: {},
+
         refreshTimer: null,
         refreshInterval: 10000,
 
@@ -38,20 +56,23 @@
                 }, this)
             );
 
-            // DOM structure setup here.
-            // After this, just need to update the function list
+            $(document).on('cancelJobCell.Narrative', $.proxy(
+                function(e, cellId, showPrompt, callback) {
+                    // Find job based on cellId
+                    var jobId = this.source2Job[cellId];
 
-            /* There's a few bits here.
-             * 1. It's all in a Bootstrap Panel scaffold.
-             * 2. The panel-body section contains the core of the widget:
-             *    a. loading panel (just a blank thing with a spinning gif)
-             *    b. error panel
-             *    c. actual function widget setup.
-             *
-             * So, initialize the scaffold, bind the three core pieces in the
-             * panel-body, make sure the right one is being shown at the start,
-             * and off we go.
-             */
+                    // If we can't find the job, then it's not being tracked, so we
+                    // should just assume it's gone already and return true to the callback.
+                    if (jobId === undefined && callback)
+                        callback(true);
+                    else if (jobId !== undefined) {
+                        if (showPrompt)
+                            this.openJobDeletePrompt(jobId, null, callback);
+                        else 
+                            this.deleteJob(jobId, callback);
+                    }
+                }, this)
+            );
 
             var $refreshBtn = $('<button>')
                               .addClass('btn btn-xs btn-default')
@@ -106,19 +127,12 @@
                     name : 'Delete Job',
                     type : 'danger',
                     callback : $.proxy(function(e, $prompt) {
-                        var removeId = this.removeId;
-                        if (removeId) {
-                            var appIds = IPython.notebook.metadata.job_ids.apps;
-                            appIds = appIds.filter(function(val) { return val.id !== removeId });
-                            IPython.notebook.metadata.job_ids.apps = appIds;
-
-                            var methodIds = IPython.notebook.metadata.job_ids.methods;
-                            methodIds = methodIds.filter(function(val) { return val.id !== removeId });
-                            IPython.notebook.metadata.job_ids.methods = methodIds;
-
-                            this.refresh(false);
-                            this.removeId = null;
+                        if (this.removeId) {
+                            this.deleteJob(this.removeId);
                         }
+                        if (this.deleteCallback)
+                            this.deleteCallback(true);
+                        this.deleteCallback = null;
                         $prompt.closePrompt();
                     }, this)
                 }
@@ -135,13 +149,153 @@
                        .append(this.$loadingPanel)
                        .append(this.$errorPanel);
 
-            this.refresh();
-
-            if (this.options.autopopulate === true) {
+            if (this.options.autopopulate) {
+                this.initJobStates();
                 this.refresh();
             }
 
+
             return this;
+        },
+
+        /**
+         * @method
+         * Initializes the jobStates object that the panel knows about.
+         * We treat the IPython.notebook.metadata.job_ids as a (more or less) read-only 
+         * object for the purposes of loading and refreshing.
+         * 
+         * At load time, that gets adapted into the jobStates object, which is used to
+         * keep track of the job state.
+         */
+        initJobStates: function() {
+            if (IPython.notebook && IPython.notebook.metadata && IPython.notebook.metadata.job_ids) {
+                // this is actually like: ['apps': [list of app jobs], 'methods':[list of method jobs]
+                var jobIds = IPython.notebook.metadata.job_ids;
+
+                for (var jobType in jobIds) {
+                    if (!(jobIds[jobType] instanceof Array))
+                        continue;
+                    for (var i=0; i<jobIds[jobType].length; i++) {
+                        var job = jobIds[jobType][i];
+                        this.jobStates[job.id] = $.extend({}, job, { 'status' : null, '$elem' : null, 'id' : job.id });
+                        this.source2Job[job.source] = job.id;
+                    }
+                }
+            }
+        },
+
+        /**
+         * @method
+         * Opens a delete prompt for this job, with a 'Delete' and 'Cancel' button.
+         * If the user clicks 'Cancel', then it shouldn't do anything besides close.
+         * If the user clicks 'Delete', then it tries to delete the job through the backend, 
+         * then clears the job info from the front end and refreshes.
+         * 
+         * Under the covers, since we're using kbasePrompt and those buttons are a little
+         * disconnected from everything else, this sets widget variables 'removeId' and 'deleteCallback'.
+         * The 'removeId' is the id of the job to delete, and 'deleteCallback' is invoked 
+         * after the deletion is done.
+         *
+         * @param {object} jobId
+         * @param {object} jobState
+         * @param {function} callback - a callback to invoke when finished.
+         */
+        openJobDeletePrompt: function(jobId, jobState, callback) {
+            if (!jobId)
+                return;
+
+            var removeText = "Deleting this job will remove it from your Narrative. Any already generated data will be retained. Continue?";
+            var warningText = "";
+
+            if (jobState) {
+                jobState = jobState.toLowerCase();
+                var jobState = jobState.toLowerCase();
+                if (jobState === 'queued' || jobState === 'running' || jobState === 'in-progress') {
+                    warningText = "This job is currently running on KBase servers! Removing it will attempt to stop the running job.";
+                }
+                else if (jobState === 'completed') {
+                    warningText = "This job has completed running. You may safely remove it without affecting your Narrative.";
+                }
+            }
+            this.$jobsModalBody.empty().append(warningText + '<br><br>' + removeText);
+            this.$jobsModalTitle.empty().html('Remove Job?');
+            this.removeId = jobId;
+
+            this.deleteCallback = callback;
+            this.$jobsModal.openPrompt();
+        },
+
+        /**
+         * Attempts to delete a job in the backend (by making a kernel call - this lets the kernel decide
+         * what kind of job it is and how to stop/delete it).
+         * When it gets a response, it then clears the job from the Jobs list.
+         */
+        deleteJob: function(jobId, callback) {
+            var deleteJobCmd = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
+                               'jm = KBjobManager()\n' +
+                               'print jm.delete_jobs(["' + jobId + '"], as_json=True)\n';
+
+            var callbacks = {
+                'output' : $.proxy(function(msgType, content) {
+                    var response = this.deleteResponse(msgType, content, jobId);
+                    if (callback)
+                        callback(response);
+                }, this),
+                'execute_reply' : $.proxy(function(content) { 
+                    this.handleCallback('execute_reply', content); 
+                }, this),
+                'clear_output' : $.proxy(function(content) { 
+                    this.handleCallback('clear_output', content); 
+                }, this),
+                'set_next_input' : $.proxy(function(content) { 
+                    this.handleCallback('set_next_input', content); 
+                }, this),
+                'input_request' : $.proxy(function(content) { 
+                    this.handleCallback('input_request', content); 
+                }, this)
+            };
+
+            IPython.notebook.kernel.execute(deleteJobCmd, callbacks, {store_history: false, silent: true});
+        },
+
+        deleteResponse: function(msgType, content, jobId) {
+            if (msgType != 'stream') {
+                console.error('An error occurred while trying to delete a job');
+                return;
+            }
+            var result = content.data;
+            try {
+                result = JSON.parse(result);
+            }
+            catch(err) {
+                // ignore and return. assume it failed.
+                // I guess we don't really care if it fails, though, the user just wants that job to be outro'd.
+                // Comment this out for now, until we make some sensible error popup or something.
+                // return false;
+            }
+
+            // if (result[jobId] === true) {
+            // successfully nuked it on the back end, now wipe it out on the front end.
+
+            // first, wipe the metadata
+            var appIds = IPython.notebook.metadata.job_ids.apps;
+            appIds = appIds.filter(function(val) { return val.id !== jobId });
+            IPython.notebook.metadata.job_ids.apps = appIds;
+
+            // ...and from the method list
+            var methodIds = IPython.notebook.metadata.job_ids.methods;
+            methodIds = methodIds.filter(function(val) { return val.id !== jobId });
+            IPython.notebook.metadata.job_ids.methods = methodIds;
+
+            // remove it from the 'cache' in this jobs panel
+            delete this.source2Job[this.jobStates[jobId].source];
+            delete this.jobStates[jobId];
+            this.refresh(false);
+
+            // nuke the removeId
+            this.removeId = null;
+            return true;
+            // return result[jobId];
         },
 
         /**
@@ -196,6 +350,12 @@
 
             var type = isApp ? 'apps' : 'methods';
             IPython.notebook.metadata.job_ids[type].push(jobInfo);
+            // put a stub in the job states
+            this.jobStates[jobInfo.id] = {'status' : null, 
+                                          '$elem' : 'null', 
+                                          'source' : jobInfo.source,
+                                          'id' : jobInfo.id };
+            this.source2Job[jobInfo.source] = jobInfo.id;
             this.refresh();
             IPython.notebook.save_checkpoint();
         },
@@ -216,11 +376,14 @@
         /**
          * @method
          */
-        refresh: function(hideLoadingMessage) {
+        refresh: function(hideLoadingMessage, initStates) {
+            if (initStates)
+                this.initJobStates();
+
             // if there's no timer, set one up - this should only happen the first time.
             if (this.refreshTimer === null) {
                 this.refreshTimer = setInterval(
-                    $.proxy(function() { this.refresh(true); }, this),
+                    $.proxy(function() { this.refresh(true, false); }, this),
                     this.refreshInterval
                 );
             }
@@ -233,7 +396,9 @@
 
             // If we don't have any job ids, or it's length is zero, just show a 
             // message and return.
-            if (!IPython.notebook.metadata.job_ids || IPython.notebook.metadata.job_ids.length === 0) {
+            if (!IPython.notebook.metadata.job_ids || 
+                IPython.notebook.metadata.job_ids.length === 0 ||
+                Object.keys(this.jobStates).length === 0) {
                 this.populateJobsPanel();
                 return;
             }
@@ -241,57 +406,65 @@
             if (!hideLoadingMessage)
                 this.showLoadingMessage('Loading running jobs...');
 
-            // Get a unique list of jobs
-            // XXX - this'll change to method vs. app jobs, soonish.
-            var jobs = IPython.notebook.metadata.job_ids;
-            var uniqueJobs = {};
+            // This contains all the job info like this:
+            // { jobId: {spec: {}, state: {}}}
+            var jobInfo = {};
+            // This contains the list of lookup parameters for each job.
+            // We pass back all specs/parameters so the back end can munge them into the right 
+            // output structures.
+            var jobParamList = [];
 
-            var jobList = [];
-            var allJobs = jobs.methods.concat(jobs.apps);
-            for (var i=0; i<allJobs.length; i++) {
-                var jobInfo = allJobs[i];
-                if (uniqueJobs.hasOwnProperty(jobInfo.id) || !jobInfo.source)
-                    continue;
-                var jobType = this.jobTypeFromId(jobInfo.id);
-                uniqueJobs[jobInfo.id] = { 'job' : jobInfo };
-                var $sourceCell = $('#' + jobInfo.source);
+            for (var jobId in this.jobStates) {
+                var jobState = this.jobStates[jobId];
+
+                jobInfo[jobId] = {'state' : jobState};
+
+                // if the job's incomplete, we have to go get it.
+                var jobIncomplete = (jobState.status !== 'completed' && jobState.status !== 'error' && jobState.status !== 'done' && jobState.status !== 'deleted')
+                // 2. The type dictates what cell it came from and how to deal with the inputs.
+                var jobType = this.jobTypeFromId(jobId);
                 var specInfo = null;
-                if ($sourceCell.length > 0) {
+                var $sourceCell = $('#' + jobState.source);
+                if ($sourceCell.length > 0) {  // if the source cell is there (kind of a jQuery trick).
+                    // if it's an NJS job, then it's an App cell, so fetch all that info.
                     if (jobType === "njs") {
                         specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
-                        if (specInfo) {
-                            jobList.push("['" + jobInfo.id + "', " +
-                                         "'" + this.safeJSONStringify(specInfo.appSpec) + "', " +
-                                         "'" + this.safeJSONStringify(specInfo.methodSpecs) + "', " +
-                                         "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
+                        if (specInfo && jobIncomplete) {
+                            jobParamList.push("['" + jobId + "', " +
+                                              "'" + this.safeJSONStringify(specInfo.appSpec) + "', " +
+                                              "'" + this.safeJSONStringify(specInfo.methodSpecs) + "', " +
+                                              "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
                         }
                     }
+                    // otherwise, it's a method cell, so fetch info that way.
                     else {
                         specInfo = $sourceCell.kbaseNarrativeMethodCell('getSpecAndParameterInfo');
-                        if (specInfo) {
-                            jobList.push("['" + jobInfo.id + "', " +
-                                         "'" + this.safeJSONStringify(specInfo.methodSpec) + "', " +
-                                         "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
-                        }
-                        else {
-                            jobList.push("['" + jobInfo.id + "']");
+                        if (jobIncomplete) {
+                            if (specInfo) {
+                                jobParamList.push("['" + jobId + "', " +
+                                                  "'" + this.safeJSONStringify(specInfo.methodSpec) + "', " +
+                                                  "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
+                            }
+                            else {
+                                jobParamList.push("['" + jobId + "']");
+                            }
                         }
                     }
-                    uniqueJobs[jobInfo.id]['spec'] = specInfo;
+                    jobInfo[jobId]['spec'] = specInfo;
                 }
+                else
+                    this.jobStates[jobId].status = 'error';
             }
 
-            if (allJobs.length === 0) {
-                // no jobs! skip the kernel noise and cut to the rendering!
-                this.populateJobsPanel();
-                return;
-            }
+            // console.log(['REFRESH: looking up ' + jobParamList.length]);
+            // console.log(['REFRESH: jobstates:', this.jobStates]);
+
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
-                                  'print job_manager.poll_jobs([' + jobList + '], as_json=True)\n'; //meth_jobs=[' + methJobList + '], app_jobs=[' + appJobList + '], as_json=True)\n';
+                                  'print job_manager.poll_jobs([' + jobParamList + '], as_json=True)\n';
             var callbacks = {
                 'output' : $.proxy(function(msgType, content) { 
-                    this.parseKernelResponse(msgType, content, uniqueJobs); 
+                    this.parseKernelResponse(msgType, content, jobInfo); 
                 }, this),
                 'execute_reply' : $.proxy(function(content) { 
                     this.handleCallback('execute_reply', content); 
@@ -307,10 +480,14 @@
                 }, this),
             };
 
-            //console.debug('JOBS PANEL: refresh');
             var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: true, store_history: false});
         },
 
+        /**
+         * @method
+         * convenience to stringify a structure while escaping everything that needs it.
+         * @private
+         */
         safeJSONStringify: function(method) {
             var esc = function(s) { 
                 return s.replace(/'/g, "&apos;")
@@ -321,22 +498,29 @@
             });
         },
 
-        parseKernelResponse: function(msgType, content, jobRef) {
+        /**
+         * @method
+         * Get the kernel response and render it if it's valid.
+         */
+        parseKernelResponse: function(msgType, content, jobInfo) {
             // if it's not a datastream, display some kind of error, and return.
-            // console.debug('JOBS PANEL: parseKernelResponse');
             if (msgType != 'stream') {
                 this.showError('Sorry, an error occurred while loading the job list.');
                 return;
             }
             var buffer = content.data;
             if (buffer.length > 0) {
-                var jobInfo = JSON.parse(buffer);
-                this.populateJobsPanel(jobInfo, jobRef);
+                var jobStatus = JSON.parse(buffer);
+                this.populateJobsPanel(jobStatus, jobInfo);
             }
             this.$loadingPanel.hide();
             this.$jobsPanel.show();
         },
 
+        /** 
+         * @method
+         * Generic callback handler for the IPython kernel.
+         */
         handleCallback: function(call, content) {
             if (content.status === 'error') {
                 this.showError(content);
@@ -348,31 +532,54 @@
             }
         },
 
-        populateJobsPanel: function(jobStatus, jobInfo) {
-            if (!jobStatus || jobStatus.length === 0) {
+        /**
+         * @method
+         * Here we go, the first part of the rendering routine.
+         * @param {object} fetchedJobStatus - the results of the jobs looked up through the kernel. This has the job status objects from NJS, etc.
+         * @param {object} jobInfo - the specs (and status) of ALL jobs, not just those looked up through the kernel. 
+         * The specs and state are used to decorate both the job renderings and the cells with results, etc.
+         * 
+         * Here's the flow:
+         * 1. Get a sorted list of *all* jobs from the this.jobStates buffer
+         * 2. All of those are getting rendered one way or another. Iterate on through.
+         * 3. When we get to one that has an update from the server, then we need to update this.jobStates, render that job info, and update the cell
+         * (possibly).
+         * 4. That's it. All should be refreshed! Update the DOM node that holds all job info.
+         *
+         * XXX - it would probably be faster to re-render all jobs in place iff they need it (e.g., probably just the time since start field).
+         * But it's Friday night at 8:30 before the big build meeting, so that might not happen yet. In all reality, I have a hard time seeing a 
+         * case where there's more than, say, 20 job elements at once in any given Narrative.
+         * We should also expire jobs in a reasonable time, at least from the Narrative.
+         */
+        populateJobsPanel: function(fetchedJobStatus, jobInfo) {
+            if (!this.jobStates || Object.keys(this.jobStates).length === 0) {
                 this.showMessage('No running jobs!');
                 return;
             }
 
-            // console.log([jobStatus, jobInfo]);
+            // console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
 
-            var storedIds = {};
-            for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {
-                storedIds[IPython.notebook.metadata.job_ids.methods[i].id] = IPython.notebook.metadata.job_ids.methods[i];
-            }
-            for (var i=0; i<IPython.notebook.metadata.job_ids.apps.length; i++) {
-                storedIds[IPython.notebook.metadata.job_ids.apps[i].id] = IPython.notebook.metadata.job_ids.apps[i];
-            }
+            // var storedIds = {};
+            // for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {
+            //     storedIds[IPython.notebook.metadata.job_ids.methods[i].id] = IPython.notebook.metadata.job_ids.methods[i];
+            // }
+            // for (var i=0; i<IPython.notebook.metadata.job_ids.apps.length; i++) {
+            //     storedIds[IPython.notebook.metadata.job_ids.apps[i].id] = IPython.notebook.metadata.job_ids.apps[i];
+            // }
 
+            // Instantiate a shiny new panel to hold job info.
             var $jobsList = $('<div>').addClass('kb-jobs-items');
 
-            if (jobStatus.length === 0 && Object.keys(storedIds).length === 0) {
-                $jobsList.append($('<div class="kb-data-loading">').append('No running jobs!'));                
+            // If we don't have any running jobs, just leave a message.
+            if (Object.keys(this.jobStates).length === 0) {
+                $jobsList.append($('<div class="kb-data-loading">').append('No running jobs!'));
             }
             else {
-                jobStatus.sort(function(a, b) {
-                    var aTime = jobInfo[a.job_id].job.timestamp;
-                    var bTime = jobInfo[b.job_id].job.timestamp;
+                // sort our set of jobs.
+                var sortedJobs = Object.keys(this.jobStates);
+                sortedJobs.sort($.proxy(function(a, b) {
+                    var aTime = this.jobStates[a].timestamp;
+                    var bTime = this.jobStates[b].timestamp;
                     // if we have timestamps for both, compare them
                     if (aTime && bTime)
                         return (new Date(aTime) < new Date(bTime)) ? 1 : -1;
@@ -380,24 +587,29 @@
                         return 1;
                     else            // if aTime is null, but bTime isn't, (OR they're both null), then put b first
                         return -1;
-                });
-                for (var i=0; i<jobStatus.length; i++) {
-                    var job = jobStatus[i];
-                    var info = jobInfo[job.job_id];
-                    $jobsList.append(this.renderJob(job, info));
-                    this.updateCell(job, info);
-                    delete storedIds[job.job_id];
-                }
-                for (var missingId in storedIds) {
-                    if (storedIds.hasOwnProperty(missingId)) {
-                        $jobsList.append(this.renderJob(null, {'job': storedIds[missingId]}));
+                }, this));
+
+                for (var i=0; i<sortedJobs.length; i++) {
+                    var jobId = sortedJobs[i];
+                    var info = jobInfo[jobId];
+
+                    // if the id shows up in the "render me!" list:
+                    if (fetchedJobStatus[jobId]) {
+                        // update the state and cell
+                        this.jobStates[jobId].status = fetchedJobStatus[jobId].job_state;
+                        this.updateCell(fetchedJobStatus[jobId], jobInfo[jobId]);
                     }
+                    // updating the given state first allows us to just pass the id and the status set to
+                    // the renderer. If the status set doesn't exist (e.g. we didn't look it up in the 
+                    // kernel), then that's just undefined and the renderer can deal.
+                    $jobsList.append(this.renderJob(jobInfo[jobId], fetchedJobStatus[jobId]));
                 }
             }
             this.$jobsPanel.empty().append($jobsList);
         },
 
-        renderJob: function(job, jobInfo) {
+
+        renderJob: function(jobInfo, fetchedJobStatus) {
             var getStepSpec = function(id, spec) {
                 for (var i=0; i<spec.steps.length; i++) {
                     if (id === spec.steps[i].step_id)
@@ -421,14 +633,15 @@
              * 3. have no job
              *    - just return null. nothing invokes this like that, anyway
              */
-
-            var jobType = this.jobTypeFromId(jobInfo.job.id);
+            var jobId = "Unknown Job Id";
+            if (jobInfo && jobInfo.state)
+                jobId = jobInfo.state.id;
+            var jobType = this.jobTypeFromId(jobInfo.state.id);
 
             var $jobDiv = $('<div>')
                           .addClass('kb-data-list-obj-row');
-
             // jobinfo: {
-            //     job: { id, source, target, timestamp },
+            //     state: { id, source, target, timestamp, $elem, status },
             //     spec: { appSpec?, methodSpec?, methodSpecs?, parameterValues }
             //     type=njs: appSpec, methodSpecs
             //     type=method: methodSpec
@@ -447,53 +660,54 @@
             }
 
             var jobName = "Unknown " + ((jobType === 'njs') ? "App" : "Method");
-            var jobId = "Unknown Job Id";
             if (jobInfo && jobInfo.spec && jobInfo.spec[specType] && jobInfo.spec[specType].info)
                 jobName = jobInfo.spec[specType].info.name;
-            if (jobInfo && jobInfo.job && jobInfo.job.id)
-                jobId = jobInfo.job.id;
 
             var $jobInfoDiv = $('<div class="kb-data-list-name">')
                                .append(jobName);
             var $jobControlDiv = $('<span class="pull-right">')
-                                 .append(this.makeJobClearButton(job, jobInfo))
+                                 .append(this.makeJobClearButton(jobId, jobInfo.state.status))
                                  .append('<br>')
-                                 .append(this.makeScrollToButton(job, jobInfo));
+                                 .append(this.makeScrollToButton(jobInfo.state.source));
             $jobInfoDiv.append($jobControlDiv)
                        .append($('<div style="font-size:75%">')
                                .append(jobId));
 
             var status = "Unknown";
+            if (this.jobStates[jobId])
+                status = this.jobStates[jobId].status.charAt(0).toUpperCase() + 
+                         this.jobStates[jobId].status.substring(1);
             var started = "Unknown";
             var position = null;
             var task = null;
 
             // don't know nothing about no job!
-            if (!job || job.error) {
-                status = this.makeJobErrorButton(job, jobInfo, 'Error');
+            if (status === 'Suspend' || status === 'Error' || status === 'Unknown') {
+                status = this.makeJobErrorButton(fetchedJobStatus, jobInfo, 'Error');
                 $jobDiv.addClass('kb-jobs-error');
             }
-            else if (job.step_errors && Object.keys(job.step_errors).length !== 0) {
-                var $errBtn = this.makeJobErrorButton(job, jobInfo);
-                status = $('<span>').append(job.job_state.charAt(0).toUpperCase() + job.job_state.substring(1) + ' ')
+            else if (status === 'Deleted') {
+                status = this.makeJobErrorButton(fetchedJobStatus, jobInfo, 'Deleted');
+                $jobDiv.addClass('kb-jobs-error');                
+            }
+            else if (fetchedJobStatus && fetchedJobStatus.step_errors && Object.keys(fetchedJobStatus.step_errors).length !== 0) {
+                var $errBtn = this.makeJobErrorButton(fetchedJobStatus, jobInfo);
+                status = $('<span>').append(status + ' ')
                                     .append($errBtn);
             }
             else {
-                if (job.job_state) {
-                    status = job.job_state.charAt(0).toUpperCase() + job.job_state.substring(1);
-                }
-                if (jobType === "njs") {
-                    var stepId = job.running_step_id;
+                if (jobType === "njs" && fetchedJobStatus) {
+                    var stepId = fetchedJobStatus.running_step_id;
                     if (stepId) {
                         var stepSpec = getStepSpec(stepId, jobInfo.spec.appSpec);
                         task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
                     }
                 }
-                if (job.position && job.position > 0)
-                    position = job.position;
+                if (fetchedJobStatus && fetchedJobStatus.position && fetchedJobStatus.position > 0)
+                    position = fetchedJobStatus.position;
             }
-            if (jobInfo && jobInfo.job && jobInfo.job.timestamp) {
-                started = this.makePrettyTimestamp(jobInfo.job.timestamp);
+            if (jobInfo && jobInfo.state && jobInfo.state.timestamp) {
+                started = this.makePrettyTimestamp(jobInfo.state.timestamp);
             }
             var $infoTable = $('<table class="kb-jobs-info-table">')
                              .append(this.makeInfoRow('Status', status));
@@ -509,23 +723,38 @@
             return $jobDiv;
         },
 
-
+        /**
+         * @method
+         * Updates the status of the cell the given job is associated with. This figures out
+         * which cell type it needs to talk to, then sends a message to that cell.
+         * 'job' = the response from the server about the job. Contains info from the job service
+         * 'jobInfo' = the info we know about the running job: its id, associated cell, etc.
+         */
         updateCell: function(job, jobInfo) {
-            var source = jobInfo.job.source;
-            var jobType = this.jobTypeFromId(jobInfo.job.id)
+            var source = jobInfo.state.source;
+            var jobType = this.jobTypeFromId(jobInfo.state.id)
+
+            // console.log(['UPDATE_CELL', job, jobInfo]);
+            var state = '';
+            if (job.job_state)
+                state = job.job_state.toLowerCase();
+            
+            // don't do anything if we don't know the source cell. it might have been deleted.
             if (!source)
-                return; // don't do anything if we can't find the cell. it might have been deleted.
+                return;
 
             var $cell = $('#' + source);
+            // don't do anything if we can't find the running cell, either.
             if (!$cell)
-                return; // don't do anything if we can't find the running cell, either.
+                return;
 
+            // if it's running and an NJS job, then it's in an app cell
             if (job.running_step_id && jobType === 'njs') {
                 $cell.kbaseNarrativeAppCell('setRunningStep', job.running_step_id);
             }
+            // if it's a ujs or method job, then it's a method cell
             else if (jobType === 'ujs' || jobType === 'method') {
-                    // assume we have 'in-progress' or 'running' vs. 'complete' or 'done'
-                var state = job.job_state.toLowerCase();
+                // assume we have 'in-progress' or 'running' vs. 'complete' or 'done'
                 var submitState = 'complete';
                 if (state.indexOf('run') != -1 || state.indexOf('progress') != -1)
                     submitState = 'running';
@@ -533,6 +762,7 @@
                     submitState = 'submitted';
                 $cell.kbaseNarrativeMethodCell('changeState', submitState);
             }
+            // if we have outputs, those need to be passed along
             if (job.widget_outputs && Object.keys(job.widget_outputs).length > 0) {
                 if (jobType === 'njs') {
                     for (var key in job.widget_outputs) {
@@ -545,8 +775,24 @@
                     $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : job.widget_outputs });
                 }
             }
+            // if it's an error, then we need to signal the cell
+            if (state === "error" || (job.step_errors && Object.keys(job.step_errors).length !== 0)) {
+                if (jobType === 'njs') {
+                    $cell.kbaseNarrativeAppCell('setRunningState', 'error');
+                }
+            }
+            // ...and if it's done, we need to signal that, too. Note that it can be both (i.e. done with errors)
+            if (state.indexOf('complete') !== -1 || state.indexOf('done') !== -1) {
+                if (jobType === 'njs') {
+                    $cell.kbaseNarrativeAppCell('setRunningState', 'complete');
+                }
+            }
         },
 
+        /**
+         * @method
+         * Dummy convenience method to make a little table row.
+         */
         makeInfoRow: function(heading, info) {
             return $('<tr>').append($('<th>')
                                     .append(heading + ':'))
@@ -554,6 +800,16 @@
                                     .append(info));
         },
 
+        /**
+         * @method
+         * @private
+         * Makes an error button for a job.
+         * This invokes the JobPanel's popup error modal, so most of the logic here is figuring out what
+         * should appear in that modal.
+         * @param {object} jobStatus - the job status object 
+         * @param {object} jobInfo - the job info object - main keys are 'state' and 'specs'
+         * @param {string} btnText - the text of the button. If empty or null, the button just gets a /!\ icon.
+         */
         makeJobErrorButton: function(jobStatus, jobInfo, btnText) {
             var removeText = "Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?";
             var headText = "An error has been detected in this job!";
@@ -565,7 +821,7 @@
             if (btnText)
                 $errBtn.append(' ' + btnText);
             $errBtn.click($.proxy(function(e) {
-                this.removeId = jobInfo.job.id;
+                this.removeId = jobInfo.state.id;
                 this.$jobsModalTitle.html('Job Error');
                 /* error types:
                  * 1. jobStatus.error is a real string. Just cough it up.
@@ -574,18 +830,22 @@
                  * 4. jobInfo is still partly missing (e.g., dont' know what cell it should point to)
                  */
                 if (!jobStatus && jobInfo) {
-                    if (!jobInfo.job.source) {
-                        errorText = "This job is not associated with an App Cell.";
-                        errorType = "Unknown App Cell";
+                    if (!jobInfo.state.source) {
+                        errorText = "This job is not associated with a Running Cell.";
+                        errorType = "Unknown Cell";
                     }
-                    else if ($('#' + jobInfo.job.source).length === 0) {
+                    else if ($('#' + jobInfo.state.source).length === 0) {
                         errorText = "The App Cell associated with this job can no longer be found in your Narrative.";
-                        errorType = "Missing App Cell";
+                        errorType = "Missing Cell";
                     }
                 }
                 else if (jobStatus.error) {
                     errorText = $('<div class="kb-jobs-error-modal">').append(jobStatus.error);
                     errorType = "Runtime";
+                }
+                else if (btnText === 'Deleted') {
+                    errorText = "This job has already been deleted from KBase Servers.";
+                    errorType = "Invalid Job";
                 }
                 else if (Object.keys(jobStatus.step_errors).length !== 0) {
                     errorType = "Runtime";
@@ -595,7 +855,7 @@
                             // contort that into the method name
                             // gotta search for it in the spec for the method id, first.
                             var methodName = "Unknown method: " + stepId;
-                            if (this.jobTypeFromId(jobInfo.job.id) === "njs") {
+                            if (this.jobTypeFromId(jobInfo.state.id) === "njs") {
                                 var methodId = null;
                                 for (var i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
                                     if (stepId === jobInfo.spec.appSpec.steps[i].step_id) {
@@ -616,7 +876,7 @@
                 }
  
                 var $errorTable = $('<table class="table table-bordered">')
-                                  .append(this.makeInfoRow('Id', jobInfo.job.id))
+                                  .append(this.makeInfoRow('Id', jobInfo.state.id))
                                   .append(this.makeInfoRow('Type', errorType))
                                   .append(this.makeInfoRow('Error', errorText));
  
@@ -629,149 +889,40 @@
             return $errBtn;
         },
 
-        makeJobClearButton: function(jobStatus, jobInfo) {
-            var removeText = "Deleting this job will remove it from your Narrative. Any already generated data will be retained. Continue?";
-            var warningText = "This job appears to have fallen into an error state and is no longer running on KBase servers.";
 
+        /**
+         * @method
+         * @private
+         * Makes a little 'x' button to delete a job.
+         * @param {string} jobId
+         * @param {string} jobStatus 
+         */
+        makeJobClearButton: function(jobId, jobStatus) {
             return $('<span data-toggle="tooltip" title="Remove Job" data-placement="left">')
                    .addClass('btn-xs kb-data-list-more-btn pull-right fa fa-times')
                    .css({'cursor':'pointer'})
                    .click($.proxy(function() {
-                       /* cases for communication!
-                        * 1. we don't know what the job's linked to - either jobStatus is null, or jobInfo is 
-                        *    missing things.
-                        * 2. the job is well formed, and complete.
-                        * 3. the job is in an error state.
-                        * 4. the job is running
-                        */
-                       var id = jobStatus.job_id;
-                       if (jobStatus && jobStatus.job_state) {
-                           var status = jobStatus.job_state.toLowerCase();
-                           if (status === 'queued' || status === 'running' || status === 'in-progress') {
-                               warningText = "This job is currently running on KBase servers! Removing it will attempt to stop the running job.";
-                           }
-                           else if (status === 'completed') {
-                               warningText = "This job has completed running. You may safely remove it without affecting your Narrative.";
-                           }
-                       }
-                       this.$jobsModalBody.empty().append(warningText + '<br><br>' + removeText);
-                       this.$jobsModalTitle.empty().html('Remove Job?');
-                       this.removeId = id;
-
-                       this.$jobsModal.openPrompt();
+                       this.openJobDeletePrompt(jobId, jobStatus);
                    }, this))
                    .tooltip();
         },
 
-        makeScrollToButton: function(job, jobInfo) {
+        /**
+         * @method
+         * @private
+         * Makes a little arrow button to scroll from a job to the associated app/method cell
+         */
+        makeScrollToButton: function(sourceId) {
             return $('<span data-toggle="tooltip" title="Scroll To App" data-placement="left">')
                    .addClass('btn-xs kb-data-list-more-btn pull-right fa fa-location-arrow')
                    .css({'cursor':'pointer'})
                    .click(function(e) {
-                       var sourceId = jobInfo.job.source;
                        if (sourceId) {
                            $('html, body').animate({ scrollTop: $('#' + sourceId).offset().top-85 }, 1000);
                            $('#' + sourceId).click();
                        }
                    })
                    .tooltip();
-        },
-
-        makeJobDetailButton: function(job, jobInfo) {
-            var showDetailModal = function(job, sourceId) {
-                var $modalBody = $('<div>');
-                var buttonList = [
-                    {
-                        name : 'Close',
-                        type : 'primary',
-                        callback : function(e, $prompt) {
-                            $prompt.closePrompt();
-                        },
-                    }
-                ];
-
-                if (sourceId) {
-                    buttonList.push({
-                        name : 'Scroll To',
-                        type : 'primary',
-                        callback : function(e, $prompt) {
-                            $prompt.closePrompt();
-                            $('#' + sourceId).click();
-                            $('html, body').animate({ scrollTop: $('#' + sourceId).offset().top-160 }, 1000);
-                        }
-                    });
-                }
-                else {
-                    buttonList.push({
-                        name : 'Unknown source',
-                        type : 'default disabled'
-                    });
-                }
-                $('<div>').kbasePrompt(
-                    {
-                        title : 'Job Details',
-                        body : $modalBody,
-                        controls : buttonList
-                    }
-                ).openPrompt();
-                $modalBody.kbaseJobWatcher({ jobInfo : job });
-            };
-
-            var sourceId = jobInfo.source ? jobInfo.source : "";
-
-            var $btn = $('<span>')
-                       .addClass('glyphicon glyphicon-info-sign kb-function-help')
-                       .click(function(e) {
-                           showDetailModal(job, sourceId);
-                       });
-
-            return $btn;
-        },
-
-        /**
-         * @method makeStatusElement
-         * Builds the HTML for a Status element based on the given job object.
-         * Cases:
-         * 1. Job complete - return 'complete + status message'
-         * 2. Error - return 'error' as a clickable link - opens a modal with the error message.
-         * 3. not complete OR error = in progress.
-         *    Show 3 rows. First = status + progress text ('x / y' or 'z%'). Second = progress bar. Bottom = time remaining div.
-         *
-         * This is all returned wrapped in a div element.
-         * @param job - the job to build a status element around.
-         * @return a div element containing the job's status.
-         * @private
-         */
-        makeStatusElement: function(job) {
-            var status = '<div job-id="' + job[0] + '">';
-            var deleteSpan = '<span class="pull-right glyphicon glyphicon-remove kbujs-delete-job" data-toggle="tooltip" title="Delete Job"></span>';
-
-            if (job[11] === 1)
-                status += '<span class="kbujs-error-cell kbujs-error" error-job-id="' + job[0] + '">' +
-                              '<span class="glyphicon glyphicon-exclamation-sign"></span>' +
-                              '&nbsp;Error: ' +
-                              job[4] +
-                          '</span>' +
-                          deleteSpan;
-            else if (job[10] === 1)
-                status += '<span>Complete: ' + job[4] + '</span>' + deleteSpan;
-            else {
-                status = '<div>' + job[4];
-                var progressType = job[8].toLowerCase();
-                var progress = job[6];
-                var max = job[7];
-
-                if (progressType === 'percent') {
-                    status += ' (' + progress + '%)</div>';
-                }
-                if (progressType === 'task') {
-                    status += ' (' + progress + ' / ' + max + ')</div>';
-                }
-                if (progressType !== 'none') {
-                    status +=  '<div class="pull-right" style="width: 75%">' + this.makeProgressBarElement(job, false) + '</div></div>';
-                }
-            }
-            return status + '</div>';
         },
 
         /**
@@ -841,63 +992,6 @@
             this.$jobsPanel.hide();
             this.$loadingPanel.hide();
             this.$errorPanel.show();
-        },
-
-        parseStage: function(stage) {
-            if (stage.toLowerCase() === 'error') {
-                var $btn = $('<span/>')
-                           .addClass('kbujs-error')
-                           .append($('<span/>')
-                                   .addClass('glyphicon glyphicon-exclamation-sign'))
-                           .append(' Error');
-
-                return $('<div>')
-                       .addClass('kbujs-error-cell')
-                       .append($btn);
-            }
-            return stage;
-        },
-
-        /**
-         * @method makeProgressBarElement
-         * Makes a Bootstrap 3 Progress bar from the given job object.
-         *
-         * @param job - the job object
-         * @param showNumber - if truthy, includes the numberical portion of what's being shown in the progressbar, separately.
-         * @return A div containing a Bootstrap 3 progressbar, and, optionally, text describing the numbers in progress.
-         * @private
-         */
-        makeProgressBarElement: function(job, showNumber) {
-            var type = job[8].toLowerCase();
-            var max = job[7] || 0;
-            var progress = job[6] || 0;
-
-            if (type === 'percent') {
-                var bar = '';
-                if (showNumber)
-                    bar += progress + '%';
-
-                return bar + '<div class="progress" style="margin-bottom: 0; pull-right;">' + 
-                               '<div class="progress-bar" role="progressbar" aria-valuenow="' + 
-                                 progress + '" aria-valuemin="0" aria-valuemax="100" style="width: ' + 
-                                 progress + '%;">' +
-                                 '<span class="sr-only">' + progress + '% Complete</span>' +
-                               '</div>' +
-                             '</div>';
-            }
-            else {
-                var bar = '';
-                if (showNumber)
-                    bar += progress + ' / ' + max;
-                return bar + '<div class="progress" style="margin-bottom: 0">' + 
-                           '<div class="progress-bar" role="progressbar" aria-valuenow="' + 
-                           progress + '" aria-valuemin="0" aria-valuemax="' + max + '" style="width: ' + 
-                           (progress / max * 100) + '%;">' +
-                               '<span class="sr-only">' + progress + ' / ' + max + '</span>' +
-                           '</div>' +
-                       '</div>';
-            }
-            return '<div></div>';
         },
 
         /**
@@ -1045,6 +1139,7 @@
                 return d;
             }
         },
-    });
 
+
+    });
 })( jQuery );

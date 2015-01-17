@@ -9,9 +9,9 @@
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
                              .append($('<span class="fa fa-trash-o" style="font-size:14pt">'))
-                             .click(function(event) { 
-                                IPython.notebook.delete_cell();
-                             });
+                             .click($.proxy(function() {
+                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
+                }, this));
 
             var $btn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
                        .append($('<span class="fa fa-cog" style="font-size:14pt">'));
@@ -90,9 +90,9 @@
             this.addMenuItem({
                 icon: 'fa fa-trash-o',
                 text: 'Delete Cell',
-                action: function() {
-                    IPython.notebook.delete_cell();
-                }
+                action: $.proxy(function() {
+                                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
+                                }, this)
             });
 
             this.$elem.append(

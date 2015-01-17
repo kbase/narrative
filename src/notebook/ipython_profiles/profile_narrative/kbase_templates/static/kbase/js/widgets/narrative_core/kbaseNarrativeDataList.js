@@ -12,7 +12,7 @@
 
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/ws/json/", // ws_name/obj_name,
+            default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
 
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
 
@@ -402,6 +402,10 @@
                                             if (self.ws_name && self.ws) {
                                                 self.ws.get_object_history({ref:object_info[6]+"/"+object_info[0]},
                                                     function(history) {
+                                                        $alertContainer.append($('<div>')
+                                                            .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                                        .append('Hide History')
+                                                                        .click(function() {$alertContainer.empty();} )));
                                                         history.reverse();
                                                         var $tbl = $('<table>').css({'width':'100%'});
                                                         for(var k=0; k<history.length;k++) {

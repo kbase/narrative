@@ -110,16 +110,6 @@
                 this)
             );
 
-            // unused for now.
-            // maybe update to modify vis of KBase widgets.
-            // but nuking for the moment.
-            // $(document).on('servicesUpdated.Narrative',
-            //     $.proxy(function(event, serviceSet) {
-            //         console.log("listing services!");
-            //     },
-            //     this)
-            // );
-
             $(document).on('narrativeDataQuery.Narrative', 
                 $.proxy(function(e, callback) {
                     var objList = this.getNarrativeDependencies();
@@ -188,9 +178,54 @@
                     this.createViewerCell(data.nearCellIdx, data, data.widget);
                 }, this)
             );
+
+            this.initDeleteCellModal();
             // Initialize the data table.
             this.render();
             return this;
+        },
+
+        initDeleteCellModal: function() {
+            this.$deleteCellModalBody = $('<div>');
+
+            var buttonList = [
+                {
+                    name : 'Cancel',
+                    type : 'default',
+                    callback : function(e, $prompt) {
+                        this.cellToDelete = null;
+                        $prompt.closePrompt();
+                    },
+                },
+                {
+                    name : 'Delete',
+                    type : 'danger',
+                    callback : $.proxy(function(e, $prompt) {
+                        if (this.cellToDelete !== undefined && this.cellToDelete !== null) {
+                            var cell = IPython.notebook.get_cell(this.cellToDelete);
+                            var removeId = $(cell.element).find('[id^=kb-cell-]').attr('id');
+                            this.trigger('cancelJobCell.Narrative', removeId, false);
+                            IPython.notebook.delete_cell(this.cellToDelete);
+                            this.cellToDelete = null;
+                        }
+                        $prompt.closePrompt();
+                    }, this)
+                }
+            ];
+            this.$deleteCellModal = $('<div>').kbasePrompt({
+                title : 'Delete Cell and Job?',
+                body : this.$deleteCellModalBody,
+                controls : buttonList
+            });
+        },
+
+        showDeleteCellModal: function(index, cell, message) {
+            if (cell && cell.metadata[this.KB_CELL]) {
+                this.cellToDelete = index;
+                if (message)
+                    this.$deleteCellModalBody.empty().html(message);
+                this.$deleteCellModal.openPrompt();
+            }
         },
         
         /**
@@ -215,7 +250,7 @@
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(method) + "'});" +
+                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
                               "</script>";
 
             cell.set_text(cellContent);
@@ -248,6 +283,7 @@
             else if ((data.method.behavior.kb_service_method && data.method.behavior.kb_service_name) ||
                      (data.method.behavior.script_module && data.method.behavior.script_name)) {
                 code = this.buildGenericRunCommand(data);
+                showOutput = false;
             }
             else {
                 // something else!
@@ -505,11 +541,10 @@
                     var cell = cells[i];
                     if (this.isFunctionCell(cell)) {
                         var method = cell.metadata[this.KB_CELL].method;
-                        var inputWidget = this.defaultInputWidget;
                         // legacy cells.
                         if (method.properties) {
                             var inputWidget = method.properties.widgets.input || this.defaultInputWidget;
-
+    
                             if (fullRender) {
                                 cell.rendered = false;
                                 cell.render();
@@ -1256,7 +1291,64 @@
          * @private
          */
         deleteCell: function(index) {
-            IPython.notebook.delete_cell(index);
+            if (index !== undefined && index !== null) {
+                var cell = IPython.notebook.get_cell(index);
+                if (cell) {
+                    // if it's a kbase method or app cell, trigger a popup
+                    if (cell.metadata[this.KB_CELL]) {
+                        widget = null; // default is app cell
+                        var state = 'input'; // default is input... also doubles as a proxy for output cells
+                        if (this.isFunctionCell(cell))
+                            widget = 'kbaseNarrativeMethodCell';
+                        else if (this.isAppCell(cell))
+                            widget = 'kbaseNarrativeAppCell';
+                        if (widget)
+                            state = $(cell.element).find('div[id^=kb-cell-]')[widget]('getRunningState');
+
+                        if (state === 'input') {
+                            IPython.notebook.delete_cell(index);
+                            return;
+                        }
+                        else {
+                            // if it's running, say so, and say it'll stop and delete the job
+                            // if it's done, say it'll clear the associated job, but won't delete data
+                            // if it's error, say it'll delete the assoc'd job
+
+                            var stateWarning = 'Deleting this cell will also delete any associated job. ' +
+                                               'Any generated data will be retained. Continue?';
+
+                            this.showDeleteCellModal(index, cell, stateWarning);
+                            // switch(state) {
+                            //     case 'running':
+                            //         // set some text
+                            //         stateWarning = 'This cell appears to have a running job associated with it. ' +
+                            //                        'Deleting this cell will also stop and delete the running job. ' +
+                            //                        'Any generated data will not be deleted. Continue?';
+                            //         break;
+                            //     case 'error':
+                            //         // set some text
+                            //         stateWarning = 'This cell appears to have produced an error while running. ' +
+                            //                        'Deleting this cell will also stop and delete the associated job. ' +
+                            //                        'Any generated data will be maintained. Continue?';
+                            //         break;
+                            //     case 'done':
+                            //         // set some text
+                            //         stateWarning = 'This cell has finished running but may have a job still associated with it. ' +
+                            //                        'Deleting this cell will also delete that job, but not any generated data. ' +
+                            //                        'Continue?';
+                            //         break;
+                            //     default:
+                            //         // set no text
+                            //         stateWarning = 'Deleting this cell will also delete any associated job. Any generated data will be retained. Continue?';
+                            //         break;
+                            // }
+                        }
+                    }
+                    else {
+                        IPython.notebook.delete_cell(index);
+                    }
+                }
+            }
         },
 
         /**

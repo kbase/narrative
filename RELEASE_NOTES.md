@@ -3,6 +3,33 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.11 - 1/16/2015
+__Changes__
+- Running Apps and Methods have a "Cancel" button associated with them. Clicking that will restore the cell to its input state, and cancel (and delete) the running job
+- Deleting App/Method cells now prompts to delete, warning the user that it'll kill any running job (if they've been run before)
+- Deleting jobs now triggers the call to the right back end services to delete the running job itself.
+- Deleting a job from a running cell now unlocks that cell so its inputs can be used again.
+- A dangling job with no associated cell should properly error.
+- A dangling job on the front end that's been deleted on the back should properly error.
+- A job in an error state (not the above, but a runtime error) should now reflect an error on its associated cell (if present)
+- Fixed an error where running a method automatically made an output cell connected to incomplete data.
+- Refactored Jobs panel to only look up jobs that are incomplete (e.g. not 'error', 'completed', 'done', or 'deleted')
+- Toolbars should only appear over IPython cells now (KBase cells have their own menus)
+- Styled app/method control buttons to be closer to the style guide / mockup.
+- Logging of apps and methods is substantially less ugly and made from fewer backslashes.
+
+### Version 0.3.10 - 1/16/2015
+__Changes__
+- Narrative panel supports copy/delete/history/revert of narratives.
+- Narrative panel shows apps/methods/description (if exists) for each narrative.
+- Links to LP for genomes and genes were added in Proteome Comparison widget.
+- 'Download as JSON' button was added for objects in narrative data list.
+- Links to LP were added for genes in genome viewer.
+- ContigSet viewer was added.
+- Plant genomes were added into public data tab (and GWAS types were removed).
+- Fixed problem where error cells were not being shown properly.
+- Added several widgets to support communities apps and methods.
+
 ### Version 0.3.9 - 1/14/2015
 __Changes__
 - Restyled menu bar buttons - 'about' button is now under the dropdown menu on the upper left of the screen, removed the global 'delete cell' button (for now!)

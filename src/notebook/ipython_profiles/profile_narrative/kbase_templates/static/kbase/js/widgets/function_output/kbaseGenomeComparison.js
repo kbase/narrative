@@ -152,6 +152,10 @@ $.KBWidget({
             		var ySize = Math.min(self.size, self.cmp.proteome2names.length * self.scale / 100);
             		var centerI = self.imgI + xSize * 50 / self.scale;
             		var centerJ = self.imgJ + ySize * 50 / self.scale;
+                    if (self.size * 100 / (self.scale * mult) > 1.1 * 
+                    		Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length)) {
+                    	return;
+                    }
             		self.scale *= mult;
             		self.imgI = centerI - self.size * 50 / self.scale;
             		self.imgJ = centerJ - self.size * 50 / self.scale;
@@ -274,43 +278,7 @@ $.KBWidget({
 				tdElem.html("Error accessing genome objects: " + data.error.message);
             });
         };
-    	//if (self.job_id == null || self.cmp_ref != null) {
     	dataIsReady();
-    	/*} else {
-        	var panel = $('<div class="loader-table"/>');
-        	container.append(panel);
-        	var table = $('<table class="table table-striped table-bordered" \
-        			style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table"/>');
-        	panel.append(table);
-        	table.append('<tr><td>Job was created with id</td><td>'+self.job_id+'</td></tr>');
-        	table.append('<tr><td>Output result will have the id</td><td>'+self.ws_id+'</td></tr>');
-        	table.append('<tr><td>Current job state is</td><td id="'+self.pref+'job"></td></tr>');
-        	var timeLst = function(event) {
-        		jobSrv.get_job_status(self.job_id, function(data) {
-        			var status = data[2];
-        			var complete = data[5];
-        			var wasError = data[6];
-    				var tdElem = $('#'+self.pref+'job');
-    				tdElem.html(status);
-				if (status === 'running') {
-					tdElem.html(status+"... &nbsp &nbsp <img src=\""+self.loadingImage+"\">");
-                                }
-        			if (complete === 1) {
-        				clearInterval(self.timer);
-					
-        				if (wasError === 0) {
-        					dataIsReady();
-        				}
-        			}
-        		}, function(data) {
-    				clearInterval(self.timer);
-    				var tdElem = $('#'+self.pref+'job');
-    				tdElem.html("Error accessing job status: " + data.error.message);
-        		});
-        	};
-        	timeLst();
-        	self.timer = setInterval(timeLst, 5000);
-    	}*/
         return this;
     },
 
@@ -395,6 +363,7 @@ $.KBWidget({
 				'<td rowspan="'+(self.geneRows+2)+'" width="10" style="border: 0px; margin: 0px; padding: 0px; text-align: center; vertical-align: middle;"><button id="'+self.pref+'btn-dirJ"'+sb+'>'+arrowJ+'</button></td>'+
 				'</tr>');
 		var svgLines = '';
+		var svgLineEnds = []; // [{x1:...,y1:...,x2:...,y2:...,gene1:...,gene2:...,bit_score:...,percent_of_bbh:...}] 
 		for (var rowPos = 0; rowPos < self.geneRows; rowPos++) {
 			var i = self.geneI + (rowPos - half) * self.dirI;
 			var j = self.geneJ + (rowPos - half) * self.dirJ;
@@ -425,6 +394,7 @@ $.KBWidget({
 					if (tuple[2] < 100)
 						dash = ' stroke-dasharray="5, 5"';
 					svgLines += '<line x1="0" y1="'+y1+'" x2="30" y2="'+y2+'"'+dash+' style="stroke:rgb(0,0,0);stroke-width:1"/>';
+					svgLineEnds.push({x1:0,y1:y1,x2:30,y2:y2,gene1:self.cmp.proteome1names[i],gene2:self.cmp.proteome2names[hitJ],bit_score:tuple[1],percent_of_bbh:tuple[2]});
 				}
 			}
 		}
@@ -436,6 +406,52 @@ $.KBWidget({
 		var svgTd = $('#'+self.pref+'glinks');
 		var svgH = self.geneRows * self.geneRowH;
 		svgTd.append('<svg width="30" height="'+svgH+'">'+svgLines+'</svg>');
+		svgTd.hover(
+    			function() {
+    				$('#widget-tooltip').show();
+    			},
+    			function() {
+    				$('#widget-tooltip').hide();
+    			}
+    	).mousemove(function(e) {
+    		var scrX = e.pageX;
+    		var scrY = e.pageY;
+    		if ((!scrX) && (!scrY) && e.clientX && e.clientY) {
+    			scrX = e.clientX + document.body.scrollLeft
+    				+ document.documentElement.scrollLeft;
+    			scrY = e.clientY + document.body.scrollTop
+    				+ document.documentElement.scrollTop;
+    		}
+    		var parentOffset = svgTd.offset();
+    		var x = scrX - parentOffset.left;
+    		var y = scrY - parentOffset.top;
+    		var minDist = -1;
+    		var bestLine = null;
+    		for (var n in svgLineEnds) {
+    			var l = svgLineEnds[n];
+    			// [{x1:...,y1:...,x2:...,y2:...,gene1:...,gene2:...,bit_score:...,percent_of_bbh:...}] 
+    			var dist = Math.abs((l.y2-l.y1)*x-(l.x2-l.x1)*y+l.x2*l.y1-l.y2*l.x1) / 
+    					Math.sqrt((l.y2-l.y1)*(l.y2-l.y1)+(l.x2-l.x1)*(l.x2-l.x1));
+    			if ((minDist < 0) || (dist < minDist)) {
+    				minDist = dist;
+    				bestLine = l;
+    			}
+    		}
+			var tip = $('#widget-tooltip');
+			if (minDist && minDist <= 2) {
+    			var msg = 'Gene1: ' + bestLine.gene1 + '<br>Gene2: ' + bestLine.gene2 + '<br>' + 
+    					'Bit-score: ' + bestLine.bit_score + '<br>Percent of related BBH bit-score: ' + bestLine.percent_of_bbh + '%';
+    			tip.html(msg);
+    			tip.css({
+    				'top': (Number(scrY) + 10) + 'px',
+    				'left': (Number(scrX) + 10) + 'px'
+    			});
+    			tip.show();
+    			return;
+			}
+			tip.hide();
+			tip.html('');
+    	});
     	$('#'+self.pref+'btn-dirI').click(function() {
     		self.dirI *= -1;
     		self.refreshGenes();

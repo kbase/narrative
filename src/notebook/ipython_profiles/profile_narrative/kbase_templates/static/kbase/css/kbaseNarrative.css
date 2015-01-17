@@ -1504,7 +1504,7 @@ div#notebook_panel {
    font-family: 'OxygenBold', sans-serif;
    font-weight: bold;
    font-size: 9pt;
-   color:#d44950;
+   color:#F44336;
 }
 
 
@@ -1537,11 +1537,11 @@ div#notebook_panel {
 }
 
 .kb-method-parameter-required-glyph {
-   color: #d44950;
+   color: #F44336;
    margin-left:7px;
 }
 .kb-method-parameter-accepted-glyph {
-   color: #5cb85c;
+   color: #4BB856;
    margin-left:7px;
 }
 
@@ -1586,6 +1586,10 @@ div#notebook_panel {
     border:0;
     border-top: 1px solid #CECECE;
     border-radius: 1px;
+}
+
+.kb-app-error {
+    background-color: #F2DEDE;
 }
 
 .app-panel-heading {
@@ -1683,7 +1687,13 @@ button.kb-app-run {
     moz-box-shadow: 1px 1px 1px #ccc;
 }
 button.kb-app-run:hover {
-    background-color: #1E88E5;;
+    background-color: #1E88E5;
+}
+button.kb-app-run.kb-app-cancel {
+    background-color: #F44336;
+}
+button.kb-app-run.kb-app-cancel:hover {
+    background-color: #E53935;
 }
 
 
@@ -2021,6 +2031,18 @@ div[class="tooltip-inner"] {
 .kb-data-list-edit-by:hover {
     color:#444;
 }
+
+.kb-data-list-narinfo {
+    color:#777;
+    font-size: 10pt;
+    margin: 2px;
+    margin-left: 10px;
+    cursor: pointer;
+}
+.kb-data-list-narinfo:hover {
+    color:#444;
+}
+
 .kb-data-list-narrative {
     color:#777;
     font-size: 10pt;

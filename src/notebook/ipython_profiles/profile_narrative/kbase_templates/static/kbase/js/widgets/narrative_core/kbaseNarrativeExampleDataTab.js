@@ -11,7 +11,7 @@
             ws_name: null, // must be the WS name, not the WS Numeric ID
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/ws/json/", // ws_name/obj_name,
+            default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             exampleWsId: 2901, // designed to be a workspace with just a handful of objects
             exampleTypeOrder: [
@@ -19,7 +19,8 @@
                 {name:['ContigSet'], displayName: "Example Contig Sets", header:'A set of DNA sequences'},
                 {name:['Genome'], displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
                 {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
-                {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'}
+                {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'},
+                {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data Sets", header:'Sets of WGS and amplicon metagenomes'}
                 ]
             
         },

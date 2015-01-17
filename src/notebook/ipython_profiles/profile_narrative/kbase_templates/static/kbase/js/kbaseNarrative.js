@@ -74,43 +74,6 @@
 })();
 
 /**
- * A fun little idea... but it doesn't really work. We need an actual way to poke at endpoints to see if they're alive.
- * But I'm leaving this in here for now. --Bill
- */
-var EndpointTester = function(url, target) {
-    this.loadingImage = 'static/kbase/images/ajax-loader.gif';
-    this.okayText = 'ok';
-    this.downText = 'down';
-    this.url = url;
-    this.$target = target;
-};
-
-EndpointTester.prototype.test = function(url) {
-    this.$target.html('<img src="' + this.loadingImage + '">');
-    var postTestParams = {
-        type: 'POST',
-        data: '{"params":{}, "version":"1.1", "method":"", "id":"' + Math.random() + '"}',
-        url: this.url,
-        success: $.proxy(function() { this.$target.html(this.okayText); }, this),
-        error: $.proxy(function(error) {
-            console.log('error!');
-            console.log(error);
-            this.$target.html(this.downText);
-        }, this),
-    };
-    var getTestParams = {
-        type: 'GET',
-        url: this.url,
-        success: $.proxy(function() { this.$target.html(this.okayText); }, this),
-        error: $.proxy(function(error) {
-            $.ajax(postTestParams);
-            this.$target.html(this.downText);
-        }, this),
-    }
-    $.ajax(getTestParams);
-};
-
-/**
  * Error logging for detectable failure conditions.
  * Logs go through the kernel and thus are sent to the
  * main KBase logging facility (Splunk, as of this writing).
@@ -301,18 +264,6 @@ narrative.init = function() {
             curCell.celltoolbar.show();
     };
 
-    $([IPython.events]).on('select.Cell', function(event, data) {
-        showIPythonCellToolbar(data.cell);
-    });
-
-    $([IPython.events]).on('create.Cell', function(event, data) {
-        showIPythonCellToolbar(data.cell);
-    });
-
-    $([IPython.events]).on('delete.Cell', function(event, data) {
-        showIPythonCellToolbar(IPython.notebook.get_selected_cell());
-    });
-
     /*
      * Once everything else is loaded and the Kernel is idle,
      * Go ahead and fill in the rest of the Javascript stuff.
@@ -320,6 +271,18 @@ narrative.init = function() {
     $([IPython.events]).one('status_started.Kernel', function() {
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0,0);
+
+        $([IPython.events]).on('select.Cell', function(event, data) {
+            showIPythonCellToolbar(data.cell);
+        });
+
+        $([IPython.events]).on('create.Cell', function(event, data) {
+            showIPythonCellToolbar(data.cell);
+        });
+
+        $([IPython.events]).on('delete.Cell', function(event, data) {
+            showIPythonCellToolbar(IPython.notebook.get_selected_cell());
+        });
 
         IPython.notebook.set_autosave_interval(0);
         IPython.CellToolbar.activate_preset("KBase");
@@ -351,6 +314,7 @@ narrative.init = function() {
                 }
             });
 
+            $([IPython.events]).trigger('select.Cell', {cell: IPython.notebook.get_selected_cell()});
         }
         if (ws_name) {
             /* It's ON like DONKEY KONG! */

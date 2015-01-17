@@ -81,18 +81,16 @@
                               .css({'margin-right':'5px'})
                               .click(
                                   $.proxy(function(event) {
-                                      self.stopRunning();
+                                      this.stopRunning();
                                   }, this)
                               )
                               .hide();
 
             var $buttons = $('<div>')
                            .addClass('buttons pull-left')
-                           // .append(this.$deleteButton)
-                           .append(this.$submitted)
                            .append(this.$runButton)
-                           .append(this.$stopButton);
-
+                           .append(this.$stopButton)
+                           .append(this.$submitted);
 
             var $progressBar = $('<div>')
                                .attr('id', 'kb-func-progress')
@@ -143,7 +141,6 @@
                               .append($('<div>')
                                       .addClass('panel-footer')
                                       .css({'overflow' : 'hidden'})
-                                      .append($progressBar)
                                       .append($buttons));
 
             $menuSpan.kbaseNarrativeCellMenu();
@@ -238,7 +235,7 @@
                         this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$submitted.html(this.submittedText).show();
                         this.$runButton.hide();
-                        this.$stopButton.show();
+                        this.$stopButton.hide();
                         this.$inputWidget.lockInputs();
                         break;
                     case 'complete':
@@ -271,6 +268,7 @@
                         this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$submitted.hide();
                         this.$runButton.show();
+                        this.$stopButton.hide();
                         this.$inputWidget.unlockInputs();
                         break;
                 }

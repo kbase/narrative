@@ -86,7 +86,7 @@ class KBjobManager():
         Polls a list of job ids on behalf of the narrativejoblistener
         account and returns the results
         """
-        job_states = list()
+        job_states = dict()
         ujs_proxy = self.__proxy_client()
 
         for job in jobs:
@@ -96,16 +96,16 @@ class KBjobManager():
 
             if job_id.startswith('method:'):
                 try:
-                    job_states.append(self.get_method_state(job, job_id))
+                    job_states[job_id] = self.get_method_state(job, job_id)
                 except Exception as e:
                     import traceback
-                    job_states.append({'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
+                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
             elif job_id.startswith('njs:'):
                 try:
-                    job_states.append(self.get_app_state(job, job_id))
+                    job_states[job_id] = self.get_app_state(job, job_id)
                 except Exception as e:
                     import traceback
-                    job_states.append({'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
+                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
             else:
                 try:
                     # 0  job_id job,
@@ -136,10 +136,10 @@ class KBjobManager():
                         job['error'] = ujs_job[4]
                     elif ujs_job[10] == 1:
                         job['widget_outputs'] = self.get_method_state(method_info, job_id)
-                    job_states.append(job)
+                    job_states[job_id] = job
                 except Exception as e:
                     import traceback
-                    job_states.append({'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()})
+                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
         if as_json:
             import json
             job_states = json.dumps(job_states)

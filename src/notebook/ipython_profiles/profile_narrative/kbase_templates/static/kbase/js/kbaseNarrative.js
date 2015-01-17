@@ -194,9 +194,6 @@ narrative.init = function() {
         if (window.kbconfig.release_notes)
             $versionDiv.append('<br>View release notes on <a href="' + window.kbconfig.release_notes + '" target="_blank">Github</a>');
 
-        // not used, but left in as legacy if we go back to it.
-        // $versionInfo = window.kbconfig.name + '<br>' + window.kbconfig.version;
-
         if (window.kbconfig.urls) {
             var urlList = Object.keys(window.kbconfig.urls).sort();
             var $versionTable = $('<table>')
@@ -210,8 +207,6 @@ narrative.init = function() {
                         $versionTable.append($('<tr>')
                                              .append($('<td>').append(val))
                                              .append($('<td>').append(url)));
-                        //                      .append($testTarget));
-                        // endpointTesters.push(new EndpointTester(url, $testTarget));
                     }
                 }
             );

@@ -138,7 +138,7 @@
         getData: function() {
             return {
                 type: 'DomainAnnotation',
-                id: this.options.treeID,
+                id: this.options.domainAnnotationID,
                 workspace: this.options.workspaceID,
                 title: 'Domain Annotation'
             };

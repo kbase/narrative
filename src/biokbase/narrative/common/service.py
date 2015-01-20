@@ -734,8 +734,8 @@ class LifecycleLogger(LifecycleObserver):
                     {'num': n, 'total': total})
 
     def error(self, code, err):
-        if len(err) > self.MAX_MSG_LEN:
-            err = err[self.MAX_MSG_LEN] + '[..]'
+        if len(str(err)) > self.MAX_MSG_LEN:
+            err = str(err[:self.MAX_MSG_LEN]) + '[..]'
         self._write(logging.ERROR, "func.error", {'errcode': code, 'errmsg':err})
 
     def debug(self, msg):

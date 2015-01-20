@@ -40,7 +40,7 @@ def _assy_to_cs(meth, input_assyfile, output_contigset):
     """
     token, workspace = meth.token, meth.workspace_id
 #     meth.debug(str(service.URLS))
-    transform_url = service.URLS.get_url('transform')
+    transform_url = service.URLS.transform
     trans = Transform(transform_url, token=token)
     _, ujs_job = trans.convert(
         {'source_kbase_type': 'KBaseFile.Assembly',

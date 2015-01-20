@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.12 - 1/20/2015
+__Changes__
+- Fixes issue where the Method Gallery overlay panel wouldn't be populated if there were any problematic method/app specs.
+- Added a link to directly submit a JIRA ticket from the pulldown menu.
+
 ### Version 0.3.11 - 1/16/2015
 __Changes__
 - Running Apps and Methods have a "Cancel" button associated with them. Clicking that will restore the cell to its input state, and cancel (and delete) the running job

@@ -55,14 +55,15 @@ local check_marker
 local provisioner
 local check_provisioner
 local initialize
+local narrative_shutdown
 local set_proxy
-local use_proxy
+local url_decode
 local get_session
+local sync_sessions
 local sync_containers
 local new_container
 local assign_container
-local url_decode
-local narrative_shutdown
+local use_proxy
 
 -- this are name/value pairs referencing ngx.shared.DICT objects
 -- that we use to track docker containers. The ngx.shared.DICT

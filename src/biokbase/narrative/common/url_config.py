@@ -3,11 +3,22 @@ import json
 
 
 class Struct:
+
     def __init__(self, **args):
-        self.__dict__.update(args)
+        self._urls = {}
+        self._urls.update(args)
 
     def get_url(self, key):
-        self.__dict__.get(key)
+        return self._urls[key]
+
+    def __getattr__(self, key):
+        return self._urls[key]
+
+    def __str__(self):
+        return str(self._urls)
+
+    def __repr__(self):
+        return str(self._urls)
 
 try:
     nar_path = os.environ["NARRATIVEDIR"]

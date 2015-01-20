@@ -42,6 +42,7 @@
         if (IPython && IPython.notebook)
             IPython.notebook.delete_cell();
     });
+    $('#kb-jira-btn').attr('href', window.kbconfig.urls.submit_jira_ticket);
 
     var $dataList = $('<div>');
     var $shareWidget = $dataList["kbaseNarrativeSharePanel"]({});

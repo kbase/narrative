@@ -4,7 +4,6 @@
    Dual licensed under the GPL (http://dev.jquery.com/browser/trunk/jquery/GPL-LICENSE.txt) and 
    MIT (http://dev.jquery.com/browser/trunk/jquery/MIT-LICENSE.txt) licenses. 
    Please attribute the author if you use it. */
-
 (function (jQuery) { // Hide scope, no jQuery conflict
     
     /* Determine whether a given ActiveX control is available.
@@ -18,8 +17,6 @@
 	    return false;
 	}
     }
-
-
     /* SVG manager.
        Use the singleton instance of this class, jQuery.svg, 
        to interact with the SVG functionality. */
@@ -227,11 +224,9 @@
     }
     
     jQuery.extend(SVGWrapper.prototype, {
-
 	/*
 	  high level graphics
 	*/
-
 	/* Draw a donut slice.
 	   @param center (int) radius of the full circle
 	   @param inner (int) radius of the inner circle of the current slice
@@ -247,47 +242,35 @@
 	    var startAngle = params.startAngle;
 	    var endAngle = params.endAngle;
 	    var settings = params.settings;
-
 	    var r1 = ((outer - 1) / 2);
 	    var r2 = ((inner - 1) / 2);
-
 	    var startAngleRad = Math.PI*startAngle/180;
 	    var endAngleRad = Math.PI*endAngle/180;
-
 	    var x1inner = parseInt(center + r2*Math.cos(startAngleRad));
 	    var y1inner = parseInt(center + r2*Math.sin(startAngleRad));
-
 	    var x2inner = parseInt(center + r2*Math.cos(endAngleRad));
 	    var y2inner = parseInt(center + r2*Math.sin(endAngleRad));
-
 	    var x1outer = parseInt(center + r1*Math.cos(startAngleRad));
 	    var y1outer = parseInt(center + r1*Math.sin(startAngleRad));
-
 	    var x2outer = parseInt(center + r1*Math.cos(endAngleRad));
 	    var y2outer = parseInt(center + r1*Math.sin(endAngleRad));
-
 	    r1 = parseInt(r1);
 	    r2 = parseInt(r2);
-
 	    var path = "M"+x1inner+","+y1inner+"  L"+x1outer+","+y1outer+"  A"+r1+","+r1+" 0 0,1 "+x2outer+","+y2outer+" L"+x2inner+","+y2inner+"  A"+r2+","+r2+" 0 0,0 "+x1inner+","+y1inner;
-
 	    return this.path(path, settings);
 	},
-
 	axis: function(params) {
 	    var start = params.start; // start pixel of the axis in the SVG
 	    var end = params.end; // end pixel of the axis in the SVG
 	    var shift = params.shift; // shift from left (vertical) or top (horizontal) of the axis
 	    var min = params.min == null ? 0 : params.min; // minimum value of the scale
 	    var max = params.max == null ? 100 : params.max; // maximum value of the scale
-
 	    var showLabels = params.showLabels == null ? true : false;
 	    var labels = params.labels; // array of labels if the labels should not be the value
 	    var labelRotation = params.labelRotation == null ? 0 : params.labelRotation; // degrees the labels should be rotated
 	    var labelFontSize = params.labelFontSize == null ? 12 : params.labelFontSize;
 	    var labelFontWeight = params.labelFontWeight == null ? 100 : params.labelFontWeight;
 	    var labelFontFamily = params.labelFontFamily == null ? "Helvetica" : params.labelFontFamily;
-
 	    var minorTicks = params.minorTicks == null ? 4 : params.minorTicks; // number of minor ticks between major ticks
 	    var minorTickLength = params.minorTickLength == null ? 5 : params.minorTickLength;
 	    var majorTickLength = params.majorTickLength == null ? 10 : params.majorTickLenght;
@@ -296,19 +279,15 @@
 	    var majorTicks = params.majorTicks == null ? 10 : params.majorTicks; // number of major ticks on the axis
 	    var scale = params.scale == null ? "linear" : params.scale;
 	    var direction = params.direction == null ? "horizontal" : params.direction;
-
 	    var length = end - start;
-
 	    // create group
 	    var g = this.group();
-
 	    // create baseline
 	    var x1 = direction == "horizontal" ? start : shift;
 	    var y1 = direction == "horizontal" ? shift : start;
 	    var x2 = direction == "horizontal" ? end : shift;
 	    var y2 = direction == "horizontal" ? shift : end;
 	    this.line(g, x1, y1, x2, y2, { stroke: "black", strokeWidth: 1 });
-
 	    // create ticks
 	    var tickpos = start;
 	    x1 = direction == "horizontal" ? tickpos : shift + majorTickShift;
@@ -319,7 +298,6 @@
 	    var y1m = direction == "horizontal" ? shift + minorTickShift : tickpos;
 	    var x2m = direction == "horizontal" ? tickpos : shift + minorTickShift - minorTickLength;
 	    var y2m = direction == "horizontal" ? shift + minorTickShift + minorTickLength : tickpos;
-
 	    var majorTickSpace = Math.floor(length / majorTicks);
 	    var minorTickSpace = Math.floor(majorTickSpace / (minorTicks + 1));
 	    
@@ -364,7 +342,6 @@
 	    
 	    return g;
 	},
-
 	legend: function(params) {
 	    var top = params.top == null ? 0 : params.top;
 	    var left = params.left == null ? 0 : params.left;
@@ -374,21 +351,17 @@
 	    var fontWeight = params.fontWeight == null ? "normal" : params.fontWeight;
 	    var fontFamily = params.fontFamily == null ? "Helvetica" : params.fontFamily;
 	    var labelSpacing = params.labelSpacing == null ? 10 : params.labelSpacing;
-
 	    var g = this.group();
 	    for (var i=0; i<labels.length; i++) {
 		this.rect(g, left, top, fontSize, fontSize, { stroke: "white", strokeWidth: 0, fill: colors[i] });
 		this.text(g, left + fontSize + fontSize, top + fontSize - 2, labels[i], { stroke: "black", fontSize: fontSize, fontFamily: fontFamily, fontWeight: fontWeight });
 		top += fontSize + labelSpacing;
 	    }
-
 	    return g;
 	},
-
 	/*
 	  end of high level graphics
 	 */
-
 	/* Retrieve the width of the SVG object. */
 	_width: function() {
 	    return (this._container ? this._container.clientWidth : this._svg.width);
@@ -1552,7 +1525,6 @@
     //====================
     /* Helper Functions */
     //====================
-
     /* Determine whether an object is an array. */
     function isArray(a) {
 	return (a && a.constructor == Array);
@@ -1570,55 +1542,8 @@
     function roundNumber(num, dec) {
 	return Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec);
     }
-    
-    /* get a nice number */
-    function niceNum (range, round) {
-        var exponent = Math.floor(Math.log10(range)); /** exponent of range */
-        var fraction = range / Math.pow(10, exponent); /** fractional part of range */
-        var niceFraction; /** nice, rounded fraction */
-	
-        if (round) {
-            if (fraction < 1.5) {
-                niceFraction = 1;
-	    } else if (fraction < 3) {
-                niceFraction = 2;
-            } else if (fraction < 7) {
-                niceFraction = 5;
-            } else {
-                niceFraction = 10;
-	    }
-        } else {
-            if (fraction <= 1) {
-                niceFraction = 1;
-            } else if (fraction <= 2) {
-                niceFraction = 2;
-            } else if (fraction <= 5) {
-                niceFraction = 5;
-            } else {
-                niceFraction = 10;
-	    }
-        }
-	
-        return niceFraction * Math.pow(10, exponent);
-    }
-    
-    /* get a nice scale, min, max and tick interval */
-    function niceScale (params) {
- 	var minPoint = params.min;
-	var maxPoint = params.max;
-	var maxTicks = params.ticks || 10;
-	var tickSpacing = niceNum(range / (maxTicks - 1), true);
-	var range = niceNum(maxPoint - minPoint, false);
-	var niceMin = Math.floor(minPoint / tickSpacing) * tickSpacing;;
-	var niceMax = Math.ceil(maxPoint / tickSpacing) * tickSpacing;
-	
-	return (niceMin, niceMax, tickSpacing);
-    }
-    
-    
     // Singleton primary SVG interface
     jQuery.svg = new SVGManager();
-
     //============
     /* Graphing */
     //============
@@ -1678,7 +1603,7 @@
 	this.yAxis = new SVGGraphAxis(this); // The main y-axis
 	this.yAxis.title('', 40);
 	this.x2Axis = null; // The secondary x-axis
-	this.y2Axis = null; // The secondary y-axis
+	this.y2Axis = new SVGGraphAxis(this); // The secondary y-axis
 	this.legend = new SVGGraphLegend(this); // The chart legend
 	this._drawNow = true;
     }
@@ -2037,6 +1962,7 @@
 	    }
 	    if (this.yAxis) {
 		if (this.yAxis._title) {
+		    this.yAxis._titleOffset = dims[this.X] - (this.yAxis._titleFontSize || 14);
 		    this._wrapper.text(this._chartCont, 0, 0, this.yAxis._title, jQuery.extend({textAnchor: 'middle',
 												transform: 'translate(' + (dims[this.X] - this.yAxis._titleOffset) + ',' +
 												(dims[this.Y] + dims[this.H] / 2) + ') rotate(-90)'}, this.yAxis._titleFormat || {}));
@@ -2054,9 +1980,10 @@
 	    }
 	    if (this.y2Axis) {
 		if (this.y2Axis._title) {
+		    var titlePos = this._getValue(this._chartCont, 'width') - 10;
 		    this._wrapper.text(this._chartCont, 0, 0, this.y2Axis._title, jQuery.extend({textAnchor: 'middle',
-												 transform: 'translate(' + (dims[this.X] + dims[this.W] + this.y2Axis._titleOffset) +
-												 ',' + (dims[this.Y] + dims[this.H] / 2) + ') rotate(-90)'}, this.y2Axis._titleFormat || {}));
+												 transform: 'translate(' + titlePos +
+												 ',' + (dims[this.Y] + dims[this.H] / 2) + ') rotate(90)'}, this.y2Axis._titleFormat || {}));
 		}
 		this._drawAxis(this.y2Axis, 'y2Axis', dims[this.X] + dims[this.W], dims[this.Y],
 			       dims[this.X] + dims[this.W], dims[this.Y] + dims[this.H]);
@@ -2074,7 +2001,7 @@
 	    var horiz = (y1 == y2);
 	    var gl = this._wrapper.group(this._chartCont, jQuery.extend({class_: id}, axis._lineFormat));
 	    var gt = this._wrapper.group(this._chartCont, jQuery.extend({class_: id + 'Labels',
-									 textAnchor: (horiz ? 'middle' : 'end')}, axis._labelFormat));
+									 textAnchor: (horiz ? 'middle' : (id=='y2Axis' ? 'left' : 'end'))}, axis._labelFormat));
 	    this._wrapper.line(gl, x1, y1, x2, y2);
 	    if (axis._ticks.major) {
 		var bottomRight = (x2 > (this._getValue(this._chartCont, 'width') / 2) &&
@@ -2115,9 +2042,8 @@
 				pretty_cur = pretty_cur.formatString(1)+' K';
 			    }
 			}
-
 			var logtext = this._wrapper.createText().string('10').span(cur, {dy: -10, fontSize: 10});
-			this._wrapper.text(gt, (horiz ? v : x1 - size), (horiz ? y1 + 2 * size : v),
+			this._wrapper.text(gt, (horiz ? v : (id=='y2Axis' ? x1 + size : x1 - size)), (horiz ? y1 + 2 * size : v),
 					   (axis._labels ? axis._labels[count++] : ((axis._scale.type == 'log') ? logtext : pretty_cur)));
 		    }
 		    
@@ -2524,23 +2450,22 @@
     
     var barOptions = ['barWidth (number) - the width of each bar',
 		      'barGap (number) - the gap between sets of bars'];
-    
-    /* Draw a standard grouped column bar chart. */
-    function SVGColumnChart() {
+    /* Draw a deviation chart. */
+    function SVGDeviationChart() {
     }
     
-    jQuery.extend(SVGColumnChart.prototype, {
+    jQuery.extend(SVGDeviationChart.prototype, {
 	
 	/* Retrieve the display title for this chart type.
 	   @return  the title */
 	title: function() {
-	    return 'Basic column chart';
+	    return 'deviation chart';
 	},
 	
 	/* Retrieve a description of this chart type.
 	   @return  its description */
 	description: function() {
-	    return 'Compare sets of values as vertical bars with grouped categories.';
+	    return 'Compare sets of values as vertical bars with deviations in grouped categories.';
 	},
 	
 	/* Retrieve a list of the options that may be set for this chart type.
@@ -2584,11 +2509,23 @@
 							strokeWidth: series._strokeWidth}, series._settings || {}));
 	    }
 	    for (var i = 0; i < series._values.length; i++) {
-		var r = graph._wrapper.rect(g,
-					    dims[graph.X] + xScale * (barGap + i * (numSer * barWidth + barGap) + (cur * barWidth)),
-					    dims[graph.Y] + yScale * (graph.yAxis._scale.max - ((graph.yAxis._scale.type == 'log') ? log10(series._values[i]) : series._values[i])),
-					    xScale * barWidth, yScale * ((graph.yAxis._scale.type == 'log') ? log10(series._values[i]) : series._values[i]), (typeof(series._fill) == 'object') ? { fill: series._fill[i] } : {});
-		graph._showStatus(r, series._name, series._values[i]);
+		var xoffset = dims[graph.X] + xScale * (barGap + i * (numSer * barWidth + barGap) + (cur * barWidth));
+		var data = series._values[i];
+		var yshift = dims[graph.Y];
+		// median - upper
+		graph._wrapper.rect(g, xoffset + 1, Math.ceil((graph.yAxis._scale.max - data.upper) * yScale + yshift), parseInt(barWidth - 2), parseInt((data.upper - data.median) * yScale), 0, 0, { stroke: 'black', strokeWidth: 1, fill: series._fill[i] });
+		
+		// median - lower
+		graph._wrapper.rect(g, xoffset + 1, parseInt((graph.yAxis._scale.max - data.median) * yScale + yshift), parseInt(barWidth - 2), parseInt((data.median - data.lower) * yScale), 0, 0, { stroke: 'black', strokeWidth: 1, fill: series._fill[i] });
+		
+		// max - upper
+		graph._wrapper.line(g, xoffset + 1 + parseInt(barWidth / 6), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), parseInt(xoffset + 1 + barWidth - 2 - parseInt(barWidth / 6)), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), { stroke: 'black', strokeWidth: 1 });
+		graph._wrapper.line(g, xoffset + parseInt(barWidth / 2), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), parseInt(xoffset + parseInt(barWidth / 2)), parseInt((graph.yAxis._scale.max - data.upper) * yScale + 1 + yshift), { stroke: 'black', strokeWidth: 1, strokeDashArray: "2,2" });
+		
+		// lower - min
+		graph._wrapper.line(g, xoffset + 1 + parseInt(barWidth / 6), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), parseInt(xoffset + 1 + barWidth - 2 - parseInt(barWidth / 6)), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), { stroke: 'black', strokeWidth: 1 });
+		graph._wrapper.line(g, xoffset + parseInt(barWidth / 2), parseInt((graph.yAxis._scale.max - data.lower) * yScale - 1 + yshift), parseInt(xoffset + parseInt(barWidth / 2)), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), { stroke: 'black', strokeWidth: 1, strokeDashArray: "2,2" });
+		
 	    }
 	},
 	
@@ -2597,7 +2534,144 @@
 	    var axis = graph.xAxis;
 	    if (axis._title) {
 		graph._wrapper.text(graph._chartCont, dims[graph.X] + dims[graph.W] / 2,
-				    dims[graph.Y] + dims[graph.H] + axis._titleOffset,
+				    parseInt(graph._chartCont.attributes[3].value),//dims[graph.Y] + dims[graph.H] + axis._titleOffset,
+				    axis._title, jQuery.extend({textAnchor: 'middle'}, axis._titleFormat || {}));
+	    }
+	    var gl = graph._wrapper.group(graph._chartCont, jQuery.extend({class_: 'xAxis'}, axis._lineFormat));
+	    var labelTextAnchor = axis.labelRotation ? "end" : "middle";
+	    var gt = graph._wrapper.group(graph._chartCont, jQuery.extend({class_: 'xAxisLabels',
+									   textAnchor: labelTextAnchor}, axis._labelFormat));
+	    graph._wrapper.line(gl, dims[graph.X], dims[graph.Y] + dims[graph.H],
+				dims[graph.X] + dims[graph.W], dims[graph.Y] + dims[graph.H]);
+	    if (axis._ticks.major) {
+		var offsets = graph._getTickOffsets(axis, true);
+		for (var i = 1; i < numVal; i++) {
+		    var x = dims[graph.X] + xScale * (barGap / 2 + i * (numSer * barWidth + barGap));
+		    graph._wrapper.line(gl, x, dims[graph.Y] + dims[graph.H] + offsets[0] * axis._ticks.size,
+					x, dims[graph.Y] + dims[graph.H] + offsets[1] * axis._ticks.size);
+		}
+		for (var i = 0; i < numVal; i++) {
+		    var x = dims[graph.X] + xScale * (barGap / 2 + (i + 0.5) * (numSer * barWidth + barGap));
+		    graph._wrapper.text(gt, x, dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size,
+					(axis._labels ? axis._labels[i] : '' + i), (axis.labelRotation ? { transform: "rotate("+axis.labelRotation+", "+x+", "+(dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size)+")"} : null));
+		}
+	    }
+	}
+    });
+    
+    /* Draw a standard grouped column bar chart. */
+    function SVGColumnChart() {
+    }
+    
+    jQuery.extend(SVGColumnChart.prototype, {
+	
+	/* Retrieve the display title for this chart type.
+	   @return  the title */
+	title: function() {
+	    return 'Basic column chart';
+	},
+	
+	/* Retrieve a description of this chart type.
+	   @return  its description */
+	description: function() {
+	    return 'Compare sets of values as vertical bars with grouped categories.';
+	},
+	
+	/* Retrieve a list of the options that may be set for this chart type.
+	   @return  options list */
+	options: function() {
+	    return barOptions;
+	},
+	
+	/* Actually draw the graph in this type's style.
+	   @param  graph  (object) the SVGGraph object */
+	drawGraph: function(graph) {
+	    graph._drawChartBackground(true);
+	    var barWidth = graph._chartOptions.barWidth || 10;
+	    var barGap = graph._chartOptions.barGap || 10;
+	    var numSer = graph._series.length;
+	    var barCount = 0;
+	    for (var i=0; i<numSer; i++) {
+		if (! graph._series[i]._settings.hasOwnProperty('seriesType') || graph._series[i]._settings.seriesType!='line') {
+		    barCount++;
+		}
+	    }
+	    var numVal = (numSer ? (graph._series[0])._values.length : 0);
+	    var dims = graph._getDims();
+	    var xScale = dims[graph.W] / ((barCount * barWidth + barGap) * numVal + barGap);
+	    var yScale = dims[graph.H] / (graph.yAxis._scale.max - graph.yAxis._scale.min);
+	    var y2Scale = graph.y2Axis ? dims[graph.H] / (graph.y2Axis._scale.max - graph.y2Axis._scale.min) : 0;
+	    this._chart = graph._wrapper.group(graph._chartCont, {class_: 'chart'});
+	    var barNum = 0;
+	    for (var i = 0; i < numSer; i++) {
+		if (graph._series[i]._settings.isY2) {
+		    this._drawSeries(graph, barNum, barCount, barWidth, barGap, dims, xScale, y2Scale);
+		} else {
+		    this._drawSeries(graph, barNum, barCount, barWidth, barGap, dims, xScale, yScale);
+		}
+		if (! graph._series[i]._settings.hasOwnProperty('seriesType') || graph._series[i]._settings.seriesType!='line') {
+		    barNum++;
+		}
+	    }
+	    graph._drawTitle();
+	    graph._drawAxes(true);
+	    this._drawXAxis(graph, barNum, numVal, barWidth, barGap, dims, xScale);
+	    graph._drawLegend();
+	},
+	
+	/* Plot an individual series. */
+	_drawSeries: function(graph, cur, numSer, barWidth, barGap, dims, xScale, yScale, type) {
+	    var series = graph._series[cur];
+	    if (series._settings.hasOwnProperty('seriesType') && series._settings.seriesType=='line') {
+		var path = graph._wrapper.createPath();
+		var circles = [];
+		for (var i = 0; i < series._values.length; i++) {
+		    var x = dims[graph.X] + xScale * (barGap / 2 + (i + 0.5) * (numSer * barWidth + barGap));
+		    var y = dims[graph.Y] + ((series._settings.isY2 ? graph.y2Axis._scale.max : graph.yAxis._scale.max) - series._values[i]) * yScale;
+		    if (i === 0) {
+			path.move(x, y);
+		    }
+		    else {
+			path.line(x, y);
+		    }
+		    circles.push( [ x, y ]);
+		}
+		if (! series._settings.noLines) {
+		    graph._wrapper.path(this._chart, path,
+					jQuery.extend({id: 'series' + cur, fill: 'none', stroke: (series._stroke=="white") ? "black" : series._stroke,
+						       strokeWidth: series._strokeWidth}, series._settings || {}));
+		}
+		for (i=0;i<circles.length;i++) {
+		    var c = graph._wrapper.circle(this._chart, circles[i][0], circles[i][1], 3, { fill: 'white', strokeWidth: 1, stroke: (series._stroke=="white") ? "black" : series._stroke, onmouseover: "this.setAttribute('r', parseInt(this.getAttribute('r')) + 1)", onmouseout: "this.setAttribute('r', parseInt(this.getAttribute('r')) - 1)" });
+		    graph._showStatus(c, series._name, series._values[i]);
+		}
+	    } else {
+		var g; 
+		if (typeof(series._fill) == 'object') {
+		    g = graph._wrapper.group(this._chart,
+					     jQuery.extend({class_: 'series' + cur, stroke: series._stroke,
+							    strokeWidth: series._strokeWidth}, series._settings || {}));
+		} else {
+		    g = graph._wrapper.group(this._chart,
+					     jQuery.extend({class_: 'series' + cur, fill: series._fill, stroke: series._stroke,
+							    strokeWidth: series._strokeWidth}, series._settings || {}));
+		}
+		for (var i = 0; i < series._values.length; i++) {
+		    var r = graph._wrapper.rect(g,
+						dims[graph.X] + xScale * (barGap + i * (numSer * barWidth + barGap) + (cur * barWidth)),
+						dims[graph.Y] + yScale * (graph.yAxis._scale.max - ((graph.yAxis._scale.type == 'log') ? log10(series._values[i]) : series._values[i])),
+						xScale * barWidth, yScale * ((graph.yAxis._scale.type == 'log') ? log10(series._values[i]) : series._values[i]), (typeof(series._fill) == 'object') ? { fill: series._fill[i] } : {});
+		    graph._showStatus(r, series._name, series._values[i]);
+		}
+	    }
+	},
+	
+	/* Draw the x-axis and its ticks. */
+	_drawXAxis: function(graph, numSer, numVal, barWidth, barGap, dims, xScale) {
+	    var axis = graph.xAxis;
+	    if (axis._title) {
+		graph._wrapper.text(graph._chartCont, dims[graph.X] + dims[graph.W] / 2,
+				    parseInt(graph._chartCont.attributes[3].value),//dims[graph.Y] + dims[graph.H] + axis._titleOffset,
 				    axis._title, jQuery.extend({textAnchor: 'middle'}, axis._titleFormat || {}));
 	    }
 	    var gl = graph._wrapper.group(graph._chartCont, jQuery.extend({class_: 'xAxis'}, axis._lineFormat));
@@ -2795,7 +2869,6 @@
 	    for (var i = 0; i < numVal; i++) {
 		accum[i] = 0;
 	    }
-
 	    var paths = [];
 	    for (var s = 0; s < numSer; s++) {
 		paths[s] = "";
@@ -2812,7 +2885,6 @@
 			paths[s] += "L" + (dims[graph.X] + xScale * (i+1)) + "," + yVal;
 		    }
 		}
-
 		if (s===0 && graph.normalizeStackedArea) {
 		    paths[s] += "L"+(dims[graph.X] + xScale * series._values.length)+","+(dims[graph.Y] + dims[graph.H])+"L"+dims[graph.X]+","+(dims[graph.Y] + dims[graph.H]);
 		} else {
@@ -3108,6 +3180,7 @@
 	drawGraph: function(graph) {
 	    graph._drawChartBackground();
 	    var dims = graph._getDims();
+	    graph.xAxis._scale.max = graph._series[0]._values.length - 1;
 	    var xScale = dims[graph.W] / (graph.xAxis._scale.max - graph.xAxis._scale.min);
 	    var yScale = dims[graph.H] / (graph.yAxis._scale.max - graph.yAxis._scale.min);
 	    this._chart = graph._wrapper.group(graph._chartCont, {class_: 'chart'});
@@ -3115,7 +3188,8 @@
 		this._drawSeries(graph, i, dims, xScale, yScale);
 	    }
 	    graph._drawTitle();
-	    graph._drawAxes();
+	    graph._drawAxes(true);
+	    this._drawXAxis(graph, graph._series[0]._values.length, dims, xScale);
 	    graph._drawLegend();
 	},
 	
@@ -3135,12 +3209,42 @@
 		}
 		circles.push( [ x, y ]);
 	    }
-	    var p = graph._wrapper.path(this._chart, path,
-					jQuery.extend({id: 'series' + cur, fill: 'none', stroke: series._stroke,
-						       strokeWidth: series._strokeWidth}, series._settings || {}));
+	    if (! series._settings.noLines) {
+		graph._wrapper.path(this._chart, path,
+				    jQuery.extend({id: 'series' + cur, fill: 'none', stroke: (series._stroke=="white") ? "black" : series._stroke,
+						   strokeWidth: series._strokeWidth}, series._settings || {}));
+	    }
 	    for (i=0;i<circles.length;i++) {
-		var c = graph._wrapper.circle(this._chart, circles[i][0], circles[i][1], 4, { fill: 'white', strokeWidth: 2, stroke: series._stroke, onmouseover: "this.setAttribute('r', parseInt(this.getAttribute('r')) + 1)", onmouseout: "this.setAttribute('r', parseInt(this.getAttribute('r')) - 1)" });
+		var c = graph._wrapper.circle(this._chart, circles[i][0], circles[i][1], 3, { fill: 'white', strokeWidth: 1, stroke: (series._stroke=="white") ? "black" : series._stroke, onmouseover: "this.setAttribute('r', parseInt(this.getAttribute('r')) + 1)", onmouseout: "this.setAttribute('r', parseInt(this.getAttribute('r')) - 1)" });
 		graph._showStatus(c, series._name, series._values[i]);
+	    }
+	},
+	/* Draw the x-axis and its ticks. */
+	_drawXAxis: function(graph, numVal, dims, xScale) {
+	    var axis = graph.xAxis;
+	    if (axis._title) {
+		graph._wrapper.text(graph._chartCont, dims[graph.X] + dims[graph.W] / 2,
+				    dims[graph.Y] + dims[graph.H] + axis._titleOffset,
+				    axis._title, jQuery.extend({textAnchor: 'middle'}, axis._titleFormat || {}));
+	    }
+	    var gl = graph._wrapper.group(graph._chartCont, jQuery.extend({class_: 'xAxis'}, axis._lineFormat));
+	    var labelTextAnchor = axis.labelRotation ? "end" : "middle";
+	    var gt = graph._wrapper.group(graph._chartCont, jQuery.extend({class_: 'xAxisLabels',
+									   textAnchor: labelTextAnchor}, axis._labelFormat));
+	    graph._wrapper.line(gl, dims[graph.X], dims[graph.Y] + dims[graph.H],
+				dims[graph.X] + dims[graph.W], dims[graph.Y] + dims[graph.H]);
+	    if (axis._ticks.major) {
+		var offsets = graph._getTickOffsets(axis, true);
+		for (var i = 1; i < numVal; i++) {
+		    var x = dims[graph.X] + xScale * i;
+		    graph._wrapper.line(gl, x, dims[graph.Y] + dims[graph.H] + offsets[0] * axis._ticks.size,
+					x, dims[graph.Y] + dims[graph.H] + offsets[1] * axis._ticks.size);
+		}
+		for (var i = 0; i < numVal; i++) {
+		    var x = dims[graph.X] + xScale * i;
+		    graph._wrapper.text(gt, x, dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size,
+					(axis._labels ? axis._labels[i] : '' + i), (axis.labelRotation ? { transform: "rotate("+axis.labelRotation+", "+x+", "+(dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size)+")"} : null));
+		}
 	    }
 	}
     });
@@ -3190,7 +3294,7 @@
 	    var numSer = graph._series.length;
 	    var numVal = (numSer ? (graph._series[0])._values.length : 0);
 	    var path = graph._wrapper.createPath();
-	    var explode = graph._chartOptions.explode || [];
+	    var explode = []; //graph._chartOptions.explode || [];
 	    explode = (isArray(explode) ? explode : [explode]);
 	    var explodeDist = graph._chartOptions.explodeDist || 10;
 	    var pieGap = (numVal <= 1 ? 0 : graph._chartOptions.pieGap || 10);
@@ -3233,7 +3337,7 @@
 		    graph._showStatus(p, series._name,
 				      roundNumber((end - start) / 2 / Math.PI * 100, 2));
 		}
-		if (graph.xAxis) {
+		if (graph.xAxis && graph.xAxis._labels[i]) {
 		    graph._wrapper.text(gt, cx, dims[graph.Y] + dims[graph.H] + graph.xAxis._titleOffset,
 					graph.xAxis._labels[i]);
 		}
@@ -3249,6 +3353,7 @@
     jQuery.svg.graphing.addChartType('line', new SVGLineChart());
     jQuery.svg.graphing.addChartType('pie', new SVGPieChart());
     jQuery.svg.graphing.addChartType('stackedArea', new SVGStackedAreaChart());
+    jQuery.svg.graphing.addChartType('deviation', new SVGDeviationChart());
     
     //============
     /* Plotting */
@@ -3700,7 +3805,7 @@
 	    var dims = this._getDims();
 	    var zerox = dims[0] - (this.xAxis._scale.min * scales[0]);
 	    var zeroy = dims[1] + dims[3] + (this.yAxis._scale.min * scales[1]);
-	    var psettings = { size: 6, shape: this.series[series].shape, 'filled': this.series[series].filled || false, color: this.series[series].color };
+	    var psettings = { size: this.series[series].pointSize || 6, shape: this.series[series].shape, 'filled': this.series[series].filled || false, color: this.series[series].color };
 	    for (i=0;i<points.length;i++) {
 		var p = points[i];
 		jQuery.extend(p, psettings);
@@ -4157,10 +4262,28 @@
 	    return this._plot;
 	}
     });
+    // css
+    jQuery("<style>")
+	.prop("type", "text/css")
+	.html("\
+svg:svg {\
+    display: none;\
+}\
+\
+.svg_error {\
+    color: red;\
+    font-weight: bold;\
+}\
+\
+.marquee {\
+    fill-opacity: 0.2;\
+    stroke: #000;\
+    stroke-dasharray: 2,4;\
+    vector-effect:non-scaling-stroke;\
+}")
+	.appendTo("head");
     
 })(jQuery);
-
-
 //===================
 /* Drag-Select-Box */
 //===================
@@ -4215,7 +4338,6 @@
     }
     
     function sortByNumber(a,b){ return a-b; }
-
     // Enable animation for all of these SVG numeric attributes -
     // named as svg-* or svg* (with first character upper case)
     jQuery.each(['x', 'y', 'width', 'height', 'rx', 'ry', 'cx', 'cy', 'r', 'x1', 'y1', 'x2', 'y2',
@@ -4246,7 +4368,6 @@
 		    };
 		}
 	       );
-
     // Enable animation for the SVG strokeDashArray attribute
     jQuery.fx.step['svgStrokeDashArray'] = jQuery.fx.step['svg-strokeDashArray'] =
 	jQuery.fx.step['svgStroke-dasharray'] = jQuery.fx.step['svg-stroke-dasharray'] = function(fx) {
@@ -4278,7 +4399,6 @@
 	    }).join(',');
 	    (attr ? attr.nodeValue = value : fx.elem.setAttribute('stroke-dasharray', value));
 	};
-
     /* Parse a strokeDashArray definition: dash, gap, ...
        @param  value  (string) the definition
        @return  (number[2n]) the extracted values */
@@ -4298,7 +4418,6 @@
 	}
 	return dashArray;
     }
-
     // Enable animation for the SVG viewBox attribute
     jQuery.fx.step['svgViewBox'] = jQuery.fx.step['svg-viewBox'] = function(fx) {
 	var attr = fx.elem.attributes.getNamedItem('viewBox');
@@ -4325,7 +4444,6 @@
 	}).join(' ');
 	(attr ? attr.nodeValue = value : fx.elem.setAttribute('viewBox', value));
     };
-
     /* Parse a viewBox definition: x, y, width, height.
        @param  value  (string) the definition
        @return  (number[4]) the extracted values */
@@ -4342,7 +4460,6 @@
 	}
 	return viewBox;
     }
-
     // Enable animation for the SVG transform attribute
     jQuery.fx.step['svgTransform'] = jQuery.fx.step['svg-transform'] = function(fx) {
 	var attr = fx.elem.attributes.getNamedItem('transform');
@@ -4388,7 +4505,6 @@
 	}
 	(attr ? attr.nodeValue = transform : fx.elem.setAttribute('transform', transform));
     };
-
     /* Decode a transform string and extract component values.
        @param  value     (string) the transform string to parse
        @param  original  (object) the settings from the original node
@@ -4452,7 +4568,6 @@
 	}
 	return transform;
     }
-
     // Enable animation for all of these SVG colour properties - based on jquery.color.js
     jQuery.each(['fill', 'stroke'],
 		function(i, attrName) {
@@ -4477,7 +4592,6 @@
 		    }
 		}
 	       );
-
     /* Find this attribute value somewhere up the node hierarchy.
        @param  elem  (element) the starting element to find the attribute
        @param  attr  (string) the attribute name
@@ -4494,7 +4608,6 @@
 	} while (elem = elem.parent());
 	return jQuery.svg._getRGB(colour);
     };
-
     /* Parse strings looking for common colour formats.
        @param  colour  (string) colour description to parse
        @return  (number[3]) RGB components of this colour */
@@ -4525,7 +4638,6 @@
 	// Otherwise, we're most likely dealing with a named color
 	return colours[jQuery.trim(colour).toLowerCase()] || colours['none'];
     };
-
     // The SVG named colours
     var colours = {
 	'':						[255, 255, 255, 1],
@@ -4678,5 +4790,4 @@
 	yellow:					[255, 255, 0],
 	yellowgreen:			[154, 205, 50]
     };
-
 })(window);

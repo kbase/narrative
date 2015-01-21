@@ -9,6 +9,7 @@ __Changes__
 - Added visualization widget for microbial community abundance and boxplots.
 - Method details and documentation are visible in a new window now.
 - Added app and method icons for the method panel.
+- Added minimize to app & method panels
 
 ### Version 0.3.13 - 1/20/2015
 __Changes__

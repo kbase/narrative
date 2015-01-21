@@ -3,6 +3,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.14 - 1/21/2015
+__Changes__
+- Updated server-side Narrative management code to always keep a queue of unattached Narrative containers present. When a user logs on, they already have one ready to connect to.
+- Added visualization widget for microbial community abundance and boxplots.
+- Method details and documentation are visible in a new window now.
+- Added app and method icons for the method panel.
+
 ### Version 0.3.13 - 1/20/2015
 __Changes__
 - Added Transform service client code

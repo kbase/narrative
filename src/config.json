@@ -57,6 +57,6 @@
         "data_import_export": "https://kbase.us/services/data_import_export",
         "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version"
     },
-    "version": "0.3.13",
+    "version": "0.3.14",
     "release_notes": "https://github.com/kbase/narrative/blob/develop/RELEASE_NOTES.md"
 }

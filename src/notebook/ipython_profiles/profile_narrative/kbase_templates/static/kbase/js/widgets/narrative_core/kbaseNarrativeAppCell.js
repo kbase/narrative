@@ -697,7 +697,7 @@
                         widget: widgetName,
                         data: output,
                         type: 'app',
-                        title: 'Output',
+                        title: this.methodSpecs[this.inputStepLookup[stepId].methodId].info.name,
                         showMenu: false,
                         time: new Date().getTime()
                     });

@@ -661,6 +661,7 @@
                         }
                     }
                     catch (err) {
+                        KBError("App::" + this.appSpec.info.name, "failed to render output widget: '" + widgetName);
                         $outputWidget[this.OUTPUT_ERROR_WIDGET]({'error': {
                             'msg': 'An error occurred while showing your output:',
                             'method_name': 'kbaseNarrativeAppCell.setStepOutput',

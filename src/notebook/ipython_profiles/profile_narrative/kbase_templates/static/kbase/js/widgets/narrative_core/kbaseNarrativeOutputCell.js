@@ -11,6 +11,7 @@
             title: 'Output',
             time: '',
         },
+        OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
 
         init: function(options) {
             this._super(options);
@@ -111,7 +112,21 @@
 
             this.$elem.append($body);
 
-            this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
+            try {
+                this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
+            }
+            catch (err) {
+                KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
+                $outputWidget[this.OUTPUT_ERROR_WIDGET]({'error': {
+                    'msg': 'An error occurred while showing your output:',
+                    'method_name': 'kbaseNarrativeOutputCell.renderCell',
+                    'type': 'Output',
+                    'severity': '',
+                    'traceback': 'Failed while trying to show a "' + widget + '"\n' +
+                                 'With inputs ' + JSON.stringify(widgetData) + '\n\n' + 
+                                 err.message
+                }});
+            }
         },
 
         getState: function() {

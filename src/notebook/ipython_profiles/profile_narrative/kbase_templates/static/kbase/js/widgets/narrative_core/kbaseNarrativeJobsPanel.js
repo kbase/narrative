@@ -351,10 +351,7 @@
             var type = isApp ? 'apps' : 'methods';
             IPython.notebook.metadata.job_ids[type].push(jobInfo);
             // put a stub in the job states
-            this.jobStates[jobInfo.id] = {'status' : null, 
-                                          '$elem' : 'null', 
-                                          'source' : jobInfo.source,
-                                          'id' : jobInfo.id };
+            this.jobStates[jobInfo.id] = $.extend({}, jobInfo, {'status' : null, '$elem' : 'null'});
             this.source2Job[jobInfo.source] = jobInfo.id;
             this.refresh();
             IPython.notebook.save_checkpoint();

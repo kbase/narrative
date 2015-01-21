@@ -3,15 +3,20 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
-### Version 0.3.13
+### Version 0.3.13 - 1/20/2015
 __Changes__
 - Added Transform service client code
 - Exposed transform service as a method
+- Added assembly view widget
 __Bugfixes__
 - Now inserts a cell instead of freezing when DnD of data onto empty narrative
 - JIRA NAR-388 - fixed a problem where errors on service invocation weren't being stringified properly before logging
 - Github issue #162 fixed - drag and drop data onto an empty Narrative now doesn't lock up
 - JIRA NAR-402 - saving a Narrative updates the Manage panel
+- JIRA KBASE-1199 - newly registered jobs should show a timestamp
+- KBASE-1210 - (not totally fixed) - debug info for launched methods should show up on the console now.
+- NAR-400, KBASE-1202, KBASE-1192, KBASE-1191 - these were all related to the apps not properly catching errors when an output widget fails to render
+- fixed a case where a typespec references a non-existent viewer
 
 ### Version 0.3.12 - 1/20/2015
 __Changes__

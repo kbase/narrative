@@ -767,12 +767,22 @@
                 if (jobType === 'njs') {
                     for (var key in job.widget_outputs) {
                         if (job.widget_outputs.hasOwnProperty(key)) {
-                            $cell.kbaseNarrativeAppCell('setStepOutput', key, job.widget_outputs[key]);
+                            try {
+                                $cell.kbaseNarrativeAppCell('setStepOutput', key, job.widget_outputs[key]);
+                            }
+                            catch (err) {
+                                console.log(["ERROR'D APP OUTPUT", err]);
+                            }
                         }
                     }
                 }
                 else {
-                    $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : job.widget_outputs });
+                    try {
+                        $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : job.widget_outputs });
+                    }
+                    catch (err) {
+                        console.log(["ERROR'D METHOD OUTPUT", err]);
+                    }
                 }
             }
             // if it's an error, then we need to signal the cell

@@ -38,6 +38,8 @@
         $errorModal: null,
         $errorModalContent:null,
 
+        OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
+
         state: null,
 
         /**
@@ -649,12 +651,25 @@
                     var widgetName = this.inputStepLookup[stepId].outputWidgetName;
                     var $outputWidget = $('<div>');
                     var widget;
-                    if (widgetName !== "kbaseDefaultNarrativeOutput")
-                        widget = $outputWidget[widgetName](output);
-                    else
-                        widget = $outputWidget[widgetName]({data:output});
-                    if (state) {
-                        widget.loadState(state);
+                    try {
+                        if (widgetName !== "kbaseDefaultNarrativeOutput")
+                            widget = $outputWidget[widgetName](output);
+                        else
+                            widget = $outputWidget[widgetName]({data:output});                
+                        if (state) {
+                            widget.loadState(state);
+                        }
+                    }
+                    catch (err) {
+                        $outputWidget[this.OUTPUT_ERROR_WIDGET]({'error': {
+                            'msg': 'An error occurred while showing your output:',
+                            'method_name': 'kbaseNarrativeAppCell.setStepOutput',
+                            'type': 'Output',
+                            'severity': '',
+                            'traceback': 'Failed while trying to show a "' + widgetName + '"\n' +
+                                         'With inputs ' + JSON.stringify(output) + '\n\n' + 
+                                         err.message
+                        }});
                     }
 
                     var header = '<span class="kb-out-desc">Output</span><span class="pull-right kb-func-timestamp">' +

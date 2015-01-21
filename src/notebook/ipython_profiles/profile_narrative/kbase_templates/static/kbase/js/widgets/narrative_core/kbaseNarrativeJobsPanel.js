@@ -351,10 +351,7 @@
             var type = isApp ? 'apps' : 'methods';
             IPython.notebook.metadata.job_ids[type].push(jobInfo);
             // put a stub in the job states
-            this.jobStates[jobInfo.id] = {'status' : null, 
-                                          '$elem' : 'null', 
-                                          'source' : jobInfo.source,
-                                          'id' : jobInfo.id };
+            this.jobStates[jobInfo.id] = $.extend({}, jobInfo, {'status' : null, '$elem' : 'null'});
             this.source2Job[jobInfo.source] = jobInfo.id;
             this.refresh();
             IPython.notebook.save_checkpoint();
@@ -420,7 +417,11 @@
                 jobInfo[jobId] = {'state' : jobState};
 
                 // if the job's incomplete, we have to go get it.
-                var jobIncomplete = (jobState.status !== 'completed' && jobState.status !== 'error' && jobState.status !== 'done' && jobState.status !== 'deleted')
+                var jobIncomplete = (jobState.status !== 'completed' && 
+                                     jobState.status !== 'error' && 
+                                     jobState.status !== 'done' && 
+                                     jobState.status !== 'deleted' &&
+                                     jobState.status !== 'suspend')
                 // 2. The type dictates what cell it came from and how to deal with the inputs.
                 var jobType = this.jobTypeFromId(jobId);
                 var specInfo = null;
@@ -767,12 +768,22 @@
                 if (jobType === 'njs') {
                     for (var key in job.widget_outputs) {
                         if (job.widget_outputs.hasOwnProperty(key)) {
-                            $cell.kbaseNarrativeAppCell('setStepOutput', key, job.widget_outputs[key]);
+                            try {
+                                $cell.kbaseNarrativeAppCell('setStepOutput', key, job.widget_outputs[key]);
+                            }
+                            catch (err) {
+                                console.log(["ERROR'D APP OUTPUT", err]);
+                            }
                         }
                     }
                 }
                 else {
-                    $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : job.widget_outputs });
+                    try {
+                        $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : job.widget_outputs });
+                    }
+                    catch (err) {
+                        console.log(["ERROR'D METHOD OUTPUT", err]);
+                    }
                 }
             }
             // if it's an error, then we need to signal the cell

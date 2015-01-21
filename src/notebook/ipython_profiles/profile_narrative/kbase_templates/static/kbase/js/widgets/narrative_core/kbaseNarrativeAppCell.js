@@ -208,7 +208,20 @@
                                   }, this)
                               )
                               .hide();
-            
+            // Reset the inputs and prepare for another "run"
+            this.$resetButton = $('<button>')
+              .attr('type', 'button')
+              .attr('value', 'Reset')
+              .addClass('kb-app-run kb-app-reset')
+              .append('Reset')
+              .css({'margin-right':'5px'})
+              .click(
+                $.proxy(function(event) {
+                  self.resetAppRun(true);
+                }, this)
+              )
+            .hide();
+
             this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
 
             var appInfo = this.appSpec.info.name;
@@ -228,6 +241,7 @@
                            .addClass('buttons pull-left')
                            .append(this.$runButton)
                            .append(this.$stopButton)
+                           .append(this.$resetButton)
                            //.append(this.$stateDebugBtn)
                            .append(this.$submitted);
 
@@ -373,7 +387,7 @@
             }
             return;
         },
-        
+
         isValid : function() {
             var isValidRet = {isValid:true, stepErrors:[]}
             if (this.inputSteps) {
@@ -412,6 +426,7 @@
                 //code
             } else {
                 var v = self.isValid();
+                // Take these action if the app input is not valid?
                 if (!v.isValid) {
                     var errorCount = 1;
                     self.$errorModalContent.empty();
@@ -442,16 +457,58 @@
             return true;
         },
 
+        /*
+         * Reset parameters and allow to re-run
+         */
+        resetAppRun: function(clear_inputs) {
+          // buttons
+          this.$stopButton.hide();
+          this.$resetButton.hide();
+          this.$submitted.hide();
+          // clear inputs
+          if (this.inputSteps) {
+            for(var i=0; i<this.inputSteps.length; i++) {
+              this.inputSteps[i].widget.unlockInputs();
+              this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+              // If invoked from "Reset" button, then clear_inputs will be
+              // true and we need to get back to the original state.
+              // If invoked from "Cancel" button we skip this step and
+              // allow the user to Reset later.
+              if (clear_inputs) {
+                var c = this.inputSteps[i].$stepContainer;
+                // clear text fields
+                c.find("span.kb-parameter-data-selection").text("");
+                // remove old output
+                c.find(".kb-cell-output").remove();
+              }
+            }
+          }
+          if (clear_inputs) {
+            this.setErrorState(false);
+            this.state.runningState.appRunState = "input";
+            this.$runButton.show();
+          }
+          else {
+            this.state.runningState.appRunState = "canceled"; // XXX?
+            this.$runButton.hide();
+            this.$resetButton.show();
+          }
+        },
+
         /* unlocks inputs and updates display properties to reflect the not running state */
         stopAppRun: function() {
             // trigger a cancel job action
             // if that returns something truthy (i.e. auto canceled, or user chose to cancel),
             // then continue and reset the state to input.
-            // otherwise, bail.
-
+            // Otherwise, bail.
+            var self = this;
             this.trigger('cancelJobCell.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
                 if (isCanceled) {
-                    this.$stopButton.hide();
+                  self.resetAppRun(false);
+
+                }
+/*  Moved to resetAppRun:
+                  this.$stopButton.hide();
                     this.$runButton.show();
                     if (this.inputSteps) {
                         for(var i=0; i<this.inputSteps.length; i++) {
@@ -461,11 +518,12 @@
                     }
                     this.setErrorState(false);
                     this.$submitted.hide();
-                    this.state.runningState.appRunState = "input";                    
+                    this.state.runningState.appRunState = "input";
                 }
+*/
             }, this)]);
         },
-        
+
         /**
          * DO NOT USE!!  use getAllParameterValues instead from now on...
          */
@@ -561,7 +619,7 @@
                     }
                     else if (state.runningState.appRunState === "done") {
                         this.$submitted.show();
-                        this.$runButton.hide();                        
+                        this.$runButton.hide();
                     }
                 }
             }
@@ -608,7 +666,7 @@
                 }
             }
         },
-        
+
         setRunningState: function(state) {
             state = state.toLowerCase();
             if (state === 'error')
@@ -623,16 +681,20 @@
             }
         },
 
+        /*
+         * Handle error in app.
+         */
         setErrorState: function(isError) {
             if (isError) {
                 this.state.runningState.appRunState = "error";
                 this.$elem.find('.kb-app-panel').addClass('kb-app-error');
                 this.$runButton.hide();
-                this.$stopButton.show();
+                this.$stopButton.hide();
+                this.$resetButton.show();
                 this.$submitted.show();
             }
             else {
-                this.$elem.find('.kb-app-panel').removeClass('kb-app-error');                
+                this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
             }
         },
 
@@ -663,7 +725,7 @@
                     //     if (widgetName !== "kbaseDefaultNarrativeOutput")
                     //         widget = $outputWidget[widgetName](output);
                     //     else
-                    //         widget = $outputWidget[widgetName]({data:output});                
+                    //         widget = $outputWidget[widgetName]({data:output});
                     //     if (state) {
                     //         widget.loadState(state);
                     //     }
@@ -676,7 +738,7 @@
                     //         'type': 'Output',
                     //         'severity': '',
                     //         'traceback': 'Failed while trying to show a "' + widgetName + '"\n' +
-                    //                      'With inputs ' + JSON.stringify(output) + '\n\n' + 
+                    //                      'With inputs ' + JSON.stringify(output) + '\n\n' +
                     //                      err.message
                     //     }});
                     //     header = header.replace(/\-out\-/, '-err-');

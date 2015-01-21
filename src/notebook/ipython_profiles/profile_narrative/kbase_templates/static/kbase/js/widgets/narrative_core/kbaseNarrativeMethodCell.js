@@ -216,7 +216,18 @@
                 if (isCanceled) {
                     this.changeState('input');
                 }
-            }, this)]);            
+            }, this)]);
+        },
+        /**
+         * @method
+         * Shows an associated error with a cell (if available)
+         */
+        showError: function() {
+            this.trigger('showJobError.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
+                if (isCanceled) {
+                    this.changeState('input');
+                }
+            }, this)]);
         },
 
         /**
@@ -245,7 +256,6 @@
                         this.$runButton.hide();
                         this.$stopButton.hide();
                         this.$inputWidget.lockInputs();
-                        // maybe unlock? show a 'last run' box?
                         break;
                     case 'running':
                         this.$submitted.html(this.submittedText).show();

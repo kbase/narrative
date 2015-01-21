@@ -1468,7 +1468,9 @@ div#notebook_panel {
 .kb-jobs-error {
     background-color: #f2dede;
 }
-
+.kb-jobs-error-btn {
+    font-size: 10pt;
+}
 .kb-jobs-item:last-child {
     border-bottom: none;
 }

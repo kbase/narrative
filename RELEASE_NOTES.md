@@ -2,6 +2,14 @@
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
 This is built on the IPython Notebook (more notes will follow).
+### Version 0.3.15 - 1/21/2015
+__Changes__
+- Updated type name for Assembly File transform method
+- Added reset button to App cells (method cells still need fixing)
+- Added widgets for metagenome sets
+__Bugfixes__
+- JIRA NAR-418 - fixed issue where job error was cleared on panel refresh.
+- Fixed issue where method panel error state wasn't being activated properly.
 
 ### Version 0.3.14 - 1/21/2015
 __Changes__

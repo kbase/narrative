@@ -78,7 +78,7 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
           var param = null;
           // Get input/output parameter value
           if (mapping.input_parameter) {
-              param = o.id;
+              param = o.name;
           }
           else if (mapping.constant_value) {
               param = mapping.constant_value;
@@ -86,7 +86,7 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
           else if (mapping.narrative_system_variable) {
               switch (mapping.narrative_system_variable) {
                   case 'workspace':
-                      param = o.ws_id;
+                      param = o.ws_name;
                       break;
                   default:
                       console.error('Method (' + method_id + ') spec: unknown narrative system variable=' + sysProp);
@@ -102,7 +102,7 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
           		param = [param];
                   break;
               case 'ref':
-          		param = o['ws_id'] + '/' + param;
+          		param = o['ws_name'] + '/' + param;
                   break;
           	default:
                   param = null;

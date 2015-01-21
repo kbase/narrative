@@ -10,6 +10,7 @@
             type: 'error',
             title: 'Output',
             time: '',
+            showMenu: true
         },
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
 
@@ -84,8 +85,11 @@
                 this.$timestamp.append($('<span>')
                                        .append(this.readableTimestamp(this.options.time)));
             }
-            var $menuSpan = $('<span style="margin-left:5px">');
-            this.$timestamp.append($menuSpan);
+            if (this.options.showMenu) {
+                var $menuSpan = $('<span style="margin-left:5px">');
+                this.$timestamp.append($menuSpan);
+                $menuSpan.kbaseNarrativeCellMenu();
+            }
 
             var $headerLabel = $('<span>')
                                .addClass('label label-info')
@@ -107,26 +111,36 @@
                                 .append($('<div>')
                                         .addClass('panel-body')
                                         .append($('<div>'))));
-
-            $menuSpan.kbaseNarrativeCellMenu();
-
-            this.$elem.append($body);
-
             try {
                 this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
+                this.$elem.append($body);
             }
             catch (err) {
                 KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
-                $outputWidget[this.OUTPUT_ERROR_WIDGET]({'error': {
+                this.options.title = 'App Error';
+                this.options.data = {'error': {
                     'msg': 'An error occurred while showing your output:',
                     'method_name': 'kbaseNarrativeOutputCell.renderCell',
                     'type': 'Output',
                     'severity': '',
                     'traceback': 'Failed while trying to show a "' + widget + '"\n' +
                                  'With inputs ' + JSON.stringify(widgetData) + '\n\n' + 
-                                 err.message
-                }});
+                                 err.message                    
+                }};
+                this.options.widget = this.OUTPUT_ERROR_WIDGET;
+                this.renderErrorOutputCell();
+
+                // this.$outWidget = $body.find('.panel-body > div')[this.OUTPUT_ERROR_WIDGET]({'error': {
+                //     'msg': 'An error occurred while showing your output:',
+                //     'method_name': 'kbaseNarrativeOutputCell.renderCell',
+                //     'type': 'Output',
+                //     'severity': '',
+                //     'traceback': 'Failed while trying to show a "' + widget + '"\n' +
+                //                  'With inputs ' + JSON.stringify(widgetData) + '\n\n' + 
+                //                  err.message
+                // }});
             }
+
         },
 
         getState: function() {

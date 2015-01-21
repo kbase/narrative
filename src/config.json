@@ -4,6 +4,7 @@
         "awe": "http://140.221.67.185:7080", 
         "cdmi": "https://kbase.us/services/cdmi_api/", 
         "fba": "http://kbase.us/services/fba_model_services/", 
+	"gene_families": "http://140.221.67.203:8123/",
         "genomeCmp": "http://dev06.berkeley.kbase.us:8283/jsonrpc", 
         "glamm": "http://140.221.84.217:7040/glamm/#", 
         "invocation": "https://kbase.us/services/invocation", 

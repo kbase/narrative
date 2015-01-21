@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("components/bootstrap-extensions/css/dataTables.bootstrap.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("components/bootstrap-extensions/css/bootstrap-fileupload.min.css") }}" type="text/css" />
-    
+
     <link rel="stylesheet" href="{{ static_url("select2-v3.5.2/select2.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("select2-v3.5.2/select2-bootstrap.css") }}" type="text/css" />
 
@@ -49,12 +49,12 @@ class="notebook_app"
     </div>
 
     <div id="content-column">
-        <span id="kb-add-code-cell" 
-              class="kb-data-list-add-data-button fa fa-terminal fa-2x" 
+        <span id="kb-add-code-cell"
+              class="kb-data-list-add-data-button fa fa-terminal fa-2x"
               style="position:fixed; bottom:15px; right:75px; z-index:5"
               data-toggle="tooltip" data-placement="top" Title="Add Code Cell"></span>
-        <span id="kb-add-md-cell" 
-              class="kb-data-list-add-data-button fa fa-paragraph fa-2x" 
+        <span id="kb-add-md-cell"
+              class="kb-data-list-add-data-button fa fa-paragraph fa-2x"
               style="position:fixed; bottom:15px; right:10px; z-index:5"
               data-toggle="tooltip" data-placement="top" Title="Add Markdown Cell"></span>
 
@@ -307,7 +307,12 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseNarrativeError.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseAssembly.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelMetaNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelTabsNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<!-- this stuff shall replace all modeling output widgets (and has no clients) -->
+<script src="{{ static_url("kbase/js/revised-widgets/modeling/KBObjects.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/modeling/KBaseFBA.FBAModel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/modeling/kbaseTabTable.js") }}" type="text/javascript" charset="utf-8"></script>
+
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelCoreNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaTabsNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseMediaEditorNarrative.js") }}" type="text/javascript" charset="utf-8"></script>

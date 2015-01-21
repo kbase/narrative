@@ -8,6 +8,7 @@ __Changes__
 - Added Transform service client code
 - Exposed transform service as a method
 - Added assembly view widget
+- Added icons for Apps and Methods in panel
 __Bugfixes__
 - Now inserts a cell instead of freezing when DnD of data onto empty narrative
 - JIRA NAR-388 - fixed a problem where errors on service invocation weren't being stringified properly before logging

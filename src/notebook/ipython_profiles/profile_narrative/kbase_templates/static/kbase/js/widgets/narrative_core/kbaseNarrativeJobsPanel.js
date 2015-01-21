@@ -599,7 +599,7 @@
                         // update the state and cell
                         this.jobStates[jobId].status = fetchedJobStatus[jobId].job_state;
                         this.jobStates[jobId].state = fetchedJobStatus[jobId];
-//                        this.updateCell(this.jobStates[jobId].state, jobInfo[jobId]);
+                        this.updateCell(jobId, jobInfo[jobId]);
                     }
                     // updating the given state first allows us to just pass the id and the status set to
                     // the renderer. If the status set doesn't exist (e.g. we didn't look it up in the 
@@ -733,14 +733,15 @@
          * 'job' = the response from the server about the job. Contains info from the job service
          * 'jobInfo' = the info we know about the running job: its id, associated cell, etc.
          */
-        updateCell: function(job, jobInfo) {
-            var source = jobInfo.state.source;
-            var jobType = this.jobTypeFromId(jobInfo.state.id)
+        updateCell: function(jobId, jobInfo) {
+            var jobState = this.jobStates[jobId];
+            var source = jobState.source;
+            var jobType = this.jobTypeFromId(jobId);
 
             // console.log(['UPDATE_CELL', job, jobInfo]);
-            var state = '';
-            if (job.job_state)
-                state = job.job_state.toLowerCase();
+            var status = '';
+            if (jobState.status)
+                status = jobState.status.toLowerCase();
             
             // don't do anything if we don't know the source cell. it might have been deleted.
             if (!source)
@@ -752,26 +753,26 @@
                 return;
 
             // if it's running and an NJS job, then it's in an app cell
-            if (job.running_step_id && jobType === 'njs') {
-                $cell.kbaseNarrativeAppCell('setRunningStep', job.running_step_id);
+            if (jobState.state.running_step_id && jobType === 'njs') {
+                $cell.kbaseNarrativeAppCell('setRunningStep', jobState.state.running_step_id);
             }
             // if it's a ujs or method job, then it's a method cell
             else if (jobType === 'ujs' || jobType === 'method') {
                 // assume we have 'in-progress' or 'running' vs. 'complete' or 'done'
                 var submitState = 'complete';
-                if (state.indexOf('run') != -1 || state.indexOf('progress') != -1)
+                if (status.indexOf('run') != -1 || status.indexOf('progress') != -1)
                     submitState = 'running';
-                else if (state.indexOf('queue') != -1 || state.indexOf('submit') != -1)
+                else if (status.indexOf('queue') != -1 || status.indexOf('submit') != -1)
                     submitState = 'submitted';
                 $cell.kbaseNarrativeMethodCell('changeState', submitState);
             }
             // if we have outputs, those need to be passed along
-            if (job.widget_outputs && Object.keys(job.widget_outputs).length > 0) {
+            if (jobState.state.widget_outputs && Object.keys(jobState.state.widget_outputs).length > 0) {
                 if (jobType === 'njs') {
-                    for (var key in job.widget_outputs) {
-                        if (job.widget_outputs.hasOwnProperty(key)) {
+                    for (var key in jobState.state.widget_outputs) {
+                        if (jobState.state.widget_outputs.hasOwnProperty(key)) {
                             try {
-                                $cell.kbaseNarrativeAppCell('setStepOutput', key, job.widget_outputs[key]);
+                                $cell.kbaseNarrativeAppCell('setStepOutput', key, jobState.state.widget_outputs[key]);
                             }
                             catch (err) {
                                 console.log(["ERROR'D APP OUTPUT", err]);
@@ -781,7 +782,7 @@
                 }
                 else {
                     try {
-                        $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : job.widget_outputs });
+                        $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : jobState.state.widget_outputs });
                     }
                     catch (err) {
                         console.log(["ERROR'D METHOD OUTPUT", err]);
@@ -789,13 +790,16 @@
                 }
             }
             // if it's an error, then we need to signal the cell
-            if (state === "error" || (job.step_errors && Object.keys(job.step_errors).length !== 0)) {
+            if (status === "error" || (jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0)) {
                 if (jobType === 'njs') {
                     $cell.kbaseNarrativeAppCell('setRunningState', 'error');
                 }
+                else {
+                    $cell.kbaseNarrativeMethodCell('changeState', 'error');
+                }
             }
             // ...and if it's done, we need to signal that, too. Note that it can be both (i.e. done with errors)
-            if (state.indexOf('complete') !== -1 || state.indexOf('done') !== -1) {
+            if (status.indexOf('complete') !== -1 || status.indexOf('done') !== -1) {
                 if (jobType === 'njs') {
                     $cell.kbaseNarrativeAppCell('setRunningState', 'complete');
                 }

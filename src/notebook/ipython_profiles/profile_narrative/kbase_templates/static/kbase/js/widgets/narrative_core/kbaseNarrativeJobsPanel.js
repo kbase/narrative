@@ -834,8 +834,10 @@
             var errorText = "The KBase servers are reporting an error for this job:";
             var errorType = "Unknown";
 
-            var $errBtn = $('<div>');
-            $errBtn.addClass('btn btn-danger btn-xs kb-data-list-more-btn fa fa-warning');
+            var $errBtn = $('<div>')
+                          .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
+                          .append('<span class="fa fa-warning" style="color:white"></span>');
+//            $errBtn.addClass('btn btn-danger btn-xs kb-data-list-more-btn fa fa-warning');
             if (btnText)
                 $errBtn.append(' ' + btnText);
             $errBtn.click($.proxy(function(e) {

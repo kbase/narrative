@@ -3,6 +3,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.13
+__Changes__
+- Github issue #162 fixed - drag and drop data onto an empty Narrative now doesn't lock up
+- Added Transform service client code
+- Exposed transform service as a method
+- JIRA NAR-388 - fixed a problem where errors on service invocation weren't being stringified properly before logging
+
 ### Version 0.3.12 - 1/20/2015
 __Changes__
 - Fixes issue where the Method Gallery overlay panel wouldn't be populated if there were any problematic method/app specs.

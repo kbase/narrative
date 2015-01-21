@@ -73,6 +73,12 @@
                     this.refresh();
                 }, this)
             );
+
+            $([IPython.events]).on(
+                'notebook_saved.Notebook', $.proxy(function(e) {
+                    this.refresh();
+                }, this)
+            );
             
             this.landingPageMap = window.kbconfig.landing_page_map;
             

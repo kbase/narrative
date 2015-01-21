@@ -790,17 +790,20 @@
         insertViewer: function(key) {
             var self = this;
             var cell = IPython.notebook.get_selected_cell();
-            var near_idx = IPython.notebook.find_cell_index(cell);
-            $(cell.element).off('dblclick');
-            $(cell.element).off('keydown');
-
+            var near_idx = 0;
+            if (cell) {
+            	near_idx = IPython.notebook.find_cell_index(cell);
+            	$(cell.element).off('dblclick');
+            	$(cell.element).off('keydown');
+            }
+            console.log(cell, near_idx);
+            
             //var cell_id = self.genUUID();
             //cell.rendered = false;
             //cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
             //cell.render();
 
             var obj = _.findWhere(self.objectList, {key: key});
-            console.debug('insertViewer: key=' + key, obj);
             var info = self.createInfoObject(obj.info);
             // Insert the narrative data cell into the div we just rendered
             //$('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});

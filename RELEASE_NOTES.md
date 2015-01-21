@@ -7,6 +7,8 @@ This is built on the IPython Notebook (more notes will follow).
 __Changes__
 - Fixes issue where the Method Gallery overlay panel wouldn't be populated if there were any problematic method/app specs.
 - Added a link to directly submit a JIRA ticket from the pulldown menu.
+__Bugfixes__
+- Now inserts a cell instead of freezing when DnD of data onto empty narrative
 
 ### Version 0.3.11 - 1/16/2015
 __Changes__
@@ -79,7 +81,7 @@ __Changes__
 - Removed old links from the Navbar menu.
 - Added separate 'Jobs' tab to side panel.
 - Fixed problem with Job errors overflowing the error modal.
-- Method panel changes 
+- Method panel changes
     - The magnifying glass button should now toggle the search input.
     - Added a 'type:_objecttype_' filter on methods and apps. This filters by their parameters. E.g. putting 'type:genome' or 'type:KBaseGenomes.Genome' in there will only show methods/apps that have a genome as a parameter.
     - Added an event that can be fired to auto-filter the methods and apps.
@@ -91,7 +93,7 @@ __Changes__
     - Updated the style to a more 'material' look.
     - Removed the '+/-' buttons for showing metadata info, replaced with '...'
 - Import tab on GetData side panel allows now to upload genome from GBK file, transcriptomes from Fasta and short reads from Fasta and Fastq
-- Viewers can be open for main data types by drag-n-drop objects from Data panel to narrative 
+- Viewers can be open for main data types by drag-n-drop objects from Data panel to narrative
 - States of long running methods calling services are now shown on Job panel and Job panel waits for 'Done' state before show output widget
 - Added a 'debug' viewer to the apps. After starting an app's run, click on the gear menu in the app cell and select 'View Job Submission'. This will both emit the returned kernel messages from that app run into your browser's Javascript console, and it will create and run a code cell that will show you the object that gets set to the Job Service.
 

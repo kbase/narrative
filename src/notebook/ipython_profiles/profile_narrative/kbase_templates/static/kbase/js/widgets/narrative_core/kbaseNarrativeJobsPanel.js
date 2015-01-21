@@ -420,7 +420,6 @@
                 jobInfo[jobId] = {'state' : jobState};
 
                 // if the job's incomplete, we have to go get it.
-                console.log('job status: ' + jobState.status);
                 var jobIncomplete = (jobState.status !== 'completed' && 
                                      jobState.status !== 'error' && 
                                      jobState.status !== 'done' && 

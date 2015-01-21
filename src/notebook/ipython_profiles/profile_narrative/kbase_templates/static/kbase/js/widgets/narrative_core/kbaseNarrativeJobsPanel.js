@@ -879,7 +879,7 @@
                             // contort that into the method name
                             // gotta search for it in the spec for the method id, first.
                             var methodName = "Unknown method: " + stepId;
-                            if (this.jobTypeFromId(jobInfo.state.id) === "njs") {
+                            if (this.jobTypeFromId(jobId) === "njs") {
                                 var methodId = null;
                                 for (var i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
                                     if (stepId === jobInfo.spec.appSpec.steps[i].step_id) {

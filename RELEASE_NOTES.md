@@ -5,17 +5,18 @@ This is built on the IPython Notebook (more notes will follow).
 
 ### Version 0.3.13
 __Changes__
-- Github issue #162 fixed - drag and drop data onto an empty Narrative now doesn't lock up
 - Added Transform service client code
 - Exposed transform service as a method
+__Bugfixes__
+- Now inserts a cell instead of freezing when DnD of data onto empty narrative
 - JIRA NAR-388 - fixed a problem where errors on service invocation weren't being stringified properly before logging
+- Github issue #162 fixed - drag and drop data onto an empty Narrative now doesn't lock up
+- JIRA NAR-402 - saving a Narrative updates the Manage panel
 
 ### Version 0.3.12 - 1/20/2015
 __Changes__
 - Fixes issue where the Method Gallery overlay panel wouldn't be populated if there were any problematic method/app specs.
 - Added a link to directly submit a JIRA ticket from the pulldown menu.
-__Bugfixes__
-- Now inserts a cell instead of freezing when DnD of data onto empty narrative
 
 ### Version 0.3.11 - 1/16/2015
 __Changes__

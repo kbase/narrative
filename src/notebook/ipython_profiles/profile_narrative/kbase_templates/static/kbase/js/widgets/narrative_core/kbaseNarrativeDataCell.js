@@ -24,8 +24,9 @@ var KBaseNarrativeViewers = function(mclient, done) {
     this.method_ids = [];
     var self = this;
     // Get application types, and populate data structures
-    mclient.list_categories({'load_methods': 0, 'load_apps': 0, 'load_types': 1},
+    mclient.list_categories({'load_methods': 1, 'load_apps': 0, 'load_types': 1},
         function(data) {
+    		var methodInfo = data[1];
             var aTypes = data[3];
             _.each(aTypes, function(val, key) {
                 if (val.loading_error) {
@@ -34,10 +35,16 @@ var KBaseNarrativeViewers = function(mclient, done) {
                 else if (val.view_method_ids && val.view_method_ids.length > 0) {
                     //console.debug("adding view method[" + key + "]=", val);
                     var mid = val.view_method_ids[0];
-                    self.viewers[key] = mid;
-                    self.landing_page_urls[key] = val.landing_page_url_prefix;
-                    self.type_names[key] = val.name;
-                    self.method_ids.push(mid);
+                    if (!methodInfo[mid]) {
+                    	console.log('Can\'t find method info for id: ' + mid);
+                    } else if (methodInfo[mid].loading_error) {
+                    	console.log('There is an error for method info with id [' + mid + ']: ' + methodInfo[mid].loading_error);
+                    } else {
+                    	self.viewers[key] = mid;
+                    	self.landing_page_urls[key] = val.landing_page_url_prefix;
+                    	self.type_names[key] = val.name;
+                    	self.method_ids.push(mid);
+                    }
                 }
                 else {
                     //console.warn("No output types for: " + key);

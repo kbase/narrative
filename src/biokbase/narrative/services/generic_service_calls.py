@@ -84,8 +84,8 @@ def _method_call(meth, method_spec_json, param_values_json):
         steps = []
         methodId = methodSpec['info']['id']
         app = { 'name' : 'App wrapper for method ' + methodId,'steps' : steps }
-        meth.debug(json.dumps(app))
         steps.append(create_app_step(workspace, token, wsClient, methodSpec, paramValues, methodId, True))
+        meth.debug(json.dumps(app))
         njsClient = NarrativeJobService(service.URLS.job_service, token = token)
         appState = njsClient.run_app(app)
         jobId = "method:" + appState["job_id"]

@@ -38,6 +38,8 @@
         $errorModal: null,
         $errorModalContent:null,
 
+        OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
+
         state: null,
 
         /**
@@ -647,29 +649,65 @@
                     this.inputStepLookup[stepId].$stepContainer.removeClass("kb-app-step-running");
 
                     var widgetName = this.inputStepLookup[stepId].outputWidgetName;
-                    var $outputWidget = $('<div>');
-                    var widget;
-                    if (widgetName !== "kbaseDefaultNarrativeOutput")
-                        widget = $outputWidget[widgetName](output);
-                    else
-                        widget = $outputWidget[widgetName]({data:output});
+
+
+
+                    // var header = '<span class="kb-out-desc">Output</span>' +
+                    //              '<span class="pull-right kb-func-timestamp">' +
+                    //                  this.readableTimestamp(new Date().getTime()) +
+                    //              '</span>';
+
+                    // var $outputWidget = $('<div>');
+                    // var widget;
+                    // try {
+                    //     if (widgetName !== "kbaseDefaultNarrativeOutput")
+                    //         widget = $outputWidget[widgetName](output);
+                    //     else
+                    //         widget = $outputWidget[widgetName]({data:output});                
+                    //     if (state) {
+                    //         widget.loadState(state);
+                    //     }
+                    // }
+                    // catch (err) {
+                    //     KBError("App::" + this.appSpec.info.name, "failed to render output widget: '" + widgetName);
+                    //     $outputWidget[this.OUTPUT_ERROR_WIDGET]({'error': {
+                    //         'msg': 'An error occurred while showing your output:',
+                    //         'method_name': 'kbaseNarrativeAppCell.setStepOutput',
+                    //         'type': 'Output',
+                    //         'severity': '',
+                    //         'traceback': 'Failed while trying to show a "' + widgetName + '"\n' +
+                    //                      'With inputs ' + JSON.stringify(output) + '\n\n' + 
+                    //                      err.message
+                    //     }});
+                    //     header = header.replace(/\-out\-/, '-err-');
+                    // }
+
+                    // var $outputCell = $("<div>")
+                    //                   .addClass("kb-cell-output")
+                    //                   .css({"padding-top":"5px","padding-bottom":"5px"})
+                    //                   .append(
+                    //                         $('<div>')
+                    //                         .addClass("panel panel-default")
+                    //                         .append($('<div>').addClass("panel-heading").append(header))
+                    //                         .append($('<div>').addClass("panel-body").append($outputWidget))
+                    //                   );
+
+                    var $outputWidget = $('<div>').css({'padding':'5px 0'});
+                    $outputWidget.kbaseNarrativeOutputCell({
+                        widget: widgetName,
+                        data: output,
+                        type: 'app',
+                        title: this.methodSpecs[this.inputStepLookup[stepId].methodId].info.name,
+                        showMenu: false,
+                        time: new Date().getTime()
+                    });
                     if (state) {
-                        widget.loadState(state);
+                        $outputWidget.loadState(state);
                     }
+                    this.inputStepLookup[stepId].$outputPanel.append($outputWidget);
+//                    this.inputStepLookup[stepId].$outputPanel.append($outputCell);
 
-                    var header = '<span class="kb-out-desc">Output</span><span class="pull-right kb-func-timestamp">' +
-                                    this.readableTimestamp(new Date().getTime()) +
-                                    '</span>';
-
-                    var $outputCell = $("<div>").addClass("kb-cell-output").css({"padding-top":"5px","padding-bottom":"5px"}).append(
-                                            $('<div>').addClass("panel panel-default")
-                                                .append($('<div>').addClass("panel-heading").append(header))
-                                                .append($('<div>').addClass("panel-body").append($outputWidget))
-                                            );
-
-                    this.inputStepLookup[stepId].$outputPanel.append($outputCell);
-
-                    this.inputStepLookup[stepId].outputWidget = widget;
+                    this.inputStepLookup[stepId].outputWidget = $outputWidget;
                     var objCopy = $.extend(true, {}, output);
                     this.state.step[stepId].outputState = {
                         output: objCopy
@@ -681,8 +719,15 @@
         setStepError: function(stepId, error) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
-                    this.inputStepLookup[stepId].$outputPanel.html(error);
+//                    this.inputStepLookup[stepId].$outputPanel.html(error);
                     // todo: actually render with the error widget
+                    this.inputStepLookup[stepId].kbaseNarrativeOutputCell({
+                        widget: this.OUTPUT_ERROR_WIDGET,
+                        data: error,
+                        type: 'error',
+                        showMenu: false,
+                        time: new Date().getTime()
+                    });
                 }
             }
         },

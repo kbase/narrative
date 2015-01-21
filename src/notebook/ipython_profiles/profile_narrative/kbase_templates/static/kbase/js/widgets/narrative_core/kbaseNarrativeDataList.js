@@ -737,11 +737,14 @@
                     // Insert cell onto narrative canvas near drop point:
                     // (a) find nearest cell using 'jquery-nearest'
                     var $near_elt = $($elt.nearest('.cell'));
-                    // (b) map that cell back to an index, and insert before it
-
-
-                    var near_idx = IPython.notebook.find_cell_index($near_elt.data().cell);
-
+                    var near_idx = 0;
+                    if ($near_elt == null || $near_elt.data() == null) {
+                      // no cell found, so place at top
+                    }
+                    else {
+                      // (b) map that cell back to an index
+                      near_idx = IPython.notebook.find_cell_index($near_elt.data().cell);
+                    }
                     // var cell = IPython.notebook.insert_cell_at_index('markdown', near_idx);
                     // // Add unique id attr. to cell
                     // var cell_id = self.genUUID();
@@ -787,17 +790,20 @@
         insertViewer: function(key) {
             var self = this;
             var cell = IPython.notebook.get_selected_cell();
-            var near_idx = IPython.notebook.find_cell_index(cell);
-            $(cell.element).off('dblclick');
-            $(cell.element).off('keydown');
-
+            var near_idx = 0;
+            if (cell) {
+            	near_idx = IPython.notebook.find_cell_index(cell);
+            	$(cell.element).off('dblclick');
+            	$(cell.element).off('keydown');
+            }
+            console.log(cell, near_idx);
+            
             //var cell_id = self.genUUID();
             //cell.rendered = false;
             //cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
             //cell.render();
 
             var obj = _.findWhere(self.objectList, {key: key});
-            console.debug('insertViewer: key=' + key, obj);
             var info = self.createInfoObject(obj.info);
             // Insert the narrative data cell into the div we just rendered
             //$('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});

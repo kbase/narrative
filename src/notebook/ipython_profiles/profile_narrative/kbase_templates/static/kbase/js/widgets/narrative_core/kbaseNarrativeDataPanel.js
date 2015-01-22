@@ -557,22 +557,33 @@
                         .then(function(d) {
                             var workspaces = [];
                             for (var i in d) {
-                                 if (d[i][8].is_temporary) {
+                                if (d[i][8].is_temporary) {
                                     if (d[i][8].is_temporary === 'true') { continue; }
                                 }
                                 var displayName = d[i][1];
-                                if (!d[i][8].narrative) { continue; }
-                                if (d[i][8].narrative_nice_name) {
-                                    displayName = d[i][8].narrative_nice_name;
-                                } else {
-                                    continue; // skip corrupted narratives
+                                if (d[i][8].narrative) {
+                                    if (d[i][8].narrative_nice_name) {
+                                        displayName = d[i][8].narrative_nice_name;
+                                        // todo: should skip temporary narratives
+                                        workspaces.push({id: d[i][0],
+                                                         name: d[i][1],
+                                                         displayName: displayName,
+                                                         count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                        continue;
+                                    }
                                 }
-                                // todo: should skip temporary narratives
-                                workspaces.push({id: d[i][0],
-                                                 name: d[i][1],
-                                                 displayName: displayName,
-                                                 count: d[i][4]});
-                                narrativeNameLookup[d[i][1]] = displayName;
+                                
+                                if (d[i][8].show_in_narrative_data_panel) {
+                                    if(d[i][8].show_in_narrative_data_panel==='1') {
+                                        displayName = "(data only) "+d[i][1];
+                                        workspaces.push({id: d[i][0],
+                                                     name: d[i][1],
+                                                     displayName:displayName,
+                                                     count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                    }
+                                }
                             }
 
                             // add to model for filter
@@ -597,21 +608,34 @@
                                 if (d[i][2] == user) {
                                     continue;
                                 }
+                                
                                 if (d[i][8].is_temporary) {
                                     if (d[i][8].is_temporary === 'true') { continue; }
                                 }
-                                if (!d[i][8].narrative) { continue; }
                                 var displayName = d[i][1];
-                                if (d[i][8].narrative_nice_name) {
-                                    displayName = d[i][8].narrative_nice_name;
-                                } else {
-                                    continue; // skip corrupted narratives
+                                if (d[i][8].narrative) {
+                                    if (d[i][8].narrative_nice_name) {
+                                        displayName = d[i][8].narrative_nice_name;
+                                        // todo: should skip temporary narratives
+                                        workspaces.push({id: d[i][0],
+                                                         name: d[i][1],
+                                                         displayName: displayName,
+                                                         count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                        continue;
+                                    }
                                 }
-                                workspaces.push({id: d[i][0],
-                                                 name: d[i][1],
-                                                 displayName:displayName,
-                                                 count: d[i][4]});
-                                narrativeNameLookup[d[i][1]] = displayName;
+                                
+                                if (d[i][8].show_in_narrative_data_panel) {
+                                    if(d[i][8].show_in_narrative_data_panel==='1') {
+                                        displayName = "(data only) "+d[i][1];
+                                        workspaces.push({id: d[i][0],
+                                                     name: d[i][1],
+                                                     displayName:displayName,
+                                                     count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                    }
+                                }
                             }
 
                             // add to model for filter

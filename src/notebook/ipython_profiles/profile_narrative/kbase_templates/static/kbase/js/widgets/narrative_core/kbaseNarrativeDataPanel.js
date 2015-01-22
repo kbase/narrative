@@ -358,10 +358,10 @@
             
             
             // hack to keep search on top
-            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'430px'});
+            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
             setLoading($mineScrollPanel);
             minePanel.append($mineScrollPanel);
-            var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'430px'});
+            var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
             setLoading($sharedScrollPanel);
             sharedPanel.append($sharedScrollPanel);
             
@@ -390,7 +390,6 @@
                 self.trigger('hideSidePanelOverlay.Narrative');
             })
             footer.append(closeBtn);
-            //footer.append(btn);
 
             // start with my data, then fetch other data
             // this is because data sets can be large and
@@ -400,7 +399,7 @@
             });
 
             var narrativeNameLookup={};
-            this.$overlayPanel = $('<div>').append(body).append(footer);
+            this.$overlayPanel = body.append(footer);
 
             function updateView(view) {
                 var p;

@@ -34,14 +34,8 @@
             var kbws = new Workspace(self.ws_url, {'token': self.options.auth});
             self.kbws = kbws;
 
-            console.log(IPython.notebook.metadata.ws_name);
-
-            this.trigger('workspaceQuery.Narrative', $.proxy(function(wsName) {
-                console.log('here');
-                this.options.ws = wsName;
-                console.log('workspace: ' + this.options.ws);
-                this.render();
-            }, this));
+            this.options.ws = window.kbconfig.workspaceId;
+            this.render();
 
             return this;
         },

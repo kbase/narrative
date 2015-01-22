@@ -256,9 +256,16 @@
 
             var $menuSpan = $('<div class="pull-right">');
 
+            // Controls (minimize)
+            var $controlsSpan = $('<div>').addClass("pull-left");
+            var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
+                        .css({color: "#888", fontSize: "14pt"});
+            $controlsSpan.append($minimizeControl);
+
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
                              .append($menuSpan)
+                             .append($controlsSpan)
                              .append($('<div>')
                                      .addClass('panel-heading app-panel-heading')
                                      .append($('<div>')
@@ -276,15 +283,53 @@
                                      .css({'overflow' : 'hidden'})
                                      .append($buttons));
 
-            $menuSpan.kbaseNarrativeCellMenu();
+            this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
+
+
             //now we link the step parameters together that are linked
             this.linkStepsTogether();
 
             // then we show the result
             this.$elem.empty().append($cellPanel);
 
+            // Add minimize/restore actions.
+            // These mess with the CSS on the cells!
+            var $mintarget = $cellPanel;
+            this.panel_minimized = false;
+            var self = this;
+            $controlsSpan.click(function() {
+              if (self.panel_minimized) {
+                console.debug("restore full panel");
+                $mintarget.find(".panel-body").slideDown();
+                $mintarget.find(".panel-footer").show();
+                $minimizeControl.removeClass("glyphicon-chevron-right")
+                                .addClass("glyphicon-chevron-down");
+                // restore original padding (20px)
+                $mintarget.find(".app-panel-heading").css({padding: "20px"});
+                self.panel_minimized = false;
+              }
+              else {
+                console.debug("minimize panel");
+                $mintarget.find(".panel-footer").hide();
+                $mintarget.find(".panel-body").slideUp();
+                $minimizeControl.removeClass("glyphicon-chevron-down")
+                                .addClass("glyphicon-chevron-right");
+                // reduce padding so it lines up
+                $mintarget.find(".app-panel-heading").css({padding: "5px"});
+                self.panel_minimized = true;
+              }
+            });
+
             // finally, we refresh so that our drop down or other boxes can be populated
             this.refresh();
+        },
+
+        minimizePanel: function() {
+          console.debug("minimize panel");
+        },
+
+        showFullPanel: function() {
+          console.debug("restore panel to full size");
         },
 
         // given a method spec, returns a jquery div that is rendered but not added yet to the dom
@@ -454,13 +499,30 @@
                 }
             }
             this.state.runningState.appRunState = "running";
+            this.displayRunning(true);
             return true;
+        },
+
+        /* Show/hide running icon */
+        displayRunning: function(is_running, had_error) {
+          if (is_running) {
+            this.cellMenu.$runningIcon.show();
+            // never show error icon while running
+            this.cellMenu.$errorIcon.hide();
+          }
+          else {
+            this.cellMenu.$runningIcon.hide();
+            // only display error when not running
+            if (had_error) { this.cellMenu.$errorIcon.show(); }
+            else { this.cellMenu.$errorIcon.hide(); }
+          }
         },
 
         /*
          * Reset parameters and allow to re-run
          */
         resetAppRun: function(clear_inputs) {
+          this.displayRunning(false);
           // buttons
           this.$stopButton.hide();
           this.$resetButton.hide();
@@ -687,6 +749,7 @@
         setErrorState: function(isError) {
             if (isError) {
                 this.state.runningState.appRunState = "error";
+                this.displayRunning(false, true);
                 this.$elem.find('.kb-app-panel').addClass('kb-app-error');
                 this.$runButton.hide();
                 this.$stopButton.hide();

@@ -306,6 +306,7 @@
                 formatNoMatches: noMatchesFoundStr,
                 placeholder:placeholder,
                 allowClear: true,
+                selectOnBlur: true,
                 query: function (query) {
                     var data = {results:[]};
                     // populate the names from our valid data object list

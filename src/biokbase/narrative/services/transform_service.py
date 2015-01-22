@@ -43,7 +43,7 @@ def _assy_to_cs(meth, input_assyfile, output_contigset):
     transform_url = service.URLS.transform
     trans = Transform(transform_url, token=token)
     _, ujs_job = trans.convert(
-        {'source_kbase_type': 'KBaseFile.Assembly',
+        {'source_kbase_type': 'KBaseFile.AssemblyFile',
          'source_workspace_name': workspace,
          'source_object_name': input_assyfile,
          'destination_kbase_type': 'KBaseGenomes.ContigSet',

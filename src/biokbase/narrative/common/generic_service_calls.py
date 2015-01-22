@@ -115,6 +115,7 @@ def correct_method_specs_json(method_specs_json):
 
 def app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut):
     methodOut = None
+    input = {}
     if 'kb_service_input_mapping' in methodSpec['behavior'] or 'script_input_mapping' in methodSpec['behavior']:
         if 'kb_service_input_mapping' in methodSpec['behavior']:
             try:
@@ -122,12 +123,13 @@ def app_state_output_into_method_output(workspace, token, wsClient, methodSpec, 
             except Exception as err:
                 ##raise ValueError("Error parsing: " + rpcOut)
                 pass
-        input = {}
         tempArgs = []
         prepare_njs_method_input(token, wsClient, workspace, methodSpec, methodInputValues, input);
-        methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, rpcOut)
     else:
-        methodOut = rpcOut
+        parameters = methodSpec['parameters']
+        for paramPos in range(0, len(parameters)):
+            input[parameters[paramPos]['id']] = methodInputValues[paramPos]
+    methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, rpcOut)
     return methodOut
 
 def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_specs_json, param_values_json, app_job_id):
@@ -140,13 +142,20 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
         app_job_id = app_job_id[4:]
     appState = njsClient.check_app_state(app_job_id)
     appState['widget_outputs'] = {}
+    prevStepReady = True
     for stepSpec in appSpec['steps']:
         stepId = stepSpec['step_id']
-        if not stepId in appState['step_outputs']:
-            continue
-        rpcOut = appState['step_outputs'][stepId]
         methodId = stepSpec['method_id']
         methodSpec = methIdToSpec[methodId]
+        if stepId in appState['step_outputs']:
+            rpcOut = appState['step_outputs'][stepId]
+            prevStepReady = True
+        elif 'output_mapping' in methodSpec['behavior'] and prevStepReady:
+            rpcOut = None
+            prevStepReady = True
+        else:
+            prevStepReady = False
+            continue
         methodInputValues = extract_param_values(paramValues, stepId)
         appState['widget_outputs'][stepId] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
     appState['job_id'] = "njs:" + appState['job_id']

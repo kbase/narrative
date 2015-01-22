@@ -208,7 +208,20 @@
                                   }, this)
                               )
                               .hide();
-            
+            // Reset the inputs and prepare for another "run"
+            this.$resetButton = $('<button>')
+              .attr('type', 'button')
+              .attr('value', 'Reset')
+              .addClass('kb-app-run kb-app-reset')
+              .append('Reset')
+              .css({'margin-right':'5px'})
+              .click(
+                $.proxy(function(event) {
+                  self.resetAppRun(true);
+                }, this)
+              )
+            .hide();
+
             this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
 
             var appInfo = this.appSpec.info.name;
@@ -228,6 +241,7 @@
                            .addClass('buttons pull-left')
                            .append(this.$runButton)
                            .append(this.$stopButton)
+                           .append(this.$resetButton)
                            //.append(this.$stateDebugBtn)
                            .append(this.$submitted);
 
@@ -242,9 +256,16 @@
 
             var $menuSpan = $('<div class="pull-right">');
 
+            // Controls (minimize)
+            var $controlsSpan = $('<div>').addClass("pull-left");
+            var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
+                        .css({color: "#888", fontSize: "14pt"});
+            $controlsSpan.append($minimizeControl);
+
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
                              .append($menuSpan)
+                             .append($controlsSpan)
                              .append($('<div>')
                                      .addClass('panel-heading app-panel-heading')
                                      .append($('<div>')
@@ -262,15 +283,53 @@
                                      .css({'overflow' : 'hidden'})
                                      .append($buttons));
 
-            $menuSpan.kbaseNarrativeCellMenu();
+            this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
+
+
             //now we link the step parameters together that are linked
             this.linkStepsTogether();
 
             // then we show the result
             this.$elem.empty().append($cellPanel);
 
+            // Add minimize/restore actions.
+            // These mess with the CSS on the cells!
+            var $mintarget = $cellPanel;
+            this.panel_minimized = false;
+            var self = this;
+            $controlsSpan.click(function() {
+              if (self.panel_minimized) {
+                console.debug("restore full panel");
+                $mintarget.find(".panel-body").slideDown();
+                $mintarget.find(".panel-footer").show();
+                $minimizeControl.removeClass("glyphicon-chevron-right")
+                                .addClass("glyphicon-chevron-down");
+                // restore original padding (20px)
+                $mintarget.find(".app-panel-heading").css({padding: "20px"});
+                self.panel_minimized = false;
+              }
+              else {
+                console.debug("minimize panel");
+                $mintarget.find(".panel-footer").hide();
+                $mintarget.find(".panel-body").slideUp();
+                $minimizeControl.removeClass("glyphicon-chevron-down")
+                                .addClass("glyphicon-chevron-right");
+                // reduce padding so it lines up
+                $mintarget.find(".app-panel-heading").css({padding: "5px"});
+                self.panel_minimized = true;
+              }
+            });
+
             // finally, we refresh so that our drop down or other boxes can be populated
             this.refresh();
+        },
+
+        minimizePanel: function() {
+          console.debug("minimize panel");
+        },
+
+        showFullPanel: function() {
+          console.debug("restore panel to full size");
         },
 
         // given a method spec, returns a jquery div that is rendered but not added yet to the dom
@@ -373,7 +432,7 @@
             }
             return;
         },
-        
+
         isValid : function() {
             var isValidRet = {isValid:true, stepErrors:[]}
             if (this.inputSteps) {
@@ -412,6 +471,7 @@
                 //code
             } else {
                 var v = self.isValid();
+                // Take these action if the app input is not valid?
                 if (!v.isValid) {
                     var errorCount = 1;
                     self.$errorModalContent.empty();
@@ -439,7 +499,62 @@
                 }
             }
             this.state.runningState.appRunState = "running";
+            this.displayRunning(true);
             return true;
+        },
+
+        /* Show/hide running icon */
+        displayRunning: function(is_running, had_error) {
+          if (is_running) {
+            this.cellMenu.$runningIcon.show();
+            // never show error icon while running
+            this.cellMenu.$errorIcon.hide();
+          }
+          else {
+            this.cellMenu.$runningIcon.hide();
+            // only display error when not running
+            if (had_error) { this.cellMenu.$errorIcon.show(); }
+            else { this.cellMenu.$errorIcon.hide(); }
+          }
+        },
+
+        /*
+         * Reset parameters and allow to re-run
+         */
+        resetAppRun: function(clear_inputs) {
+          this.displayRunning(false);
+          // buttons
+          this.$stopButton.hide();
+          this.$resetButton.hide();
+          this.$submitted.hide();
+          // clear inputs
+          if (this.inputSteps) {
+            for(var i=0; i<this.inputSteps.length; i++) {
+              this.inputSteps[i].widget.unlockInputs();
+              this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+              // If invoked from "Reset" button, then clear_inputs will be
+              // true and we need to get back to the original state.
+              // If invoked from "Cancel" button we skip this step and
+              // allow the user to Reset later.
+              if (clear_inputs) {
+                var c = this.inputSteps[i].$stepContainer;
+                // clear text fields
+                c.find("span.kb-parameter-data-selection").text("");
+                // remove old output
+                c.find(".kb-cell-output").remove();
+              }
+            }
+          }
+          if (clear_inputs) {
+            this.setErrorState(false);
+            this.state.runningState.appRunState = "input";
+            this.$runButton.show();
+          }
+          else {
+            this.state.runningState.appRunState = "canceled"; // XXX?
+            this.$runButton.hide();
+            this.$resetButton.show();
+          }
         },
 
         /* unlocks inputs and updates display properties to reflect the not running state */
@@ -447,11 +562,15 @@
             // trigger a cancel job action
             // if that returns something truthy (i.e. auto canceled, or user chose to cancel),
             // then continue and reset the state to input.
-            // otherwise, bail.
-
+            // Otherwise, bail.
+            var self = this;
             this.trigger('cancelJobCell.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
                 if (isCanceled) {
-                    this.$stopButton.hide();
+                  self.resetAppRun(false);
+
+                }
+/*  Moved to resetAppRun:
+                  this.$stopButton.hide();
                     this.$runButton.show();
                     if (this.inputSteps) {
                         for(var i=0; i<this.inputSteps.length; i++) {
@@ -461,11 +580,12 @@
                     }
                     this.setErrorState(false);
                     this.$submitted.hide();
-                    this.state.runningState.appRunState = "input";                    
+                    this.state.runningState.appRunState = "input";
                 }
+*/
             }, this)]);
         },
-        
+
         /**
          * DO NOT USE!!  use getAllParameterValues instead from now on...
          */
@@ -561,7 +681,7 @@
                     }
                     else if (state.runningState.appRunState === "done") {
                         this.$submitted.show();
-                        this.$runButton.hide();                        
+                        this.$runButton.hide();
                     }
                 }
             }
@@ -608,7 +728,7 @@
                 }
             }
         },
-        
+
         setRunningState: function(state) {
             state = state.toLowerCase();
             if (state === 'error')
@@ -623,16 +743,21 @@
             }
         },
 
+        /*
+         * Handle error in app.
+         */
         setErrorState: function(isError) {
             if (isError) {
                 this.state.runningState.appRunState = "error";
+                this.displayRunning(false, true);
                 this.$elem.find('.kb-app-panel').addClass('kb-app-error');
                 this.$runButton.hide();
-                this.$stopButton.show();
+                this.$stopButton.hide();
+                this.$resetButton.show();
                 this.$submitted.show();
             }
             else {
-                this.$elem.find('.kb-app-panel').removeClass('kb-app-error');                
+                this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
             }
         },
 
@@ -663,7 +788,7 @@
                     //     if (widgetName !== "kbaseDefaultNarrativeOutput")
                     //         widget = $outputWidget[widgetName](output);
                     //     else
-                    //         widget = $outputWidget[widgetName]({data:output});                
+                    //         widget = $outputWidget[widgetName]({data:output});
                     //     if (state) {
                     //         widget.loadState(state);
                     //     }
@@ -676,7 +801,7 @@
                     //         'type': 'Output',
                     //         'severity': '',
                     //         'traceback': 'Failed while trying to show a "' + widgetName + '"\n' +
-                    //                      'With inputs ' + JSON.stringify(output) + '\n\n' + 
+                    //                      'With inputs ' + JSON.stringify(output) + '\n\n' +
                     //                      err.message
                     //     }});
                     //     header = header.replace(/\-out\-/, '-err-');

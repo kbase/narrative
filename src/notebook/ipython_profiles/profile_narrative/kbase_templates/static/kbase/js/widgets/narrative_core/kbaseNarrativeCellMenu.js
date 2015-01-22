@@ -8,19 +8,21 @@
             this._super(options);
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
-                             .append($('<span class="fa fa-trash-o" style="font-size:14pt">'))
+                              .css({"background-color": "transparent"})
+                             .append($('<span class="fa fa-trash-o" style="font-size:14pt; padding-left: 5px;">'))
                              .click($.proxy(function() {
                     this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
                 }, this));
 
             var $btn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
+                      .css({"background-color": "transparent"})
                        .append($('<span class="fa fa-cog" style="font-size:14pt">'));
 
             this.$menu = $('<ul>')
                          .addClass('dropdown-menu')
                          .css({
-                                'right' : '0', 
-                                'left' : 'auto', 
+                                'right' : '0',
+                                'left' : 'auto',
                                 'margin' : '0'
                          });
 
@@ -37,7 +39,7 @@
                         var cell = IPython.notebook.insert_cell_below('code');
                         if (stackTrace instanceof Array) {
                             cell.set_text('job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info');
-                            IPython.notebook.get_selected_cell().execute();                            
+                            IPython.notebook.get_selected_cell().execute();
                         }
                         else {
                             cell.set_text('job_info=' + stackTrace);
@@ -95,8 +97,19 @@
                                 }, this)
             });
 
+            // this shows whether the app is running
+            this.$runningIcon = $("<span>").addClass("fa fa-circle-o-notch fa-spin")
+                                .css({"color": "rgb(42,121,191)"})
+                                .hide();
+            // this shows on error
+            this.$errorIcon =  $("<span>").addClass("fa fa-exclamation-triangle")
+                              .css({"color": "red"})
+                              .hide();
+
             this.$elem.append(
                 $('<span>')
+                    .append(this.$runningIcon)
+                    .append(this.$errorIcon)
                     .append($deleteBtn)
                     .append($('<span class="dropdown">')
                               .append($btn)

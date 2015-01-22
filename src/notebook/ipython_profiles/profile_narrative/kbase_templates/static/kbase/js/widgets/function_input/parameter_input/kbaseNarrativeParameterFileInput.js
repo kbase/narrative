@@ -8,8 +8,8 @@
         version: '1.0.0',
         options: {
         	isInSidePanel: false,
-            shockUrl: 'https://kbase.us/services/shock-api/',
-            ujsUrl: 'https://kbase.us/services/userandjobstate/',
+            shockUrl: window.kbconfig.urls.shock,
+            ujsUrl: window.kbconfig.urls.user_and_job_state,
             fullShockSearchToResume: false,
             serviceNameInUJS: "ShockUploader",
             maxFileStatesInUJS: 100,

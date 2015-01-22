@@ -3,12 +3,45 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.18 - 1/22/2015
+__Changes__
+- Added a different FBA model viewer widget
+- Changed communities widgets to properly fetch an auth token
+
+__Bugfixes__
+- JIRA NAR-478 - fixed problem where contig count in genome viewer was incorrect
+- JIRA NAR-487 - plant genomes should be copyable now in data slide out
+- JIRA NAR-441 - corrupted Narratives should be properly handled; deleting a Narrative from a workspace via the API shouldn't break the Narrative loading process
+
+### Version 0.3.17 - 1/22/2015
+__Bugfixes__
+- Repaired link to FBA model visualization widgets
+
+### Version 0.3.16 - 1/21/2015
+__Changes__
+- Added link to KBase internal status page.
+- Added programmatic access to workspace id.
+- KBase cells can now be collapsed and restored.
+- App and Method cells now have a spinning icon while running.
+- A traceback should now appear (where applicable) in the Jobs panel.
+
+### Version 0.3.15 - 1/21/2015
+__Changes__
+- Updated type name for Assembly File transform method
+- Added reset button to App cells (method cells still need fixing)
+- Added widgets for metagenome sets
+
+__Bugfixes__
+- JIRA NAR-418 - fixed issue where job error was cleared on panel refresh.
+- Fixed issue where method panel error state wasn't being activated properly.
+
 ### Version 0.3.14 - 1/21/2015
 __Changes__
 - Updated server-side Narrative management code to always keep a queue of unattached Narrative containers present. When a user logs on, they already have one ready to connect to.
 - Added visualization widget for microbial community abundance and boxplots.
 - Method details and documentation are visible in a new window now.
 - Added app and method icons for the method panel.
+- Added minimize to app & method panels
 
 ### Version 0.3.13 - 1/20/2015
 __Changes__
@@ -16,6 +49,7 @@ __Changes__
 - Exposed transform service as a method
 - Added assembly view widget
 - Added icons for Apps and Methods in panel
+
 __Bugfixes__
 - Now inserts a cell instead of freezing when DnD of data onto empty narrative
 - JIRA NAR-388 - fixed a problem where errors on service invocation weren't being stringified properly before logging

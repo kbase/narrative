@@ -4,7 +4,7 @@
         "awe": "http://140.221.67.185:7080", 
         "cdmi": "https://kbase.us/services/cdmi_api/", 
         "fba": "http://kbase.us/services/fba_model_services/", 
-	"gene_families": "http://140.221.67.203:8123/",
+        "gene_families": "http://140.221.67.203:8123/",
         "genomeCmp": "http://dev06.berkeley.kbase.us:8283/jsonrpc", 
         "glamm": "http://140.221.84.217:7040/glamm/#", 
         "invocation": "https://kbase.us/services/invocation", 
@@ -26,7 +26,9 @@
         "ws_browser": "http://narrative.kbase.us/functional-site/#/ws",
         "transform": "https://narrative-dev.kbase.us/transform",
         "data_import_export": "https://kbase.us/services/data_import_export",
-        "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1"
+        "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1",
+        "shock": "https://kbase.us/services/shock-api",
+        "status_page": "http://kbase.us/internal/status"
     }, 
     "git_commit_hash": "bfbb9a8", 
     "git_commit_time": "Wed Nov 12 15:34:42 2014 -0800", 
@@ -55,8 +57,10 @@
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws",
         "transform": "https://narrative-dev.kbase.us/transform",
         "data_import_export": "https://kbase.us/services/data_import_export",
-        "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version"
+        "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version",
+        "shock": "https://kbase.us/services/shock-api",
+        "status_page": "http://kbase.us/internal/status"
     },
-    "version": "0.3.14",
-    "release_notes": "https://github.com/kbase/narrative/blob/develop/RELEASE_NOTES.md"
+    "version": "0.3.18",
+    "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md"
 }

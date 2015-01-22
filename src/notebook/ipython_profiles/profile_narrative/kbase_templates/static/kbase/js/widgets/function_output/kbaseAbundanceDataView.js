@@ -4,11 +4,12 @@
 (function($, undefined) {
     $.KBWidget({
             name: 'AbundanceDataView',
+            parent: "kbaseAuthenticatedWidget",
             version: '1.0.0',
+            token: null,
             options: {
 	            id: null,
 	            ws: null,
-	            auth: null,
 	            name: 0
         },
 	    ws_url: window.kbconfig.urls.workspace,
@@ -16,18 +17,22 @@
         
 	    init: function(options) {
             this._super(options);
-            return this.render();
+            return this;
         },
 	
         render: function() {
 	        var self = this;
 	        var pref = this.uuidv4();
-	        var container = this.$elem;
-	        var kbws = new Workspace(self.ws_url, {'token': self.options.auth});
-            
-	        container.empty();
-	        container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 
+	        var container = this.$elem;
+	        container.empty();
+            if (self.token == null) {
+                container.append("<div>[Error] You're not logged in</div>");
+                return;
+            }
+            container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
+
+	        var kbws = new Workspace(self.ws_url, {'token': self.token});
 	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
 	            container.empty();
 		        // parse data
@@ -121,6 +126,18 @@
 		        container.append(main);
 	        });
 	        return self;
+        },
+
+        loggedInCallback: function(event, auth) {
+            this.token = auth.token;
+            this.render();
+            return this;
+        },
+
+        loggedOutCallback: function(event, auth) {
+            this.token = null;
+            this.render();
+            return this;
         },
 
 	    sparse2dense: function(sparse, rmax, cmax) {

@@ -8,8 +8,8 @@
         version: '1.0.0',
         options: {
         	isInSidePanel: false,
-            shockUrl: 'https://kbase.us/services/shock-api/',
-            ujsUrl: 'https://kbase.us/services/userandjobstate/',
+            shockUrl: window.kbconfig.urls.shock,
+            ujsUrl: window.kbconfig.urls.user_and_job_state,
             fullShockSearchToResume: false,
             serviceNameInUJS: "ShockUploader",
             maxFileStatesInUJS: 100,
@@ -21,6 +21,7 @@
         fileName: null,
         percentText: null,
         uploadIsReady: false,
+        uploadWasStarted: false,
         enabled: true,
         locked: false,
         required: true,
@@ -167,6 +168,7 @@
             var prevShockNodeId = self.shockNodeId;
             self.shockNodeId = null;
             self.uploadIsReady = false;
+            self.uploadWasStarted = true;
     		self.isValid();
         	// get the selected file
         	var file = realButton.files[0];
@@ -237,6 +239,7 @@
             				self.uploadIsReady = true;
             				self.isValid();
             				self.selectFileMode(true);
+                            self.uploadWasStarted = false;
             				shockClient.change_node_file_name(self.shockNodeId, file.name, function(info) {
             					//showShockInfo(self.shockNodeId);
             				}, function(error) {
@@ -252,6 +255,7 @@
             		}
             	}, function(error) {
             		self.selectFileMode(true);
+                    self.uploadWasStarted = false;
             		alert("Error: " + error);
             	}, function() {
             		return self.cancelUpload;
@@ -287,7 +291,11 @@
             	self.rowDivs[0].$feedback.show();
             	self.rowDivs[0].$error.hide();
             	errorDetectedHere = true;
-            	errorMessages.push("required field "+self.spec.ui_name+" missing.");
+            	if (self.uploadWasStarted) {
+            		errorMessages.push("required field "+self.spec.ui_name+" is not 100% ready.");
+            	} else {
+            		errorMessages.push("required field "+self.spec.ui_name+" missing.");
+            	}
             	errorDetected = true;
             } else {
             	self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");

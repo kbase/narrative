@@ -148,6 +148,7 @@
             }
             $input.select2({
                 minimumResultsForSearch: -1,
+                selectOnBlur: true,
                 //placeholder:placeholder,
                 //allowClear: true,
                 formatSelection: function(object, container) {

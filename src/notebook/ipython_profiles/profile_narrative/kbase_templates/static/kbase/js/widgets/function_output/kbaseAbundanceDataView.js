@@ -92,7 +92,7 @@
                     }
 		            var tabs = "<ul class='nav nav-tabs'>"+
 		                       "<li class='active'><a data-toggle='tab' href='#outputGraph"+glen+"'>BoxPlots</a></li>"+
-		                       "<li><a data-toggle='tab' href='#outputTable"+tlen+"'>Table</a></li></ul>";
+		                       "<li><a data-toggle='tab' href='#outputTable"+tlen+"'>Abundance Table</a></li></ul>";
 		            var divs = "<div class='tab-content'>"+
 		                       "<div class='tab-pane active' id='outputGraph"+glen+"' style='width: 95%;'></div>"+
 		                       "<div class='tab-pane' id='outputTable"+tlen+"' style='width: 95%;'></div></div>";

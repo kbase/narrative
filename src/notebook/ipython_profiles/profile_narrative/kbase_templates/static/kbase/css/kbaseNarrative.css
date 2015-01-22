@@ -371,8 +371,8 @@ p#site-title {
 .kb-side-overlay-container {
     /*min-width: 550px;
     max-width: 800px;*/
-    width: 675px;  /* I would advise fixing this for UX sake */
-    height: 620px;
+    width: 700px;  /* I would advise fixing this for UX sake */
+    /*height: 850px;*/
     border : 1px solid #ababab;
     z-index : 9990;
     background : white;
@@ -2151,7 +2151,7 @@ div[class="tooltip-inner"] {
     margin: 0 0 0 15px;
     overflow-x: hidden;
     overflow-y: auto;
-    height: 500px;
+    /*height: 830px;*/
     display: block;
 }
 
@@ -2159,7 +2159,7 @@ div[class="tooltip-inner"] {
     position: absolute;
     width: 100%;
     bottom: 0px;
-    height: 70px;
+    height: 50px;
 }
 
 .kb-overlay-footer .btn-primary,

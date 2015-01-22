@@ -222,6 +222,7 @@
               )
             .hide();
 
+
             this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
 
             var appInfo = this.appSpec.info.name;
@@ -349,15 +350,15 @@
             var $methodInfo = $('<div>')
                               .addClass('kb-func-desc')
                               .append('<h1><b>' + stepHeading +'&nbsp&nbsp-&nbsp '+ stepSpec.info.name + '</b></h1>')
-                              .append($('<button>')
+                              /*.append($('<button>')
                                       .addClass('btn btn-default btn-xs')
                                       .attr('type', 'button')
                                       .attr('data-toggle', 'collapse')
                                       .attr('data-target', '#' + methodId)
-                                      .append(buttonLabel))
+                                      .append(buttonLabel))*/
                               .append($('<div>')
                                       .attr('id', methodId)
-                                      .addClass('collapse')
+                                      //.addClass('collapse')
                                       .append($('<h2>')
                                          .append(methodDesc +
                                                  ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + stepSpec.info.id +

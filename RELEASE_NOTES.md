@@ -2,6 +2,15 @@
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
 This is built on the IPython Notebook (more notes will follow).
+
+### Version 0.3.16 - 1/21/2015
+__Changes__
+- Added link to KBase internal status page.
+- Added programmatic access to workspace id.
+- KBase cells can now be collapsed and restored.
+- App and Method cells now have a spinning icon while running.
+- A traceback should now appear (where applicable) in the Jobs panel.
+
 ### Version 0.3.15 - 1/21/2015
 __Changes__
 - Updated type name for Assembly File transform method

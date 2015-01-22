@@ -21,6 +21,7 @@
                 {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
                 {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'},
                 {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data Sets", header:'Sets of WGS and amplicon metagenomes'}
+                /*{name:['GenomeTranscriptomeHack'], displayName: "Example Sorghum Transcriptomes", header:'Sorghum bicolor transcriptome data in response to ABA and osmotic stress'}*/
                 ]
             
         },
@@ -137,6 +138,8 @@
             self.objectList.sort(function(a,b) {
                                         if (a.info[2].toUpperCase() > b.info[2].toUpperCase()) return -1; // sort by type
                                         if (a.info[2].toUpperCase() < b.info[2].toUpperCase()) return 1;
+                                        if (a.info[1].toUpperCase() > b.info[1].toUpperCase()) return -1; // then by name
+                                        if (a.info[1].toUpperCase() < b.info[1].toUpperCase()) return 1;
                                         return 0;
                                     });
             for (var k=0; k<self.objectList.length; k++) {

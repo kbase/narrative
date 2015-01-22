@@ -558,7 +558,7 @@
                 return;
             }
 
-            console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
+            // console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
 
             // var storedIds = {};
             // for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {

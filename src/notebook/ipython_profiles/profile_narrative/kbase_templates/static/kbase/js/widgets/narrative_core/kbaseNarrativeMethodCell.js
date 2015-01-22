@@ -17,6 +17,7 @@
         options: {
             method: null,
             cellId: null,
+            methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -64,7 +65,7 @@
                         return;
 
                     this.submittedText = 'submitted on ' + this.readableTimestamp();
-                    this.trigger('runCell.Narrative', { 
+                    this.trigger('runCell.Narrative', {
                         cell: IPython.notebook.get_selected_cell(),
                         method: this.method,
                         parameters: this.getParameters()
@@ -119,16 +120,20 @@
                               .append($('<span>')
                                       .addClass('pull-right kb-func-timestamp')
                                       .attr('id', 'last-run'))
-                              .append($('<button>')
+                              /*.append($('<button>')
                                       .addClass('btn btn-default btn-xs')
                                       .attr('type', 'button')
                                       .attr('data-toggle', 'collapse')
                                       .attr('data-target', '#' + methodId)
-                                      .append(buttonLabel))
+                                      .append(buttonLabel))*/
                               .append($('<h2>')
                                       .attr('id', methodId)
-                                      .addClass('collapse')
-                                      .append(methodDesc));
+                                      //.addClass('collapse')
+                                      .append(methodDesc +
+                                            ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + this.method.info.id +
+                                                '" target="_blank">more...</a>'
+
+                                      ));
 
             this.$cellPanel = $('<div>')
                               .addClass('panel kb-func-panel kb-cell-run')
@@ -187,9 +192,9 @@
          */
         loadState: function(state) {
             // cases (for older ones)
-            // 1. state looks like: 
+            // 1. state looks like:
             // { params: {},
-            //   runningState: {runState, 
+            //   runningState: {runState,
             //                  submittedText,
             //                  outputState}
             // }
@@ -202,7 +207,7 @@
                 this.submittedText = state.runningState.submittedText;
                 this.changeState(state.runningState);
             }
-            else 
+            else
                 this.$inputWidget.loadState(state);
         },
 
@@ -216,7 +221,7 @@
                 if (isCanceled) {
                     this.changeState('input');
                 }
-            }, this)]);            
+            }, this)]);
         },
 
         /**
@@ -281,8 +286,8 @@
 
         /*
          * This function is invoked every time we run app. This is the difference between it
-         * and getAllParameterValues/getParameterValue which could be invoked many times before running 
-         * (e.g. when widget is rendered). 
+         * and getAllParameterValues/getParameterValue which could be invoked many times before running
+         * (e.g. when widget is rendered).
          */
         prepareDataBeforeRun: function() {
             if (this.inputSteps) {

@@ -208,7 +208,7 @@
                                   }, this)
                               )
                               .hide();
-            
+
             this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
 
             var appInfo = this.appSpec.info.name;
@@ -290,15 +290,15 @@
             var $methodInfo = $('<div>')
                               .addClass('kb-func-desc')
                               .append('<h1><b>' + stepHeading +'&nbsp&nbsp-&nbsp '+ stepSpec.info.name + '</b></h1>')
-                              .append($('<button>')
+                              /*.append($('<button>')
                                       .addClass('btn btn-default btn-xs')
                                       .attr('type', 'button')
                                       .attr('data-toggle', 'collapse')
                                       .attr('data-target', '#' + methodId)
-                                      .append(buttonLabel))
+                                      .append(buttonLabel))*/
                               .append($('<div>')
                                       .attr('id', methodId)
-                                      .addClass('collapse')
+                                      //.addClass('collapse')
                                       .append($('<h2>')
                                          .append(methodDesc +
                                                  ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + stepSpec.info.id +
@@ -373,7 +373,7 @@
             }
             return;
         },
-        
+
         isValid : function() {
             var isValidRet = {isValid:true, stepErrors:[]}
             if (this.inputSteps) {
@@ -461,11 +461,11 @@
                     }
                     this.setErrorState(false);
                     this.$submitted.hide();
-                    this.state.runningState.appRunState = "input";                    
+                    this.state.runningState.appRunState = "input";
                 }
             }, this)]);
         },
-        
+
         /**
          * DO NOT USE!!  use getAllParameterValues instead from now on...
          */
@@ -561,7 +561,7 @@
                     }
                     else if (state.runningState.appRunState === "done") {
                         this.$submitted.show();
-                        this.$runButton.hide();                        
+                        this.$runButton.hide();
                     }
                 }
             }
@@ -608,7 +608,7 @@
                 }
             }
         },
-        
+
         setRunningState: function(state) {
             state = state.toLowerCase();
             if (state === 'error')
@@ -632,7 +632,7 @@
                 this.$submitted.show();
             }
             else {
-                this.$elem.find('.kb-app-panel').removeClass('kb-app-error');                
+                this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
             }
         },
 
@@ -663,7 +663,7 @@
                     //     if (widgetName !== "kbaseDefaultNarrativeOutput")
                     //         widget = $outputWidget[widgetName](output);
                     //     else
-                    //         widget = $outputWidget[widgetName]({data:output});                
+                    //         widget = $outputWidget[widgetName]({data:output});
                     //     if (state) {
                     //         widget.loadState(state);
                     //     }
@@ -676,7 +676,7 @@
                     //         'type': 'Output',
                     //         'severity': '',
                     //         'traceback': 'Failed while trying to show a "' + widgetName + '"\n' +
-                    //                      'With inputs ' + JSON.stringify(output) + '\n\n' + 
+                    //                      'With inputs ' + JSON.stringify(output) + '\n\n' +
                     //                      err.message
                     //     }});
                     //     header = header.replace(/\-out\-/, '-err-');

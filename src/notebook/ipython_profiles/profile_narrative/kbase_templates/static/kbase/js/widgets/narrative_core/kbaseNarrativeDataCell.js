@@ -24,8 +24,9 @@ var KBaseNarrativeViewers = function(mclient, done) {
     this.method_ids = [];
     var self = this;
     // Get application types, and populate data structures
-    mclient.list_categories({'load_methods': 0, 'load_apps': 0, 'load_types': 1},
+    mclient.list_categories({'load_methods': 1, 'load_apps': 0, 'load_types': 1},
         function(data) {
+    		var methodInfo = data[1];
             var aTypes = data[3];
             _.each(aTypes, function(val, key) {
                 if (val.loading_error) {
@@ -34,10 +35,16 @@ var KBaseNarrativeViewers = function(mclient, done) {
                 else if (val.view_method_ids && val.view_method_ids.length > 0) {
                     //console.debug("adding view method[" + key + "]=", val);
                     var mid = val.view_method_ids[0];
-                    self.viewers[key] = mid;
-                    self.landing_page_urls[key] = val.landing_page_url_prefix;
-                    self.type_names[key] = val.name;
-                    self.method_ids.push(mid);
+                    if (!methodInfo[mid]) {
+                    	console.log('Can\'t find method info for id: ' + mid);
+                    } else if (methodInfo[mid].loading_error) {
+                    	console.log('There is an error for method info with id [' + mid + ']: ' + methodInfo[mid].loading_error);
+                    } else {
+                    	self.viewers[key] = mid;
+                    	self.landing_page_urls[key] = val.landing_page_url_prefix;
+                    	self.type_names[key] = val.name;
+                    	self.method_ids.push(mid);
+                    }
                 }
                 else {
                     //console.warn("No output types for: " + key);
@@ -71,7 +78,7 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
           var param = null;
           // Get input/output parameter value
           if (mapping.input_parameter) {
-              param = o.id;
+              param = o.name;
           }
           else if (mapping.constant_value) {
               param = mapping.constant_value;
@@ -79,7 +86,7 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
           else if (mapping.narrative_system_variable) {
               switch (mapping.narrative_system_variable) {
                   case 'workspace':
-                      param = o.ws_id;
+                      param = o.ws_name;
                       break;
                   default:
                       console.error('Method (' + method_id + ') spec: unknown narrative system variable=' + sysProp);
@@ -95,7 +102,7 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
           		param = [param];
                   break;
               case 'ref':
-          		param = o['ws_id'] + '/' + param;
+          		param = o['ws_name'] + '/' + param;
                   break;
           	default:
                   param = null;

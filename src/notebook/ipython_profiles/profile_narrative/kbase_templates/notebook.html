@@ -261,6 +261,8 @@ class="notebook_app"
 
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNarrativeMethodInput.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_input/devDataViz.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_input/create_metagenome_set.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterDropdownInput.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -300,19 +302,21 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_input/rastGenomeImportInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseGenomeImportInput.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_input/kbStandaloneListselect.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <!-- function output JS widgets -->
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseNarrativeError.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseAssembly.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseAssemblyView.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelMetaNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <!-- this stuff shall replace all modeling output widgets (and has no clients) -->
-<script src="{{ static_url("kbase/js/revised-widgets/modeling/KBObjects.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/revised-widgets/modeling/KBaseFBA.FBAModel.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/revised-widgets/modeling/KBaseFBA.FBA.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/revised-widgets/modeling/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/revised-widgets/modeling/kbaseTabTable.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/KBObjects.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBA.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelCoreNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaTabsNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -354,6 +358,7 @@ class="notebook_app"
 <script src="{{ static_url("kbmanhattan/js/manhattan.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDataDump.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseCheckObject.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseAbundanceDataView.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseAbundanceDataTable.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseAbundanceDataBoxplot.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseAbundanceDataHeatmap.js") }}" type="text/javascript" charset="utf-8"></script>

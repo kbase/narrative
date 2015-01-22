@@ -1468,7 +1468,9 @@ div#notebook_panel {
 .kb-jobs-error {
     background-color: #f2dede;
 }
-
+.kb-jobs-error-btn {
+    font-size: 10pt;
+}
 .kb-jobs-item:last-child {
     border-bottom: none;
 }
@@ -2041,6 +2043,12 @@ div[class="tooltip-inner"] {
 }
 .kb-data-list-narinfo:hover {
     color:#444;
+}
+
+.kb-data-list-narrative-error {
+    color:#F44336;
+    font-size: 10pt;
+    margin: 2px;
 }
 
 .kb-data-list-narrative {

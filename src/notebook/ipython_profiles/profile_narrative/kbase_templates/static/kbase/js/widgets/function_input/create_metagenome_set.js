@@ -10,7 +10,7 @@
         version: "1.0.0",
         token: null,
         options: {},
-        ws_name: window.kbconfig.workspaceId;
+        ws_name: window.kbconfig.workspaceId,
         ws_url: window.kbconfig.urls.workspace,
         loading_image: "static/kbase/images/ajax-loader.gif",
 

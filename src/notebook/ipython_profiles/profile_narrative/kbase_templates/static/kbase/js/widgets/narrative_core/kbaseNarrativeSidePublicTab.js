@@ -146,12 +146,13 @@
                         // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
                         // [9] : int size // [10] : usermeta meta
             			var name = info[1];
+            			var id = info[1];
             			var metadata = {};
             			if (self.currentCategory === 'media') {
             				metadata['Size'] = info[9];
             			} else if (self.currentCategory === 'plant_gnms') {
             				if (info[10].Name) {
-            					metadata['ID'] = name;
+            					metadata['ID'] = id;
             					name = info[10].Name;
             				}
             				metadata['Source'] = info[10].Source;
@@ -162,7 +163,7 @@
             			self.objectList.push({
     						$div: null,
     						info: info,
-    						id: name,
+    						id: id,
     						name: name,
     						metadata: metadata,
     						ws: cat.ws,
@@ -331,8 +332,8 @@
                             var targetName = object.name;
                             if (!isNaN(targetName))
                             	targetName = self.categoryDescr[self.currentCategory].type.split('.')[1] + ' ' + targetName;
-                            var targetName = targetName.replace(/[^a-zA-Z0-9|\.\-_]/g,'_');
-                            //console.log(object.name + " -> " + targetName);
+                            targetName = targetName.replace(/[^a-zA-Z0-9|\.\-_]/g,'_');
+                            console.log("Copying " + object.ws + "/" + object.id + " -> " + self.wsName + "/" + targetName);
                             self.wsClient.copy_object({
                                 to:   {ref: self.wsName + "/" + targetName},
                                 from: {ref: object.ws +   "/" + object.id} },

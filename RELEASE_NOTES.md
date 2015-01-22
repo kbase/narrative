@@ -16,6 +16,7 @@ __Changes__
 - Updated type name for Assembly File transform method
 - Added reset button to App cells (method cells still need fixing)
 - Added widgets for metagenome sets
+
 __Bugfixes__
 - JIRA NAR-418 - fixed issue where job error was cleared on panel refresh.
 - Fixed issue where method panel error state wasn't being activated properly.
@@ -34,6 +35,7 @@ __Changes__
 - Exposed transform service as a method
 - Added assembly view widget
 - Added icons for Apps and Methods in panel
+
 __Bugfixes__
 - Now inserts a cell instead of freezing when DnD of data onto empty narrative
 - JIRA NAR-388 - fixed a problem where errors on service invocation weren't being stringified properly before logging

@@ -71,7 +71,7 @@
 		var kbws = self.kbws;
 
                 // Get list of metagenome ids from workspace
-                var response = kbws.list_objects({ workspaces : [self.options.ws] , type : 'Communities.Metagenome'} , function(data) {
+                var response = kbws.list_objects({ ids : [self.options.ws] , type : 'Communities.Metagenome'} , function(data) {
                         var idList = [];
                         for (var i=0; i<data.length; i++) {
                                 idList.push({ref: self.options.ws+"/"+data[i][0] });

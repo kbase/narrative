@@ -358,10 +358,10 @@
             
             
             // hack to keep search on top
-            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'695px'});
+            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
             setLoading($mineScrollPanel);
             minePanel.append($mineScrollPanel);
-            var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'695px'});
+            var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
             setLoading($sharedScrollPanel);
             sharedPanel.append($sharedScrollPanel);
             

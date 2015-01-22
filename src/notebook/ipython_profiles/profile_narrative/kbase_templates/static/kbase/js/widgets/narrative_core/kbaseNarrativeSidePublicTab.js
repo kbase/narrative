@@ -35,7 +35,7 @@
         	'gwas_population_traits': {name:'GWAS Population Traits',type:'KBaseGwasData.GwasPopulationTrait',ws:'KBasePublicGwasDataV2',search:true},
         	'gwas_gene_lists': {name:'GWAS Gene Lists',type:'KBaseGwasData.GwasGeneList',ws:'KBasePublicGwasDataV2',search:true}*/
         },
-        mainListPanelHeight: '680px',
+        mainListPanelHeight: '535px',
         maxNameLength: 60,
         totalPanel: null,
         resultPanel: null,

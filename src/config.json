@@ -59,6 +59,6 @@
         "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version",
         "shock": "https://kbase.us/services/shock-api"
     },
-    "version": "0.3.14",
+    "version": "0.3.15",
     "release_notes": "https://github.com/kbase/narrative/blob/develop/RELEASE_NOTES.md"
 }

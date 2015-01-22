@@ -2045,6 +2045,12 @@ div[class="tooltip-inner"] {
     color:#444;
 }
 
+.kb-data-list-narrative-error {
+    color:#F44336;
+    font-size: 10pt;
+    margin: 2px;
+}
+
 .kb-data-list-narrative {
     color:#777;
     font-size: 10pt;

@@ -267,6 +267,17 @@
                 }
             }, this)]);
         },
+        /**
+         * @method
+         * Shows an associated error with a cell (if available)
+         */
+        showError: function() {
+            this.trigger('showJobError.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
+                if (isCanceled) {
+                    this.changeState('input');
+                }
+            }, this)]);
+        },
 
         /**
          * @method

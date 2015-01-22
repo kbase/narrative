@@ -151,7 +151,7 @@
                                       .css({'overflow' : 'hidden'})
                                       .append($buttons));
 
-            $menuSpan.kbaseNarrativeCellMenu();
+            this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
             this.$elem.append(this.$cellPanel);
 
             // Add minimize/restore actions.
@@ -240,6 +240,21 @@
                 this.$inputWidget.loadState(state);
         },
 
+        /* Show/hide running icon */
+        displayRunning: function(is_running, had_error) {
+          if (is_running) {
+            this.cellMenu.$runningIcon.show();
+            // never show error icon while running
+            this.cellMenu.$errorIcon.hide();
+          }
+          else {
+            this.cellMenu.$runningIcon.hide();
+            // only display error when not running
+            if (had_error) { this.cellMenu.$errorIcon.show(); }
+            else { this.cellMenu.$errorIcon.hide(); }
+            }
+          },
+
         /**
          * @method
          * This sends a trigger to the jobs panel to stop any running jobs. If the callback is
@@ -271,6 +286,7 @@
                         this.$runButton.hide();
                         this.$stopButton.hide();
                         this.$inputWidget.lockInputs();
+                        this.displayRunning(true);
                         break;
                     case 'complete':
                         this.$cellPanel.removeClass('kb-app-step-running');
@@ -279,6 +295,7 @@
                         this.$runButton.hide();
                         this.$stopButton.hide();
                         this.$inputWidget.lockInputs();
+                        this.displayRunning(false);
                         // maybe unlock? show a 'last run' box?
                         break;
                     case 'running':
@@ -288,6 +305,7 @@
                         this.$runButton.hide();
                         this.$stopButton.show();
                         this.$inputWidget.lockInputs();
+                        this.displayRunning(true);
                         break;
                     case 'error':
                         this.$submitted.html(this.submittedText).show();
@@ -296,6 +314,7 @@
                         this.$stopButton.show();
                         this.$inputWidget.lockInputs();
                         this.$elem.find('.kb-app-panel').addClass('kb-app-error');
+                        this.displayRunning(true, false);
                         break;
                     default:
                         this.$cellPanel.removeClass('kb-app-step-running');
@@ -304,6 +323,7 @@
                         this.$runButton.show();
                         this.$stopButton.hide();
                         this.$inputWidget.unlockInputs();
+                        this.displayRunning(false);
                         break;
                 }
             }

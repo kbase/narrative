@@ -3,6 +3,16 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.18 - 1/22/2015
+__Changes__
+- Added a different FBA model viewer widget
+- Changed communities widgets to properly fetch an auth token
+
+__Bugfixes__
+- JIRA NAR-478 - fixed problem where contig count in genome viewer was incorrect
+- JIRA NAR-487 - plant genomes should be copyable now in data slide out
+- JIRA NAR-441 - corrupted Narratives should be properly handled; deleting a Narrative from a workspace via the API shouldn't break the Narrative loading process
+
 ### Version 0.3.17 - 1/22/2015
 __Bugfixes__
 - Repaired link to FBA model visualization widgets

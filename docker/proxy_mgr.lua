@@ -689,12 +689,12 @@ set_proxy = function(self)
                                 ngx.log(ngx.INFO, "Atempting to kill container "..id)
                                 local ok, err = pcall(notemgr.remove_notebook, id)
                                 if ok then
-                                    del += 1
+                                    del = del + 1
                                     table.insert(response.deleted, id)
                                     docker_map:delete(id)
                                     ngx.log(ngx.INFO, "Container "..id.." removed")
                                 elseif string.find(err, "does not exist") then
-                                    del += 1
+                                    del = del + 1
                                     table.insert(response.deleted, id)
                                     docker_map:delete(id)
                                     ngx.log(ngx.WARN, "Notebook "..id.." nonexistent - removing references")

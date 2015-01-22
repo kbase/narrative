@@ -8,6 +8,21 @@
 
 (function() {
 
+    // Dumb thing to get the workspace ID just like the back end does - from the URL at startup.
+    // This snippet keeps the workspace ID local, so it shouldn't be changed if some knucklehead pokes at the URL
+    // before trying to fetch it again.
+    var workspaceId = null;
+    var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
+    if (m && m.length > 0)
+        workspaceId = m[1];
+    window.kbconfig.workspaceId = workspaceId;
+    
+    $(document).on('workspaceIdQuery.Narrative', function(e, callback) {
+        if (callback) {
+            callback(workspaceId);
+        }
+    });
+
     // bind menubar buttons
     $('#kb-save-btn').click(function(e) {
         if (IPython && IPython.notebook) {
@@ -43,6 +58,7 @@
             IPython.notebook.delete_cell();
     });
     $('#kb-jira-btn').attr('href', window.kbconfig.urls.submit_jira_ticket + '%20' + window.kbconfig.version);
+    $('#kb-status-btn').attr('href', window.kbconfig.urls.status_page);
 
     var $dataList = $('<div>');
     var $shareWidget = $dataList["kbaseNarrativeSharePanel"]({});
@@ -272,7 +288,7 @@ narrative.init = function() {
     $([IPython.events]).one('status_started.Kernel', function() {
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0,0);
-
+        
         $([IPython.events]).on('select.Cell', function(event, data) {
             showIPythonCellToolbar(data.cell);
         });
@@ -315,22 +331,18 @@ narrative.init = function() {
                 }
             });
 
+            // This puts the cell menu in the right place.
             $([IPython.events]).trigger('select.Cell', {cell: IPython.notebook.get_selected_cell()});
         }
         if (ws_name) {
             /* It's ON like DONKEY KONG! */
-            $('a#workspace-link').attr('href',
-                    $('a#workspace-link').attr('href') +
-                    'objects/' + ws_name);
+            $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + ws_name);
             var narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
                 loadingImage: "/static/kbase/images/ajax-loader.gif",
                 ws_id: IPython.notebook.metadata.ws_name
             });
             $sidePanel.render();
             $(document).trigger('setWorkspaceName.Narrative', {'wsId' : ws_name, 'narrController': narr_ws});
-            // $dataWidget.setNarrWs(narr_ws); //as a callback
-            // $dataWidget.setWorkspace(ws_name);
-            // setTimeout(function() { $jobsWidget.refresh(); }, 750);
         }
         else {
             // ?

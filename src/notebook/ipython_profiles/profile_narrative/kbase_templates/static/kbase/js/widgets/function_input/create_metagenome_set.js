@@ -1,11 +1,11 @@
 /**
- * @author Bill Riehl <wjriehl@lbl.gov>
+ * @author Andreas Wilke <wilke@anl.gov>
  * @public
  */
 
 (function( $, undefined ) {
     $.KBWidget({
-        name: "devVizSelector",
+        name: "create_metagenome_set",
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
@@ -18,7 +18,7 @@
             loadingImage: "../images/ajax-loader.gif"
         },
 
-	ws_url: "https://kbase.us/services/ws/",
+        ws_url: window.kbconfig.urls.workspace,
         loading_image: "static/kbase/images/ajax-loader.gif",
 
         /**
@@ -30,19 +30,16 @@
         init: function(options) {
             this._super(options);
 
-	    var self = this;
-	    var kbws = new Workspace(self.ws_url, {'token': self.options.auth});
-	    self.kbws = kbws ;
+            var self = this;
+            var kbws = new Workspace(self.ws_url, {'token': self.options.auth});
+            self.kbws = kbws;
 
-	    $(document).on(
-		'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-		    self.options.ws = info.wsId;
-		}, this)
-		);
+            this.options.ws = window.kbconfig.workspaceId;
+            this.render();
 
-	    this.render();
             return this;
         },
+
 	render: function() {
 		var self = this;
 	    

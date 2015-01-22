@@ -27,7 +27,8 @@
         "transform": "https://narrative-dev.kbase.us/transform",
         "data_import_export": "https://kbase.us/services/data_import_export",
         "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1",
-        "shock": "https://kbase.us/services/shock-api"
+        "shock": "https://kbase.us/services/shock-api",
+        "status_page": "http://kbase.us/internal/status"
     }, 
     "git_commit_hash": "bfbb9a8", 
     "git_commit_time": "Wed Nov 12 15:34:42 2014 -0800", 
@@ -57,8 +58,9 @@
         "transform": "https://narrative-dev.kbase.us/transform",
         "data_import_export": "https://kbase.us/services/data_import_export",
         "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version",
-        "shock": "https://kbase.us/services/shock-api"
+        "shock": "https://kbase.us/services/shock-api",
+        "status_page": "http://kbase.us/internal/status"
     },
-    "version": "0.3.15",
-    "release_notes": "https://github.com/kbase/narrative/blob/develop/RELEASE_NOTES.md"
+    "version": "0.3.16",
+    "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md"
 }

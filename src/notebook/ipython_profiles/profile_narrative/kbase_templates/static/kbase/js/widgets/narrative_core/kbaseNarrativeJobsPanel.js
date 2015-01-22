@@ -903,6 +903,9 @@
                                   .append(this.makeInfoRow('Id', jobId))
                                   .append(this.makeInfoRow('Type', errorType))
                                   .append(this.makeInfoRow('Error', errorText));
+                if (jobState.state.traceback) {
+                    $errorTable.append(this.makeInfoRow('Traceback', '<pre class="kb-jobs-error-modal"><code>' + jobState.state.traceback + '</code></pre>'));
+                }
  
                 this.$jobsModalBody.empty();
                 this.$jobsModalBody.append($('<div>').append(headText))

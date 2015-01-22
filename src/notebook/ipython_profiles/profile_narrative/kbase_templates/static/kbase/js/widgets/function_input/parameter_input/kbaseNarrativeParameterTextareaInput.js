@@ -25,7 +25,6 @@
         
         render: function() {
             var self = this;
-            console.log(this.spec);
             var spec = self.spec;
             
             // check if we need to allow multiple values

@@ -674,6 +674,7 @@ set_proxy = function(self)
                 local dock_lock = locklib:new(M.lock_name, lock_opts)
                 -- loop through ids
                 local ids = docker_map:get_keys()
+                local del = 0
                 for num = 1, #ids do
                     id = ids[num]
                     -- lock docker map before read/write
@@ -688,10 +689,12 @@ set_proxy = function(self)
                                 ngx.log(ngx.INFO, "Atempting to kill container "..id)
                                 local ok, err = pcall(notemgr.remove_notebook, id)
                                 if ok then
+                                    del += 1
                                     table.insert(response.deleted, id)
                                     docker_map:delete(id)
                                     ngx.log(ngx.INFO, "Container "..id.." removed")
                                 elseif string.find(err, "does not exist") then
+                                    del += 1
                                     table.insert(response.deleted, id)
                                     docker_map:delete(id)
                                     ngx.log(ngx.WARN, "Notebook "..id.." nonexistent - removing references")
@@ -702,6 +705,7 @@ set_proxy = function(self)
                             end
                         end
                         dock_lock:unlock() -- unlock if it worked
+                        response.message = "Sucessfully killed "..del.." containers"
                     else
                         ngx.log(ngx.ERR, "Error: "..err)
                         response.message = "Error: "..err

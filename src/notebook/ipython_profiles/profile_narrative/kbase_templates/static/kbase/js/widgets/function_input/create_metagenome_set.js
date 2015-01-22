@@ -8,16 +8,9 @@
         name: "create_metagenome_set",
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
-        options: {
-	    //id: null,
-            ws: 3350 ,
-            auth: null,
-            //name: 0,
-            //top: "10",
-            //order: "average",
-            loadingImage: "../images/ajax-loader.gif"
-        },
-
+        token: null,
+        options: {},
+        ws_name: window.kbconfig.workspaceId;
         ws_url: window.kbconfig.urls.workspace,
         loading_image: "static/kbase/images/ajax-loader.gif",
 
@@ -29,27 +22,21 @@
          */
         init: function(options) {
             this._super(options);
-
-            var self = this;
-            var kbws = new Workspace(self.ws_url, {'token': self.options.auth});
-            self.kbws = kbws;
-
-            console.log(IPython.notebook.metadata.ws_name);
-
-            this.trigger('workspaceQuery.Narrative', $.proxy(function(wsName) {
-                console.log('here');
-                this.options.ws = wsName;
-                console.log('workspace: ' + this.options.ws);
-                this.render();
-            }, this));
-
             return this;
         },
 
 	render: function() {
 		var self = this;
-	    
 		var container = this.$elem;
+
+        container.empty();
+        if (self.token == null) {
+            container.append("<div>[Error] You're not logged in</div>");
+            return;
+        }
+        container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
+        var kbws = new Workspace(self.ws_url, {'token': self.token});
+        
 		var lslen = 0;
         	if (window.hasOwnProperty('rendererListselect') && rendererListselect.length) {
         		lslen = rendererListselect.length;
@@ -74,13 +61,11 @@
 		r.setAttribute('id', 'myResultDiv');
 		container.append(r);
 
-		var kbws = self.kbws;
-
                 // Get list of metagenome ids from workspace
-                var response = kbws.list_objects({ workspaces : [self.options.ws] , type : 'Communities.Metagenome'} , function(data) {
+                var response = kbws.list_objects({ ids : [self.ws_name] , type : 'Communities.Metagenome'} , function(data) {
                         var idList = [];
                         for (var i=0; i<data.length; i++) {
-                                idList.push({ref: self.options.ws+"/"+data[i][0] });
+                                idList.push({ref: self.ws_name+"/"+data[i][0] });
                         }
 		        // get the metadata for the ids
                         kbws.get_objects(idList, function(resData) {
@@ -146,11 +131,11 @@
 	    };
 	    
 	    var save_params = {
-	     	id: self.options.ws, //if only ws name is given change to workspace
+	     	id: self.ws_name, //if only ws name is given change to workspace
 	     	objects: [object_data]
 	    };
 	   
-	    var kbws = self.kbws; 
+	    var kbws = new Workspace(self.ws_url, {'token': self.token});
 	    console.log(save_params);
 	    kbws.save_objects(save_params);
 	    

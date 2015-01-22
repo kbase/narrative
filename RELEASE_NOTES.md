@@ -2,11 +2,25 @@
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
 This is built on the IPython Notebook (more notes will follow).
+
+### Version 0.3.17 - 1/22/2015
+__Bugfixes__
+- Repaired link to FBA model visualization widgets
+
+### Version 0.3.16 - 1/21/2015
+__Changes__
+- Added link to KBase internal status page.
+- Added programmatic access to workspace id.
+- KBase cells can now be collapsed and restored.
+- App and Method cells now have a spinning icon while running.
+- A traceback should now appear (where applicable) in the Jobs panel.
+
 ### Version 0.3.15 - 1/21/2015
 __Changes__
 - Updated type name for Assembly File transform method
 - Added reset button to App cells (method cells still need fixing)
 - Added widgets for metagenome sets
+
 __Bugfixes__
 - JIRA NAR-418 - fixed issue where job error was cleared on panel refresh.
 - Fixed issue where method panel error state wasn't being activated properly.
@@ -25,6 +39,7 @@ __Changes__
 - Exposed transform service as a method
 - Added assembly view widget
 - Added icons for Apps and Methods in panel
+
 __Bugfixes__
 - Now inserts a cell instead of freezing when DnD of data onto empty narrative
 - JIRA NAR-388 - fixed a problem where errors on service invocation weren't being stringified properly before logging

@@ -667,30 +667,74 @@ set_proxy = function(self)
         -- then queues it for deletion, along with any session thats bound to it
         local key = string.match(ngx.var.uri, uri_key_rx)
         if key then
-            local target = session_map:get(key)
-            if target then
-                local session = notemgr:split(target)
-                local val = docker_map:get(session[2])
-                if val then
-                    -- info = { state, ip:port, session, last_time, last_ip }
-                    local info = notemgr:split(val)
-                    -- mark the proxy instance for deletion
-                    info[1] = "idle"
-                    local success, err, forcible = docker_map:set(id, table.concat(info, " "))
-                    if success then
-                        response["msg"] = "Marked for reaping"
-                        ngx.log(ngx.INFO, "Marked for reaping: "..key..", "..session[2])
+            -- immediatly delete all provisioned containers
+            if key == "provisioned" then
+                response = { message = "", deleted = {}, error = {} }
+                -- get locker
+                local dock_lock = locklib:new(M.lock_name, lock_opts)
+                -- loop through ids
+                local ids = docker_map:get_keys()
+                for num = 1, #ids do
+                    id = ids[num]
+                    -- lock docker map before read/write
+                    elapsed, err = dock_lock:lock(id)
+                    if elapsed then -- lock worked
+                        local val = docker_map:get(id) -- make sure its still there
+                        if val then
+                            -- info = { state, ip:port, session, last_time, last_ip }
+                            local info = notemgr:split(val)
+                            -- this is provisioned / unassigned
+                            if info[1] == "queued" then
+                                ngx.log(ngx.INFO, "Atempting to kill container "..id)
+                                local ok, err = pcall(notemgr.remove_notebook, id)
+                                if ok then
+                                    table.insert(response.deleted, id)
+                                    docker_map:delete(id)
+                                    ngx.log(ngx.INFO, "Container "..id.." removed")
+                                elseif string.find(err, "does not exist") then
+                                    table.insert(response.deleted, id)
+                                    docker_map:delete(id)
+                                    ngx.log(ngx.WARN, "Notebook "..id.." nonexistent - removing references")
+                                else
+                                    table.insert(response.error, id)
+                                    ngx.log(ngx.ERR, "Error: "..err)
+                                end
+                            end
+                        end
+                        dock_lock:unlock() -- unlock if it worked
                     else
-                        response["error"] = err
+                        ngx.log(ngx.ERR, "Error: "..err)
+                        response.message = "Error: "..err
                         ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
                     end
+                end
+            -- mark for deletion container associated with session key
+            else
+                local target = session_map:get(key)
+                if target then
+                    local session = notemgr:split(target)
+                    local val = docker_map:get(session[2])
+                    if val then
+                        -- info = { state, ip:port, session, last_time, last_ip }
+                        local info = notemgr:split(val)
+                        -- mark the proxy instance for deletion
+                        info[1] = "idle"
+                        local success, err, forcible = docker_map:set(id, table.concat(info, " "))
+                        if success then
+                            response["msg"] = "Marked for reaping"
+                            ngx.log(ngx.INFO, "Marked for reaping: "..key..", "..session[2])
+                        else
+                            response["error"] = err
+                            ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+                        end
+                    else
+                        response["error"] = "Docker container "..session[2].." does not exist"
+                        ngx.status = ngx.HTTP_NOT_FOUND
+                    end
                 else
-                    response["error"] = "Docker container "..session[2].." does not exist"
+                    response["error"] = "Session key "..key.." does not exist"
                     ngx.status = ngx.HTTP_NOT_FOUND
                 end
-            else
-                response["error"] = "Session key "..key.." does not exist"
-                ngx.status = ngx.HTTP_NOT_FOUND
             end
         else 
             response["error"] = "No valid session key specified"

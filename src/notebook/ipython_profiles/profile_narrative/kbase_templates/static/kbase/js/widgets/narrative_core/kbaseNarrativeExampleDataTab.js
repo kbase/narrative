@@ -51,7 +51,7 @@
                                  .append('<img src="' + this.options.loadingImage + '">');
             this.$elem.append(this.$loadingDiv);
             this.$mainPanel = $('<div>')
-                .css({'overflow-y':'auto'});
+                .css({'overflow-y':'auto','height':'749px'});
             this.$elem.append(this.$mainPanel);
             
             if (window.kbconfig && window.kbconfig.urls) {

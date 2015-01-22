@@ -99,6 +99,7 @@
             	} else {
             		self.cancelUpload = true;
                     self.selectFileMode(true);
+                    self.uploadWasStarted = false;
             	}
             });
             $(this.fakeButton).css({"width": "90px"});
@@ -285,7 +286,7 @@
             var errorDetected = false;
             var errorMessages = [];
             var pVal = self.getParameterValue();
-            if (self.enabled && self.required && !pVal) {
+            if (self.enabled && (self.required || self.uploadWasStarted) && !pVal) {
             	self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
             	self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
             	self.rowDivs[0].$feedback.show();

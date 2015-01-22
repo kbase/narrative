@@ -558,7 +558,7 @@
                 return;
             }
 
-            // console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
+            console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
 
             // var storedIds = {};
             // for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {
@@ -903,6 +903,9 @@
                                   .append(this.makeInfoRow('Id', jobId))
                                   .append(this.makeInfoRow('Type', errorType))
                                   .append(this.makeInfoRow('Error', errorText));
+                if (jobState.state.traceback) {
+                    $errorTable.append(this.makeInfoRow('Traceback', '<pre><code>' + jobState.state.traceback + '</code></pre>'));
+                }
  
                 this.$jobsModalBody.empty();
                 this.$jobsModalBody.append($('<div>').append(headText))

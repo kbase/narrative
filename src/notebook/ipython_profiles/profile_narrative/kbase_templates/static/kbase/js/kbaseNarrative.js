@@ -43,6 +43,7 @@
             IPython.notebook.delete_cell();
     });
     $('#kb-jira-btn').attr('href', window.kbconfig.urls.submit_jira_ticket + '%20' + window.kbconfig.version);
+    $('#kb-status-btn').attr('href', window.kbconfig.urls.status_page);
 
     var $dataList = $('<div>');
     var $shareWidget = $dataList["kbaseNarrativeSharePanel"]({});

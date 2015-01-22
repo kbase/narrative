@@ -3,6 +3,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.3.17 - 1/22/2015
+__Bugfixes__
+- Repaired link to FBA model visualization widgets
+
 ### Version 0.3.16 - 1/21/2015
 __Changes__
 - Added link to KBase internal status page.

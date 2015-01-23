@@ -373,26 +373,26 @@
             setLoading($sharedScrollPanel);
             sharedPanel.append($sharedScrollPanel);
             
-            // Setup the panels that are defined by widgets
-            publicPanel.kbaseNarrativeSidePublicTab({});
-            importPanel.kbaseNarrativeSideImportTab({});
-            examplePanel.kbaseNarrativeExampleDataTab({});
-
-            
             var body = $('<div>');
             var footer = $('<div>');
             body.addClass('kb-side-panel');
             body.append($tabs.header, $tabs.body);
-
-            // It is silly to invoke a new object for each widget
-            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
-            var ws = new Workspace(this.options.workspaceURL, auth);
-
+            
             // add footer status container and buttons
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
             var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>').css({'margin':'10px'});
             var closeBtn = $('<button class="btn btn-default pull-right">Close</button>').css({'margin':'10px'});
+            
+            // Setup the panels that are defined by widgets
+            publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus});
+            importPanel.kbaseNarrativeSideImportTab({});
+            examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus});
+
+            // It is silly to invoke a new object for each widget
+            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
+            var ws = new Workspace(this.options.workspaceURL, auth);
+
 
             closeBtn.click(function() {
                 self.trigger('hideSidePanelOverlay.Narrative');
@@ -1163,6 +1163,15 @@
                                     },
                                     function(error) {
                                         $(thisBtn).html('Error');
+                                        if (error.error && error.error.message) {
+                                            if (error.error.message.indexOf('may not write to workspace')>=0) {
+                                                importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: you do not have permission to add data to this Narrative.'));
+                                            } else {
+                                                importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: '+error.error.message));
+                                            }
+                                        } else {
+                                            importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
+                                        }
                                         console.error(error);
                                     });
                                 

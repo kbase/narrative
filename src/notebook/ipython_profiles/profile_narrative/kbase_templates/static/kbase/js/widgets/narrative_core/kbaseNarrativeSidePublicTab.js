@@ -9,6 +9,7 @@
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
+		$importStatus:$('<div>'),
         	addToNarrativeButton: null,
         	selectedItems: null,
         	landing_page_url: "/functional-site/#/", // !! always include trailing slash
@@ -343,6 +344,15 @@
                                 },
                                 function(error) {
                                     $(thisBtn).html('Error');
+                                    if (error.error && error.error.message) {
+                                        if (error.error.message.indexOf('may not write to workspace')>=0) {
+                                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: you do not have permission to add data to this Narrative.'));
+                                        } else {
+                                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: '+error.error.message));
+                                        }
+                                    } else {
+                                        self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
+                                    }
                                     console.error(error);
                                 });
                             

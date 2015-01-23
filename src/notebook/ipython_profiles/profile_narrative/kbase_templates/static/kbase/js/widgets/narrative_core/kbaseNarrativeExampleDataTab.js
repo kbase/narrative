@@ -14,6 +14,7 @@
             default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             exampleWsId: 2901, // designed to be a workspace with just a handful of objects
+	    $importStatus:$('<div>'),
             exampleTypeOrder: [
                 {name:['AssemblyInput','SingleEndLibrary','PairedEndLibrary','ReferenceAssembly'], displayName: "Example Sequence Assembly Inputs", header:'Various types of read data configured for sequence assembly.'},
                 {name:['ContigSet'], displayName: "Example Contig Sets", header:'A set of DNA sequences'},
@@ -222,6 +223,15 @@
                                 },
                                 function(error) {
                                     $(thisBtn).html('Error');
+                                    if (error.error && error.error.message) {
+                                        if (error.error.message.indexOf('may not write to workspace')>=0) {
+                                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: you do not have permission to add data to this Narrative.'));
+                                        } else {
+                                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: '+error.error.message));
+                                        }
+                                    } else {
+                                        self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
+                                    }
                                     console.error(error);
                                 });
                             

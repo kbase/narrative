@@ -178,11 +178,12 @@
                         }
                     },
                     function(error) {
-                        // don't worry about it, just do nothing...
-                        self.$mainListDiv.show();
-                        self.$mainListDiv.append("error: ");
-                        self.$mainListDiv.append(error.error.message);
                         console.error(error);
+                        
+                        self.$mainListDiv.show();
+                        self.$mainListDiv.empty();
+                        self.$mainListDiv.append($('<div>').css({'color':'#F44336','margin':'10px'})
+                                                 .append('Error: '+error.error.message));
                         self.hideLoading();
                     });
             }
@@ -310,12 +311,13 @@
                     self.hideLoading();
                 },
                 function(error) {
+                    console.error(error);
                     KBError("kbaseNarrativeDataList.getNextDataChunk",
                             error.error.message);
                     self.$mainListDiv.show();
-                    self.$mainListDiv.append("error: ");
-                    self.$mainListDiv.append(error.error.message);
-                    console.error(error);
+                    self.$mainListDiv.empty();
+                    self.$mainListDiv.append($('<div>').css({'color':'#F44336','margin':'10px'})
+                                             .append('Error: '+error.error.message));
                     self.hideLoading();
                 });
 

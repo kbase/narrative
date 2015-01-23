@@ -48,7 +48,7 @@
             var errorModalId = "app-error-modal-"+ self.uuid();
             var modalLabel = "app-error-modal-lablel-"+ self.uuid();
             self.$errorModalContent = $('<div>');
-            self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="z-index: 1000000;">').addClass("modal fade");
+            self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="position:auto">').addClass("modal fade");
             self.$errorModal.append(
                 $('<div>').addClass('modal-dialog').append(
                     $('<div>').addClass('modal-content').append(
@@ -60,9 +60,9 @@
                             $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
                     )
                 ));
-            self.$elem.append(self.$errorModal);
+            $('body').append(self.$errorModal);
             self.$warningModalContent = $('<div>');
-            self.$warningModal =  $('<div tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="z-index: 1000000;">').addClass("modal fade");
+            self.$warningModal =  $('<div tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="position:auto">').addClass("modal fade");
             var confirmButton = $('<button type="button" data-dismiss="modal">').addClass("btn").append("Confirm");
             confirmButton.click($.proxy(function(event) {
             	self.stopTimer();
@@ -79,7 +79,7 @@
                             $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Cancel"))
                     )
                 ));
-            self.$elem.append(self.$warningModal);
+            $('body').append(self.$warningModal);
 
 
             if (window.kbconfig && window.kbconfig.urls) {

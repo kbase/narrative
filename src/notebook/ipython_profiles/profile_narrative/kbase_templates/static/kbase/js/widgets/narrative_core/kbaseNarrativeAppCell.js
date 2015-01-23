@@ -411,19 +411,21 @@
                             this.inputStepLookup[steps[s].step_id].widget.disableParameterEditing(input_mapping[m].to);
                             // connect the values
                             if(this.inputStepLookup[input_mapping[m].step_source]) {
-                                var step_target = this.inputStepLookup[steps[s].step_id].widget;
-                                var step_source = this.inputStepLookup[input_mapping[m].step_source].widget;
-                                var from = input_mapping[m].from;
-                                var to = input_mapping[m].to;
-                                // set the value to the original value
-                                step_target.setParameterValue(to, step_source.getParameterValue(from));
-                                // make sure the value changes every time the source input changes
-                                step_source.addInputListener(
-                                    from,
-                                    function() {
-                                        step_target.setParameterValue(to, step_source.getParameterValue(from));
-                                    }
-                                );
+                                (function(localS, localM) {
+                                    var step_target = self.inputStepLookup[steps[localS].step_id].widget;
+                                    var step_source = self.inputStepLookup[input_mapping[localM].step_source].widget;
+                                    var from = input_mapping[localM].from;
+                                    var to = input_mapping[localM].to;
+                                    // set the value to the original value
+                                    step_target.setParameterValue(to, step_source.getParameterValue(from));
+                                    // make sure the value changes every time the source input changes
+                                    step_source.addInputListener(
+                                        from,
+                                        function() {
+                                            step_target.setParameterValue(to, step_source.getParameterValue(from));
+                                        }
+                                    );
+                                })(s,m);
                             } else {
                                 console.error("invalid input mapping in spec for "+steps[s].step_id+", from step does not exist.");
                                 console.error(this.appSpec);

@@ -369,6 +369,14 @@
     <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
 
     <script>
+        // Dumb thing to get the workspace ID just like the back end does - from the URL at startup.
+        // This snippet keeps the workspace ID local, so it shouldn't be changed if some knucklehead pokes at the URL
+        // before trying to fetch it again.
+        var workspaceId = null;
+        var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
+        if (m && m.length > 0)
+            workspaceId = m[1];
+
         var configJSON = $.parseJSON(
             $.ajax({
                 url: "{{ static_url('kbase/config.json') }}",
@@ -399,6 +407,7 @@
                             release_notes: configJSON['release_notes'],
                             mode: configJSON['mode'],
                             data_icons: dataIcons,
+                            workspaceId: workspaceId
                           };
     </script>
     <script src="{{ static_url("kbase/js/api/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>

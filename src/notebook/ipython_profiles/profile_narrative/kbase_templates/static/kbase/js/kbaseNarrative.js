@@ -7,16 +7,6 @@
 "use strict";
 
 (function() {
-
-    // Dumb thing to get the workspace ID just like the back end does - from the URL at startup.
-    // This snippet keeps the workspace ID local, so it shouldn't be changed if some knucklehead pokes at the URL
-    // before trying to fetch it again.
-    var workspaceId = null;
-    var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
-    if (m && m.length > 0)
-        workspaceId = m[1];
-    window.kbconfig.workspaceId = workspaceId;
-    
     $(document).on('workspaceIdQuery.Narrative', function(e, callback) {
         if (callback) {
             callback(workspaceId);

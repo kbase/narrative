@@ -294,9 +294,14 @@
             this.n_objs_rendered++;
         },
 
+        escapeSearchQuery: function(str) {
+        	return str.replace(/[\%]/g, "").replace(/[\:\"\\]/g, "\\$&");
+        },
+
         search: function (category, query, itemsPerPage, pageNum, ret, errorCallback) {
+        	var escapedQ = this.escapeSearchQuery(query);
         	var url = this.searchUrlPrefix + '?itemsPerPage=' + itemsPerPage + '&' + 
-        		'page=' + pageNum + '&q=' + query + '&category=' + category;
+        		'page=' + pageNum + '&q=' + encodeURIComponent(escapedQ) + '&category=' + category;
         	var promise = jQuery.Deferred();
         	jQuery.ajax(url, {
         		success: function (data) {

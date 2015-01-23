@@ -369,12 +369,9 @@ p#site-title {
 }
 
 .kb-side-overlay-container {
-    /*min-width: 550px;
-    max-width: 800px;*/
     width: 700px;  /* I would advise fixing this for UX sake */
-    /*height: 850px;*/
     border : 1px solid #ababab;
-    z-index : 9990;
+    z-index : 1030;
     background : white;
     position : fixed;
 }
@@ -443,7 +440,7 @@ p#site-title {
 
 .kb-overlay-dimmer {
     position: fixed;
-    z-index: 1030;
+    z-index: 1020;
     right: 0;
     bottom: 0;
     opacity: 0.5;

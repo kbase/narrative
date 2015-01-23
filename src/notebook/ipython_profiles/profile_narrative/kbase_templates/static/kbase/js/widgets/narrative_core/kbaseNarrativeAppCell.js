@@ -248,7 +248,8 @@
 
             var $appSubtitleDiv = $("<div>")
                                         .addClass('kb-app-panel-description')
-                                        .append(this.appSpec.info.subtitle);
+                                        .append(this.appSpec.info.subtitle)
+                                        .append('&nbsp;&nbsp;<a href="'+this.options.appHelpLink+this.appSpec.info.id+'" target="_blank">more...</a>');
 
             var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, "")
             var $appHeaderDiv = $("<div>")

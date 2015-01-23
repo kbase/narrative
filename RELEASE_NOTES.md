@@ -16,10 +16,12 @@ __Changes__
 - Added refresh button to data slideout
 - Added example transcriptome data
 - Updated import UI for all supported types
+- Improved error messages in data panel and data slideout
 
 __Bugfixes__
 - Fixed some problems in create_metagenome_set widget
 - JIRA NAR-465 Fixed problem where workspace id wasn't internally available when it should be
+- JIRA KBASE-1610 Fixed issue with selecting multiple genomes for an input to an app
 
 ### Version 0.3.18 - 1/22/2015
 __Changes__

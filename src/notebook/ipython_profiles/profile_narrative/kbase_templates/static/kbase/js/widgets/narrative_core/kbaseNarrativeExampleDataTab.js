@@ -145,7 +145,6 @@
                                         if (a.info[1].toUpperCase() < b.info[1].toUpperCase()) return 1;
                                         return 0;
                                     });
-            console.log('typedivs',typeDivs);
             for (var k=0; k<self.objectList.length; k++) {
                 var obj = self.objectList[k];
                 var typeName='';
@@ -198,7 +197,7 @@
             // [9] : int size // [10] : usermeta meta
             var type = '';
             if (object_info[2]==='TranscriptomeHack') {
-                type='Genome'; console.log('!!!!!!!!!!!!!!',object_info);
+                type='Genome';
             } else {
                 var type_tokens = object_info[2].split('.')
                 var type_module = type_tokens[0];

@@ -106,7 +106,7 @@
                                 .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
                 var $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
                                 .append(spec.short_hint);
-                if (spec.description) {
+                if (spec.description && spec.short_hint !== spec.description) {
                     $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
                                     .tooltip({title:spec.description, html:true}));
                 }

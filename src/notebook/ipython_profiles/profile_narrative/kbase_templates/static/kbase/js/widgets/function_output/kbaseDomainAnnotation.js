@@ -9,7 +9,7 @@
     $.KBWidget({
         name: 'kbaseDomainAnnotation',
         parent: 'kbaseAuthenticatedWidget',
-        version: '0.0.2',
+        version: '1.0.1',
         options: {
             domainAnnotationID: null,
             workspaceID: null,

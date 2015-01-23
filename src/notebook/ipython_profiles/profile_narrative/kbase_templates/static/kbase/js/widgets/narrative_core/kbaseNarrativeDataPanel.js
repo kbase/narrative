@@ -346,7 +346,9 @@
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
                 importPanel = $('<div class="kb-import-content kb-import-import">'),
                 examplePanel = $('<div class="kb-import-content">');
-                
+            
+            
+            
             // add tabs
             var $tabs = this.buildTabs([
                     {tabName: '<small>My Data</small>', content: minePanel},
@@ -358,9 +360,15 @@
             
             
             // hack to keep search on top
+            
+            var $mineFilterRow = $('<div class="row">');
+            minePanel.append($mineFilterRow);
             var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
             setLoading($mineScrollPanel);
             minePanel.append($mineScrollPanel);
+            
+            var $sharedFilterRow = $('<div class="row">');
+            sharedPanel.append($sharedFilterRow);
             var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
             setLoading($sharedScrollPanel);
             sharedPanel.append($sharedScrollPanel);
@@ -403,16 +411,26 @@
 
             function updateView(view) {
                 var p;
-                if (view == 'mine') p = getMyWS();
-                else if (view == 'shared') p = getSharedWS();
+                if (view == 'mine') {
+                    p = getMyWS();
+                } else if (view == 'shared') {
+                    p = getSharedWS();
+                }
 
                 return $.when(p).done(function(workspaces) {
-                    if (view == 'mine') prom = getMyData(workspaces);
-                    else if (view == 'shared') prom = getSharedData(workspaces);
+                    if (view == 'mine') {
+                        prom = getMyData(workspaces);
+                    } else if (view == 'shared') {
+                        prom = getSharedData(workspaces);
+                    }
                     $.when(prom).done(function() {
                         if (view == 'mine') {
+                           // minePanel.detach();  // arg!! why isn't the filter bar it's own div?
+                           // minePanel.append($mineScrollPanel);
                             addMyFilters();
                         } else if(view == 'shared') {
+                          //  minePanel.detach();  // arg!! why isn't the filter bar it's own div?
+                          //  minePanel.append($mineScrollPanel);
                             addSharedFilters();
                         }
                     });
@@ -869,7 +887,7 @@
                                      '</option>');
                 }
                 var typeFilter = $('<div class="col-sm-3">').append(typeInput);
-
+                
                 // event for type dropdown
                 typeInput.change(function() {
                     type = $(this).children('option:selected').data('type');
@@ -888,10 +906,26 @@
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, $mineScrollPanel, mineSelected);
                 });
+                
+                
+                var $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align':'center'}).append(
+                                        $('<button>')
+                                            .css({'margin-top':'12px'})
+                                            .addClass('btn btn-xs btn-default')
+                                            .click(function(event) {
+                                                $mineScrollPanel.empty();
+                                                setLoading($mineScrollPanel);
+                                                updateView('mine').done(function() {
+                                                    updateView('shared'); });
+                                                })
+                                            .append($('<span>')
+                                                .addClass('glyphicon glyphicon-refresh')));
+                
 
                 // add search, type, ws filter to dom
-                var row = $('<div class="row">').append(searchFilter, typeFilter, wsFilter);
-                minePanel.prepend(row);
+                $mineFilterRow.empty();
+                $mineFilterRow.append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
+                //minePanel.prepend(row);
             }
 
             function addSharedFilters() {
@@ -954,9 +988,24 @@
                     render(filtered, $sharedScrollPanel, sharedSelected);
                 });
 
+                
+                var $refreshBtnDiv = $('<div>').addClass('col-sm-1').append(
+                                        $('<button>')
+                                            .css({'margin-top':'12px'})
+                                            .addClass('btn btn-xs btn-default')
+                                            .click(function(event) {
+                                                $sharedScrollPanel.empty();
+                                                setLoading($sharedScrollPanel);
+                                                updateView('shared').done(function() {
+                                                    updateView('mine'); });
+                                                })
+                                            .append($('<span>')
+                                                .addClass('glyphicon glyphicon-refresh')));
+                
                 // add search, type, ws filter to dom
-                var row = $('<div class="row">').append(searchFilter, typeFilter, wsFilter);
-                sharedPanel.prepend(row);
+                $sharedFilterRow.empty();
+                $sharedFilterRow.append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
+                //sharedPanel.prepend(row);
             }
 
             function rowTemplate(obj) {

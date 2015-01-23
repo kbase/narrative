@@ -333,7 +333,7 @@ end
 --
 -- Provisoning function that looks in the docker_map to identify how many provisioned
 -- containers there are, if less than provion_count, spawns more
--- do not provision containers that would casue total to be > than container_max
+-- do not provision containers that would cause total to be > than container_max
 provisioner = function()
     ngx.log(ngx.INFO, "provisioner running")
     -- sync docker_map with existing containers

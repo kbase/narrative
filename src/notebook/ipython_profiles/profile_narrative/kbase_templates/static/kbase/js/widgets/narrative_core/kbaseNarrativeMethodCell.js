@@ -17,6 +17,7 @@
         options: {
             method: null,
             cellId: null,
+            methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -119,16 +120,20 @@
                               .append($('<span>')
                                       .addClass('pull-right kb-func-timestamp')
                                       .attr('id', 'last-run'))
-                              .append($('<button>')
+                              /*.append($('<button>')
                                       .addClass('btn btn-default btn-xs')
                                       .attr('type', 'button')
                                       .attr('data-toggle', 'collapse')
                                       .attr('data-target', '#' + methodId)
-                                      .append(buttonLabel))
+                                      .append(buttonLabel))*/
                               .append($('<h2>')
                                       .attr('id', methodId)
-                                      .addClass('collapse')
-                                      .append(methodDesc));
+                                      //.addClass('collapse')
+                                      .append(methodDesc +
+                                            ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + this.method.info.id +
+                                                '" target="_blank">more...</a>'
+
+                                      ));
 
             // Controls (minimize)
             var $controlsSpan = $('<div>').addClass("pull-left");

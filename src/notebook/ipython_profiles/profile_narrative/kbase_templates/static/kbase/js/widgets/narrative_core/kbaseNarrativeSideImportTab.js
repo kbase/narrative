@@ -385,30 +385,34 @@
             		url = params['ftpFolder'];
             	}
             	if (url) {
-            		var contigsetId = null;
+            		var options = {};
             		if (params['contigObject'] && params['contigObject'].length > 0) {
-            			contigsetId = params['contigObject'];
+            			options['contigset_object_name'] = params['contigObject'];
             		} else {
-            			contigsetId = params['outputObject'] + '.contigset';
+            			options['contigset_object_name'] = params['outputObject'] + '.contigset';
             		}
             		args = {'external_type': 'Genbank.Genome', 
             				'kbase_type': 'KBaseGenomes.Genome', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'options': '{"contigset_object_name":"'+contigsetId+'"}}',
-            				'url_mapping': {'Genbank.Genome': url}}
+            				'options': JSON.stringify(options),
+            				'url_mapping': {'Genbank.Genome': url}};
             	} else {
             		self.showError(methodId + " import mode for Genome type is not supported yet");
             	}
             } else if (self.selectedType === 'Transcript') {
             	if (methodId === 'import_transcript_file') {
             		var url = self.shockURL + '/node/' + params['fastaFile'];
+            		var options = {'dna':self.asBool(params['dna'])};
+            		var genomeId = params['genomeId'];
+            		if (genomeId)
+            			options['genome_id'] = genomeId;
             		args = {'external_type': 'FASTA.Transcripts', 
             				'kbase_type': 'KBaseGenomes.Genome', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'options': '{"genome_id":"'+params['outputObject']+'","dna":'+self.asBool(params['dna'])+'}',
-            				'url_mapping': {'url_mapping_is_not_defined_in_config': url}}
+            				'options': JSON.stringify(options),
+            				'url_mapping': {'FASTA.Transcripts': url}};
             	} else {
             		self.showError(methodId + " import mode for Genome type is not supported yet");
             	}
@@ -424,37 +428,47 @@
             				'kbase_type': 'KBaseGenomes.ContigSet', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'options': '{"fasta_reference_only":'+self.asBool(params['fastaReferenceOnly'])+'}',
-            				'url_mapping': {'FASTA.DNA.Assembly': url}}
+            				'options': JSON.stringify({"fasta_reference_only":self.asBool(params['fastaReferenceOnly'])}),
+            				'url_mapping': {'FASTA.DNA.Assembly': url}};
             	} else {
             		self.showError(methodId + " import mode for ContigSet type is not supported yet");
             	}
             } else if (self.selectedType === 'ShortReads') {
             	if (methodId === 'import_reads_fasta_file') {
-            		var refName = "test_ref_name";
-            		args = {'etype': 'KBaseAssembly.FA', 
-            				'kb_type': 'KBaseAssembly.ReferenceAssembly', 
-            				'in_id': params['fastaFile'], 
-            				'ws_name': self.wsName, 
-            				'obj_name': params['outputObject'],
-            				'opt_args': '{"validator":{},"transformer":{"reference_name":"'+refName+'","handle_service_url":"'+self.handleURL+'","shock_url":"'+self.shockURL+'"}}'}
+            		var options = {};
+            		var refName = params['refname'];
+            		if (refName)
+            			options['refname'] = refName;
+            		args = {'external_type': 'FASTA.DNA.Assembly', 
+            				'kbase_type': 'KBaseGenomes.ReferenceAssembly', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'options': JSON.stringify(options),
+            				'url_mapping': {'FASTA.DNA.Assembly': params['fastaFile']}};
             	} else if (methodId === 'import_reads_pe_fastq_file') {
-            		var shockNodes = params['fastqFile1'];
+            		var urlMapping = {'FASTQ.DNA.Reads.1': params['fastqFile1']};
             		if (params['fastqFile2'] && params['fastqFile2'].length > 0)
-            			shockNodes += params['fastqFile2'];
-            		args = {'etype': 'KBaseAssembly.FQ', 
-            				'kb_type': 'KBaseAssembly.PairedEndLibrary', 
-            				'in_id': shockNodes, 
-            				'ws_name': self.wsName, 
-            				'obj_name': params['outputObject'],
-            				'opt_args': '{"validator":{},"transformer":{"handle_service_url":"'+self.handleURL+'","shock_url":"'+self.shockURL+'"}}'}
+            			urlMapping['FASTQ.DNA.Reads.2'] = params['fastqFile2'];
+            		var options = {'outward':self.asBool(params['readOrientationOutward'])};
+            		var optInsert = params['insertSizeMean'];
+            		if (optInsert)
+            			options['insert'] = optInsert;
+            		var optStdev = params['insertSizeStDev'];
+            		if (optStdev)
+            			options['stdev'] = optStdev;
+            		args = {'external_type': 'FASTQ.DNA.Reads', 
+            				'kbase_type': 'KBaseAssembly.PairedEndLibrary', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'options': JSON.stringify(options),
+            				'url_mapping': urlMapping};
             	} else if (methodId === 'import_reads_se_fastq_file') {
-            		args = {'etype': 'KBaseAssembly.FQ', 
-            				'kb_type': 'KBaseAssembly.SingleEndLibrary', 
-            				'in_id': params['fastqFile'], 
-            				'ws_name': self.wsName, 
-            				'obj_name': params['outputObject'],
-            				'opt_args': '{"validator":{},"transformer":{"handle_service_url":"'+self.handleURL+'","shock_url":"'+self.shockURL+'"}}'}
+            		args = {'external_type': 'FASTQ.DNA.Reads', 
+            				'kbase_type': 'KBaseAssembly.SingleEndLibrary', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'options': '{}',
+            				'url_mapping': {'FASTQ.DNA.Reads': params['fastqFile']}};
             	} else {
             		self.showError(methodId + " import mode for ShortReads type is not supported yet");
             	}

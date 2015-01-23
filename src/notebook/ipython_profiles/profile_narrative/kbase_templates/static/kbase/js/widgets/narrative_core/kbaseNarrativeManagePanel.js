@@ -179,10 +179,28 @@
                                 }
                             }
                         }
-                        self.ws.get_object_info(narRefsToLookup,1,
+                        self.ws.get_object_info_new({objects:narRefsToLookup,includeMetadata:1,ignoreErrors:1},
                                 function(objList) {
                                     for(var i=0; i<objList.length; i++) {
-                                        self.allNarData[i].nar_info = objList[i];
+                                        if (objList[i]!==null) {
+                                            self.allNarData[i].nar_info = objList[i];
+                                        } else {
+                                            self.allNarData[i].error = true;
+                                            (function(errorIndex) {
+                                                self.ws.get_object_info_new({objects:[narRefsToLookup[errorIndex]],includeMetadata:1,ignoreErrors:0},
+                                                    function(error_obj_info) {
+                                                        // this should not work!! but if it does, fine, remove the error and save the info
+                                                        self.allNarData[errorIndex].error = false;
+                                                        self.allNarData[errorIndex].nar_info = error_obj_info[0];
+                                                    },
+                                                    function(error) {
+                                                        // this shouldn't happen often, so if it does, just take the time to refresh
+                                                        self.allNarData[errorIndex].error_msg = error.error.message;
+                                                        self.allNarData[errorIndex].$div = null;
+                                                        self.renderPanel();
+                                                    });
+                                            })(i);
+                                        }
                                     }
                                     self.renderPanel();
                                 },
@@ -219,18 +237,24 @@
         
         advancedSetNarLookup: {},
         
+        sortNarrativesFunc : function(a,b) {
+            if (a.error && b.error) { return 0; }
+            if (a.error) { return 1; }
+            if (b.error) { return -1; }
+            if (a.nar_info[3] > b.nar_info[3]) return -1; // sort by date
+            if (a.nar_info[3] < b.nar_info[3]) return 1;  // sort by date
+            return 0;
+        },
+        
+        
         renderPanel: function() {
             var self = this;
             if (self.$narPanel && self.narData) {
-                self.$narPanel.empty();
+                self.$narPanel.children().detach();
                 
                 if (self.narData.mine.length>0) {
                     self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append("My Narratives")));
-                    self.narData.mine.sort(function(a,b) {
-                                    if (a.nar_info[3] > b.nar_info[3]) return -1; // sort by date
-                                    if (a.nar_info[3] < b.nar_info[3]) return 1;  // sort by date
-                                    return 0;
-                                });
+                    self.narData.mine.sort(self.sortNarrativesFunc);
                     for(var k=0; k<self.narData.mine.length; k++) {
                         if (!self.narData.mine[k].$div) {
                             self.narData.mine[k].$div = self.renderNarrativeDiv(self.narData.mine[k]);
@@ -240,11 +264,7 @@
                 }
                 
                 if (self.narData.shared.length>0) {
-                    self.narData.shared.sort(function(a,b) {
-                                    if (a.nar_info[3] > b.nar_info[3]) return -1; // sort by date
-                                    if (a.nar_info[3] < b.nar_info[3]) return 1;  // sort by date
-                                    return 0;
-                                });
+                    self.narData.shared.sort(self.sortNarrativesFunc);
                     self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append("Shared With Me")));
                     for(var k=0; k<self.narData.shared.length; k++) {
                         if (!self.narData.shared[k].$div) {
@@ -364,7 +384,7 @@
             }
         },
         
-        addDataControls: function(object_info, $alertContainer, ws_info) {
+        addDataControls: function(object_info, $alertContainer, ws_info, isError) {
             var self = this;
             var $btnToolbar = $('<span>')
                                         .addClass('btn-toolbar')
@@ -373,7 +393,9 @@
             var btnClasses = "btn btn-xs btn-default";
             var css = {'color':'#888', 'margin':'0px'};
                                         
-            var $openHistory = $('<span>')
+            var $openHistory = $('<span>');
+            if (!isError) {
+                $openHistory
                                         .addClass(btnClasses).css(css)
                                         .tooltip({title:'View narrative history to revert changes', 'container':'body'})
                                         .append($('<span>').addClass('fa fa-history').css(css))
@@ -447,6 +469,7 @@
                                                     });
                                             }
                                         });
+            }
                                         
             /*var $openProvenance = $('<span>')
                                         .addClass(btnClasses).css(css)
@@ -465,76 +488,80 @@
                                             $alertContainer.append('Coming soon');
                                         });*/
             
-            var $copy = $('<span>')
-                .addClass(btnClasses).css(css)
-                .tooltip({title:'Copy Narrative and Data', 'container':'body'})
-                .append($('<span>').addClass('fa fa-copy').css(css))
-                .click(function(e) {
-                    e.stopPropagation(); $alertContainer.empty(); $alertContainer.show();
-                    var $newNameInput = $('<input type="text">').addClass('form-control').val(ws_info[8].narrative_nice_name+ ' - Copy');
-                    $alertContainer.append(
-                        $('<div>').append(
-                            $('<div>').append("Enter a name for the new Narrative"))
-                                .append($('<div>').append($newNameInput))
-                                .append($('<button>').addClass('kb-data-list-btn')
-                                    .append('Copy')
-                                    .click(function() {
-                                        $(this).prop("disabled",true);
-                                        var newMeta = ws_info[8];
-                                        newMeta['narrative_nice_name'] = $newNameInput.val();
-                                        
-                                        var id = new Date().getTime();
-                                        var ws_name = self.my_user_id + ":" + id;
-                                        
-                                        self.ws.clone_workspace({
-                                                    wsi: {id:ws_info[0]},
-                                                    workspace: ws_name,
-                                                    meta: newMeta
-                                                },
-                                                function(new_ws_info) {
-                                                    var new_narrative_ref = new_ws_info[0]+"/"+new_ws_info[8].narrative;
-                                                    // ok, a lot of work just to update the narrative name in the 
-                                                    self.ws.get_objects([{ref:new_narrative_ref}],
-                                                        function(data) {
-                                                            data = data[0]; // only one thing should be returned
-                                                            var new_nar_metadata = data.info[10];
-                                                            new_nar_metadata.name = newMeta['narrative_nice_name'];
-                                                            data.data.metadata.name = newMeta['narrative_nice_name'];
-                                                            self.ws.save_objects({id:new_ws_info[0],objects:[
-                                                                {
-                                                                    type:data.info[2],
-                                                                    data:data.data,
-                                                                    provenance:data.provenance,
-                                                                    name:data.info[1],
-                                                                    meta:new_nar_metadata
-                                                                }
-                                                                ]},
-                                                                function(info) {
-                                                                    console.log('copying complete',info);
-                                                                    self.refresh();
-                                                                },
-                                                                function(error) {
-                                                                    console.error(error);
-                                                                    $alertContainer.empty();
-                                                                    $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on rename."+error.error.message));
-                                                                });
-                                                        },
-                                                        function(error) {
-                                                            console.error(error);
-                                                            $alertContainer.empty();
-                                                            $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on rename."+error.error.message));
-                                                        })
-                                                },
-                                                function(error) {
-                                                    console.error(error);
-                                                    $alertContainer.empty();
-                                                    $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
-                                                });
-                                        }))
-                                .append($('<button>').addClass('kb-data-list-cancel-btn')
-                                    .append('Cancel')
-                                    .click(function() {$alertContainer.empty();} )));
+            var $copy = $('<span>');
+            if (!isError) {
+                $copy
+                    .addClass(btnClasses).css(css)
+                    .tooltip({title:'Copy Narrative and Data', 'container':'body'})
+                    .append($('<span>').addClass('fa fa-copy').css(css))
+                    .click(function(e) {
+                        e.stopPropagation(); $alertContainer.empty(); $alertContainer.show();
+                        var $newNameInput = $('<input type="text">').addClass('form-control').val(ws_info[8].narrative_nice_name+ ' - Copy');
+                        $alertContainer.append(
+                            $('<div>').append(
+                                $('<div>').append("Enter a name for the new Narrative"))
+                                    .append($('<div>').append($newNameInput))
+                                    .append($('<button>').addClass('kb-data-list-btn')
+                                        .append('Copy')
+                                        .click(function() {
+                                            $(this).prop("disabled",true);
+                                            var newMeta = ws_info[8];
+                                            newMeta['narrative_nice_name'] = $newNameInput.val();
+                                            
+                                            var id = new Date().getTime();
+                                            var ws_name = self.my_user_id + ":" + id;
+                                            
+                                            self.ws.clone_workspace({
+                                                        wsi: {id:ws_info[0]},
+                                                        workspace: ws_name,
+                                                        meta: newMeta
+                                                    },
+                                                    function(new_ws_info) {
+                                                        var new_narrative_ref = new_ws_info[0]+"/"+new_ws_info[8].narrative;
+                                                        // ok, a lot of work just to update the narrative name in the 
+                                                        self.ws.get_objects([{ref:new_narrative_ref}],
+                                                            function(data) {
+                                                                data = data[0]; // only one thing should be returned
+                                                                var new_nar_metadata = data.info[10];
+                                                                new_nar_metadata.name = newMeta['narrative_nice_name'];
+                                                                data.data.metadata.name = newMeta['narrative_nice_name'];
+                                                                self.ws.save_objects({id:new_ws_info[0],objects:[
+                                                                    {
+                                                                        type:data.info[2],
+                                                                        data:data.data,
+                                                                        provenance:data.provenance,
+                                                                        name:data.info[1],
+                                                                        meta:new_nar_metadata
+                                                                    }
+                                                                    ]},
+                                                                    function(info) {
+                                                                        console.log('copying complete',info);
+                                                                        self.refresh();
+                                                                    },
+                                                                    function(error) {
+                                                                        console.error(error);
+                                                                        $alertContainer.empty();
+                                                                        $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on rename."+error.error.message));
+                                                                    });
+                                                            },
+                                                            function(error) {
+                                                                console.error(error);
+                                                                $alertContainer.empty();
+                                                                $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on rename."+error.error.message));
+                                                            })
+                                                    },
+                                                    function(error) {
+                                                        console.error(error);
+                                                        $alertContainer.empty();
+                                                        $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                    });
+                                            }))
+                                    .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                        .append('Cancel')
+                                        .click(function() {$alertContainer.empty();} )));
                 });
+            }
+            
             var $delete = $('<span>') 
                                         .addClass(btnClasses).css(css)
                                         .tooltip({title:'Delete Narrative', 'container':'body'})
@@ -555,7 +582,7 @@
                                                             .append('Delete')
                                                             .click(function() {
                                                                 if (self.ws_name && self.ws) {
-                                                                    self.ws.delete_workspace({ id: object_info[6] },
+                                                                    self.ws.delete_workspace({ id: ws_info[0] },
                                                                         function() {
                                                                             if (isCurrent) {
                                                                                 window.location.replace(self.options.landing_page_url+'narrativemanager/start');
@@ -604,12 +631,15 @@
             
             var $alertContainer=$('<div>').addClass('kb-data-list-more-div').css({'text-align':'center','margin':'5px'}).hide();
             
-            var narRef = "ws."+data.ws_info[0]+".obj."+data.nar_info[0];
-            var nameText = narRef;
-            if (data.nar_info[10].name) {
+            var narRef = "ws."+data.ws_info[0]+".obj."+data.ws_info[8].narrative;
+            var nameText = narRef; var version='';
+            if (data.nar_info && data.nar_info[10].name) {
                 nameText = data.nar_info[10].name;
+                version = 'v'+data.nar_info[4];
+            } else if (data.error && data.ws_info[8].narrative_nice_name) {
+                nameText = data.ws_info[8].narrative_nice_name + ' ('+nameText+')';
             }
-            var $version = $('<span>').addClass("kb-data-list-version").append('v'+data.nar_info[4]);
+            var $version = $('<span>').addClass("kb-data-list-version").append(version);
             var $priv = $('<span>').css({'color':'#999','margin-left':'8px'}).prop('data-toggle','tooltip').prop('data-placement','right');
              if (data.ws_info[5]==='r') {
                 $priv.addClass('fa fa-lock').prop('title','read-only');
@@ -621,78 +651,88 @@
             if (isCurrent) {
                  $nameLink.append($('<span>').addClass('fa fa-circle').css({'margin-right':'3px','color':'#4BB856'})
                                     .tooltip({title:'You are viewing this Narrative now'}));
+            } else if (data.error) {
+                 $nameLink.append($('<span>').addClass('fa fa-circle').css({'margin-right':'3px','color':'#F44336'})
+                                    .tooltip({title:'This narrative has been corrupted.'}));
             }
             $nameLink.append(nameText).append($version).append($priv);
-            
             $dataCol.append($('<div>').addClass('kb-data-list-name').css({'white-space':'normal', 'cursor':'pointer'}).append($nameLink));
-            var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
-            if(data.ws_info[2]===this._attributes.auth.user_id) {
-            } else {
-                $dataCol.append($usrNameSpan).append('<br>');
-                this.displayRealName(data.ws_info[2], $usrNameSpan);
-            }
-            var summary = this.getNarSummary(data.nar_info);
-            if (summary) {
-                $dataCol.append($('<span>').addClass('kb-data-list-narinfo').append(summary)
-                                .click(
-                                    function() {
-                                        $alertContainer.empty(); $alertContainer.show();
-                                        $alertContainer.append($('<div>')
-                                                            .append($('<button>').addClass('kb-data-list-cancel-btn')
-                                                                        .append('Hide Narrative Info')
-                                                                        .click(function() {$alertContainer.empty();} )));
-                                        $alertContainer.append(self.getNarContent(data.nar_info));
-                                    })
-                                .append('<br>'));
-            }
-            $dataCol.append($('<span>').addClass('kb-data-list-type').append(this.getTimeStampStr(data.nar_info[3])));
             
-            var $shareContainer = $('<div>').hide();
-            var $shareToolbar = $('<span>').addClass('btn-toolbar').attr('role', 'toolbar');
-            $ctrContent.append($shareToolbar);
-            this.ws.get_permissions({id:data.ws_info[0]},
-                function(perm) {
-                    var shareCount = 0;
-                    for(var usr in perm) {
-                        if (perm.hasOwnProperty(usr)) {
-                            if (usr === '*') { continue; }
-                            shareCount++;
+            // only disply the rest if there was no error
+            if (!data.error) {
+                var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
+                if(data.ws_info[2]===this._attributes.auth.user_id) {
+                } else {
+                    $dataCol.append($usrNameSpan).append('<br>');
+                    this.displayRealName(data.ws_info[2], $usrNameSpan);
+                }
+                var summary = this.getNarSummary(data.nar_info);
+                if (summary) {
+                    $dataCol.append($('<span>').addClass('kb-data-list-narinfo').append(summary)
+                                    .click(
+                                        function() {
+                                            $alertContainer.empty(); $alertContainer.show();
+                                            $alertContainer.append($('<div>')
+                                                                .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                                            .append('Hide Narrative Info')
+                                                                            .click(function() {$alertContainer.empty();} )));
+                                            $alertContainer.append(self.getNarContent(data.nar_info));
+                                        })
+                                    .append('<br>'));
+                }
+                $dataCol.append($('<span>').addClass('kb-data-list-type').append(this.getTimeStampStr(data.nar_info[3])));
+                
+                var $shareContainer = $('<div>').hide();
+                var $shareToolbar = $('<span>').addClass('btn-toolbar').attr('role', 'toolbar');
+                $ctrContent.append($shareToolbar);
+                this.ws.get_permissions({id:data.ws_info[0]},
+                    function(perm) {
+                        var shareCount = 0;
+                        for(var usr in perm) {
+                            if (perm.hasOwnProperty(usr)) {
+                                if (usr === '*') { continue; }
+                                shareCount++;
+                            }
                         }
-                    }
-                    // should really put this in the addDatacontrols; so refactor at some point!
-                    $shareToolbar.append(
-                            $('<span>')   
-                                .addClass('btn btn-xs btn-default').css({'color':'#888', 'margin':'0px'})
-                                .tooltip({title:'View share settings', 'container':'body'})
-                                            .append($('<span>').addClass('fa fa-share-alt').css({'color':'#888','margin':'0px','font-size':'10pt'})
-                                                .append(' '+shareCount)
-                                                .on('click',function() {
-                                                    $alertContainer.hide();
-                                                    $shareContainer.slideToggle('fast');
-                                                    if($shareContainer.is(':empty')) {
-                                                        var $share = $('<div>');
-                                                        // just use the share panel, max height is practically unlimited because we are already
-                                                        // in a scrollable pane
-                                                        $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
-                                                        $shareContainer.append($share);
-                                                    }
-                                                })));
-                },
-                function(error) {
-                    console.error('error getting permissions for manage panel');
-                    console.error(error);
-                });
+                        // should really put this in the addDatacontrols; so refactor at some point!
+                        $shareToolbar.append(
+                                $('<span>')   
+                                    .addClass('btn btn-xs btn-default').css({'color':'#888', 'margin':'0px'})
+                                    .tooltip({title:'View share settings', 'container':'body'})
+                                                .append($('<span>').addClass('fa fa-share-alt').css({'color':'#888','margin':'0px','font-size':'10pt'})
+                                                    .append(' '+shareCount)
+                                                    .on('click',function() {
+                                                        $alertContainer.hide();
+                                                        $shareContainer.slideToggle('fast');
+                                                        if($shareContainer.is(':empty')) {
+                                                            var $share = $('<div>');
+                                                            // just use the share panel, max height is practically unlimited because we are already
+                                                            // in a scrollable pane
+                                                            $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
+                                                            $shareContainer.append($share);
+                                                        }
+                                                    })));
+                    },
+                    function(error) {
+                        console.error('error getting permissions for manage panel');
+                        console.error(error);
+                    });
             
-            var $btnToolbar = self.addDataControls(data.nar_info,$alertContainer, data.ws_info);
-            $ctrContent.append($btnToolbar.hide());
-            
+                var $btnToolbar = self.addDataControls(data.nar_info,$alertContainer, data.ws_info);
+                $ctrContent.append($btnToolbar.hide());
+                $narDiv
+                    .mouseenter(function(){ $btnToolbar.show(); })
+                    .mouseleave(function(){ $btnToolbar.hide(); });
+            } else if (data.error_msg) {
+                 $dataCol.append($('<span>').addClass('kb-data-list-narrative-error').append(
+                                 'This Narrative has been corrupted: '+data.error_msg));
+                var $btnToolbar = self.addDataControls(data.nar_info,$alertContainer, data.ws_info, true);
+                $ctrContent.append($btnToolbar);
+            }
             $narDiv.append($('<table>').css({'width':'100%'})
                            .append($('<tr>').append($dataCol).append($ctrCol)));
             $narDiv.append($alertContainer);
             $narDiv.append($shareContainer);
-            $narDiv
-                .mouseenter(function(){ $btnToolbar.show(); })
-                .mouseleave(function(){ $btnToolbar.hide(); });
             
             var $narDivContainer = $('<div>').append($('<hr>').addClass('kb-data-list-row-hr').css({'margin-left':'15px'}))
                                         .append($narDiv);

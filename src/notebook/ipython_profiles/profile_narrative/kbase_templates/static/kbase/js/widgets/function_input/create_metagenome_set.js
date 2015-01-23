@@ -10,7 +10,7 @@
         version: "1.0.0",
         token: null,
         options: {},
-        ws_id: null,
+        ws_id: window.kbconfig.workspaceId,
         ws_url: window.kbconfig.urls.workspace,
         loading_image: "static/kbase/images/ajax-loader.gif",
 
@@ -22,8 +22,7 @@
          */
         init: function(options) {
             this._super(options);
-            var ws_id = window.kbconfig.workspaceId;
-            this.ws_id = parseInt(ws_id, 10);
+            this.ws_id = parseInt(this.ws_id, 10);
             return this;
         },
 

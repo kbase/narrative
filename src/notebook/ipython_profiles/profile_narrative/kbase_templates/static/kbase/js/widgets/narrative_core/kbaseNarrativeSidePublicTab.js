@@ -70,7 +70,7 @@
                 typeInput.append('<option value="'+cat+'">'+catName+'</option>');
             }
             var typeFilter = $('<div class="col-sm-3">').append(typeInput);
-            var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Filter data">').css(mrg);
+            var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">').css(mrg);
             typeInput.change(function() {
             	self.searchAndRender(typeInput.val(), filterInput.val());
             });

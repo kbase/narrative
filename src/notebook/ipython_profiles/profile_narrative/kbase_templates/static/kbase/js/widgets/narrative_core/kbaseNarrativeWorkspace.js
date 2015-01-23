@@ -1874,20 +1874,33 @@
         * The `next_steps` parameter is exactly the same type of object
         * returned by the `getfunctionSpecs.Narrative` trigger in
         * `kbaseNarrativeMethodPanel`.
+        * Returns the <div> that was populated.
         */
         showNextSteps: function(next_steps) {
           var $tgt = $('<div>').addClass('kb-app-next');
-          var subtitle = $('<h3>').text('Suggested next steps:');
-          $tgt.append(subtitle);
+          var $title = $('<h3>').text('Suggested next steps:');
+          $tgt.append($title);
+          // init hide/unhide behavior
+          $hide_btn = $('<span>').addClass('kb-app-next-hide').text('hide');
+          $unhide_btn = $('<span>').addClass('kb-app-next-unhide')
+                      .text('next steps').hide();
+          $hide_btn.click(function() {                  // hide
+            $title.hide(); $tgt.find('a').hide();
+            $hide_btn.hide(); $unhide_btn.show(); });
+          $unhide_btn.click(function() {                // unhide
+            $title.show(); $tgt.find('a').show();
+            $unhide_btn.hide(); $hide_btn.show(); });
+          $tgt.append($hide_btn).append($unhide_btn);
+          // add all the links to the next-step apps/methods
           var $apps = $('<div>'), comma = {v: ''}, self = this;
           // iterate over apps and methods in the result
           _.each(['apps', 'methods'], function(mtype) {
             var specs = next_steps[mtype];
-            // iterate over all specs in app/method section
+            // Iterate over all specs in app/method section
             _.each(_.values(specs), function(s) {
-              var name = s.info.name;                       // readable name
+              var name = s.info.name; // readable name, displayed to user
               var href = $('<a>').attr({'href': '#'}).text(comma.v + name);
-              // Insert app/method on click
+              // insert app/method on click
               href.click(function() {
                 self.trigger(mtype.slice(0, -1) + "Clicked.Narrative", s);
               });

@@ -436,7 +436,7 @@
 
          */
         getNextSteps: function() {
-          console.debug("Find next steps for method",this.method);
+          //console.debug("Find next steps for method",this.method);
           var method_ids = [ ], app_ids = [ ];
           // add one or more next steps
           // XXX: replace this with something much smarter
@@ -470,12 +470,9 @@
           // name of the spec and all we have is the id.
           var result = {};
           var params = {apps: app_ids, methods: method_ids};
-          console.debug("call getFunctionSpecs:", params);
           this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
-              console.debug("Set result to", specs);
               result.specs = specs;
           }]);
-          console.debug("Returning next steps:", result.specs);
           return result.specs;
         },
 

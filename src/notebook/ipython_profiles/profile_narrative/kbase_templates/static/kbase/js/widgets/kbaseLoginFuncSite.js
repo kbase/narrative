@@ -303,6 +303,11 @@
                                                     .attr('target', '_blank')
                                                     .css('padding-right', '0px')
                                                     .css('padding-left', '0px')
+                                                    .bind('click',
+                                                        $.proxy( function(e) {
+                                                            this.data('login-dropdown-menu').hide();
+                                                        }, this)
+                                                    )
                                             )
                                         )
                                 )
@@ -335,10 +340,11 @@
 
             this.registerLogin =
                 function(args) {
-
                     if ( args.success ) {
                         this.data("loginlink").hide();
-                        this.data('loggedinuser_id').text(args.name);
+                        this.data('loggedinuser_id').text(args.name)
+                                                    .attr('href', '/functional-site/#/people/' + args.user_id)
+                                                    .click();
                         this.data("userdisplay").show();
                         this.data('loginDialog').closePrompt();
                     }

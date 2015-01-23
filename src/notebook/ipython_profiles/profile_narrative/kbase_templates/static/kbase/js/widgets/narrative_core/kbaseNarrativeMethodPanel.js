@@ -184,7 +184,9 @@
              */
             $(document).on('getFunctionSpecs.Narrative',
                 $.proxy(function(e, specSet, callback) {
+                  console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
                     if (callback) {
+                      console.debug("Trigger: specSet=",specSet);
                         callback(this.getFunctionSpecs(specSet));
                     }
                 }, this)
@@ -495,6 +497,7 @@
          * If a spec isn't found, then it won't appear in the return values.
          */
         getFunctionSpecs: function(specSet) {
+            console.debug("getFunctionSpecs(specSet=",specSet,")");
             var results = {};
             if (specSet.apps && specSet.apps instanceof Array) {
                 results.apps = {};
@@ -504,13 +507,16 @@
                 }
             }
             if (specSet.methods && specSet.methods instanceof Array) {
+              results.methods = _.pick(this.methodSpecs, specSet.methods);
+              /*
                 results.methods = {};
-                for (var i=0; i<specSet.methods.length; i++) {
+                for (var i=0; i < specSet.methods.length; i++) {
                     if (this.methodSpecs[specSet.methods[i]])
                         results.methods[specSet.methods[i]] = this.methodSpecs[specSet.methods[i]];
                 }
+              */
             }
-            console.log(results);
+            console.debug("getFunctionSpecs returning:",results);
             return results;
         },
 

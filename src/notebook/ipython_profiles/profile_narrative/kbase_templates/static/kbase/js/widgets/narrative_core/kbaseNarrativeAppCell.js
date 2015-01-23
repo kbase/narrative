@@ -557,6 +557,14 @@
           }
         },
 
+
+        /**
+         * Show a list of suggested 'next steps' after we have finished the run.
+         */
+        showNextSteps: function() {
+
+        },
+
         /* unlocks inputs and updates display properties to reflect the not running state */
         stopAppRun: function() {
             // trigger a cancel job action

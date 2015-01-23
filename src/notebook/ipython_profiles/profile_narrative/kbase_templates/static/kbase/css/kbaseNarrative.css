@@ -583,6 +583,8 @@ ul.pane-list li {
     margin-left: 5px;
 }
 
+/* --- KBase method list styles --*/
+
 .kb-method-list-logo {
     width:  30pt;
     height: 30pt;
@@ -1582,7 +1584,7 @@ div#notebook_panel {
 }
 
 
-/** App styling */
+/* -- App/method panel styling --*/
 
 .kb-app-panel {
     border:0;
@@ -1664,6 +1666,18 @@ div#notebook_panel {
     -webkit-animation: pulse 1s ease infinite; */
     /*opacity: 0.7;*/
 }
+
+/* "next steps" text and links */
+.kb-app-next h3 {
+  /* based on small-heading */
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-size: 1em;
+  font-style: italic;
+  color: #888;
+  padding: 1em 0 0.5em 0;
+}
+
+/* -- END method/app styling --*/
 
 @-webkit-keyframes pulse {
   0% { opacity: 1.0; }

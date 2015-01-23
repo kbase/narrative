@@ -374,7 +374,7 @@
         // before trying to fetch it again.
         var workspaceId = null;
         var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
-        if (m && m.length > 0)
+        if (m && m.length > 1)
             workspaceId = parseInt(m[1]);
 
         var configJSON = $.parseJSON(

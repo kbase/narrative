@@ -446,9 +446,9 @@
             				'options': JSON.stringify(options),
             				'url_mapping': {'FASTA.DNA.Assembly': params['fastaFile']}};
             	} else if (methodId === 'import_reads_pe_fastq_file') {
-            		var urlMapping = {'FASTQ.DNA.Reads.1': params['fastqFile1']};
+            		var urlMapping = {'SequenceReads.1': params['fastqFile1']};
             		if (params['fastqFile2'] && params['fastqFile2'].length > 0)
-            			urlMapping['FASTQ.DNA.Reads.2'] = params['fastqFile2'];
+            			urlMapping['SequenceReads.2'] = params['fastqFile2'];
             		var options = {'outward':self.asBool(params['readOrientationOutward'])};
             		var optInsert = params['insertSizeMean'];
             		if (optInsert)
@@ -456,19 +456,19 @@
             		var optStdev = params['insertSizeStDev'];
             		if (optStdev)
             			options['stdev'] = optStdev;
-            		args = {'external_type': 'FASTQ.DNA.Reads', 
+            		args = {'external_type': 'SequenceReads', 
             				'kbase_type': 'KBaseAssembly.PairedEndLibrary', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
             				'options': JSON.stringify(options),
             				'url_mapping': urlMapping};
             	} else if (methodId === 'import_reads_se_fastq_file') {
-            		args = {'external_type': 'FASTQ.DNA.Reads', 
+            		args = {'external_type': 'SequenceReads', 
             				'kbase_type': 'KBaseAssembly.SingleEndLibrary', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
             				'options': '{}',
-            				'url_mapping': {'FASTQ.DNA.Reads': params['fastqFile']}};
+            				'url_mapping': {'SequenceReads': params['fastqFile']}};
             	} else {
             		self.showError(methodId + " import mode for ShortReads type is not supported yet");
             	}

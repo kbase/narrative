@@ -3,6 +3,16 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.4.1 - 1/23/2015
+__Changes__
+- Added link to app man page from app cell
+- Importer for FASTA/FASTQ files was switched to a new version
+
+__Bugfixes__
+- Error modal that appears while trying to import data should be visible now, and not below the page dimmer
+- JIRA NAR-477 - Propagating parameters to multiple steps should work correctly now
+- JIRA NAR-516 - special characters should be properly escaped while searching for data now
+
 ### Version 0.4.0 - 1/23/2015
 
 These are significant enough changes - mainly the improved data upload support and (mostly) feature complete data visualization widgets - to add a minor version number.

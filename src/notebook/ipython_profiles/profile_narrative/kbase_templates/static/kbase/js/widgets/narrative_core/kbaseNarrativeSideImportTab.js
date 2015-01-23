@@ -48,7 +48,7 @@
             var errorModalId = "app-error-modal-"+ self.uuid();
             var modalLabel = "app-error-modal-lablel-"+ self.uuid();
             self.$errorModalContent = $('<div>');
-            self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="z-index: 1000000;">').addClass("modal fade");
+            self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="position:auto">').addClass("modal fade");
             self.$errorModal.append(
                 $('<div>').addClass('modal-dialog').append(
                     $('<div>').addClass('modal-content').append(
@@ -60,9 +60,9 @@
                             $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
                     )
                 ));
-            self.$elem.append(self.$errorModal);
+            $('body').append(self.$errorModal);
             self.$warningModalContent = $('<div>');
-            self.$warningModal =  $('<div tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="z-index: 1000000;">').addClass("modal fade");
+            self.$warningModal =  $('<div tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="position:auto">').addClass("modal fade");
             var confirmButton = $('<button type="button" data-dismiss="modal">').addClass("btn").append("Confirm");
             confirmButton.click($.proxy(function(event) {
             	self.stopTimer();
@@ -79,7 +79,7 @@
                             $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Cancel"))
                     )
                 ));
-            self.$elem.append(self.$warningModal);
+            $('body').append(self.$warningModal);
 
 
             if (window.kbconfig && window.kbconfig.urls) {
@@ -446,9 +446,9 @@
             				'options': JSON.stringify(options),
             				'url_mapping': {'FASTA.DNA.Assembly': params['fastaFile']}};
             	} else if (methodId === 'import_reads_pe_fastq_file') {
-            		var urlMapping = {'FASTQ.DNA.Reads.1': params['fastqFile1']};
+            		var urlMapping = {'SequenceReads.1': params['fastqFile1']};
             		if (params['fastqFile2'] && params['fastqFile2'].length > 0)
-            			urlMapping['FASTQ.DNA.Reads.2'] = params['fastqFile2'];
+            			urlMapping['SequenceReads.2'] = params['fastqFile2'];
             		var options = {'outward':self.asBool(params['readOrientationOutward'])};
             		var optInsert = params['insertSizeMean'];
             		if (optInsert)
@@ -456,19 +456,19 @@
             		var optStdev = params['insertSizeStDev'];
             		if (optStdev)
             			options['stdev'] = optStdev;
-            		args = {'external_type': 'FASTQ.DNA.Reads', 
+            		args = {'external_type': 'SequenceReads', 
             				'kbase_type': 'KBaseAssembly.PairedEndLibrary', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
             				'options': JSON.stringify(options),
             				'url_mapping': urlMapping};
             	} else if (methodId === 'import_reads_se_fastq_file') {
-            		args = {'external_type': 'FASTQ.DNA.Reads', 
+            		args = {'external_type': 'SequenceReads', 
             				'kbase_type': 'KBaseAssembly.SingleEndLibrary', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
             				'options': '{}',
-            				'url_mapping': {'FASTQ.DNA.Reads': params['fastqFile']}};
+            				'url_mapping': {'SequenceReads': params['fastqFile']}};
             	} else {
             		self.showError(methodId + " import mode for ShortReads type is not supported yet");
             	}

@@ -11,7 +11,7 @@
  */
 (function( $, undefined ) {
     $.KBWidget({
-        name: 'kbaseNarrativeMethodPanel', 
+        name: 'kbaseNarrativeMethodPanel',
         parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
@@ -29,7 +29,7 @@
 
         /**
          * This private method is automatically called when the widget is initialized.
-         * 
+         *
          * Initialization steps:
          * 1. Put a loading spinner in its attached div
          * 2. Assume that the kernel is loaded before this is inited. //Check if the kernel is loaded - wait until it is.
@@ -91,9 +91,9 @@
                                           .append($('<span>')
                                                   .append('X'))
                                           .click(
-                                            $.proxy(function(event) { 
-                                                this.$searchInput.val(''); 
-                                                this.$searchInput.trigger('input'); 
+                                            $.proxy(function(event) {
+                                                this.$searchInput.val('');
+                                                this.$searchInput.trigger('input');
                                             }, this)
                                           ));
 
@@ -133,7 +133,7 @@
                                  .append(this.$loadingPanel)
                                  .append(this.$errorPanel));
 
-            // $(document).on('hasFunction.Narrative', 
+            // $(document).on('hasFunction.Narrative',
             //     $.proxy(function(e, service, method, callback) {
             //         if (callback) {
             //             callback(this.hasFunction(service, method));
@@ -150,7 +150,7 @@
                     }
                 }, this)
             );
-            
+
             $(document).on('removeFilterMethods.Narrative',
                 $.proxy(function(e) {
                     this.$searchDiv.hide();
@@ -164,7 +164,7 @@
              *      apps: [list, of, app, ids],
              *      methods: [list, of, method, ids]
              * }
-             * 
+             *
              * Either the apps or methods key can exist, or not and will be searched
              * appropriately.
              *
@@ -179,7 +179,7 @@
              *         id: { spec }
              *      }
              * }
-             * 
+             *
              * If a spec isn't found, then it won't appear in the return values.
              */
             $(document).on('getFunctionSpecs.Narrative',
@@ -262,7 +262,7 @@
 
         /**
          * Shows a popup panel with a description of the clicked method.
-         * @param {object} method - the method containing a title and 
+         * @param {object} method - the method containing a title and
          * description for populating the popup.
          * @private
          */
@@ -272,7 +272,7 @@
             this.help.$helpBody.html(method.tooltip);
             this.help.$helpLinkout.attr('href', this.options.methodHelpLink + method.id);
             this.help.$helpPanel.css({
-                                       'left':event.pageX, 
+                                       'left':event.pageX,
                                        'top':event.pageY
                                      })
                                 .show();
@@ -291,7 +291,7 @@
             this.showLoadingMessage("Loading KBase Methods from service...");
 
             var methodProm = this.methClient.list_methods_spec({},
-                $.proxy(function(methods) { 
+                $.proxy(function(methods) {
                     this.methodSpecs = {};
                     for (var i=0; i<methods.length; i++) {
                         this.methodSpecs[methods[i].info.id] = methods[i];
@@ -299,7 +299,7 @@
                 }, this)
             );
             var appProm = this.methClient.list_apps_spec({},
-                $.proxy(function(apps) { 
+                $.proxy(function(apps) {
                     this.appSpecs = {};
                     for (var i=0; i<apps.length; i++) {
                         this.appSpecs[apps[i].info.id] = apps[i];
@@ -378,20 +378,26 @@
 
         /**
          * Creates and returns a list item containing info about the given narrative function.
-         * Clicking the function anywhere outside the help (?) button will trigger a 
-         * function_clicked.Narrative event. Clicking the help (?) button will trigger a 
+         * Clicking the function anywhere outside the help (?) button will trigger a
+         * function_clicked.Narrative event. Clicking the help (?) button will trigger a
          * function_help.Narrative event.
-         * 
+         *
          * Both events have the relevant data passed along with them for use by the responding
          * element.
          * @param {object} method - the method object returned from the kernel.
          * @private
          */
         buildMethod: function(icon, method, triggerFn) {
+            var icon_name = "method";
+            if ( icon == "A") { icon_name = "app"; }
+            var icon_url = "static/kbase/images/" + icon_name + "-icon.png";
             var $logo = $('<div>')
                         .addClass('kb-method-list-logo')
-                        .css({ 'background-color' : this.logoColorLookup(icon) })
-                        .append(icon)
+                        .css({'background-image': 'url(' + icon_url + ')',
+                              'background-repeat': 'no-repeat',
+                              'background-color' : 'white' /*this.logoColorLookup(icon)*/
+                            })
+                        //.append(icon)
                         .click($.proxy(function(e) {
                             e.stopPropagation();
                             triggerFn(method);
@@ -462,7 +468,7 @@
                                     else { $moreBtn.hide(); }
                                 }, this));
                            } ));
-                        
+
         },
 
         /* 'request' should be expected to be an object like this:
@@ -470,7 +476,7 @@
          *      apps: [list, of, app, ids],
          *      methods: [list, of, method, ids]
          * }
-         * 
+         *
          * Either the apps or methods key can exist, or not and will be searched
          * appropriately.
          *
@@ -485,7 +491,7 @@
          *         id: { spec }
          *      }
          * }
-         * 
+         *
          * If a spec isn't found, then it won't appear in the return values.
          */
         getFunctionSpecs: function(specSet) {
@@ -530,7 +536,7 @@
                             '#9E9E9E', //grey
                             '#607D8B'  //blue grey
                          ];
-            
+
             // first, if there are some colors we want to catch...
             switch (type) {
                 case "M":
@@ -540,7 +546,7 @@
                     return "#03A9F4";
                     break;
             }
-            
+
             // pick one based on the characters
             var code = 0;
             for(var i=0; i<type.length; i++) {
@@ -570,11 +576,11 @@
         /**
          * Creates a new function field in the functions list.
          * This 'function' is represented as a DOM element. It has a name (styled as
-         * a button, or something buttonish) and a help button. 
+         * a button, or something buttonish) and a help button.
          *
          * Clicking the function button triggers a function_clicked.Narrative event,
          * and clicking the help button triggers a function_help.Narrative event.
-         * 
+         *
          * Both of these events have the relevant data passed along with them for
          * population by the responding element.
          *
@@ -591,7 +597,7 @@
 
         //     var $helpButton = $('<span>')
         //                       .addClass('glyphicon glyphicon-question-sign')
-        //                       .css({'float': 'right', 
+        //                       .css({'float': 'right',
         //                             'cursor': 'pointer',
         //                             'font-size': '14pt',
         //                             'color': '#0064b6'})
@@ -609,7 +615,7 @@
          */
         showLoadingMessage: function(message) {
             this.$loadingPanel.find('#message').empty();
-            if (message) 
+            if (message)
                 this.$loadingPanel.find('#message').html(message);
             this.$functionPanel.hide();
             this.$errorPanel.hide();
@@ -687,7 +693,7 @@
             $.each(elements,
                 $.proxy(
                     function (idx, val) {
-                        var $topElem = 
+                        var $topElem =
                             $('<div></div>')
                             .addClass('panel panel-default')
                             .css('margin-bottom', '2px')
@@ -748,7 +754,7 @@
         },
 
         /**
-         * A *REALLY* simple filter based on whether the given pattern string is present in the 
+         * A *REALLY* simple filter based on whether the given pattern string is present in the
          * method's name.
          * Returns true if so, false if not.
          * Doesn't care if its a method or an app, since they both have name fields at their root.

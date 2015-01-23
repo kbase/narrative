@@ -20,7 +20,8 @@
                 {name:['Genome'], displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
                 {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
                 {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'},
-                {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data Sets", header:'Sets of WGS and amplicon metagenomes'}
+                {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data Sets", header:'Sets of WGS and amplicon metagenomes'},
+                {name:['TranscriptomeHack'], displayName: "Example Sorghum Transcriptomes", header:'Sorghum bicolor transcriptome data in response to ABA and osmotic stress'}
                 ]
             
         },
@@ -51,7 +52,7 @@
                                  .append('<img src="' + this.options.loadingImage + '">');
             this.$elem.append(this.$loadingDiv);
             this.$mainPanel = $('<div>')
-                .css({'overflow-y':'auto'});
+                .css({'overflow-y':'auto','height':'604px'});
             this.$elem.append(this.$mainPanel);
             
             if (window.kbconfig && window.kbconfig.urls) {
@@ -88,6 +89,9 @@
                         for (var i=0; i<infoList.length; i++) {
                             // skip narrative objects
                             if (infoList[i][2].indexOf('KBaseNarrative') == 0) { continue; }
+                            if (infoList[i][1].indexOf('Transcriptome') == 0) {
+                                infoList[i][2] = 'TranscriptomeHack';
+                            }
                             self.objectList.push({
                                     $div:self.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
                                     info:infoList[i]
@@ -137,11 +141,19 @@
             self.objectList.sort(function(a,b) {
                                         if (a.info[2].toUpperCase() > b.info[2].toUpperCase()) return -1; // sort by type
                                         if (a.info[2].toUpperCase() < b.info[2].toUpperCase()) return 1;
+                                        if (a.info[1].toUpperCase() > b.info[1].toUpperCase()) return -1; // then by name
+                                        if (a.info[1].toUpperCase() < b.info[1].toUpperCase()) return 1;
                                         return 0;
                                     });
             for (var k=0; k<self.objectList.length; k++) {
                 var obj = self.objectList[k];
-                var typeName = obj.info[2].split('-')[0].split('.')[1];
+                var typeName='';
+                if (obj.info[2]==='TranscriptomeHack') {
+                    typeName=obj.info[2];
+                } else {
+                    typeName = obj.info[2].split('-')[0].split('.')[1];
+                }
+                
                 if (typeDivs.hasOwnProperty(typeName)) {
                     typeDivs[typeName].append(obj.$div);
                 } else {
@@ -183,9 +195,14 @@
             // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
             // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
             // [9] : int size // [10] : usermeta meta
-            var type_tokens = object_info[2].split('.')
-            var type_module = type_tokens[0];
-            var type = type_tokens[1].split('-')[0];
+            var type = '';
+            if (object_info[2]==='TranscriptomeHack') {
+                type='Genome';
+            } else {
+                var type_tokens = object_info[2].split('.')
+                var type_module = type_tokens[0];
+                type = type_tokens[1].split('-')[0];
+            }
             
             var $addDiv =
                 $('<div>').append(

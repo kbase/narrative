@@ -13,15 +13,12 @@
         token: null,
         wsName: null,
         loadingImage: "static/kbase/images/ajax-loader.gif",
-        wsUrl: "https://kbase.us/services/ws/",
-        methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
+        wsUrl: window.kbconfig.urls.workspace,
+        methodStoreURL: window.kbconfig.urls.narrative_method_store,
         methClient: null,
-        //uploaderURL: 'http://140.221.67.172:7778',
-        uploaderURL: 'https://narrative-dev.kbase.us/transform',
-        //aweURL: 'http://140.221.67.172:7080',
-        ujsURL: 'https://kbase.us/services/userandjobstate/',
-        shockURL: 'http://10.1.16.87:7078',
-        handleURL: 'http://10.1.16.87:7109',
+        uploaderURL: window.kbconfig.urls.transform,
+        ujsURL: window.kbconfig.urls.user_and_job_state,
+        shockURL: window.kbconfig.urls.shock,
         methods: null,			// {method_id -> method_spec}
         types: null,			// {type_name -> type_spec}
         selectedType: null,		// selected type name
@@ -379,123 +376,124 @@
             	params[paramId] = paramValue;
         	}
             var uploaderClient = new Transform(this.uploaderURL, {'token': self.token});
+            var args = null;
             if (self.selectedType === 'KBaseGenomes.Genome') {
+            	var url = null;
             	if (methodId === 'import_genome_gbk_file') {
-            		var contigsetId = null;
+            		url = self.shockURL + '/node/' + params['gbkFile'];
+            	} else if (methodId === 'import_genome_gbk_ftp') {
+            		url = params['ftpFolder'];
+            	}
+            	if (url) {
+            		var options = {};
             		if (params['contigObject'] && params['contigObject'].length > 0) {
-            			contigsetId = params['contigObject'];
+            			options['contigset_object_name'] = params['contigObject'];
             		} else {
-            			contigsetId = params['outputObject'] + '.contigset';
+            			options['contigset_object_name'] = params['outputObject'] + '.contigset';
             		}
-            		var args = {'etype': 'KBaseGenomes.GBK', 
-            				'kb_type': 'KBaseGenomes.Genome', 
-            				'in_id': params['gbkFile'], 
-            				'ws_name': self.wsName, 
-            				'obj_name': params['outputObject']};
-            				//'opt_args': '{"validator":{},"transformer":{"contigset_ref":"'+self.wsName+'/'+contigsetId+'"}}'}
-            		console.log(args);
-    				self.showInfo("Sending data...", true);
-            		uploaderClient.upload(args,
-            				$.proxy(function(data) {
-            					console.log(data);
-            					self.waitForJob(data[1]);
-                            }, this),
-                            $.proxy(function(error) {
-                                self.showError(error);
-                            }, this)
-                        );
+            		args = {'external_type': 'Genbank.Genome', 
+            				'kbase_type': 'KBaseGenomes.Genome', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'options': JSON.stringify(options),
+            				'url_mapping': {'Genbank.Genome': url}};
             	} else {
             		self.showError(methodId + " import mode for Genome type is not supported yet");
             	}
             } else if (self.selectedType === 'Transcript') {
             	if (methodId === 'import_transcript_file') {
-            		var args = {'etype': 'Transcript.FASTA', 
-            				'kb_type': 'KBaseGenomes.Genome', 
-            				'in_id': params['fastaFile'], 
-            				'ws_name': self.wsName, 
-            				'obj_name': params['outputObject']};
-            				//'opt_args': '{"validator":{},"transformer":{"contigset_ref":"'+self.wsName+'/'+contigsetId+'"}}'}
-            		console.log(args);
-    				self.showInfo("Sending data...", true);
-            		uploaderClient.upload(args,
-            				$.proxy(function(data) {
-            					console.log(data);
-            					self.waitForJob(data[1]);
-                            }, this),
-                            $.proxy(function(error) {
-                                self.showError(error);
-                            }, this)
-                        );
+            		var url = self.shockURL + '/node/' + params['fastaFile'];
+            		var options = {'dna':self.asBool(params['dna'])};
+            		var genomeId = params['genomeId'];
+            		if (genomeId)
+            			options['genome_id'] = genomeId;
+            		args = {'external_type': 'FASTA.Transcripts', 
+            				'kbase_type': 'KBaseGenomes.Genome', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'options': JSON.stringify(options),
+            				'url_mapping': {'FASTA.Transcripts': url}};
             	} else {
             		self.showError(methodId + " import mode for Genome type is not supported yet");
             	}
             } else if (self.selectedType === 'KBaseGenomes.ContigSet') {
-            	self.showError("Support for ContigSet is coming.");
+            	var url = null;
+            	if (methodId === 'import_contigset_fasta_file') {
+            		url = self.shockURL + '/node/' + params['fastaFile'];
+            	} else if (methodId === 'import_contigset_fasta_ftp') {
+            		url = params['ftpFolder'];
+            	}
+            	if (url) {
+            		args = {'external_type': 'FASTA.DNA.Assembly', 
+            				'kbase_type': 'KBaseGenomes.ContigSet', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'options': JSON.stringify({"fasta_reference_only":self.asBool(params['fastaReferenceOnly'])}),
+            				'url_mapping': {'FASTA.DNA.Assembly': url}};
+            	} else {
+            		self.showError(methodId + " import mode for ContigSet type is not supported yet");
+            	}
             } else if (self.selectedType === 'ShortReads') {
             	if (methodId === 'import_reads_fasta_file') {
-            		var refName = "test_ref_name";
-            		var args = {'etype': 'KBaseAssembly.FA', 
-            				'kb_type': 'KBaseAssembly.ReferenceAssembly', 
-            				'in_id': params['fastaFile'], 
-            				'ws_name': self.wsName, 
-            				'obj_name': params['outputObject'],
-            				'opt_args': '{"validator":{},"transformer":{"reference_name":"'+refName+'","handle_service_url":"'+self.handleURL+'","shock_url":"'+self.shockURL+'"}}'}
-            		console.log(args);
-    				self.showInfo("Sending data...", true);
-            		uploaderClient.upload(args,
-            				$.proxy(function(data) {
-            					console.log(data);
-            					self.waitForJob(data[1]);
-                            }, this),
-                            $.proxy(function(error) {
-                                self.showError(error);
-                            }, this)
-                        );
+            		var options = {};
+            		var refName = params['refname'];
+            		if (refName)
+            			options['refname'] = refName;
+            		args = {'external_type': 'FASTA.DNA.Assembly', 
+            				'kbase_type': 'KBaseGenomes.ReferenceAssembly', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'options': JSON.stringify(options),
+            				'url_mapping': {'FASTA.DNA.Assembly': params['fastaFile']}};
             	} else if (methodId === 'import_reads_pe_fastq_file') {
-            		var shockNodes = params['fastqFile1'];
+            		var urlMapping = {'FASTQ.DNA.Reads.1': params['fastqFile1']};
             		if (params['fastqFile2'] && params['fastqFile2'].length > 0)
-            			shockNodes += params['fastqFile2'];
-            		var args = {'etype': 'KBaseAssembly.FQ', 
-            				'kb_type': 'KBaseAssembly.PairedEndLibrary', 
-            				'in_id': shockNodes, 
-            				'ws_name': self.wsName, 
-            				'obj_name': params['outputObject'],
-            				'opt_args': '{"validator":{},"transformer":{"handle_service_url":"'+self.handleURL+'","shock_url":"'+self.shockURL+'"}}'}
-            		console.log(args);
-    				self.showInfo("Sending data...", true);
-            		uploaderClient.upload(args,
-            				$.proxy(function(data) {
-            					console.log(data);
-            					self.waitForJob(data[1]);
-                            }, this),
-                            $.proxy(function(error) {
-                                self.showError(error);
-                            }, this)
-                        );
+            			urlMapping['FASTQ.DNA.Reads.2'] = params['fastqFile2'];
+            		var options = {'outward':self.asBool(params['readOrientationOutward'])};
+            		var optInsert = params['insertSizeMean'];
+            		if (optInsert)
+            			options['insert'] = optInsert;
+            		var optStdev = params['insertSizeStDev'];
+            		if (optStdev)
+            			options['stdev'] = optStdev;
+            		args = {'external_type': 'FASTQ.DNA.Reads', 
+            				'kbase_type': 'KBaseAssembly.PairedEndLibrary', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'options': JSON.stringify(options),
+            				'url_mapping': urlMapping};
             	} else if (methodId === 'import_reads_se_fastq_file') {
-            		var args = {'etype': 'KBaseAssembly.FQ', 
-            				'kb_type': 'KBaseAssembly.SingleEndLibrary', 
-            				'in_id': params['fastqFile'], 
-            				'ws_name': self.wsName, 
-            				'obj_name': params['outputObject'],
-            				'opt_args': '{"validator":{},"transformer":{"handle_service_url":"'+self.handleURL+'","shock_url":"'+self.shockURL+'"}}'}
-            		console.log(args);
-    				self.showInfo("Sending data...", true);
-            		uploaderClient.upload(args,
-            				$.proxy(function(data) {
-            					console.log(data);
-            					self.waitForJob(data[1]);
-                            }, this),
-                            $.proxy(function(error) {
-                                self.showError(error);
-                            }, this)
-                        );
+            		args = {'external_type': 'FASTQ.DNA.Reads', 
+            				'kbase_type': 'KBaseAssembly.SingleEndLibrary', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'options': '{}',
+            				'url_mapping': {'FASTQ.DNA.Reads': params['fastqFile']}};
             	} else {
             		self.showError(methodId + " import mode for ShortReads type is not supported yet");
             	}
             } else {
             	self.showError("Import for [" + self.selectedType + "] type is not supported yet.");
             }
+            if (args) {
+        		console.log(args);
+				self.showInfo("Sending data...", true);
+        		uploaderClient.upload(args,
+        				$.proxy(function(data) {
+        					console.log(data);
+        					self.waitForJob(data[1]);
+                        }, this),
+                        $.proxy(function(error) {
+                            self.showError(error);
+                        }, this)
+                    );
+            }
+        },
+        
+        asBool: function(val) {
+        	if (!val)
+        		return false;
+        	return val == 1 || val === "1";
         },
         
         waitForJob: function(jobId) {

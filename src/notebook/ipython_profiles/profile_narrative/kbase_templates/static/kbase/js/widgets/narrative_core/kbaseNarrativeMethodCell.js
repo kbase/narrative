@@ -17,6 +17,7 @@
         options: {
             method: null,
             cellId: null,
+            methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -64,7 +65,7 @@
                         return;
 
                     this.submittedText = 'submitted on ' + this.readableTimestamp();
-                    this.trigger('runCell.Narrative', { 
+                    this.trigger('runCell.Narrative', {
                         cell: IPython.notebook.get_selected_cell(),
                         method: this.method,
                         parameters: this.getParameters()
@@ -119,19 +120,31 @@
                               .append($('<span>')
                                       .addClass('pull-right kb-func-timestamp')
                                       .attr('id', 'last-run'))
-                              .append($('<button>')
+                              /*.append($('<button>')
                                       .addClass('btn btn-default btn-xs')
                                       .attr('type', 'button')
                                       .attr('data-toggle', 'collapse')
                                       .attr('data-target', '#' + methodId)
-                                      .append(buttonLabel))
+                                      .append(buttonLabel))*/
                               .append($('<h2>')
                                       .attr('id', methodId)
-                                      .addClass('collapse')
-                                      .append(methodDesc));
+                                      //.addClass('collapse')
+                                      .append(methodDesc +
+                                            ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + this.method.info.id +
+                                                '" target="_blank">more...</a>'
+
+                                      ));
+
+            // Controls (minimize)
+            var $controlsSpan = $('<div>').addClass("pull-left");
+            var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
+                                    .css({color: "#888", fontSize: "14pt",
+                                          paddingTop: "7px"});
+            $controlsSpan.append($minimizeControl);
 
             this.$cellPanel = $('<div>')
                               .addClass('panel kb-func-panel kb-cell-run')
+                              .append($controlsSpan)
                               .append($('<div>')
                                       .addClass('panel-heading')
                                       .append($methodInfo))
@@ -143,8 +156,34 @@
                                       .css({'overflow' : 'hidden'})
                                       .append($buttons));
 
-            $menuSpan.kbaseNarrativeCellMenu();
+            this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
             this.$elem.append(this.$cellPanel);
+
+            // Add minimize/restore actions.
+            // These mess with the CSS on the cells!
+            var $mintarget = this.$cellPanel;
+            this.panel_minimized = false;
+            var self = this;
+            $controlsSpan.click(function() {
+              if (self.panel_minimized) {
+                console.debug("restore full panel");
+                $mintarget.find(".panel-body").slideDown();
+                $mintarget.find(".panel-footer").show();
+                $minimizeControl.removeClass("glyphicon-chevron-right")
+                                .addClass("glyphicon-chevron-down")
+                                .css({paddingTop: "7px"});
+                self.panel_minimized = false;
+              }
+              else {
+                console.debug("minimize panel");
+                $mintarget.find(".panel-footer").hide();
+                $mintarget.find(".panel-body").slideUp();
+                $minimizeControl.removeClass("glyphicon-chevron-down")
+                                 .addClass("glyphicon-chevron-right")
+                                 .css({paddingTop: "7px"});
+               self.panel_minimized = true;
+              }
+            });
 
             var inputWidgetName = this.method.widgets.input;
             if (!inputWidgetName || inputWidgetName === 'null')
@@ -187,9 +226,9 @@
          */
         loadState: function(state) {
             // cases (for older ones)
-            // 1. state looks like: 
+            // 1. state looks like:
             // { params: {},
-            //   runningState: {runState, 
+            //   runningState: {runState,
             //                  submittedText,
             //                  outputState}
             // }
@@ -202,9 +241,24 @@
                 this.submittedText = state.runningState.submittedText;
                 this.changeState(state.runningState);
             }
-            else 
+            else
                 this.$inputWidget.loadState(state);
         },
+
+        /* Show/hide running icon */
+        displayRunning: function(is_running, had_error) {
+          if (is_running) {
+            this.cellMenu.$runningIcon.show();
+            // never show error icon while running
+            this.cellMenu.$errorIcon.hide();
+          }
+          else {
+            this.cellMenu.$runningIcon.hide();
+            // only display error when not running
+            if (had_error) { this.cellMenu.$errorIcon.show(); }
+            else { this.cellMenu.$errorIcon.hide(); }
+            }
+          },
 
         /**
          * @method
@@ -216,7 +270,18 @@
                 if (isCanceled) {
                     this.changeState('input');
                 }
-            }, this)]);            
+            }, this)]);
+        },
+        /**
+         * @method
+         * Shows an associated error with a cell (if available)
+         */
+        showError: function() {
+            this.trigger('showJobError.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
+                if (isCanceled) {
+                    this.changeState('input');
+                }
+            }, this)]);
         },
 
         /**
@@ -237,6 +302,7 @@
                         this.$runButton.hide();
                         this.$stopButton.hide();
                         this.$inputWidget.lockInputs();
+                        this.displayRunning(true);
                         break;
                     case 'complete':
                         this.$cellPanel.removeClass('kb-app-step-running');
@@ -245,6 +311,7 @@
                         this.$runButton.hide();
                         this.$stopButton.hide();
                         this.$inputWidget.lockInputs();
+                        this.displayRunning(false);
                         // maybe unlock? show a 'last run' box?
                         break;
                     case 'running':
@@ -254,6 +321,7 @@
                         this.$runButton.hide();
                         this.$stopButton.show();
                         this.$inputWidget.lockInputs();
+                        this.displayRunning(true);
                         break;
                     case 'error':
                         this.$submitted.html(this.submittedText).show();
@@ -262,6 +330,7 @@
                         this.$stopButton.show();
                         this.$inputWidget.lockInputs();
                         this.$elem.find('.kb-app-panel').addClass('kb-app-error');
+                        this.displayRunning(true, false);
                         break;
                     default:
                         this.$cellPanel.removeClass('kb-app-step-running');
@@ -270,6 +339,7 @@
                         this.$runButton.show();
                         this.$stopButton.hide();
                         this.$inputWidget.unlockInputs();
+                        this.displayRunning(false);
                         break;
                 }
             }
@@ -281,8 +351,8 @@
 
         /*
          * This function is invoked every time we run app. This is the difference between it
-         * and getAllParameterValues/getParameterValue which could be invoked many times before running 
-         * (e.g. when widget is rendered). 
+         * and getAllParameterValues/getParameterValue which could be invoked many times before running
+         * (e.g. when widget is rendered).
          */
         prepareDataBeforeRun: function() {
             if (this.inputSteps) {

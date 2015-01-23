@@ -346,7 +346,9 @@
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
                 importPanel = $('<div class="kb-import-content kb-import-import">'),
                 examplePanel = $('<div class="kb-import-content">');
-                
+            
+            
+            
             // add tabs
             var $tabs = this.buildTabs([
                     {tabName: '<small>My Data</small>', content: minePanel},
@@ -358,39 +360,44 @@
             
             
             // hack to keep search on top
-            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'430px'});
+            
+            var $mineFilterRow = $('<div class="row">');
+            minePanel.append($mineFilterRow);
+            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
             setLoading($mineScrollPanel);
             minePanel.append($mineScrollPanel);
-            var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'430px'});
+            
+            var $sharedFilterRow = $('<div class="row">');
+            sharedPanel.append($sharedFilterRow);
+            var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
             setLoading($sharedScrollPanel);
             sharedPanel.append($sharedScrollPanel);
-            
-            // Setup the panels that are defined by widgets
-            publicPanel.kbaseNarrativeSidePublicTab({});
-            importPanel.kbaseNarrativeSideImportTab({});
-            examplePanel.kbaseNarrativeExampleDataTab({});
-
             
             var body = $('<div>');
             var footer = $('<div>');
             body.addClass('kb-side-panel');
             body.append($tabs.header, $tabs.body);
-
-            // It is silly to invoke a new object for each widget
-            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
-            var ws = new Workspace(this.options.workspaceURL, auth);
-
+            
             // add footer status container and buttons
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
             var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>').css({'margin':'10px'});
             var closeBtn = $('<button class="btn btn-default pull-right">Close</button>').css({'margin':'10px'});
+            
+            // Setup the panels that are defined by widgets
+            publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus});
+            importPanel.kbaseNarrativeSideImportTab({});
+            examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus});
+
+            // It is silly to invoke a new object for each widget
+            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
+            var ws = new Workspace(this.options.workspaceURL, auth);
+
 
             closeBtn.click(function() {
                 self.trigger('hideSidePanelOverlay.Narrative');
             })
             footer.append(closeBtn);
-            //footer.append(btn);
 
             // start with my data, then fetch other data
             // this is because data sets can be large and
@@ -400,20 +407,30 @@
             });
 
             var narrativeNameLookup={};
-            this.$overlayPanel = $('<div>').append(body).append(footer);
+            this.$overlayPanel = body.append(footer);
 
             function updateView(view) {
                 var p;
-                if (view == 'mine') p = getMyWS();
-                else if (view == 'shared') p = getSharedWS();
+                if (view == 'mine') {
+                    p = getMyWS();
+                } else if (view == 'shared') {
+                    p = getSharedWS();
+                }
 
                 return $.when(p).done(function(workspaces) {
-                    if (view == 'mine') prom = getMyData(workspaces);
-                    else if (view == 'shared') prom = getSharedData(workspaces);
+                    if (view == 'mine') {
+                        prom = getMyData(workspaces);
+                    } else if (view == 'shared') {
+                        prom = getSharedData(workspaces);
+                    }
                     $.when(prom).done(function() {
                         if (view == 'mine') {
+                           // minePanel.detach();  // arg!! why isn't the filter bar it's own div?
+                           // minePanel.append($mineScrollPanel);
                             addMyFilters();
                         } else if(view == 'shared') {
+                          //  minePanel.detach();  // arg!! why isn't the filter bar it's own div?
+                          //  minePanel.append($mineScrollPanel);
                             addSharedFilters();
                         }
                     });
@@ -558,22 +575,33 @@
                         .then(function(d) {
                             var workspaces = [];
                             for (var i in d) {
-                                 if (d[i][8].is_temporary) {
+                                if (d[i][8].is_temporary) {
                                     if (d[i][8].is_temporary === 'true') { continue; }
                                 }
                                 var displayName = d[i][1];
-                                if (!d[i][8].narrative) { continue; }
-                                if (d[i][8].narrative_nice_name) {
-                                    displayName = d[i][8].narrative_nice_name;
-                                } else {
-                                    continue; // skip corrupted narratives
+                                if (d[i][8].narrative) {
+                                    if (d[i][8].narrative_nice_name) {
+                                        displayName = d[i][8].narrative_nice_name;
+                                        // todo: should skip temporary narratives
+                                        workspaces.push({id: d[i][0],
+                                                         name: d[i][1],
+                                                         displayName: displayName,
+                                                         count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                        continue;
+                                    }
                                 }
-                                // todo: should skip temporary narratives
-                                workspaces.push({id: d[i][0],
-                                                 name: d[i][1],
-                                                 displayName: displayName,
-                                                 count: d[i][4]});
-                                narrativeNameLookup[d[i][1]] = displayName;
+                                
+                                if (d[i][8].show_in_narrative_data_panel) {
+                                    if(d[i][8].show_in_narrative_data_panel==='1') {
+                                        displayName = "(data only) "+d[i][1];
+                                        workspaces.push({id: d[i][0],
+                                                     name: d[i][1],
+                                                     displayName:displayName,
+                                                     count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                    }
+                                }
                             }
 
                             // add to model for filter
@@ -598,21 +626,34 @@
                                 if (d[i][2] == user) {
                                     continue;
                                 }
+                                
                                 if (d[i][8].is_temporary) {
                                     if (d[i][8].is_temporary === 'true') { continue; }
                                 }
-                                if (!d[i][8].narrative) { continue; }
                                 var displayName = d[i][1];
-                                if (d[i][8].narrative_nice_name) {
-                                    displayName = d[i][8].narrative_nice_name;
-                                } else {
-                                    continue; // skip corrupted narratives
+                                if (d[i][8].narrative) {
+                                    if (d[i][8].narrative_nice_name) {
+                                        displayName = d[i][8].narrative_nice_name;
+                                        // todo: should skip temporary narratives
+                                        workspaces.push({id: d[i][0],
+                                                         name: d[i][1],
+                                                         displayName: displayName,
+                                                         count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                        continue;
+                                    }
                                 }
-                                workspaces.push({id: d[i][0],
-                                                 name: d[i][1],
-                                                 displayName:displayName,
-                                                 count: d[i][4]});
-                                narrativeNameLookup[d[i][1]] = displayName;
+                                
+                                if (d[i][8].show_in_narrative_data_panel) {
+                                    if(d[i][8].show_in_narrative_data_panel==='1') {
+                                        displayName = "(data only) "+d[i][1];
+                                        workspaces.push({id: d[i][0],
+                                                     name: d[i][1],
+                                                     displayName:displayName,
+                                                     count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                    }
+                                }
                             }
 
                             // add to model for filter
@@ -846,7 +887,7 @@
                                      '</option>');
                 }
                 var typeFilter = $('<div class="col-sm-3">').append(typeInput);
-
+                
                 // event for type dropdown
                 typeInput.change(function() {
                     type = $(this).children('option:selected').data('type');
@@ -865,10 +906,26 @@
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, $mineScrollPanel, mineSelected);
                 });
+                
+                
+                var $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align':'center'}).append(
+                                        $('<button>')
+                                            .css({'margin-top':'12px'})
+                                            .addClass('btn btn-xs btn-default')
+                                            .click(function(event) {
+                                                $mineScrollPanel.empty();
+                                                setLoading($mineScrollPanel);
+                                                updateView('mine').done(function() {
+                                                    updateView('shared'); });
+                                                })
+                                            .append($('<span>')
+                                                .addClass('glyphicon glyphicon-refresh')));
+                
 
                 // add search, type, ws filter to dom
-                var row = $('<div class="row">').append(searchFilter, typeFilter, wsFilter);
-                minePanel.prepend(row);
+                $mineFilterRow.empty();
+                $mineFilterRow.append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
+                //minePanel.prepend(row);
             }
 
             function addSharedFilters() {
@@ -931,9 +988,24 @@
                     render(filtered, $sharedScrollPanel, sharedSelected);
                 });
 
+                
+                var $refreshBtnDiv = $('<div>').addClass('col-sm-1').append(
+                                        $('<button>')
+                                            .css({'margin-top':'12px'})
+                                            .addClass('btn btn-xs btn-default')
+                                            .click(function(event) {
+                                                $sharedScrollPanel.empty();
+                                                setLoading($sharedScrollPanel);
+                                                updateView('shared').done(function() {
+                                                    updateView('mine'); });
+                                                })
+                                            .append($('<span>')
+                                                .addClass('glyphicon glyphicon-refresh')));
+                
                 // add search, type, ws filter to dom
-                var row = $('<div class="row">').append(searchFilter, typeFilter, wsFilter);
-                sharedPanel.prepend(row);
+                $sharedFilterRow.empty();
+                $sharedFilterRow.append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
+                //sharedPanel.prepend(row);
             }
 
             function rowTemplate(obj) {
@@ -1091,6 +1163,15 @@
                                     },
                                     function(error) {
                                         $(thisBtn).html('Error');
+                                        if (error.error && error.error.message) {
+                                            if (error.error.message.indexOf('may not write to workspace')>=0) {
+                                                importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: you do not have permission to add data to this Narrative.'));
+                                            } else {
+                                                importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: '+error.error.message));
+                                            }
+                                        } else {
+                                            importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
+                                        }
                                         console.error(error);
                                     });
                                 

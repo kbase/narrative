@@ -10,7 +10,7 @@
         version: "1.0.0",
         token: null,
         options: {},
-        ws_name: window.kbconfig.workspaceId;
+        ws_id: window.kbconfig.workspaceId,
         ws_url: window.kbconfig.urls.workspace,
         loading_image: "static/kbase/images/ajax-loader.gif",
 
@@ -22,6 +22,7 @@
          */
         init: function(options) {
             this._super(options);
+            this.ws_id = parseInt(this.ws_id, 10);
             return this;
         },
 
@@ -34,7 +35,6 @@
             container.append("<div>[Error] You're not logged in</div>");
             return;
         }
-        container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
         var kbws = new Workspace(self.ws_url, {'token': self.token});
         
 		var lslen = 0;
@@ -62,11 +62,12 @@
 		container.append(r);
 
                 // Get list of metagenome ids from workspace
-                var response = kbws.list_objects({ ids : [self.ws_name] , type : 'Communities.Metagenome'} , function(data) {
+                kbws.list_objects({ ids : [self.ws_id] , type : 'Communities.Metagenome'} , function(data) {
                         var idList = [];
                         for (var i=0; i<data.length; i++) {
-                                idList.push({ref: self.ws_name+"/"+data[i][0] });
+                                idList.push({ref: self.ws_id+"/"+data[i][0] });
                         }
+                        //console.log(idList);
 		        // get the metadata for the ids
                         kbws.get_objects(idList, function(resData) {
                                 var listSelectData = [];
@@ -101,42 +102,50 @@
                 });
 
 	},
+	
+	loggedInCallback: function(event, auth) {
+        this.token = auth.token;
+        this.render();
+        return this;
+    },
+
+    loggedOutCallback: function(event, auth) {
+        this.token = null;
+        this.render();
+        return this;
+    },
+    
 	metagenomesSelected: function(items, listName) {
 	    var self = this.master;
 	
 	    var d = document.getElementById("myResultDiv");
 
 	    // if data is selected create list and save it to ws
+	    var date = new Date();
 	    var collection = {
 	    	name: listName,
 	    	type: 'Metagenome',
-	    	created: 'no timestamp available',
+	    	created: date.toISOString(),
 	    	members: []
 	    };
 	    
 	    for (var i=0 ; i<items.length;i++){
-		
-	    	var member = {
-	    	    ID: items[i].wsitem,
-	    	    URL: items[i].wsid
-	    	};
-		
-	    	collection.members.push(member);
+		    collection.members[i] = {'ID': items[i].id, 'URL': ""};
 	    }
 	    
 	    var object_data = {
-	     	type: 'Communities.Metagenome',
+	     	type: 'Communities.Collection',
 	     	data: collection,
-	     	name: listName,
+	     	name: listName
 	    };
 	    
 	    var save_params = {
-	     	id: self.ws_name, //if only ws name is given change to workspace
+	     	id: self.ws_id, //if only ws name is given change to workspace
 	     	objects: [object_data]
 	    };
+	    //console.log(save_params);
 	   
 	    var kbws = new Workspace(self.ws_url, {'token': self.token});
-	    console.log(save_params);
 	    kbws.save_objects(save_params);
 	    
 	    d.innerHTML = "<h5>collection "+listName+" saved.</h5>";

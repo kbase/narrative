@@ -395,14 +395,13 @@
             				'kbase_type': 'KBaseGenomes.Genome', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'options': JSON.stringify(options),
+            				'optional_arguments': JSON.stringify({'validate':{},'transform':options}),
             				'url_mapping': {'Genbank.Genome': url}};
             	} else {
             		self.showError(methodId + " import mode for Genome type is not supported yet");
             	}
             } else if (self.selectedType === 'Transcript') {
             	if (methodId === 'import_transcript_file') {
-            		var url = self.shockURL + '/node/' + params['fastaFile'];
             		var options = {'dna':self.asBool(params['dna'])};
             		var genomeId = params['genomeId'];
             		if (genomeId)
@@ -411,8 +410,8 @@
             				'kbase_type': 'KBaseGenomes.Genome', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'options': JSON.stringify(options),
-            				'url_mapping': {'FASTA.Transcripts': url}};
+            				'optional_arguments': JSON.stringify({'validate':{},'transform':options}),
+            				'url_mapping': {'FASTA.Transcripts': self.shockURL + '/node/' + params['fastaFile']}};
             	} else {
             		self.showError(methodId + " import mode for Genome type is not supported yet");
             	}
@@ -428,7 +427,8 @@
             				'kbase_type': 'KBaseGenomes.ContigSet', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'options': JSON.stringify({"fasta_reference_only":self.asBool(params['fastaReferenceOnly'])}),
+            				'optional_arguments': JSON.stringify({'validate':{},'transform':
+            						{"fasta_reference_only":self.asBool(params['fastaReferenceOnly'])}}),
             				'url_mapping': {'FASTA.DNA.Assembly': url}};
             	} else {
             		self.showError(methodId + " import mode for ContigSet type is not supported yet");
@@ -443,12 +443,12 @@
             				'kbase_type': 'KBaseGenomes.ReferenceAssembly', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'options': JSON.stringify(options),
-            				'url_mapping': {'FASTA.DNA.Assembly': params['fastaFile']}};
+            				'optional_arguments': JSON.stringify({'validate':{},'transform':options}),
+            				'url_mapping': {'FASTA.DNA.Assembly': self.shockURL + '/node/' + params['fastaFile']}};
             	} else if (methodId === 'import_reads_pe_fastq_file') {
-            		var urlMapping = {'SequenceReads.1': params['fastqFile1']};
+            		var urlMapping = {'SequenceReads.1': self.shockURL + '/node/' + params['fastqFile1']};
             		if (params['fastqFile2'] && params['fastqFile2'].length > 0)
-            			urlMapping['SequenceReads.2'] = params['fastqFile2'];
+            			urlMapping['SequenceReads.2'] = self.shockURL + '/node/' + params['fastqFile2'];
             		var options = {'outward':self.asBool(params['readOrientationOutward'])};
             		var optInsert = params['insertSizeMean'];
             		if (optInsert)
@@ -460,23 +460,64 @@
             				'kbase_type': 'KBaseAssembly.PairedEndLibrary', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'options': JSON.stringify(options),
+            				'optional_arguments': JSON.stringify(options),
             				'url_mapping': urlMapping};
             	} else if (methodId === 'import_reads_se_fastq_file') {
             		args = {'external_type': 'SequenceReads', 
             				'kbase_type': 'KBaseAssembly.SingleEndLibrary', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'options': '{}',
-            				'url_mapping': {'SequenceReads': params['fastqFile']}};
+            				'optional_arguments': JSON.stringify({'validate':{},'transform':{}}),
+            				'url_mapping': {'SequenceReads': self.shockURL + '/node/' + params['fastqFile']}};
             	} else {
             		self.showError(methodId + " import mode for ShortReads type is not supported yet");
+            	}
+            } else if (self.selectedType === 'KBaseFBA.FBAModel') {
+            	if (methodId === 'import_fbamodel_csv_file') {
+            		var options = {};
+            		var genome = params['genomeObject'];
+            		if (genome)
+            			options['genome'] = genome;
+            		var biomass = params['biomass'];
+            		if (biomass)
+            			options['biomass'] = biomass;
+            		args = {'external_type': 'CSV', 
+            				'kbase_type': 'KBaseFBA.FBAModel', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': JSON.stringify({'validate':{},'transform':options}),
+            				'url_mapping': {
+            					'CSV.FBAModel': self.shockURL + '/node/' + params['reactionFile'],
+            					'CSV.Compounds': self.shockURL + '/node/' + params['compoundFile']
+            				}
+            		};
+            	} else if (methodId === 'import_fbamodel_sbml_file') {
+            		var urlMapping = {'SBML.FBAModel': self.shockURL + '/node/' + params['reactionFile']};
+            		var compoundFile = params['compoundFile'];
+            		if (compoundFile)
+            			urlMapping['CSV.Compounds'] = self.shockURL + '/node/' + compoundFile;
+            		var options = {};
+            		var genome = params['genomeObject'];
+            		if (genome)
+            			options['genome'] = genome;
+            		var biomass = params['biomass'];
+            		if (biomass)
+            			options['biomass'] = biomass;
+            		args = {'external_type': 'SBML', 
+            				'kbase_type': 'KBaseFBA.FBAModel', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': JSON.stringify({'validate':{},'transform':options}),
+            				'url_mapping': urlMapping};
+            	} else {
+            		self.showError(methodId + " import mode for FBAModel type is not supported yet");
             	}
             } else {
             	self.showError("Import for [" + self.selectedType + "] type is not supported yet.");
             }
             if (args) {
-        		console.log(args);
+        		console.log("Data to be sent to transform service:");
+        		console.log(JSON.stringify(args));
 				self.showInfo("Sending data...", true);
         		uploaderClient.upload(args,
         				$.proxy(function(data) {

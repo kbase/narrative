@@ -167,11 +167,6 @@
                 this.$jobCountBadge.append(numJobs);
         },
 
-        adjustJobCounter: function(increment) {
-            var count = parseInt(this.$jobCountBadge.text());
-            this.setJobCounter(increment ? count+1 : count-1);
-        },
-
         /**
          * @method
          * Initializes the jobStates object that the panel knows about.
@@ -185,7 +180,6 @@
             if (IPython.notebook && IPython.notebook.metadata && IPython.notebook.metadata.job_ids) {
                 // this is actually like: ['apps': [list of app jobs], 'methods':[list of method jobs]
                 var jobIds = IPython.notebook.metadata.job_ids;
-                var counter = 0;
                 for (var jobType in jobIds) {
                     if (!(jobIds[jobType] instanceof Array))
                         continue;
@@ -194,9 +188,7 @@
                         this.jobStates[job.id] = $.extend({}, job, { 'status' : null, '$elem' : null, 'id' : job.id });
                         this.source2Job[job.source] = job.id;
                     }
-                    counter += jobIds[jobType].length;
                 }
-                this.setJobCounter(counter);
             }
         },
 
@@ -303,8 +295,6 @@
             methodIds = methodIds.filter(function(val) { return val.id !== jobId });
             IPython.notebook.metadata.job_ids.methods = methodIds;
 
-            this.adjustJobCounter(false);
-
             // remove it from the 'cache' in this jobs panel
             delete this.source2Job[this.jobStates[jobId].source];
             delete this.jobStates[jobId];
@@ -371,7 +361,6 @@
             // put a stub in the job states
             this.jobStates[jobInfo.id] = $.extend({}, jobInfo, {'status' : null, '$elem' : 'null'});
             this.source2Job[jobInfo.source] = jobInfo.id;
-            this.adjustJobCounter(true);
             this.refresh();
             IPython.notebook.save_checkpoint();
         },
@@ -387,6 +376,21 @@
                 var type = jobId.split(':')[0];
                 return type.toLowerCase();
             }
+        },
+
+        /**
+         * There are a few different status options that show a job is complete vs. 
+         * incomplete. We mark ones as "running" for our purpose if they do not
+         * have any of these statuses.
+         * @method
+         * @private
+         */
+        jobIsIncomplete: function(status) {
+            return (status !== 'completed' && 
+                    status !== 'error' && 
+                    status !== 'done' && 
+                    status !== 'deleted' &&
+                    status !== 'suspend');
         },
 
         /**
@@ -436,11 +440,7 @@
 //                jobInfo[jobId] = {'state' : jobState};
 
                 // if the job's incomplete, we have to go get it.
-                var jobIncomplete = (jobState.status !== 'completed' && 
-                                     jobState.status !== 'error' && 
-                                     jobState.status !== 'done' && 
-                                     jobState.status !== 'deleted' &&
-                                     jobState.status !== 'suspend')
+                var jobIncomplete = this.jobIsIncomplete(jobState.status);
                 // 2. The type dictates what cell it came from and how to deal with the inputs.
                 var jobType = this.jobTypeFromId(jobId);
                 var specInfo = null;
@@ -579,14 +579,6 @@
 
             // console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
 
-            // var storedIds = {};
-            // for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {
-            //     storedIds[IPython.notebook.metadata.job_ids.methods[i].id] = IPython.notebook.metadata.job_ids.methods[i];
-            // }
-            // for (var i=0; i<IPython.notebook.metadata.job_ids.apps.length; i++) {
-            //     storedIds[IPython.notebook.metadata.job_ids.apps[i].id] = IPython.notebook.metadata.job_ids.apps[i];
-            // }
-
             // Instantiate a shiny new panel to hold job info.
             var $jobsList = $('<div>').addClass('kb-jobs-items');
 
@@ -609,22 +601,27 @@
                         return -1;
                 }, this));
 
+                var stillRunning = 0;
                 for (var i=0; i<sortedJobs.length; i++) {
                     var jobId = sortedJobs[i];
                     var info = jobInfo[jobId];
 
                     // if the id shows up in the "render me!" list:
+                    // only those we fetched might still be running.
                     if (fetchedJobStatus[jobId]) {
                         // update the state and cell
                         this.jobStates[jobId].status = fetchedJobStatus[jobId].job_state;
+                        if (this.jobIsIncomplete(this.jobStates[jobId].status))
+                            stillRunning++;
                         this.jobStates[jobId].state = fetchedJobStatus[jobId];
                         this.updateCell(jobId, jobInfo[jobId]);
                     }
                     // updating the given state first allows us to just pass the id and the status set to
                     // the renderer. If the status set doesn't exist (e.g. we didn't look it up in the 
                     // kernel), then that's just undefined and the renderer can deal.
-                    $jobsList.append(this.renderJob(jobId, jobInfo[jobId])); //, fetchedJobStatus[jobId]));
+                    $jobsList.append(this.renderJob(jobId, jobInfo[jobId]));
                 }
+                this.setJobCounter(stillRunning);
             }
             this.$jobsPanel.empty().append($jobsList);
         },

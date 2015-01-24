@@ -395,7 +395,7 @@
             				'kbase_type': 'KBaseGenomes.Genome', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'optional_arguments': JSON.stringify({'validate':{},'transform':options}),
+            				'optional_arguments': {'validate':{},'transform':options},
             				'url_mapping': {'Genbank.Genome': url}};
             	} else {
             		self.showError(methodId + " import mode for Genome type is not supported yet");
@@ -410,7 +410,7 @@
             				'kbase_type': 'KBaseGenomes.Genome', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'optional_arguments': JSON.stringify({'validate':{},'transform':options}),
+            				'optional_arguments': {'validate':{},'transform':options},
             				'url_mapping': {'FASTA.Transcripts': self.shockURL + '/node/' + params['fastaFile']}};
             	} else {
             		self.showError(methodId + " import mode for Genome type is not supported yet");
@@ -427,8 +427,8 @@
             				'kbase_type': 'KBaseGenomes.ContigSet', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'optional_arguments': JSON.stringify({'validate':{},'transform':
-            						{"fasta_reference_only":self.asBool(params['fastaReferenceOnly'])}}),
+            				'optional_arguments': {'validate':{},'transform':
+            						{"fasta_reference_only":self.asBool(params['fastaReferenceOnly'])}},
             				'url_mapping': {'FASTA.DNA.Assembly': url}};
             	} else {
             		self.showError(methodId + " import mode for ContigSet type is not supported yet");
@@ -443,7 +443,7 @@
             				'kbase_type': 'KBaseGenomes.ReferenceAssembly', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'optional_arguments': JSON.stringify({'validate':{},'transform':options}),
+            				'optional_arguments': {'validate':{},'transform':options},
             				'url_mapping': {'FASTA.DNA.Assembly': self.shockURL + '/node/' + params['fastaFile']}};
             	} else if (methodId === 'import_reads_pe_fastq_file') {
             		var urlMapping = {'SequenceReads.1': self.shockURL + '/node/' + params['fastqFile1']};
@@ -467,7 +467,7 @@
             				'kbase_type': 'KBaseAssembly.SingleEndLibrary', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'optional_arguments': JSON.stringify({'validate':{},'transform':{}}),
+            				'optional_arguments': {'validate':{},'transform':{}},
             				'url_mapping': {'SequenceReads': self.shockURL + '/node/' + params['fastqFile']}};
             	} else {
             		self.showError(methodId + " import mode for ShortReads type is not supported yet");
@@ -485,7 +485,7 @@
             				'kbase_type': 'KBaseFBA.FBAModel', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'optional_arguments': JSON.stringify({'validate':{},'transform':options}),
+            				'optional_arguments': {'validate':{},'transform':options},
             				'url_mapping': {
             					'CSV.FBAModel': self.shockURL + '/node/' + params['reactionFile'],
             					'CSV.Compounds': self.shockURL + '/node/' + params['compoundFile']
@@ -507,10 +507,21 @@
             				'kbase_type': 'KBaseFBA.FBAModel', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'optional_arguments': JSON.stringify({'validate':{},'transform':options}),
+            				'optional_arguments': {'validate':{},'transform':options},
             				'url_mapping': urlMapping};
             	} else {
             		self.showError(methodId + " import mode for FBAModel type is not supported yet");
+            	}
+            } else if (self.selectedType === 'KBaseBiochem.Media') {
+            	if (methodId === 'import_media_csv_file') {
+            		args = {'external_type': 'CSV', 
+            				'kbase_type': 'KBaseBiochem.Media', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':{}},
+            				'url_mapping': {'CSV.Media': self.shockURL + '/node/' + params['csvFile']}};
+            	} else {
+            		self.showError(methodId + " import mode for Media type is not supported yet");
             	}
             } else {
             	self.showError("Import for [" + self.selectedType + "] type is not supported yet.");

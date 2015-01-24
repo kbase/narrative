@@ -41,11 +41,22 @@
                 // just one field, phew, this one should be easy    
                 var d = spec.default_values;
                 self.required= true;
+                if (spec.optional===1) {
+                    self.required = false;
+                }
                 
                 var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] : "";
                 var form_id = spec.id;
                 var $dropdown= $('<select id="'+form_id+'">').css({width:"100%"})
                                 .on("change",function() { self.isValid() });
+                
+                if (d && d.length>0 && d[0]==="" && !self.required) {
+                    // we assume that if there is a single value set as empty, and this is optional, we allow an
+                    // empty selection which ends up getting omitted from the params on the backend
+                    // annoying select two removes my option if it is left blank!! must disguise it!
+                    $dropdown.append($('<option value="">').append('-'));
+                }
+                
                 
                 var foundOptions = false;
                 /* HOW IT SHOULD BE!!! */
@@ -285,6 +296,9 @@
          */
         getParameterValue: function() {
             var value = this.$elem.find("#"+this.spec.id).val();
+            if (value==="") {
+                return null;
+            }
             return value;
         }
         

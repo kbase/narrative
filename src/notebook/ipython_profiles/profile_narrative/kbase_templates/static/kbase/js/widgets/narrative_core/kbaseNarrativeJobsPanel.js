@@ -10,6 +10,9 @@
             autopopulate: true,
             title: 'Jobs',
         },
+        $jobCountBadge: $('<span>')
+                        .addClass('label label-danger'),
+        title: $('<span>Jobs </span>'),
         // these are the elements that contain running apps and methods
         $appsList: null,
         $methodsList: null,
@@ -37,7 +40,7 @@
 
         init: function(options) {
             this._super(options);
-
+            this.title.append(this.$jobCountBadge);
             $(document).on('registerMethod.Narrative', $.proxy(
                 function(e, jobInfo) {
                     this.registerJob(jobInfo, false);
@@ -158,6 +161,17 @@
             return this;
         },
 
+        setJobCounter: function(numJobs) {
+            this.$jobCountBadge.empty();
+            if (numJobs > 0)
+                this.$jobCountBadge.append(numJobs);
+        },
+
+        adjustJobCounter: function(increment) {
+            var count = parseInt(this.$jobCountBadge.text());
+            this.setJobCounter(increment ? count+1 : count-1);
+        },
+
         /**
          * @method
          * Initializes the jobStates object that the panel knows about.
@@ -171,7 +185,7 @@
             if (IPython.notebook && IPython.notebook.metadata && IPython.notebook.metadata.job_ids) {
                 // this is actually like: ['apps': [list of app jobs], 'methods':[list of method jobs]
                 var jobIds = IPython.notebook.metadata.job_ids;
-
+                var counter = 0;
                 for (var jobType in jobIds) {
                     if (!(jobIds[jobType] instanceof Array))
                         continue;
@@ -180,7 +194,9 @@
                         this.jobStates[job.id] = $.extend({}, job, { 'status' : null, '$elem' : null, 'id' : job.id });
                         this.source2Job[job.source] = job.id;
                     }
+                    counter += jobIds[jobType].length;
                 }
+                this.setJobCounter(counter);
             }
         },
 
@@ -287,6 +303,8 @@
             methodIds = methodIds.filter(function(val) { return val.id !== jobId });
             IPython.notebook.metadata.job_ids.methods = methodIds;
 
+            this.adjustJobCounter(false);
+
             // remove it from the 'cache' in this jobs panel
             delete this.source2Job[this.jobStates[jobId].source];
             delete this.jobStates[jobId];
@@ -353,6 +371,7 @@
             // put a stub in the job states
             this.jobStates[jobInfo.id] = $.extend({}, jobInfo, {'status' : null, '$elem' : 'null'});
             this.source2Job[jobInfo.source] = jobInfo.id;
+            this.adjustJobCounter(true);
             this.refresh();
             IPython.notebook.save_checkpoint();
         },

@@ -69,7 +69,7 @@
                     content: $managePanel
                 },
                 {
-                    tabName : 'Jobs',
+                    tabName : this.$jobsWidget.title,
                     content: $jobsPanel
                 }
             ], true);

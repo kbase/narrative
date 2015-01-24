@@ -523,6 +523,21 @@
             	} else {
             		self.showError(methodId + " import mode for Media type is not supported yet");
             	}
+            } else if (self.selectedType === 'KBasePhenotypes.PhenotypeSet') {
+            	if (methodId === 'import_phenotypeset_csv_file') {
+            		var options = {};
+            		var genome = params['genomeObject'];
+            		if (genome)
+            			options['genome'] = genome;
+            		args = {'external_type': 'CSV', 
+            				'kbase_type': 'KBasePhenotypes.PhenotypeSet', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':options},
+            				'url_mapping': {'CSV.Phenotypes': self.shockURL + '/node/' + params['csvFile']}};
+            	} else {
+            		self.showError(methodId + " import mode for PhenotypeSet type is not supported yet");
+            	}
             } else {
             	self.showError("Import for [" + self.selectedType + "] type is not supported yet.");
             }

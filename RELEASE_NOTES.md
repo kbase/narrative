@@ -3,6 +3,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.4.2 - 1/23/2015
+__Changes__
+- JIRA NAR-432 - added little red badge in the Jobs header with the number of running jobs
+- Added support for CSV to PhenotypeSet importer
+- Added support for Media importer
+- Added support for importing FBA Models from CSV or SBML
+- Optional dropdown inputs can now pass no inputs if its spec defaults to an empty string
+- Parameter info mouseover icon only appears if the longer info is different from the short hint
+
 ### Version 0.4.1 - 1/23/2015
 __Changes__
 - Added link to app man page from app cell

@@ -433,7 +433,6 @@
         /**
          * Return list of specs which are the 'next steps'
          * from the current method.
-
          */
         getNextSteps: function() {
           //console.debug("Find next steps for method",this.method);

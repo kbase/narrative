@@ -179,6 +179,11 @@
                 }, this)
             );
 
+            $(document).on('showNextSteps.Narrative',
+              $.proxy(function(event, obj) {
+                this.showNextSteps(obj);
+              }, this));
+
             $(document).on('createViewerCell.Narrative',
                 $.proxy(function(event, data) {
                     this.createViewerCell(data.nearCellIdx, data, data.widget);
@@ -1860,9 +1865,9 @@
             outputCell.rendered = false; // force a render
             outputCell.render();
             // If present, add list of "next steps"
-            if (result.next_steps) {
+            if (result.next_steps.apps || result.next_steps.methods) {
               var $body = $('#' + outCellId).find('.panel-body');
-              $body.append(this.showNextSteps(result.next_steps));
+              this.showNextSteps({elt: $body, next_steps: result.next_steps});
             }
             this.resetProgress(cell);
             this.trigger('updateData.Narrative');
@@ -1871,12 +1876,16 @@
 
         /**
         * Show a list of suggested 'next steps' after we have finished the run.
-        * The `next_steps` parameter is exactly the same type of object
-        * returned by the `getfunctionSpecs.Narrative` trigger in
-        * `kbaseNarrativeMethodPanel`.
+        * The input is an object of the form:
+        *   { next_steps: value is exactly the same type of object,
+        *                 returned by the `getfunctionSpecs.Narrative`
+        *                 trigger in `kbaseNarrativeMethodPanel`.
+        *     elt: Created <div> is added with .append()
+        *   }
         * Returns the <div> that was populated.
         */
-        showNextSteps: function(next_steps) {
+        showNextSteps: function(obj) {
+          var $elt = obj.elt, next_steps = obj.next_steps;
           var $tgt = $('<div>').addClass('kb-app-next');
           var $title = $('<h3>').text('Suggested next steps:');
           $tgt.append($title);
@@ -1894,12 +1903,15 @@
           // add all the links to the next-step apps/methods
           var $apps = $('<div>'), comma = {v: ''}, self = this;
           // iterate over apps and methods in the result
+          var has_both = next_steps.apps && next_steps.methods;
           _.each(['apps', 'methods'], function(mtype) {
+            if (has_both) { /* XXX: prefix with (App) or something? */ }
             var specs = next_steps[mtype];
             // Iterate over all specs in app/method section
             _.each(_.values(specs), function(s) {
               var name = s.info.name; // readable name, displayed to user
-              var href = $('<a>').attr({'href': '#'}).text(comma.v + name);
+              var href = $('<a>').attr({'href': 'javascript:;'})
+                                 .text(comma.v + name);
               // insert app/method on click
               href.click(function() {
                 self.trigger(mtype.slice(0, -1) + "Clicked.Narrative", s);
@@ -1909,6 +1921,7 @@
             });
           });
           $tgt.append($apps);
+          $elt.append($tgt);
           return $tgt;
         },
 

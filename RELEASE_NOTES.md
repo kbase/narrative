@@ -3,6 +3,45 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.4.2 - 1/23/2015
+__Changes__
+- JIRA NAR-432 - added little red badge in the Jobs header with the number of running jobs
+- Added support for CSV to PhenotypeSet importer
+- Added support for Media importer
+- Added support for importing FBA Models from CSV or SBML
+- Optional dropdown inputs can now pass no inputs if its spec defaults to an empty string
+- Parameter info mouseover icon only appears if the longer info is different from the short hint
+
+### Version 0.4.1 - 1/23/2015
+__Changes__
+- Added link to app man page from app cell
+- Importer for FASTA/FASTQ files was switched to a new version
+
+__Bugfixes__
+- Error modal that appears while trying to import data should be visible now, and not below the page dimmer
+- JIRA NAR-477 - Propagating parameters to multiple steps should work correctly now
+- JIRA NAR-516 - special characters should be properly escaped while searching for data now
+
+### Version 0.4.0 - 1/23/2015
+
+These are significant enough changes - mainly the improved data upload support and (mostly) feature complete data visualization widgets - to add a minor version number.
+
+__Changes__
+- Updated URL of tutorial page
+- Updated user-icon link to go to user profile page instead of globus
+- Added features to Gene Domains visualization widget
+- Updated FBA model widgets
+- The 'Search Data' menu item should make a new browser window
+- Added refresh button to data slideout
+- Added example transcriptome data
+- Updated import UI for all supported types
+- Improved error messages in data panel and data slideout
+
+__Bugfixes__
+- Fixed some problems in create_metagenome_set widget
+- JIRA NAR-465 Fixed problem where workspace id wasn't internally available when it should be
+- JIRA KBASE-1610 Fixed issue with selecting multiple genomes for an input to an app
+
 ### Version 0.3.18 - 1/22/2015
 __Changes__
 - Added a different FBA model viewer widget

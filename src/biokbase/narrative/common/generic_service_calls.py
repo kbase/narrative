@@ -243,7 +243,14 @@ def transform_value(paramValue, workspace, targetTrans):
         return int(paramValue) 
     if targetTrans.startswith("list<") and targetTrans.endswith(">"):
         innerTrans = targetTrans[5:-1]
-        return [transform_value(paramValue, workspace, innerTrans)]
+        if isinstance(paramValue, list):
+            ret = []
+            for pos in range(0, len(paramValue)):
+                elem = paramValue[pos]
+                ret.append(transform_value(elem, workspace, innerTrans))
+            return ret
+        else:
+            return [transform_value(paramValue, workspace, innerTrans)]
     if targetTrans == "none":
         return paramValue
     raise ValueError("Transformation type is not supported: " + targetTrans)

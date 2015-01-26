@@ -37,6 +37,7 @@
     "prod": {
         "awe": "https://kbase.us/services/awe-api", 
         "fba": "https://kbase.us/services/fba_model_services/", 
+        "gene_families": "https://kbase.us/services/gene_families",
         "genomeCmp": "https://kbase.us/services/genome_comparison/jsonrpc", 
         "invocation": "https://kbase.us/services/invocation", 
         "job_service": "http://narrative-dev.kbase.us:8200", 

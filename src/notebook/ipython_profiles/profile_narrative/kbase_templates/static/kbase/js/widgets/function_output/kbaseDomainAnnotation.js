@@ -19,7 +19,6 @@
             loadingImage: "static/kbase/images/ajax-loader.gif",
             height: null,
         },
-        token: null,
 
         // Data for vizualization
         domainAnnotationData: null,
@@ -31,6 +30,7 @@
         domainAccession2Description: {},
         annotatedGenesCount: 0,
         annotatedDomainsCount: 0,
+
 
         init: function(options) {
             this._super(options);
@@ -47,20 +47,34 @@
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
+            return this;
+        },
+
+        loggedInCallback: function(event, auth) {
+
+            // Cretae a new workspace client
+            this.ws = new Workspace(this.options.workspaceURL, auth);
+           
             // Let's go...
             this.render();           
-
+           
+            return this;
+        },
+        loggedOutCallback: function(event, auth) {
+            this.ws = null;
+            this.isLoggedIn = false;
             return this;
         },
 
   
         render: function(){
+
             var self = this;
             self.pref = this.uuid();
             self.loading(true);
 
             var container = this.$elem;
-            var kbws = new Workspace(self.wsUrl, {'token': self.token});
+            var kbws = this.ws;
 
 
             //self.options.workspaceID + "/" + self.options.domainAnnotationID;

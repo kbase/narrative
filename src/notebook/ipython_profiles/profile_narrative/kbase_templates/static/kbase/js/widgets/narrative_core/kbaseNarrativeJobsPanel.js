@@ -436,12 +436,10 @@
 
             for (var jobId in this.jobStates) {
                 var jobState = this.jobStates[jobId];
-
-//                jobInfo[jobId] = {'state' : jobState};
-
                 // if the job's incomplete, we have to go get it.
                 var jobIncomplete = this.jobIsIncomplete(jobState.status);
-                // 2. The type dictates what cell it came from and how to deal with the inputs.
+
+                // The type dictates what cell it came from and how to deal with the inputs.
                 var jobType = this.jobTypeFromId(jobId);
                 var specInfo = null;
                 var $sourceCell = $('#' + jobState.source);
@@ -853,7 +851,6 @@
             var $errBtn = $('<div>')
                           .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
                           .append('<span class="fa fa-warning" style="color:white"></span>');
-//            $errBtn.addClass('btn btn-danger btn-xs kb-data-list-more-btn fa fa-warning');
             if (btnText)
                 $errBtn.append(' ' + btnText);
             $errBtn.click($.proxy(function(e) {

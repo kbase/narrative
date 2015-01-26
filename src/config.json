@@ -61,6 +61,6 @@
         "shock": "https://kbase.us/services/shock-api",
         "status_page": "http://kbase.us/internal/status"
     },
-    "version": "0.3.18",
+    "version": "0.4.2",
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md"
 }

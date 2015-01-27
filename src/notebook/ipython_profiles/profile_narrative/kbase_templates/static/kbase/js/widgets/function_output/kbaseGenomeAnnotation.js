@@ -157,6 +157,7 @@
             		var genesSettings = {
             				"sPaginationType": "full_numbers",
             				"iDisplayLength": 10,
+            				"aaSorting": [[ 1, "asc" ], [2, "asc"]],
             				"aoColumns": [
             				              {sTitle: "Gene ID", mData: "id"}, 
             				              {sTitle: "Contig", mData: "contig"},
@@ -200,6 +201,7 @@
             		var contigsSettings = {
             				"sPaginationType": "full_numbers",
             				"iDisplayLength": 10,
+            				"aaSorting": [],
             				"aoColumns": [
             				              {sTitle: "Contig name", mData: "name"},
             				              {sTitle: "Length", mData: "length"},

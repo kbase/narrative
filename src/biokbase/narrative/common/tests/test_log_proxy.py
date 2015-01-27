@@ -3,6 +3,7 @@ Test log proxy and kblogging
 """
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 
+import logging
 import os
 import signal
 import sys
@@ -17,9 +18,12 @@ class MainTestCase(unittest.TestCase):
     conf = "/tmp/kbase_logforward.conf"
     vb = 0
     smpcfg = "sample"
+    meta = None
 
     def setUp(self):
         self._config(['db: test', 'collection: kblog'])
+        if proxy.g_log is None:
+            proxy.g_log = logging.getLogger(proxy.LOGGER_NAME)
 
     def _config(self, lines):
         text = '\n'.join(lines)
@@ -30,7 +34,7 @@ class MainTestCase(unittest.TestCase):
         pid = os.fork()
         if pid == 0:
             #print("Run child")
-            proxy.main(self)
+            proxy.run(self)
         else:
             time.sleep(1)
             #print("Wait for child to start")
@@ -71,10 +75,14 @@ class MainTestCase(unittest.TestCase):
         self.assertRaises(KeyError, proxy.DBConfiguration, self.conf)
 
 class LogRecordTest(unittest.TestCase):
+    def setUp(self):
+        if proxy.g_log is None:
+            proxy.g_log = logging.getLogger(proxy.LOGGER_NAME)
+
     def test_basic(self):
         for input in {}, {"message": "hello"}:
-            kbrec = proxy.KBaseLogRecord(input)
-        kbrec = proxy.KBaseLogRecord({"message": "greeting;Hello=World"})
+            kbrec = proxy.DBRecord(input)
+        kbrec = proxy.DBRecord({"message": "greeting;Hello=World"})
         self.assertEqual(kbrec.record['event'], 'greeting')
         self.assertEqual(kbrec.record['Hello'], 'World')
 
@@ -82,9 +90,9 @@ class LogRecordTest(unittest.TestCase):
         for inp in ({"xanthium": 12},
                     {12: "xanthium"},
                     {"message": "Hello=World;greeting"}):
-            kbrec = proxy.KBaseLogRecord(inp)
+            kbrec = proxy.DBRecord(inp)
             self.assertRaises(ValueError,
-                              proxy.KBaseLogRecord,
+                              proxy.DBRecord,
                               inp, strict=True)
 
 if __name__ == '__main__':

@@ -20,7 +20,7 @@ import time
 import yaml
 # Local
 from biokbase import narrative
-from biokbase.narrative.common.util import parse_kvp
+from biokbase.narrative.common.kvp import parse_kvp
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import log_common
 
@@ -451,8 +451,11 @@ class DBRecord(object):
         # Event gets its own field, too
         rec['event'] = event
         # Levelname is too long
-        rec['level'] = rec['levelname']
-        del rec['levelname']
+        if 'levelname' in rec:
+            rec['level'] = rec['levelname']
+            del rec['levelname']
+        else:
+            rec['level'] = logging.getLevelName(logging.INFO)
 
     def _strip_logging_junk(self):
         """Delete/rename fields from logging library."""
@@ -551,4 +554,3 @@ def run(args):
     g_log.debug("Stop main loop")
 
     return 0
-

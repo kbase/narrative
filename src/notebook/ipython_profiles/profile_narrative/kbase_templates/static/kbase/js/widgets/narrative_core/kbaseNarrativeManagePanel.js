@@ -182,9 +182,11 @@
                         self.ws.get_object_info_new({objects:narRefsToLookup,includeMetadata:1,ignoreErrors:1},
                                 function(objList) {
                                     for(var i=0; i<objList.length; i++) {
-                                        if (objList[i]!==null) {
+                                        if (objList[i]!==null && objList[i][2].indexOf('KBaseNarrative.Narrative')===0) {
                                             self.allNarData[i].nar_info = objList[i];
                                         } else {
+                                            console.error('Corrupted Workspace: ');
+                                            console.error('Searching for narrative: ', narRefsToLookup[i], ' but got: ', objList[i]);
                                             self.allNarData[i].error = true;
                                             (function(errorIndex) {
                                                 self.ws.get_object_info_new({objects:[narRefsToLookup[errorIndex]],includeMetadata:1,ignoreErrors:0},
@@ -517,32 +519,48 @@
                                                         meta: newMeta
                                                     },
                                                     function(new_ws_info) {
-                                                        var new_narrative_ref = new_ws_info[0]+"/"+new_ws_info[8].narrative;
-                                                        // ok, a lot of work just to update the narrative name in the 
+                                                        // we have to match based on names because when cloning, the object id is not preserved!!! arg!
+                                                        var new_narrative_ref = new_ws_info[0]+"/"+ object_info[1]; //new_ws_info[8].narrative;
+                                                        // ok, a lot of work just to update the narrative name in the metadata
                                                         self.ws.get_objects([{ref:new_narrative_ref}],
                                                             function(data) {
                                                                 data = data[0]; // only one thing should be returned
                                                                 var new_nar_metadata = data.info[10];
                                                                 new_nar_metadata.name = newMeta['narrative_nice_name'];
                                                                 data.data.metadata.name = newMeta['narrative_nice_name'];
-                                                                self.ws.save_objects({id:new_ws_info[0],objects:[
-                                                                    {
-                                                                        type:data.info[2],
-                                                                        data:data.data,
-                                                                        provenance:data.provenance,
-                                                                        name:data.info[1],
-                                                                        meta:new_nar_metadata
-                                                                    }
-                                                                    ]},
-                                                                    function(info) {
-                                                                        console.log('copying complete',info);
-                                                                        self.refresh();
+                                                                
+                                                                // set workspace metadata to point to the correct object id since they can change on clone!!
+                                                                self.ws.alter_workspace_metadata({
+                                                                        wsi:{id:new_ws_info[0]},
+                                                                        new: {'narrative' : String(data.info[0]) }
                                                                     },
-                                                                    function(error) {
-                                                                        console.error(error);
-                                                                        $alertContainer.empty();
-                                                                        $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on rename."+error.error.message));
+                                                                    function () {
+                                                                        // so much work just to update this name!
+                                                                        self.ws.save_objects({id:new_ws_info[0],objects:[
+                                                                            {
+                                                                                type:data.info[2],
+                                                                                data:data.data,
+                                                                                provenance:data.provenance,
+                                                                                name:data.info[1],
+                                                                                meta:new_nar_metadata
+                                                                            }
+                                                                            ]},
+                                                                            function(info) {
+                                                                                console.log('copying complete',info);
+                                                                                self.refresh();
+                                                                            },
+                                                                            function(error) {
+                                                                                console.error(error);
+                                                                                $alertContainer.empty();
+                                                                                $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on rename."+error.error.message));
+                                                                            });
+                                                                    
+                                                                    },
+                                                                    function name(error) {
+                                                                        
                                                                     });
+                                                                
+                                                                
                                                             },
                                                             function(error) {
                                                                 console.error(error);

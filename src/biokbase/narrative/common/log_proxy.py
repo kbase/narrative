@@ -20,7 +20,7 @@ import time
 import yaml
 # Local
 from biokbase import narrative
-from biokbase.narrative.common.util import parse_kvp
+from biokbase.narrative.common.kvp import parse_kvp
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import log_common
 
@@ -551,4 +551,3 @@ def run(args):
     g_log.debug("Stop main loop")
 
     return 0
-

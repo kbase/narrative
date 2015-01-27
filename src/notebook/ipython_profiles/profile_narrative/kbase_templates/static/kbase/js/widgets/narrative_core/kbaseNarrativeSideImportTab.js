@@ -559,8 +559,10 @@
         
         asBool: function(val) {
         	if (!val)
-        		return false;
-        	return val == 1 || val === "1";
+        		return 0;
+        	if (val == 1 || val === "1")
+        		return 1;
+        	return 0;
         },
         
         waitForJob: function(jobId) {

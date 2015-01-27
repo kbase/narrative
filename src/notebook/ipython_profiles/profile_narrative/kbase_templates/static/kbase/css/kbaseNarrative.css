@@ -580,6 +580,8 @@ ul.pane-list li {
     margin-left: 5px;
 }
 
+/* --- KBase method list styles --*/
+
 .kb-method-list-logo {
     width:  30pt;
     height: 30pt;
@@ -1579,7 +1581,7 @@ div#notebook_panel {
 }
 
 
-/** App styling */
+/* -- App/method panel styling --*/
 
 .kb-app-panel {
     border:0;
@@ -1661,6 +1663,41 @@ div#notebook_panel {
     -webkit-animation: pulse 1s ease infinite; */
     /*opacity: 0.7;*/
 }
+
+/* -- "next steps" text and links -- */
+.kb-app-next {
+  border-top: 2px solid #CECECE;
+}
+.kb-app-next h3 {
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.9em;
+  font-style: italic;
+  color: #888;
+  float: left;
+  padding: 0.5em 0 0.25em 0;
+  margin: 0;
+  -webkit-margin-before: 0;
+  -webkit-margin-after: 0.25em;
+}
+.kb-app-next-hide {
+  float: right;
+  color: #2196F3;
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.9em;
+  margin-top: 0.25em;
+  margin-right: 0.5em;
+}
+.kb-app-next-unhide {
+  color: #2196F3;
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.9em;
+  margin-top: 0.25em;
+}
+.kb-app-next div { /* container for links */
+  clear: both;
+}
+
+/* -- END method/app styling --*/
 
 @-webkit-keyframes pulse {
   0% { opacity: 1.0; }

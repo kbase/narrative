@@ -63,6 +63,7 @@ __Changes__
 - KBase cells can now be collapsed and restored.
 - App and Method cells now have a spinning icon while running.
 - A traceback should now appear (where applicable) in the Jobs panel.
+- Added "next steps" at bottom of app/method
 
 ### Version 0.3.15 - 1/21/2015
 __Changes__

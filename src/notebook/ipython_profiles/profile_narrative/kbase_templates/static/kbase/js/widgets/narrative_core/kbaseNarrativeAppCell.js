@@ -744,7 +744,43 @@
                 this.state.runningState.runningStep = null;
                 this.state.runningState.appRunState = state;
                 this.$stopButton.hide();
+                // Show the 'next-steps' to take, if there are any
+                var next_steps = this.getNextSteps();
+                if (next_steps.apps || next_steps.methods) {
+                  this.trigger("showNextSteps.Narrative",
+                    {elt: this.$elem, "next_steps": next_steps});
+                }
             }
+        },
+
+        getNextSteps: function() {
+          console.debug("Find next steps for app",this.appSpec);
+          var method_ids = [ ], app_ids = [ ];
+          // add one or more next steps
+          // XXX: replace this with something much smarter
+          switch (this.appSpec.info.id) {
+            case "genome_assembly":
+              app_ids.push("genome_comparison");
+              app_ids.push("build_fba_model");
+              method_ids.push("insert_genome_into_species_tree_generic");
+              method_ids.push("compare_two_metabolic_models_generic");
+              break;
+            case "build_fba_model":
+              app_ids.push("community_fba_modeling");
+              // ?? Translate Model to New Genome
+              break;
+            case "build_species_tree":
+              method_ids.push("compute_pangenome");
+              break;
+          }
+          // Fetch function specs now because we need the real, human-readable
+          // name of the spec and all we have is the id.
+          var result = {};
+          var params = {apps: app_ids, methods: method_ids};
+          this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
+            result.specs = specs;
+          }]);
+          return result.specs;
         },
 
         /*

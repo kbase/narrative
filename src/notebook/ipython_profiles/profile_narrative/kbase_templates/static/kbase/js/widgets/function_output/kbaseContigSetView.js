@@ -91,6 +91,7 @@
             		var contigsSettings = {
             				"sPaginationType": "full_numbers",
             				"iDisplayLength": 10,
+            				"aaSorting": [[ 1, "desc" ]],
             				"aoColumns": [
             				              {sTitle: "Contig name", mData: "name"},
             				              {sTitle: "Length", mData: "length"}

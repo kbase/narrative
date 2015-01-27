@@ -386,11 +386,13 @@
          * @private
          */
         jobIsIncomplete: function(status) {
-            return (status !== 'completed' && 
-                    status !== 'error' && 
-                    status !== 'done' && 
-                    status !== 'deleted' &&
-                    status !== 'suspend');
+            if (!status)
+                return true;
+            return (status.toLowerCase().indexOf('completed') === -1 && 
+                    status.toLowerCase().indexOf('error') === -1 && 
+                    status.toLowerCase().indexOf('done') === -1 &&
+                    status.toLowerCase().indexOf('deleted') === -1 &&
+                    status.toLowerCase().indexOf('suspend') === -1);
         },
 
         /**
@@ -570,12 +572,11 @@
          * We should also expire jobs in a reasonable time, at least from the Narrative.
          */
         populateJobsPanel: function(fetchedJobStatus, jobInfo) {
+            console.log([fetchedJobStatus, jobInfo]);
             if (!this.jobStates || Object.keys(this.jobStates).length === 0) {
                 this.showMessage('No running jobs!');
                 return;
             }
-
-            // console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
 
             // Instantiate a shiny new panel to hold job info.
             var $jobsList = $('<div>').addClass('kb-jobs-items');

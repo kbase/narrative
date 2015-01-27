@@ -284,6 +284,8 @@
             }, this)]);
         },
 
+
+
         /**
          * @method
          * Updates the method cell's state.
@@ -305,6 +307,7 @@
                         this.displayRunning(true);
                         break;
                     case 'complete':
+                        console.debug("Method is complete");
                         this.$cellPanel.removeClass('kb-app-step-running');
                         this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$submitted.html(this.submittedText).show();
@@ -425,9 +428,56 @@
         setOutput: function(data) {
             if (data.cellId && this.allowOutput) {
                 this.allowOutput = false;
+                console.debug("Creating output cell...");
+                data.next_steps = this.getNextSteps();
                 this.trigger('createOutputCell.Narrative', data);
                 this.changeState('complete');
             }
+        },
+
+        /**
+         * Return list of specs which are the 'next steps'
+         * from the current method.
+         */
+        getNextSteps: function() {
+          //console.debug("Find next steps for method",this.method);
+          var method_ids = [ ], app_ids = [ ];
+          // add one or more next steps
+          // XXX: replace this with something much smarter
+          switch (this.method.info.id) {
+            case "assemble_contigset_from_reads":
+              method_ids.push("annotate_contigset"); // genome_assembly
+              break;
+            case "build_a_metabolic_model":
+              method_ids.push("gapfill_a_metabolic_model"); // build_fba_model
+              break;
+            case  "retrieve_functional_abundance_profile":
+              method_ids.push("normalize_abundance_profile"); //communities_build_functional_profile
+              break;
+            case "merge_to_community_model":
+              method_ids.push("gapfill_a_metabolic_model"); //community_fba_modeling
+              break;
+            case "compare_two_proteomes_generic":
+              method_ids.push("translate_model_to_new_genome"); //fba_model_translation
+              break;
+            case "translate_model_to_new_genome":
+              method_ids.push("gapfill_a_metabolic_model"); //fba_model_translation
+              break;
+            case "gapfill_a_metabolic_model":
+              method_ids.push("compare_two_metabolic_models_generic"); //fba_model_translation
+              break;
+            case "compute_pangenome":
+              method_ids.push("genome_comparison_from_pangenome"); // genome_comparison
+              break;
+          }
+          // Fetch function specs now because we need the real, human-readable
+          // name of the spec and all we have is the id.
+          var result = {};
+          var params = {apps: app_ids, methods: method_ids};
+          this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
+              result.specs = specs;
+          }]);
+          return result.specs;
         },
 
         /**

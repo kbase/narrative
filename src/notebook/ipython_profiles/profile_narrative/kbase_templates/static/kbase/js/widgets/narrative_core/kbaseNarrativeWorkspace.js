@@ -2,7 +2,7 @@
  * Top-level 'widget' for the workspace interaction with the KBase narrative.
  *
  * The widget lists the objects in the workspace and include a search field
- * to filter the list, as well as a button to 'Add' new items from sources 
+ * to filter the list, as well as a button to 'Add' new items from sources
  * like the CDS and local files.
  *
  * Options:
@@ -12,7 +12,7 @@
  *
  * Triggers events:
  * updateData.Narrative - when any externally represented data should be updated.
- * 
+ *
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
@@ -74,21 +74,21 @@
 
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
-            $([IPython.events]).on('notebook_loaded.Notebook', 
+            $([IPython.events]).on('notebook_loaded.Notebook',
                 $.proxy(function() {
                     this.rebindActionButtons();
                     this.hideGeneratedCodeCells();
                 }, this)
             );
 
-            $(document).on('workspaceUpdated.Narrative', 
+            $(document).on('workspaceUpdated.Narrative',
                 $.proxy(function(e, ws_id) {
                     this.ws_id = ws_id;
-                }, 
+                },
                 this)
             );
 
-            $(document).on('dataUpdated.Narrative', 
+            $(document).on('dataUpdated.Narrative',
                 $.proxy(function(event) {
                     if (IPython && IPython.notebook) {
                         // XXX: This is a hell of a hack. I hate
@@ -110,7 +110,7 @@
                 this)
             );
 
-            $(document).on('narrativeDataQuery.Narrative', 
+            $(document).on('narrativeDataQuery.Narrative',
                 $.proxy(function(e, callback) {
                     var objList = this.getNarrativeDependencies();
                     if (callback) {
@@ -126,7 +126,7 @@
             $(document).on('function_clicked.Narrative',
                 $.proxy(function(event, method) {
                     this.buildFunctionCell(method);
-                }, 
+                },
                 this)
             );
 
@@ -168,10 +168,21 @@
             $(document).on('createOutputCell.Narrative',
                 $.proxy(function(event, data) {
                     var cellIndex = $('#'+data.cellId).nearest('.cell').index();
-                    this.createOutputCell(IPython.notebook.get_cell(cellIndex), 
-                        {'embed' : true, 'data' : this.safeJSONStringify(data.result)});
+                    var params = {'embed' : true,
+                                  'data': this.safeJSONStringify(data.result)};
+                    if (data.next_steps) {
+                      console.debug("adding next steps in create");
+                      params.next_steps = data.next_steps;
+                    }
+                    this.createOutputCell(IPython.notebook.get_cell(cellIndex),
+                                          params);
                 }, this)
             );
+
+            $(document).on('showNextSteps.Narrative',
+              $.proxy(function(event, obj) {
+                this.showNextSteps(obj);
+              }, this));
 
             $(document).on('createViewerCell.Narrative',
                 $.proxy(function(event, data) {
@@ -227,7 +238,7 @@
                 this.$deleteCellModal.openPrompt();
             }
         },
-        
+
         /**
          * @method buildMethodCell
          * @param {Object} method -
@@ -236,7 +247,7 @@
         buildMethodCell: function(method) {
             var cell = IPython.notebook.insert_cell_below('markdown');
             cell.celltoolbar.hide();
-            
+
             // make this a function input cell, as opposed to an output cell
             this.setMethodCell(cell, method);
 
@@ -436,7 +447,7 @@
                                       buttons +
                                   "</div>" +
                               "</div>" +
-                              "\n<script>" + 
+                              "\n<script>" +
                               "$('#" + cellId + " > div > div#inputs')." + inputWidget + "({ method:'" +
                                this.safeJSONStringify(method) + "'});" +
                               "</script>";
@@ -512,7 +523,7 @@
          * @return {string} JSON string
          */
         safeJSONStringify: function(method) {
-            var esc = function(s) { 
+            var esc = function(s) {
                 return s.replace(/'/g, "&apos;")
                         .replace(/"/g, "&quot;");
             };
@@ -544,7 +555,7 @@
                         // legacy cells.
                         if (method.properties) {
                             var inputWidget = method.properties.widgets.input || this.defaultInputWidget;
-    
+
                             if (fullRender) {
                                 cell.rendered = false;
                                 cell.render();
@@ -786,7 +797,7 @@
          },
 
         /**
-         * Bind the 'Copy narrative' button to 
+         * Bind the 'Copy narrative' button to
          * a function that copies the narrative.
          */
         bindCopyButton: function(element) {
@@ -943,7 +954,7 @@
                         }
                     }
                 }
-                
+
             }
 
             // look up the deps in the data panel.
@@ -1357,7 +1368,7 @@
          */
         bindDeleteButton: function() {
             var self = this;
-            return( 
+            return(
                 function(event) {
                     event.preventDefault();
                     var idx = IPython.notebook.get_selected_index();
@@ -1378,7 +1389,7 @@
         rebindActionButtons: function() {
             if (!(IPython && IPython.notebook))
                 return;
-            
+
             // Rewrite the following to iterate using the IPython cell
             // based methods instead of DOM objects
 
@@ -1390,7 +1401,7 @@
                 var cellType = cell.metadata[this.KB_CELL];
                 if (cellType) {
                     this.removeCellEditFunction(cell);
-                    if (this.isFunctionCell(cell)) { 
+                    if (this.isFunctionCell(cell)) {
                         // added to only update the built-in non-widgetized function cells
                         if (cell.metadata[this.KB_CELL].method.properties) { // cheat to see if it's an old one!
                             this.bindActionButtons(cell);
@@ -1470,8 +1481,8 @@
                       "method = Service.get_service('" + escService + "').get_method('" + escMethod + "')\n";
 
             var paramList = params.map(
-                function(p) { 
-                    return "'" + addSlashes(p) + "'"; 
+                function(p) {
+                    return "'" + addSlashes(p) + "'";
                 }
             );
             cmd += "method(" + paramList + ")";
@@ -1599,8 +1610,8 @@
             if (msgType === "stream") {
                 buffer += content.data;
                 var lines = buffer.split("\n");
-                var offs = 0, 
-                    done = false, 
+                var offs = 0,
+                    done = false,
                     self = this,
                     result = "";
 
@@ -1709,7 +1720,7 @@
          * XXX: Should this trigger a save?
          */
         registerJobId: function(jobId, sourceCell) {
-            // This is possibly the ugliest hack here. In the future, all cells should actually know their 
+            // This is possibly the ugliest hack here. In the future, all cells should actually know their
             // fancy UUIDs. But that *might* be backwards incompatible with existing narratives that we want
             // to show off.
             //
@@ -1742,12 +1753,12 @@
 
             var uuid = this.uuidgen();
             var outCellId = 'kb-cell-out-' + uuid;
-            var outputData = '{"data":' + this.safeJSONStringify(data) + ', ' + 
+            var outputData = '{"data":' + this.safeJSONStringify(data) + ', ' +
                                '"type":"' + type + '", ' +
                                '"widget":"' + widget + '", ' +
                                '"cellId":"' + outCellId + '", ' +
                                '"title":"' + title + '", ' +
-                               '"time":' + this.getTimestamp() + '}'; 
+                               '"time":' + this.getTimestamp() + '}';
 
             cellText = '<div id="' + outCellId + '"></div>\n' +
                        '<script>' +
@@ -1765,6 +1776,7 @@
          * widget - the widget to use (if null, then use kbaseDefaultNarrativeOutput)
          * data - the object to be passed in to the widget
          * embed - if true, then embed the widget and render it.
+         * Returns unique id (string) of output cell <div>
          */
         createOutputCell: function(cell, result, isError, widget) {
             if (typeof result === 'string' && !isError) {
@@ -1838,12 +1850,12 @@
 
             var uuid = this.uuidgen();
             var outCellId = 'kb-cell-out-' + uuid;
-            var outputData = '{"data":' + data + ', ' + 
+            var outputData = '{"data":' + data + ', ' +
                                '"type":"' + outputType + '", ' +
                                '"widget":"' + widget + '", ' +
                                '"cellId":"' + outCellId + '", ' +
                                '"title":"' + outputTitle + '", ' +
-                               '"time":' + this.getTimestamp() + '}'; 
+                               '"time":' + this.getTimestamp() + '}';
 
             cellText = '<div id="' + outCellId + '"></div>\n' +
                        '<script>' +
@@ -1852,9 +1864,65 @@
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
             outputCell.render();
-
+            // If present, add list of "next steps"
+            if (result.next_steps.apps || result.next_steps.methods) {
+              var $body = $('#' + outCellId).find('.panel-body');
+              this.showNextSteps({elt: $body, next_steps: result.next_steps});
+            }
             this.resetProgress(cell);
             this.trigger('updateData.Narrative');
+            return outCellId;
+        },
+
+        /**
+        * Show a list of suggested 'next steps' after we have finished the run.
+        * The input is an object of the form:
+        *   { next_steps: value is exactly the same type of object,
+        *                 returned by the `getfunctionSpecs.Narrative`
+        *                 trigger in `kbaseNarrativeMethodPanel`.
+        *     elt: Created <div> is added with .append()
+        *   }
+        * Returns the <div> that was populated.
+        */
+        showNextSteps: function(obj) {
+          var $elt = obj.elt, next_steps = obj.next_steps;
+          var $tgt = $('<div>').addClass('kb-app-next');
+          var $title = $('<h3>').text('Suggested next steps:');
+          $tgt.append($title);
+          // init hide/unhide behavior
+          $hide_btn = $('<span>').addClass('kb-app-next-hide').text('hide');
+          $unhide_btn = $('<span>').addClass('kb-app-next-unhide')
+                      .text('next steps').hide();
+          $hide_btn.click(function() {                  // hide
+            $title.hide(); $tgt.find('a').hide();
+            $hide_btn.hide(); $unhide_btn.show(); });
+          $unhide_btn.click(function() {                // unhide
+            $title.show(); $tgt.find('a').show();
+            $unhide_btn.hide(); $hide_btn.show(); });
+          $tgt.append($hide_btn).append($unhide_btn);
+          // add all the links to the next-step apps/methods
+          var $apps = $('<div>'), comma = {v: ''}, self = this;
+          // iterate over apps and methods in the result
+          var has_both = next_steps.apps && next_steps.methods;
+          _.each(['apps', 'methods'], function(mtype) {
+            if (has_both) { /* XXX: prefix with (App) or something? */ }
+            var specs = next_steps[mtype];
+            // Iterate over all specs in app/method section
+            _.each(_.values(specs), function(s) {
+              var name = s.info.name; // readable name, displayed to user
+              var href = $('<a>').attr({'href': 'javascript:;'})
+                                 .text(comma.v + name);
+              // insert app/method on click
+              href.click(function() {
+                self.trigger(mtype.slice(0, -1) + "Clicked.Narrative", s);
+              });
+              $apps.append(href);
+              comma.v = ', ';
+            });
+          });
+          $tgt.append($apps);
+          $elt.append($tgt);
+          return $tgt;
         },
 
         /**
@@ -2060,7 +2128,7 @@
 
         /**
          * Returns a timestamp in milliseconds since the epoch.
-         * (This is a one-liner, but kept as a separate function in case our needs change. 
+         * (This is a one-liner, but kept as a separate function in case our needs change.
          * Maybe we'll want to use UTC or whatever...)
          * @public
          */

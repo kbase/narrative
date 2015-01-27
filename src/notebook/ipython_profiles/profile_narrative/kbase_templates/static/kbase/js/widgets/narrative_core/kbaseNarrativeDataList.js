@@ -462,23 +462,12 @@
                                         .append($('<span>').addClass('fa fa-download').css(css))
                                         .click(function(e) {
                                             e.stopPropagation(); $alertContainer.empty();
-                                            $alertContainer.append($('<div>')
-                                            		.append($('<button>').addClass('kb-data-list-btn')
-                                                            .append('Download as JSON')
-                                                            .click(function() {
-                                                            	var url = window.kbconfig.urls.data_import_export + '/download?ws='+object_info[7]+'&id='+object_info[1]+'&token='+self._attributes.auth.token;
-                                                            	console.log("Download url=" + url);
-                                                            	var hiddenIFrameID = 'hiddenDownloader';
-                                                                var iframe = document.getElementById(hiddenIFrameID);
-                                                            	if (iframe === null) {
-                                                            		iframe = document.createElement('iframe');
-                                                            		iframe.id = hiddenIFrameID;
-                                                            		iframe.style.display = 'none';
-                                                            		document.body.appendChild(iframe);
-                                                            	}
-                                                            	iframe.src = url;
-                                                            }))
-                                            );
+                                            var type = object_info[2].split('-')[0];
+                                            var wsId = object_info[7];
+                                            var objId = object_info[1];
+                                            var downloadPanel = $('<div>');
+                                            $alertContainer.append(downloadPanel);
+                                            downloadPanel.kbaseNarrativeDownloadPanel({token: self._attributes.auth.token, type: type, wsId: wsId, objId: objId});
                                         });
 
             var $rename = $('<span>')

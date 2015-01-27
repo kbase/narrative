@@ -3,6 +3,18 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.4.3 - 1/27/2015
+__Changes__
+- Updated Transform endpoint to the production version
+- Updated Gene Domains endpoint to the production version
+- Added kbaseDomainAnnotation widget
+- Added Media, PhenotypeSet, and PhenotypeSimulationSet widgets
+- Moved downloader panel to a separate widget
+- Updated log testing proxy
+
+__Bugfixes__
+- Fixed issue where some workspace/narrative mappings were lost
+
 ### Version 0.4.2 - 1/23/2015
 __Changes__
 - JIRA NAR-432 - added little red badge in the Jobs header with the number of running jobs
@@ -63,6 +75,7 @@ __Changes__
 - KBase cells can now be collapsed and restored.
 - App and Method cells now have a spinning icon while running.
 - A traceback should now appear (where applicable) in the Jobs panel.
+- Added "next steps" at bottom of app/method
 
 ### Version 0.3.15 - 1/21/2015
 __Changes__

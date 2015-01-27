@@ -451,8 +451,11 @@ class DBRecord(object):
         # Event gets its own field, too
         rec['event'] = event
         # Levelname is too long
-        rec['level'] = rec['levelname']
-        del rec['levelname']
+        if 'levelname' in rec:
+            rec['level'] = rec['levelname']
+            del rec['levelname']
+        else:
+            rec['level'] = logging.getLevelName(logging.INFO)
 
     def _strip_logging_junk(self):
         """Delete/rename fields from logging library."""

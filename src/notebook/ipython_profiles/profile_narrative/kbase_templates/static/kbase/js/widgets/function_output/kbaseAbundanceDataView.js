@@ -113,8 +113,9 @@
 			        devTest.settings.target = document.getElementById("outputGraph"+glen);
                     devTest.settings.data = divdata;
                     devTest.settings.show_legend = false;
-			        devTest.settings.height = 400;
-			        devTest.settings.type = "deviation";
+                    devTest.settings.height = 400;
+                    devTest.settings.chartArea = [ 0.1, 0.1, 0.95, 0.8 ];
+                    devTest.settings.type = "deviation";
                     devTest.render(glen);
 		        }
 	        }, function(data) {

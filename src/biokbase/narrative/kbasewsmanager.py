@@ -9,11 +9,11 @@ Authors:
 
 Copyright (C) 2013 The Regents of the University of California
 Department of  Energy contract-operators of the Lawrence Berkeley National Laboratory
-1 Cyclotron Road, Berkeley,  CA 94720 
+1 Cyclotron Road, Berkeley,  CA 94720
 
 Copyright (C) 2013 The KBase Project
 
-Distributed unspecified open source license as of 9/27/2013  
+Distributed unspecified open source license as of 9/27/2013
 
 """
 # System
@@ -76,7 +76,7 @@ class KBaseWSNotebookManager(NotebookManager):
         'dependencies' : List of workspace refs,
         'notebook' : {
             <mostly, the IPython notebook object>,
-            'metadata' : 
+            'metadata' :
         }
     }
 
@@ -103,7 +103,7 @@ class KBaseWSNotebookManager(NotebookManager):
     # to get an id of 'Hello_Freaking_World_123'
     # We will enforce validation on the narrative naming GUI, but this is
     # a safety net
-    wsid_regex = re.compile('[\W]+', re.UNICODE)    
+    wsid_regex = re.compile('[\W]+', re.UNICODE)
 
     def __init__(self, **kwargs):
         """Verify that we can connect to the configured WS instance"""
@@ -119,7 +119,7 @@ class KBaseWSNotebookManager(NotebookManager):
         except Exception as e:
             raise web.HTTPError(500, u"Unable to connect to workspace service"
                                      u" at %s: %s " % (self.kbasews_uri, e))
-        
+
         # Map Narrative ids to notebook names
         mapping = Dict()
         # Map notebook names to Narrative ids
@@ -145,14 +145,14 @@ class KBaseWSNotebookManager(NotebookManager):
     def _clean_id(self, id):
         """Clean any whitespace out of the given id"""
         return self.wsid_regex.sub('', id.replace(' ', '_'))
-            
+
     def list_notebooks(self):
         """List all notebooks in WSS
         For the ID field, we use "{ws_id}.{obj_id}"
         The obj_id field is sanitized version of document.ipynb.metadata.name
 
         Returns a list of dicts with two keys: 'name' and 'notebook_id'. 'name'
-        should be of the format 'workspace name/Narrative name' and id should have 
+        should be of the format 'workspace name/Narrative name' and id should have
         the format 'ws.###.obj.###'
         """
         self.log.debug("Listing Narratives")
@@ -208,7 +208,7 @@ class KBaseWSNotebookManager(NotebookManager):
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
         try:
-            wsobj = { 
+            wsobj = {
                       'type' : self.ws_type,
                       'data' : nb,
                       'provenance' : [],
@@ -262,14 +262,17 @@ class KBaseWSNotebookManager(NotebookManager):
             if not m:
                 return False
             self.log.debug("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
-            objmeta = ws_util.get_wsobj_meta(self.wsclient(), ws_id=m.group('wsid'))
+            try:
+                objmeta = ws_util.get_wsobj_meta(self.wsclient(), ws_id=m.group('wsid'))
+            except ws_util.PermissionsError, err:
+                return False # XXX: kind of a lie!
             if notebook_id in objmeta:
                 self.mapping[notebook_id] = notebook_id
                 return True
             else:
                 return False
         return exists
-    
+
     def get_name(self, notebook_id):
         """Get a notebook name, raising 404 if not found"""
         self.log.debug("Checking for name of Narrative %s")
@@ -285,7 +288,7 @@ class KBaseWSNotebookManager(NotebookManager):
         """Get the Notebook representation of a notebook by notebook_id.
 
         There are now new and legacy versions of Narratives that need to be handled.
-        The old version just included the Notebook object as the Narrative object, 
+        The old version just included the Notebook object as the Narrative object,
         with an optional Metadata field.
 
         The new version has a slightly more structured Metadata field, with a
@@ -331,7 +334,7 @@ class KBaseWSNotebookManager(NotebookManager):
     #     kb-cell.method.properties.parameters.paramN.type
 
     #     for anything that isn't a string or numeric, and we combine that type with
-    #     the corresponding value found under 
+    #     the corresponding value found under
     #     kb-cell.widget_state[0].state.paramN
 
     #     We create an array of type:value pairs from the params and return that
@@ -369,7 +372,7 @@ class KBaseWSNotebookManager(NotebookManager):
 
     def extract_cell_info(self, nb):
         """
-        This is an internal method that returns, as a dict, how many kb-method, 
+        This is an internal method that returns, as a dict, how many kb-method,
         kb-app, and IPython cells exist in the notebook object.
 
         For app and method cells, it counts them based on their method/app ids
@@ -389,14 +392,14 @@ class KBaseWSNotebookManager(NotebookManager):
             }
         }
         """
-        cell_types = {'method' : {}, 
-                      'app' : {}, 
+        cell_types = {'method' : {},
+                      'app' : {},
                       'output': 0,
                       'ipython' : {'markdown': 0, 'code': 0}}
         for wksheet in nb.get('worksheets'):
             for cell in wksheet.get('cells'):
                 meta = cell['metadata']
-                if 'kb-cell' in meta:  
+                if 'kb-cell' in meta:
                     t = None
                     # It's a KBase cell! So, either an app or method.
                     if 'type' in meta['kb-cell'] and meta['kb-cell']['type'] == 'function_output':
@@ -432,15 +435,15 @@ class KBaseWSNotebookManager(NotebookManager):
         if user_id is None:
             raise web.HTTPError(400, u'Cannot determine user identity from '
                                      u'session information')
-    
+
         # we don't rename anymore--- we only set the name in the metadata
         #try:
         #    new_name = normalize('NFC', nb.metadata.name)
         #except AttributeError:
         #    raise web.HTTPError(400, u'Missing Narrative name')
         #new_name = self._clean_id(new_name)
-        
-        
+
+
         # Verify that our own home workspace exists, note that we aren't doing this
         # as a general thing for other workspaces
         wsclient = self.wsclient()
@@ -467,7 +470,7 @@ class KBaseWSNotebookManager(NotebookManager):
 
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
-        
+
 
         # First, init wsid and wsobj, since they'll be used later
         wsid = ''         # the workspace id
@@ -480,7 +483,7 @@ class KBaseWSNotebookManager(NotebookManager):
         else:
             m = None
 
-        # After this logic wsid is guaranteed to get set. 
+        # After this logic wsid is guaranteed to get set.
         # The objid of wsobj might not, but that's fine! The workspace will just assign a new id if so.
         if m:
             # wsid, objid = ws.XXX.obj.YYY
@@ -502,7 +505,7 @@ class KBaseWSNotebookManager(NotebookManager):
             ws_util.alter_workspace_metadata(wsclient, None, updated_metadata, ws_id=wsid)
         except Exception as e:
             raise web.HTTPError(500, u'Error saving Narrative: %s, %s' % (e.__str__(), wsid))
-        
+
         # Now we can save the Narrative object.
         try:
             # 'wsobj' = the ObjectSaveData type from the workspace client
@@ -603,7 +606,7 @@ class KBaseWSNotebookManager(NotebookManager):
         this is a no-op for now.
         """
         return []
-    
+
     def restore_checkpoint(self, notebook_id, checkpoint_id):
         """restore a notebook to a checkpointed state"""
         pass

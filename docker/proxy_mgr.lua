@@ -136,6 +136,8 @@ M.provision_interval = 30
 
 -- How many provisioned (un-assigned) containers should we have on stand-by
 M.provision_count = 10
+-- The max number of docker containers to have running, including provisioned
+M.container_max = 100
 
 -- Default URL for authentication failure redirect, nil means just error out without redirect
 M.auth_redirect = "/?redirect=%s"
@@ -331,11 +333,13 @@ end
 --
 -- Provisoning function that looks in the docker_map to identify how many provisioned
 -- containers there are, if less than provion_count, spawns more
+-- do not provision containers that would cause total to be > than container_max
 provisioner = function()
     ngx.log(ngx.INFO, "provisioner running")
     -- sync docker_map with existing containers
     sync_containers()
     local queued = 0
+    local total = 0
     -- get locker
     local dock_lock = locklib:new(M.lock_name, lock_opts)
     -- loop through ids
@@ -348,6 +352,7 @@ provisioner = function()
             local val = docker_map:get(id) -- make sure its still there
             if val then
                 -- info = { state, ip:port, session, last_time, last_ip }
+                total = total + 1
                 local info = notemgr:split(val)
                 if info[1] == "queued" then
                     queued = queued + 1
@@ -358,9 +363,16 @@ provisioner = function()
     end
     if queued < M.provision_count then
         local to_spawn = M.provision_count - queued
-        ngx.log(ngx.INFO, "Provisioner spawning "..to_spawn.." containers")
-        for i = 1, to_spawn do
-             new_container()
+        if (to_spawn + total) > M.container_max then
+            to_spawn = M.container_max - total
+        end
+        if to_spawn > 0 then
+            ngx.log(ngx.INFO, "Provisioner spawning "..to_spawn.." containers")
+            for i = 1, to_spawn do
+                new_container()
+            end
+        else
+            ngx.log(ngx.WARN, "Unable to provision containers, currently running "..total.." for max of "..M.container_max)
         end
     end
     -- reset provisioner
@@ -419,8 +431,11 @@ initialize = function(self, conf)
         initialized = os.time()
         M.sweep_interval = conf.sweep_interval or M.sweep_interval
         M.mark_interval = conf.mark_interval or M.mark_interval
+        M.provision_interval = conf.provision_interval or M.provision_interval
         M.timeout = conf.idle_timeout or M.timeout
         M.auth_redirect = conf.auth_redirect or M.auth_redirect
+        M.provision_count = conf.provision_count or M.provision_count
+        M.container_max = conf.container_max or M.container_max
         M.lock_name = conf.lock_name or M.lock_name
         session_map = conf.session_map or ngx.shared.session_map
         docker_map = conf.docker_map or ngx.shared.docker_map

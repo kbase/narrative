@@ -102,10 +102,9 @@ function KBCacheClient(token) {
         ujs_url = "http://140.221.84.180:7083"
     }*/
 
-    fba_url = "http://kbase.us/services/KBaseFBAModeling/";
-    //ws_url = "https://kbase.us/services/ws/"
-    ws_url = "http://dev04.berkeley.kbase.us:7058";
-    ujs_url = "http://140.221.84.180:7083";
+    fba_url = "https://kbase.us/services/KBaseFBAModeling/";
+    ws_url = "https://kbase.us/services/ws/";
+    ujs_url = "https://kbase.us/services/userandjobstate";
 
     console.log('FBA URL is:', fba_url);
     console.log('Workspace URL is:', ws_url);

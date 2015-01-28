@@ -450,7 +450,7 @@
             		var urlMapping = {'SequenceReads.1': self.shockURL + '/node/' + params['fastqFile1']};
             		if (params['fastqFile2'] && params['fastqFile2'].length > 0)
             			urlMapping['SequenceReads.2'] = self.shockURL + '/node/' + params['fastqFile2'];
-            		var options = {'outward':self.asBool(params['readOrientationOutward']),
+            		var options = {'outward':self.asInt(params['readOrientationOutward']),
             				'output_file_name': 'pelib.fastq.json'};
             		var optInsert = params['insertSizeMean'];
             		if (optInsert)
@@ -561,12 +561,18 @@
         
         asBool: function(val) {
         	if (!val)
+        		return false;
+        	return (val == 1 || val === "1");
+        },
+
+        asInt: function(val) {
+        	if (!val)
         		return 0;
         	if (val == 1 || val === "1")
         		return 1;
         	return 0;
         },
-        
+
         waitForJob: function(jobId) {
         	var self = this;
         	/*var aweClient = new AweClient({url: self.aweURL, token: self.token});

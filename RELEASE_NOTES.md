@@ -3,6 +3,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.4.4 - 1/27/2015
+__Changes__
+- Updated deployment script to auto-init/update submodules and clear out old versions of provisioned (but unattached) containers,
+- Updates to metagenome widgets to prevent crashes.
+
+__Bugfixes__
+- JIRA NAR-541 - fixed problem with missing datatables header images
+- Removed (again?) a dead pointer to a deprecated/moved javascript file.
+
 ### Version 0.4.3 - 1/27/2015
 __Changes__
 - Updated Transform endpoint to the production version

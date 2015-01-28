@@ -3,13 +3,13 @@
  */
 (function($, undefined) {
     $.KBWidget({
-            name: 'AbundanceDataBoxplot',
-            version: '1.0.0',
-            options: {
-	            id: null,
-	            ws: null,
-	            auth: null,
-	            name: 0
+        name: 'AbundanceDataBoxplot',
+        version: '1.0.0',
+        options: {
+	        id: null,
+	        ws: null,
+	        auth: null,
+	        name: 0
         },
 	    ws_url: window.kbconfig.urls.workspace,
 	    loading_image: "static/kbase/images/ajax-loader.gif",
@@ -71,7 +71,7 @@
                     var devTest = standaloneGraph.create({index: glen});
 			        devTest.settings.target = document.getElementById("outputGraph"+glen);
                     devTest.settings.data = divdata;
-                    devTest.settings.show_legend = true;
+                    devTest.settings.show_legend = false;
 			        devTest.settings.height = 400;
 			        devTest.settings.type = "deviation";
                     devTest.render(glen);

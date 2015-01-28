@@ -6,6 +6,10 @@ DS=$( date +%Y%m%d%H )
 NAR_NAME="kbase/narrative"
 NAR_BASE="base2.0"
 
+# Update the git submodule(s)
+git submodule init
+git submodule update
+
 # Start by updating the config file to include the current git commit hash and timestamp
 src/scripts/kb-git-version -f src/config.json
 
@@ -32,3 +36,6 @@ docker tag $NAR_NAME:latest $NAR_NAME:$DS
 
 # Remove the temp files.
 rm Dockerfile
+
+# Remove any provisioned, but not used, containers
+curl -k -X DELETE http://localhost/proxy_map/provisioned

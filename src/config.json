@@ -40,7 +40,7 @@
         "gene_families": "https://kbase.us/services/gene_families",
         "genomeCmp": "https://kbase.us/services/genome_comparison/jsonrpc", 
         "invocation": "https://kbase.us/services/invocation", 
-        "job_service": "http://narrative-dev.kbase.us:8200", 
+        "job_service": "https://kbase.us/services/njs-wrapper", 
         "landing_pages": "/functional-site/#/", 
         "log_proxy_host": "172.17.42.1", 
         "log_proxy_port": 32001, 

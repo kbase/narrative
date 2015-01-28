@@ -2049,12 +2049,32 @@
 		    var len = (cur == major ? size : size / 2);
 		    var v = (horiz ? x1 : y1) +
 			(horiz ? cur - axis._scale.min : axis._scale.max - cur) * scale;
-		    this._wrapper.line(gl, (horiz ? v : x1 + len * offsets[0]),
+		    if (cur == major) {
+
+			// fix floating point error
+			var maj_str = cur.toString();
+			var tick_str = axis._ticks.major.toString();
+		    
+			// round to a maximum of 3 significant digits
+			if (tick_str.substr(tick_str.indexOf('.')+1).length > 3) {
+			    tick_str = tick_str.substr(0, tick_str.indexOf('.')+4);
+			}
+			
+			// fail if the max is smaller than the smallest number displayable with
+			// three significant digits
+			if (parseFloat(tick_str) < 0.001) {
+			    return;
+			}
+			if (maj_str.substr(maj_str.indexOf('.')+1).length > tick_str.substr(tick_str.indexOf('.')+1).length) {
+			    maj_str = parseFloat(major.toFixed(tick_str.substr(tick_str.indexOf('.')+1).length));
+			}
+			
+			this._wrapper.line(gl, (horiz ? v : x1 + len * offsets[0]),
 				       (horiz ? y1 + len * offsets[0] : v),
 				       (horiz ? v : x1 + len * offsets[1]),
 				       (horiz ? y1 + len * offsets[1] : v));
-		    if (cur == major) {
-			var pretty_cur = cur;
+		    
+			var pretty_cur = maj_str;
 			if (this.shortAxisLabels) {
 			    pretty_cur = Math.floor(pretty_cur) + '';
 			    if (pretty_cur.length > 12) {
@@ -2073,7 +2093,7 @@
 			}
 
 			var logtext = this._wrapper.createText().string('10').span(cur, {dy: -10, fontSize: 10});
-			this._wrapper.text(gt, (horiz ? v : (id=='y2Axis' ? x1 + size : x1 - size)), (horiz ? y1 + 2 * size : v),
+			this._wrapper.text(gt, (horiz ? v : (id=='y2Axis' ? x1 + size + 5 : x1 - size - 5)), (horiz ? y1 + 2 * size : v + 5),
 					   (axis._labels ? axis._labels[count++] : ((axis._scale.type == 'log') ? logtext : pretty_cur)));
 		    }
 		    
@@ -2509,7 +2529,7 @@
 	   @param  graph  (object) the SVGGraph object */
 	drawGraph: function(graph) {
 	    graph._drawChartBackground(true);
-	    var barWidth = graph._chartOptions.barWidth || 10;
+	    var barWidth = graph._chartOptions.barWidth || 20;
 	    var barGap = graph._chartOptions.barGap || 10;
 	    var numSer = graph._series.length;
 	    var numVal = (numSer ? (graph._series[0])._values.length : 0);
@@ -2542,23 +2562,31 @@
 	    for (var i = 0; i < series._values.length; i++) {
 		var xoffset = dims[graph.X] + xScale * (barGap + i * (numSer * barWidth + barGap) + (cur * barWidth));
 		var data = series._values[i];
+		
+		if (graph.yAxis._scale.type == 'log') {
+		    data.upper = log10(data.upper);
+		    data.median = log10(data.median);
+		    data.max = log10(data.max);
+		    data.lower = log10(data.lower);
+		    data.min = log10(data.min);
+		}
 
 		var yshift = dims[graph.Y];
-
 		// median - upper
 		graph._wrapper.rect(g, xoffset + 1, Math.ceil((graph.yAxis._scale.max - data.upper) * yScale + yshift), parseInt(barWidth - 2), parseInt((data.upper - data.median) * yScale), 0, 0, { stroke: 'black', strokeWidth: 1, fill: series._fill[i] });
 		
 		// median - lower
 		graph._wrapper.rect(g, xoffset + 1, parseInt((graph.yAxis._scale.max - data.median) * yScale + yshift), parseInt(barWidth - 2), parseInt((data.median - data.lower) * yScale), 0, 0, { stroke: 'black', strokeWidth: 1, fill: series._fill[i] });
-		
+
 		// max - upper
+		var mu = 
 		graph._wrapper.line(g, xoffset + 1 + parseInt(barWidth / 6), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), parseInt(xoffset + 1 + barWidth - 2 - parseInt(barWidth / 6)), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), { stroke: 'black', strokeWidth: 1 });
 		graph._wrapper.line(g, xoffset + parseInt(barWidth / 2), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), parseInt(xoffset + parseInt(barWidth / 2)), parseInt((graph.yAxis._scale.max - data.upper) * yScale + 1 + yshift), { stroke: 'black', strokeWidth: 1, strokeDashArray: "2,2" });
+
 		
 		// lower - min
 		graph._wrapper.line(g, xoffset + 1 + parseInt(barWidth / 6), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), parseInt(xoffset + 1 + barWidth - 2 - parseInt(barWidth / 6)), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), { stroke: 'black', strokeWidth: 1 });
 		graph._wrapper.line(g, xoffset + parseInt(barWidth / 2), parseInt((graph.yAxis._scale.max - data.lower) * yScale - 1 + yshift), parseInt(xoffset + parseInt(barWidth / 2)), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), { stroke: 'black', strokeWidth: 1, strokeDashArray: "2,2" });
-		
 	    }
 	},
 	
@@ -2578,13 +2606,13 @@
 				dims[graph.X] + dims[graph.W], dims[graph.Y] + dims[graph.H]);
 	    if (axis._ticks.major) {
 		var offsets = graph._getTickOffsets(axis, true);
-		for (var i = 1; i < numVal; i++) {
-		    var x = dims[graph.X] + xScale * (barGap / 2 + i * (numSer * barWidth + barGap));
+		for (var i = 0; i < numSer; i++) {
+		    var x = dims[graph.X] + (xScale * barGap) + (barWidth / 2) + (i * (barWidth * xScale));
 		    graph._wrapper.line(gl, x, dims[graph.Y] + dims[graph.H] + offsets[0] * axis._ticks.size,
 					x, dims[graph.Y] + dims[graph.H] + offsets[1] * axis._ticks.size);
 		}
 		for (var i = 0; i < numSer; i++) {
-		    var x = dims[graph.X] + (xScale * barGap) + (barWidth / 2) + (i * (barGap * xScale));
+		    var x = dims[graph.X] + (xScale * barGap) + (barWidth / 2) + (i * (barWidth * xScale));
 		    graph._wrapper.text(gt, x, dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size,
 					(axis._labels ? axis._labels[i] : graph._series[i]._name), (axis.labelRotation ? { textAnchor: "end", transform: "rotate("+axis.labelRotation+", "+x+", "+(dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size)+")"} : { textAnchor: "end", transform: "rotate(-50, "+x+", "+(dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size)+")"}));
 		}

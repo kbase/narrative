@@ -3,6 +3,18 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.4.5 - 1/28/2015
+__Changes__
+- Changed endpoint URLs for transform service and job service
+- Added better error page when a narrative is either not found or unauthorized
+- Made several adjustments to communities visualization widgets
+
+__Bugfixes__
+- Fixed state checking for long-running job registered with the UJS
+- Fixed issue where FBA service can return unparseable results
+- Fixed various problems with FBA model visualization widgets
+
+
 ### Version 0.4.4 - 1/27/2015
 __Changes__
 - Updated deployment script to auto-init/update submodules and clear out old versions of provisioned (but unattached) containers,

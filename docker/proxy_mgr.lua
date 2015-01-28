@@ -135,9 +135,9 @@ M.timeout = 300
 M.provision_interval = 30
 
 -- How many provisioned (un-assigned) containers should we have on stand-by
-M.provision_count = 10
+M.provision_count = 20
 -- The max number of docker containers to have running, including provisioned
-M.container_max = 100
+M.container_max = 5000
 
 -- Default URL for authentication failure redirect, nil means just error out without redirect
 M.auth_redirect = "/?redirect=%s"

@@ -36,8 +36,8 @@ init_by_lua '
     json = require("json")
     proxymgr = require("proxy_mgr")
     proxymgr:initialize{
-        provision_count = 10,
-        container_max = 100,
+        provision_count = 20,
+        container_max = 5000,
         lock_name = "lock_map",
         session_map = ngx.shared.session_map,
         docker_map = ngx.shared.docker_map,

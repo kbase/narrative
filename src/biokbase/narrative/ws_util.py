@@ -6,7 +6,6 @@ import re
 import biokbase
 import biokbase.workspace
 
-
 g_log = logging.getLogger(__name__)
 
 # regex for parsing out workspace_id and object_id from
@@ -24,6 +23,21 @@ class BadWorkspaceID(Exception):
 class BadWorkspaceID(Exception):
     pass
 
+class PermissionsError(biokbase.workspace.client.ServerError):
+    """Raised if user does not have permission to
+    access the workspace.
+    """
+    @staticmethod
+    def is_permissions_error(err):
+        """Try to guess if the error string is a permission-denied error
+        for the narrative (i.e. the workspace the narrative is in).
+        """
+        pat = re.compile("\s*[Uu]ser \w+ may not \w+ workspace.*")
+        return pat.match(err) is not None
+
+    def __init__(self, name=None, code=None, message=None, **kw):
+        biokbase.workspace.client.ServerError.__init__(self, name, code,
+                                                       message, **kw)
 
 # List of fields returned by the list_workspace_objects function
 list_ws_obj_fields = ['id','type','moddate','instance','command',
@@ -57,14 +71,21 @@ def get_wsobj_meta(wsclient, objtype=ws_narrative_type, ws_id=None):
     Returns a dictionary of object descriptions - the key is a workspace id of
     the form "ws.{workspace_id}.obj.{object_id}" and the values are dictionaries
     keyed on the list_ws_obj_field list above.
+
+    Raises: PermissionsError, if access is denied
     """
-    if ws_id is None:
-        res = wsclient.list_objects({'type' : objtype,
-                                     'includeMetadata' : 1})
-    else:
-        res = wsclient.list_objects({'type' : objtype,
-                                     'includeMetadata' : 1,
-                                     'ids' : [ws_id] })
+    try:
+        if ws_id is None:
+            res = wsclient.list_objects({'type' : objtype,
+                                         'includeMetadata' : 1})
+        else:
+            res = wsclient.list_objects({'type' : objtype,
+                                         'includeMetadata' : 1,
+                                         'ids' : [ws_id] })
+    except biokbase.workspace.client.ServerError, err:
+        if PermissionsError.is_permissions_error(err.message):
+            raise PermissionsError(name=err.name, code=err.code,
+                                   message=err.message, data=err.data)
     my_narratives = {}
     for obj in res:
         my_narratives["ws.%s.obj.%s" % (obj[obj_field['wsid']],obj[obj_field['objid']])] = dict(zip(list_objects_fields,obj))
@@ -90,7 +111,7 @@ def alter_workspace_metadata(wsclient, ref, new_metadata={}, ws_id=None):
 
     Takes an initialized workspace client and a workspace ID
     of the form "ws.{ws_id}.obj.{object id}" and returns the following:
-    { 
+    {
       'data' : {actual data contained in the object},
       'metadata' : { a dictionary version of the object metadata },
       ... all the fields that are normally returned in a ws ObjectData type
@@ -106,17 +127,17 @@ def alter_workspace_metadata(wsclient, ref, new_metadata={}, ws_id=None):
         ws_id = match.group(1)
     elif ws_id is None and ref is None:
         raise BadWorkspaceID("No workspace id or object reference given!")
-    
+
     wsclient.alter_workspace_metadata({'wsi':{'id':ws_id}, 'new':new_metadata})
-    
-    
+
+
 def get_wsobj(wsclient, ws_id, objtype=None):
     """
     This is just a wrapper for the workspace get_objects call.
 
     Takes an initialized workspace client and a workspace ID
     of the form "ws.{ws_id}.obj.{object id}" and returns the following:
-    { 
+    {
       'data' : {actual data contained in the object},
       'metadata' : { a dictionary version of the object metadata },
       ... all the fields that are normally returned in a ws ObjectData type

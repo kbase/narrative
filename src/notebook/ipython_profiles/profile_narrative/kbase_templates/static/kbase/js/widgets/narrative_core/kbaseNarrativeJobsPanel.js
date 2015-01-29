@@ -274,6 +274,7 @@
         deleteResponse: function(msgType, content, jobId) {
             if (msgType != 'stream') {
                 console.error('An error occurred while trying to delete a job');
+                this.refresh(false);
                 return;
             }
             var result = content.data;
@@ -300,10 +301,11 @@
             // remove it from the 'cache' in this jobs panel
             delete this.source2Job[this.jobStates[jobId].source];
             delete this.jobStates[jobId];
-            this.refresh(false);
 
             // nuke the removeId
             this.removeId = null;
+
+            this.refresh(false);
             return true;
         },
 

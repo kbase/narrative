@@ -38,4 +38,4 @@ docker tag $NAR_NAME:latest $NAR_NAME:$DS
 rm Dockerfile
 
 # Remove any provisioned, but not used, containers
-curl -k -X DELETE http://localhost/proxy_map/provisioned
+curl -L -X DELETE http://localhost/proxy_map/provisioned

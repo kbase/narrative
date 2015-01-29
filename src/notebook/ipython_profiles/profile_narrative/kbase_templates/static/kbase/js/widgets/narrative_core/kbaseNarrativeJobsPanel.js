@@ -585,6 +585,7 @@
         populateJobsPanel: function(fetchedJobStatus, jobInfo) {
             if (!this.jobStates || Object.keys(this.jobStates).length === 0) {
                 this.showMessage('No running jobs!');
+                this.setJobCounter(0);
                 return;
             }
 

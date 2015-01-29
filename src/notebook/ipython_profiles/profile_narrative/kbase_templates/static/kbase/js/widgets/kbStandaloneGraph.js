@@ -254,6 +254,50 @@
 	    
 	    return renderer;
 	},
+
+	niceNum: function (range, round) {
+            var exponent = Math.floor(Math.log10(range)); /** exponent of range */
+            var fraction = range / Math.pow(10, exponent); /** fractional part of range */
+            var niceFraction; /** nice, rounded fraction */
+	    
+            if (round) {
+		if (fraction < 1.5) {
+                    niceFraction = 1;
+		} else if (fraction < 3) {
+                    niceFraction = 2;
+		} else if (fraction < 7) {
+                    niceFraction = 5;
+		} else {
+                    niceFraction = 10;
+		}
+            } else {
+		if (fraction <= 1) {
+                    niceFraction = 1;
+		} else if (fraction <= 2) {
+                    niceFraction = 2;
+		} else if (fraction <= 5) {
+                    niceFraction = 5;
+		} else {
+                    niceFraction = 10;
+		}
+            }
+	    
+            return niceFraction * Math.pow(10, exponent);
+	},
+	
+	/* get a nice scale, min, max and tick interval */
+	niceScale: function (params) {
+ 	    var minPoint = params.min;
+	    var maxPoint = params.max;
+	    var maxTicks = params.ticks || 10;
+	    var range = rendererGraph[0].niceNum(maxPoint - minPoint, false);
+	    var tickSpacing = rendererGraph[0].niceNum(range / (maxTicks - 1), true);
+	    var niceMin = Math.floor(minPoint / tickSpacing) * tickSpacing;;
+	    var niceMax = Math.ceil(maxPoint / tickSpacing) * tickSpacing;
+	    
+	    return { min: niceMin, max: niceMax, space: tickSpacing };
+	},
+
 	hover: function (title, value, event, e) {
 	    var id = e.currentTarget.ownerSVGElement.ownerSVGElement.parentNode.id;
 	    var index = id.substr(9);
@@ -354,15 +398,16 @@
 		svg.graph.xAxis.labelRotation = renderer.settings.x_labels_rotation;
 		svg.graph.xAxis.labels(renderer.settings.x_labels);
 	    }
+	    var sy = rendererGraph[0].niceScale({min: 0, max: max, ticks: renderer.settings.y_labeled_tick_interval });
 	    svg.graph.yAxis.
 		title(renderer.settings.y_title, renderer.settings.y_title_color).
-		ticks(parseInt(max / renderer.settings.y_labeled_tick_interval), parseInt(max / renderer.settings.y_tick_interval), 'log').
+		ticks(sy.max / renderer.settings.y_labeled_tick_interval, sy.max / renderer.settings.y_tick_interval, null, null, renderer.settings.y_scale).
 		scale(0,max,renderer.settings.y_scale);
 
 	    if (renderer.settings.hasY2) {
 		svg.graph.y2Axis.
 		    title(renderer.settings.y2_title || "", renderer.settings.y2_title_color).
-		    ticks(parseInt(y2max / renderer.settings.y2_labeled_tick_interval), parseInt(y2max / renderer.settings.y2_tick_interval), 'log').
+		    ticks(parseInt(y2max / renderer.settings.y2_labeled_tick_interval), parseInt(y2max / renderer.settings.y2_tick_interval), null, null, renderer.settings.y_scale).
 		    scale(0,y2max,renderer.settings.y2_scale);
 		if (renderer.settings.y2_labels.length) {
 		    svg.graph.y2Axis.labels(renderer.settings.y2_labels); 
@@ -407,7 +452,7 @@
 	    var fivenumbers = [];
 	    var min = data[0].data[0];
 	    var max = data[0].data[0];
-	   
+	    
 	    for (var i=0;i<data.length;i++) {
 		data[i].data = data[i].data.sort(function (a, b) {
 		    return a - b;

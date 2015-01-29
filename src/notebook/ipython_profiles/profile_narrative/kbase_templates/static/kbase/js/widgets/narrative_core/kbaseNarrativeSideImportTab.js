@@ -402,7 +402,8 @@
             	}
             } else if (self.selectedType === 'Transcript') {
             	if (methodId === 'import_transcript_file') {
-            		var options = {'dna':self.asBool(params['dna'])};
+            		var options = {'dna':self.asInt(params['dna']),
+            				"output_file_name": "transcripts.json"};
             		var genomeId = params['genomeId'];
             		if (genomeId)
             			options['genome_id'] = genomeId;
@@ -449,7 +450,8 @@
             		var urlMapping = {'SequenceReads.1': self.shockURL + '/node/' + params['fastqFile1']};
             		if (params['fastqFile2'] && params['fastqFile2'].length > 0)
             			urlMapping['SequenceReads.2'] = self.shockURL + '/node/' + params['fastqFile2'];
-            		var options = {'outward':self.asBool(params['readOrientationOutward'])};
+            		var options = {'outward':self.asInt(params['readOrientationOutward']),
+            				'output_file_name': 'pelib.fastq.json'};
             		var optInsert = params['insertSizeMean'];
             		if (optInsert)
             			options['insert'] = optInsert;
@@ -460,14 +462,14 @@
             				'kbase_type': 'KBaseAssembly.PairedEndLibrary', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'optional_arguments': JSON.stringify(options),
+            				'optional_arguments': {'validate':{},'transform':options},
             				'url_mapping': urlMapping};
             	} else if (methodId === 'import_reads_se_fastq_file') {
             		args = {'external_type': 'SequenceReads', 
             				'kbase_type': 'KBaseAssembly.SingleEndLibrary', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
-            				'optional_arguments': {'validate':{},'transform':{}},
+            				'optional_arguments': {'validate':{},'transform':{'output_file_name': 'selib.fastq.json'}},
             				'url_mapping': {'SequenceReads': self.shockURL + '/node/' + params['fastqFile']}};
             	} else {
             		self.showError(methodId + " import mode for ShortReads type is not supported yet");
@@ -559,12 +561,18 @@
         
         asBool: function(val) {
         	if (!val)
+        		return false;
+        	return (val == 1 || val === "1");
+        },
+
+        asInt: function(val) {
+        	if (!val)
         		return 0;
         	if (val == 1 || val === "1")
         		return 1;
         	return 0;
         },
-        
+
         waitForJob: function(jobId) {
         	var self = this;
         	/*var aweClient = new AweClient({url: self.aweURL, token: self.token});

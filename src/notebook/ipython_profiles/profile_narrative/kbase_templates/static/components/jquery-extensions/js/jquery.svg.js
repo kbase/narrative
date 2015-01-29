@@ -4,6 +4,7 @@
    Dual licensed under the GPL (http://dev.jquery.com/browser/trunk/jquery/GPL-LICENSE.txt) and 
    MIT (http://dev.jquery.com/browser/trunk/jquery/MIT-LICENSE.txt) licenses. 
    Please attribute the author if you use it. */
+
 (function (jQuery) { // Hide scope, no jQuery conflict
     
     /* Determine whether a given ActiveX control is available.
@@ -17,6 +18,7 @@
 	    return false;
 	}
     }
+
     /* SVG manager.
        Use the singleton instance of this class, jQuery.svg, 
        to interact with the SVG functionality. */
@@ -224,9 +226,11 @@
     }
     
     jQuery.extend(SVGWrapper.prototype, {
+
 	/*
 	  high level graphics
 	*/
+
 	/* Draw a donut slice.
 	   @param center (int) radius of the full circle
 	   @param inner (int) radius of the inner circle of the current slice
@@ -242,35 +246,47 @@
 	    var startAngle = params.startAngle;
 	    var endAngle = params.endAngle;
 	    var settings = params.settings;
+
 	    var r1 = ((outer - 1) / 2);
 	    var r2 = ((inner - 1) / 2);
+
 	    var startAngleRad = Math.PI*startAngle/180;
 	    var endAngleRad = Math.PI*endAngle/180;
+
 	    var x1inner = parseInt(center + r2*Math.cos(startAngleRad));
 	    var y1inner = parseInt(center + r2*Math.sin(startAngleRad));
+
 	    var x2inner = parseInt(center + r2*Math.cos(endAngleRad));
 	    var y2inner = parseInt(center + r2*Math.sin(endAngleRad));
+
 	    var x1outer = parseInt(center + r1*Math.cos(startAngleRad));
 	    var y1outer = parseInt(center + r1*Math.sin(startAngleRad));
+
 	    var x2outer = parseInt(center + r1*Math.cos(endAngleRad));
 	    var y2outer = parseInt(center + r1*Math.sin(endAngleRad));
+
 	    r1 = parseInt(r1);
 	    r2 = parseInt(r2);
+
 	    var path = "M"+x1inner+","+y1inner+"  L"+x1outer+","+y1outer+"  A"+r1+","+r1+" 0 0,1 "+x2outer+","+y2outer+" L"+x2inner+","+y2inner+"  A"+r2+","+r2+" 0 0,0 "+x1inner+","+y1inner;
+
 	    return this.path(path, settings);
 	},
+
 	axis: function(params) {
 	    var start = params.start; // start pixel of the axis in the SVG
 	    var end = params.end; // end pixel of the axis in the SVG
 	    var shift = params.shift; // shift from left (vertical) or top (horizontal) of the axis
 	    var min = params.min == null ? 0 : params.min; // minimum value of the scale
 	    var max = params.max == null ? 100 : params.max; // maximum value of the scale
+
 	    var showLabels = params.showLabels == null ? true : false;
 	    var labels = params.labels; // array of labels if the labels should not be the value
 	    var labelRotation = params.labelRotation == null ? 0 : params.labelRotation; // degrees the labels should be rotated
 	    var labelFontSize = params.labelFontSize == null ? 12 : params.labelFontSize;
 	    var labelFontWeight = params.labelFontWeight == null ? 100 : params.labelFontWeight;
 	    var labelFontFamily = params.labelFontFamily == null ? "Helvetica" : params.labelFontFamily;
+
 	    var minorTicks = params.minorTicks == null ? 4 : params.minorTicks; // number of minor ticks between major ticks
 	    var minorTickLength = params.minorTickLength == null ? 5 : params.minorTickLength;
 	    var majorTickLength = params.majorTickLength == null ? 10 : params.majorTickLenght;
@@ -279,15 +295,19 @@
 	    var majorTicks = params.majorTicks == null ? 10 : params.majorTicks; // number of major ticks on the axis
 	    var scale = params.scale == null ? "linear" : params.scale;
 	    var direction = params.direction == null ? "horizontal" : params.direction;
+
 	    var length = end - start;
+
 	    // create group
 	    var g = this.group();
+
 	    // create baseline
 	    var x1 = direction == "horizontal" ? start : shift;
 	    var y1 = direction == "horizontal" ? shift : start;
 	    var x2 = direction == "horizontal" ? end : shift;
 	    var y2 = direction == "horizontal" ? shift : end;
 	    this.line(g, x1, y1, x2, y2, { stroke: "black", strokeWidth: 1 });
+
 	    // create ticks
 	    var tickpos = start;
 	    x1 = direction == "horizontal" ? tickpos : shift + majorTickShift;
@@ -298,6 +318,7 @@
 	    var y1m = direction == "horizontal" ? shift + minorTickShift : tickpos;
 	    var x2m = direction == "horizontal" ? tickpos : shift + minorTickShift - minorTickLength;
 	    var y2m = direction == "horizontal" ? shift + minorTickShift + minorTickLength : tickpos;
+
 	    var majorTickSpace = Math.floor(length / majorTicks);
 	    var minorTickSpace = Math.floor(majorTickSpace / (minorTicks + 1));
 	    
@@ -342,6 +363,7 @@
 	    
 	    return g;
 	},
+
 	legend: function(params) {
 	    var top = params.top == null ? 0 : params.top;
 	    var left = params.left == null ? 0 : params.left;
@@ -351,17 +373,21 @@
 	    var fontWeight = params.fontWeight == null ? "normal" : params.fontWeight;
 	    var fontFamily = params.fontFamily == null ? "Helvetica" : params.fontFamily;
 	    var labelSpacing = params.labelSpacing == null ? 10 : params.labelSpacing;
+
 	    var g = this.group();
 	    for (var i=0; i<labels.length; i++) {
 		this.rect(g, left, top, fontSize, fontSize, { stroke: "white", strokeWidth: 0, fill: colors[i] });
 		this.text(g, left + fontSize + fontSize, top + fontSize - 2, labels[i], { stroke: "black", fontSize: fontSize, fontFamily: fontFamily, fontWeight: fontWeight });
 		top += fontSize + labelSpacing;
 	    }
+
 	    return g;
 	},
+
 	/*
 	  end of high level graphics
 	 */
+
 	/* Retrieve the width of the SVG object. */
 	_width: function() {
 	    return (this._container ? this._container.clientWidth : this._svg.width);
@@ -1525,6 +1551,7 @@
     //====================
     /* Helper Functions */
     //====================
+
     /* Determine whether an object is an array. */
     function isArray(a) {
 	return (a && a.constructor == Array);
@@ -1542,8 +1569,10 @@
     function roundNumber(num, dec) {
 	return Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec);
     }
+
     // Singleton primary SVG interface
     jQuery.svg = new SVGManager();
+
     //============
     /* Graphing */
     //============
@@ -2020,12 +2049,32 @@
 		    var len = (cur == major ? size : size / 2);
 		    var v = (horiz ? x1 : y1) +
 			(horiz ? cur - axis._scale.min : axis._scale.max - cur) * scale;
-		    this._wrapper.line(gl, (horiz ? v : x1 + len * offsets[0]),
+		    if (cur == major) {
+
+			// fix floating point error
+			var maj_str = cur.toString();
+			var tick_str = axis._ticks.major.toString();
+		    
+			// round to a maximum of 3 significant digits
+			if (tick_str.substr(tick_str.indexOf('.')+1).length > 3) {
+			    tick_str = tick_str.substr(0, tick_str.indexOf('.')+4);
+			}
+			
+			// fail if the max is smaller than the smallest number displayable with
+			// three significant digits
+			if (parseFloat(tick_str) < 0.001) {
+			    return;
+			}
+			if (maj_str.substr(maj_str.indexOf('.')+1).length > tick_str.substr(tick_str.indexOf('.')+1).length) {
+			    maj_str = parseFloat(major.toFixed(tick_str.substr(tick_str.indexOf('.')+1).length));
+			}
+			
+			this._wrapper.line(gl, (horiz ? v : x1 + len * offsets[0]),
 				       (horiz ? y1 + len * offsets[0] : v),
 				       (horiz ? v : x1 + len * offsets[1]),
 				       (horiz ? y1 + len * offsets[1] : v));
-		    if (cur == major) {
-			var pretty_cur = cur;
+		    
+			var pretty_cur = maj_str;
 			if (this.shortAxisLabels) {
 			    pretty_cur = Math.floor(pretty_cur) + '';
 			    if (pretty_cur.length > 12) {
@@ -2042,8 +2091,9 @@
 				pretty_cur = pretty_cur.formatString(1)+' K';
 			    }
 			}
+
 			var logtext = this._wrapper.createText().string('10').span(cur, {dy: -10, fontSize: 10});
-			this._wrapper.text(gt, (horiz ? v : (id=='y2Axis' ? x1 + size : x1 - size)), (horiz ? y1 + 2 * size : v),
+			this._wrapper.text(gt, (horiz ? v : (id=='y2Axis' ? x1 + size + 5 : x1 - size - 5)), (horiz ? y1 + 2 * size : v + 5),
 					   (axis._labels ? axis._labels[count++] : ((axis._scale.type == 'log') ? logtext : pretty_cur)));
 		    }
 		    
@@ -2450,6 +2500,7 @@
     
     var barOptions = ['barWidth (number) - the width of each bar',
 		      'barGap (number) - the gap between sets of bars'];
+
     /* Draw a deviation chart. */
     function SVGDeviationChart() {
     }
@@ -2478,7 +2529,7 @@
 	   @param  graph  (object) the SVGGraph object */
 	drawGraph: function(graph) {
 	    graph._drawChartBackground(true);
-	    var barWidth = graph._chartOptions.barWidth || 10;
+	    var barWidth = graph._chartOptions.barWidth || 20;
 	    var barGap = graph._chartOptions.barGap || 10;
 	    var numSer = graph._series.length;
 	    var numVal = (numSer ? (graph._series[0])._values.length : 0);
@@ -2511,21 +2562,31 @@
 	    for (var i = 0; i < series._values.length; i++) {
 		var xoffset = dims[graph.X] + xScale * (barGap + i * (numSer * barWidth + barGap) + (cur * barWidth));
 		var data = series._values[i];
+		
+		if (graph.yAxis._scale.type == 'log') {
+		    data.upper = log10(data.upper);
+		    data.median = log10(data.median);
+		    data.max = log10(data.max);
+		    data.lower = log10(data.lower);
+		    data.min = log10(data.min);
+		}
+
 		var yshift = dims[graph.Y];
 		// median - upper
 		graph._wrapper.rect(g, xoffset + 1, Math.ceil((graph.yAxis._scale.max - data.upper) * yScale + yshift), parseInt(barWidth - 2), parseInt((data.upper - data.median) * yScale), 0, 0, { stroke: 'black', strokeWidth: 1, fill: series._fill[i] });
 		
 		// median - lower
 		graph._wrapper.rect(g, xoffset + 1, parseInt((graph.yAxis._scale.max - data.median) * yScale + yshift), parseInt(barWidth - 2), parseInt((data.median - data.lower) * yScale), 0, 0, { stroke: 'black', strokeWidth: 1, fill: series._fill[i] });
-		
+
 		// max - upper
+		var mu = 
 		graph._wrapper.line(g, xoffset + 1 + parseInt(barWidth / 6), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), parseInt(xoffset + 1 + barWidth - 2 - parseInt(barWidth / 6)), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), { stroke: 'black', strokeWidth: 1 });
 		graph._wrapper.line(g, xoffset + parseInt(barWidth / 2), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), parseInt(xoffset + parseInt(barWidth / 2)), parseInt((graph.yAxis._scale.max - data.upper) * yScale + 1 + yshift), { stroke: 'black', strokeWidth: 1, strokeDashArray: "2,2" });
+
 		
 		// lower - min
 		graph._wrapper.line(g, xoffset + 1 + parseInt(barWidth / 6), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), parseInt(xoffset + 1 + barWidth - 2 - parseInt(barWidth / 6)), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), { stroke: 'black', strokeWidth: 1 });
 		graph._wrapper.line(g, xoffset + parseInt(barWidth / 2), parseInt((graph.yAxis._scale.max - data.lower) * yScale - 1 + yshift), parseInt(xoffset + parseInt(barWidth / 2)), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), { stroke: 'black', strokeWidth: 1, strokeDashArray: "2,2" });
-		
 	    }
 	},
 	
@@ -2545,15 +2606,15 @@
 				dims[graph.X] + dims[graph.W], dims[graph.Y] + dims[graph.H]);
 	    if (axis._ticks.major) {
 		var offsets = graph._getTickOffsets(axis, true);
-		for (var i = 1; i < numVal; i++) {
-		    var x = dims[graph.X] + xScale * (barGap / 2 + i * (numSer * barWidth + barGap));
+		for (var i = 0; i < numSer; i++) {
+		    var x = dims[graph.X] + (xScale * barGap) + (barWidth / 2) + (i * (barWidth * xScale));
 		    graph._wrapper.line(gl, x, dims[graph.Y] + dims[graph.H] + offsets[0] * axis._ticks.size,
 					x, dims[graph.Y] + dims[graph.H] + offsets[1] * axis._ticks.size);
 		}
-		for (var i = 0; i < numVal; i++) {
-		    var x = dims[graph.X] + xScale * (barGap / 2 + (i + 0.5) * (numSer * barWidth + barGap));
+		for (var i = 0; i < numSer; i++) {
+		    var x = dims[graph.X] + (xScale * barGap) + (barWidth / 2) + (i * (barWidth * xScale));
 		    graph._wrapper.text(gt, x, dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size,
-					(axis._labels ? axis._labels[i] : '' + i), (axis.labelRotation ? { transform: "rotate("+axis.labelRotation+", "+x+", "+(dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size)+")"} : null));
+					(axis._labels ? axis._labels[i] : graph._series[i]._name), (axis.labelRotation ? { textAnchor: "end", transform: "rotate("+axis.labelRotation+", "+x+", "+(dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size)+")"} : { textAnchor: "end", transform: "rotate(-50, "+x+", "+(dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size)+")"}));
 		}
 	    }
 	}
@@ -2869,6 +2930,7 @@
 	    for (var i = 0; i < numVal; i++) {
 		accum[i] = 0;
 	    }
+
 	    var paths = [];
 	    for (var s = 0; s < numSer; s++) {
 		paths[s] = "";
@@ -2885,6 +2947,7 @@
 			paths[s] += "L" + (dims[graph.X] + xScale * (i+1)) + "," + yVal;
 		    }
 		}
+
 		if (s===0 && graph.normalizeStackedArea) {
 		    paths[s] += "L"+(dims[graph.X] + xScale * series._values.length)+","+(dims[graph.Y] + dims[graph.H])+"L"+dims[graph.X]+","+(dims[graph.Y] + dims[graph.H]);
 		} else {
@@ -3180,7 +3243,9 @@
 	drawGraph: function(graph) {
 	    graph._drawChartBackground();
 	    var dims = graph._getDims();
+
 	    graph.xAxis._scale.max = graph._series[0]._values.length - 1;
+
 	    var xScale = dims[graph.W] / (graph.xAxis._scale.max - graph.xAxis._scale.min);
 	    var yScale = dims[graph.H] / (graph.yAxis._scale.max - graph.yAxis._scale.min);
 	    this._chart = graph._wrapper.group(graph._chartCont, {class_: 'chart'});
@@ -3219,6 +3284,7 @@
 		graph._showStatus(c, series._name, series._values[i]);
 	    }
 	},
+
 	/* Draw the x-axis and its ticks. */
 	_drawXAxis: function(graph, numVal, dims, xScale) {
 	    var axis = graph.xAxis;
@@ -4262,6 +4328,7 @@
 	    return this._plot;
 	}
     });
+
     // css
     jQuery("<style>")
 	.prop("type", "text/css")
@@ -4284,6 +4351,7 @@ svg:svg {\
 	.appendTo("head");
     
 })(jQuery);
+
 //===================
 /* Drag-Select-Box */
 //===================
@@ -4338,6 +4406,7 @@ svg:svg {\
     }
     
     function sortByNumber(a,b){ return a-b; }
+
     // Enable animation for all of these SVG numeric attributes -
     // named as svg-* or svg* (with first character upper case)
     jQuery.each(['x', 'y', 'width', 'height', 'rx', 'ry', 'cx', 'cy', 'r', 'x1', 'y1', 'x2', 'y2',
@@ -4368,6 +4437,7 @@ svg:svg {\
 		    };
 		}
 	       );
+
     // Enable animation for the SVG strokeDashArray attribute
     jQuery.fx.step['svgStrokeDashArray'] = jQuery.fx.step['svg-strokeDashArray'] =
 	jQuery.fx.step['svgStroke-dasharray'] = jQuery.fx.step['svg-stroke-dasharray'] = function(fx) {
@@ -4399,6 +4469,7 @@ svg:svg {\
 	    }).join(',');
 	    (attr ? attr.nodeValue = value : fx.elem.setAttribute('stroke-dasharray', value));
 	};
+
     /* Parse a strokeDashArray definition: dash, gap, ...
        @param  value  (string) the definition
        @return  (number[2n]) the extracted values */
@@ -4418,6 +4489,7 @@ svg:svg {\
 	}
 	return dashArray;
     }
+
     // Enable animation for the SVG viewBox attribute
     jQuery.fx.step['svgViewBox'] = jQuery.fx.step['svg-viewBox'] = function(fx) {
 	var attr = fx.elem.attributes.getNamedItem('viewBox');
@@ -4444,6 +4516,7 @@ svg:svg {\
 	}).join(' ');
 	(attr ? attr.nodeValue = value : fx.elem.setAttribute('viewBox', value));
     };
+
     /* Parse a viewBox definition: x, y, width, height.
        @param  value  (string) the definition
        @return  (number[4]) the extracted values */
@@ -4460,6 +4533,7 @@ svg:svg {\
 	}
 	return viewBox;
     }
+
     // Enable animation for the SVG transform attribute
     jQuery.fx.step['svgTransform'] = jQuery.fx.step['svg-transform'] = function(fx) {
 	var attr = fx.elem.attributes.getNamedItem('transform');
@@ -4505,6 +4579,7 @@ svg:svg {\
 	}
 	(attr ? attr.nodeValue = transform : fx.elem.setAttribute('transform', transform));
     };
+
     /* Decode a transform string and extract component values.
        @param  value     (string) the transform string to parse
        @param  original  (object) the settings from the original node
@@ -4568,6 +4643,7 @@ svg:svg {\
 	}
 	return transform;
     }
+
     // Enable animation for all of these SVG colour properties - based on jquery.color.js
     jQuery.each(['fill', 'stroke'],
 		function(i, attrName) {
@@ -4592,6 +4668,7 @@ svg:svg {\
 		    }
 		}
 	       );
+
     /* Find this attribute value somewhere up the node hierarchy.
        @param  elem  (element) the starting element to find the attribute
        @param  attr  (string) the attribute name
@@ -4608,6 +4685,7 @@ svg:svg {\
 	} while (elem = elem.parent());
 	return jQuery.svg._getRGB(colour);
     };
+
     /* Parse strings looking for common colour formats.
        @param  colour  (string) colour description to parse
        @return  (number[3]) RGB components of this colour */
@@ -4638,6 +4716,7 @@ svg:svg {\
 	// Otherwise, we're most likely dealing with a named color
 	return colours[jQuery.trim(colour).toLowerCase()] || colours['none'];
     };
+
     // The SVG named colours
     var colours = {
 	'':						[255, 255, 255, 1],
@@ -4790,4 +4869,5 @@ svg:svg {\
 	yellow:					[255, 255, 0],
 	yellowgreen:			[154, 205, 50]
     };
+
 })(window);

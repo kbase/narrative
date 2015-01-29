@@ -15,14 +15,19 @@ import os
 import sys
 import urllib
 import re
+
 import IPython.html.services.notebooks.handlers
 from IPython.html.notebook.handlers import web  # get Tornado hook
 import IPython
+from tornado import web
+
 import biokbase.auth
 from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.util import kbase_env
 
 g_log = get_logger("biokbase.narrative")
+
+NARRATIVE_NOT_FOUND = 466 # special error code
 
 def monkeypatch_method(cls):
     """
@@ -149,7 +154,15 @@ def do_patching(c):
     # Patch RequestHandler to deal with errors and render them in a half-decent
     # error page, templated to look (more or less) like the rest of the site.
     @monkeypatch_method(IPython.html.base.handlers.RequestHandler)
-    def write_error(self, status_code, **kwargs):
+    def write_error(self, status_code, exc_info=None, **kwargs):
+        err_obj = exc_info[1]
+        app_log.warn("Write error: {}".format(err_obj))
+        # handle  special not-found
+        if err_obj.log_message.startswith('Notebook does not exist'):
+            app_log.warn("Not found error")
+            self.write(self.render_template('notfound.html', narr_id=kbase_env.narrative))
+            return
+
         # some defaults
         error = 'Unknown error'
         traceback = 'Not available'
@@ -157,8 +170,7 @@ def do_patching(c):
 
         import traceback
 
-        if self.settings.get('debug') and 'exc_info' in kwargs:
-            exc_info = kwargs['exc_info']
+        if self.settings.get('debug') and exc_info is not None:
             trace_info = ''.join(["%s<br>" % line for line in traceback.format_exception(*exc_info)])
             request_info = ''.join(["<strong>%s</strong>: %s<br>" % (k, self.request.__dict__[k] ) for k in self.request.__dict__.keys()])
 

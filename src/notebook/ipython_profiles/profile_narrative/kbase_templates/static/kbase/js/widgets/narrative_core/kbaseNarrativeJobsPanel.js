@@ -266,6 +266,11 @@
             IPython.notebook.kernel.execute(deleteJobCmd, callbacks, {store_history: false, silent: true});
         },
 
+        /**
+         * @method
+         * When we get the deletion response from the kernel, we should delete the job.
+         * We should *probably* just delete the job anyway, whether there's an error or not.
+         */
         deleteResponse: function(msgType, content, jobId) {
             if (msgType != 'stream') {
                 console.error('An error occurred while trying to delete a job');
@@ -281,9 +286,6 @@
                 // Comment this out for now, until we make some sensible error popup or something.
                 // return false;
             }
-
-            // if (result[jobId] === true) {
-            // successfully nuked it on the back end, now wipe it out on the front end.
 
             // first, wipe the metadata
             var appIds = IPython.notebook.metadata.job_ids.apps;
@@ -303,7 +305,6 @@
             // nuke the removeId
             this.removeId = null;
             return true;
-            // return result[jobId];
         },
 
         /**

@@ -6,6 +6,8 @@ This is built on the IPython Notebook (more notes will follow).
 ### Version 0.4.6 - 1/28/2015
 __Changes__
 - Added another separate page when a narrative is not found (not just unauthorized)
+- Added support for single file extraction during download
+- Changed "dna" parameter of plant transcriptome uploader to integer value
 
 __Bugfixes__
 - Fixed issue with deployment script not auto-shutting-down all non-attached instances
@@ -13,6 +15,8 @@ __Bugfixes__
 - NAR-562 - job deletion should work right, and if a deletion fails, it shouldn't break the jobs panel
 - When a user tries to delete a job, it should always remove that job
 - NAR-484 - long job names should wrap now
+- Fixed more issues with FBA model widgets
+- Fixed boolean properties issues in uploaders
 
 ### Version 0.4.5 - 1/28/2015
 __Changes__

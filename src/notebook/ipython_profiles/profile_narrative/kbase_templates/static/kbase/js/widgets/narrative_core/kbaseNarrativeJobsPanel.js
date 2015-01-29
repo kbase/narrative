@@ -593,7 +593,6 @@
                 return;
             }
 
-            console.log([fetchedJobStatus, jobInfo]);
             // Instantiate a shiny new panel to hold job info.
             var $jobsList = $('<div>').addClass('kb-jobs-items');
 

@@ -9,9 +9,14 @@ This is a cheesy way to share jobs so that all users can see what long-running
 jobs are going.
 
 Consider this a pass at alleviating some of our current August 2014 panic-mode.
+
+UPDATED 1/28/2015
+This manages where jobs get looked up, whether from the UJS or NJS or wherever
+else they're running from. The 'poll_jobs' method routes the job to the service
+it needs to be looked up from.
 """
-__author__ = ["William Riehl <wjriehl@lbl.gov>"]
-__version__ = "0.0.1"
+__author__ = ["William Riehl <wjriehl@lbl.gov>", "Roman Sutormin <rsutormin@lbl.gov>"]
+__version__ = "0.1.0"
 
 import os
 import json
@@ -100,13 +105,19 @@ class KBjobManager():
                     job_states[job_id] = self.get_method_state(job, job_id)
                 except Exception as e:
                     import traceback
-                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
+                    job_states[job_id] = {'job_id' : job_id,
+                                          'job_state' : 'error',
+                                          'error' : e.__str__(),
+                                          'traceback' : traceback.format_exc()}
             elif job_id.startswith('njs:'):
                 try:
                     job_states[job_id] = self.get_app_state(job, job_id)
                 except Exception as e:
                     import traceback
-                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
+                    job_states[job_id] = {'job_id' : job_id,
+                                          'job_state' : 'error',
+                                          'error' : e.__str__(),
+                                          'traceback' : traceback.format_exc()}
             else:
                 try:
                     # 0  job_id job,
@@ -140,7 +151,10 @@ class KBjobManager():
                     job_states[job_id] = job
                 except Exception as e:
                     import traceback
-                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
+                    job_states[job_id] = {'job_id' : job_id,
+                                          'job_state' : 'error',
+                                          'error' : e.__str__(),
+                                          'traceback' : traceback.format_exc()}
         if as_json:
             import json
             job_states = json.dumps(job_states)

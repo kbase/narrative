@@ -45,58 +45,37 @@
         render: function() {
             var self = this;
     		var downloadPanel = this.$elem;
-    		downloadPanel.append($('<button>').addClass('kb-data-list-btn')
-                    .append('Download as JSON')
-                    .click(function() {
-                    	var url = self.exportURL + '/download?ws='+self.wsId+'&id='+self.objId+'&token='+self.token+
-                    		'&url='+encodeURIComponent(self.wsUrl);
-                    	self.downloadFile(url);
-                    }));
+		downloadPanel.append('Export as:');
     		var addDownloader = function(descr) {
-    			downloadPanel.append($('<button>').addClass('kb-data-list-btn')
-    					.append('Download as ' + descr.name)
+    		downloadPanel.append($('<button>').addClass('kb-data-list-btn')
+    					.append(descr.name)
     					.click(function() {
+						downloadPanel.find('.kb-data-list-btn').prop('disabled', true);
     						self.runDownloader(self.type, self.wsId, self.objId, descr);
     					}));
     		};
     		var downloaders = self.prepareDownloaders(self.type, self.wsId, self.objId);
     		for (var downloadPos in downloaders)
     			addDownloader(downloaders[downloadPos]);
-    		downloadPanel.append('<br>').append($('<button>').addClass('kb-data-list-cancel-btn')
-                    .append('Hide Download')
-                    .click(function() {downloadPanel.empty();} ));
-            var modalLabel = "app-warning-modal-lablel-"+ self.uuid();
-            self.$warningModal = $('<div tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="position:auto">').addClass("modal fade");
-            self.getDownloadDialogEmptyPanel().append(self.$warningModal);
-            self.$warningModalContent = $('<div>');
-            var $stopButton = $('<button type="button" data-dismiss="modal">').addClass("btn").append("Cancel");
-            $stopButton.click($.proxy(function(event) {
-            	self.stopTimer();
-            }, this));
-            self.$warningModal.append(
-                $('<div>').addClass('modal-dialog').append(
-                    $('<div>').addClass('modal-content').append(
-                        $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" id="'+modalLabel+'">Download should start quickly...</h4>')
-                    ).append(
-                       $('<div>').addClass('modal-body').append(self.$warningModalContent)
-                    ).append(
-                        $('<div>').addClass('modal-footer').append($stopButton)
-                    )
-                ));
-    		return this;
-        },
-        
-        getDownloadDialogEmptyPanel: function() {
-    		var downloadDialogDivId = "downloadDialogDivId";
-    		var dialog = $('#' + downloadDialogDivId);
-    		if (dialog) {
-    			dialog.empty();
-    		} else {
-    			console.log("Creating download dialog element...");
-    			dialog = $('<div id="' + downloadDialogDivId + '">');
-                $('body').append(dialog);
-    		}
-    		return dialog;
+		
+    		downloadPanel.append($('<button>').addClass('kb-data-list-btn')
+                    .append('JSON')
+                    .click(function() {
+                    	var url = self.exportURL + '/download?ws='+self.wsId+'&id='+self.objId+'&token='+self.token+
+                    		'&url='+encodeURIComponent(self.wsUrl);
+                    	self.downloadFile(url);
+                    }));
+    		downloadPanel.append($('<button>').addClass('kb-data-list-cancel-btn')
+                    .append('Cancel')
+                    .click(function() {
+			self.stopTimer();
+			downloadPanel.empty();
+		    } ));
+		
+	    self.$statusDiv = $('<div>').css({'margin':'15px'});
+	    self.$statusDivContent = $('<div>');
+	    self.$statusDiv.append(self.$statusDivContent);
+	    downloadPanel.append(self.$statusDiv.hide());
         },
         
         prepareDownloaders: function(type, wsId, objId) {
@@ -123,8 +102,8 @@
         
         runDownloader: function(type, wsId, objId, descr) { // descr is {name: ..., external_type: ...[, transform_options: ...[, unzip: ...]]}
             var self = this;
-            self.showMessage('Download status: Preparing server-side data');
-            self.$warningModal.modal('show');
+            self.showMessage('<img src="'+self.loadingImage+'" /> Export status: Preparing data');
+            self.$statusDiv.show();
         	var transform_options = descr.transform_options;
         	if (!transform_options)
         		transform_options = {};
@@ -157,11 +136,11 @@
 					if (complete === 1) {
 						self.stopTimer();
 						if (wasError === 0) {
-							console.log("Download job is done");
+							console.log("Export is complete");
 							// Starting download from Shock
 							jobSrv.get_results(jobId, function(data) {
-								self.$warningModal.modal('hide');
-					        	self.$warningModal = null;
+								self.$statusDiv.hide();
+								self.$elem.find('.kb-data-list-btn').prop('disabled', false);
 								console.log(data);
 								self.downloadUJSResults(data, wsObjectName, unzip);
 							}, function(data) {
@@ -173,8 +152,8 @@
 	            			self.showError(status);
 						}
 					} else {
-						console.log("Download status: " + status, true);
-			            self.showMessage('Download status: ' + status);
+						console.log("Export status: " + status, true);
+			            self.showMessage('<img src="'+self.loadingImage+'" /> Export status: ' + status);
 					}
 				}, function(data) {
 					self.stopTimer();
@@ -234,32 +213,14 @@
         
         showMessage: function(msg) {
         	var self = this;
-            self.$warningModalContent.empty();
-            self.$warningModalContent.append(msg);
+            self.$statusDivContent.empty();
+            self.$statusDivContent.append(msg);
         },
         
         showError: function(msg) {
         	var self = this;
-        	if (self.$warningModal)
-        		self.$warningModal.modal('hide');
-        	self.$warningModal = null;
-            var errorModalId = "app-error-modal-"+ self.uuid();
-            var modalLabel = "app-error-modal-lablel-"+ self.uuid();
-            var $errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="position:auto">').addClass("modal fade");
-            $errorModal.append(
-                $('<div>').addClass('modal-dialog').append(
-                    $('<div>').addClass('modal-content').append(
-                        $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" id="'+modalLabel+'">Problems in file download.</h4>')
-                    ).append(
-                       $('<div>').addClass('modal-body').append($('<div>').addClass("kb-app-step-error-mssg")
-                			.append('Error: ' + msg))
-                    ).append(
-                        $('<div>').addClass('modal-footer').append(
-                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Close"))
-                    )
-                ));
-            self.getDownloadDialogEmptyPanel().append($errorModal);
-            $errorModal.modal('show');
+		self.$statusDivContent.empty();
+		self.$statusDivContent.append($('<span>').css({color:'#F44336'}).append('Error: '+msg));
         },
         
         stopTimer: function() {
@@ -268,14 +229,6 @@
 				this.timer = null;
 				console.log("Timer was stopped");
 			}
-		},
-        
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
-        }
+		}
     });
 })( jQuery );

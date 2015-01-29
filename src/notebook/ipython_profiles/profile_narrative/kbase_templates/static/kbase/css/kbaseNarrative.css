@@ -1986,6 +1986,12 @@ div[class="tooltip-inner"] {
 .kb-data-list-btn:hover {
     background-color: #1E88E5;;
 }
+.kb-data-list-btn[disabled] {
+    box-shadow: none;
+    background-color: #BBDEFB;
+    color: #fff;
+}
+
 
 .kb-data-list-cancel-btn {
     background-color: #F5F5F5;

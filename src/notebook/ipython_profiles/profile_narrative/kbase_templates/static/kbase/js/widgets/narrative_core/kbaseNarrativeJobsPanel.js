@@ -338,6 +338,12 @@
             this.$jobsPanel.show();
         },
 
+        /**
+         * @method
+         * Registers a job with the Narrative. This adds its job id and source of the job (the cell that started it) to 
+         * the narrative metadata. It also starts caching the state internally to the jobs panel. Once all this is done,
+         * so the user doesn't accidentally lose the job, it triggers a narrative save.
+         */
         registerJob: function(jobInfo, isApp) {
             // Check to make sure the Narrative has been instantiated to begin with.
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel || !IPython.notebook.metadata)
@@ -362,8 +368,10 @@
             // put a stub in the job states
             this.jobStates[jobInfo.id] = $.extend({}, jobInfo, {'status' : null, '$elem' : 'null'});
             this.source2Job[jobInfo.source] = jobInfo.id;
-            this.refresh();
+            // save the narrative!
             IPython.notebook.save_checkpoint();
+
+            this.refresh();
         },
 
         /*

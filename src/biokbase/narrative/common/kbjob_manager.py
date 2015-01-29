@@ -200,8 +200,12 @@ class KBjobManager():
             if app_id is not None:
                 token = os.environ['KB_AUTH_TOKEN']
                 njsClient = NarrativeJobService(URLS.job_service, token = token)
-                status = njsClient.delete_app(app_id)
-                if (not status == 'success') and ('was marked for deletion' not in status):
+                try:
+                    status = njsClient.delete_app(app_id)
+                    if (not status == 'success') and ('was marked for deletion' not in status):
+                        is_deleted = False
+                except Exception as e:
+                    # just return false until we get some better info from the NJS folks.
                     is_deleted = False
             deletion_status[job_id] = is_deleted
         if as_json:

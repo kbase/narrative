@@ -15,6 +15,20 @@
     "FBAModel": ["fa-exchange fa-rotate-90"],
     "Media": ["fa-eyedropper"],
     "ReferenceAssembly": ["fa-book"],
-    "Metagenome": ["fa-group"]
+    "Metagenome": ["fa-group"],
+    "SingleEndLibrary": ["fa-align-justify"],
+    "PairedEndLibrary": ["fa-align-justify"],
+    "AssemblyInput": ["fa-align-justify"],
+    "ProteomeComparison": ["fa-arrows-h"],
+    "GenomeComparison": ["fa-arrows-h"],
+    "DomainAlignment": ["fa-sliders"],
+    "Tree": ["fa-tree"],
+    "TaxonomicMatrix": ["fa-table"],
+    "FunctionalMatrix": ["fa-table"],
+    "GenomeSet": ["fa-list-ul"],
+    "PhenotypeSet": ["fa-list-ul"],
+    "PhenotypeSimulationSet": ["fa-list-ul"],
+    "Collection": ["fa-list-alt"],
+    "Pangenome": ["fa-star-o fa-rotate-180", "fa-star-o"]
   }
 }

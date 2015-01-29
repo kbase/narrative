@@ -2030,6 +2030,12 @@ div[class="tooltip-inner"] {
 .kb-data-icon-lnudge {
   margin-right: 3px;
 }
+.kb-data-icon-unudge {
+  margin-bottom: 0.5em;
+}
+.kb-data-icon-dnudge {
+  margin-top: 0.5em;
+}
 
 .kb-data-list-info {
 }

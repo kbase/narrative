@@ -441,7 +441,7 @@
             		if (refName)
             			options['refname'] = refName;
             		args = {'external_type': 'FASTA.DNA.Assembly', 
-            				'kbase_type': 'KBaseGenomes.ReferenceAssembly', 
+            				'kbase_type': 'KBaseAssembly.ReferenceAssembly', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
             				'optional_arguments': {'validate':{},'transform':options},

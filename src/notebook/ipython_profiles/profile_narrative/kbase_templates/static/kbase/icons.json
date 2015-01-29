@@ -1,0 +1,20 @@
+{
+  "methods": {
+    "method": ["fa-cube"],
+    "app": ["fa-cubes"]
+  },
+  "data": {
+    "DEFAULT": ["fa-flask"],
+    "ContigSet": ["fa-signal fa-rotate-90",
+      "fa-signal fa-rotate-270 kb-data-icon-rnudge"],
+    "Genome": ["fa-barcode"],
+    "Network": ["fa-connectdevelop"],
+    "ExpressionSample": ["fa-arrows"],
+    "ExpressionSeries": ["fa-arrows"],
+    "FBA": ["fa-exchange"],
+    "FBAModel": ["fa-exchange fa-rotate-90"],
+    "Media": ["fa-eyedropper"],
+    "ReferenceAssembly": ["fa-book"],
+    "Metagenome": ["fa-group"]
+  }
+}

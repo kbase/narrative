@@ -2023,6 +2023,14 @@ div[class="tooltip-inner"] {
     text-shadow: -1px 0 #777, 0 1px #777, 1px 0 #777, 0 -1px #777;
 }
 
+/* Nudge the data icon a bit to the left or right */
+.kb-data-icon-rnudge {
+  margin-left: 3px;
+}
+.kb-data-icon-lnudge {
+  margin-right: 3px;
+}
+
 .kb-data-list-info {
 }
 .kb-data-list-name {

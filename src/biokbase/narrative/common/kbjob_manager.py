@@ -9,9 +9,14 @@ This is a cheesy way to share jobs so that all users can see what long-running
 jobs are going.
 
 Consider this a pass at alleviating some of our current August 2014 panic-mode.
+
+UPDATED 1/28/2015
+This manages where jobs get looked up, whether from the UJS or NJS or wherever
+else they're running from. The 'poll_jobs' method routes the job to the service
+it needs to be looked up from.
 """
-__author__ = ["William Riehl <wjriehl@lbl.gov>"]
-__version__ = "0.0.1"
+__author__ = ["William Riehl <wjriehl@lbl.gov>", "Roman Sutormin <rsutormin@lbl.gov>"]
+__version__ = "0.1.0"
 
 import os
 import json
@@ -100,13 +105,19 @@ class KBjobManager():
                     job_states[job_id] = self.get_method_state(job, job_id)
                 except Exception as e:
                     import traceback
-                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
+                    job_states[job_id] = {'job_id' : job_id,
+                                          'job_state' : 'error',
+                                          'error' : e.__str__(),
+                                          'traceback' : traceback.format_exc()}
             elif job_id.startswith('njs:'):
                 try:
                     job_states[job_id] = self.get_app_state(job, job_id)
                 except Exception as e:
                     import traceback
-                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
+                    job_states[job_id] = {'job_id' : job_id,
+                                          'job_state' : 'error',
+                                          'error' : e.__str__(),
+                                          'traceback' : traceback.format_exc()}
             else:
                 try:
                     # 0  job_id job,
@@ -125,22 +136,26 @@ class KBjobManager():
                     # 13 Results res
                     ujs_job = self.poll_ujs_job(job_id, ujs_proxy)
                     method_info = job
-                    job = { 'job_id' : job_id, 
-                            'job_state' : ujs_job[4], 
-                            'running_step_id' : '', 
-                            'step_errors': {}, 
-                            'step_outputs': {}, 
-                            'widget_outputs': ujs_job[13], 
+                    job = { 'job_id' : job_id,
+                            'job_state' : ujs_job[2],
+                            'running_step_id' : '',
+                            'step_errors': {},
+                            'step_outputs': {},
+                            'widget_outputs': ujs_job[13],
                             'ujs_info' : ujs_job }
                     if ujs_job[11] == 1:
                         job['job_state'] = 'error'
                         job['error'] = ujs_job[4]
                     elif ujs_job[10] == 1:
+                        job['job_state'] = 'completed'
                         job['widget_outputs'] = self.get_method_state(method_info, job_id)
                     job_states[job_id] = job
                 except Exception as e:
                     import traceback
-                    job_states[job_id] = {'job_id' : job_id, 'job_state' : 'error', 'error' : e.__str__(), 'traceback' : traceback.format_exc()}
+                    job_states[job_id] = {'job_id' : job_id,
+                                          'job_state' : 'error',
+                                          'error' : e.__str__(),
+                                          'traceback' : traceback.format_exc()}
         if as_json:
             import json
             job_states = json.dumps(job_states)
@@ -185,8 +200,12 @@ class KBjobManager():
             if app_id is not None:
                 token = os.environ['KB_AUTH_TOKEN']
                 njsClient = NarrativeJobService(URLS.job_service, token = token)
-                status = njsClient.delete_app(app_id)
-                if (not status == 'success') and ('was marked for deletion' not in status):
+                try:
+                    status = njsClient.delete_app(app_id)
+                    if (not status == 'success') and ('was marked for deletion' not in status):
+                        is_deleted = False
+                except Exception as e:
+                    # just return false until we get some better info from the NJS folks.
                     is_deleted = False
             deletion_status[job_id] = is_deleted
         if as_json:

@@ -266,9 +266,15 @@
             IPython.notebook.kernel.execute(deleteJobCmd, callbacks, {store_history: false, silent: true});
         },
 
+        /**
+         * @method
+         * When we get the deletion response from the kernel, we should delete the job.
+         * We should *probably* just delete the job anyway, whether there's an error or not.
+         */
         deleteResponse: function(msgType, content, jobId) {
             if (msgType != 'stream') {
                 console.error('An error occurred while trying to delete a job');
+                this.refresh(false);
                 return;
             }
             var result = content.data;
@@ -281,9 +287,6 @@
                 // Comment this out for now, until we make some sensible error popup or something.
                 // return false;
             }
-
-            // if (result[jobId] === true) {
-            // successfully nuked it on the back end, now wipe it out on the front end.
 
             // first, wipe the metadata
             var appIds = IPython.notebook.metadata.job_ids.apps;
@@ -298,12 +301,16 @@
             // remove it from the 'cache' in this jobs panel
             delete this.source2Job[this.jobStates[jobId].source];
             delete this.jobStates[jobId];
-            this.refresh(false);
 
             // nuke the removeId
             this.removeId = null;
+            
+            // save the narrative!
+            IPython.notebook.save_checkpoint();
+
+
+            this.refresh(false);
             return true;
-            // return result[jobId];
         },
 
         /**
@@ -337,6 +344,12 @@
             this.$jobsPanel.show();
         },
 
+        /**
+         * @method
+         * Registers a job with the Narrative. This adds its job id and source of the job (the cell that started it) to 
+         * the narrative metadata. It also starts caching the state internally to the jobs panel. Once all this is done,
+         * so the user doesn't accidentally lose the job, it triggers a narrative save.
+         */
         registerJob: function(jobInfo, isApp) {
             // Check to make sure the Narrative has been instantiated to begin with.
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel || !IPython.notebook.metadata)
@@ -361,8 +374,10 @@
             // put a stub in the job states
             this.jobStates[jobInfo.id] = $.extend({}, jobInfo, {'status' : null, '$elem' : 'null'});
             this.source2Job[jobInfo.source] = jobInfo.id;
-            this.refresh();
+            // save the narrative!
             IPython.notebook.save_checkpoint();
+
+            this.refresh();
         },
 
         /*
@@ -386,11 +401,13 @@
          * @private
          */
         jobIsIncomplete: function(status) {
-            return (status !== 'completed' && 
-                    status !== 'error' && 
-                    status !== 'done' && 
-                    status !== 'deleted' &&
-                    status !== 'suspend');
+            if (!status)
+                return true;
+            return (status.toLowerCase().indexOf('completed') === -1 && 
+                    status.toLowerCase().indexOf('error') === -1 && 
+                    status.toLowerCase().indexOf('done') === -1 &&
+                    status.toLowerCase().indexOf('deleted') === -1 &&
+                    status.toLowerCase().indexOf('suspend') === -1);
         },
 
         /**
@@ -436,12 +453,10 @@
 
             for (var jobId in this.jobStates) {
                 var jobState = this.jobStates[jobId];
-
-//                jobInfo[jobId] = {'state' : jobState};
-
                 // if the job's incomplete, we have to go get it.
                 var jobIncomplete = this.jobIsIncomplete(jobState.status);
-                // 2. The type dictates what cell it came from and how to deal with the inputs.
+
+                // The type dictates what cell it came from and how to deal with the inputs.
                 var jobType = this.jobTypeFromId(jobId);
                 var specInfo = null;
                 var $sourceCell = $('#' + jobState.source);
@@ -574,10 +589,9 @@
         populateJobsPanel: function(fetchedJobStatus, jobInfo) {
             if (!this.jobStates || Object.keys(this.jobStates).length === 0) {
                 this.showMessage('No running jobs!');
+                this.setJobCounter(0);
                 return;
             }
-
-            // console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
 
             // Instantiate a shiny new panel to hold job info.
             var $jobsList = $('<div>').addClass('kb-jobs-items');
@@ -853,7 +867,6 @@
             var $errBtn = $('<div>')
                           .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
                           .append('<span class="fa fa-warning" style="color:white"></span>');
-//            $errBtn.addClass('btn btn-danger btn-xs kb-data-list-more-btn fa fa-warning');
             if (btnText)
                 $errBtn.append(' ' + btnText);
             $errBtn.click($.proxy(function(e) {

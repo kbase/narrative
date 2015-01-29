@@ -13,7 +13,6 @@
             treeID: null,
             workspaceID: null,
             treeObjVer: null,
-            jobID: null,
             kbCache: null,
             workspaceURL: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
             loadingImage: "static/kbase/images/ajax-loader.gif",
@@ -21,7 +20,6 @@
             height: null,
         },
 
-        treeWsRef: null,
         pref: null,
         timer: null,
         loadingImage: "static/kbase/images/ajax-loader.gif",
@@ -58,60 +56,12 @@
         render: function() {
         	this.wsClient = new Workspace(this.options.workspaceURL, {token: this.token});
             this.loading(false);
-            if (this.treeWsRef || this.options.jobID == null) {
-            	this.loadTree();
-            } else {
-                var self = this;
-                var jobSrv = new UserAndJobState(self.options.ujsServiceURL, {token: this.token});
-                self.$elem.empty();
-
-            	var panel = $('<div class="loader-table"/>');
-            	self.$elem.append(panel);
-            	var table = $('<table class="table table-striped table-bordered" \
-            			style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table"/>');
-            	panel.append(table);
-            	table.append('<tr><td>Job was created with id</td><td>'+self.options.jobID+'</td></tr>');
-            	table.append('<tr><td>Output result will be stored as</td><td>'+self.options.treeID+'</td></tr>');
-            	table.append('<tr><td>Current job state is</td><td id="'+self.pref+'job"></td></tr>');
-            	var timeLst = function(event) {
-            		jobSrv.get_job_status(self.options.jobID, function(data) {
-            			var status = data[2];
-            			var complete = data[5];
-            			var wasError = data[6];
-        				var tdElem = $('#'+self.pref+'job');
-        				if (status === 'running') {
-        					tdElem.html(status+"... &nbsp &nbsp <img src=\""+self.loadingImage+"\">");
-                        } else {
-            				tdElem.html(status);
-                        }
-            			if (complete === 1) {
-            				clearInterval(self.timer);
-            				if (this.treeWsRef) {
-            					// Just skip all this cause data was already showed through setState()
-            				} else {
-            					if (wasError === 0) {
-            						self.loadTree();
-            					}
-            				}
-            			}
-            		}, function(data) {
-        				clearInterval(self.timer);
-        				if (this.treeWsRef) {
-        					// Just skip all this cause data was already showed through setState()
-        				} else {
-        					var tdElem = $('#'+self.pref+'job');
-        					tdElem.html("Error accessing job status: " + data.error.message);
-        				}
-            		});
-            	};
-            	timeLst();
-            	self.timer = setInterval(timeLst, 5000);
-            }
+            this.loadTree();
         },
         
         loadTree: function() {
             var prom;
-            var objId = this.buildObjectIdentity(this.options.workspaceID, this.options.treeID, this.options.treeObjVer, this.treeWsRef);
+            var objId = this.buildObjectIdentity(this.options.workspaceID, this.options.treeID, this.options.treeObjVer, null);
             if (this.options.kbCache)
                 prom = this.options.kbCache.req('ws', 'get_objects', [objId]);
             else
@@ -134,10 +84,6 @@
 
                 watchForWidgetMaxWidthCorrection(canvasDivId);
 
-            	if (!self.treeWsRef) {
-            		var info = objArr[0].info;
-            		self.treeWsRef = info[6] + "/" + info[0] + "/" + info[4];
-            	}
                 var tree = objArr[0].data;
 
                 var refToInfoMap = {};
@@ -254,22 +200,6 @@
                     var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
-        },
-
-        getState: function() {
-            var self = this;
-            var state = {
-            	treeWsRef: self.treeWsRef
-            };
-            return state;
-        },
-
-        loadState: function(state) {
-            var self = this;
-            if (state && state.treeWsRef) {
-                self.treeWsRef = state.treeWsRef;
-                self.render();
-            }
         },
 
         loggedInCallback: function(event, auth) {

@@ -12,12 +12,10 @@
         ws_id: null,
         ws_name: null,
         token: null,
-        job_id: null,
         width: 1150,
         options: {
             ws_id: null,
-            ws_name: null,
-            job_id: null
+            ws_name: null
         },
         loadingImage: "static/kbase/images/ajax-loader.gif",
         wsUrl: window.kbconfig.urls.workspace,
@@ -28,8 +26,6 @@
 
             this.ws_name = options.ws_name;
             this.ws_id = options.ws_id;
-            if (options.job_id)
-            	this.job_id = options.job_id;
             if (options.ws && options.id) {
                   this.ws_id = options.id;
                   this.ws_name = options.ws;
@@ -320,45 +316,7 @@
             		container.append('<p>[Error] ' + data.error.message + '</p>');
             	});            	
             };
-
-            /*if (self.job_id) {
-            	container.empty();
-                var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.token});
-            	var panel = $('<div class="loader-table"/>');
-            	container.append(panel);
-            	var table = $('<table class="table table-striped table-bordered" \
-            			style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-            	panel.append(table);
-            	table.append('<tr><td>Job was created with id</td><td>'+self.job_id+'</td></tr>');
-            	table.append('<tr><td>Genome will have the id</td><td>'+self.ws_id+'</td></tr>');
-            	table.append('<tr><td>Current job state is</td><td id="'+pref+'job"></td></tr>');
-            	var timeLst = function(event) {
-            		jobSrv.get_job_status(self.job_id, function(data) {
-            			var status = data[2];
-            			var complete = data[5];
-            			var wasError = data[6];
-        				var tdElem = $('#'+pref+'job');
-        				tdElem.html(status);
-					if (status === 'running') {
-                                            tdElem.html(status+"... &nbsp &nbsp <img src=\""+self.loadingImage+"\">");
-                                        }
-            			if (complete === 1) {
-            				clearInterval(self.timer);
-            				if (wasError === 0) {
-            		            ready();
-            				}
-            			}
-            		}, function(data) {
-        				clearInterval(self.timer);
-        				var tdElem = $('#'+pref+'job');
-        				tdElem.html("Error accessing job status: " + data.error.message);
-            		});
-            	};
-            	self.timer = setInterval(timeLst, 5000);
-            	timeLst();
-            } else {*/
             ready();
-            //}
             return this;
         },
         

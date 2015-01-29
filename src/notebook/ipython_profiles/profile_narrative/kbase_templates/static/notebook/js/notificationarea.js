@@ -13,6 +13,10 @@ var IPython = (function (IPython) {
     "use strict";
     var utils = IPython.utils;
 
+    var websocketDisconnectMsg = "<p>Your Narrative's connection to KBase has been lost.</p>" +
+                                 "<p>You will not be able to run KBase apps, use code cells, or save any changes.</p>" +
+                                 "<p>Please check your network connection and click 'Reconnect' to try again</p>" +
+                                 "<p>If this persists, try restarting your browser, or notify <a href='mailto:help@kbase.us' target='_blank'>help@kbase.us</a>.</p>";
 
     var NotificationArea = function (selector) {
         this.selector = selector;
@@ -127,11 +131,13 @@ var IPython = (function (IPython) {
                 return;
             }
             console.log('WebSocket connection failed: ', ws_url)
-            msg = "A WebSocket connection to could not be established." +
-                " You will NOT be able to run code. Check your" +
-                " network connection or notebook server configuration.";
+            // msg = "A WebSocket connection to could not be established." +
+            //     " You will NOT be able to run code. Check your" +
+            //     " network connection or notebook server configuration.";
+            msg = websocketDisconnectMsg;
+
             IPython.dialog.modal({
-                title: "WebSocket connection failed",
+                title: "Narrative connection lost!",
                 body: msg,
                 buttons : {
                     "OK": {},

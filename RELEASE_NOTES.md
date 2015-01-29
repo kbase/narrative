@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.4.7 - 1/28/2015
+__Changes__
+- Changed Narrative tutorial link to the new one on staging.kbase.us
+- JIRA NAR-444 - Changed websocket error dialog to something much more user-readable and KBase-appropriate.
+
 ### Version 0.4.6 - 1/28/2015
 __Changes__
 - Added another separate page when a narrative is not found (not just unauthorized)

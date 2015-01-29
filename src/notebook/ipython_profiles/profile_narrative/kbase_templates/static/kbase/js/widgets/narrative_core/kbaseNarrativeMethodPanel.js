@@ -4,7 +4,7 @@
  * (unless functions were passed in on construction).
  *
  * Each function is presented in a list (for now - accordion may be coming soon)
- * and when clicked will fire a "function_clicked.narrative" event.
+ * and when clicked will fire a "methodClicked.narrative" event.
  *
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
@@ -381,7 +381,7 @@
         /**
          * Creates and returns a list item containing info about the given narrative function.
          * Clicking the function anywhere outside the help (?) button will trigger a
-         * function_clicked.Narrative event. Clicking the help (?) button will trigger a
+         * methodClicked.Narrative event. Clicking the help (?) button will trigger a
          * function_help.Narrative event.
          *
          * Both events have the relevant data passed along with them for use by the responding
@@ -426,15 +426,9 @@
                                         .attr('href', this.options.methodHelpLink + method.info.id)));
 
             var $moreBtn = $('<span>')
-                           //.addClass('btn btn-default btn-xs kb-data-list-more-btn pull-right fa fa-ellipsis-h')
                            .addClass('kb-data-list-more fa fa-ellipsis-h')
                            .attr('aria-hidden', 'true')
                            .css({'color' : '#999'});
-                           /* click behavior is now attached to entire row...
-                            .click(function(e) {
-                               $more.slideToggle('fast', $.proxy(function() {
-                                }, this));
-                           });*/
 
             var $mainDiv = $('<div>')
                            .addClass('kb-data-list-info')

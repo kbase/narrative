@@ -3,6 +3,17 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.4.6 - 1/28/2015
+__Changes__
+- Added another separate page when a narrative is not found (not just unauthorized)
+
+__Bugfixes__
+- Fixed issue with deployment script not auto-shutting-down all non-attached instances
+- NAR-500 - completed UJS jobs should stay completed
+- NAR-562 - job deletion should work right, and if a deletion fails, it shouldn't break the jobs panel
+- When a user tries to delete a job, it should always remove that job
+- NAR-484 - long job names should wrap now
+
 ### Version 0.4.5 - 1/28/2015
 __Changes__
 - Changed endpoint URLs for transform service and job service

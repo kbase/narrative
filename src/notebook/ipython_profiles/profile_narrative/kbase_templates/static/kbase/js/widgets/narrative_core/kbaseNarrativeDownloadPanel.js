@@ -26,9 +26,10 @@
         exportURL: window.kbconfig.urls.data_import_export,
         timer: null,
         
-        downloaders: {  // type -> {name: ..., external_type: ...[, transform_options: ...]}
-        	'KBaseGenomes.ContigSet': [{name: 'FASTA', external_type: 'FASTA.DNA.Assembly', transform_options: {"output_file_name": "fs.fasta"}}],
-        	'KBaseGenomes.Genome': [{name: "GENBANK", external_type: 'Genbank.Genome', transform_options: {}}]
+        downloaders: {  // type -> {name: ..., external_type: ...[, transform_options: ...[, unzip: <file_ext>]}
+        	'KBaseGenomes.ContigSet': [{name: 'FASTA', external_type: 'FASTA.DNA.Assembly', transform_options: {output_file_name: '?.fasta'}, unzip: 'fasta'}],
+        	'KBaseGenomes.Genome': [{name: "GENBANK", external_type: 'Genbank.Genome', transform_options: {}}],
+        	'KBaseAssembly.SingleEndLibrary': [{name: "FASTQ", external_type: 'SequenceReads', transform_options: {output_file_name: '?.fastq'}, unzip: 'fastq'}]
         },
 
         init: function(options) {
@@ -47,7 +48,8 @@
     		downloadPanel.append($('<button>').addClass('kb-data-list-btn')
                     .append('Download as JSON')
                     .click(function() {
-                    	var url = self.exportURL + '/download?ws='+self.wsId+'&id='+self.objId+'&token='+self.token;
+                    	var url = self.exportURL + '/download?ws='+self.wsId+'&id='+self.objId+'&token='+self.token+
+                    		'&url='+encodeURIComponent(self.wsUrl);
                     	self.downloadFile(url);
                     }));
     		var addDownloader = function(descr) {
@@ -60,6 +62,9 @@
     		var downloaders = self.prepareDownloaders(self.type, self.wsId, self.objId);
     		for (var downloadPos in downloaders)
     			addDownloader(downloaders[downloadPos]);
+    		downloadPanel.append('<br>').append($('<button>').addClass('kb-data-list-cancel-btn')
+                    .append('Hide Download')
+                    .click(function() {downloadPanel.empty();} ));
             var modalLabel = "app-warning-modal-lablel-"+ self.uuid();
             self.$warningModal = $('<div tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="position:auto">').addClass("modal fade");
             self.getDownloadDialogEmptyPanel().append(self.$warningModal);
@@ -95,11 +100,28 @@
         },
         
         prepareDownloaders: function(type, wsId, objId) {
-        	var ret = this.downloaders[type];
+        	var descrList = this.downloaders[type];
+        	var ret = [];
+        	for (var descrPos in descrList) {
+        		var descr = descrList[descrPos];
+        		var retDescr = {name: descr.name, external_type: descr.external_type, unzip: descr.unzip};
+        		ret.push(retDescr);
+        		if (descr.transform_options) {
+        			retDescr.transform_options = {};
+        			for (var key in descr.transform_options) {
+        				if (!descr.transform_options.hasOwnProperty(key))
+        					continue;
+        				var value = descr.transform_options[key];
+        				if (value.indexOf('?') == 0)
+        					value = objId + value.substring(1);
+        				retDescr.transform_options[key] = value;
+        			}
+        		}
+        	}
         	return ret;
         },
         
-        runDownloader: function(type, wsId, objId, descr) { // descr is {name: ..., external_type: ...[, transform_options: ...]}
+        runDownloader: function(type, wsId, objId, descr) { // descr is {name: ..., external_type: ...[, transform_options: ...[, unzip: ...]]}
             var self = this;
             self.showMessage('Download status: Preparing server-side data');
             self.$warningModal.modal('show');
@@ -114,7 +136,7 @@
             		$.proxy(function(data) {
             			console.log(data);
             			var jobId = data[1];
-            			self.waitForJob(jobId, objId);
+            			self.waitForJob(jobId, objId, descr.unzip);
             		}, this),
             		$.proxy(function(data) {
             			console.log(data.error.error);
@@ -123,7 +145,7 @@
             );
         },
 
-        waitForJob: function(jobId, wsObjectName) {
+        waitForJob: function(jobId, wsObjectName, unzip) {
             var self = this;
             var jobSrv = new UserAndJobState(this.ujsURL, {token: this.token});
 			var timeLst = function(event) {
@@ -141,7 +163,7 @@
 								self.$warningModal.modal('hide');
 					        	self.$warningModal = null;
 								console.log(data);
-								self.downloadUJSResults(data, wsObjectName);
+								self.downloadUJSResults(data, wsObjectName, unzip);
 							}, function(data) {
             					console.log(data.error.message);
                     			self.showError(data.error.message);
@@ -164,7 +186,7 @@
 			timeLst();
         },
         
-        downloadUJSResults: function(ujsResults, wsObjectName) {
+        downloadUJSResults: function(ujsResults, wsObjectName, unzip) {
         	var self = this;
 			var shockNode = ujsResults.shocknodes[0];
 			var elems = shockNode.split('/');
@@ -177,7 +199,15 @@
         	var shockClient = new ShockClient({url: self.shockURL, token: self.token});
         	var downloadShockNodeWithName = function(name) {
     			var url = self.exportURL + '/download?id='+shockNode+'&token='+
-    				encodeURIComponent(self.token)+'&name='+encodeURIComponent(name);
+    				encodeURIComponent(self.token)+'&del=1';
+    			if (unzip) {
+    				url += '&zip='+encodeURIComponent(unzip);
+    			} else {
+    				url += '&name='+encodeURIComponent(name);
+    			}
+    			var remoteShockUrl = ujsResults.shockurl;
+    			if (remoteShockUrl)
+    				url += '&url='+encodeURIComponent(remoteShockUrl);
     			self.downloadFile(url);
         	};
         	/*shockClient.get_node(shockNode, function(data) {

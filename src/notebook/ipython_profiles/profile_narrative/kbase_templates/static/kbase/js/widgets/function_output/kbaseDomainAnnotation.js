@@ -219,6 +219,8 @@
 
                             ////////////////////////////// Build Gene Domains table //////////////////////////////
                             var tabContent = $("<div/>");
+
+
                             var tableGeneDomains = $('<table class="table table-striped table-bordered" '+
                                 'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="' + self.pref + id + '-table"/>');
                             tabContent.append(tableGeneDomains);
@@ -247,25 +249,18 @@
                             var geneStart = gene[1];
                             var geneEnd = gene[2];
                             var domainsInfo = gene[4];
+
+
                             for(var domainId in domainsInfo){
                                 var domainsArray = domainsInfo[domainId];
                                 for(var i = 0 ; i < domainsArray.length; i++){
                                     var domainStart = domainsArray[i][0];
                                     var domainEnd = domainsArray[i][1];
                                     var eValue = domainsArray[i][2];
-/*
-                                    var domainSignature = domainId + "_" + domainStart + "_" + domainEnd;
-                                    if(uniqueDomains[domainSignature] == undefined){
-                                        uniqueDomains[domainSignature] = "";
-                                    } else {
-                                        // Because we might have several SAME domain annotations that came from 
-                                        // different DomainAnnotation objects linked to a given genome
-                                        continue;
-                                    } 
-*/
 
-                                    var domainImgWidth = (domainEnd - domainStart)*100/(geneEnd - geneStart);
-                                    var  domainImgleftShift = (domainStart)*100/(geneEnd - geneStart);
+                                    var geneLength = (geneEnd - geneStart + 1)/3;
+                                    var domainImgWidth = (domainEnd - domainStart)*100/geneLength;
+                                    var domainImgleftShift = (domainStart)*100/geneLength;
 
                                     geneDomainsTableData.push({
                                         'contigId' : contigId,
@@ -274,11 +269,11 @@
                                         'geneEnd' : geneEnd,
                                         'domainId' : domainId,
                                         'domainDescription' : self.domainAccession2Description[domainId],
-                                        'domainStart': Math.round(domainStart/3),
-                                        'domainEnd' : Math.round(domainEnd/3),
+                                        'domainStart': domainStart, 
+                                        'domainEnd' : domainEnd, 
                                         'eValue' : eValue,
                                         'image' : 
-                                                '<div style="widht: 100%; height:100%; vertical-align: middle;">'
+                                                '<div style="widht: 100%; height:100%; vertical-align: middle; margin-top: 1em; margin-bottom: 1em;">'
                                                 + '<div style="position:relative; border: 1px solid gray; width:100%; height:2px;">' 
                                                 + '<div style="position:relative; left: ' + domainImgleftShift +'%;' 
                                                 + ' width:' + domainImgWidth + '%;'

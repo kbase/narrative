@@ -304,6 +304,10 @@
 
             // nuke the removeId
             this.removeId = null;
+            
+            // save the narrative!
+            IPython.notebook.save_checkpoint();
+
 
             this.refresh(false);
             return true;

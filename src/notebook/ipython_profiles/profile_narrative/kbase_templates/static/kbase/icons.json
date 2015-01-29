@@ -12,7 +12,7 @@
     "ExpressionSample": ["fa-arrows"],
     "ExpressionSeries": ["fa-arrows"],
     "FBA": ["fa-exchange"],
-    "FBAModel": ["fa-exchange fa-rotate-90"],
+    "FBAModel": ["fa-exchange"],
     "Media": ["fa-eyedropper"],
     "ReferenceAssembly": ["fa-book"],
     "Metagenome": ["fa-group"],

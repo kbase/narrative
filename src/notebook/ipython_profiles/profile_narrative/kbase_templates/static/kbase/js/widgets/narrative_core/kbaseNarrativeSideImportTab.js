@@ -402,7 +402,7 @@
             	}
             } else if (self.selectedType === 'Transcript') {
             	if (methodId === 'import_transcript_file') {
-            		var options = {'dna':self.asBool(params['dna']),
+            		var options = {'dna':self.asInt(params['dna']),
             				"output_file_name": "transcripts.json"};
             		var genomeId = params['genomeId'];
             		if (genomeId)

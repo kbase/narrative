@@ -44,24 +44,22 @@
 			        for (var i=0; i<d.members.length; i++) {
 				        idList.push({ ref: d.members[i].URL });
 			        }
-			        console.log(idList);
                 
                     if (idList.length > 0) {
 			            kbws.get_objects(idList, function(resData) {
                             var tdata = [];
                             for (var i=0; i<resData.length; i++) {
-                                console.log(resData[i].data.id);
-                                tdata.push({
-                                    "id": resData[i].data.id,
-                                    "name": resData[i].data.name,
-                                    "project name": resData[i].data.mixs.project_name,
-                                    "PI lastname": resData[i].data.mixs.PI_lastname,
-                                    "biome": resData[i].data.mixs.biome,
-                                    "sequence type": resData[i].data.mixs.sequence_type,
-                                    "sequencing method": resData[i].data.mixs.seq_method,
-                                    "status": resData[i].data["status"],
-                                    "created": resData[i].data.created
-                                });
+                                tdata.push([
+                                    resData[i].data.id,
+                                    resData[i].data.name,
+                                    resData[i].data.mixs.project_name,
+                                    resData[i].data.mixs.PI_lastname,
+                                    resData[i].data.mixs.biome,
+                                    resData[i].data.mixs.sequence_type,
+                                    resData[i].data.mixs.seq_method,
+                                    resData[i].data["status"],
+                                    resData[i].data.created
+                                ]);
                             }
                         
 				            var tlen = 0;
@@ -74,7 +72,7 @@
 
 				            var tableCollection = standaloneTable.create({index: tlen});
                             tableCollection.settings.target = document.getElementById("collectionTable"+tlen);
-                            tableCollection.settings.data = { header: ["ID", "name", "Project", "PI", "biome", "seq.type", "seq.method", "status", "created"], data: tdata };
+                            tableCollection.settings.data = { header: ["ID", "name", "Project", "PI", "biome", "sequence type", "sequencing method", "status", "created"], data: tdata };
                             tableCollection.render(tlen);
 			            });
 		            } else {

@@ -10,6 +10,7 @@ __Changes__
 - Single file download mode was switched off
 - Zip file mode including provenance info was supported for JSON format download
 - Added lots of new icons for data and apps
+- Updated some of the button styles in the data panels
 
 __Bugfixes__
 - Fixed issue with synchronous methods being treated as asynchronous, and not showing any output.

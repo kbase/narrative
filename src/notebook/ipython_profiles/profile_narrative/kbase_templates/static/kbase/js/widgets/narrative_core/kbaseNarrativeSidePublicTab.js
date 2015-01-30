@@ -55,6 +55,7 @@
                         //console.log('side panel import tab -- setting ws to ' + info.wsId);
                         self.wsName = info.wsId;
                         self.data_icons = window.kbconfig.icons.data;
+                        self.render();
             		}, this)
             );
             return this;
@@ -62,7 +63,9 @@
 
         render: function() {
         	var self = this;
-
+        	if (!self.data_icons)
+        		return;
+        	
             this.wsClient = new Workspace(this.wsUrl, {'token': this.token});
             var mrg = {'margin': '10px 0px 10px 0px'};
             var typeInput = $('<select class="form-control kb-import-filter">').css(mrg);
@@ -329,7 +332,7 @@
 
             var $addDiv =
                 $('<div>').append(
-                    $('<button>').addClass('btn btn-default')
+                    $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
                         .append($('<span>').addClass('fa fa-chevron-circle-left').append(' Add'))
                         .on('click',function() { // probably should move action outside of render func, but oh well
                             $(this).attr("disabled","disabled");
@@ -409,7 +412,12 @@
             }
 
       var icons = this.data_icons;
-      var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
+      var icon = null;
+      if (icons) {
+    	  icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
+      } else {
+    	  ison = [];
+      }
       var $logo = $('<span>')
       // background circle
       .addClass("fa-stack fa-2x").css({'cursor':'pointer'})

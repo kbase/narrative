@@ -329,7 +329,7 @@
 
             var $addDiv =
                 $('<div>').append(
-                    $('<button>').addClass('btn btn-default')
+                    $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
                         .append($('<span>').addClass('fa fa-chevron-circle-left').append(' Add'))
                         .on('click',function() { // probably should move action outside of render func, but oh well
                             $(this).attr("disabled","disabled");

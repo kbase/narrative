@@ -629,7 +629,7 @@
             var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td');
             this.displayRealName(object_info[5],$savedByUserSpan);
 
-            var $alertDiv = $('<div>').css({'text-align':'center','margin':'10px'});
+            var $alertDiv = $('<div>').css({'text-align':'center','margin':'10px 0px'});
             var typeLink = '<a href="'+this.options.landing_page_url+'spec/module/'+type_module+'" target="_blank">' +type_module+"</a>.<wbr>" +
                            '<a href="'+this.options.landing_page_url+'spec/type/'+object_info[2]+'" target="_blank">' +(type_tokens[1].replace('-','&#8209;')) + '.' + type_tokens[2] + '</a>';
             var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()

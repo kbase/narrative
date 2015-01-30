@@ -38,6 +38,8 @@
         refreshTimer: null,
         refreshInterval: 10000,
 
+        completedStatus: [ 'completed', 'done', 'deleted', 'suspend' ],
+
         init: function(options) {
             this._super(options);
             this.title.append(this.$jobCountBadge);
@@ -403,11 +405,17 @@
         jobIsIncomplete: function(status) {
             if (!status)
                 return true;
-            return (status.toLowerCase().indexOf('completed') === -1 && 
-                    status.toLowerCase().indexOf('error') === -1 && 
-                    status.toLowerCase().indexOf('done') === -1 &&
-                    status.toLowerCase().indexOf('deleted') === -1 &&
-                    status.toLowerCase().indexOf('suspend') === -1);
+
+            status = status.toLowerCase();
+            // if status matches any of the possible cases in this.completedStatus, 
+            // return true
+            for (var i=0; i<this.completedStatus; i++) {
+                if (status.indexOf(this.completedStatus[i]) !== -1)
+                    return false;
+            }
+            if (status === 'error')
+                return false;
+            return true;
         },
 
         /**
@@ -932,14 +940,25 @@
                                   .append(this.makeInfoRow('Id', jobId))
                                   .append(this.makeInfoRow('Type', errorType))
                                   .append(this.makeInfoRow('Error', errorText));
-                if (jobState.state.traceback) {
-                    $errorTable.append(this.makeInfoRow('Traceback', '<pre class="kb-jobs-error-modal"><code>' + jobState.state.traceback + '</code></pre>'));
-                }
+                // if (jobState.state.traceback) {                    
+                //     $errorTable.append(this.makeInfoRow('Traceback', '<pre class="kb-jobs-error-modal"><code>' + jobState.state.traceback + '</code></pre>'));
+                // }
  
                 this.$jobsModalBody.empty();
                 this.$jobsModalBody.append($('<div>').append(headText))
-                                   .append($errorTable)
-                                   .append($('<div>').append(removeText));
+                                   .append($errorTable);
+                if (jobState.state.traceback) {
+                    var $tb = $('<div>');
+                    $tb.kbaseAccordion({
+                        elements: [{
+                            title: 'Detailed Error Information',
+                            body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
+                        }]
+                    });
+                    this.$jobsModalBody.append($tb);
+                }
+
+                this.$jobsModalBody.append($('<div>').append(removeText));
                 this.$jobsModal.openPrompt();
             }, this));
             return $errBtn;
@@ -1195,7 +1214,5 @@
                 return d;
             }
         },
-
-
     });
 })( jQuery );

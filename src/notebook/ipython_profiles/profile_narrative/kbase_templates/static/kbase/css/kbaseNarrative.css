@@ -1477,6 +1477,9 @@ div#notebook_panel {
 .kb-jobs-error-modal {
     width: 485px;
     word-wrap: break-word;
+    max-height: 220px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /** new method parameter styling **/

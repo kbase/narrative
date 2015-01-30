@@ -133,7 +133,7 @@
 	        };
 	    
 	        for (var i=0 ; i<items.length;i++){
-		        collection.members[i] = {'ID': items[i].id, 'URL': ""};
+		        collection.members[i] = {'ID': items[i].id, 'URL': items[i].wsid+"/"+items[i].wsitem};
 	        }
 	    
 	        var object_data = {

@@ -27,9 +27,9 @@
         timer: null,
         
         downloaders: {  // type -> {name: ..., external_type: ...[, transform_options: ...[, unzip: <file_ext>]}
-        	'KBaseGenomes.ContigSet': [{name: 'FASTA', external_type: 'FASTA.DNA.Assembly', transform_options: {output_file_name: '?.fasta'}, unzip: 'fasta'}],
+        	'KBaseGenomes.ContigSet': [{name: 'FASTA', external_type: 'FASTA.DNA.Assembly', transform_options: {output_file_name: 'fs.fasta'}}],
         	'KBaseGenomes.Genome': [{name: "GENBANK", external_type: 'Genbank.Genome', transform_options: {}}],
-        	'KBaseAssembly.SingleEndLibrary': [{name: "FASTQ", external_type: 'SequenceReads', transform_options: {output_file_name: '?.fastq'}, unzip: 'fastq'}]
+        	'KBaseAssembly.SingleEndLibrary': [{name: "FASTQ", external_type: 'SequenceReads', transform_options: {output_file_name: '?.fastq'}}]
         },
 
         init: function(options) {
@@ -201,7 +201,7 @@
     			var url = self.exportURL + '/download?id='+shockNode+'&token='+
     				encodeURIComponent(self.token)+'&del=1';
     			if (unzip) {
-    				url += '&zip='+encodeURIComponent(unzip);
+    				url += '&unzip='+encodeURIComponent(unzip);
     			} else {
     				url += '&name='+encodeURIComponent(name);
     			}

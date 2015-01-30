@@ -2255,7 +2255,7 @@ div[class="tooltip-inner"] {
 
 .kb-import-content {
     position:relative;
-    margin: 0 0 0 15px;
+    margin: 0 0 0 0px;
     overflow-x: hidden;
     overflow-y: auto;
     /*height: 830px;*/

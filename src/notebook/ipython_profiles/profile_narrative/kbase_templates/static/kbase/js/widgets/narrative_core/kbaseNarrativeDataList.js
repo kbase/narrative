@@ -115,14 +115,14 @@
             this.$elem.append($mainListDivContainer);
 
             if (window.kbconfig === undefined || window.kbconfig.urls === undefined ||
-                window.kbconfig.data_icons === undefined) {
+                window.kbconfig.icons === undefined) {
               // bail out now
               alert("Failed to load base configuration! Aborting narrative now.");
               window.location = "/"; //XXX: Need to load the error page!!
             }
             this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             this.options.ws_url = window.kbconfig.urls.workspace;
-            this.data_icons = window.kbconfig.data_icons;
+            this.data_icons = window.kbconfig.icons.data;
 
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
@@ -179,7 +179,7 @@
                     },
                     function(error) {
                         console.error(error);
-                        
+
                         self.$mainListDiv.show();
                         self.$mainListDiv.empty();
                         self.$mainListDiv.append($('<div>').css({'color':'#F44336','margin':'10px'})
@@ -565,23 +565,26 @@
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
             var unversioned_full_type = type_module + '.' + type;
-            var logo_name = "";
-            if (_.has(this.data_icons, type)) {
-              logo_name = this.data_icons[type];
-            }
-            else {
-              logo_name = this.data_icons['DEFAULT'];
-            }
-            var logo_url = "static/kbase/images/data-icons/" + logo_name + ".png";
+            var icons = this.data_icons;
+            var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
+            var icon_cls = icon.join(' ');
             var $logo = $('<div>')
-                            .addClass("kb-data-list-logo")
-                            .css({'background-image': 'url(' + logo_url + ')',
-                                  'background-color':this.logoColorLookup(type),'cursor':'pointer'})
-                            //.append(type.substring(0,1))
-                            .click(function(e) {
-                                e.stopPropagation();
-                                self.insertViewer(object_key);
-                            });
+              // background circle
+              .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
+              .append($('<i>')
+                .addClass("fa fa-circle fa-stack-2x")
+                .css({'color':this.logoColorLookup(type)}));
+            // add stack of font-awesome icons
+            _.each(icon, function(cls) {
+              $logo.append($('<i>')
+                .addClass("fa fa-inverse fa-stack-1x " + cls));
+            });
+            // add behavior
+            $logo.click(function(e) {
+                e.stopPropagation();
+                self.insertViewer(object_key);
+            });
+
             var shortName = object_info[1]; var isShortened=false;
             if (shortName.length>this.options.max_name_length) {
                 shortName = shortName.substring(0,this.options.max_name_length-3)+'...';
@@ -788,7 +791,7 @@
             	$(cell.element).off('keydown');
             }
             console.log(cell, near_idx);
-            
+
             //var cell_id = self.genUUID();
             //cell.rendered = false;
             //cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');

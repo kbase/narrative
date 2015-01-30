@@ -22,7 +22,7 @@
         wsUrl: "https://kbase.us/services/ws/",
         wsClient: null,
         categories: ['genomes', 'metagenomes', 'media', 'plant_gnms'
-                     /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations', 
+                     /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations',
                      'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'*/ ],
         categoryDescr: {  // search API category -> {}
         	'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV4',search:true},
@@ -46,7 +46,7 @@
         currentPage: null,
         totalResults: null,
         itemsPerPage: 20,
-        
+
         init: function(options) {
             this._super(options);
             var self = this;
@@ -54,14 +54,15 @@
             		'setWorkspaceName.Narrative', $.proxy(function(e, info) {
                         //console.log('side panel import tab -- setting ws to ' + info.wsId);
                         self.wsName = info.wsId;
+                        self.data_icons = window.kbconfig.icons.data;
             		}, this)
             );
             return this;
         },
-        
+
         render: function() {
         	var self = this;
-        	
+
             this.wsClient = new Workspace(this.wsUrl, {'token': this.token});
             var mrg = {'margin': '10px 0px 10px 0px'};
             var typeInput = $('<select class="form-control kb-import-filter">').css(mrg);
@@ -80,7 +81,7 @@
             });
 
             var searchFilter = $('<div class="col-sm-9">').append(filterInput);
-            
+
             var header = $('<div class="row">').css({'margin': '0px 10px 0px 10px'}).append(typeFilter).append(searchFilter);
             self.$elem.append(header);
             self.totalPanel = $('<div>').css({'margin': '0px 0px 0px 10px'});
@@ -126,7 +127,7 @@
         	self.totalResults = null;
         	self.renderMore();
         },
-        
+
         renderMore: function() {
         	var self = this;
         	var cat = self.categoryDescr[self.currentCategory];
@@ -280,7 +281,7 @@
         		});
         	}
         },
-        
+
         attachRow: function(index) {
             var obj = this.objectList[index];
             if (obj.attached) { return; }
@@ -300,7 +301,7 @@
 
         search: function (category, query, itemsPerPage, pageNum, ret, errorCallback) {
         	var escapedQ = this.escapeSearchQuery(query);
-        	var url = this.searchUrlPrefix + '?itemsPerPage=' + itemsPerPage + '&' + 
+        	var url = this.searchUrlPrefix + '?itemsPerPage=' + itemsPerPage + '&' +
         		'page=' + pageNum + '&q=' + encodeURIComponent(escapedQ) + '&category=' + category;
         	var promise = jQuery.Deferred();
         	jQuery.ajax(url, {
@@ -316,7 +317,7 @@
         		headers: {},
         		type: "GET"
         	});
-        	
+
         	return promise;
         },
 
@@ -325,7 +326,7 @@
             var type_tokens = object.type.split('.')
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
-            
+
             var $addDiv =
                 $('<div>').append(
                     $('<button>').addClass('btn btn-default')
@@ -333,7 +334,7 @@
                         .on('click',function() { // probably should move action outside of render func, but oh well
                             $(this).attr("disabled","disabled");
                             $(this).html('<img src="'+self.loadingImage+'">');
-                            
+
                             var thisBtn = this;
                             var targetName = object.name;
                             if (!isNaN(targetName))
@@ -360,10 +361,10 @@
                                     }
                                     console.error(error);
                                 });
-                            
+
                         }));
-            
-            var shortName = object.name; 
+
+            var shortName = object.name;
             var isShortened=false;
             if (shortName.length>this.maxNameLength) {
                 shortName = shortName.substring(0,this.maxNameLength-3)+'...';
@@ -377,7 +378,7 @@
             }
             var $name = $('<span>').addClass("kb-data-list-name").append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
             if (isShortened) { $name.tooltip({title:object.name, placement:'bottom'}); }
-           
+
             var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
             var btnClasses = "btn btn-xs btn-default";
             var css = {'color':'#888'};
@@ -390,7 +391,7 @@
                                             e.stopPropagation();
                                             window.open(landingPageLink);
                                         });
-                                        
+
             var $openProvenance = $('<span>')
                                         .addClass(btnClasses).css(css)
                                         //.tooltip({title:'View data provenance and relationships', 'container':'body'})
@@ -400,13 +401,27 @@
                                             window.open(self.options.landing_page_url+'objgraphview/'+object.ws+'/'+object.id);
                                         });
             $btnToolbar.append($openLandingPage).append($openProvenance);
-		
+
             var titleElement = $('<span>').css({'margin':'10px'}).append($btnToolbar.hide()).append($name);
             for (var key in object.metadata) {
             	var value = $('<span>').addClass("kb-data-list-type").append('&nbsp;&nbsp;' + key + ':&nbsp;' + object.metadata[key]);
             	titleElement.append('<br>').append(value);
             }
-            
+
+      var icons = this.data_icons;
+      var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
+      var $logo = $('<span>')
+      // background circle
+      .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
+      .append($('<i>')
+      .addClass("fa fa-circle fa-stack-2x")
+      .css({'color': this.logoColorLookup(type)}));
+      // add stack of font-awesome icons
+      _.each(icon, function(cls) {
+        $logo.append($('<i>')
+        .addClass("fa fa-inverse fa-stack-1x " + cls));
+      });
+
 	    var $topTable = $('<table>')
                                  .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
                                  .append($('<tr>')
@@ -415,13 +430,13 @@
                                                 .append($addDiv.hide()))
                                          .append($('<td>')
                                                  .css({'width':'50px'})
-                                                 .append($('<span>')
+                                                 .append($logo))/*$('<span>')
                                             		 	.addClass("kb-data-list-logo")
                                             		 	.css({'background-color':this.logoColorLookup(type)})
-                                            		 	.append(type.substring(0,1))))
+                                            		 	.append(type.substring(0,1))))*/
                                          .append($('<td>')
                                                  .append(titleElement)));
-	    
+
 	    var $row = $('<div>')
                                 .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
                                 //.addClass('kb-data-list-obj-row')
@@ -438,7 +453,7 @@
                                     $addDiv.hide();
                                     $btnToolbar.hide();
                                 });
-                            
+
             var $rowWithHr = $('<div>')
                                     .append($('<hr>')
                                                 .addClass('kb-data-list-row-hr')
@@ -478,7 +493,7 @@
                             '#9E9E9E', //grey
                             '#607D8B'  //blue grey
                          ];
-            
+
             // first, if there are some colors we want to catch...
             switch (type) {
                 case "Genome":
@@ -494,7 +509,7 @@
                 case "Tree":
                     return '#795548'; //brown
             }
-            
+
             // pick one based on the characters
             var code = 0;
             for(var i=0; i<type.length; i++) {
@@ -502,7 +517,7 @@
             }
             return colors[ code % colors.length ];
         },
-        
+
         showInfo: function(message, spinner) {
         	if (spinner)
         		message = '<img src="'+this.loadingImage+'"/> ' + message;
@@ -521,9 +536,9 @@
             this.render();
             return this;
         },
-        
+
         uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
                 function(c) {
                     var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);

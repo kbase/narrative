@@ -1496,7 +1496,7 @@ div#notebook_panel {
 }
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
 .kb-method-parameter-row-hover {
-   background:#F5F5F5;
+   background:#F9F9F9;
 }
 
 .kb-method-parameter-row-error {
@@ -1914,6 +1914,11 @@ div[class="tooltip-inner"] {
     color: #aaa;
 }
 
+.kb-btn-sm {
+    padding: 5px 10px;
+    font-size: 13px;
+}
+
 
 
 /* data list */
@@ -2253,7 +2258,7 @@ div[class="tooltip-inner"] {
 
 .kb-import-content {
     position:relative;
-    margin: 0 0 0 15px;
+    margin: 0 0 0 0px;
     overflow-x: hidden;
     overflow-y: auto;
     /*height: 830px;*/

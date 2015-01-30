@@ -926,6 +926,8 @@
                 else if (jobState.state.error) {
                     errorText = $('<div class="kb-jobs-error-modal">').append(jobState.state.error);
                     errorType = "Runtime";
+                    if (jobState.state.error === 'awe_error')
+                        errorType = 'AWE Error';                    
                 }
 
                 /* error types:

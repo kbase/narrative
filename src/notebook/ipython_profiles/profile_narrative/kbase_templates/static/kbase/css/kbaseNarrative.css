@@ -1493,7 +1493,7 @@ div#notebook_panel {
 }
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
 .kb-method-parameter-row-hover {
-   background:#F5F5F5;
+   background:#F9F9F9;
 }
 
 .kb-method-parameter-row-error {
@@ -1909,6 +1909,11 @@ div[class="tooltip-inner"] {
 .kb-default-btn[disabled] {
     box-shadow: none;
     color: #aaa;
+}
+
+.kb-btn-sm {
+    padding: 5px 10px;
+    font-size: 13px;
 }
 
 

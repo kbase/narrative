@@ -114,8 +114,8 @@
             if (self.options.isInSidePanel)
             	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
             var $buttonCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input").append(
-                                $('<button>').addClass("btn btn-default btn-sm")
-                                .append($('<span class="kb-parameter-data-row-add">').addClass("glyphicon glyphicon-plus"))
+                                $('<button>').addClass("kb-default-btn kb-btn-sm")
+                                .append($('<span class="kb-parameter-data-row-add">').addClass("fa fa-plus"))
                                 .append(" add another "+self.spec.ui_name)
                                 .on("click",function() { self.addRow() }) );
             self.$addRowController = $('<div>').addClass("row kb-method-parameter-row").append($nameCol).append($buttonCol);
@@ -191,8 +191,8 @@
                                     .tooltip({title:spec.description, html:true}));
                 }
             } else {
-                $removalButton = $('<button>').addClass("btn btn-default btn-sm")
-                                .append($('<span class="kb-parameter-data-row-remove">').addClass("glyphicon glyphicon-remove"))
+                $removalButton = $('<button>').addClass("kb-default-btn kb-btn-sm")
+                                .append($('<span class="kb-parameter-data-row-remove">').addClass("fa fa-remove"))
                                 .append(" remove "+spec.ui_name)
                                 .on("click",function() { self.removeRow(uuidForRemoval); })
                 $hintCol.append($removalButton);
@@ -309,6 +309,7 @@
                 selectOnBlur: true,
                 query: function (query) {
                     var data = {results:[]};
+                    
                     // populate the names from our valid data object list
                     if (self.validDataObjectList) {
                         for(var i=0; i<self.validDataObjectList.length; i++){

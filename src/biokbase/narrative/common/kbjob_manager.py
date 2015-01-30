@@ -20,6 +20,7 @@ __version__ = "0.1.0"
 
 import os
 import json
+import traceback
 from biokbase.userandjobstate.client import UserAndJobState
 from biokbase.narrativejobproxy.client import NarrativeJobProxy
 from biokbase.NarrativeJobService.Client import NarrativeJobService
@@ -104,20 +105,12 @@ class KBjobManager():
                 try:
                     job_states[job_id] = self.get_method_state(job, job_id)
                 except Exception as e:
-                    import traceback
-                    job_states[job_id] = {'job_id' : job_id,
-                                          'job_state' : 'error',
-                                          'error' : e.__str__(),
-                                          'traceback' : traceback.format_exc()}
+                    job_states[job_id] = self.prepare_job_error_state(job_id, e)
             elif job_id.startswith('njs:'):
                 try:
                     job_states[job_id] = self.get_app_state(job, job_id)
                 except Exception as e:
-                    import traceback
-                    job_states[job_id] = {'job_id' : job_id,
-                                          'job_state' : 'error',
-                                          'error' : e.__str__(),
-                                          'traceback' : traceback.format_exc()}
+                    job_states[job_id] = self.prepare_job_error_state(job_id, e)
             else:
                 try:
                     # 0  job_id job,
@@ -151,15 +144,34 @@ class KBjobManager():
                         job['widget_outputs'] = self.get_method_state(method_info, job_id)
                     job_states[job_id] = job
                 except Exception as e:
-                    import traceback
-                    job_states[job_id] = {'job_id' : job_id,
-                                          'job_state' : 'error',
-                                          'error' : e.__str__(),
-                                          'traceback' : traceback.format_exc()}
+                    job_states[job_id] = self.prepare_job_error_state(job_id, e)
         if as_json:
             import json
             job_states = json.dumps(job_states)
         return job_states
+
+    def prepare_job_error_state(self, job_id, e):
+        e_type = type(e).__name__
+        e_message = e.__str__()
+        e_trace = traceback.format_exc()
+        job_state = 'error'
+        if e_type == 'ConnectionError':
+            job_state = 'network_error'         # Network problem routing to NJS wrapper
+        elif e_type == 'ServerError':
+            if '[awe error] job not found:' in e_message:
+                job_state = 'config_error'      # NJS/AWE-server was wiped (or config url was switched to wrong instance)
+            elif 'Information is not available' in e_message:
+                job_state = 'config_error'      # NJS wrapper was wiped (or config url was switched to wrong instance)
+            elif '[awe error] User Unauthorized:' in e_message:
+                job_state = "config_error"      # NJS is trying to retrieve state of unshared AWE job
+            elif 'UnknownHostException' in e_message or 'Server returned HTTP response code:' in e_message:
+                job_state = 'network_error'     # Network problem routing NJS
+        return {
+            'job_id' : job_id,
+            'job_state' : job_state,
+            'error' : e_type + ': ' + e_message,
+            'traceback' : e_trace
+        }
 
     def get_app_state(self, app_info, app_job_id):
         """

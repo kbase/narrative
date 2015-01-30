@@ -79,15 +79,11 @@
             //this.fileBrowse = realButton;
             this.$elem.append(realButton);
             
-            var td = $('<td/>');
-            td.css(cellCss);
-            td.css({'width' : '70%', 'padding' : '0px'});
-            tr.append(td);
-            td.append(this.fileName);
+            
             
             // create the visible upload button
             this.fakeButton = document.createElement('button');
-            this.fakeButton.setAttribute('class', 'btn btn-primary');
+            this.fakeButton.setAttribute('class', 'kb-primary-btn');
             this.selectFileMode(true);
             this.fakeButton.fb = realButton;
             this.fakeButton.addEventListener('click', function() {
@@ -102,12 +98,17 @@
                     self.uploadWasStarted = false;
             	}
             });
-            $(this.fakeButton).css({"width": "90px"});
+            $(this.fakeButton);
             var td2 = $('<td/>');
             td2.css(cellCss);
-            td2.css({'width' : '90px', 'padding' : '0px'});
             tr.append(td2);
             td2.append(this.fakeButton);
+	    
+	    var td = $('<td/>');
+            td.css(cellCss);
+            td.css({'width' : '70%', 'padding' : '0px', 'margin':'2px'});
+            tr.append(td);
+            td.append(this.fileName);
 
             var td3 = $('<td/>');
             td3.css(cellCss);
@@ -159,7 +160,7 @@
         
         selectFileMode: function(inSelectFileMode) {
             this.inSelectFileMode = inSelectFileMode;
-            this.fakeButton.innerHTML = inSelectFileMode ? "Select file" : "Cancel";
+            this.fakeButton.innerHTML = inSelectFileMode ? "Select File" : "Cancel";
         },
         
         fileSelected: function (nameText, prcText, realButton) {

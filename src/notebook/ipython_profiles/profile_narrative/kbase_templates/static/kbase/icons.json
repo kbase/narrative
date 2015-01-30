@@ -1,0 +1,34 @@
+{
+  "methods": {
+    "method": ["fa-cube"],
+    "app": ["fa-cubes"]
+  },
+  "data": {
+    "DEFAULT": ["fa-flask"],
+    "ContigSet": ["fa-signal fa-rotate-90",
+      "fa-signal fa-rotate-270 kb-data-icon-rnudge"],
+    "Genome": ["fa-barcode"],
+    "Network": ["fa-connectdevelop"],
+    "ExpressionSample": ["fa-arrows"],
+    "ExpressionSeries": ["fa-arrows"],
+    "FBA": ["fa-exchange"],
+    "FBAModel": ["fa-exchange"],
+    "Media": ["fa-eyedropper"],
+    "ReferenceAssembly": ["fa-book"],
+    "Metagenome": ["fa-group"],
+    "SingleEndLibrary": ["fa-align-justify"],
+    "PairedEndLibrary": ["fa-align-justify"],
+    "AssemblyInput": ["fa-align-justify"],
+    "ProteomeComparison": ["fa-arrows-h"],
+    "GenomeComparison": ["fa-arrows-h"],
+    "DomainAlignment": ["fa-sliders"],
+    "Tree": ["fa-tree"],
+    "TaxonomicMatrix": ["fa-table"],
+    "FunctionalMatrix": ["fa-table"],
+    "GenomeSet": ["fa-list-ul"],
+    "PhenotypeSet": ["fa-list-ul"],
+    "PhenotypeSimulationSet": ["fa-list-ul"],
+    "Collection": ["fa-list-alt"],
+    "Pangenome": ["fa-star-o fa-rotate-180", "fa-star-o"]
+  }
+}

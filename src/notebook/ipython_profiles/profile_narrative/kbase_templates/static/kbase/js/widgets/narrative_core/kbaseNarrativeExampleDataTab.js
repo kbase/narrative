@@ -24,17 +24,17 @@
                 {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data Sets", header:'Sets of WGS and amplicon metagenomes'},
                 {name:['TranscriptomeHack'], displayName: "Example Sorghum Transcriptomes", header:'Sorghum bicolor transcriptome data in response to ABA and osmotic stress'}
                 ]
-            
+
         },
 
         ws: null,
         narWs:null,
         ws_landing_page_map: {},
-        
+
         $mainPanel:null,
         $loadingDiv:null,
-        
-        
+
+
         /**
          * @method init
          * Builds the DOM structure for the widget.
@@ -48,19 +48,20 @@
             this._super(options);
             var self = this;
             this.getLandingPageMap();  //start off this request so that we hopefully get something back right away
-            
+
             this.$loadingDiv = $('<div>').addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">');
             this.$elem.append(this.$loadingDiv);
             this.$mainPanel = $('<div>')
                 .css({'overflow-y':'auto','height':'604px'});
             this.$elem.append(this.$mainPanel);
-            
+
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.ws_url = window.kbconfig.urls.workspace;
+                this.data_icons = window.kbconfig.icons.data;
             }
             this.showLoading();
-            
+
             var self = this;
             $(document).on('setWorkspaceName.Narrative', function(e, info){
                 self.narWs = info.wsId;
@@ -68,11 +69,11 @@
             })
             return this;
         },
-        
+
         refresh: function() { },
-        
+
         objectList:null,
-        
+
         getExampleDataAndRender: function() {
             var self = this;
             if (self.narWs && self.ws) {
@@ -100,7 +101,7 @@
                             );
                         }
                         self.renderData();
-                    }, 
+                    },
                     function(error) {
                         self.$mainPanel.show();
                         self.$mainPanel.append("error: ");
@@ -109,14 +110,14 @@
                         self.hideLoading();
                     });
             }
-            
+
         },
-        
-        
+
+
         renderData: function() {
             var self = this;
             if (!self.objectList) { return; }
-            
+
             var typeDivs = {};
             for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
                 var typeInfo = self.options.exampleTypeOrder[t];
@@ -137,7 +138,7 @@
                                 .append($('<div>').css({'margin':'4px','color':'#555'})
                                         .append('Assorted data types used in more advanced analyses')));
             typeDivs['other.types'] = $tc;
-            
+
             var hasOthers = false;
             self.objectList.sort(function(a,b) {
                                         if (a.info[2].toUpperCase() > b.info[2].toUpperCase()) return -1; // sort by type
@@ -154,7 +155,7 @@
                 } else {
                     typeName = obj.info[2].split('-')[0].split('.')[1];
                 }
-                
+
                 if (typeDivs.hasOwnProperty(typeName)) {
                     typeDivs[typeName].append(obj.$div);
                 } else {
@@ -162,17 +163,17 @@
                     hasOthers = true;
                 }
             }
-            
+
             for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
                 self.$mainPanel.append(typeDivs[self.options.exampleTypeOrder[t].name[0]]);
             }
             if (hasOthers) {
                 self.$mainPanel.append(typeDivs['other.types']);
             }
-            
+
             self.hideLoading();
         },
-        
+
         getObjData: function(type, ignoreVersion) {
             if (type) {
                 var dataSet = {};
@@ -186,9 +187,9 @@
                 }
                 return dataSet;
             }
-            return this.obj_data;  
+            return this.obj_data;
         },
-        
+
         renderObjectRowDiv: function(object_info) {
             var self = this;
             // object_info:
@@ -204,7 +205,7 @@
                 var type_module = type_tokens[0];
                 type = type_tokens[1].split('-')[0];
             }
-            
+
             var $addDiv =
                 $('<div>').append(
                     $('<button>').addClass('btn btn-default')
@@ -212,7 +213,7 @@
                         .on('click',function() { // probably should move action outside of render func, but oh well
                             $(this).attr("disabled","disabled");
                             $(this).html('<img src="'+self.options.loadingImage+'">');
-                            
+
                             var thisBtn = this;
                             self.ws.copy_object({
                                 to:   {ref: self.narWs     + "/" + object_info[1]},
@@ -234,9 +235,9 @@
                                     }
                                     console.error(error);
                                 });
-                            
+
                         }));
-            
+
             var shortName = object_info[1]; var isShortened=false;
             /*if (shortName.length>this.options.max_name_length) {
                 shortName = shortName.substring(0,this.options.max_name_length-3)+'...';
@@ -245,7 +246,7 @@
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
             if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom'}); }
             var $type = $('<span>').addClass("kb-data-list-type").append(type);
-           
+
             var metadata = object_info[10];
             var metadataText = '';
             for(var key in metadata) {
@@ -269,7 +270,7 @@
                     }
                 }
             }
-            
+
             var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
                                 .append($('<div>').css({'text-align':'center','margin':'5pt'})
                                             .append('<a href="'+landingPageLink+'" target="_blank">'+
@@ -280,7 +281,7 @@
                                     $('<table style="width=100%">')
                                         .append("<tr><th>Permament Id</th><td>" +object_info[6]+ "/" +object_info[0]+ "/" +object_info[4] + '</td></tr>')
                                         .append(metadataText));
-            
+
             var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
                 .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
                 .on('click',function() {
@@ -293,6 +294,20 @@
                             $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
                     });*/
+            var icons = this.data_icons;
+            var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
+            var $logo = $('<span>')
+            // background circle
+            .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
+            .append($('<i>')
+            .addClass("fa fa-circle fa-stack-2x")
+            .css({'color': this.logoColorLookup(type)}));
+            // add stack of font-awesome icons
+            _.each(icon, function(cls) {
+              $logo.append($('<i>')
+              .addClass("fa fa-inverse fa-stack-1x " + cls));
+            });
+
             var $topTable = $('<table>')
                                  .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
                                  .append($('<tr>')
@@ -301,13 +316,13 @@
                                                 .append($addDiv))
                                          .append($('<td>')
                                                  .css({'width':'50px'})
-                                                 .append($('<span>')
+                                                 .append($logo))/*$('<span>')
                                             		 	.addClass("kb-data-list-logo")
                                             		 	.css({'background-color':this.logoColorLookup(type)})
-                                            		 	.append(type.substring(0,1))))
+                                            		 	.append(type.substring(0,1))))*/
                                          .append($('<td>')
                                                  .append($name).append('<br>').append($type)));
-	    
+
 	    var $row = $('<div>')
                                 .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
                                 //.addClass('kb-data-list-obj-row')
@@ -320,16 +335,16 @@
                                 .mouseleave(function(){
                                     $addDiv.hide();
                                 });*/
-                    
+
             return $row;
         },
-        
-        
+
+
 
         renderMore: function() {
             var self=this;
             if (self.objectList) {
-                
+
                 if (!self.searchFilterOn) { // if search filter is off, then we just are showing everything
                     var start = self.n_objs_rendered;
                     for(var i=start; i<self.objectList.length; i++) {
@@ -355,7 +370,7 @@
                 }
             }
         },
-        
+
         attachRow: function(index) {
             if (this.objectList[index].attached) { return; }
             if (this.objectList[index].$div) {
@@ -378,7 +393,7 @@
             row.attached = true;
             this.n_objs_rendered++;
         },
-        
+
         detachAllRows: function() {
             for (var i=0; i<this.objectList.length; i++) {
                 this.detachRow(i);
@@ -396,14 +411,14 @@
                 this.n_objs_rendered--;
             }
         },
-        
-        
+
+
         renderList: function() {
             var self = this;
             self.showLoading();
-            
+
             self.detachAllRows();
-            
+
             if (self.objectList.length>0) {
                 for(var i=0; i<self.objectList.length; i++) {
                     // only show up to the given number
@@ -417,13 +432,13 @@
                 // todo: show an upload button or some other message if there are no elements
                 self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'}).append("No data added yet."));
             }
-            
+
             self.hideLoading();
         },
-        
+
         renderController: function() {
             var self = this;
-            
+
             var $byDate = $('<label id="nar-data-list-default-sort-label" class="btn btn-default">').addClass('btn btn-default')
                                 .append($('<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'))
                                 .append("date")
@@ -434,18 +449,18 @@
                                         return 0;
                                     });
                                 });
-                                
+
             var $byName = $('<label class="btn btn-default">')
                                 .append($('<input type="radio" name="options" id="option2" autocomplete="off">'))
                                 .append("name")
                                 .on('click',function() {
                                     self.sortData(function(a,b) {
                                         if (a.info[1].toUpperCase() < b.info[1].toUpperCase()) return -1; // sort by name
-                                        if (a.info[1].toUpperCase() > b.info[1].toUpperCase()) return 1; 
+                                        if (a.info[1].toUpperCase() > b.info[1].toUpperCase()) return 1;
                                         return 0;
                                     });
                                 });
-                                
+
             var $byType = $('<label class="btn btn-default">')
                                 .append($('<input type="radio" name="options" id="option3" autocomplete="off">'))
                                 .append("type")
@@ -461,14 +476,14 @@
                                 .on('click',function() {
                                     self.reverseData();
                                 });
-            
+
             var $sortByGroup = $('<div data-toggle="buttons">')
                                     .addClass("btn-group btn-group-sm")
                                     .css({"margin":"2px"})
                                     .append($byDate)
                                     .append($byName)
                                     .append($byType);
-            
+
             var $addDataBtn = $('<button>')
                                 .addClass("btn btn-warning kb-data-list-get-data-button")
                                 .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Get Data')
@@ -485,8 +500,8 @@
                                           }
                                       );*/
                                 });
-            
-            
+
+
             var $openSearch = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
                 .html('<span class="fa fa-search" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
@@ -520,7 +535,7 @@
                         self.$filterTypeDiv.hide();
                     }
                 });
-            
+
             self.$searchInput = $('<input type="text">').addClass('form-control');
             self.$searchDiv = $('<div>').addClass("input-group").css({'margin-bottom':'10px'})
                                 .append(self.$searchInput)
@@ -536,7 +551,7 @@
                                 .append("<small>sort by: </small>")
                                 .append($sortByGroup)
                                 .append($upOrDown);
-            
+
             self.$filterTypeSelect = $('<select>').addClass("form-control")
                                         .append($('<option value="">'))
                                         .change(function() {
@@ -545,12 +560,12 @@
                                             //var textSelected   = optionSelected.text();
                                             self.filterByType(typeSelected);
                                         });
-            
+
             self.$filterTypeDiv = $('<div>').css({'margin':'3px','margin-left':'5px','margin-bottom':'10px'})
                                 .append(self.$filterTypeSelect);
-                                
-                                
-            
+
+
+
             var $header = $('<div>').addClass('row').css({'margin':'5px'})
                     .append($('<div>').addClass('col-xs-7').css({'margin':'0px','padding':'0px'})
                         .append($openSearch)
@@ -558,24 +573,24 @@
                         .append($openFilter))
                     .append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'})
                         .append($addDataBtn));
-            
-            
+
+
             self.$sortByDiv.hide();
             self.$searchDiv.hide();
             self.$filterTypeDiv.hide();
-            
+
             var $filterDiv = $('<div>')
                                 .append(self.$sortByDiv)
                                 .append(self.$searchDiv)
                                 .append(self.$filterTypeDiv);
-                                
+
             self.$controllerDiv.append($header).append($filterDiv);
         },
-        
+
         populateAvailableTypes: function() {
             var self = this;
             if (self.availableTypes && self.$filterTypeSelect) {
-                
+
                 var types = [];
                 for(var type in self.availableTypes) {
                     if(self.availableTypes.hasOwnProperty(type)) {
@@ -583,7 +598,7 @@
                     }
                 }
                 types.sort();
-                
+
                 self.$filterTypeSelect.empty();
                 self.$filterTypeSelect.append($('<option value="">'));
                 for(var i=0; i<types.length; i++) {
@@ -594,58 +609,58 @@
                 }
             }
         },
-        
-        
+
+
         reverseData: function() {
             var self = this;
             if (!self.objectList) { return; }
-            
+
             self.objectList.reverse();
             self.renderList();
             self.search();
-            
+
             self.hideLoading();
         },
-        
+
         sortData: function(sortfunction) {
             var self = this;
             if (!self.objectList) { return; }
             //should add spinning wait bar ....
             self.showLoading();
-            
+
             self.objectList.sort(sortfunction);
             self.renderList();
             self.search();  // always refilter on the search term search if there is something there
-            
+
             self.hideLoading();
-            
+
             // go back to the top on sort
             self.$mainListDiv.animate({
                 scrollTop:0
             }, 300); // fast = 200, slow = 600
         },
-        
-        
+
+
         currentMatch: [],
         currentTerm: '',
         searchFilterOn: false,
         n_filteredObjsRendered: null,
-        
+
         search: function(term, type) {
             var self = this;
             if (!self.objectList) { return; }
-            
+
             if (!term && self.$searchInput) {
                 term = self.$searchInput.val();
             }
-            
+
             // if type wasn't selected, then we try to get something that was set
             if (!type) {
                 if (self.$filterTypeSelect) {
                     type = self.$filterTypeSelect.find("option:selected").val();
                 }
             }
-            
+
             term = term.trim();
             if (term.length>0 || type) {
                 self.searchFilterOn = true;
@@ -665,9 +680,9 @@
                 term = term.replace(/\|/g,'\\|').replace(/\\\\\|/g,'|'); // bars are common in kb ids, so escape them unless we have \\|
                 term = term.replace(/\./g,'\\.').replace(/\\\\\./g,'.'); // dots are common in names, so we escape them, but
                                                                          // if a user writes '\\.' we assume they want the regex '.'
-                
+
                 var regex = new RegExp(term, 'i');
-                
+
                 var n_matches = 0; self.n_filteredObjsRendered = 0;
                 for(var k=0; k<self.currentMatch.length; k++) {
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
@@ -679,38 +694,38 @@
                     if (regex.test(info[1])) { match = true; } // match on name
                     else if (regex.test(info[2].split('.')[1].split('-'))) { match = true; } // match on type name
                     else if (regex.test(info[5])) { match = true; } // match on saved_by user
-                    
+
                     if (!match && info[10]) { // match on metadata values
                         for(var metaKey in info[10]) {
                             if (info[10].hasOwnProperty(metaKey)) {
                                 if (regex.test(info[10][metaKey])) { match = true; break; }
                                 else if (regex.test(metaKey+"::"+info[10][metaKey])) {
-                                    match = true; break; 
+                                    match = true; break;
                                 }
                             }
                         }
                     }
-                    
-                    
+
+
                     if (type) { // if type is defined, then our sort must also filter by the type
                         if (type !== info[2].split('-')[0].split('.')[1]) {
                             match = false; // no match if we are not the selected type!
                         }
                     }
-                    
+
                     if (match) {
                         // matches must always switch to show if they are rendered
                         if (self.currentMatch[k].$div) {
                             self.currentMatch[k].$div.show();
                         }
-                        
+
                         // todo: add check so we only show up to the number we render... switching to this will require that
                         // we revise the renderMore logic...
                         if (n_matches < self.options.objs_to_render_to_start) {
                             self.attachRowElement(self.currentMatch[k]);
                             self.n_filteredObjsRendered++;
                         }
-                        
+
                         newMatch.push(self.currentMatch[k]);
                         n_matches++;
                     }
@@ -733,19 +748,19 @@
             }
             self.currentTerm = term;
         },
-        
-        
+
+
         filterByType: function(type) {
             var self = this;
             self.search(null,type);
         },
-        
+
         getRichData: function(object_info,$moreRow) {
             var self = this;
             var $usernameTd = $moreRow.find(".kb-data-list-username-td");
             self.displayRealName(object_info[5],$usernameTd);
         },
-        
+
         showLoading : function() {
             this.$loadingDiv.show();
             this.$mainPanel.hide();
@@ -754,12 +769,12 @@
             this.$loadingDiv.hide();
             this.$mainPanel.show();
         },
-        
+
         displayRealName: function(username,$targetSpan) {
 	    var self = this;
 	    // todo : use globus to populate user names, but we use a hack because of globus CORS headers
 	    if (self.ws) { // make sure we are logged in and have some things
-		
+
                 if (self.real_name_lookup[username]) {
                     $targetSpan.html(self.real_name_lookup[username]+" ("+username+")");
                 } else {
@@ -783,11 +798,11 @@
                 }
 	    }
         },
-        
+
         getLandingPageMap: function() {
             this.ws_landing_page_map = window.kbconfig.landing_page_map;
         },
-        
+
         loggedInCallback: function(event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
             this.getExampleDataAndRender();
@@ -799,7 +814,7 @@
             this.isLoggedIn = false;
             return this;
         },
-        
+
         logoColorLookup:function(type) {
             var colors = [
                             '#F44336', //red
@@ -822,7 +837,7 @@
                             '#9E9E9E', //grey
                             '#607D8B'  //blue grey
                          ];
-            
+
             // first, if there are some colors we want to catch...
             switch (type) {
                 case "Genome":
@@ -838,7 +853,7 @@
                 case "Tree":
                     return '#795548'; //brown
             }
-            
+
             // pick one based on the characters
             var code = 0;
             for(var i=0; i<type.length; i++) {
@@ -846,7 +861,7 @@
             }
             return colors[ code % colors.length ];
         }
-        
+
     })
 
 })(jQuery);

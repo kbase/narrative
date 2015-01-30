@@ -47,6 +47,7 @@
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+                this.meth_icons = window.kbconfig.icons.methods;
             }
 
             this.$searchDiv = $('<div>')
@@ -390,20 +391,28 @@
          * @private
          */
         buildMethod: function(icon, method, triggerFn) {
-            var icon_name = "method";
-            if ( icon == "A") { icon_name = "app"; }
-            var icon_url = "static/kbase/images/" + icon_name + "-icon.png";
+            /* Logos */
+            var icon_name = (icon == "A") ? "app" : "method";
+            var icon_color = (icon == "A") ? "#F0B400" : "#93B9C4";
+            //var icon_url = "static/kbase/images/" + icon_name + "-icon.png";
+            var icons = this.meth_icons;
+            var icon = icons[icon_name];
             var $logo = $('<div>')
-                        .addClass('kb-method-list-logo')
-                        .css({'background-image': 'url(' + icon_url + ')',
-                              'background-repeat': 'no-repeat',
-                              'background-color' : 'white' /*this.logoColorLookup(icon)*/
-                            })
-                        //.append(icon)
-                        .click($.proxy(function(e) {
-                            e.stopPropagation();
-                            triggerFn(method);
-                        }, this));
+              // background
+              .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
+              .append($('<i>')
+                .addClass("fa fa-square fa-stack-2x")
+                .css({'color': icon_color}));
+            // add stack of font-awesome icons
+            _.each(icon, function(cls) {
+              $logo.append($('<i>')
+              .addClass("fa fa-inverse fa-stack-1x " + cls));
+            });
+            // add behavior
+            $logo.click($.proxy(function(e) {
+              e.stopPropagation();
+              triggerFn(method);
+            }, this));
 
             var $name = $('<div>')
                         .addClass('kb-data-list-name')

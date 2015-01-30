@@ -19,7 +19,7 @@
 (function( $, undefined ) {
 
     $.KBWidget({
-        name: "kbaseNarrativeDataPanel", 
+        name: "kbaseNarrativeDataPanel",
         parent: "kbaseNarrativeControlPanel",
         version: "1.0.0",
         wsClient: null,
@@ -48,9 +48,9 @@
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
 
-        
+
         dataListWidget: null,
-        
+
         init: function(options) {
             this._super(options);
 
@@ -67,7 +67,8 @@
                 this.options.wsBrowserURL = window.kbconfig.urls.ws_browser;
                 this.options.landingPageURL = window.kbconfig.urls.landing_pages;
             }
-            
+            this.data_icons = window.kbconfig.icons.data;
+
             var $dataList = $('<div>');
             this.body().append($dataList);
             this.dataListWidget = $dataList["kbaseNarrativeDataList"](
@@ -77,7 +78,7 @@
                                         loadingImage: this.options.loadingImage,
                                         parentControlPanel: this
                                     });
-            
+
             $(document).on(
                 'setWorkspaceName.Narrative', $.proxy(function(e, info) {
                     this.ws_name = info.wsId;
@@ -85,7 +86,7 @@
                     this.dataListWidget.setWorkspace(this.ws_name);
                 }, this)
             );
-            
+
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
              */
@@ -98,8 +99,8 @@
                 },
                 this)
             );
-            
-            
+
+
             /**
              * This should be triggered when something updates the available data in either the narrative or
              * in the workspace.
@@ -111,7 +112,7 @@
                 },
                 this )
             );
-            
+
             /**
              * This should be triggered when something wants to know what workspace this widget is currently linked to.
              */
@@ -120,15 +121,15 @@
                     if (callback) {
                         callback(this.ws_name);
                     }
-                }, 
+                },
                 this)
             );
-            
+
             this.landingPageMap = window.kbconfig.landing_page_map;
 
             // initialize the importer
             this.dataImporter();
-            
+
             if (this.ws_name)
                 this.trigger('workspaceUpdated.Narrative', this.ws_name);
 
@@ -142,10 +143,10 @@
                                this.trigger('hideGalleryPanelOverlay.Narrative');
                                this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
                            }, this)));
-            
+
             return this;
         },
-        
+
         addButtonToControlPanel: function($btn) {
             this.addButton($btn);
         },
@@ -214,12 +215,12 @@
          *
          * If 'type' is a string, then it returns only objects matching that
          * object type (this is case-sensitive!).
-         * 
+         *
          * If 'type' is an array, then it returns only objects matching all of
          * those types.
          *
          * Returns data like this:
-         * { 
+         * {
          *   type1 : [ [metadata1], [metadata2], ... ],
          *   type2 : [ [metadata3], [metadata4], ... ]
          * }
@@ -231,7 +232,7 @@
             } else {
                 return {};
             }
-            
+
         },
 
         /**
@@ -248,7 +249,7 @@
         },
 
 
-        
+
 
         buildTabs: function(tabs, isOuter) {
             var $header = $('<div>');
@@ -305,8 +306,8 @@
             })
 
             var self = this;
-            var user = $("#signin-button").kbaseLogin('session', 'user_id');  // TODO: use 
-            
+            var user = $("#signin-button").kbaseLogin('session', 'user_id');  // TODO: use
+
             // models
             var myData = [], sharedData = [];
 
@@ -346,9 +347,9 @@
                 publicPanel = $('<div class="kb-import-content kb-import-public">'),
                 importPanel = $('<div class="kb-import-content kb-import-import">'),
                 examplePanel = $('<div class="kb-import-content">');
-            
-            
-            
+
+
+
             // add tabs
             var $tabs = this.buildTabs([
                     {tabName: '<small>My Data</small>', content: minePanel},
@@ -357,33 +358,33 @@
                     {tabName: '<small>Example</small>', content: examplePanel},
                     {tabName: '<small>Import</small>', content: importPanel},
                 ]);
-            
-            
+
+
             // hack to keep search on top
-            
+
             var $mineFilterRow = $('<div class="row">');
             minePanel.append($mineFilterRow);
             var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
             setLoading($mineScrollPanel);
             minePanel.append($mineScrollPanel);
-            
+
             var $sharedFilterRow = $('<div class="row">');
             sharedPanel.append($sharedFilterRow);
             var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
             setLoading($sharedScrollPanel);
             sharedPanel.append($sharedScrollPanel);
-            
+
             var body = $('<div>');
             var footer = $('<div>');
             body.addClass('kb-side-panel');
             body.append($tabs.header, $tabs.body);
-            
+
             // add footer status container and buttons
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
             var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>').css({'margin':'10px'});
             var closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin':'10px'});
-            
+
             // Setup the panels that are defined by widgets
             publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus});
             importPanel.kbaseNarrativeSideImportTab({});
@@ -522,13 +523,13 @@
                 return $.when.apply($, proms).then(function() {
                     // update model
                     sharedData = [].concat.apply([], arguments);
-                    
+
                     sharedData.sort(function(a,b) {
                             if (a[3] > b[3]) return -1; // sort by name
                             if (a[3] < b[3]) return 1;
                             return 0;
                         });
-                    
+
                     render(sharedData, $sharedScrollPanel, sharedSelected);
                 })
             }
@@ -556,7 +557,7 @@
                     container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
                     return;
                 }
-                
+
                 // infinite scroll
                 var currentPos = end;
                 container.unbind('scroll');
@@ -591,7 +592,7 @@
                                         continue;
                                     }
                                 }
-                                
+
                                 if (d[i][8].show_in_narrative_data_panel) {
                                     if(d[i][8].show_in_narrative_data_panel==='1') {
                                         displayName = "(data only) "+d[i][1];
@@ -606,7 +607,7 @@
 
                             // add to model for filter
                             myWorkspaces = workspaces;
-                            
+
                             // sort by name
                             myWorkspaces.sort(function(a,b) {
                                     if (a.displayName.toUpperCase() < b.displayName.toUpperCase()) return -1; // sort by name
@@ -626,7 +627,7 @@
                                 if (d[i][2] == user) {
                                     continue;
                                 }
-                                
+
                                 if (d[i][8].is_temporary) {
                                     if (d[i][8].is_temporary === 'true') { continue; }
                                 }
@@ -643,7 +644,7 @@
                                         continue;
                                     }
                                 }
-                                
+
                                 if (d[i][8].show_in_narrative_data_panel) {
                                     if(d[i][8].show_in_narrative_data_panel==='1') {
                                         displayName = "(data only) "+d[i][1];
@@ -854,7 +855,7 @@
 
                 // possible filters via input
                 var type, ws, query;
-                
+
                 // create filter (search)
                 var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
                 var searchFilter = $('<div class="col-sm-4">').append(filterInput);
@@ -887,7 +888,7 @@
                                      '</option>');
                 }
                 var typeFilter = $('<div class="col-sm-3">').append(typeInput);
-                
+
                 // event for type dropdown
                 typeInput.change(function() {
                     type = $(this).children('option:selected').data('type');
@@ -906,8 +907,8 @@
                     var filtered = filterData(myData, {type: type, ws:ws, query:query})
                     render(filtered, $mineScrollPanel, mineSelected);
                 });
-                
-                
+
+
                 var $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align':'center'}).append(
                                         $('<button>')
                                             .css({'margin-top':'12px'})
@@ -920,7 +921,7 @@
                                                 })
                                             .append($('<span>')
                                                 .addClass('glyphicon glyphicon-refresh')));
-                
+
 
                 // add search, type, ws filter to dom
                 $mineFilterRow.empty();
@@ -934,11 +935,11 @@
 
                 // possible filters via input
                 var type, ws, query;
-                
+
                 // create filter (search)
                 var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
                 var searchFilter = $('<div class="col-sm-4">').append(filterInput);
-                
+
                 // create workspace filter
                 var wsInput = $('<select class="form-control kb-import-filter">');
                 wsInput.append('<option>All narratives...</option>');
@@ -988,7 +989,7 @@
                     render(filtered, $sharedScrollPanel, sharedSelected);
                 });
 
-                
+
                 var $refreshBtnDiv = $('<div>').addClass('col-sm-1').append(
                                         $('<button>')
                                             .css({'margin-top':'12px'})
@@ -1001,7 +1002,7 @@
                                                 })
                                             .append($('<span>')
                                                 .addClass('glyphicon glyphicon-refresh')));
-                
+
                 // add search, type, ws filter to dom
                 $sharedFilterRow.empty();
                 $sharedFilterRow.append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
@@ -1020,28 +1021,26 @@
                 var type = type_tokens[1].split('-')[0];
                 var unversioned_full_type = type_module + '.' + type;
                 var logo_name = "";
-                /*if (_.has(self.data_icons, type)) {
-                    logo_name = this.data_icons[type];
-                }
-                else {
-                    logo_name = self.data_icons['DEFAULT'];
-                }
-                var logo_url = "static/kbase/images/data-icons/" + logo_name + ".png";
-                var $logo = $('<div>')
-                                    .addClass("kb-data-list-logo");
-                                    .css({'background-image': 'url(' + logo_url + ')',
-                                          'background-color':this.logoColorLookup(type),'cursor':'default'});*/
                 var landingPageLink = self.options.default_landing_page_url + object_info[7] + '/' + object_info[1];
                                             var ws_landing_page_map = window.kbconfig.landing_page_map;
                                             if (ws_landing_page_map && ws_landing_page_map[type_module] && ws_landing_page_map[type_module][type]) {
                                                 landingPageLink = self.options.landing_page_url +
                                                                 ws_landing_page_map[type_module][type] + "/" + object_info[7] + '/' + object_info[1];
                                             }
-                 var $logo = $('<span>')
-                                .addClass("kb-data-list-logo")
-                                .css({'background-color':self.logoColorLookup(type)})
-                                .append(type.substring(0,1));
-                
+                var icons = self.data_icons;
+                var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
+                var $logo = $('<span>')
+                  // background circle
+                  .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
+                  .append($('<i>')
+                    .addClass("fa fa-circle fa-stack-2x")
+                    .css({'color': self.logoColorLookup(type)}));
+                  // add stack of font-awesome icons
+                  _.each(icon, function(cls) {
+                    $logo.append($('<i>')
+                    .addClass("fa fa-inverse fa-stack-1x " + cls));
+                  });
+
                 var shortName = object_info[1]; var isShortened=false;
                 if (shortName.length>50) {
                     shortName = shortName.substring(0,50)+'...';
@@ -1062,7 +1061,7 @@
                             window.open(self.options.landing_page_url+'people/'+object_info[5]);
                         });
                 }
-                
+
                 var metadata = object_info[10];
                 var metadataText = '';
                 for(var key in metadata) {
@@ -1106,7 +1105,7 @@
                 //            $toggleAdvancedViewBtn.hide();
                 //        }
                 //    };
-    
+
                 var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
                 var btnClasses = "btn btn-xs btn-default";
                 var css = {'color':'#888'};
@@ -1119,7 +1118,7 @@
                                             e.stopPropagation();
                                             window.open(landingPageLink);
                                         });
-                                        
+
                 var $openProvenance = $('<span>')
                                         .addClass(btnClasses).css(css)
                                         //.tooltip({title:'View data provenance and relationships', 'container':'body'})
@@ -1129,9 +1128,9 @@
                                             window.open(self.options.landing_page_url+'objgraphview/'+object_info[7]+'/'+object_info[1]);
                                         });
                 $btnToolbar.append($openLandingPage).append($openProvenance);
-    
-    
-    
+
+
+
                 var $mainDiv  = $('<div>').addClass('kb-data-list-info').css({padding:'0px',margin:'0px'})
                                     .append($btnToolbar)
                                     .append($name).append($version).append('<br>')
@@ -1141,8 +1140,8 @@
                                     //    function() {
                                     //        toggleAdvanced();
                                     //    });
-    
-    
+
+
                 var $addDiv =
                     $('<div>').append(
                         $('<button>').addClass('btn btn-default')
@@ -1150,7 +1149,7 @@
                             .on('click',function() { // probably should move action outside of render func, but oh well
                                 $(this).attr("disabled","disabled");
                                 $(this).html('<img src="'+self.options.loadingImage+'">');
-                                
+
                                 var thisBtn = this;
                                 var targetName = object_info[1];
                                 //console.log(object.name + " -> " + targetName);
@@ -1174,10 +1173,10 @@
                                         }
                                         console.error(error);
                                     });
-                                
+
                             }));
-    
-    
+
+
                 var $topTable = $('<table>')
                                  .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
                                  .append($('<tr>')
@@ -1189,7 +1188,7 @@
                                                  .append($logo))
                                          .append($('<td>')
                                                  .append($mainDiv)));
-    
+
                 var $row = $('<div>')
                                 .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
                                 //.addClass('kb-data-list-obj-row')
@@ -1207,24 +1206,24 @@
                                     $addDiv.hide();
                                     $btnToolbar.hide();
                                 });
-                            
+
                 var $rowWithHr = $('<div>').data('ref', obj.wsID+'.'+obj.id)
                                 .data('obj-name', obj.name)
                                     .append($('<hr>')
                                                 .addClass('kb-data-list-row-hr')
                                                 .css({'margin-left':'150px'}))
                                     .append($row);
-    
+
                 return $rowWithHr;
             }
-            
+
             // the existing .loading() .rmLoading() puts the loading icon in the wrong place
             function setLoading($container) {
                 $container.empty();
                 $container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'})
                                   .append('<img src="' + self.options.loadingImage + '">'));
             }
-            
+
             function objURL(module, type, ws, name) {
                 var mapping = window.kbconfig.landing_page_map;
                 if (mapping[module] && mapping[module][type]) {
@@ -1236,13 +1235,13 @@
             function wsURL(ws) {
                 return self.options.landingPageURL+'ws/'+ws;
             }
-            
+
             var monthLookup = ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"];
             // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
             function getTimeStampStr(objInfoTimeStamp) {
                 var date = new Date(objInfoTimeStamp);
                 var seconds = Math.floor((new Date() - date) / 1000);
-    
+
                 // f-ing safari, need to add extra ':' delimiter to parse the timestamp
                 if (isNaN(seconds)) {
                     var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
@@ -1256,7 +1255,7 @@
                         return monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
                     }
                 }
-    
+
                 var interval = Math.floor(seconds / 31536000);
                 if (interval > 1) {
                     return monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
@@ -1284,7 +1283,7 @@
                 return Math.floor(seconds) + " seconds ago";
             };
         },
-        
+
         logoColorLookup:function(type) {
             var colors = [
                             '#F44336', //red
@@ -1331,7 +1330,7 @@
             }
             return colors[ code % colors.length ];
         }
-        
+
     });
 
 })( jQuery );

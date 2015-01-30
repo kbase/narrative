@@ -29,10 +29,16 @@
         downloaders: {  // type -> {name: ..., external_type: ...[, transform_options: ...[, unzip: <file_ext>]}
         	'KBaseGenomes.ContigSet': [{name: 'FASTA', external_type: 'FASTA.DNA.Assembly', transform_options: {output_file_name: 'fs.fasta'}}],
         	'KBaseGenomes.Genome': [{name: "GENBANK", external_type: 'Genbank.Genome', transform_options: {}}],
-        	'KBaseAssembly.SingleEndLibrary': [{name: "FASTQ", external_type: 'SequenceReads', transform_options: {output_file_name: '?.fastq'}}],
+        	
+		'KBaseAssembly.SingleEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+		'KBaseAssembly.PairedEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+		'KBaseFile.SingleEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+		'KBaseFile.PairedEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+		
 		'KBaseFBA.FBAModel':[{name: "SBML", external_type: 'SBML.FBAModel', transform_options: {}},
-				     {name: "CSV", external_type: 'CSV.FBAModel', transform_options: {}}]
-	
+				     {name: "CSV", external_type: 'CSV.FBAModel', transform_options: {}}],
+		
+		/* not working yet - 'KBaseBiochem.Media':[{name: "CSV", external_type: 'CSV.Media', transform_options: {}}] */
 	},
 
         init: function(options) {
@@ -231,6 +237,7 @@
         showError: function(msg) {
         	var self = this;
 		self.$statusDivContent.empty();
+		self.$elem.find('.kb-data-list-btn').prop('disabled', false); // error is final state, so reactivate!
 		self.$statusDivContent.append($('<span>').css({color:'#F44336'}).append('Error: '+msg));
         },
         

@@ -28,6 +28,7 @@
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
             ws_name: null,
             nar_name: null,
+            new_narrative_link:"/functional-site/#/narrativemanager/new"
         },
         
         ws:null,
@@ -110,6 +111,7 @@
             var self = this;
             if (self.ws) {
                 self.narData=null;
+                self.showLoading();
                 self.ws.list_workspace_info(
                     {excludeGlobal:1},
                     function(wsList) {
@@ -204,23 +206,24 @@
             }
         },
         
+        showLoading: function() {
+            this.$narPanel.html('<br><center><img src="'+this.options.loadingImage+'"/></center><br>');
+        },
+        
         renderHeader: function() {
             var self = this;
             if (self.$mainPanel) {
                 self.$mainPanel.empty();
                 
-                $newNarrativeLink = $("<div>").css({'margin':'10px','text-align':'center'});
+                var $msgPanel = $("<div>").css({'margin':'10px','text-align':'center'});
                 self.$mainPanel.append(
-                    $('<div>').css({'margin':'15px','text-align':'center'}).append(
-                        self.makeNewNarrativeBtn()).append(
-                        $newNarrativeLink));
+                    $('<div>').css({'margin':'15px','text-align':'center'})
+                        .append(self.makeNewNarrativeBtn())
+                        .append(self.makeCopyThisNarrativeBtn($msgPanel))
+                        .append($msgPanel));
                 
-                self.$newNarrativeLink = $('<div>');
-                self.$mainPanel.append(self.$newNarrativeLink);
-                
-                self.$narPanel = $('<div>'); //.css({'margin':'10px'});
+                self.$narPanel = $('<div>');
                 self.$mainPanel.append(self.$narPanel);
-                //self.renderPanel();
             }
         },
         
@@ -238,8 +241,9 @@
         
         renderPanel: function() {
             var self = this;
+            
             if (self.$narPanel && self.narData) {
-                self.$narPanel.children().detach();
+                self.$narPanel.children().detach(); // this will also hide any loading messages if they exist
                 
                 if (self.narData.mine.length>0) {
                     self.$narPanel.append($('<div>').append($('<div>').addClass('kb-nar-manager-titles').append("My Narratives")));
@@ -746,35 +750,131 @@
         },
         
         
+        makeCopyThisNarrativeBtn: function($alertContainer) {
+            var self = this;
+            var $active = $('<span>').addClass('fa fa-copy').append(" Copy Narrative");
+            var $working = $('<span>').append("Copying Narrative...");
+            
+            var $btn = $('<button>').addClass('kb-primary-btn')
+                    .append($active)
+                    .on('click', function(e) {
+                        e.stopPropagation();
+                        $(this).prop('disabled', true).empty().append($working);
+                        
+                        self.ws.get_workspace_info({workspace: self.ws_name},
+                            function(ws_info) {
+                                self.ws.get_object_info_new({objects:[{ref: ws_info[0] + '/' + ws_info[8]['narrative']}], includeMetadata:1},
+                                    function(object_info_list) {
+                                        var object_info = object_info_list[0];
+                                        var $newNameInput = $('<input type="text">').addClass('form-control').val(ws_info[8]['narrative_nice_name']+' - Copy');
+                                        $alertContainer.append(
+                                            $('<div>').append(
+                                                $('<div>').append("Enter a name for the new Narrative"))
+                                                    .append($('<div>').append($newNameInput))
+                                                    .append($('<button>').addClass('kb-data-list-btn')
+                                                        .append('Copy')
+                                                        .click(function() {
+                                                            var $thisBtn = $(this);
+                                                            $thisBtn.prop("disabled",true);
+                                                            var newMeta = ws_info[8];
+                                                            newMeta['narrative_nice_name'] = $newNameInput.val();
+                                                            
+                                                            var id = new Date().getTime();
+                                                            var ws_name = self.my_user_id + ":" + id;
+                                                            
+                                                            self.ws.clone_workspace({
+                                                                        wsi: {id:ws_info[0]},
+                                                                        workspace: ws_name,
+                                                                        meta: newMeta
+                                                                    },
+                                                                    function(new_ws_info) {
+                                                                        // we have to match based on names because when cloning, the object id is not preserved!!! arg!
+                                                                        var new_narrative_ref = new_ws_info[0]+"/"+ object_info[1]; //new_ws_info[8].narrative;
+                                                                        // ok, a lot of work just to update the narrative name in the metadata
+                                                                        self.ws.get_objects([{ref:new_narrative_ref}],
+                                                                            function(data) {
+                                                                                data = data[0]; // only one thing should be returned
+                                                                                var new_nar_metadata = data.info[10];
+                                                                                new_nar_metadata.name = newMeta['narrative_nice_name'];
+                                                                                data.data.metadata.name = newMeta['narrative_nice_name'];
+                                                                                
+                                                                                // set workspace metadata to point to the correct object id since they can change on clone!!
+                                                                                self.ws.alter_workspace_metadata({
+                                                                                        wsi:{id:new_ws_info[0]},
+                                                                                        new: {'narrative' : String(data.info[0]) }
+                                                                                    },
+                                                                                    function () {
+                                                                                        // so much work just to update this name!
+                                                                                        self.ws.save_objects({id:new_ws_info[0],objects:[
+                                                                                            {
+                                                                                                type:data.info[2],
+                                                                                                data:data.data,
+                                                                                                provenance:data.provenance,
+                                                                                                name:data.info[1],
+                                                                                                meta:new_nar_metadata
+                                                                                            }
+                                                                                            ]},
+                                                                                            function(info) {
+                                                                                                console.log('copying complete',info);
+                                                                                                $thisBtn.prop('disabled', false).empty().append($active);
+                                                                                                $alertContainer.empty();
+                                                                                                self.refresh();
+                                                                                            },
+                                                                                            function(error) {
+                                                                                                console.error(error);
+                                                                                                $alertContainer.empty();
+                                                                                                $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on data update. "+error.error.message));
+                                                                                            });
+                                                                                    
+                                                                                    },
+                                                                                    function (error) {
+                                                                                        console.error(error);
+                                                                                        $alertContainer.empty();
+                                                                                        $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on data update. "+error.error.message));
+                                                                                    });
+                                                                                
+                                                                                
+                                                                            },
+                                                                            function(error) {
+                                                                                console.error(error);
+                                                                                $alertContainer.empty();
+                                                                                $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! Copied successfully, but error on rename. "+error.error.message));
+                                                                            })
+                                                                    },
+                                                                    function(error) {
+                                                                        console.error(error);
+                                                                        $alertContainer.empty();
+                                                                        $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                                                    });
+                                                            }))
+                                                    .append($('<button>').addClass('kb-data-list-cancel-btn')
+                                                        .append('Cancel')
+                                                        .click(function() {$alertContainer.empty();} )));
+                                    },
+                                    function(error) {
+                                        console.error(error);
+                                        $alertContainer.empty();
+                                        $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                                    });
+                            },
+                            function(error) {
+                                console.error(error);
+                                $alertContainer.empty();
+                                $alertContainer.append($('<span>').css({'color':'#F44336'}).append("Error! "+error.error.message));
+                            });
+                });
+            return $btn;
+        },
+        
         makeNewNarrativeBtn: function() {
             var self = this;
             var $active = $('<span>').addClass('fa fa-plus').append(" New Narrative");
             var $working = $('<span>').append("Building Narrative...");
             var $btn =
-                $('<button>').addClass('btn btn-default').append($active)
+                $('<button>').addClass('kb-primary-btn').append($active)
                     .on('click', function() {
-                        $(this).prop('disabled', true).empty().append($working);
-                        var button = this;
-                        self.manager.createTempNarrative(
-                            {
-                                cells:[],
-                                parameters:[],
-                                importData : []
-                            },
-                            function(info) {
-                                // info.ws_info   info.nar_info
-                                console.log('created new narrative!',info);
-                                var newWsId = info.nar_info[6];
-                                var newNarId = info.nar_info[0];
-                                $newNarrativeLink.empty().append('<a href="ws.'+newWsId+'.obj.'+newNarId+'" target="_blank">Open your new Narrative.</a>');
-                                $(button).prop('disabled', false).empty().append("Narrative Created");
-                            },
-                            function(error) {
-                                alert('error!!'+error.error.message);
-                                console.error('error');
-                                $(button).prop('disabled', false).empty().append("Narrative Creation Error");
-                            }
-                        )
+                        // just open the link, don't do the work here...
+                        window.open(self.options.new_narrative_link);
                     });
             
             return $btn;

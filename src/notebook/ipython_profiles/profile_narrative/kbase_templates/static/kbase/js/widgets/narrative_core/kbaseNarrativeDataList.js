@@ -915,7 +915,7 @@
                 // todo: show an upload button or some other message if there are no elements
                 self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'})
                                          .append("This Narrative has no data yet.<br><br>")
-                                         .append($("<span>").append('Add Data').addClass('btn btn-lg kb-data-list-add-data-text-button')
+                                         .append($("<button>").append('Add Data').addClass('kb-data-list-add-data-text-button').css({'margin':'20px'})
                                                  .click(function() {
                                                         self.trigger('hideGalleryPanelOverlay.Narrative');
                                                         self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);

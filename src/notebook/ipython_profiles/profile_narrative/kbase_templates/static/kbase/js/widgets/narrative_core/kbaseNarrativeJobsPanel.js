@@ -951,7 +951,7 @@
                     var $tb = $('<div>');
                     $tb.kbaseAccordion({
                         elements: [{
-                            title: 'Error traceback',
+                            title: 'Detailed Error Information',
                             body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
                         }]
                     });

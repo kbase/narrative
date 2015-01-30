@@ -155,17 +155,19 @@ class KBjobManager():
         e_message = e.__str__()
         e_trace = traceback.format_exc()
         job_state = 'error'
-        if e_type == 'ConnectionError':
-            job_state = 'network_error'         # Network problem routing to NJS wrapper
+        if e_type == 'ConnectionError' or e_type == 'HTTPError':
+            job_state = 'network_error'            # Network problem routing to NJS wrapper
         elif e_type == 'ServerError':
             if '[awe error] job not found:' in e_message:
-                job_state = 'config_error'      # NJS/AWE-server was wiped (or config url was switched to wrong instance)
+                job_state = 'not_found_error'      # NJS/AWE-server was wiped (or config url was switched to wrong instance)
             elif 'Information is not available' in e_message:
-                job_state = 'config_error'      # NJS wrapper was wiped (or config url was switched to wrong instance)
+                job_state = 'not_found_error'      # NJS wrapper was wiped (or config url was switched to wrong instance)
             elif '[awe error] User Unauthorized:' in e_message:
-                job_state = "config_error"      # NJS is trying to retrieve state of unshared AWE job
+                job_state = 'unauthorized_error'   # NJS is trying to retrieve state of unshared AWE job
             elif 'UnknownHostException' in e_message or 'Server returned HTTP response code:' in e_message:
-                job_state = 'network_error'     # Network problem routing NJS
+                job_state = 'network_error'        # Network problem routing NJS
+            elif '[awe error]' in e_message:
+                job_state = 'awe_error'
         return {
             'job_id' : job_id,
             'job_state' : job_state,

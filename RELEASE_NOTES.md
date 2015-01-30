@@ -9,6 +9,10 @@ __Changes__
 - Fixed bug with absent red box around long running UJS method
 - Single file download mode was switched off
 - Zip file mode including provenance info was supported for JSON format download
+- Added lots of new icons for data and apps
+
+__Bugfixes__
+- Fixed issue with synchronous methods being treated as asynchronous, and not showing any output.
 
 ### Version 0.4.7 - 1/28/2015
 __Changes__

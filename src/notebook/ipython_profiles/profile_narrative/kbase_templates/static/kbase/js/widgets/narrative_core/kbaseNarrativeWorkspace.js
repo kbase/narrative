@@ -285,13 +285,13 @@
 
             // Three cases to NOT show immediately:
             // 1. method.job_id_output_field is not null    -- long running (via UJS)
-            // 2. method.behavior.kb_service_url IS null    -- long running service call (via NJS)
+            // 2. method.behavior.kb_service_method is not null && method.behavior.kb_service_url IS null    -- long running service call (via NJS)
             // 3. method.behavior.script_module is not null -- AWE script backend (via NJS)
 
             // if there's a job_id_output_field in the method, then it's long-running, and we shouldn't show an output cell right away.
             // ...or maybe show a temporary one?
             if ((data.method.job_id_output_field && data.method.job_id_output_field != null) ||
-                (!data.method.behavior.kb_service_url || data.method.behavior.kb_service_url.length === 0) ||
+                (data.method.behavior.kb_service_method && (!data.method.behavior.kb_service_url || data.method.behavior.kb_service_url.length === 0)) ||
                 (data.method.behavior.script_module)) {
                 showOutput = false;
             }

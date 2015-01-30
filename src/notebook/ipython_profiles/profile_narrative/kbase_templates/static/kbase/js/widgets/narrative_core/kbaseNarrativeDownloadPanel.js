@@ -62,7 +62,7 @@
                     .append('JSON')
                     .click(function() {
                     	var url = self.exportURL + '/download?ws='+self.wsId+'&id='+self.objId+'&token='+self.token+
-                    		'&url='+encodeURIComponent(self.wsUrl);
+                    		'&url='+encodeURIComponent(self.wsUrl) + "&wszip=1";
                     	self.downloadFile(url);
                     }));
     		downloadPanel.append($('<button>').addClass('kb-data-list-cancel-btn')

@@ -277,7 +277,7 @@
                         <li><a href="/functional-site/#/search/?q=*" target="_blank">Search Data</a></li>
                         <li><a id="kb-status-btn" href="" target="_blank">KBase Service Status</a></li>
                         <li role="presentation" class="divider"></li>
-                        <li><a id="kb-jira-btn" href="" target="_blank">Submit JIRA ticket</a></li>                        
+                        <li><a id="kb-jira-btn" href="" target="_blank">Submit JIRA ticket</a></li>
                         <li role="presentation" class="divider"></li>
                         <li><a id="kb-about-btn">About</a></li>
 <!--                         <li><a href="#">Help</a></li>
@@ -391,9 +391,9 @@
                 dataType: 'json'
             }).responseText
         );
-        var dataIcons = $.parseJSON(
+        var icons = $.parseJSON(
           $.ajax({
-            url: "{{ static_url('kbase/data-icons.json') }}",
+            url: "{{ static_url('kbase/icons.json') }}",
             async: false,
             dataType: 'json'
           }).responseText
@@ -406,7 +406,7 @@
                             landing_page_map: landingPageMap,
                             release_notes: configJSON['release_notes'],
                             mode: configJSON['mode'],
-                            data_icons: dataIcons,
+                            icons: icons,
                             workspaceId: workspaceId
                           };
     </script>

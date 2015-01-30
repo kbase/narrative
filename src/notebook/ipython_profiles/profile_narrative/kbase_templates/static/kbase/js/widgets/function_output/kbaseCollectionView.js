@@ -39,16 +39,18 @@
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
 			        // parse data		            
-			        var d = data[0];
+			        var d = data[0]['data'];
 			        var idList = [];
 			        for (var i=0; i<d.members.length; i++) {
 				        idList.push({ ref: d.members[i].URL });
 			        }
+			        console.log(idList);
                 
                     if (idList.length > 0) {
 			            kbws.get_objects(idList, function(resData) {
                             var tdata = [];
                             for (var i=0; i<resData.length; i++) {
+                                console.log(resData[i].data.id);
                                 tdata.push({
                                     "id": resData[i].data.id,
                                     "name": resData[i].data.name,

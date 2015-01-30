@@ -39,7 +39,7 @@
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
 				// parse data		            
-				var d = data[0];
+				var d = data[0]['data'];
 
 				// get base numbers
         			var stats  = d.statistics.sequence_stats;
@@ -87,7 +87,7 @@
             				}
         			}
 
-				var html = "<h3>Metagenome Data Sheet for"+d.id+"</h3>";
+				var html = "<h3>Metagenome Data Sheet for "+d.id+"</h3>";
 				html += '<table>';
 				html += '<tr><td style="padding-right: 25px;"><b>Metagenome Name</b></td><td>'+d.name+'</td></tr>';
                                 html += '<tr><td style="padding-right: 25px;"><b>PI</b></td><td>'+d.metadata.project.data.PI_firstname+' '+d.metadata.project.data.PI_lastname+'</td></tr>';
@@ -104,8 +104,10 @@
 				html += '<p>'+qc_fail_seqs+' sequences ('+(qc_fail_seqs / total * 100).toFixed(2)+'%) failed to pass the QC pipeline. Of the sequences that passed QC, '+ann_rna_reads+' sequences ('+(ann_rna_reads / total * 100).toFixed(2)+'%) containe ribosomal RNA genes.'+(is_rna ? '' : ptext)+ftext+'</p>';
 
 				html += '<h3>Project Information</h3>';
-				html += '<p>This metagenome is part of the project '+d.metadata.project.data.project_name+'</p><p>'+d.metadata.project.data.project_description+'</p>';
-
+				html += '<p>This metagenome is part of the project '+d.metadata.project.data.project_name+'</p>';
+				if (d.metadata.project.data.project_description) {
+                    html += '<p>'+d.metadata.project.data.project_description+'</p>';
+                }
 				html += '<h3>Metadata</h3>';
 				html += '<table class="table table-condensed table-striped">';
 				html += '<tr><th colspan=2>MIxS</th></tr>';

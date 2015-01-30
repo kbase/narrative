@@ -208,7 +208,7 @@
 
             var $addDiv =
                 $('<div>').append(
-                    $('<button>').addClass('btn btn-default')
+                    $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
                         .append($('<span>').addClass('fa fa-chevron-circle-left').append(' Add'))
                         .on('click',function() { // probably should move action outside of render func, but oh well
                             $(this).attr("disabled","disabled");
@@ -313,7 +313,7 @@
                                  .append($('<tr>')
                                          .append($('<td>')
                                                  .css({'width':'90px'})
-                                                .append($addDiv))
+                                                .append($addDiv.hide()))
                                          .append($('<td>')
                                                  .css({'width':'50px'})
                                                  .append($logo))/*$('<span>')
@@ -328,13 +328,12 @@
                                 //.addClass('kb-data-list-obj-row')
                                 .append($('<div>').addClass('kb-data-list-obj-row-main')
                                             .append($topTable))
-                                // show/hide ellipses on hover, show extra info on click
-                                /*.mouseenter(function(){
+                                .mouseenter(function(){
                                     $addDiv.show();
                                 })
                                 .mouseleave(function(){
                                     $addDiv.hide();
-                                });*/
+                                });
 
             return $row;
         },

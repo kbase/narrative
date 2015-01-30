@@ -3,6 +3,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.4.8 - 1/29/2015
+__Changes__
+- Fixed issue with input object type for reads ref-lib uploader.
+- Fixed bug with absent red box around long running UJS method
+- Single file download mode was switched off
+- Zip file mode including provenance info was supported for JSON format download
+
 ### Version 0.4.7 - 1/28/2015
 __Changes__
 - Changed Narrative tutorial link to the new one on staging.kbase.us

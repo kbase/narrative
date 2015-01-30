@@ -369,7 +369,7 @@
                     return display;
                 },
                 formatResult: function(object, container, query) {
-                    var display = "<b>"+object.text+"</b>";
+                    var display = '<span style="word-wrap:break-word;"><b>'+object.text+"</b></span>";
                     if (object.info) {
                         // we can add additional info here in the dropdown ...
                         display = display + " (v" + object.info[4]+")<br>";

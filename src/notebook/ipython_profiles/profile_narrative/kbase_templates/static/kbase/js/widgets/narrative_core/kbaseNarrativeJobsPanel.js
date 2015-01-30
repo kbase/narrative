@@ -723,7 +723,15 @@
             var position = null;
             var task = null;
 
-            // don't know nothing about no job!
+            /* Lots of cases for status:
+             * suspend, error, unknown, awe_error - do the usual blocked error thing.
+             * deleted - treat job as deleted
+             * not_found_error - job's not there, so say so.
+             * unauthorized_error - not allowed to see it
+             * network_error - a (hopefully transient) error response based on network issues. refreshing should fix it.
+             * jobstate has step_errors - then at least one step has an error, so we should show them
+             * otherwise, no errors, so render their status happily.
+             */
             if (status === 'Suspend' || status === 'Error' || status === 'Unknown' || status === 'Awe_error') {
                 status = this.makeJobErrorButton(jobId, jobInfo, 'Error');
                 $jobDiv.addClass('kb-jobs-error');
@@ -756,7 +764,7 @@
                         task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
                     }
                 }
-                if (jobState.state && jobState.state.position && jobState.state.position > 0)
+                if (jobState.state && jobState.state.position !== undefined && jobState.state.position !== null)
                     position = jobState.state.position;
             }
             if (jobState.timestamp) {
@@ -769,7 +777,6 @@
             if (position !== null)
                 $infoTable.append(this.makeInfoRow('Queue Position', position));
             $infoTable.append(this.makeInfoRow('Started', started));
-
 
             $jobDiv.append($jobInfoDiv)
                    .append($infoTable);

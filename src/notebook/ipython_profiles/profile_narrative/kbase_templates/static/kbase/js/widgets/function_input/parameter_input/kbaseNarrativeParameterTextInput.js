@@ -310,12 +310,26 @@
                 query: function (query) {
                     var data = {results:[]};
                     
+                    // if there is a current selection (this is a bit of a hack) we
+                    // prefill the input box so we don't have to do additional typing
+                    if (query.term.trim()==="" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
+                        var searchbox = $input.data('select2').search;
+                        if (searchbox) {
+                            $(searchbox).val($input.select2('data').text);
+                            query.term = $input.select2('data').text;
+                            $input.data('select2').kbaseHackLastSelection = null;
+                        }
+                    }
+                    $input.data('select2').kbaseHackLastTerm = query.term;
+                    
                     // populate the names from our valid data object list
+                    var exactMatch = false;
                     if (self.validDataObjectList) {
                         for(var i=0; i<self.validDataObjectList.length; i++){
                             var d = self.validDataObjectList[i];
                             if (query.term.trim()!=="") {
                                 if(self.select2Matcher(query.term,d.name)) {
+                                    if (query.term === d.name) { exactMatch = true; }
                                     data.results.push({id:d.name, text:d.name, info:d.info});
                                 }
                                 // search metadata too
@@ -337,12 +351,10 @@
                         }
                     }
                     
-                    //only allow the name if it is set as an output name...
-                    if (data.results.length===0) {
-                        if (query.term.trim()!=="") {
-                            if(self.isOutputName) {
-                                data.results.push({id:query.term, text:query.term});
-                            }
+                    //always allow the name if it is set as an output name, unshift it to the front...
+                    if (query.term.trim()!=="") {
+                        if(self.isOutputName && !exactMatch) {
+                            data.results.unshift({id:query.term, text:query.term});
                         }
                     }
                     
@@ -368,7 +380,11 @@
                     }
                     return display;
                 }
-            });
+            })
+            .on("select2-selecting",
+                function(e) {
+                    $input.data('select2').kbaseHackLastSelection = e.choice;
+                });
             
             if (defaultValue) {
                 $input.select2("data",{id:defaultValue, text:defaultValue});

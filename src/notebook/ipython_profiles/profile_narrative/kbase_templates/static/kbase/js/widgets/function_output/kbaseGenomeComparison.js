@@ -11,11 +11,9 @@ $.KBWidget({
     parent: "kbaseAuthenticatedWidget",
     version: "1.0.0",
 	ws_name: null,
-	job_id: null,
 	ws_id: null,
     options: {
     	ws_name: null,
-    	job_id: null,
     	ws_id: null
     },
 
@@ -45,7 +43,6 @@ $.KBWidget({
     init: function(options) {
         this._super(options);
         this.ws_name = options.ws_name;
-        this.job_id = options.job_id;
         this.ws_id = options.ws_id;
     	this.pref = this.uuid();
         return this;

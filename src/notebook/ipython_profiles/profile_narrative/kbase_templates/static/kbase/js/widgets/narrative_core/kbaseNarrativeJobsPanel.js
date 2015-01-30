@@ -790,7 +790,7 @@
             else if (jobType === 'ujs' || jobType === 'method') {
                 // assume we have 'in-progress' or 'running' vs. 'complete' or 'done'
                 var submitState = 'complete';
-                if (status.indexOf('run') != -1 || status.indexOf('progress') != -1)
+                if (status.indexOf('run') != -1 || status.indexOf('progress') != -1 || status.indexOf('started') != -1)
                     submitState = 'running';
                 else if (status.indexOf('queue') != -1 || status.indexOf('submit') != -1)
                     submitState = 'submitted';

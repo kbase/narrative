@@ -1986,6 +1986,12 @@ div[class="tooltip-inner"] {
 .kb-data-list-btn:hover {
     background-color: #1E88E5;;
 }
+.kb-data-list-btn[disabled] {
+    box-shadow: none;
+    background-color: #BBDEFB;
+    color: #fff;
+}
+
 
 .kb-data-list-cancel-btn {
     background-color: #F5F5F5;
@@ -2021,6 +2027,20 @@ div[class="tooltip-inner"] {
     font-size: 18pt;
     font-weight: bold;
     text-shadow: -1px 0 #777, 0 1px #777, 1px 0 #777, 0 -1px #777;
+}
+
+/* Nudge the data icon a bit to the left or right */
+.kb-data-icon-rnudge {
+  margin-left: 3px;
+}
+.kb-data-icon-lnudge {
+  margin-right: 3px;
+}
+.kb-data-icon-unudge {
+  margin-bottom: 0.5em;
+}
+.kb-data-icon-dnudge {
+  margin-top: 0.5em;
 }
 
 .kb-data-list-info {

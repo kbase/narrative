@@ -12,12 +12,10 @@
         ws_id: null,
         ws_name: null,
         token: null,
-        job_id: null,
         width: 1150,
         options: {
             ws_id: null,
-            ws_name: null,
-            job_id: null
+            ws_name: null
         },
         loadingImage: "static/kbase/images/ajax-loader.gif",
         wsUrl: window.kbconfig.urls.workspace,
@@ -28,8 +26,6 @@
 
             this.ws_name = options.ws_name;
             this.ws_id = options.ws_id;
-            if (options.job_id)
-            	this.job_id = options.job_id;
             if (options.ws && options.id) {
                   this.ws_id = options.id;
                   this.ws_name = options.ws;

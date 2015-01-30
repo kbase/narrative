@@ -67,7 +67,7 @@
                                 tlen = rendererTable.length;
                             }
 				        
-				            var html = '<h3>Metagenome Collection '+d.name+'</h3><div id="collectionTable'+tlen+'"></div>';
+				            var html = '<h3>Metagenome Collection '+d.name+'</h3><div id="collectionTable'+tlen+'" style="width: 95%;"></div>';
 		            	    container.append(html);
 
 				            var tableCollection = standaloneTable.create({index: tlen});

@@ -58,7 +58,7 @@
 	    		    if (window.hasOwnProperty('rendererTable') && rendererTable.length) {
 				        tlen = rendererTable.length;
 			        }
-            	    container.append('<div id="annotationTable'+tlen+'"></div>');
+            	    container.append('<div id="annotationTable'+tlen+'" style="width: 95%;"></div>');
 			        
 			        var tableAnn = standaloneTable.create({index: tlen});
 	  		        tableAnn.settings.target = document.getElementById("annotationTable"+tlen);

@@ -109,7 +109,7 @@
                     html += '<p>'+d.metadata.project.data.project_description+'</p>';
                 }
 				html += '<h3>Metadata</h3>';
-				html += '<table class="table table-condensed table-striped">';
+				html += '<table class="table table-condensed table-striped" style="width: 95%;">';
 				html += '<tr><th colspan=2>MIxS</th></tr>';
 				for (var i in d.mixs) {
 					if (d.mixs.hasOwnProperty(i)) {

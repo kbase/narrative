@@ -48,6 +48,7 @@
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
                 this.meth_icons = window.kbconfig.icons.methods;
+                this.icon_colors = window.kbconfig.icons.colors;
             }
 
             this.$searchDiv = $('<div>')
@@ -393,7 +394,7 @@
         buildMethod: function(icon, method, triggerFn) {
             /* Logos */
             var icon_name = (icon == "A") ? "app" : "method";
-            var icon_color = (icon == "A") ? "#F0B400" : "#93B9C4";
+            var icon_color = (icon == "A") ? this.icon_colors[9] : this.icon_colors[5];
             //var icon_url = "static/kbase/images/" + icon_name + "-icon.png";
             var icons = this.meth_icons;
             var icon = icons[icon_name];

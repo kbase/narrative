@@ -114,8 +114,8 @@
             if (self.options.isInSidePanel)
             	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
             var $buttonCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input").append(
-                                $('<button>').addClass("btn btn-default btn-sm")
-                                .append($('<span class="kb-parameter-data-row-add">').addClass("glyphicon glyphicon-plus"))
+                                $('<button>').addClass("kb-default-btn kb-btn-sm")
+                                .append($('<span class="kb-parameter-data-row-add">').addClass("fa fa-plus"))
                                 .append(" add another "+self.spec.ui_name)
                                 .on("click",function() { self.addRow() }) );
             self.$addRowController = $('<div>').addClass("row kb-method-parameter-row").append($nameCol).append($buttonCol);
@@ -191,8 +191,8 @@
                                     .tooltip({title:spec.description, html:true}));
                 }
             } else {
-                $removalButton = $('<button>').addClass("btn btn-default btn-sm")
-                                .append($('<span class="kb-parameter-data-row-remove">').addClass("glyphicon glyphicon-remove"))
+                $removalButton = $('<button>').addClass("kb-default-btn kb-btn-sm")
+                                .append($('<span class="kb-parameter-data-row-remove">').addClass("fa fa-remove"))
                                 .append(" remove "+spec.ui_name)
                                 .on("click",function() { self.removeRow(uuidForRemoval); })
                 $hintCol.append($removalButton);
@@ -309,12 +309,27 @@
                 selectOnBlur: true,
                 query: function (query) {
                     var data = {results:[]};
+                    
+                    // if there is a current selection (this is a bit of a hack) we
+                    // prefill the input box so we don't have to do additional typing
+                    if (query.term.trim()==="" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
+                        var searchbox = $input.data('select2').search;
+                        if (searchbox) {
+                            $(searchbox).val($input.select2('data').text);
+                            query.term = $input.select2('data').text;
+                            $input.data('select2').kbaseHackLastSelection = null;
+                        }
+                    }
+                    $input.data('select2').kbaseHackLastTerm = query.term;
+                    
                     // populate the names from our valid data object list
+                    var exactMatch = false;
                     if (self.validDataObjectList) {
                         for(var i=0; i<self.validDataObjectList.length; i++){
                             var d = self.validDataObjectList[i];
                             if (query.term.trim()!=="") {
                                 if(self.select2Matcher(query.term,d.name)) {
+                                    if (query.term === d.name) { exactMatch = true; }
                                     data.results.push({id:d.name, text:d.name, info:d.info});
                                 }
                                 // search metadata too
@@ -336,12 +351,10 @@
                         }
                     }
                     
-                    //only allow the name if it is set as an output name...
-                    if (data.results.length===0) {
-                        if (query.term.trim()!=="") {
-                            if(self.isOutputName) {
-                                data.results.push({id:query.term, text:query.term});
-                            }
+                    //always allow the name if it is set as an output name, unshift it to the front...
+                    if (query.term.trim()!=="") {
+                        if(self.isOutputName && !exactMatch) {
+                            data.results.unshift({id:query.term, text:query.term});
                         }
                     }
                     
@@ -367,7 +380,11 @@
                     }
                     return display;
                 }
-            });
+            })
+            .on("select2-selecting",
+                function(e) {
+                    $input.data('select2').kbaseHackLastSelection = e.choice;
+                });
             
             if (defaultValue) {
                 $input.select2("data",{id:defaultValue, text:defaultValue});

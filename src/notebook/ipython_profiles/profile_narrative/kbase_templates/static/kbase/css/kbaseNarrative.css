@@ -1867,6 +1867,52 @@ div[class="tooltip-inner"] {
 
 /* end: data table */
 
+
+
+/* default blue button in the new style */
+.kb-primary-btn {
+    background-color: #2196F3;
+    border-radius: 1px;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    margin: 3px;
+    font-size: 14px;
+    font-family: "Roboto",Helvetica,Arial,sans-serif;
+    font-weight: 400;
+    box-shadow: 1px 1px 3px #aaa;
+}
+.kb-primary-btn:hover {
+    background-color: #1E88E5;
+}
+.kb-primary-btn[disabled] {
+    box-shadow: none;
+    background-color: #BBDEFB;
+    color: #fff;
+}
+/* gray button in the new style */
+.kb-default-btn {
+    background-color: #F5F5F5;
+    border-radius: 1px;
+    color: #555;
+    border: none;
+    padding: 10px 20px;
+    margin: 3px;
+    font-size: 14px;
+    font-family: "Roboto",Helvetica,Arial,sans-serif;
+    font-weight: 400;
+    box-shadow: 1px 1px 3px #aaa;
+}
+.kb-default-btn:hover {
+    background-color: #CECECE;
+}
+.kb-default-btn[disabled] {
+    box-shadow: none;
+    color: #aaa;
+}
+
+
+
 /* data list */
 .kb-data-list-obj-row {
     transition: all 0.1s ease;
@@ -1992,7 +2038,6 @@ div[class="tooltip-inner"] {
     color: #fff;
 }
 
-
 .kb-data-list-cancel-btn {
     background-color: #F5F5F5;
     border-radius: 1px;
@@ -2011,6 +2056,10 @@ div[class="tooltip-inner"] {
     width:70%;
     margin: 2px;
 }
+
+
+
+
 
 .kb-data-list-logo {
     width:  30pt;

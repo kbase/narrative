@@ -382,7 +382,7 @@
             var importStatus = $('<div class="pull-left kb-import-status">');
             footer.append(importStatus)
             var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>').css({'margin':'10px'});
-            var closeBtn = $('<button class="btn btn-default pull-right">Close</button>').css({'margin':'10px'});
+            var closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin':'10px'});
             
             // Setup the panels that are defined by widgets
             publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus});

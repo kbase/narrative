@@ -759,7 +759,8 @@
                     .append($active)
                     .on('click', function(e) {
                         e.stopPropagation();
-                        $(this).prop('disabled', true).empty().append($working);
+                        var $cpyBtn = $(this);
+                        $cpyBtn.prop('disabled', true).empty().append($working);
                         
                         self.ws.get_workspace_info({workspace: self.ws_name},
                             function(ws_info) {
@@ -849,7 +850,10 @@
                                                             }))
                                                     .append($('<button>').addClass('kb-data-list-cancel-btn')
                                                         .append('Cancel')
-                                                        .click(function() {$alertContainer.empty();} )));
+                                                        .click(function() {
+                                                            $cpyBtn.prop('disabled', false).empty().append($active);
+                                                            $alertContainer.empty();
+                                                        } )));
                                     },
                                     function(error) {
                                         console.error(error);

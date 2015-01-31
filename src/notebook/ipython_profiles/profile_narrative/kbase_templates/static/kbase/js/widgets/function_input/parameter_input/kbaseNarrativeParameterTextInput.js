@@ -24,7 +24,7 @@
         enabled: true,
         isOutputName: false,
         required: true,
-        validDataObjectList: null,
+        validDataObjectList: [],
         allow_multiple:false,
         
         $rowsContainer: null,
@@ -114,8 +114,8 @@
             if (self.options.isInSidePanel)
             	$nameCol.css({'text-align': 'left', 'padding-left': '10px'});
             var $buttonCol = $('<div>').addClass(self.inputColClass).addClass("kb-method-parameter-input").append(
-                                $('<button>').addClass("btn btn-default btn-sm")
-                                .append($('<span class="kb-parameter-data-row-add">').addClass("glyphicon glyphicon-plus"))
+                                $('<button>').addClass("kb-default-btn kb-btn-sm")
+                                .append($('<span class="kb-parameter-data-row-add">').addClass("fa fa-plus"))
                                 .append(" add another "+self.spec.ui_name)
                                 .on("click",function() { self.addRow() }) );
             self.$addRowController = $('<div>').addClass("row kb-method-parameter-row").append($nameCol).append($buttonCol);
@@ -159,7 +159,7 @@
                         self.isUsingSelect2 = true;
                         $input =$('<input id="' + form_id + '" type="text" style="width:100%" />')
                                     .on("change",function() { self.isValid() });
-                        this.validDataObjectList = [];
+                        //this.validDataObjectList = []; - why was this here? ...
                     }
                 }
             }
@@ -184,10 +184,15 @@
                                 .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
             var $hintCol  = $('<div>').addClass(self.hintColClass).addClass("kb-method-parameter-hint");
             var uuidForRemoval = self.genUUID(); var $removalButton=null;
-            if(showHint) { $hintCol.append(spec.short_hint); }
-            else {
-                $removalButton = $('<button>').addClass("btn btn-default btn-sm")
-                                .append($('<span class="kb-parameter-data-row-remove">').addClass("glyphicon glyphicon-remove"))
+            if(showHint) {
+                $hintCol.append(spec.short_hint);
+                if (spec.description && spec.short_hint !== spec.description) {
+                    $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
+                                    .tooltip({title:spec.description, html:true}));
+                }
+            } else {
+                $removalButton = $('<button>').addClass("kb-default-btn kb-btn-sm")
+                                .append($('<span class="kb-parameter-data-row-remove">').addClass("fa fa-remove"))
                                 .append(" remove "+spec.ui_name)
                                 .on("click",function() { self.removeRow(uuidForRemoval); })
                 $hintCol.append($removalButton);
@@ -301,18 +306,30 @@
                 formatNoMatches: noMatchesFoundStr,
                 placeholder:placeholder,
                 allowClear: true,
-                //multiple: true,
-                //maximumSelectionSize:1,
+                selectOnBlur: true,
                 query: function (query) {
-                    
                     var data = {results:[]};
                     
+                    // if there is a current selection (this is a bit of a hack) we
+                    // prefill the input box so we don't have to do additional typing
+                    if (query.term.trim()==="" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
+                        var searchbox = $input.data('select2').search;
+                        if (searchbox) {
+                            $(searchbox).val($input.select2('data').text);
+                            query.term = $input.select2('data').text;
+                            $input.data('select2').kbaseHackLastSelection = null;
+                        }
+                    }
+                    $input.data('select2').kbaseHackLastTerm = query.term;
+                    
                     // populate the names from our valid data object list
+                    var exactMatch = false;
                     if (self.validDataObjectList) {
                         for(var i=0; i<self.validDataObjectList.length; i++){
                             var d = self.validDataObjectList[i];
                             if (query.term.trim()!=="") {
                                 if(self.select2Matcher(query.term,d.name)) {
+                                    if (query.term === d.name) { exactMatch = true; }
                                     data.results.push({id:d.name, text:d.name, info:d.info});
                                 }
                                 // search metadata too
@@ -334,12 +351,10 @@
                         }
                     }
                     
-                    //only allow the name if it is set as an output name...
-                    if (data.results.length===0) {
-                        if (query.term.trim()!=="") {
-                            if(self.isOutputName) {
-                                data.results.push({id:query.term, text:query.term});
-                            }
+                    //always allow the name if it is set as an output name, unshift it to the front...
+                    if (query.term.trim()!=="") {
+                        if(self.isOutputName && !exactMatch) {
+                            data.results.unshift({id:query.term, text:query.term});
                         }
                     }
                     
@@ -354,7 +369,7 @@
                     return display;
                 },
                 formatResult: function(object, container, query) {
-                    var display = "<b>"+object.text+"</b>";
+                    var display = '<span style="word-wrap:break-word;"><b>'+object.text+"</b></span>";
                     if (object.info) {
                         // we can add additional info here in the dropdown ...
                         display = display + " (v" + object.info[4]+")<br>";
@@ -365,7 +380,11 @@
                     }
                     return display;
                 }
-            });
+            })
+            .on("select2-selecting",
+                function(e) {
+                    $input.data('select2').kbaseHackLastSelection = e.choice;
+                });
             
             if (defaultValue) {
                 $input.select2("data",{id:defaultValue, text:defaultValue});
@@ -389,12 +408,14 @@
                 return { isValid: true, errormssgs:[]}; // do not validate if disabled
             }
             var p= self.getParameterValue();
+            if (p===null) { return { isValid: true, errormssgs:[]}; }
             var errorDetected = false;
             var errorMessages = [];
             if(p instanceof Array) {
             } else { p = [p]; }
             for(var i=0; i<p.length; i++) {
                 var errorDetectedHere = false;
+                if (p[i]===null) { continue; }
                 pVal = p[i].trim();
                 // if it is a required field and not empty, keep the required icon around but we have an error (only for the first element)
                 if (pVal==='' && self.required && i===0) {
@@ -574,6 +595,7 @@
          * specific parameter values based on the App spec, so we need a way to do this.
          */
         setParameterValue: function(value) {
+            if (value===null) { return; }
             if(value instanceof Array) {
             } else { value = [value]; }
             
@@ -619,8 +641,32 @@
                 this.spec.optional === 1) {
 //                this.setParameterValue(this.generateRandomOutputString());
             }
+            
+            // if this is optional, and not filled out, then we return null
+            if (this.spec.optional === 1) {
+                if (this.rowInfo.length===1) {
+                    if (this.rowInfo[0].$input.val().trim().length===0) {
+                        return null; // return null since this is optional an no values are set
+                    }
+                    if (this.allow_multiple) {
+                        return [this.rowInfo[0].$input.val()];
+                    }
+                    return this.rowInfo[0].$input.val();
+                }
+                var value = [];
+                for(var i=0; i<this.rowInfo.length; i++) {
+                    if (this.rowInfo[0].$input.val().trim().length>0) {
+                        value.push(this.rowInfo[i].$input.val()); // only push the value if it is not empty
+                    }
+                }
+                if (value.length===0) { return null; } // return null since this is optional and nothing was set
+                return value;
+            }
 
             if (this.rowInfo.length===1) {
+                if (this.allow_multiple) {
+                    return [this.rowInfo[0].$input.val()];
+                }
                 return this.rowInfo[0].$input.val();
             }
             var value = [];

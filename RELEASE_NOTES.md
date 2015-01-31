@@ -3,6 +3,260 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.4.8 - 1/29/2015
+__Changes__
+- Fixed issue with input object type for reads ref-lib uploader.
+- Fixed bug with absent red box around long running UJS method
+- Single file download mode was switched off
+- Zip file mode including provenance info was supported for JSON format download
+- Added lots of new icons for data and apps
+- Updated some of the button styles in the data panels
+
+__Bugfixes__
+- Fixed issue with synchronous methods being treated as asynchronous, and not showing any output.
+
+### Version 0.4.7 - 1/28/2015
+__Changes__
+- Changed Narrative tutorial link to the new one on staging.kbase.us
+- JIRA NAR-444 - Changed websocket error dialog to something much more user-readable and KBase-appropriate.
+
+### Version 0.4.6 - 1/28/2015
+__Changes__
+- Added another separate page when a narrative is not found (not just unauthorized)
+- Added support for single file extraction during download
+- Changed "dna" parameter of plant transcriptome uploader to integer value
+
+__Bugfixes__
+- Fixed issue with deployment script not auto-shutting-down all non-attached instances
+- NAR-500 - completed UJS jobs should stay completed
+- NAR-562 - job deletion should work right, and if a deletion fails, it shouldn't break the jobs panel
+- When a user tries to delete a job, it should always remove that job
+- NAR-484 - long job names should wrap now
+- Fixed more issues with FBA model widgets
+- Fixed boolean properties issues in uploaders
+
+### Version 0.4.5 - 1/28/2015
+__Changes__
+- Changed endpoint URLs for transform service and job service
+- Added better error page when a narrative is either not found or unauthorized
+- Made several adjustments to communities visualization widgets
+
+__Bugfixes__
+- Fixed state checking for long-running job registered with the UJS
+- Fixed issue where FBA service can return unparseable results
+- Fixed various problems with FBA model visualization widgets
+
+
+### Version 0.4.4 - 1/27/2015
+__Changes__
+- Updated deployment script to auto-init/update submodules and clear out old versions of provisioned (but unattached) containers,
+- Updates to metagenome widgets to prevent crashes.
+
+__Bugfixes__
+- JIRA NAR-541 - fixed problem with missing datatables header images
+- Removed (again?) a dead pointer to a deprecated/moved javascript file.
+
+### Version 0.4.3 - 1/27/2015
+__Changes__
+- Updated Transform endpoint to the production version
+- Updated Gene Domains endpoint to the production version
+- Added kbaseDomainAnnotation widget
+- Added Media, PhenotypeSet, and PhenotypeSimulationSet widgets
+- Moved downloader panel to a separate widget
+- Updated log testing proxy
+
+__Bugfixes__
+- Fixed issue where some workspace/narrative mappings were lost
+
+### Version 0.4.2 - 1/23/2015
+__Changes__
+- JIRA NAR-432 - added little red badge in the Jobs header with the number of running jobs
+- Added support for CSV to PhenotypeSet importer
+- Added support for Media importer
+- Added support for importing FBA Models from CSV or SBML
+- Optional dropdown inputs can now pass no inputs if its spec defaults to an empty string
+- Parameter info mouseover icon only appears if the longer info is different from the short hint
+
+### Version 0.4.1 - 1/23/2015
+__Changes__
+- Added link to app man page from app cell
+- Importer for FASTA/FASTQ files was switched to a new version
+
+__Bugfixes__
+- Error modal that appears while trying to import data should be visible now, and not below the page dimmer
+- JIRA NAR-477 - Propagating parameters to multiple steps should work correctly now
+- JIRA NAR-516 - special characters should be properly escaped while searching for data now
+
+### Version 0.4.0 - 1/23/2015
+
+These are significant enough changes - mainly the improved data upload support and (mostly) feature complete data visualization widgets - to add a minor version number.
+
+__Changes__
+- Updated URL of tutorial page
+- Updated user-icon link to go to user profile page instead of globus
+- Added features to Gene Domains visualization widget
+- Updated FBA model widgets
+- The 'Search Data' menu item should make a new browser window
+- Added refresh button to data slideout
+- Added example transcriptome data
+- Updated import UI for all supported types
+- Improved error messages in data panel and data slideout
+
+__Bugfixes__
+- Fixed some problems in create_metagenome_set widget
+- JIRA NAR-465 Fixed problem where workspace id wasn't internally available when it should be
+- JIRA KBASE-1610 Fixed issue with selecting multiple genomes for an input to an app
+
+### Version 0.3.18 - 1/22/2015
+__Changes__
+- Added a different FBA model viewer widget
+- Changed communities widgets to properly fetch an auth token
+
+__Bugfixes__
+- JIRA NAR-478 - fixed problem where contig count in genome viewer was incorrect
+- JIRA NAR-487 - plant genomes should be copyable now in data slide out
+- JIRA NAR-441 - corrupted Narratives should be properly handled; deleting a Narrative from a workspace via the API shouldn't break the Narrative loading process
+
+### Version 0.3.17 - 1/22/2015
+__Bugfixes__
+- Repaired link to FBA model visualization widgets
+
+### Version 0.3.16 - 1/21/2015
+__Changes__
+- Added link to KBase internal status page.
+- Added programmatic access to workspace id.
+- KBase cells can now be collapsed and restored.
+- App and Method cells now have a spinning icon while running.
+- A traceback should now appear (where applicable) in the Jobs panel.
+- Added "next steps" at bottom of app/method
+
+### Version 0.3.15 - 1/21/2015
+__Changes__
+- Updated type name for Assembly File transform method
+- Added reset button to App cells (method cells still need fixing)
+- Added widgets for metagenome sets
+
+__Bugfixes__
+- JIRA NAR-418 - fixed issue where job error was cleared on panel refresh.
+- Fixed issue where method panel error state wasn't being activated properly.
+
+### Version 0.3.14 - 1/21/2015
+__Changes__
+- Updated server-side Narrative management code to always keep a queue of unattached Narrative containers present. When a user logs on, they already have one ready to connect to.
+- Added visualization widget for microbial community abundance and boxplots.
+- Method details and documentation are visible in a new window now.
+- Added app and method icons for the method panel.
+- Added minimize to app & method panels
+
+### Version 0.3.13 - 1/20/2015
+__Changes__
+- Added Transform service client code
+- Exposed transform service as a method
+- Added assembly view widget
+- Added icons for Apps and Methods in panel
+
+__Bugfixes__
+- Now inserts a cell instead of freezing when DnD of data onto empty narrative
+- JIRA NAR-388 - fixed a problem where errors on service invocation weren't being stringified properly before logging
+- Github issue #162 fixed - drag and drop data onto an empty Narrative now doesn't lock up
+- JIRA NAR-402 - saving a Narrative updates the Manage panel
+- JIRA KBASE-1199 - newly registered jobs should show a timestamp
+- KBASE-1210 - (not totally fixed) - debug info for launched methods should show up on the console now.
+- NAR-400, KBASE-1202, KBASE-1192, KBASE-1191 - these were all related to the apps not properly catching errors when an output widget fails to render
+- fixed a case where a typespec references a non-existent viewer
+
+### Version 0.3.12 - 1/20/2015
+__Changes__
+- Fixes issue where the Method Gallery overlay panel wouldn't be populated if there were any problematic method/app specs.
+- Added a link to directly submit a JIRA ticket from the pulldown menu.
+
+### Version 0.3.11 - 1/16/2015
+__Changes__
+- Running Apps and Methods have a "Cancel" button associated with them. Clicking that will restore the cell to its input state, and cancel (and delete) the running job
+- Deleting App/Method cells now prompts to delete, warning the user that it'll kill any running job (if they've been run before)
+- Deleting jobs now triggers the call to the right back end services to delete the running job itself.
+- Deleting a job from a running cell now unlocks that cell so its inputs can be used again.
+- A dangling job with no associated cell should properly error.
+- A dangling job on the front end that's been deleted on the back should properly error.
+- A job in an error state (not the above, but a runtime error) should now reflect an error on its associated cell (if present)
+- Fixed an error where running a method automatically made an output cell connected to incomplete data.
+- Refactored Jobs panel to only look up jobs that are incomplete (e.g. not 'error', 'completed', 'done', or 'deleted')
+- Toolbars should only appear over IPython cells now (KBase cells have their own menus)
+- Styled app/method control buttons to be closer to the style guide / mockup.
+- Logging of apps and methods is substantially less ugly and made from fewer backslashes.
+
+### Version 0.3.10 - 1/16/2015
+__Changes__
+- Narrative panel supports copy/delete/history/revert of narratives.
+- Narrative panel shows apps/methods/description (if exists) for each narrative.
+- Links to LP for genomes and genes were added in Proteome Comparison widget.
+- 'Download as JSON' button was added for objects in narrative data list.
+- Links to LP were added for genes in genome viewer.
+- ContigSet viewer was added.
+- Plant genomes were added into public data tab (and GWAS types were removed).
+- Fixed problem where error cells were not being shown properly.
+- Added several widgets to support communities apps and methods.
+
+### Version 0.3.9 - 1/14/2015
+__Changes__
+- Restyled menu bar buttons - 'about' button is now under the dropdown menu on the upper left of the screen, removed the global 'delete cell' button (for now!)
+- Restyled code and markdown cell buttons in the lower right corner of the page
+- Added a debug message that appears in the browser's Javascript console whenever an app/method object is sent to the NJS
+- App and Method specs should be globally available to all elements on the page from the method panel
+- Various styling adjustments on the data panel overlay
+- The 'more' button under each app and method in the methods panel should now link to an external manual page
+
+### Version 0.3.8 - 1/13/2015
+__Changes__
+- Drag and drop data and data viewer bug fixes.
+- Position of a queued job should now be tracked in the job panel.
+- The Narrative object metadata now tracks the number of each type of cell in that Narrative. Method and App cells are further tracked by their id.
+
+### Version 0.3.7 - 1/12/2015
+__Changes__
+- Fix for int, float and array types of input sending to NJS
+- Fix for empty parameter values in import tab
+- Support was added into public data for meta-genomes and 6 types of GWAS
+- Fixed 'Add Data' button in a new Narrative - should properly open the data overlay now
+- Updated layout and styling of Method Gallery overlay to be closer to the mockup
+
+### Version 0.3.6 - 1/9/2015
+__Changes__
+- Changed install.sh - now it requires an existing Python virtual environment for installation
+- Removed text/code cell buttons from method panel - they've now migrated to the lower right side of the page.
+- Started restyling various elements to match the new style guide (colors, shadows, etc.)
+- Inserted (better) icons than just letters for data objects
+- Public data tab on side panel was redesigned. Genome mode using search API is now the only supported mode there.
+- Method cell changes
+    - Fixed problem where starting a long-running method would immediately show an output cell with broken results
+    - Fixed problem when submitting a method with numerical value inputs
+    - Fixed problem when submitting a method with multiple possible output types for a single parameter
+    - Fixed problem where method cell parameters were not being properly validated before sending the job
+- Added document that details app failure points
+- Data list supports deleting, renaming, reverting objects
+
+### Version 0.3.5 - 1/7/2015
+__Changes__
+- Added link to release notes in 'About' dialog.
+- Removed old links from the Navbar menu.
+- Added separate 'Jobs' tab to side panel.
+- Fixed problem with Job errors overflowing the error modal.
+- Method panel changes
+    - The magnifying glass button should now toggle the search input.
+    - Added a 'type:_objecttype_' filter on methods and apps. This filters by their parameters. E.g. putting 'type:genome' or 'type:KBaseGenomes.Genome' in there will only show methods/apps that have a genome as a parameter.
+    - Added an event that can be fired to auto-filter the methods and apps.
+    - Updated the style to a more 'material' look.
+    - All specs are now fetched at Narrative startup. This will speed up some of the in-page population, but any apps with errors in their specs are no longer displayed in the list.
+    - Removed the '+/-' buttons for expanding the tooltip, replaced with '...'
+- Data list changes
+    - Added a big red '+' button to add more data.
+    - Updated the style to a more 'material' look.
+    - Removed the '+/-' buttons for showing metadata info, replaced with '...'
+- Import tab on GetData side panel allows now to upload genome from GBK file, transcriptomes from Fasta and short reads from Fasta and Fastq
+- Viewers can be open for main data types by drag-n-drop objects from Data panel to narrative
+- States of long running methods calling services are now shown on Job panel and Job panel waits for 'Done' state before show output widget
+- Added a 'debug' viewer to the apps. After starting an app's run, click on the gear menu in the app cell and select 'View Job Submission'. This will both emit the returned kernel messages from that app run into your browser's Javascript console, and it will create and run a code cell that will show you the object that gets set to the Job Service.
+
 ### Version 0.3.4
 __Changes__
 - Redesign of the Method Gallery panel

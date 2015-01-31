@@ -25,7 +25,6 @@
         
         render: function() {
             var self = this;
-            console.log(this.spec);
             var spec = self.spec;
             
             // check if we need to allow multiple values
@@ -87,6 +86,10 @@
                                 .append($('<div>').css({"display":"inline-block"}).append($feedbackTip));
                 var $hintCol  = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
                                 .append(spec.short_hint);
+		if (spec.description && spec.short_hint !== spec.description) {
+		    $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
+					.tooltip({title:spec.description, html:true}));
+		}
                 $row.append($nameCol).append($inputCol).append($hintCol);
                 
                 var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
@@ -127,6 +130,7 @@
                 return { isValid: true, errormssgs:[]}; // do not validate if disabled
             }
             var p= self.getParameterValue();
+	    if (p===null) { return { isValid: true, errormssgs:[]}; }
             var errorDetected = false;
             var errorMessages = [];
             if(p instanceof Array) {
@@ -222,6 +226,11 @@
          */
         getParameterValue: function() {
             var value = this.$elem.find("#"+this.spec.id).val();
+	    if (this.spec.optional === 1) {
+		if (value.trim().length===0) {
+		    return null;
+		}
+	    }
             return value;
         }
         

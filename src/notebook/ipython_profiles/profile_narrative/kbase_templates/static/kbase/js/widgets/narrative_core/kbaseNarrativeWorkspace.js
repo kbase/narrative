@@ -2,7 +2,7 @@
  * Top-level 'widget' for the workspace interaction with the KBase narrative.
  *
  * The widget lists the objects in the workspace and include a search field
- * to filter the list, as well as a button to 'Add' new items from sources 
+ * to filter the list, as well as a button to 'Add' new items from sources
  * like the CDS and local files.
  *
  * Options:
@@ -12,7 +12,7 @@
  *
  * Triggers events:
  * updateData.Narrative - when any externally represented data should be updated.
- * 
+ *
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
@@ -74,21 +74,21 @@
 
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
-            $([IPython.events]).on('notebook_loaded.Notebook', 
+            $([IPython.events]).on('notebook_loaded.Notebook',
                 $.proxy(function() {
                     this.rebindActionButtons();
                     this.hideGeneratedCodeCells();
                 }, this)
             );
 
-            $(document).on('workspaceUpdated.Narrative', 
+            $(document).on('workspaceUpdated.Narrative',
                 $.proxy(function(e, ws_id) {
                     this.ws_id = ws_id;
-                }, 
+                },
                 this)
             );
 
-            $(document).on('dataUpdated.Narrative', 
+            $(document).on('dataUpdated.Narrative',
                 $.proxy(function(event) {
                     if (IPython && IPython.notebook) {
                         // XXX: This is a hell of a hack. I hate
@@ -99,9 +99,6 @@
                         this.refreshFunctionInputs(!this.inputsRendered);
                         if (!this.inputsRendered) {
                             this.loadAllRecentCellStates();
-                            this.updateNarrativeDependencies();
-                            // temp hack until I think of something better.
-                            this.trigger('updateNarrativeDataTab.Narrative');
                         }
 
                         this.inputsRendered = true;
@@ -110,17 +107,7 @@
                 this)
             );
 
-            // unused for now.
-            // maybe update to modify vis of KBase widgets.
-            // but nuking for the moment.
-            // $(document).on('servicesUpdated.Narrative',
-            //     $.proxy(function(event, serviceSet) {
-            //         console.log("listing services!");
-            //     },
-            //     this)
-            // );
-
-            $(document).on('narrativeDataQuery.Narrative', 
+            $(document).on('narrativeDataQuery.Narrative',
                 $.proxy(function(e, callback) {
                     var objList = this.getNarrativeDependencies();
                     if (callback) {
@@ -133,12 +120,15 @@
             // When a user clicks on a function, this event gets fired with
             // method information. This builds a function cell out of that method
             // and inserts it in the right place.
-            $(document).on('function_clicked.Narrative',
-                $.proxy(function(event, method) {
-                    this.buildFunctionCell(method);
-                }, 
-                this)
-            );
+            /** DEPRECATED **
+             * use methodClicked.Narrative or appClicked.Narrative instead *
+             */
+            // $(document).on('function_clicked.Narrative',
+            //     $.proxy(function(event, method) {
+            //         this.buildFunctionCell(method);
+            //     },
+            //     this)
+            // );
 
             $(document).on('methodClicked.Narrative',
                 $.proxy(function(event, method) {
@@ -178,16 +168,77 @@
             $(document).on('createOutputCell.Narrative',
                 $.proxy(function(event, data) {
                     var cellIndex = $('#'+data.cellId).nearest('.cell').index();
-                    this.createOutputCell(IPython.notebook.get_cell(cellIndex), 
-                        {'embed' : true, 'data' : this.safeJSONStringify(data.result)});
+                    var params = {'embed' : true,
+                                  'data': this.safeJSONStringify(data.result)};
+                    if (data.next_steps) {
+                      console.debug("adding next steps in create");
+                      params.next_steps = data.next_steps;
+                    }
+                    this.createOutputCell(IPython.notebook.get_cell(cellIndex),
+                                          params);
                 }, this)
             );
 
+            $(document).on('showNextSteps.Narrative',
+              $.proxy(function(event, obj) {
+                this.showNextSteps(obj);
+              }, this));
+
+            $(document).on('createViewerCell.Narrative',
+                $.proxy(function(event, data) {
+                    this.createViewerCell(data.nearCellIdx, data, data.widget);
+                }, this)
+            );
+
+            this.initDeleteCellModal();
             // Initialize the data table.
             this.render();
             return this;
         },
-        
+
+        initDeleteCellModal: function() {
+            this.$deleteCellModalBody = $('<div>');
+
+            var buttonList = [
+                {
+                    name : 'Cancel',
+                    type : 'default',
+                    callback : function(e, $prompt) {
+                        this.cellToDelete = null;
+                        $prompt.closePrompt();
+                    },
+                },
+                {
+                    name : 'Delete',
+                    type : 'danger',
+                    callback : $.proxy(function(e, $prompt) {
+                        if (this.cellToDelete !== undefined && this.cellToDelete !== null) {
+                            var cell = IPython.notebook.get_cell(this.cellToDelete);
+                            var removeId = $(cell.element).find('[id^=kb-cell-]').attr('id');
+                            this.trigger('cancelJobCell.Narrative', removeId, false);
+                            IPython.notebook.delete_cell(this.cellToDelete);
+                            this.cellToDelete = null;
+                        }
+                        $prompt.closePrompt();
+                    }, this)
+                }
+            ];
+            this.$deleteCellModal = $('<div>').kbasePrompt({
+                title : 'Delete Cell and Job?',
+                body : this.$deleteCellModalBody,
+                controls : buttonList
+            });
+        },
+
+        showDeleteCellModal: function(index, cell, message) {
+            if (cell && cell.metadata[this.KB_CELL]) {
+                this.cellToDelete = index;
+                if (message)
+                    this.$deleteCellModalBody.empty().html(message);
+                this.$deleteCellModal.openPrompt();
+            }
+        },
+
         /**
          * @method buildMethodCell
          * @param {Object} method -
@@ -195,6 +246,8 @@
          */
         buildMethodCell: function(method) {
             var cell = IPython.notebook.insert_cell_below('markdown');
+            cell.celltoolbar.hide();
+
             // make this a function input cell, as opposed to an output cell
             this.setMethodCell(cell, method);
 
@@ -208,7 +261,7 @@
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(method) + "'});" +
+                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
                               "</script>";
 
             cell.set_text(cellContent);
@@ -229,10 +282,19 @@
             var self = this;
             var code = '';
             var showOutput = true;
+
+            // Three cases to NOT show immediately:
+            // 1. method.job_id_output_field is not null    -- long running (via UJS)
+            // 2. method.behavior.kb_service_method is not null && method.behavior.kb_service_url IS null    -- long running service call (via NJS)
+            // 3. method.behavior.script_module is not null -- AWE script backend (via NJS)
+
             // if there's a job_id_output_field in the method, then it's long-running, and we shouldn't show an output cell right away.
             // ...or maybe show a temporary one?
-            if (data.method.job_id_output_field && data.method.job_id_output_field != null)
+            if ((data.method.job_id_output_field && data.method.job_id_output_field != null) ||
+                (data.method.behavior.kb_service_method && (!data.method.behavior.kb_service_url || data.method.behavior.kb_service_url.length === 0)) ||
+                (data.method.behavior.script_module)) {
                 showOutput = false;
+            }
             // old, pre-njs style where the methods were all living in IPython-land
             if (data.method.behavior.python_class && data.method.behavior.python_function) {
                 code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
@@ -244,7 +306,8 @@
             }
             else {
                 // something else!
-                // do nothing for now.
+                // do the standard for now.
+                code = this.buildGenericRunCommand(data);
             }
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
@@ -258,8 +321,9 @@
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
         },
 
-        buildAppCell: function(appInfo) {
+        buildAppCell: function(appSpec) {
             var cell = IPython.notebook.insert_cell_below('markdown');
+            cell.celltoolbar.hide();
             this.removeCellEditFunction(cell);
 
             var tempContent = '<img src="' + this.options.loadingImage + '">';
@@ -267,28 +331,20 @@
             cell.rendered = false;
             cell.render();
 
-            this.methClient.get_app_spec({'ids': [appInfo.id]}, 
-                $.proxy(function(appSpec) {
-                    this.setAppCell(cell, appSpec[0]);
-                    var cellIndex = IPython.notebook.ncells() - 1;
-                    var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
+            this.setAppCell(cell, appSpec);
+            var cellIndex = IPython.notebook.ncells() - 1;
+            var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
 
-                    // The various components are HTML STRINGS, not jQuery objects.
-                    // This is because the cell expects a text input, not a jQuery input.
-                    // Yeah, I know it's ugly, but that's how it goes.
-                    var cellContent = "<div id='" + cellId + "'></div>" +
-                                      "\n<script>" +
-                                      "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec[0]) + "', 'cellId' : '" + cellId + "'});" +
-                                      "</script>";
-                    cell.set_text(cellContent);
-                    cell.rendered = false;
-                    cell.render();
-
-                }, this),
-                $.proxy(function(error) {
-
-                }, this)
-            );
+            // The various components are HTML STRINGS, not jQuery objects.
+            // This is because the cell expects a text input, not a jQuery input.
+            // Yeah, I know it's ugly, but that's how it goes.
+            var cellContent = "<div id='" + cellId + "'></div>" +
+                              "\n<script>" +
+                              "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec) + "', 'cellId' : '" + cellId + "'});" +
+                              "</script>";
+            cell.set_text(cellContent);
+            cell.rendered = false;
+            cell.render();
         },
 
         runAppCell: function(data) {
@@ -301,17 +357,18 @@
             var self = this;
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content); },
+                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, "app"); },
                 'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
                 'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
                 'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
-            }
+            };
 
             var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
         },
 
         buildAppCommand: function(appSpec, methodSpecs, parameters) {
+            console.log([appSpec, methodSpecs, parameters]);
             var appSpecJSON = this.safeJSONStringify(appSpec);
             var methodSpecJSON = this.safeJSONStringify(methodSpecs);
             var paramsJSON = this.safeJSONStringify(parameters);
@@ -321,100 +378,102 @@
                    "method('" + appSpecJSON + "', '" + methodSpecJSON + "', '" + paramsJSON + "')";
         },
 
-        /**
-         * @method buildFunctionCell
-         * @param {Object} method - the JSON schema version of the method to invoke. This will
-         * include a list of parameters and outputs.
-         */
-        buildFunctionCell: function(method) {
-            var cell = IPython.notebook.insert_cell_below('markdown');
-            // make this a function input cell, as opposed to an output cell
-            this.setFunctionCell(cell, method);
+        /** DEPRECATED / OBSOLETED - use buildMethodCell or buildAppCell instead. **/
+        // /**
+        //  * @method buildFunctionCell
+        //  * @param {Object} method - the JSON schema version of the method to invoke. This will
+        //  * include a list of parameters and outputs.
+        //  */
+        // buildFunctionCell: function(method) {
+        //     var cell = IPython.notebook.insert_cell_below('markdown');
+        //     cell.celltoolbar.hide();
+        //     // make this a function input cell, as opposed to an output cell
+        //     this.setFunctionCell(cell, method);
 
-            // THIS IS WRONG! FIX THIS LATER!
-            // But it should work for now... nothing broke up to this point, right?
-            var cellIndex = IPython.notebook.ncells() - 1;
-            var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
+        //     // THIS IS WRONG! FIX THIS LATER!
+        //     // But it should work for now... nothing broke up to this point, right?
+        //     var cellIndex = IPython.notebook.ncells() - 1;
+        //     var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
 
-            // The various components are HTML STRINGS, not jQuery objects.
-            // This is because the cell expects a text input, not a jQuery input.
-            // Yeah, I know it's ugly, but that's how it goes.
-            var cellContent;
+        //     // The various components are HTML STRINGS, not jQuery objects.
+        //     // This is because the cell expects a text input, not a jQuery input.
+        //     // Yeah, I know it's ugly, but that's how it goes.
+        //     var cellContent;
 
-            if (this.validateMethod(method)) {
-                // This is the list of parameters for the given method
-                var inputWidget = this.defaultInputWidget;
-                if (method.properties.widgets.input)
-                    inputWidget = method.properties.widgets.input;
+        //     if (this.validateMethod(method)) {
+        //         // This is the list of parameters for the given method
+        //         var inputWidget = this.defaultInputWidget;
+        //         if (method.properties.widgets.input)
+        //             inputWidget = method.properties.widgets.input;
 
-                var inputDiv = "<div id='inputs'></div>";
+        //         var inputDiv = "<div id='inputs'></div>";
 
-                // These are the 'delete' and 'run' buttons for the cell
-                var button_content;
-                if (this.readonly) {
-                    button_content = "";
-                }
-                else {
-                    button_content = "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default btn-sm'>Delete</button> " +
-                                     "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary btn-sm'>Run</button>";
-                                     //style='margin-top:10px'>" +
-                }
-                var buttons = "<div class='buttons pull-right'>" + button_content +
-                              "</div>";
+        //         // These are the 'delete' and 'run' buttons for the cell
+        //         var button_content;
+        //         if (this.readonly) {
+        //             button_content = "";
+        //         }
+        //         else {
+        //             button_content = "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default btn-sm'>Delete</button> " +
+        //                              "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary btn-sm'>Run</button>";
+        //                              //style='margin-top:10px'>" +
+        //         }
+        //         var buttons = "<div class='buttons pull-right'>" + button_content +
+        //                       "</div>";
 
-                // The progress bar remains hidden until invoked by running the cell
-                var progressBar = "<div id='kb-func-progress' class='pull-left' style='display:none;'>" +
-                                    "<div class='progress progress-striped active kb-cell-progressbar'>" +
-                                        "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
-                                        "aria-valuemin='0' aria-valuemax='100' style='width:0%'/>" +
-                                    "</div>" +
-                                    "<p class='text-success'/>" +
-                                  "</div>";
+        //         // The progress bar remains hidden until invoked by running the cell
+        //         var progressBar = "<div id='kb-func-progress' class='pull-left' style='display:none;'>" +
+        //                             "<div class='progress progress-striped active kb-cell-progressbar'>" +
+        //                                 "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
+        //                                 "aria-valuemin='0' aria-valuemax='100' style='width:0%'/>" +
+        //                             "</div>" +
+        //                             "<p class='text-success'/>" +
+        //                           "</div>";
 
-                // Associate method title with description via BS3 collapsing
-                var methodId = cellId + "-method-details";
-                var buttonLabel = "...";
-                var methodDesc = method.description.replace(/"/g, "'"); // double-quotes hurt markdown rendering
-                var methodInfo = "<span class='kb-func-desc'>" +
-                                   "<h1 style='display:inline'><b>" + method.title + "</b></h1>" +
-                                   "<span class='pull-right kb-func-timestamp' id='last-run'></span>" +
-                                   "<button class='btn btn-default btn-xs' type='button' data-toggle='collapse'" +
-                                      " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
-                                    "<div><h2 class='collapse' id='" + methodId + "'>" +
-                                      methodDesc + "</h2></div>" +
-                                 "</span>";
+        //         // Associate method title with description via BS3 collapsing
+        //         var methodId = cellId + "-method-details";
+        //         var buttonLabel = "...";
+        //         var methodDesc = method.description.replace(/"/g, "'"); // double-quotes hurt markdown rendering
+        //         var methodInfo = "<span class='kb-func-desc'>" +
+        //                            "<h1 style='display:inline'><b>" + method.title + "</b></h1>" +
+        //                            "<span class='pull-right kb-func-timestamp' id='last-run'></span>" +
+        //                            "<button class='btn btn-default btn-xs' type='button' data-toggle='collapse'" +
+        //                               " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
+        //                             "<div><h2 class='collapse' id='" + methodId + "'>" +
+        //                               methodDesc + "</h2></div>" +
+        //                          "</span>";
 
-                // Bringing it all together...
-                cellContent = "<div class='panel kb-func-panel kb-cell-run' id='" + cellId + "'>" +
-                                  "<div class='panel-heading'>" +
-                                      methodInfo +
-                                  "</div>" +
-                                  "<div class='panel-body'>" +
-                                      inputDiv +
-                                  "</div>" +
-                                  "<div class='panel-footer' style='overflow:hidden'>" +
-                                      progressBar +
-                                      buttons +
-                                  "</div>" +
-                              "</div>" +
-                              "\n<script>" + 
-                              "$('#" + cellId + " > div > div#inputs')." + inputWidget + "({ method:'" +
-                               this.safeJSONStringify(method) + "'});" +
-                              "</script>";
-                console.debug("created input cell '", methodDesc, "', id = ", cellId);
-            }
-            else {
-                cellContent = "Error - the selected method is invalid.";
-            }
-            cell.set_text(cellContent);
+        //         // Bringing it all together...
+        //         cellContent = "<div class='panel kb-func-panel kb-cell-run' id='" + cellId + "'>" +
+        //                           "<div class='panel-heading'>" +
+        //                               methodInfo +
+        //                           "</div>" +
+        //                           "<div class='panel-body'>" +
+        //                               inputDiv +
+        //                           "</div>" +
+        //                           "<div class='panel-footer' style='overflow:hidden'>" +
+        //                               progressBar +
+        //                               buttons +
+        //                           "</div>" +
+        //                       "</div>" +
+        //                       "\n<script>" +
+        //                       "$('#" + cellId + " > div > div#inputs')." + inputWidget + "({ method:'" +
+        //                        this.safeJSONStringify(method) + "'});" +
+        //                       "</script>";
+        //         console.debug("created input cell '", methodDesc, "', id = ", cellId);
+        //     }
+        //     else {
+        //         cellContent = "Error - the selected method is invalid.";
+        //     }
+        //     cell.set_text(cellContent);
 
-            cell.rendered = false;
-            cell.render();
+        //     cell.rendered = false;
+        //     cell.render();
 
-            // restore the input widget's state.
-            this.removeCellEditFunction(cell);
-            this.bindActionButtons(cell);
-        },
+        //     // restore the input widget's state.
+        //     this.removeCellEditFunction(cell);
+        //     this.bindActionButtons(cell);
+        // },
 
         /**
          * A TEMPORARY FUNCTION that should refresh and update the given cell's metadata to the new(er) version,
@@ -473,7 +532,7 @@
          * @return {string} JSON string
          */
         safeJSONStringify: function(method) {
-            var esc = function(s) { 
+            var esc = function(s) {
                 return s.replace(/'/g, "&apos;")
                         .replace(/"/g, "&quot;");
             };
@@ -502,7 +561,6 @@
                     var cell = cells[i];
                     if (this.isFunctionCell(cell)) {
                         var method = cell.metadata[this.KB_CELL].method;
-                        var inputWidget = this.defaultInputWidget;
                         // legacy cells.
                         if (method.properties) {
                             var inputWidget = method.properties.widgets.input || this.defaultInputWidget;
@@ -748,7 +806,7 @@
          },
 
         /**
-         * Bind the 'Copy narrative' button to 
+         * Bind the 'Copy narrative' button to
          * a function that copies the narrative.
          */
         bindCopyButton: function(element) {
@@ -905,7 +963,7 @@
                         }
                     }
                 }
-                
+
             }
 
             // look up the deps in the data panel.
@@ -1253,7 +1311,64 @@
          * @private
          */
         deleteCell: function(index) {
-            IPython.notebook.delete_cell(index);
+            if (index !== undefined && index !== null) {
+                var cell = IPython.notebook.get_cell(index);
+                if (cell) {
+                    // if it's a kbase method or app cell, trigger a popup
+                    if (cell.metadata[this.KB_CELL]) {
+                        widget = null; // default is app cell
+                        var state = 'input'; // default is input... also doubles as a proxy for output cells
+                        if (this.isFunctionCell(cell))
+                            widget = 'kbaseNarrativeMethodCell';
+                        else if (this.isAppCell(cell))
+                            widget = 'kbaseNarrativeAppCell';
+                        if (widget)
+                            state = $(cell.element).find('div[id^=kb-cell-]')[widget]('getRunningState');
+
+                        if (state === 'input') {
+                            IPython.notebook.delete_cell(index);
+                            return;
+                        }
+                        else {
+                            // if it's running, say so, and say it'll stop and delete the job
+                            // if it's done, say it'll clear the associated job, but won't delete data
+                            // if it's error, say it'll delete the assoc'd job
+
+                            var stateWarning = 'Deleting this cell will also delete any associated job. ' +
+                                               'Any generated data will be retained. Continue?';
+
+                            this.showDeleteCellModal(index, cell, stateWarning);
+                            // switch(state) {
+                            //     case 'running':
+                            //         // set some text
+                            //         stateWarning = 'This cell appears to have a running job associated with it. ' +
+                            //                        'Deleting this cell will also stop and delete the running job. ' +
+                            //                        'Any generated data will not be deleted. Continue?';
+                            //         break;
+                            //     case 'error':
+                            //         // set some text
+                            //         stateWarning = 'This cell appears to have produced an error while running. ' +
+                            //                        'Deleting this cell will also stop and delete the associated job. ' +
+                            //                        'Any generated data will be maintained. Continue?';
+                            //         break;
+                            //     case 'done':
+                            //         // set some text
+                            //         stateWarning = 'This cell has finished running but may have a job still associated with it. ' +
+                            //                        'Deleting this cell will also delete that job, but not any generated data. ' +
+                            //                        'Continue?';
+                            //         break;
+                            //     default:
+                            //         // set no text
+                            //         stateWarning = 'Deleting this cell will also delete any associated job. Any generated data will be retained. Continue?';
+                            //         break;
+                            // }
+                        }
+                    }
+                    else {
+                        IPython.notebook.delete_cell(index);
+                    }
+                }
+            }
         },
 
         /**
@@ -1262,7 +1377,7 @@
          */
         bindDeleteButton: function() {
             var self = this;
-            return( 
+            return(
                 function(event) {
                     event.preventDefault();
                     var idx = IPython.notebook.get_selected_index();
@@ -1283,7 +1398,7 @@
         rebindActionButtons: function() {
             if (!(IPython && IPython.notebook))
                 return;
-            
+
             // Rewrite the following to iterate using the IPython cell
             // based methods instead of DOM objects
 
@@ -1295,7 +1410,7 @@
                 var cellType = cell.metadata[this.KB_CELL];
                 if (cellType) {
                     this.removeCellEditFunction(cell);
-                    if (this.isFunctionCell(cell)) { 
+                    if (this.isFunctionCell(cell)) {
                         // added to only update the built-in non-widgetized function cells
                         if (cell.metadata[this.KB_CELL].method.properties) { // cheat to see if it's an old one!
                             this.bindActionButtons(cell);
@@ -1375,8 +1490,8 @@
                       "method = Service.get_service('" + escService + "').get_method('" + escMethod + "')\n";
 
             var paramList = params.map(
-                function(p) { 
-                    return "'" + addSlashes(p) + "'"; 
+                function(p) {
+                    return "'" + addSlashes(p) + "'";
                 }
             );
             cmd += "method(" + paramList + ")";
@@ -1461,7 +1576,7 @@
                 });
 
                 errorBlob.traceback = errTb;
-                this.createErrorCell(cell, JSON.stringify(errorBlob));
+                this.createOutputCell(cell, '{"error" :' + JSON.stringify(errorBlob) + '}', true);
 
             }
             this.showCellProgress(cell, "DONE", 0, 0);
@@ -1504,8 +1619,8 @@
             if (msgType === "stream") {
                 buffer += content.data;
                 var lines = buffer.split("\n");
-                var offs = 0, 
-                    done = false, 
+                var offs = 0,
+                    done = false,
                     self = this,
                     result = "";
 
@@ -1585,8 +1700,24 @@
                     // if we found progress markers, trim processed prefix from buffer
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
-                if (result.length > 0 && showOutput) {
-                    this.createOutputCell(cell, result);
+                if (result.length > 0) {
+                    if (showOutput === "app" && window.kbconfig && window.kbconfig.mode === "debug") {
+                        if (!cell.metadata[this.KB_CELL].stackTrace)
+                            cell.metadata[this.KB_CELL].stackTrace = [];
+                        // try to parse the result as JSON - if so, then it's a final result and we just
+                        // need the 'data' field
+                        try {
+                            var data = JSON.parse(result);
+                            if (data && typeof data === 'object')
+                                cell.metadata[this.KB_CELL].stackTrace.push(data.data);
+                        }
+                        catch (err) {
+                            // it's NOT JSON, and we should just append it.
+                            cell.metadata[this.KB_CELL].stackTrace.push(result);
+                        }
+                    }
+                    else if (showOutput)
+                        this.createOutputCell(cell, result);
                 }
             }
         },
@@ -1598,7 +1729,7 @@
          * XXX: Should this trigger a save?
          */
         registerJobId: function(jobId, sourceCell) {
-            // This is possibly the ugliest hack here. In the future, all cells should actually know their 
+            // This is possibly the ugliest hack here. In the future, all cells should actually know their
             // fancy UUIDs. But that *might* be backwards incompatible with existing narratives that we want
             // to show off.
             //
@@ -1623,6 +1754,30 @@
                 this.trigger('registerMethod.Narrative', jobInfo);
         },
 
+
+        createViewerCell: function(cellIndex, data, widget) {
+            var cell = this.addOutputCell(cellIndex, widget);
+            var title = "Data Viewer";
+            var type = "viewer";
+
+            var uuid = this.uuidgen();
+            var outCellId = 'kb-cell-out-' + uuid;
+            var outputData = '{"data":' + this.safeJSONStringify(data) + ', ' +
+                               '"type":"' + type + '", ' +
+                               '"widget":"' + widget + '", ' +
+                               '"cellId":"' + outCellId + '", ' +
+                               '"title":"' + title + '", ' +
+                               '"time":' + this.getTimestamp() + '}';
+
+            cellText = '<div id="' + outCellId + '"></div>\n' +
+                       '<script>' +
+                       '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
+                       '</script>';
+            cell.set_text(cellText);
+            cell.rendered = false; // force a render
+            cell.render();
+        },
+
         /**
          * Result is an object with this structure:
          * cell = the invoking function cell.
@@ -1630,8 +1785,9 @@
          * widget - the widget to use (if null, then use kbaseDefaultNarrativeOutput)
          * data - the object to be passed in to the widget
          * embed - if true, then embed the widget and render it.
+         * Returns unique id (string) of output cell <div>
          */
-        createOutputCell: function(cell, result, isError) {
+        createOutputCell: function(cell, result, isError, widget) {
             if (typeof result === 'string' && !isError) {
                 // try to parse it as JSON.
                 // if we fail, then it's not something we can deal with and shouldn't
@@ -1703,12 +1859,12 @@
 
             var uuid = this.uuidgen();
             var outCellId = 'kb-cell-out-' + uuid;
-            var outputData = '{"data":' + data + ', ' + 
+            var outputData = '{"data":' + data + ', ' +
                                '"type":"' + outputType + '", ' +
                                '"widget":"' + widget + '", ' +
                                '"cellId":"' + outCellId + '", ' +
                                '"title":"' + outputTitle + '", ' +
-                               '"time":' + this.getTimestamp() + '}'; 
+                               '"time":' + this.getTimestamp() + '}';
 
             cellText = '<div id="' + outCellId + '"></div>\n' +
                        '<script>' +
@@ -1717,9 +1873,65 @@
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
             outputCell.render();
-
+            // If present, add list of "next steps"
+            if (result.next_steps.apps || result.next_steps.methods) {
+              var $body = $('#' + outCellId).find('.panel-body');
+              this.showNextSteps({elt: $body, next_steps: result.next_steps});
+            }
             this.resetProgress(cell);
             this.trigger('updateData.Narrative');
+            return outCellId;
+        },
+
+        /**
+        * Show a list of suggested 'next steps' after we have finished the run.
+        * The input is an object of the form:
+        *   { next_steps: value is exactly the same type of object,
+        *                 returned by the `getfunctionSpecs.Narrative`
+        *                 trigger in `kbaseNarrativeMethodPanel`.
+        *     elt: Created <div> is added with .append()
+        *   }
+        * Returns the <div> that was populated.
+        */
+        showNextSteps: function(obj) {
+          var $elt = obj.elt, next_steps = obj.next_steps;
+          var $tgt = $('<div>').addClass('kb-app-next');
+          var $title = $('<h3>').text('Suggested next steps:');
+          $tgt.append($title);
+          // init hide/unhide behavior
+          $hide_btn = $('<span>').addClass('kb-app-next-hide').text('hide');
+          $unhide_btn = $('<span>').addClass('kb-app-next-unhide')
+                      .text('next steps').hide();
+          $hide_btn.click(function() {                  // hide
+            $title.hide(); $tgt.find('a').hide();
+            $hide_btn.hide(); $unhide_btn.show(); });
+          $unhide_btn.click(function() {                // unhide
+            $title.show(); $tgt.find('a').show();
+            $unhide_btn.hide(); $hide_btn.show(); });
+          $tgt.append($hide_btn).append($unhide_btn);
+          // add all the links to the next-step apps/methods
+          var $apps = $('<div>'), comma = {v: ''}, self = this;
+          // iterate over apps and methods in the result
+          var has_both = next_steps.apps && next_steps.methods;
+          _.each(['apps', 'methods'], function(mtype) {
+            if (has_both) { /* XXX: prefix with (App) or something? */ }
+            var specs = next_steps[mtype];
+            // Iterate over all specs in app/method section
+            _.each(_.values(specs), function(s) {
+              var name = s.info.name; // readable name, displayed to user
+              var href = $('<a>').attr({'href': 'javascript:;'})
+                                 .text(comma.v + name);
+              // insert app/method on click
+              href.click(function() {
+                self.trigger(mtype.slice(0, -1) + "Clicked.Narrative", s);
+              });
+              $apps.append(href);
+              comma.v = ', ';
+            });
+          });
+          $tgt.append($apps);
+          $elt.append($tgt);
+          return $tgt;
         },
 
         /**
@@ -1778,7 +1990,7 @@
          */
         addOutputCell: function(currentIndex, widget) {
             var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
-
+            cell.celltoolbar.hide();
             this.setOutputCell(cell, widget);
             this.removeCellEditFunction(cell);
 
@@ -1787,6 +1999,7 @@
 
         addErrorCell: function(currentIndex) {
             var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
+            cell.celltoolbar.hide();
             this.setErrorCell(cell);
             this.removeCellEditFunction(cell);
             return cell;
@@ -1924,7 +2137,7 @@
 
         /**
          * Returns a timestamp in milliseconds since the epoch.
-         * (This is a one-liner, but kept as a separate function in case our needs change. 
+         * (This is a one-liner, but kept as a separate function in case our needs change.
          * Maybe we'll want to use UTC or whatever...)
          * @public
          */

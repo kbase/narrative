@@ -646,7 +646,6 @@
                 this.setJobCounter(stillRunning);
             }
             this.$jobsPanel.empty().append($jobsList);
-            console.log(this.jobStates);
         },
 
         renderJob: function(jobId, jobInfo) {

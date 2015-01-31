@@ -3,6 +3,21 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.4.9 - 1/30/2015
+__Changes__
+- Added some missing metagenome viewer widgets.
+- Updated all JS client code to their most recent compiled versions.
+- Updated Python Narrative Method Store client.
+- Improved layout and structure of job error modal.
+- Improved styling for data view/selector buttons
+- Added downloaders for FBA models, paired-end reads, and single-end reads.
+- Added a 'Copy Narrative' button to narrative panel
+
+__Bugfixes__
+- JIRA NAR-530 - fixed issue with long object names not wrapping in dropdown selectors.
+- JIRA NAR-579 - fixed problem where short-jobs (e.g. viewers) were improperly treated as long-running.
+- JIRA NAR-582, NAR-514 - added better error status checking for job lookups. Now it covers network errors, unauthorized user errors, missing job errors, and generic AWE errors
+
 ### Version 0.4.8 - 1/29/2015
 __Changes__
 - Fixed issue with input object type for reads ref-lib uploader.

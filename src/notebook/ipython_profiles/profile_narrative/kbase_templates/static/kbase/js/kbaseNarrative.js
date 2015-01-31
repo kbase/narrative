@@ -230,7 +230,7 @@ Narrative.prototype.initUpgradeDialog = function() {
 Narrative.prototype.checkVersion = function($newVersion) {
     // look up new version here.
     $.ajax({
-        url: "/static/narrative_version",
+        url: window.kbconfig.urls.version_check,
         async: true,
         dataType: 'text',
         crossDomain: true,

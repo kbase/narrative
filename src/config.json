@@ -60,7 +60,8 @@
         "data_import_export": "https://kbase.us/services/data_import_export",
         "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version",
         "shock": "https://kbase.us/services/shock-api",
-        "status_page": "http://kbase.us/internal/status"
+        "status_page": "http://kbase.us/internal/status",
+        "version_check": "/narrative_version"
     },
     "version": "0.4.9",
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md"

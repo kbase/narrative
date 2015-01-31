@@ -143,7 +143,7 @@ var Narrative = function() {
     this.narr_ws = null;
     this.readonly = false; /* whether whole narrative is read-only */
     this.authToken = null;
-    this.versionCheckTime = 60000;
+    this.versionCheckTime = 6000*60*1000;
     this.versionHtml = 'KBase Narrative<br>Alpha version';
     this.selectedCell = null;
     this.currentVersion = window.kbconfig.version;
@@ -221,9 +221,10 @@ Narrative.prototype.initUpgradeDialog = function() {
     });
     var self = this;
     self.checkVersion($newVersion);
-    setInterval(function() {
-        self.checkVersion($newVersion);
-    }, this.versionCheckTime);
+    // ONLY CHECK AT STARTUP FOR NOW.
+    // setInterval(function() {
+    //     self.checkVersion($newVersion);
+    // }, this.versionCheckTime);
 };
 
 Narrative.prototype.checkVersion = function($newVersion) {
@@ -236,7 +237,7 @@ Narrative.prototype.checkVersion = function($newVersion) {
         success: function(ver) {
             if (self.currentVersion !== ver) {
                 $newVersion.empty().append('<b>' + ver + '</b>');
-                $('#kb-update-btn').fadeIn(1000); 
+                $('#kb-update-btn').fadeIn('fast'); 
             }
         },
         fail: function(err) {

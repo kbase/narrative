@@ -59,6 +59,7 @@
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.ws_url = window.kbconfig.urls.workspace;
                 this.data_icons = window.kbconfig.icons.data;
+                this.icon_colors = window.kbconfig.icons.colors;
             }
             this.showLoading();
 
@@ -815,50 +816,9 @@
         },
 
         logoColorLookup:function(type) {
-            var colors = [
-                            '#F44336', //red
-                            '#E91E63', //pink
-                            '#9C27B0', //purple
-                            '#673AB7', //deep purple
-                            '#3F51B5', //indigo
-                            '#2196F3', //blue
-                            '#03A9F4', //light blue
-                            '#00BCD4', //cyan
-                            '#009688', //teal
-                            '#4CAF50', //green
-                            '#8BC34A', //lime green
-                            '#CDDC39', //lime
-                            '#FFEB3B', //yellow
-                            '#FFC107', //amber
-                            '#FF9800', //orange
-                            '#FF5722', //deep orange
-                            '#795548', //brown
-                            '#9E9E9E', //grey
-                            '#607D8B'  //blue grey
-                         ];
-
-            // first, if there are some colors we want to catch...
-            switch (type) {
-                case "Genome":
-                    return '#2196F3'; //blue
-                case "FBAModel":
-                    return '#4CAF50'; //green
-                case "FBA":
-                    return '#F44336'; //red
-                case "ContigSet":
-                    return '#FF9800'; //orange
-                case "ProteomeComparison":
-                    return '#3F51B5'; //indigo
-                case "Tree":
-                    return '#795548'; //brown
-            }
-
-            // pick one based on the characters
-            var code = 0;
-            for(var i=0; i<type.length; i++) {
-                code += type.charCodeAt(i);
-            }
-            return colors[ code % colors.length ];
+          var code = 0;
+          for (var i=0; i < type.length; code += type.charCodeAt(i++));
+          return this.icon_colors[ code % this.icon_colors.length ];
         }
 
     })

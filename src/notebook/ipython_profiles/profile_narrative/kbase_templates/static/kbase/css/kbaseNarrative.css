@@ -1977,17 +1977,20 @@ div[class="tooltip-inner"] {
 }
 
 .kb-data-list-add-data-button {
-    transition: all 0.4s ease;
-    width:  40pt;
-    height: 40pt;
-    color:  #fff;
+	
+    cursor:pointer;
     background-color: #F44336;
-    border-radius: 50%;
+    color: #fff;
+    border: none;
+    box-shadow: 1px 1px 3px #aaa;
+    -webkit-box-shadow: 1px 1px 3px #aaa;
+    moz-box-shadow: 1px 1px 3px #aaa;
     text-align: center;
-    padding-top: 10pt;
-    box-shadow: 2px 2px 4px 1px #ccc;
-    -webkit-box-shadow: 2px 2px 4px 1px #ccc;
-    moz-box-shadow: 2px 2px 4px 1px #ccc;
+    
+    width:  30pt;
+    height: 30pt;
+    border-radius: 50%;
+    padding-top: 5pt;
 }
 /* specialize buttons that hover over narrative */
 #kb-add-code-cell, #kb-add-md-cell {
@@ -2002,27 +2005,25 @@ div[class="tooltip-inner"] {
 
 .kb-data-list-add-data-button:hover {
     cursor:pointer;
-    box-shadow: 4px 4px 8px 1px #ccc;
-    -webkit-box-shadow: 4px 4px 8px 1px #ccc;
-    moz-box-shadow: 4px 4px 8px 1px #ccc;
+    background-color: #DC3C31;
 }
 
 .kb-data-list-add-data-text-button {
-    transition: all 0.4s ease;
-    color:  #fff;
     background-color: #F44336;
-    text-align: center;
-    border-radius: 0%;
-    box-shadow: 2px 2px 4px 1px #ccc;
-    -webkit-box-shadow: 2px 2px 4px 1px #ccc;
-    moz-box-shadow: 2px 2px 4px 1px #ccc;
+    border-radius: 1px;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    margin: 3px;
+    font-size: 14px;
+    font-family: "Roboto",Helvetica,Arial,sans-serif;
+    font-weight: 400;
+    box-shadow: 1px 1px 3px #aaa;
+    -webkit-box-shadow: 1px 1px 3px #aaa;
+    moz-box-shadow: 1px 1px 3px #aaa;
 }
 .kb-data-list-add-data-text-button:hover {
-    cursor:pointer;
-    color:  #fff;
-    box-shadow: 4px 4px 8px 1px #ccc;
-    -webkit-box-shadow: 4px 4px 8px 1px #ccc;
-    moz-box-shadow: 4px 4px 8px 1px #ccc;
+    background-color: #DC3C31;
 }
 
 
@@ -2035,6 +2036,8 @@ div[class="tooltip-inner"] {
     padding: 5px 10px;
     font-size: 13px;
     box-shadow: 1px 1px 3px #aaa;
+    -webkit-box-shadow: 1px 1px 3px #aaa;
+    moz-box-shadow: 1px 1px 3px #aaa;
     margin: 5px;
 }
 .kb-data-list-btn:hover {
@@ -2054,6 +2057,8 @@ div[class="tooltip-inner"] {
     padding: 5px 10px;
     font-size: 13px;
     box-shadow: 1px 1px 3px #aaa;
+    -webkit-box-shadow: 1px 1px 3px #aaa;
+    moz-box-shadow: 1px 1px 3px #aaa;
     margin: 5px;
 }
 .kb-data-list-cancel-btn:hover {

@@ -320,6 +320,9 @@ class LogStreamForwarder(asyncore.dispatcher):
         self._meta, self._hnd = meta, hnd
         self._hdr, self._dbg = '', g_log.isEnabledFor(logging.DEBUG)
 
+    def writable(self):
+        return False
+
     def handle_read(self):
         # Read header
         chunk = self.recv(4 - len(self._hdr))

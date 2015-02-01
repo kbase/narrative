@@ -237,7 +237,7 @@ Narrative.prototype.checkVersion = function($newVersion) {
         success: function(ver) {
             ver = $.parseJSON(ver);
             if (self.currentVersion !== ver.version) {
-                $newVersion.empty().append('<b>' + ver + '</b>');
+                $newVersion.empty().append('<b>' + ver.version + '</b>');
                 $('#kb-update-btn').fadeIn('fast'); 
             }
         },

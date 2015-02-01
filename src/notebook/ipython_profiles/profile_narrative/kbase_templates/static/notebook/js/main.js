@@ -62,6 +62,7 @@ function (marked) {
     IPython.notification_area.init_notification_widgets();
 
     // Monkey patch to get the narrative 'start me up' event registered at the right time.
+    var narrative = new Narrative();
     narrative.init();
     // End Monkey patch.
 

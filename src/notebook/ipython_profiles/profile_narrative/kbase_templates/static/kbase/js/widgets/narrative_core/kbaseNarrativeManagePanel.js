@@ -752,11 +752,12 @@
         
         makeCopyThisNarrativeBtn: function($alertContainer) {
             var self = this;
-            var $active = $('<span>').addClass('fa fa-copy').append(" Copy Narrative");
+            var active = '<span class="fa fa-copy"></span> Copy Narrative';
+//            var $active = $('<span>').addClass('fa fa-copy').append(" Copy Narrative");
             var $working = $('<span>').append("Copying Narrative...");
             
             var $btn = $('<button>').addClass('kb-primary-btn')
-                    .append($active)
+                    .append(active)
                     .on('click', function(e) {
                         e.stopPropagation();
                         var $cpyBtn = $(this);
@@ -872,10 +873,13 @@
         
         makeNewNarrativeBtn: function() {
             var self = this;
-            var $active = $('<span>').addClass('fa fa-plus').append(" New Narrative");
+            var active = '<span class="fa fa-plus"></span> New Narrative';
+            // !!! Putting text inside the span with font awesome classes will 
+            // cause the browser to use its default font.
+//            var $active = $('<span>').addClass('fa fa-plus').append(" New Narrative");
             var $working = $('<span>').append("Building Narrative...");
             var $btn =
-                $('<button>').addClass('kb-primary-btn').append($active)
+                $('<button>').addClass('kb-primary-btn').append(active)
                     .on('click', function() {
                         // just open the link, don't do the work here...
                         window.open(self.options.new_narrative_link);

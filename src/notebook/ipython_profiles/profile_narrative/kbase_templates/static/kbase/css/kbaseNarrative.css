@@ -2008,11 +2008,10 @@ div[class="tooltip-inner"] {
 }
 /* specialize buttons that hover over narrative */
 #kb-add-code-cell, #kb-add-md-cell {
-  box-shadow: #CECECE 2px 2px 1px;
-  height: 40px;
-  width: 40px;
-  background-color: rgba(128,128,128,0.5);
-  font-size: 1.2em;
+    box-shadow: #CECECE 2px 2px 1px;
+    height: 40px;
+    width: 40px;
+    background-color: rgba(128,128,128,0.5);
 }
 #kb-add-code-cell { right: 100px; }
 #kb-add-md-cell { margin-right: 20px; }

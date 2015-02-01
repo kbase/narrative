@@ -1672,8 +1672,14 @@ div#notebook_panel {
    margin-top:20px;
 }
 
+.kb-app-step-error {
+    border: 3px solid #D14836;
+    border-radius: 5px;
+    z-index: auto;
+}
+
 .kb-app-step-running {
-    border: 3px solid #d14836;
+    border: 3px solid #2196F3;
     border-radius: 5px;
     z-index: auto;
     /*animation: pulse 1s ease infinite;

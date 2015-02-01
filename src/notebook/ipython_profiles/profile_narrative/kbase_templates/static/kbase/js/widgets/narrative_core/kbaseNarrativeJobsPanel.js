@@ -804,7 +804,7 @@
                 return;
 
             var $cell = $('#' + source);
-            // don't do anything if we can't find the running cell, either.
+            // don't do anything if we know what the source should be, but we can't find it.
             if (!$cell)
                 return;
 

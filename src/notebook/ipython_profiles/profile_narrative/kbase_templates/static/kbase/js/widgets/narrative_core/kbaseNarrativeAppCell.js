@@ -89,7 +89,7 @@
         fetchMethodInfo: function() {
             if (!this.appSpec.steps || this.appSpec.steps.length === 0) {
                 KBError("App::" + this.appSpec.info.name, "has no steps");
-                this.showError('App "' + this.appSpec.info.name + '" has no steps!');
+                this.showAppLoadingError('App "' + this.appSpec.info.name + '" has no steps!');
             }
             // get the list of method ids
             var methodIds = [];
@@ -103,12 +103,17 @@
                 }, this),
                 $.proxy(function(error) {
                     KBError('get_method_spec', error);
-                    this.showError(error);
+                    this.showAppLoadingError(error);
                 }, this)
             );
         },
 
-        showError: function(error) {
+        /**
+         * Shows an error that occurred while loading app information. This essentially breaks the cell.
+         * @method
+         * @private
+         */
+        showAppLoadingError: function(error) {
             console.error(error);
             var $errorHeader = $('<div>')
                                .addClass('alert alert-danger')
@@ -145,7 +150,11 @@
             this.$elem.empty().append($errorPanel);
         },
 
-        /* temp hack to deal with current state of NJS */
+        /** 
+         * Fetches the app spec, method specs, and parameter values
+         * These are used elsewhere to set up the NJS job and to send 
+         * returned output values to the right place.
+         */
         getSpecAndParameterInfo: function() {
             return {
                 appSpec : this.appSpec,
@@ -328,11 +337,11 @@
         },
 
         minimizePanel: function() {
-            console.debug("minimize panel");
+            // console.debug("minimize panel");
         },
 
         showFullPanel: function() {
-            console.debug("restore panel to full size");
+            // console.debug("restore panel to full size");
         },
 
         // given a method spec, returns a jquery div that is rendered but not added yet to the dom
@@ -432,7 +441,13 @@
             return;
         },
 
-        isValid : function() {
+        /**
+         * Checks all parameters across all steps for validity. If any are invalid,
+         * this returns them in {stepErrors: []} and the valid state in {isValid:boolean}
+         * @method
+         * @private
+         */
+        validateParameters : function() {
             var isValidRet = {isValid:true, stepErrors:[]}
             if (this.inputSteps) {
                 for(var i=0; i<this.inputSteps.length; i++) {
@@ -461,15 +476,16 @@
             }
         },
 
-        /* locks inputs and updates display properties to reflect the running state
-            returns true if everything is valid and we can start, false if there were errors
-        */
+        /**
+         * locks inputs and updates display properties to reflect the running state
+         * returns true if everything is valid and we can start, false if there were errors
+         */
         startAppRun: function(ignoreValidCheck) {
             var self = this;
             if (ignoreValidCheck) {
                 //code
             } else {
-                var v = self.isValid();
+                var v = self.validateParameters();
                 // Take these action if the app input is not valid?
                 if (!v.isValid) {
                     var errorCount = 1;
@@ -504,17 +520,17 @@
 
         /* Show/hide running icon */
         displayRunning: function(is_running, had_error) {
-          if (is_running) {
-            this.cellMenu.$runningIcon.show();
-            // never show error icon while running
-            this.cellMenu.$errorIcon.hide();
-          }
-          else {
-            this.cellMenu.$runningIcon.hide();
-            // only display error when not running
-            if (had_error) { this.cellMenu.$errorIcon.show(); }
-            else { this.cellMenu.$errorIcon.hide(); }
-          }
+            if (is_running) {
+                this.cellMenu.$runningIcon.show();
+                // never show error icon while running
+                this.cellMenu.$errorIcon.hide();
+            }
+            else {
+                this.cellMenu.$runningIcon.hide();
+                // only display error when not running
+                if (had_error) { this.cellMenu.$errorIcon.show(); }
+                else { this.cellMenu.$errorIcon.hide(); }
+            }
         },
 
         /*
@@ -728,10 +744,34 @@
                 // Show the 'next-steps' to take, if there are any
                 var next_steps = this.getNextSteps();
                 if (next_steps.apps || next_steps.methods) {
-                  this.trigger("showNextSteps.Narrative",
-                    {elt: this.$elem, "next_steps": next_steps});
+                    this.trigger("showNextSteps.Narrative",
+                      {elt: this.$elem, "next_steps": next_steps});
                 }
             }
+        },
+
+        /**
+         * From a single string - maybe an object - set the state of a running app
+         * possible states:
+         * input - unlock all input areas, remove footer, show Run button
+         * submitted - in-between state after user clicks Run, while we wait on the job info,
+         *             lock inputs, no control buttons, etc, show spinny icon
+         * queued - lock inputs, show Cancel button, but no highlighted steps, show spinny icon
+         * running - should highlight which step is running, use Cancel button
+         * error - should color whole app with error styling, still lock things, show cancel button,
+         *       - show error icon, no spinny icon
+         * completed - no more icons, show reset button which can unlock inputs
+         *
+         */
+        setAppState: function(state) {
+            // this.state = {
+            //         runningState: {
+            //             appRunState: "input", // could be 'input' || 'running' || 'error' || 'done', something else?
+            //             runningStep: null
+            //         },
+            //         step: { }
+            //     };
+
         },
 
         getNextSteps: function() {

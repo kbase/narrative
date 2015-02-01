@@ -219,8 +219,7 @@ Narrative.prototype.initUpgradeDialog = function() {
     $('#kb-update-btn').click(function(event) {
         $upgradeModal.modal('show');
     });
-    var self = this;
-    self.checkVersion($newVersion);
+    this.checkVersion($newVersion);
     // ONLY CHECK AT STARTUP FOR NOW.
     // setInterval(function() {
     //     self.checkVersion($newVersion);
@@ -229,6 +228,7 @@ Narrative.prototype.initUpgradeDialog = function() {
 
 Narrative.prototype.checkVersion = function($newVersion) {
     // look up new version here.
+    var self = this;
     $.ajax({
         url: window.kbconfig.urls.version_check,
         async: true,

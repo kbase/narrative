@@ -210,7 +210,8 @@ Narrative.prototype.initUpgradeDialog = function() {
                                             .addClass('modal-body')
                                             .append($('<span>').append('Your current version of the Narrative is <b>' + this.currentVersion + '</b>. Version '))
                                             .append($newVersion)
-                                            .append($('<span>').append(' is now available. Click "Update and Reload" to reload with the latest version!')))
+                                            .append($('<span>').append(' is now available. Click "Update and Reload" to reload with the latest version!<br><br>' + 
+                                                                       '<b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b>')))
                                     .append($('<div>')
                                             .addClass('modal-footer')
                                             .append($('<div>')
@@ -409,10 +410,9 @@ Narrative.prototype.init = function() {
 };
 
 Narrative.prototype.updateVersion = function() {
-    $('#kb-save-btn').trigger('click');
     var user = $('#signin-button').kbaseLogin('session', 'user_id');
     var prom = $.ajax({
-        contentType: 'applcation/json',
+        contentType: 'application/json',
         url: '/narrative_shutdown/' + user,
         type: 'DELETE',
         crossDomain: true
@@ -421,6 +421,6 @@ Narrative.prototype.updateVersion = function() {
         setTimeout(function() { location.reload(true); }, 200);
     });
     prom.fail(function(jqXHR, response, error) {
-        alert('Unable to reset your Narrative session\nError: ' + jqXHR.status + ' ' + error);
+        alert('Unable to update your Narrative session\nError: ' + jqXHR.status + ' ' + error);
     });
 };

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VER_OUTFILE="/Users/wjriehl/Desktop/narrative-version"
+VER_OUTFILE="/kb/deployment/ui-common/narrative_version"
 DS=$( date +%Y%m%d%H )
 
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.

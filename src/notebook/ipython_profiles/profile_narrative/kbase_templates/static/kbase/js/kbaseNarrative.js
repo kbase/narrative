@@ -210,7 +210,9 @@ Narrative.prototype.initUpgradeDialog = function() {
                                             .addClass('modal-body')
                                             .append($('<span>').append('Your current version of the Narrative is <b>' + this.currentVersion + '</b>. Version '))
                                             .append($newVersion)
-                                            .append($('<span>').append(' is now available. Click "Update and Reload" to reload with the latest version!<br><br>' + 
+                                            .append($('<span>').append(' is now available.<br><br>' + 
+                                                                       'See <a href="' + window.kbconfig.release_notes + '" target="_blank">here</a> for current release notes.<br>' +
+                                                                       'Click "Update and Reload" to reload with the latest version!<br><br>' + 
                                                                        '<b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b>')))
                                     .append($('<div>')
                                             .addClass('modal-footer')

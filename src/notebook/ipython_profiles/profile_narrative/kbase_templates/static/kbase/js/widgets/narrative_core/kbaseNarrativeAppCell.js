@@ -1,5 +1,7 @@
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
+ * @author Michael Sneddon <mwsneddon@lbl.gov>
+ * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
  * This is a generalized class for an input cell that sits in an IPython markdown cell.
  * It handles all of its rendering here (no longer in HTML in markdown), and invokes
@@ -85,9 +87,9 @@
         },
 
         fetchMethodInfo: function() {
-          if (!this.appSpec.steps || this.appSpec.steps.length === 0) {
-            KBError("App::" + this.appSpec.info.name, "has no steps");
-            this.showError('App "' + this.appSpec.info.name + '" has no steps!');
+            if (!this.appSpec.steps || this.appSpec.steps.length === 0) {
+                KBError("App::" + this.appSpec.info.name, "has no steps");
+                this.showAppLoadingError('App "' + this.appSpec.info.name + '" has no steps!');
             }
             // get the list of method ids
             var methodIds = [];
@@ -101,12 +103,17 @@
                 }, this),
                 $.proxy(function(error) {
                     KBError('get_method_spec', error);
-                    this.showError(error);
+                    this.showAppLoadingError(error);
                 }, this)
             );
         },
 
-        showError: function(error) {
+        /**
+         * Shows an error that occurred while loading app information. This essentially breaks the cell.
+         * @method
+         * @private
+         */
+        showAppLoadingError: function(error) {
             console.error(error);
             var $errorHeader = $('<div>')
                                .addClass('alert alert-danger')
@@ -143,7 +150,11 @@
             this.$elem.empty().append($errorPanel);
         },
 
-        /* temp hack to deal with current state of NJS */
+        /** 
+         * Fetches the app spec, method specs, and parameter values
+         * These are used elsewhere to set up the NJS job and to send 
+         * returned output values to the right place.
+         */
         getSpecAndParameterInfo: function() {
             return {
                 appSpec : this.appSpec,
@@ -210,18 +221,17 @@
                               .hide();
             // Reset the inputs and prepare for another "run"
             this.$resetButton = $('<button>')
-              .attr('type', 'button')
-              .attr('value', 'Reset')
-              .addClass('kb-app-run kb-app-reset')
-              .append('Reset')
-              .css({'margin-right':'5px'})
-              .click(
-                $.proxy(function(event) {
-                  self.resetAppRun(true);
+                .attr('type', 'button')
+                .attr('value', 'Reset')
+                .addClass('kb-app-run kb-app-reset')
+                .append('Reset')
+                .css({'margin-right':'5px'})
+                .click(
+                    $.proxy(function(event) {
+                    self.resetAppRun(true);
                 }, this)
-              )
+            )
             .hide();
-
 
             this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
 
@@ -300,26 +310,26 @@
             this.panel_minimized = false;
             var self = this;
             $controlsSpan.click(function() {
-              if (self.panel_minimized) {
-                console.debug("restore full panel");
-                $mintarget.find(".panel-body").slideDown();
-                $mintarget.find(".panel-footer").show();
-                $minimizeControl.removeClass("glyphicon-chevron-right")
-                                .addClass("glyphicon-chevron-down");
-                // restore original padding (20px)
-                $mintarget.find(".app-panel-heading").css({padding: "20px"});
-                self.panel_minimized = false;
-              }
-              else {
-                console.debug("minimize panel");
-                $mintarget.find(".panel-footer").hide();
-                $mintarget.find(".panel-body").slideUp();
-                $minimizeControl.removeClass("glyphicon-chevron-down")
-                                .addClass("glyphicon-chevron-right");
-                // reduce padding so it lines up
-                $mintarget.find(".app-panel-heading").css({padding: "5px"});
-                self.panel_minimized = true;
-              }
+                if (self.panel_minimized) {
+                    console.debug("restore full panel");
+                    $mintarget.find(".panel-body").slideDown();
+                    $mintarget.find(".panel-footer").show();
+                    $minimizeControl.removeClass("glyphicon-chevron-right")
+                                    .addClass("glyphicon-chevron-down");
+                    // restore original padding (20px)
+                    $mintarget.find(".app-panel-heading").css({padding: "20px"});
+                    self.panel_minimized = false;
+                }
+                else {
+                    console.debug("minimize panel");
+                    $mintarget.find(".panel-footer").hide();
+                    $mintarget.find(".panel-body").slideUp();
+                    $minimizeControl.removeClass("glyphicon-chevron-down")
+                                    .addClass("glyphicon-chevron-right");
+                    // reduce padding so it lines up
+                    $mintarget.find(".app-panel-heading").css({padding: "5px"});
+                    self.panel_minimized = true;
+                }
             });
 
             // finally, we refresh so that our drop down or other boxes can be populated
@@ -327,11 +337,11 @@
         },
 
         minimizePanel: function() {
-          console.debug("minimize panel");
+            // console.debug("minimize panel");
         },
 
         showFullPanel: function() {
-          console.debug("restore panel to full size");
+            // console.debug("restore panel to full size");
         },
 
         // given a method spec, returns a jquery div that is rendered but not added yet to the dom
@@ -351,12 +361,6 @@
             var $methodInfo = $('<div>')
                               .addClass('kb-func-desc')
                               .append('<h1><b>' + stepHeading +'&nbsp&nbsp-&nbsp '+ stepSpec.info.name + '</b></h1>')
-                              /*.append($('<button>')
-                                      .addClass('btn btn-default btn-xs')
-                                      .attr('type', 'button')
-                                      .attr('data-toggle', 'collapse')
-                                      .attr('data-target', '#' + methodId)
-                                      .append(buttonLabel))*/
                               .append($('<div>')
                                       .attr('id', methodId)
                                       //.addClass('collapse')
@@ -437,7 +441,13 @@
             return;
         },
 
-        isValid : function() {
+        /**
+         * Checks all parameters across all steps for validity. If any are invalid,
+         * this returns them in {stepErrors: []} and the valid state in {isValid:boolean}
+         * @method
+         * @private
+         */
+        validateParameters : function() {
             var isValidRet = {isValid:true, stepErrors:[]}
             if (this.inputSteps) {
                 for(var i=0; i<this.inputSteps.length; i++) {
@@ -466,15 +476,16 @@
             }
         },
 
-        /* locks inputs and updates display properties to reflect the running state
-            returns true if everything is valid and we can start, false if there were errors
-        */
+        /**
+         * locks inputs and updates display properties to reflect the running state
+         * returns true if everything is valid and we can start, false if there were errors
+         */
         startAppRun: function(ignoreValidCheck) {
             var self = this;
             if (ignoreValidCheck) {
                 //code
             } else {
-                var v = self.isValid();
+                var v = self.validateParameters();
                 // Take these action if the app input is not valid?
                 if (!v.isValid) {
                     var errorCount = 1;
@@ -509,56 +520,56 @@
 
         /* Show/hide running icon */
         displayRunning: function(is_running, had_error) {
-          if (is_running) {
-            this.cellMenu.$runningIcon.show();
-            // never show error icon while running
-            this.cellMenu.$errorIcon.hide();
-          }
-          else {
-            this.cellMenu.$runningIcon.hide();
-            // only display error when not running
-            if (had_error) { this.cellMenu.$errorIcon.show(); }
-            else { this.cellMenu.$errorIcon.hide(); }
-          }
+            if (is_running) {
+                this.cellMenu.$runningIcon.show();
+                // never show error icon while running
+                this.cellMenu.$errorIcon.hide();
+            }
+            else {
+                this.cellMenu.$runningIcon.hide();
+                // only display error when not running
+                if (had_error) { this.cellMenu.$errorIcon.show(); }
+                else { this.cellMenu.$errorIcon.hide(); }
+            }
         },
 
         /*
          * Reset parameters and allow to re-run
          */
         resetAppRun: function(clear_inputs) {
-          this.displayRunning(false);
-          // buttons
-          this.$stopButton.hide();
-          this.$resetButton.hide();
-          this.$submitted.hide();
-          // clear inputs
-          if (this.inputSteps) {
-            for(var i=0; i<this.inputSteps.length; i++) {
-              this.inputSteps[i].widget.unlockInputs();
-              this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
-              // If invoked from "Reset" button, then clear_inputs will be
-              // true and we need to get back to the original state.
-              // If invoked from "Cancel" button we skip this step and
-              // allow the user to Reset later.
-              if (clear_inputs) {
-                var c = this.inputSteps[i].$stepContainer;
-                // clear text fields
-                c.find("span.kb-parameter-data-selection").text("");
-                // remove old output
-                c.find(".kb-cell-output").remove();
-              }
+            this.displayRunning(false);
+            // buttons
+            this.$stopButton.hide();
+            this.$resetButton.hide();
+            this.$submitted.hide();
+            // clear inputs
+            if (this.inputSteps) {
+                for(var i=0; i<this.inputSteps.length; i++) {
+                    this.inputSteps[i].widget.unlockInputs();
+                    this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                    // If invoked from "Reset" button, then clear_inputs will be
+                    // true and we need to get back to the original state.
+                    // If invoked from "Cancel" button we skip this step and
+                    // allow the user to Reset later.
+                    if (clear_inputs) {
+                        var c = this.inputSteps[i].$stepContainer;
+                        // clear text fields
+                        c.find("span.kb-parameter-data-selection").text("");
+                        // remove old output
+                        c.find(".kb-cell-output").remove();
+                    }
+                }
             }
-          }
-          if (clear_inputs) {
-            this.setErrorState(false);
-            this.state.runningState.appRunState = "input";
-            this.$runButton.show();
-          }
-          else {
-            this.state.runningState.appRunState = "canceled"; // XXX?
-            this.$runButton.hide();
-            this.$resetButton.show();
-          }
+            if (clear_inputs) {
+                this.setErrorState(false);
+                this.state.runningState.appRunState = "input";
+                this.$runButton.show();
+            }
+            else {
+                this.state.runningState.appRunState = "canceled"; // XXX?
+                this.$runButton.hide();
+                this.$resetButton.show();
+            }
         },
 
         /* unlocks inputs and updates display properties to reflect the not running state */
@@ -573,20 +584,6 @@
                   self.resetAppRun(false);
 
                 }
-/*  Moved to resetAppRun:
-                  this.$stopButton.hide();
-                    this.$runButton.show();
-                    if (this.inputSteps) {
-                        for(var i=0; i<this.inputSteps.length; i++) {
-                            this.inputSteps[i].widget.unlockInputs();
-                            this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
-                        }
-                    }
-                    this.setErrorState(false);
-                    this.$submitted.hide();
-                    this.state.runningState.appRunState = "input";
-                }
-*/
             }, this)]);
         },
 
@@ -735,8 +732,15 @@
 
         setRunningState: function(state) {
             state = state.toLowerCase();
-            if (state === 'error')
+            if (state === 'error') {
                 this.setErrorState(true);
+                for (var i=0; i<this.inputSteps.length; i++) {
+                    if (this.inputSteps[i].$stepContainer.hasClass('kb-app-step-running')) {
+                        this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                        this.inputSteps[i].$stepContainer.addClass('kb-app-step-error');
+                    }
+                }
+            }
             else if (state === 'complete') {
                 for (var i=0; i<this.inputSteps.length; i++) {
                     this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
@@ -747,40 +751,64 @@
                 // Show the 'next-steps' to take, if there are any
                 var next_steps = this.getNextSteps();
                 if (next_steps.apps || next_steps.methods) {
-                  this.trigger("showNextSteps.Narrative",
-                    {elt: this.$elem, "next_steps": next_steps});
+                    this.trigger("showNextSteps.Narrative",
+                      {elt: this.$elem, "next_steps": next_steps});
                 }
             }
         },
 
+        /**
+         * From a single string - maybe an object - set the state of a running app
+         * possible states:
+         * input - unlock all input areas, remove footer, show Run button
+         * submitted - in-between state after user clicks Run, while we wait on the job info,
+         *             lock inputs, no control buttons, etc, show spinny icon
+         * queued - lock inputs, show Cancel button, but no highlighted steps, show spinny icon
+         * running - should highlight which step is running, use Cancel button
+         * error - should color whole app with error styling, still lock things, show cancel button,
+         *       - show error icon, no spinny icon
+         * completed - no more icons, show reset button which can unlock inputs
+         *
+         */
+        setAppState: function(state) {
+            // this.state = {
+            //         runningState: {
+            //             appRunState: "input", // could be 'input' || 'running' || 'error' || 'done', something else?
+            //             runningStep: null
+            //         },
+            //         step: { }
+            //     };
+
+        },
+
         getNextSteps: function() {
-          console.debug("Find next steps for app",this.appSpec);
-          var method_ids = [ ], app_ids = [ ];
-          // add one or more next steps
-          // XXX: replace this with something much smarter
-          switch (this.appSpec.info.id) {
-            case "genome_assembly":
-              app_ids.push("genome_comparison");
-              app_ids.push("build_fba_model");
-              method_ids.push("insert_genome_into_species_tree_generic");
-              method_ids.push("compare_two_metabolic_models_generic");
-              break;
-            case "build_fba_model":
-              app_ids.push("community_fba_modeling");
-              // ?? Translate Model to New Genome
-              break;
-            case "build_species_tree":
-              method_ids.push("compute_pangenome");
-              break;
-          }
-          // Fetch function specs now because we need the real, human-readable
-          // name of the spec and all we have is the id.
-          var result = {};
-          var params = {apps: app_ids, methods: method_ids};
-          this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
-            result.specs = specs;
-          }]);
-          return result.specs;
+            console.debug("Find next steps for app",this.appSpec);
+            var method_ids = [ ], app_ids = [ ];
+            // add one or more next steps
+            // XXX: replace this with something much smarter
+            switch (this.appSpec.info.id) {
+                case "genome_assembly":
+                    app_ids.push("genome_comparison");
+                    app_ids.push("build_fba_model");
+                    method_ids.push("insert_genome_into_species_tree_generic");
+                    method_ids.push("compare_two_metabolic_models_generic");
+                    break;
+                case "build_fba_model":
+                    app_ids.push("community_fba_modeling");
+                    // ?? Translate Model to New Genome
+                    break;
+                case "build_species_tree":
+                    method_ids.push("compute_pangenome");
+                    break;
+            }
+            // Fetch function specs now because we need the real, human-readable
+            // name of the spec and all we have is the id.
+            var result = {};
+            var params = {apps: app_ids, methods: method_ids};
+            this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
+                result.specs = specs;
+            }]);
+            return result.specs;
         },
 
         /*
@@ -814,49 +842,6 @@
                     this.inputStepLookup[stepId].$stepContainer.removeClass("kb-app-step-running");
 
                     var widgetName = this.inputStepLookup[stepId].outputWidgetName;
-
-
-
-                    // var header = '<span class="kb-out-desc">Output</span>' +
-                    //              '<span class="pull-right kb-func-timestamp">' +
-                    //                  this.readableTimestamp(new Date().getTime()) +
-                    //              '</span>';
-
-                    // var $outputWidget = $('<div>');
-                    // var widget;
-                    // try {
-                    //     if (widgetName !== "kbaseDefaultNarrativeOutput")
-                    //         widget = $outputWidget[widgetName](output);
-                    //     else
-                    //         widget = $outputWidget[widgetName]({data:output});
-                    //     if (state) {
-                    //         widget.loadState(state);
-                    //     }
-                    // }
-                    // catch (err) {
-                    //     KBError("App::" + this.appSpec.info.name, "failed to render output widget: '" + widgetName);
-                    //     $outputWidget[this.OUTPUT_ERROR_WIDGET]({'error': {
-                    //         'msg': 'An error occurred while showing your output:',
-                    //         'method_name': 'kbaseNarrativeAppCell.setStepOutput',
-                    //         'type': 'Output',
-                    //         'severity': '',
-                    //         'traceback': 'Failed while trying to show a "' + widgetName + '"\n' +
-                    //                      'With inputs ' + JSON.stringify(output) + '\n\n' +
-                    //                      err.message
-                    //     }});
-                    //     header = header.replace(/\-out\-/, '-err-');
-                    // }
-
-                    // var $outputCell = $("<div>")
-                    //                   .addClass("kb-cell-output")
-                    //                   .css({"padding-top":"5px","padding-bottom":"5px"})
-                    //                   .append(
-                    //                         $('<div>')
-                    //                         .addClass("panel panel-default")
-                    //                         .append($('<div>').addClass("panel-heading").append(header))
-                    //                         .append($('<div>').addClass("panel-body").append($outputWidget))
-                    //                   );
-
                     var $outputWidget = $('<div>').css({'padding':'5px 0'});
                     $outputWidget.kbaseNarrativeOutputCell({
                         widget: widgetName,
@@ -870,8 +855,6 @@
                         $outputWidget.loadState(state);
                     }
                     this.inputStepLookup[stepId].$outputPanel.append($outputWidget);
-//                    this.inputStepLookup[stepId].$outputPanel.append($outputCell);
-
                     this.inputStepLookup[stepId].outputWidget = $outputWidget;
                     var objCopy = $.extend(true, {}, output);
                     this.state.step[stepId].outputState = {
@@ -884,8 +867,6 @@
         setStepError: function(stepId, error) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
-//                    this.inputStepLookup[stepId].$outputPanel.html(error);
-                    // todo: actually render with the error widget
                     this.inputStepLookup[stepId].kbaseNarrativeOutputCell({
                         widget: this.OUTPUT_ERROR_WIDGET,
                         data: error,

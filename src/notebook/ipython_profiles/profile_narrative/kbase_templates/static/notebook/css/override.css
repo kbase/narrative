@@ -21,3 +21,13 @@ pre { outline: none; }
     border: none;
     border-bottom: none;
 }
+
+div.input_area {
+    border: 1px solid #CECECE;
+    border-radius: 0px;
+}
+
+div.text_cell_input {
+    border: 1px solid #CECECE;
+    border-radius: 0px;
+}

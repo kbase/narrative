@@ -17,4 +17,7 @@ pre { outline: none; }
 
 .celltoolbar {
     height: auto;
+    background: none;
+    border: none;
+    border-bottom: none;
 }

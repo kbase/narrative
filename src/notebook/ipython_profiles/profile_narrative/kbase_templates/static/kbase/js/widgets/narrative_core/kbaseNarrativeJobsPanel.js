@@ -26,7 +26,7 @@
                        timestamp: <str> }
          * }
          */
-        jobStates: {},
+        jobStates: null,
 
         /* when populated should have structure:
          * {
@@ -179,6 +179,8 @@
          * keep track of the job state.
          */
         initJobStates: function() {
+            if (this.jobStates === null)
+                this.jobStates = {};
             if (IPython.notebook && IPython.notebook.metadata && IPython.notebook.metadata.job_ids) {
                 // this is actually like: ['apps': [list of app jobs], 'methods':[list of method jobs]
                 var jobIds = IPython.notebook.metadata.job_ids;
@@ -422,7 +424,7 @@
          * @method
          */
         refresh: function(hideLoadingMessage, initStates) {
-            if (initStates)
+            if (this.jobStates === null || initStates)
                 this.initJobStates();
 
             // if there's no timer, set one up - this should only happen the first time.
@@ -472,6 +474,7 @@
                     // if it's an NJS job, then it's an App cell, so fetch all that info.
                     if (jobType === "njs") {
                         specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
+                        console.log(specInfo);
                         if (specInfo && jobIncomplete) {
                             jobParamList.push("['" + jobId + "', " +
                                               "'" + this.safeJSONStringify(specInfo.appSpec) + "', " +

@@ -732,8 +732,15 @@
 
         setRunningState: function(state) {
             state = state.toLowerCase();
-            if (state === 'error')
+            if (state === 'error') {
                 this.setErrorState(true);
+                for (var i=0; i<this.inputSteps.length; i++) {
+                    if (this.inputSteps[i].$stepContainer.hasClass('kb-app-step-running')) {
+                        this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                        this.inputSteps[i].$stepContainer.addClass('kb-app-step-error');
+                    }
+                }
+            }
             else if (state === 'complete') {
                 for (var i=0; i<this.inputSteps.length; i++) {
                     this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');

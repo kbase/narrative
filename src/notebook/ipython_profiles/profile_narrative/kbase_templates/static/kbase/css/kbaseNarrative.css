@@ -157,8 +157,11 @@ div#notebook {
     box-shadow: 0 0 3px #CECECE;
     margin-right: 5px;
 }
+.navbar-right .fa::before { /* color nav icons */
+    color: #2196F3;
+}
 #kb-nav-menu { /* don't add shadows here */
-  box-shadow: none;
+    box-shadow: none;
 }
 .kb-nav-btn > div {
     color: #666 !important;
@@ -167,12 +170,23 @@ div#notebook {
     font-size: 10pt;
     margin-top: -5px;
 }
-.navbar-right .fa::before { /* color nav icons */
-  color: #2196F3;
-}
 .navbar-right .kb-nav-btn:hover {
-  background-color: #F5F5F5;
+    background-color: #F5F5F5;
 }
+.kb-nav-btn-upgrade {
+    background-color: #4BB856 !important;
+    display: none;
+}
+.kb-nav-btn-upgrade .fa::before {
+    color: #FFF !important;
+}
+.kb-nav-btn-upgrade > div {
+    color: #FFF !important;
+}
+.kb-nav-btn-upgrade:hover {
+    background-color: #43A047 !important;
+}
+
 #kb-ipy-menu { /* restore rounded corners */
   border-radius: 4px !important;
   margin-right: 0;
@@ -1994,11 +2008,10 @@ div[class="tooltip-inner"] {
 }
 /* specialize buttons that hover over narrative */
 #kb-add-code-cell, #kb-add-md-cell {
-  box-shadow: #CECECE 2px 2px 1px;
-  height: 40px;
-  width: 40px;
-  background-color: rgba(128,128,128,0.5);
-  font-size: 1.2em;
+    box-shadow: #CECECE 2px 2px 1px;
+    height: 40px;
+    width: 40px;
+    background-color: rgba(128,128,128,0.5);
 }
 #kb-add-code-cell { right: 100px; }
 #kb-add-md-cell { margin-right: 20px; }

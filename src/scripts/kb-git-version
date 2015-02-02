@@ -2,6 +2,8 @@
 """
 Update narrative/src/config.json to contain a git hash and timestamp of the 
 commit from which we're deploying.
+
+Updated 1/31/2015
 """
 
 import json
@@ -10,28 +12,42 @@ import subprocess
 import sys
 import argparse
 
+__author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 default_cfg_file = 'config.json'
 
 def main(args):
     try:
-        if (args.vb > 0):
+        if args.vb > 0:
             print "Opening config file"
         cfg_json = open(args.cfg_file).read()
         config = json.loads(cfg_json)
 
-        if (args.vb > 0):
+        if args.vb > 0:
             print "Getting git commit info"
         hash_time = subprocess.check_output('git log --pretty="%h,%ad" -n 1', shell=True)
         hash_time = hash_time.strip().split(',')
         config['git_commit_hash'] = hash_time[0]
         config['git_commit_time'] = hash_time[1]
 
-        if (args.vb > 0):
+        if args.vb > 0:
             print "Writing updated config file"
         cfg_json = json.dumps(config, sort_keys=True, indent=4)
         outfile = open(args.cfg_file, 'w')
         outfile.write(cfg_json)
         outfile.close()
+
+        if args.opt_out is not None:
+            if args.vb > 0:
+                print "Writing updated version check file for browser access"
+            mini_cfg = {
+                'version' : config.get('version', None),
+                'git_hash' : config.get('git_commit_hash', None)
+            }
+            outfile = open(args.opt_out, 'w')
+            outfile.write(json.dumps(mini_cfg, separators=(',',':')))
+            outfile.close()
+
+
 
     except Exception as err:
         print 'Failed to update git commit hash and timestamp!'
@@ -41,6 +57,7 @@ def parse_args():
     p = argparse.ArgumentParser(description=__doc__.strip())
     p.add_argument("-f", "--config-file", dest="cfg_file", default=default_cfg_file, help="JSON config file (default=%(default)s)")
     p.add_argument("-v", "--verbose", dest="vb", action="count", default=0, help="Increase verbosity")
+    p.add_argument("-o", "--output", dest="opt_out", default=None, help="Optional extra output file for Narrative version and git stamp")
     return p.parse_args()
 
 if __name__ == '__main__':

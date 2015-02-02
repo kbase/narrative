@@ -187,58 +187,77 @@
         },
 
         showWidget: function(type) {
-          var self = this;
-          this.selectedType = type;
-          this.widgetPanelCard1.css('display', 'none');
-          this.widgetPanelCard2.css('display', '');
-          this.widgetPanelCard2.empty();
-          var $header = null;
-          var $body = null;
-          var numberOfTabs = this.types[type]["import_method_ids"].length;
-          if (numberOfTabs > 1) {
-        	  var $header = $('<div>');
-        	  var $body = $('<div>');
-        	  this.widgetPanelCard2.append($header).append($body);
-          }
-          for (var methodPos in this.types[type]["import_method_ids"]) {
-        		
-        	var methodId = this.types[type]["import_method_ids"][methodPos];
-        	var methodSpec = this.methods[methodId];
-            var inputWidgetName = methodSpec.widgets.input;
-            if (!inputWidgetName || inputWidgetName === 'null')
-                inputWidgetName = "kbaseNarrativeMethodInput";
-            var methodJson = JSON.stringify(methodSpec);
-            
-            var $inputDiv = $('<div>');
-
-            // These are the 'delete' and 'run' buttons for the cell
-            var $runButton = $('<button>')
+            var self = this;
+            this.selectedType = type;
+            this.widgetPanelCard1.css('display', 'none');
+            this.widgetPanelCard2.css('display', '');
+            this.widgetPanelCard2.empty();
+            var $header = null;
+            var $body = null;
+            var numberOfTabs = this.types[type]["import_method_ids"].length;
+            if (numberOfTabs > 1) {
+            	var $header = $('<div>');
+            	var $body = $('<div>');
+            	this.widgetPanelCard2.append($header).append($body);
+            }
+            for (var methodPos in this.types[type]["import_method_ids"]) {
+            	self.showTab(type, methodPos, $header, $body, numberOfTabs);
+            }
+            var $importButton = $('<button>')
                              .attr('id', this.cellId + '-run')
                              .attr('type', 'button')
                              .attr('value', 'Import')
                              .addClass('kb-primary-btn')
                              .append('Import');
-            $runButton.click(
+
+            var $cancelButton = $('<button>')
+                             .attr('id', this.cellId + '-run')
+                             .attr('type', 'button')
+                             .attr('value', 'Cancel')
+                             .addClass('kb-primary-btn')
+                             .append('Cancel');
+
+            var btnImport = function(show) {
+            	if (show) {
+            		$importButton.show();
+            		$cancelButton.hide();
+            	} else {
+            		$importButton.hide();
+            		$cancelButton.show();
+            	}
+            };
+            
+            $importButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
                     var v = self.getInputWidget().isValid();
                     if (v.isValid) {
-                    	self.runImport();
+                    	btnImport(false);
+                    	self.runImport(function() {
+                        	btnImport(true);
+                    	});
                     } else {
-                        var errorCount = 1;
-                        self.$errorModalContent.empty();
-                        var $errorStep = $('<div>');
-                        for (var e=0; e<v.errormssgs.length; e++) {
-                        	$errorStep.append($('<div>')
-                        			.addClass("kb-app-step-error-mssg")
-                        			.append('['+errorCount+']: ' + v.errormssgs[e]));
-                        	errorCount = errorCount+1;
-                        }
-                        self.$errorModalContent.append($errorStep);
-                        self.$errorModal.modal('show');
-                    }
+                    	var errorCount = 1;
+                    	self.$errorModalContent.empty();
+                    	var $errorStep = $('<div>');
+                    	for (var e=0; e<v.errormssgs.length; e++) {
+                    		$errorStep.append($('<div>')
+                    				.addClass("kb-app-step-error-mssg")
+                    				.append('['+errorCount+']: ' + v.errormssgs[e]));
+                    		errorCount = errorCount+1;
+                    	}
+                    	self.$errorModalContent.append($errorStep);
+                    	self.$errorModal.modal('show');
+                    	}
                 }, this)
             );
+            
+            $cancelButton.click(function() {
+            	self.stopTimer();
+            	btnImport(true);
+				self.showInfo("Import job was cancelled");
+            });
+            
             var $backButton = $('<button>')
                              .attr('id', this.cellId + '-back')
                              .attr('type', 'button')
@@ -252,27 +271,30 @@
                 }, this)
             );
 
-            var $buttons = $('<div>')
+            var $buttons = $('<div style="margin: 0px 30px 0px 33px;">')
                            .addClass('buttons')
-                           .append($runButton)
+                           .append($importButton)
+                           .append('&nbsp;')
+                           .append($cancelButton)
                            .append('&nbsp;')
                            .append($backButton);
 
-            var $progressBar = $('<div>')
-                               .attr('id', 'kb-func-progress')
-                               .addClass('pull-left')
-                               .css({'display' : 'none'})
-                               .append($('<div>')
-                                       .addClass('progress progress-striped active kb-cell-progressbar')
-                                       .append($('<div>')
-                                               .addClass('progress-bar progress-bar-success')
-                                               .attr('role', 'progressbar')
-                                               .attr('aria-valuenow', '0')
-                                               .attr('aria-valuemin', '0')
-                                               .attr('aria-valuemax', '100')
-                                               .css({'width' : '0%'})))
-                               .append($('<p>')
-                                       .addClass('text-success'));
+        	$cancelButton.hide();
+        	self.widgetPanelCard2.append($buttons);
+        },
+        
+        showTab: function(type, methodPos, $header, $body, numberOfTabs) {
+            var self = this;
+        	var methodId = this.types[type]["import_method_ids"][methodPos];
+        	var methodSpec = this.methods[methodId];
+            var inputWidgetName = methodSpec.widgets.input;
+            if (!inputWidgetName || inputWidgetName === 'null')
+                inputWidgetName = "kbaseNarrativeMethodInput";
+            var methodJson = JSON.stringify(methodSpec);
+            
+            var $inputDiv = $('<div>');
+
+            // These are the 'delete' and 'run' buttons for the cell
 
             var methodUuid = 'import-method-details-'+this.uuid();
             var buttonLabel = 'details';
@@ -293,8 +315,7 @@
                     .append($('<div>')
                     .append($inputDiv))
                     .append($('<div>')
-                    .css({'overflow' : 'hidden', 'margin' : '0px 0px 0px 18px'})
-                    .append($buttons));
+                    .css({'overflow' : 'hidden', 'margin' : '0px 0px 0px 18px'}));
                         
         	var isShown = methodPos == 0;
         	var tabName = methodSpec.info.name;
@@ -332,7 +353,6 @@
             this.inputWidget[methodId] = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
 
         	this.tabs[methodId] = tab;
-          }
         },
         
         getSelectedTabId: function() {
@@ -364,13 +384,13 @@
             this.widgetPanelCard1.css('display', '');
         },
         
-        runImport: function() {
+        runImport: function(callback) {
         	var self = this;
         	var paramValueArray = this.getInputWidget().getParameters();
         	var params = {};
         	var methodId = self.getSelectedTabId();
         	var methodSpec = self.methods[methodId];
-        	for(var i in methodSpec.parameters) {
+        	for (var i in methodSpec.parameters) {
             	var paramId = methodSpec.parameters[i].id;
             	var paramValue = paramValueArray[i];
             	params[paramId] = paramValue;
@@ -550,12 +570,15 @@
         		uploaderClient.upload(args,
         				$.proxy(function(data) {
         					console.log(data);
-        					self.waitForJob(data[1]);
+        					self.waitForJob(data[1], callback);
                         }, this),
                         $.proxy(function(error) {
                             self.showError(error);
+                        	callback(false);
                         }, this)
                     );
+            } else {
+            	callback(false);
             }
         },
         
@@ -573,7 +596,7 @@
         	return 0;
         },
 
-        waitForJob: function(jobId) {
+        waitForJob: function(jobId, callback) {
         	var self = this;
         	/*var aweClient = new AweClient({url: self.aweURL, token: self.token});
         	var timeLst = function(event) {
@@ -604,6 +627,7 @@
         			var wasError = data[6];
         			if (complete === 1) {
         				self.stopTimer();
+        				callback(wasError === 0);
         				if (wasError === 0) {
                             self.trigger('updateDataList.Narrative');
             				self.showInfo("Import job is done");
@@ -616,6 +640,7 @@
         		}, function(data) {
         			self.stopTimer();
     				console.log(data.error.message);
+    				callback(false);
         		});
         	};
         	self.timer = setInterval(timeLst, 5000);

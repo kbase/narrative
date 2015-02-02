@@ -120,13 +120,13 @@
         },
 
         addMenuItem: function(item) {
-            var $label = $('<span>');
+            var label = '';
             if (item.icon)
-                $label.addClass(item.icon);
+                label += '<span class="' + item.icon +'"></span> ';
             if (item.text)
-                $label.append(' ' + item.text);
+                label += ' ' + item.text;
             var $item = $('<a>')
-                        .append($label)
+                        .append(label)
                         .click($.proxy(function(event) {
                             event.preventDefault();
                             event.stopPropagation();

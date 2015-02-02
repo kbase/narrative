@@ -251,10 +251,10 @@
                                         .append(this.appSpec.info.subtitle)
                                         .append('&nbsp;&nbsp;<a href="'+this.options.appHelpLink+this.appSpec.info.id+'" target="_blank">more...</a>');
 
-            var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, "")
+            var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, '"')
             var $appHeaderDiv = $("<div>")
                                         .addClass('kb-app-panel-header')
-                                        .append(headerCleaned);
+                                        .html(headerCleaned);
 
             var $menuSpan = $('<div class="pull-right">');
 

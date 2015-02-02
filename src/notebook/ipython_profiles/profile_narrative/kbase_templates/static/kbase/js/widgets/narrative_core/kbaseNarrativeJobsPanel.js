@@ -26,7 +26,7 @@
                        timestamp: <str> }
          * }
          */
-        jobStates: {},
+        jobStates: null,
 
         /* when populated should have structure:
          * {
@@ -179,6 +179,8 @@
          * keep track of the job state.
          */
         initJobStates: function() {
+            if (this.jobStates === null)
+                this.jobStates = {};
             if (IPython.notebook && IPython.notebook.metadata && IPython.notebook.metadata.job_ids) {
                 // this is actually like: ['apps': [list of app jobs], 'methods':[list of method jobs]
                 var jobIds = IPython.notebook.metadata.job_ids;
@@ -422,7 +424,7 @@
          * @method
          */
         refresh: function(hideLoadingMessage, initStates) {
-            if (initStates)
+            if (this.jobStates === null || initStates)
                 this.initJobStates();
 
             // if there's no timer, set one up - this should only happen the first time.
@@ -493,7 +495,7 @@
                             }
                         }
                     }
-                    jobInfo[jobId] = {'spec': specInfo}; //['spec'] = specInfo;
+                    jobInfo[jobId] = { 'spec': specInfo };
                 }
                 else
                     this.jobStates[jobId].status = 'error';
@@ -595,6 +597,7 @@
          * We should also expire jobs in a reasonable time, at least from the Narrative.
          */
         populateJobsPanel: function(fetchedJobStatus, jobInfo) {
+            console.log(fetchedJobStatus, jobInfo);
             if (!this.jobStates || Object.keys(this.jobStates).length === 0) {
                 this.showMessage('No running jobs!');
                 this.setJobCounter(0);
@@ -763,7 +766,7 @@
                         task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
                     }
                 }
-                if (jobState.state && jobState.state.position !== undefined && jobState.state.position !== null)
+                if (jobState.state && jobState.state.position !== undefined && jobState.state.position !== null && jobState.state.position > 0)
                     position = jobState.state.position;
             }
             if (jobState.timestamp) {
@@ -804,7 +807,7 @@
                 return;
 
             var $cell = $('#' + source);
-            // don't do anything if we can't find the running cell, either.
+            // don't do anything if we know what the source should be, but we can't find it.
             if (!$cell)
                 return;
 

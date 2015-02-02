@@ -328,7 +328,7 @@
                         break;
                     case 'error':
                         this.$submitted.html(this.submittedText).show();
-                        this.$cellPanel.addClass('kb-app-step-running');
+                        this.$cellPanel.addClass('kb-app-step-error');
                         this.$runButton.hide();
                         this.$stopButton.show();
                         this.$inputWidget.lockInputs();

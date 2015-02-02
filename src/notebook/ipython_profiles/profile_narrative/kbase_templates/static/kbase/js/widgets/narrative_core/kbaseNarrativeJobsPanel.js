@@ -766,7 +766,7 @@
                         task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
                     }
                 }
-                if (jobState.state && jobState.state.position !== undefined && jobState.state.position !== null)
+                if (jobState.state && jobState.state.position !== undefined && jobState.state.position !== null && jobState.state.position > 0)
                     position = jobState.state.position;
             }
             if (jobState.timestamp) {

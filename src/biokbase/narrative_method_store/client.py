@@ -225,6 +225,11 @@ class NarrativeMethodStore(object):
                           [])
         return resp[0]
 
+    def list_types(self, params):
+        resp = self._call('NarrativeMethodStore.list_types',
+                          [params])
+        return resp[0]
+
     def get_method_brief_info(self, params):
         resp = self._call('NarrativeMethodStore.get_method_brief_info',
                           [params])
@@ -252,5 +257,10 @@ class NarrativeMethodStore(object):
 
     def get_app_spec(self, params):
         resp = self._call('NarrativeMethodStore.get_app_spec',
+                          [params])
+        return resp[0]
+
+    def get_type_info(self, params):
+        resp = self._call('NarrativeMethodStore.get_type_info',
                           [params])
         return resp[0]

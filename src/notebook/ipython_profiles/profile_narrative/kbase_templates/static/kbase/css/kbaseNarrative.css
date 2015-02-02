@@ -157,8 +157,11 @@ div#notebook {
     box-shadow: 0 0 3px #CECECE;
     margin-right: 5px;
 }
+.navbar-right .fa::before { /* color nav icons */
+    color: #2196F3;
+}
 #kb-nav-menu { /* don't add shadows here */
-  box-shadow: none;
+    box-shadow: none;
 }
 .kb-nav-btn > div {
     color: #666 !important;
@@ -167,12 +170,23 @@ div#notebook {
     font-size: 10pt;
     margin-top: -5px;
 }
-.navbar-right .fa::before { /* color nav icons */
-  color: #2196F3;
-}
 .navbar-right .kb-nav-btn:hover {
-  background-color: #F5F5F5;
+    background-color: #F5F5F5;
 }
+.kb-nav-btn-upgrade {
+    background-color: #4BB856 !important;
+    display: none;
+}
+.kb-nav-btn-upgrade .fa::before {
+    color: #FFF !important;
+}
+.kb-nav-btn-upgrade > div {
+    color: #FFF !important;
+}
+.kb-nav-btn-upgrade:hover {
+    background-color: #43A047 !important;
+}
+
 #kb-ipy-menu { /* restore rounded corners */
   border-radius: 4px !important;
   margin-right: 0;
@@ -1477,6 +1491,9 @@ div#notebook_panel {
 .kb-jobs-error-modal {
     width: 485px;
     word-wrap: break-word;
+    max-height: 220px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /** new method parameter styling **/
@@ -1493,7 +1510,7 @@ div#notebook_panel {
 }
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
 .kb-method-parameter-row-hover {
-   background:#F5F5F5;
+   background:#F9F9F9;
 }
 
 .kb-method-parameter-row-error {
@@ -1867,6 +1884,57 @@ div[class="tooltip-inner"] {
 
 /* end: data table */
 
+
+
+/* default blue button in the new style */
+.kb-primary-btn {
+    background-color: #2196F3;
+    border-radius: 1px;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    margin: 3px;
+    font-size: 14px;
+    font-family: "Roboto",Helvetica,Arial,sans-serif;
+    font-weight: 400;
+    box-shadow: 1px 1px 3px #aaa;
+}
+.kb-primary-btn:hover {
+    background-color: #1E88E5;
+}
+.kb-primary-btn[disabled] {
+    box-shadow: none;
+    background-color: #BBDEFB;
+    color: #fff;
+}
+/* gray button in the new style */
+.kb-default-btn {
+    background-color: #F5F5F5;
+    border-radius: 1px;
+    color: #555;
+    border: none;
+    padding: 10px 20px;
+    margin: 3px;
+    font-size: 14px;
+    font-family: "Roboto",Helvetica,Arial,sans-serif;
+    font-weight: 400;
+    box-shadow: 1px 1px 3px #aaa;
+}
+.kb-default-btn:hover {
+    background-color: #CECECE;
+}
+.kb-default-btn[disabled] {
+    box-shadow: none;
+    color: #aaa;
+}
+
+.kb-btn-sm {
+    padding: 5px 10px;
+    font-size: 13px;
+}
+
+
+
 /* data list */
 .kb-data-list-obj-row {
     transition: all 0.1s ease;
@@ -1923,52 +1991,52 @@ div[class="tooltip-inner"] {
 }
 
 .kb-data-list-add-data-button {
-    transition: all 0.4s ease;
-    width:  40pt;
-    height: 40pt;
-    color:  #fff;
+	
+    cursor:pointer;
     background-color: #F44336;
-    border-radius: 50%;
+    color: #fff;
+    border: none;
+    box-shadow: 1px 1px 3px #aaa;
+    -webkit-box-shadow: 1px 1px 3px #aaa;
+    moz-box-shadow: 1px 1px 3px #aaa;
     text-align: center;
-    padding-top: 10pt;
-    box-shadow: 2px 2px 4px 1px #ccc;
-    -webkit-box-shadow: 2px 2px 4px 1px #ccc;
-    moz-box-shadow: 2px 2px 4px 1px #ccc;
+    
+    width:  30pt;
+    height: 30pt;
+    border-radius: 50%;
+    padding-top: 5pt;
 }
 /* specialize buttons that hover over narrative */
 #kb-add-code-cell, #kb-add-md-cell {
-  box-shadow: #CECECE 2px 2px 1px;
-  height: 40px;
-  width: 40px;
-  background-color: rgba(128,128,128,0.5);
-  font-size: 1.2em;
+    box-shadow: #CECECE 2px 2px 1px;
+    height: 40px;
+    width: 40px;
+    background-color: rgba(128,128,128,0.5);
 }
 #kb-add-code-cell { right: 100px; }
 #kb-add-md-cell { margin-right: 20px; }
 
 .kb-data-list-add-data-button:hover {
     cursor:pointer;
-    box-shadow: 4px 4px 8px 1px #ccc;
-    -webkit-box-shadow: 4px 4px 8px 1px #ccc;
-    moz-box-shadow: 4px 4px 8px 1px #ccc;
+    background-color: #DC3C31;
 }
 
 .kb-data-list-add-data-text-button {
-    transition: all 0.4s ease;
-    color:  #fff;
     background-color: #F44336;
-    text-align: center;
-    border-radius: 0%;
-    box-shadow: 2px 2px 4px 1px #ccc;
-    -webkit-box-shadow: 2px 2px 4px 1px #ccc;
-    moz-box-shadow: 2px 2px 4px 1px #ccc;
+    border-radius: 1px;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    margin: 3px;
+    font-size: 14px;
+    font-family: "Roboto",Helvetica,Arial,sans-serif;
+    font-weight: 400;
+    box-shadow: 1px 1px 3px #aaa;
+    -webkit-box-shadow: 1px 1px 3px #aaa;
+    moz-box-shadow: 1px 1px 3px #aaa;
 }
 .kb-data-list-add-data-text-button:hover {
-    cursor:pointer;
-    color:  #fff;
-    box-shadow: 4px 4px 8px 1px #ccc;
-    -webkit-box-shadow: 4px 4px 8px 1px #ccc;
-    moz-box-shadow: 4px 4px 8px 1px #ccc;
+    background-color: #DC3C31;
 }
 
 
@@ -1981,10 +2049,17 @@ div[class="tooltip-inner"] {
     padding: 5px 10px;
     font-size: 13px;
     box-shadow: 1px 1px 3px #aaa;
+    -webkit-box-shadow: 1px 1px 3px #aaa;
+    moz-box-shadow: 1px 1px 3px #aaa;
     margin: 5px;
 }
 .kb-data-list-btn:hover {
     background-color: #1E88E5;;
+}
+.kb-data-list-btn[disabled] {
+    box-shadow: none;
+    background-color: #BBDEFB;
+    color: #fff;
 }
 
 .kb-data-list-cancel-btn {
@@ -1995,6 +2070,8 @@ div[class="tooltip-inner"] {
     padding: 5px 10px;
     font-size: 13px;
     box-shadow: 1px 1px 3px #aaa;
+    -webkit-box-shadow: 1px 1px 3px #aaa;
+    moz-box-shadow: 1px 1px 3px #aaa;
     margin: 5px;
 }
 .kb-data-list-cancel-btn:hover {
@@ -2005,6 +2082,10 @@ div[class="tooltip-inner"] {
     width:70%;
     margin: 2px;
 }
+
+
+
+
 
 .kb-data-list-logo {
     width:  30pt;
@@ -2023,13 +2104,26 @@ div[class="tooltip-inner"] {
     text-shadow: -1px 0 #777, 0 1px #777, 1px 0 #777, 0 -1px #777;
 }
 
+/* Nudge the data icon a bit to the left or right */
+.kb-data-icon-rnudge {
+  margin-left: 3px;
+}
+.kb-data-icon-lnudge {
+  margin-right: 3px;
+}
+.kb-data-icon-unudge {
+  margin-bottom: 0.5em;
+}
+.kb-data-icon-dnudge {
+  margin-top: 0.5em;
+}
+
 .kb-data-list-info {
 }
 .kb-data-list-name {
     color:#2e618d;
     font-size: 11pt;
     font-weight: bold;
-    white-space: nowrap;
     margin: 2px;
 }
 
@@ -2182,7 +2276,7 @@ div[class="tooltip-inner"] {
 
 .kb-import-content {
     position:relative;
-    margin: 0 0 0 15px;
+    margin: 0 0 0 0px;
     overflow-x: hidden;
     overflow-y: auto;
     /*height: 830px;*/

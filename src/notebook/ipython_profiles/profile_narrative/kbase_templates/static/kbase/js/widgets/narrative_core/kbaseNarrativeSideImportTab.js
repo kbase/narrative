@@ -57,7 +57,7 @@
                        $('<div>').addClass('modal-body').append(self.$errorModalContent)
                     ).append(
                         $('<div>').addClass('modal-footer').append(
-                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
+                            $('<button type="button" data-dismiss="modal">').addClass("kb-default-btn").append("Dismiss"))
                     )
                 ));
             $('body').append(self.$errorModal);
@@ -76,7 +76,7 @@
                        $('<div>').addClass('modal-body').append(self.$warningModalContent)
                     ).append(
                         $('<div>').addClass('modal-footer').append(confirmButton).append(
-                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Cancel"))
+                            $('<button type="button" data-dismiss="modal">').addClass("kb-default-btn").append("Cancel"))
                     )
                 ));
             $('body').append(self.$warningModal);
@@ -99,7 +99,7 @@
                               .attr('id', this.cellId + '-next')
                               .attr('type', 'button')
                               .attr('value', 'Next')
-                              .addClass('btn btn-primary btn-sm')
+                              .addClass('kb-primary-btn')
                               .css({'border' : '4px'})
                               .append('Next');
             var $hintDiv  = $('<div>').addClass("kb-method-parameter-hint")
@@ -216,7 +216,7 @@
                              .attr('id', this.cellId + '-run')
                              .attr('type', 'button')
                              .attr('value', 'Import')
-                             .addClass('btn btn-primary btn-sm')
+                             .addClass('kb-primary-btn')
                              .append('Import');
             $runButton.click(
                 $.proxy(function(event) {
@@ -243,7 +243,7 @@
                              .attr('id', this.cellId + '-back')
                              .attr('type', 'button')
                              .attr('value', 'Back')
-                             .addClass('btn btn-primary btn-sm')
+                             .addClass('kb-primary-btn')
                              .append('Back');
             $backButton.click(
                 $.proxy(function(event) {
@@ -402,7 +402,7 @@
             	}
             } else if (self.selectedType === 'Transcript') {
             	if (methodId === 'import_transcript_file') {
-            		var options = {'dna':self.asBool(params['dna']),
+            		var options = {'dna':self.asInt(params['dna']),
             				"output_file_name": "transcripts.json"};
             		var genomeId = params['genomeId'];
             		if (genomeId)
@@ -441,7 +441,7 @@
             		if (refName)
             			options['refname'] = refName;
             		args = {'external_type': 'FASTA.DNA.Assembly', 
-            				'kbase_type': 'KBaseGenomes.ReferenceAssembly', 
+            				'kbase_type': 'KBaseAssembly.ReferenceAssembly', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
             				'optional_arguments': {'validate':{},'transform':options},

@@ -277,11 +277,11 @@
                         <li><a href="/functional-site/#/search/?q=*" target="_blank">Search Data</a></li>
                         <li><a id="kb-status-btn" href="" target="_blank">KBase Service Status</a></li>
                         <li role="presentation" class="divider"></li>
-                        <li><a id="kb-jira-btn" href="" target="_blank">Submit JIRA ticket</a></li>                        
+                        <li><a id="kb-jira-btn" href="" target="_blank">Submit JIRA ticket</a></li>
                         <li role="presentation" class="divider"></li>
                         <li><a id="kb-about-btn">About</a></li>
 <!--                         <li><a href="#">Help</a></li>
- -->                        <li><a target="_blank" href="//kbase.us/get-started/narrative-quick-start">Narrative Tutorial</a></li>
+ -->                        <li><a target="_blank" href="https://staging.kbase.us/narrative-guide/">Narrative Tutorial</a></li>
                         <li><a target="_blank" href="mailto:help@kbase.us">Email help@kbase.us</a></li>
                     </ul>
                 </div>
@@ -302,15 +302,19 @@
             </div>
 
             <div class="navbar-right">
+                <button id="kb-update-btn" class="btn btn-default navbar-btn kb-nav-btn kb-nav-btn-upgrade">
+                    <div class="fa fa-refresh fa-spin"></div>
+                    <div class="kb-nav-btn-txt">New Version Available!</div>
+                </button>
                 <div class="btn-group">
                     <button id="kb-ipy-menu" class="btn btn-default navbar-btn kb-nav-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <div id="kb-kernel-icon" class="fa fa-circle-o"><span class="caret"></div>
                         <div class="kb-nav-btn-txt">kernel</div>
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="kb-ipy-menu">
-                        <li><a id="kb-kernel-int-btn"><span class="fa fa-times"> Interrupt</span></a></li>
-                        <li><a id="kb-kernel-ref-btn"><span class="fa fa-refresh"> Restart</span></a></li>
-                        <li><a id="kb-kernel-rec-btn"><span class="fa fa-power-off"> Reconnect</span></a></li>
+                        <li><a id="kb-kernel-int-btn"><span class="fa fa-times"></span> Interrupt</a></li>
+                        <li><a id="kb-kernel-ref-btn"><span class="fa fa-refresh"></span> Restart</a></li>
+                        <li><a id="kb-kernel-rec-btn"><span class="fa fa-power-off"></span> Reconnect</a></li>
                     </ul>
                 </div>
                 <button id="kb-share-btn" class="btn btn-default navbar-btn kb-nav-btn">
@@ -391,9 +395,9 @@
                 dataType: 'json'
             }).responseText
         );
-        var dataIcons = $.parseJSON(
+        var icons = $.parseJSON(
           $.ajax({
-            url: "{{ static_url('kbase/data-icons.json') }}",
+            url: "{{ static_url('kbase/icons.json') }}",
             async: false,
             dataType: 'json'
           }).responseText
@@ -406,15 +410,11 @@
                             landing_page_map: landingPageMap,
                             release_notes: configJSON['release_notes'],
                             mode: configJSON['mode'],
-                            data_icons: dataIcons,
+                            icons: icons,
                             workspaceId: workspaceId
                           };
     </script>
-    <script src="{{ static_url("kbase/js/api/kbase-api.js") }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ static_url("kbase/js/api/workspaceDeluxeClient.js") }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ static_url("kbase/js/api/fbaModelServices.js") }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ static_url("kbase/js/api/userandjobstate.js") }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ static_url("kbase/js/api/NarrativeMethodStore.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ static_url("kbase/js/api/kbase-client-api.min.js") }}" type="text/javascript" charset="utf-8"></script>
 
     <script src="{{ static_url("base/js/namespace.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("base/js/page.js") }}" type="text/javascript" charset="utf-8"></script>

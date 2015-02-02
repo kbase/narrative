@@ -38,6 +38,8 @@
         refreshTimer: null,
         refreshInterval: 10000,
 
+        completedStatus: [ 'completed', 'done', 'deleted', 'suspend', 'not_found_error', 'unauthorized_error', 'awe_error' ],
+
         init: function(options) {
             this._super(options);
             this.title.append(this.$jobCountBadge);
@@ -266,9 +268,15 @@
             IPython.notebook.kernel.execute(deleteJobCmd, callbacks, {store_history: false, silent: true});
         },
 
+        /**
+         * @method
+         * When we get the deletion response from the kernel, we should delete the job.
+         * We should *probably* just delete the job anyway, whether there's an error or not.
+         */
         deleteResponse: function(msgType, content, jobId) {
             if (msgType != 'stream') {
                 console.error('An error occurred while trying to delete a job');
+                this.refresh(false);
                 return;
             }
             var result = content.data;
@@ -281,9 +289,6 @@
                 // Comment this out for now, until we make some sensible error popup or something.
                 // return false;
             }
-
-            // if (result[jobId] === true) {
-            // successfully nuked it on the back end, now wipe it out on the front end.
 
             // first, wipe the metadata
             var appIds = IPython.notebook.metadata.job_ids.apps;
@@ -298,12 +303,16 @@
             // remove it from the 'cache' in this jobs panel
             delete this.source2Job[this.jobStates[jobId].source];
             delete this.jobStates[jobId];
-            this.refresh(false);
 
             // nuke the removeId
             this.removeId = null;
+            
+            // save the narrative!
+            IPython.notebook.save_checkpoint();
+
+
+            this.refresh(false);
             return true;
-            // return result[jobId];
         },
 
         /**
@@ -337,6 +346,12 @@
             this.$jobsPanel.show();
         },
 
+        /**
+         * @method
+         * Registers a job with the Narrative. This adds its job id and source of the job (the cell that started it) to 
+         * the narrative metadata. It also starts caching the state internally to the jobs panel. Once all this is done,
+         * so the user doesn't accidentally lose the job, it triggers a narrative save.
+         */
         registerJob: function(jobInfo, isApp) {
             // Check to make sure the Narrative has been instantiated to begin with.
             if (!IPython || !IPython.notebook || !IPython.notebook.kernel || !IPython.notebook.metadata)
@@ -361,8 +376,10 @@
             // put a stub in the job states
             this.jobStates[jobInfo.id] = $.extend({}, jobInfo, {'status' : null, '$elem' : 'null'});
             this.source2Job[jobInfo.source] = jobInfo.id;
-            this.refresh();
+            // save the narrative!
             IPython.notebook.save_checkpoint();
+
+            this.refresh();
         },
 
         /*
@@ -386,11 +403,19 @@
          * @private
          */
         jobIsIncomplete: function(status) {
-            return (status !== 'completed' && 
-                    status !== 'error' && 
-                    status !== 'done' && 
-                    status !== 'deleted' &&
-                    status !== 'suspend');
+            if (!status)
+                return true;
+
+            status = status.toLowerCase();
+            // if status matches any of the possible cases in this.completedStatus, 
+            // return true
+            for (var i=0; i<this.completedStatus.length; i++) {
+                if (status.indexOf(this.completedStatus[i]) !== -1)
+                    return false;
+            }
+            if (status === 'error')
+                return false;
+            return true;
         },
 
         /**
@@ -436,12 +461,10 @@
 
             for (var jobId in this.jobStates) {
                 var jobState = this.jobStates[jobId];
-
-//                jobInfo[jobId] = {'state' : jobState};
-
                 // if the job's incomplete, we have to go get it.
                 var jobIncomplete = this.jobIsIncomplete(jobState.status);
-                // 2. The type dictates what cell it came from and how to deal with the inputs.
+
+                // The type dictates what cell it came from and how to deal with the inputs.
                 var jobType = this.jobTypeFromId(jobId);
                 var specInfo = null;
                 var $sourceCell = $('#' + jobState.source);
@@ -574,10 +597,9 @@
         populateJobsPanel: function(fetchedJobStatus, jobInfo) {
             if (!this.jobStates || Object.keys(this.jobStates).length === 0) {
                 this.showMessage('No running jobs!');
+                this.setJobCounter(0);
                 return;
             }
-
-            // console.log(['POPULATE_JOBS_PANEL', fetchedJobStatus, jobInfo]);
 
             // Instantiate a shiny new panel to hold job info.
             var $jobsList = $('<div>').addClass('kb-jobs-items');
@@ -700,14 +722,33 @@
             var position = null;
             var task = null;
 
-            // don't know nothing about no job!
-            if (status === 'Suspend' || status === 'Error' || status === 'Unknown') {
+            /* Lots of cases for status:
+             * suspend, error, unknown, awe_error - do the usual blocked error thing.
+             * deleted - treat job as deleted
+             * not_found_error - job's not there, so say so.
+             * unauthorized_error - not allowed to see it
+             * network_error - a (hopefully transient) error response based on network issues. refreshing should fix it.
+             * jobstate has step_errors - then at least one step has an error, so we should show them
+             * otherwise, no errors, so render their status happily.
+             */
+            if (status === 'Suspend' || status === 'Error' || status === 'Unknown' || status === 'Awe_error') {
                 status = this.makeJobErrorButton(jobId, jobInfo, 'Error');
                 $jobDiv.addClass('kb-jobs-error');
             }
             else if (status === 'Deleted') {
                 status = this.makeJobErrorButton(jobId, jobInfo, 'Deleted');
                 $jobDiv.addClass('kb-jobs-error');                
+            }
+            else if (status === 'Not_found_error') {
+                status = this.makeJobErrorButton(jobId, jobInfo, 'Job Not Found');
+                $jobDiv.addClass('kb-jobs-error');
+            }
+            else if (status === 'Unauthorized_error') {
+                status = this.makeJobErrorButton(jobId, jobInfo, 'Unauthorized');
+                $jobDiv.addClass('kb-jobs-error');
+            }
+            else if (status === 'Network_error') {
+                status = this.makeJobErrorButton(jobId, jobInfo, 'Network Error');
             }
             else if (jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0) {
                 var $errBtn = this.makeJobErrorButton(jobId, jobInfo);
@@ -722,7 +763,7 @@
                         task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
                     }
                 }
-                if (jobState.state && jobState.state.position && jobState.state.position > 0)
+                if (jobState.state && jobState.state.position !== undefined && jobState.state.position !== null)
                     position = jobState.state.position;
             }
             if (jobState.timestamp) {
@@ -735,7 +776,6 @@
             if (position !== null)
                 $infoTable.append(this.makeInfoRow('Queue Position', position));
             $infoTable.append(this.makeInfoRow('Started', started));
-
 
             $jobDiv.append($jobInfoDiv)
                    .append($infoTable);
@@ -776,7 +816,7 @@
             else if (jobType === 'ujs' || jobType === 'method') {
                 // assume we have 'in-progress' or 'running' vs. 'complete' or 'done'
                 var submitState = 'complete';
-                if (status.indexOf('run') != -1 || status.indexOf('progress') != -1)
+                if (status.indexOf('run') != -1 || status.indexOf('progress') != -1 || status.indexOf('started') != -1)
                     submitState = 'running';
                 else if (status.indexOf('queue') != -1 || status.indexOf('submit') != -1)
                     submitState = 'submitted';
@@ -820,6 +860,8 @@
                     $cell.kbaseNarrativeAppCell('setRunningState', 'complete');
                 }
             }
+
+            // other statuses - network_error, not_found_error, unauthorized_error, etc. - are ignored for now.
         },
 
         /**
@@ -853,7 +895,6 @@
             var $errBtn = $('<div>')
                           .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
                           .append('<span class="fa fa-warning" style="color:white"></span>');
-//            $errBtn.addClass('btn btn-danger btn-xs kb-data-list-more-btn fa fa-warning');
             if (btnText)
                 $errBtn.append(' ' + btnText);
             $errBtn.click($.proxy(function(e) {
@@ -872,13 +913,27 @@
                     errorText = "The App Cell associated with this job can no longer be found in your Narrative.";
                     errorType = "Missing Cell";
                 }
-                else if (jobState.state.error) {
-                    errorText = $('<div class="kb-jobs-error-modal">').append(jobState.state.error);
-                    errorType = "Runtime";
-                }
                 else if (btnText === 'Deleted') {
                     errorText = "This job has already been deleted from KBase Servers.";
                     errorType = "Invalid Job";
+                }
+                else if (btnText === 'Job Not Found') {
+                    errorText = "This job was not found to be running on KBase Servers. It may have been deleted, or may not be started yet.";
+                    errorType = "Invalid Job";
+                }
+                else if (btnText === 'Unauthorized') {
+                    errorText = "You do not have permission to view information about this job.";
+                    errorType = "Unauthorized";
+                }
+                else if (btnText === 'Network Error') {
+                    errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
+                    errorType = "Network";
+                }
+                else if (jobState.state.error) {
+                    errorText = $('<div class="kb-jobs-error-modal">').append(jobState.state.error);
+                    errorType = "Runtime";
+                    if (jobState.state.error === 'awe_error')
+                        errorType = 'AWE Error';                    
                 }
 
                 /* error types:
@@ -919,14 +974,22 @@
                                   .append(this.makeInfoRow('Id', jobId))
                                   .append(this.makeInfoRow('Type', errorType))
                                   .append(this.makeInfoRow('Error', errorText));
-                if (jobState.state.traceback) {
-                    $errorTable.append(this.makeInfoRow('Traceback', '<pre class="kb-jobs-error-modal"><code>' + jobState.state.traceback + '</code></pre>'));
-                }
- 
+
                 this.$jobsModalBody.empty();
                 this.$jobsModalBody.append($('<div>').append(headText))
-                                   .append($errorTable)
-                                   .append($('<div>').append(removeText));
+                                   .append($errorTable);
+                if (jobState.state.traceback) {
+                    var $tb = $('<div>');
+                    $tb.kbaseAccordion({
+                        elements: [{
+                            title: 'Detailed Error Information',
+                            body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
+                        }]
+                    });
+                    this.$jobsModalBody.append($tb);
+                }
+
+                this.$jobsModalBody.append($('<div>').append(removeText));
                 this.$jobsModal.openPrompt();
             }, this));
             return $errBtn;
@@ -1182,7 +1245,5 @@
                 return d;
             }
         },
-
-
     });
 })( jQuery );

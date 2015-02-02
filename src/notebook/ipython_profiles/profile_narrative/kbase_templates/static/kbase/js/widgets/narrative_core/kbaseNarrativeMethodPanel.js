@@ -4,7 +4,7 @@
  * (unless functions were passed in on construction).
  *
  * Each function is presented in a list (for now - accordion may be coming soon)
- * and when clicked will fire a "function_clicked.narrative" event.
+ * and when clicked will fire a "methodClicked.narrative" event.
  *
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
@@ -47,6 +47,8 @@
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+                this.meth_icons = window.kbconfig.icons.methods;
+                this.icon_colors = window.kbconfig.icons.colors;
             }
 
             this.$searchDiv = $('<div>')
@@ -381,7 +383,7 @@
         /**
          * Creates and returns a list item containing info about the given narrative function.
          * Clicking the function anywhere outside the help (?) button will trigger a
-         * function_clicked.Narrative event. Clicking the help (?) button will trigger a
+         * methodClicked.Narrative event. Clicking the help (?) button will trigger a
          * function_help.Narrative event.
          *
          * Both events have the relevant data passed along with them for use by the responding
@@ -390,20 +392,28 @@
          * @private
          */
         buildMethod: function(icon, method, triggerFn) {
-            var icon_name = "method";
-            if ( icon == "A") { icon_name = "app"; }
-            var icon_url = "static/kbase/images/" + icon_name + "-icon.png";
+            /* Logos */
+            var icon_name = (icon == "A") ? "app" : "method";
+            var icon_color = (icon == "A") ? this.icon_colors[9] : this.icon_colors[5];
+            //var icon_url = "static/kbase/images/" + icon_name + "-icon.png";
+            var icons = this.meth_icons;
+            var icon = icons[icon_name];
             var $logo = $('<div>')
-                        .addClass('kb-method-list-logo')
-                        .css({'background-image': 'url(' + icon_url + ')',
-                              'background-repeat': 'no-repeat',
-                              'background-color' : 'white' /*this.logoColorLookup(icon)*/
-                            })
-                        //.append(icon)
-                        .click($.proxy(function(e) {
-                            e.stopPropagation();
-                            triggerFn(method);
-                        }, this));
+              // background
+              .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
+              .append($('<i>')
+                .addClass("fa fa-square fa-stack-2x")
+                .css({'color': icon_color}));
+            // add stack of font-awesome icons
+            _.each(icon, function(cls) {
+              $logo.append($('<i>')
+              .addClass("fa fa-inverse fa-stack-1x " + cls));
+            });
+            // add behavior
+            $logo.click($.proxy(function(e) {
+              e.stopPropagation();
+              triggerFn(method);
+            }, this));
 
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
@@ -426,15 +436,9 @@
                                         .attr('href', this.options.methodHelpLink + method.info.id)));
 
             var $moreBtn = $('<span>')
-                           //.addClass('btn btn-default btn-xs kb-data-list-more-btn pull-right fa fa-ellipsis-h')
                            .addClass('kb-data-list-more fa fa-ellipsis-h')
                            .attr('aria-hidden', 'true')
                            .css({'color' : '#999'});
-                           /* click behavior is now attached to entire row...
-                            .click(function(e) {
-                               $more.slideToggle('fast', $.proxy(function() {
-                                }, this));
-                           });*/
 
             var $mainDiv = $('<div>')
                            .addClass('kb-data-list-info')

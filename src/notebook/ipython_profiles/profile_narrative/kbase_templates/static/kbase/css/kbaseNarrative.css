@@ -919,7 +919,7 @@ div#notebook_panel {
     font-family: "OxygenBold", Arial, sans-serif;
     text-transform: uppercase;
     color: #2e618d;
-    border-bottom: 1px solid #CECECE;
+    /*border-bottom: 1px solid #CECECE;*/
 }
 
 /* From user and job state service */

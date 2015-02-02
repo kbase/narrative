@@ -123,7 +123,7 @@
             this.widgetPanelCard2 = $('<div style="display: none; margin: 0px;">');
             this.widgetPanel.append(this.widgetPanelCard2);
 
-            this.infoPanel = $('<div style="margin: 20px 0px 0px 30px;">');
+            this.infoPanel = $('<div style="margin: 20px 30px 0px 30px;">');
 
             this.$elem.append(upperPanel);
             this.$elem.append(this.widgetPanel);
@@ -456,7 +456,7 @@
             	}
             } else if (self.selectedType === 'ShortReads') {
             	if (methodId === 'import_reads_fasta_file') {
-            		var options = {};
+            		var options = {'output_file_name': 'reflib.fasta.json'};
             		var refName = params['refname'];
             		if (refName)
             			options['refname'] = refName;
@@ -503,7 +503,7 @@
             		var biomass = params['biomass'];
             		if (biomass)
             			options['biomass'] = biomass;
-            		args = {'external_type': 'CSV', 
+            		args = {'external_type': 'CSV.FBAModel', 
             				'kbase_type': 'KBaseFBA.FBAModel', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
@@ -525,7 +525,7 @@
             		var biomass = params['biomass'];
             		if (biomass)
             			options['biomass'] = biomass;
-            		args = {'external_type': 'SBML', 
+            		args = {'external_type': 'SBML.FBAModel', 
             				'kbase_type': 'KBaseFBA.FBAModel', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
@@ -536,7 +536,7 @@
             	}
             } else if (self.selectedType === 'KBaseBiochem.Media') {
             	if (methodId === 'import_media_csv_file') {
-            		args = {'external_type': 'CSV', 
+            		args = {'external_type': 'CSV.Media', 
             				'kbase_type': 'KBaseBiochem.Media', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
@@ -551,12 +551,12 @@
             		var genome = params['genomeObject'];
             		if (genome)
             			options['genome'] = genome;
-            		args = {'external_type': 'CSV', 
+            		args = {'external_type': 'CSV.PhenotypeSet', 
             				'kbase_type': 'KBasePhenotypes.PhenotypeSet', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
             				'optional_arguments': {'validate':{},'transform':options},
-            				'url_mapping': {'CSV.Phenotypes': self.shockURL + '/node/' + params['csvFile']}};
+            				'url_mapping': {'CSV.PhenotypeSet': self.shockURL + '/node/' + params['csvFile']}};
             	} else {
             		self.showError(methodId + " import mode for PhenotypeSet type is not supported yet");
             	}
@@ -632,14 +632,19 @@
                             self.trigger('updateDataList.Narrative');
             				self.showInfo("Import job is done");
         				} else {
-            				self.showError(status);
+    						self.showError('loading detailed error...');
+        					jobSrv.get_detailed_error(jobId, function(data) {
+        						self.showError(data);
+        					}, function(data) {
+        						self.showError(data.error.message);
+        	        		});
         				}
         			} else {
         				self.showInfo("Import job has status: " + status, true);
         			}
         		}, function(data) {
         			self.stopTimer();
-    				console.log(data.error.message);
+        			self.showError(data.error.message);
     				callback(false);
         		});
         	};
@@ -661,7 +666,7 @@
         	if (error.error && error.error.message)
         		errorMsg = error.error.message;
         	this.infoPanel.empty();
-        	this.infoPanel.append('<span class="label label-danger">Error: '+errorMsg+'"</span>');
+        	this.infoPanel.append('<pre style="text-align: left; background-color: #ffe0e0;">Error:\n'+errorMsg+'</pre>');
         },
 
         showInfo: function(message, spinner) {

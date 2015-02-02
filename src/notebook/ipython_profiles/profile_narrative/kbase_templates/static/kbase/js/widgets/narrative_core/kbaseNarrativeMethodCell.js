@@ -453,9 +453,9 @@
           var self = this;
           this.methClient.get_method_full_info(params,
             function(info_list) {
-              //console.debug("Got full info: ", info_list);
+              //console.debug("Full info for method: ", info_list);
               var sugg = info_list[0].suggestions;
-              //console.debug("Suggestions: ", sugg);
+              //console.debug("Suggestions for next methods: ", sugg);
               var params = {apps: sugg.next_apps,methods: sugg.next_methods };
               //console.debug("Getting function specs, params=", params);
               self.trigger('getFunctionSpecs.Narrative', [params, function(specs) {

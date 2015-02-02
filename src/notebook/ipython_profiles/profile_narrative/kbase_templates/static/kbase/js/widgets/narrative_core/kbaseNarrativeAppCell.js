@@ -745,12 +745,14 @@
                 this.state.runningState.appRunState = state;
                 this.$stopButton.hide();
                 // Show the 'next-steps' to take, if there are any
-                this.getNextSteps( function(next_steps) {
-                  if (next_steps.apps || next_steps.methods) {
-                    this.trigger("showNextSteps.Narrative",
-                      {elt: this.$elem, "next_steps": next_steps});
-                  }
-                });
+                this.getNextSteps(
+                  $.proxy(function(next_steps) {
+                    if (next_steps.apps || next_steps.methods) {
+                      this.trigger("showNextSteps.Narrative",
+                        {elt: this.$elem, "next_steps": next_steps});
+                    }
+                  }, this)
+                );
             }
         },
 
@@ -787,31 +789,32 @@
         },
 */
     /**
-    * Get next steps, and invoke callback() with
+    * Get next steps, and invoke `render_cb` to render
     * the specs returned by the trigger:getFunctionSpecs.Narrative for
     * each of the possible apps/methods.
     */
-    getNextSteps: function(callback) {
-      console.debug("Find next steps for app",this.app);
+    getNextSteps: function(render_cb) {
+      var app = this.appSpec;
+      //console.debug("Find next steps for app", app);
       // fetch full info, which contains suggested next steps
-      var params = {ids: [this.app.info.id]};
+      var params = {ids: [app.info.id]};
       var result = {};
-      var self = this;
       this.methClient.get_app_full_info(params,
-        function(info_list) {
-          //console.debug("Got full info: ", info_list);
+        $.proxy(function(info_list) {
+          //console.debug("Got full info for app:", info_list);
           var sugg = info_list[0].suggestions;
-          //console.debug("Suggestions: ", sugg);
+          //console.debug("Suggestions for app:", sugg);
           var params = {apps: sugg.next_apps,methods: sugg.next_methods };
           //console.debug("Getting function specs, params=", params);
-          self.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
-            callback(specs);
+          // Pass callback to render each retrieved function spec
+          this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
+            render_cb(specs);
           }]);
-        },
-        function() {
+        }, this),
+        $.proxy(function() {
           KBError("kbaseNarrativeMethodCell.getNextSteps",
-          "Could not get full info for: " + self.method.info.id);
-        });
+          "Could not get full info for app:" + app.info.id);
+        }, this));
       },
 
         /*

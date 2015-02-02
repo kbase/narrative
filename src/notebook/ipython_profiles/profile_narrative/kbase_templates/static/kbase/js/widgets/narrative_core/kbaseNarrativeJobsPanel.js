@@ -474,7 +474,6 @@
                     // if it's an NJS job, then it's an App cell, so fetch all that info.
                     if (jobType === "njs") {
                         specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
-                        console.log(specInfo);
                         if (specInfo && jobIncomplete) {
                             jobParamList.push("['" + jobId + "', " +
                                               "'" + this.safeJSONStringify(specInfo.appSpec) + "', " +
@@ -496,7 +495,7 @@
                             }
                         }
                     }
-                    jobInfo[jobId] = {'spec': specInfo}; //['spec'] = specInfo;
+                    jobInfo[jobId] = { 'spec': specInfo };
                 }
                 else
                     this.jobStates[jobId].status = 'error';
@@ -598,6 +597,7 @@
          * We should also expire jobs in a reasonable time, at least from the Narrative.
          */
         populateJobsPanel: function(fetchedJobStatus, jobInfo) {
+            console.log(fetchedJobStatus, jobInfo);
             if (!this.jobStates || Object.keys(this.jobStates).length === 0) {
                 this.showMessage('No running jobs!');
                 this.setJobCounter(0);

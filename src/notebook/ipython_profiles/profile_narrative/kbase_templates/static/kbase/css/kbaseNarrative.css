@@ -356,7 +356,7 @@ p#site-title {
     border-top: 1px solid #aaa;
 }
 
-#bottom-tabs p a{
+#bottom-tabs p a {
     border: 1px solid #018841;
     background-color: #fff;
     padding: 14px 20px;
@@ -375,7 +375,7 @@ p#site-title {
 
 .kb-side-overlay-container {
     width: 700px;  /* I would advise fixing this for UX sake */
-    border : 1px solid #ababab;
+    border : 1px solid #CECECE;
     z-index : 1030;
     background : white;
     position : fixed;
@@ -383,7 +383,7 @@ p#site-title {
 
 .kb-side-overlay-header {
     width: 100%;
-    background-color: #428bca;
+    background-color: #2196F3;
     color: #fff;
     padding: 6px;
     font-size: 12pt;
@@ -409,10 +409,11 @@ p#site-title {
     display: inline-block;
     font-size: 12pt;
     text-align: center;
-    border: 6px solid #428bca;
-    background-color: #428bca;
+    border-bottom: 6px solid #2196F3;
+    border-top: 6px solid #2196F3;
+    background-color: #2196F3;
     padding: 6px;
-    color: #b3d1ea;
+    color: #BBDEFB;
     font-weight: bold;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -426,11 +427,11 @@ p#site-title {
 }
 
 .kb-side-header:hover {
-    border-bottom: 6px solid orange;
+    border-bottom: 6px solid #10CE34;
 }
 
 .kb-side-header.active {
-    border-bottom: 6px solid orange;
+    border-bottom: 6px solid #10CE34;
     color: #fff;
     cursor: auto;
 }
@@ -2012,7 +2013,8 @@ div[class="tooltip-inner"] {
     box-shadow: #CECECE 2px 2px 1px;
     height: 40px;
     width: 40px;
-    background-color: rgba(128,128,128,0.5);
+    background-color: #2196F3;
+    opacity: 0.5;
 }
 #kb-add-code-cell { right: 100px; }
 #kb-add-md-cell { margin-right: 20px; }

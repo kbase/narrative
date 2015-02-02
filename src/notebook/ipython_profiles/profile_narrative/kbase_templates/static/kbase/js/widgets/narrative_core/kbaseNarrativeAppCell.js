@@ -745,14 +745,17 @@
                 this.state.runningState.appRunState = state;
                 this.$stopButton.hide();
                 // Show the 'next-steps' to take, if there are any
-                var next_steps = this.getNextSteps();
-                if (next_steps.apps || next_steps.methods) {
-                  this.trigger("showNextSteps.Narrative",
-                    {elt: this.$elem, "next_steps": next_steps});
-                }
+                this.getNextSteps( function(next_steps) {
+                  if (next_steps.apps || next_steps.methods) {
+                    this.trigger("showNextSteps.Narrative",
+                      {elt: this.$elem, "next_steps": next_steps});
+                  }
+                });
             }
         },
 
+
+/*
         getNextSteps: function() {
           console.debug("Find next steps for app",this.appSpec);
           var method_ids = [ ], app_ids = [ ];
@@ -782,6 +785,34 @@
           }]);
           return result.specs;
         },
+*/
+    /**
+    * Get next steps, and invoke callback() with
+    * the specs returned by the trigger:getFunctionSpecs.Narrative for
+    * each of the possible apps/methods.
+    */
+    getNextSteps: function(callback) {
+      console.debug("Find next steps for app",this.app);
+      // fetch full info, which contains suggested next steps
+      var params = {ids: [this.app.info.id]};
+      var result = {};
+      var self = this;
+      this.methClient.get_app_full_info(params,
+        function(info_list) {
+          //console.debug("Got full info: ", info_list);
+          var sugg = info_list[0].suggestions;
+          //console.debug("Suggestions: ", sugg);
+          var params = {apps: sugg.next_apps,methods: sugg.next_methods };
+          //console.debug("Getting function specs, params=", params);
+          self.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
+            callback(specs);
+          }]);
+        },
+        function() {
+          KBError("kbaseNarrativeMethodCell.getNextSteps",
+          "Could not get full info for: " + self.method.info.id);
+        });
+      },
 
         /*
          * Handle error in app.

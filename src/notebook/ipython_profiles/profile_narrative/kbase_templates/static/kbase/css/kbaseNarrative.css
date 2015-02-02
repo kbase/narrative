@@ -1427,9 +1427,12 @@ div#notebook_panel {
 }
 
 /** output cell styling */
+.kb-cell-output .panel {
+    border-radius: 0px;
+}
+
 .kb-cell-output .panel .panel-heading {
     padding: 5px 10px;
-    border-radius: 1px;
 }
 
 .rendered_html .kb-cell-output ul {

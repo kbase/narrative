@@ -16,6 +16,8 @@ MAINTAINER Bill Riehl wjriehl@lbl.gov
 
 EXPOSE 8888
 
+ADD ./narrative/docker/sources.list /etc/apt/sources.list
+
 # Copy in the narrative repo
 ADD ./narrative /kb/dev_container/narrative
 ADD ./narrative/kbase-logdb.conf /tmp/kbase-logdb.conf

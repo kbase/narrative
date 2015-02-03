@@ -135,9 +135,85 @@ var KBFail = function(is_fatal, where, what) {
 var KBError = function(where, what) {
   return KBFail(false, where, what);
 }
+
+/**
+ * KBFatal will, in addition to calling KBFail(),
+ * put up a modal dialog showing the error
+ * and providing some advice to users on what to do next.
+ *
+ * @param where (string) Where the error occurred
+ * @param what  (string) What happened
+ */
 var KBFatal = function(where, what) {
-  return KBFail(true, where, what);
+
+  var res = KBFail(true, where, what);
+
+  var version = 'unknown';
+  if (window.kbconfig !== undefined &&
+      window.kbconfig.version !== undefined) {
+    version = window.kbconfig.version;
+  }
+  var hash = 'unkown';
+  if (window.kbconfig !== undefined &&
+    window.kbconfig.git_commit_hash !== undefined) {
+    hash = window.kbconfig.git_commit_hash;
+  }
+  var full_version = 'unknown';
+  if (version != 'unknown') {
+    if (hash == 'unknown') {
+      full_version = version;
+    }
+    else {
+      full_version = version + ' (hash=' + hash + ')';
+    }
+  }
+  var $fatal =
+    $('<div tabindex=-1 role="dialog" aria-labelledby="kb-fatal-error" aria-hidden="true">')
+      .addClass('modal fade')
+    .append($('<div>').addClass('modal-dialog')
+      .append($('<div>').addClass('modal-content').addClass('kb-error-dialog')
+        .append($('<div>').addClass('modal-header')
+          .append($('<h4>').addClass('modal-title')
+            .append('KBase Narrative Error')))
+        .append($('<div>').addClass('modal-body'))
+          .append($('<p>').css({'margin': '-1em 0 0 1em'})
+            .text('Hmmm, your narrative seemed to hit a fatal error.'))
+          .append($('<p>').css({'margin-left': '1em'})
+            .html('But, as a wise man once said, ' +
+                  '<strong>"Don\'t Panic!"</strong>'))
+          .append($('<p>').css({'margin': '1em 0 0 1em'})
+            .text('Some errors are caused by the ' +
+                    'way browsers cache information. Try manually clearing your ' +
+                    'browser cache and reloading the page.')
+            .append($('<span>')
+              .append($('<a>')
+                .attr({href:"http://www.refreshyourcache.com/en/home/",
+                       target: "_blank"})
+                .text('This page'))
+              .append($('<span>')
+                .text(' has instructions on how to clear the cache on all major browsers.'))))
+          .append($('<p>').css({'margin': '1em 0 0 1em'})
+            .html('If that doesn\'t work, please ' +
+              'contact us at ' +
+              '<a href="mailto:help@kbase.us">help@kbase.us</a> ' +
+              'and include the following information in your email:'))
+        .append($('<p>').css({margin: '1em 0 0 2em'}).addClass('kb-err-text')
+            .text('Version: ' + full_version))
+        .append($('<p>').css({margin: '0 0 0 2em'}).addClass('kb-err-text')
+            .text('Error location: ' + where))
+        .append($('<p>').css({margin: '0 0 0 2em'}).addClass('kb-err-text')
+            .text('Error message: ' + what))
+        .append($('<div>').addClass('modal-footer')
+          .append($('<div>')
+              .append($('<span>').css({float: 'left'}).addClass('kb-err-warn')
+                .text("Note: the Narrative may not work properly until this error is fixed"))
+            .append($('<button type="button" data-dismiss="modal">')
+              .addClass('btn btn-default')
+              .append('Close').click(function(e) { $fatal.modal('close'); })
+    )))));
+  $fatal.modal('show');
 }
+
 
 var Narrative = function() {
     this.narr_ws = null;

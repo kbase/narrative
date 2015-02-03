@@ -2363,3 +2363,17 @@ div[class="tooltip-inner"] {
 .kb-import-status {
     margin: 20px;
 }
+
+/* Error dialog */
+.kb-error-dialog strong {
+    color: darkgreen; /*  Douglas Adams forever */
+}
+.kb-err-text {
+    color: black;
+    font-family: Consolas, "Courier New", monospace;
+}
+.kb-err-warn {
+    color: firebrick;
+    font-style: italic;
+    margin-top: 0.5em;
+}

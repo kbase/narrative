@@ -57,7 +57,7 @@
                                     resData[i].data.mixs.biome,
                                     resData[i].data.mixs.sequence_type,
                                     resData[i].data.mixs.seq_method,
-                                    resData[i].data["status"],
+                                    resData[i].data.statistics.sequence_stats.bp_count_raw,
                                     resData[i].data.created
                                 ]);
                             }
@@ -67,12 +67,12 @@
                                 tlen = rendererTable.length;
                             }
 				        
-				            var html = '<h3>Metagenome Collection '+d.name+'</h3><div id="collectionTable'+tlen+'" style="width: 95%;"></div>';
+				            var html = '<h4>Metagenome Collection '+d.name+'</h4><div id="collectionTable'+tlen+'" style="width: 95%;"></div>';
 		            	    container.append(html);
 
 				            var tableCollection = standaloneTable.create({index: tlen});
                             tableCollection.settings.target = document.getElementById("collectionTable"+tlen);
-                            tableCollection.settings.data = { header: ["ID", "name", "Project", "PI", "biome", "sequence type", "sequencing method", "status", "created"], data: tdata };
+                            tableCollection.settings.data = { header: ["ID", "Name", "Project", "PI", "Biome", "Sequence Type", "Sequencing Method", "bp Count", "Created"], data: tdata };
                             tableCollection.render(tlen);
 			            });
 		            } else {

@@ -21,7 +21,7 @@ This document will walk through the server building process. For this developerâ
 
 After installing Vagrant and Virtualbox, run  
 
-    vagrant init hashicorp/precise64
+    vagrant init hashicorp/trusty64
 
 This will create the base Vagrantfile. You can modify it to use more memory by adding this block
 before the final 'end' in the `Vagrantfile` that was created by the previous command.:
@@ -100,6 +100,13 @@ Thereâ€™s a little tweaking that needs to happen here - the `lua_package_path` l
     
     # change lua path (all one line)
     lua_package_path "/kb/deployment/services/narrative/docker/?;/kb/deployment/services/narrative/docker/?.lua;;";
+
+## Install npm and grunt
+
+One last step before getting Docker and the Narrative installed is the installation of a couple of Javascript packages. These are used by the build script to concatenate and minify the Narrative front end extensions to the IPython Notebook
+
+    sudo apt-get install npm
+    sudo npm install -g grunt-cli
 
 # Install and set up Docker
 

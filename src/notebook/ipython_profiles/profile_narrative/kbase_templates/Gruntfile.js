@@ -84,7 +84,8 @@ module.exports = function(grunt) {
         },
         uglify: {
             options: {
-                sourceMap: true,
+                dest: 'static/kbase-narrative.min.js',
+                sourceMap: false,
             }
         },
         filerev: {

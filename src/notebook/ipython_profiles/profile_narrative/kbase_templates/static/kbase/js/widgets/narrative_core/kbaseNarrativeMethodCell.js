@@ -329,7 +329,7 @@
                         break;
                     case 'error':
                         this.$submitted.html(this.submittedText).show();
-                        this.$cellPanel.addClass('kb-app-step-running');
+                        this.$cellPanel.addClass('kb-app-step-error');
                         this.$runButton.hide();
                         this.$stopButton.show();
                         this.$inputWidget.lockInputs();
@@ -441,76 +441,31 @@
         },
 
         /**
-         * Get next steps, and invoke callback() with
+         * Get next steps, and invoke render_cb() with
          * the specs returned by the trigger:getFunctionSpecs.Narrative for
          * each of the possible apps/methods.
          */
-        getNextSteps: function(callback) {
+        getNextSteps: function(render_cb) {
           //console.debug("Find next steps for method",this.method);
           // fetch full info, which contains suggested next steps
           var params = {ids: [this.method.info.id]};
           var result = {};
-          var self = this;
           this.methClient.get_method_full_info(params,
-            function(info_list) {
+            $.proxy(function(info_list) {
               //console.debug("Full info for method: ", info_list);
               var sugg = info_list[0].suggestions;
               //console.debug("Suggestions for next methods: ", sugg);
-              var params = {apps: sugg.next_apps,methods: sugg.next_methods };
+              var params = {apps: sugg.next_apps, methods: sugg.next_methods};
               //console.debug("Getting function specs, params=", params);
-              self.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
-                  callback(specs);
-              }]);
-            },
+              this.trigger('getFunctionSpecs.Narrative', [params,
+                function(specs) { render_cb(specs); }]);
+            }, this),
             function() {
               KBError("kbaseNarrativeMethodCell.getNextSteps",
                        "Could not get full info for method: " + self.method.info.id);
             });
         },
-/*          if (full_info.length == 0) {
-            return [];
-          }
-          var sugg = full_info[0].suggestions;
-          var method_ids = [ ], app_ids = [ ];
 
-          // add one or more next steps
-          // XXX: replace this with something much smarter
-          switch (this.method.info.id) {
-            case "assemble_contigset_from_reads":
-              method_ids.push("annotate_contigset"); // genome_assembly
-              break;
-            case "build_a_metabolic_model":
-              method_ids.push("gapfill_a_metabolic_model"); // build_fba_model
-              break;
-            case  "retrieve_functional_abundance_profile":
-              method_ids.push("normalize_abundance_profile"); //communities_build_functional_profile
-              break;
-            case "merge_to_community_model":
-              method_ids.push("gapfill_a_metabolic_model"); //community_fba_modeling
-              break;
-            case "compare_two_proteomes_generic":
-              method_ids.push("translate_model_to_new_genome"); //fba_model_translation
-              break;
-            case "translate_model_to_new_genome":
-              method_ids.push("gapfill_a_metabolic_model"); //fba_model_translation
-              break;
-            case "gapfill_a_metabolic_model":
-              method_ids.push("compare_two_metabolic_models_generic"); //fba_model_translation
-              break;
-            case "compute_pangenome":
-              method_ids.push("genome_comparison_from_pangenome"); // genome_comparison
-              break;
-          }
-          // Fetch function specs now because we need the real, human-readable
-          // name of the spec and all we have is the id.
-          var result = {};
-          var params = {apps: app_ids, methods: method_ids};
-          this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
-              result.specs = specs;
-          }]);
-          return result.specs;
-        },
-*/
         /**
          * Converts a timestamp to a simple string.
          * Do this American style - HH:MM:SS MM/DD/YYYY

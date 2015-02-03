@@ -213,7 +213,7 @@
             		var contigsTable = $('#'+pref+'contigs-table').dataTable(contigsSettings);
             		contigsTable.fnAddData(contigsData);
 
-            		////////////////////////////// Overview Tab //////////////////////////////
+            		////////////////////////////// New Tab //////////////////////////////
             		var lastElemTabNum = 0;
 
             		function openTabGetId(tabName) {
@@ -222,7 +222,9 @@
             			lastElemTabNum++;
             			var tabId = '' + pref + 'elem' + lastElemTabNum;
             			var tabDiv = $('<div id="'+tabId+'"> ');
-            			tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: (i == 0)});
+            			tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: (i == 0), deleteCallback: function(name) {
+            				tabPane.kbaseTabs('removeTab', name);
+            			}});
             			return tabId;
             		}
 
@@ -292,6 +294,7 @@
             			cgb.data.options.onClickFunction = function(svgElement, feature) {
             				showGene(feature.feature_id);
             			};
+            			cgb.data.options.token = self.token;
             			cgb.data.$elem = $('<div style="width:100%; height: 200px;"/>');
             			cgb.data.$elem.show(function(){
             				cgb.data.update();

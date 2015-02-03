@@ -99,6 +99,7 @@
                         this.refreshFunctionInputs(!this.inputsRendered);
                         if (!this.inputsRendered) {
                             this.loadAllRecentCellStates();
+                            this.trigger('refreshJobs.Narrative');
                         }
 
                         this.inputsRendered = true;

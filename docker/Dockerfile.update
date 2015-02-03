@@ -21,6 +21,7 @@ ADD ./narrative/docker/sources.list /etc/apt/sources.list
 # Copy in the narrative repo
 ADD ./narrative /kb/dev_container/narrative
 ADD ./narrative/kbase-logdb.conf /tmp/kbase-logdb.conf
+RUN apt-get update
 RUN apt-get install -y python-virtualenv python-thrift python-yaml python-paramiko
 RUN cd /kb/dev_container/narrative; /bin/bash old-install.sh -p /kb/deployment/services narrative
 RUN cd /tmp/narrative

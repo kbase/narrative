@@ -254,7 +254,8 @@
             for (var i=0; i<widgets.length; i++) {
                 var widgetInfo = widgets[i];
                 var $widgetDiv = $('<div>')
-                                 .css({'height' : height + '%', 'border-bottom' : '5px solid #e0e0e0'});
+                                 .addClass('kb-side-separator')
+                                 .css({'height' : height + '%'});
 
                 retObj[widgetInfo.name] = $widgetDiv[widgetInfo.name](widgetInfo.params);
                 $panelSet.append($widgetDiv);
@@ -267,8 +268,6 @@
             this.initOverlay();
 
             this.$methodsWidget.refreshFromService();
-            setTimeout($.proxy(function() { this.$jobsWidget.refresh(false, true); }, this), 750);
-
         }
 
     })

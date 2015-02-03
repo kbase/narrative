@@ -17,7 +17,7 @@
         options: {
             method: null,
             cellId: null,
-            methodHelpLink: '/functional-site/#/narrativestore/method/',
+            methodHelpLink: '/functional-site/#/narrativestore/method/'
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -39,6 +39,7 @@
             this.method = JSON.parse(this.options.method);
             this.cellId = this.options.cellId;
             this.initErrorModal();
+            this.methClient = new NarrativeMethodStore(window.kbconfig.urls.narrative_method_store);
             this.render();
             return this;
         },
@@ -429,19 +430,49 @@
             if (data.cellId && this.allowOutput) {
                 this.allowOutput = false;
                 console.debug("Creating output cell...");
-                data.next_steps = this.getNextSteps();
-                this.trigger('createOutputCell.Narrative', data);
-                this.changeState('complete');
+                // Show the 'next-steps' to take, if there are any
+                var self = this;
+                this.getNextSteps( function(next_steps) {
+                  data.next_steps = next_steps;
+                  self.trigger('createOutputCell.Narrative', data);
+                  self.changeState('complete');
+                });
             }
         },
 
         /**
-         * Return list of specs which are the 'next steps'
-         * from the current method.
+         * Get next steps, and invoke callback() with
+         * the specs returned by the trigger:getFunctionSpecs.Narrative for
+         * each of the possible apps/methods.
          */
-        getNextSteps: function() {
+        getNextSteps: function(callback) {
           //console.debug("Find next steps for method",this.method);
+          // fetch full info, which contains suggested next steps
+          var params = {ids: [this.method.info.id]};
+          var result = {};
+          var self = this;
+          this.methClient.get_method_full_info(params,
+            function(info_list) {
+              //console.debug("Full info for method: ", info_list);
+              var sugg = info_list[0].suggestions;
+              //console.debug("Suggestions for next methods: ", sugg);
+              var params = {apps: sugg.next_apps,methods: sugg.next_methods };
+              //console.debug("Getting function specs, params=", params);
+              self.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
+                  callback(specs);
+              }]);
+            },
+            function() {
+              KBError("kbaseNarrativeMethodCell.getNextSteps",
+                       "Could not get full info for method: " + self.method.info.id);
+            });
+        },
+/*          if (full_info.length == 0) {
+            return [];
+          }
+          var sugg = full_info[0].suggestions;
           var method_ids = [ ], app_ids = [ ];
+
           // add one or more next steps
           // XXX: replace this with something much smarter
           switch (this.method.info.id) {
@@ -479,7 +510,7 @@
           }]);
           return result.specs;
         },
-
+*/
         /**
          * Converts a timestamp to a simple string.
          * Do this American style - HH:MM:SS MM/DD/YYYY

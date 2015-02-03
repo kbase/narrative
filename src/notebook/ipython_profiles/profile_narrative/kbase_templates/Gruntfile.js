@@ -27,7 +27,7 @@ var createIPythonCompatibleConfig = function(context, block) {
     // regex for ripping out the static_url bit
     // strings that match this regex will have the actual path and script in
     // the second element of the match array
-    var pattern = /\<script\s*src=\"\{\{\s*static_url\(\"(\S+\.js)\"\)\s*\}\}\"/;
+    var pattern = /^\s*\<script\s*src=\"\{\{\s*static_url\(\"(\S+\.js)\"\)\s*\}\}\"/;
     for (var i=0; i<block.raw.length; i++) {
         var m = block.raw[i].match(pattern);
         if (m && m.length === 2) {

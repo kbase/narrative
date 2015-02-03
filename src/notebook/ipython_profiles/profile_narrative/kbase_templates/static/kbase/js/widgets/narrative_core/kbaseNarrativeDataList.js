@@ -116,9 +116,7 @@
 
             if (window.kbconfig === undefined || window.kbconfig.urls === undefined ||
                 window.kbconfig.icons === undefined) {
-              // bail out now
-              alert("Failed to load base configuration! Aborting narrative now.");
-              window.location = "/"; //XXX: Need to load the error page!!
+                KBFatal("kbaseNarrativeDataList.init", "Failed to load base configuration");
             }
             this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             this.options.ws_url = window.kbconfig.urls.workspace;
@@ -191,13 +189,12 @@
                     });
             }
             else {
-              // XXX: We should probably DO something
               var where = "kbaseNarrativeDataList.refresh";
               if (!self.ws) {
-                KBError(where, "workspace not connected");
+                KBFatal(where, "Workspace not connected");
               }
               else {
-                KBError(where, "workspace name is empty");
+                KBFatal(where, "Workspace name is empty");
               }
             }
         },

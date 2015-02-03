@@ -12,6 +12,7 @@ __Changes__
 - Improved styling for data view/selector buttons
 - Added downloaders for FBA models, paired-end reads, and single-end reads.
 - Added a 'Copy Narrative' button to narrative panel
+- Added a friendly and potentially helpful message for narrative fatal errors.
 
 __Bugfixes__
 - JIRA NAR-530 - fixed issue with long object names not wrapping in dropdown selectors.

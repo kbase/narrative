@@ -150,9 +150,9 @@
             this.$elem.empty().append($errorPanel);
         },
 
-        /** 
+        /**
          * Fetches the app spec, method specs, and parameter values
-         * These are used elsewhere to set up the NJS job and to send 
+         * These are used elsewhere to set up the NJS job and to send
          * returned output values to the right place.
          */
         getSpecAndParameterInfo: function() {
@@ -749,67 +749,46 @@
                 this.state.runningState.appRunState = state;
                 this.$stopButton.hide();
                 // Show the 'next-steps' to take, if there are any
-                var next_steps = this.getNextSteps();
-                if (next_steps.apps || next_steps.methods) {
-                    this.trigger("showNextSteps.Narrative",
-                      {elt: this.$elem, "next_steps": next_steps});
-                }
+                this.getNextSteps(
+                  $.proxy(function(next_steps) {
+                    if (next_steps.apps || next_steps.methods) {
+                      this.trigger("showNextSteps.Narrative",
+                        {elt: this.$elem, "next_steps": next_steps});
+                    }
+                  }, this)
+                );
             }
         },
 
-        /**
-         * From a single string - maybe an object - set the state of a running app
-         * possible states:
-         * input - unlock all input areas, remove footer, show Run button
-         * submitted - in-between state after user clicks Run, while we wait on the job info,
-         *             lock inputs, no control buttons, etc, show spinny icon
-         * queued - lock inputs, show Cancel button, but no highlighted steps, show spinny icon
-         * running - should highlight which step is running, use Cancel button
-         * error - should color whole app with error styling, still lock things, show cancel button,
-         *       - show error icon, no spinny icon
-         * completed - no more icons, show reset button which can unlock inputs
-         *
-         */
-        setAppState: function(state) {
-            // this.state = {
-            //         runningState: {
-            //             appRunState: "input", // could be 'input' || 'running' || 'error' || 'done', something else?
-            //             runningStep: null
-            //         },
-            //         step: { }
-            //     };
 
-        },
-
-        getNextSteps: function() {
-            console.debug("Find next steps for app",this.appSpec);
-            var method_ids = [ ], app_ids = [ ];
-            // add one or more next steps
-            // XXX: replace this with something much smarter
-            switch (this.appSpec.info.id) {
-                case "genome_assembly":
-                    app_ids.push("genome_comparison");
-                    app_ids.push("build_fba_model");
-                    method_ids.push("insert_genome_into_species_tree_generic");
-                    method_ids.push("compare_two_metabolic_models_generic");
-                    break;
-                case "build_fba_model":
-                    app_ids.push("community_fba_modeling");
-                    // ?? Translate Model to New Genome
-                    break;
-                case "build_species_tree":
-                    method_ids.push("compute_pangenome");
-                    break;
-            }
-            // Fetch function specs now because we need the real, human-readable
-            // name of the spec and all we have is the id.
-            var result = {};
-            var params = {apps: app_ids, methods: method_ids};
-            this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
-                result.specs = specs;
-            }]);
-            return result.specs;
-        },
+    /**
+    * Get next steps, and invoke `render_cb` to render
+    * the specs returned by the trigger:getFunctionSpecs.Narrative for
+    * each of the possible apps/methods.
+    */
+    getNextSteps: function(render_cb) {
+      var app = this.appSpec;
+      //console.debug("Find next steps for app", app);
+      // fetch full info, which contains suggested next steps
+      var params = {ids: [app.info.id]};
+      var result = {};
+      this.methClient.get_app_full_info(params,
+        $.proxy(function(info_list) {
+          //console.debug("Got full info for app:", info_list);
+          var sugg = info_list[0].suggestions;
+          //console.debug("Suggestions for app:", sugg);
+          var params = {apps: sugg.next_apps,methods: sugg.next_methods };
+          //console.debug("Getting function specs, params=", params);
+          // Pass callback to render each retrieved function spec
+          this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
+            render_cb(specs);
+          }]);
+        }, this),
+        $.proxy(function() {
+          KBError("kbaseNarrativeMethodCell.getNextSteps",
+          "Could not get full info for app:" + app.info.id);
+        }, this));
+      },
 
         /*
          * Handle error in app.

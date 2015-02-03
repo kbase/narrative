@@ -162,7 +162,8 @@
         loggedInCallback: function(event, auth) {
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
             this.isLoggedIn = true;
-            this.refresh();
+            if (this.ws_name)
+                this.refresh();
             return this;
         },
 
@@ -175,13 +176,15 @@
         loggedOutCallback: function(event, auth) {
             this.wsClient = null;
             this.isLoggedIn = false;
-            this.refresh();
+            this.ws_name = null;
+            // this.refresh();
             return this;
         },
 
         setWorkspace: function(ws_name) {
             this.ws_name = ws_name;
-            this.refresh();
+            if (this.wsClient)
+                this.refresh();
         },
 
         /**
@@ -206,7 +209,7 @@
          * @public
          */
         refresh: function() {
-            this.dataListWidget.refresh();
+//            this.dataListWidget.refresh();
             return;
         },
 

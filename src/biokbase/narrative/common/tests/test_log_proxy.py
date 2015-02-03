@@ -46,8 +46,8 @@ class MainTestCase(unittest.TestCase):
             # wait for it to stop
             #print("Wait for child ({:d}) to stop".format(pid))
             cpid, r = os.waitpid(pid, 0)
-            self.assertEqual(r, 0,
-                             "Non-zero exit status ({:d}) from proxy".format(r))
+            self.failUnless(r < 2,
+                             "Bad exit status ({:d}) from proxy".format(r))
 
     def test_configuration(self):
         # empty

@@ -1,19 +1,6 @@
 /**
- * Widget to display a table of data objects from a kbase workspace.
- *
- * TODO: Re-enable "readonly" mode by following instructions in isReadonlyWorkspace()
- *       (dan g. 10/30/2014)
- *
- * Options:
- *    wsId - the name of the workspace to show in this widget
- *    loadingImage - an image to show in the middle of the widget while loading data
- *    notLoggedInMsg - a string to put in the middle of the widget when not logged in.
- *
- * Triggers events:
- * dataUpdated.Narrative - when the loaded data table gets updated.
- * workspaceUpdated.Narrative - when the current workspace ID gets updated
- * @author Bill Riehl <wjriehl@lbl.gov>
- * @author Dan Gunter <dkgunter@lbl.gov>
+ * Widget for viewing and modifying narrative share settings
+ * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
 (function( $, undefined ) {

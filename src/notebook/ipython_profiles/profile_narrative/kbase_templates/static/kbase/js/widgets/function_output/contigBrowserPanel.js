@@ -26,11 +26,12 @@ function ContigBrowserPanel() {
             onClickFunction: null,
 
             width: 550,
+            token: null
         },
 
         //cdmiURL: "http://kbase.us/services/cdmi_api",
-        proteinInfoURL: "http://kbase.us/services/protein_info_service",
-        workspaceURL: "https://kbase.us/services/ws/",
+        //proteinInfoURL: "http://kbase.us/services/protein_info_service",
+        workspaceURL: window.kbconfig.urls.workspace,
         tooltip: null,
         operonFeatures: [],
         $messagePane: null,
@@ -44,8 +45,8 @@ function ContigBrowserPanel() {
 
             //this.cdmiClient = new CDMI_API(this.cdmiURL);
             //this.entityClient = new CDMI_EntityAPI(this.cdmiURL);
-            this.proteinInfoClient = new ProteinInfo(this.proteinInfoURL);
-            this.workspaceClient = new workspaceService(this.workspaceURL);
+            //this.proteinInfoClient = new ProteinInfo(this.proteinInfoURL);
+            this.workspaceClient = new Workspace(this.workspaceURL, {'token': this.options.token});
 
             this.render();
 

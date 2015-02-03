@@ -27,10 +27,24 @@
         timer: null,
         
         downloaders: {  // type -> {name: ..., external_type: ...[, transform_options: ...[, unzip: <file_ext>]}
-        	'KBaseGenomes.ContigSet': [{name: 'FASTA', external_type: 'FASTA.DNA.Assembly', transform_options: {output_file_name: 'fs.fasta'}}],
+        	'KBaseGenomes.ContigSet': [{name: 'FASTA', external_type: 'FASTA.DNA.Assembly', transform_options: {"output_file_name": "?.fasta"}}],
         	'KBaseGenomes.Genome': [{name: "GENBANK", external_type: 'Genbank.Genome', transform_options: {}}],
-        	'KBaseAssembly.SingleEndLibrary': [{name: "FASTQ", external_type: 'SequenceReads', transform_options: {output_file_name: '?.fastq'}}]
-        },
+        	
+		'KBaseAssembly.SingleEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+		'KBaseAssembly.PairedEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+		'KBaseFile.SingleEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+		'KBaseFile.PairedEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+		
+		'KBaseFBA.FBAModel':[{name: "SBML", external_type: 'SBML.FBAModel', transform_options: {}},
+				     {name: "CSV", external_type: 'CSV.FBAModel', transform_options: {}}],
+		
+		'KBaseFBA.FBA':[{name: "CSV", external_type: 'CSV.FBA', transform_options: {}}],
+		
+		'KBaseBiochem.Media':[{name: "CSV", external_type: 'CSV.Media', transform_options: {}}],
+		
+		'KBasePhenotypes.PhenotypeSet':[{name: "CSV", external_type: 'CSV.PhenotypeSet', transform_options: {}}],
+		'KBasePhenotypes.PhenotypeSimulationSet':[{name: "CSV", external_type: 'CSV.PhenotypeSimulationSet', transform_options: {}}]
+	},
 
         init: function(options) {
             this._super(options);
@@ -45,12 +59,20 @@
         render: function() {
             var self = this;
     		var downloadPanel = this.$elem;
-		downloadPanel.append('Export as:');
+		
+		var $labeltd = $('<td>').css({'white-space':'nowrap','padding':'1px'}).append('Export as:');
+		var $btnTd = $('<td>').css({'padding':'1px'});
+		downloadPanel.append($('<table>').css({width:'100%'})
+					.append('<tr>')
+					   .append($labeltd)
+					   .append($btnTd));
+		
+		
     		var addDownloader = function(descr) {
-    		downloadPanel.append($('<button>').addClass('kb-data-list-btn')
+		    $btnTd.append($('<button>').addClass('kb-data-list-btn')
     					.append(descr.name)
     					.click(function() {
-						downloadPanel.find('.kb-data-list-btn').prop('disabled', true);
+						$btnTd.find('.kb-data-list-btn').prop('disabled', true);
     						self.runDownloader(self.type, self.wsId, self.objId, descr);
     					}));
     		};
@@ -58,14 +80,14 @@
     		for (var downloadPos in downloaders)
     			addDownloader(downloaders[downloadPos]);
 		
-    		downloadPanel.append($('<button>').addClass('kb-data-list-btn')
+    		$btnTd.append($('<button>').addClass('kb-data-list-btn')
                     .append('JSON')
                     .click(function() {
                     	var url = self.exportURL + '/download?ws='+self.wsId+'&id='+self.objId+'&token='+self.token+
                     		'&url='+encodeURIComponent(self.wsUrl) + "&wszip=1";
                     	self.downloadFile(url);
                     }));
-    		downloadPanel.append($('<button>').addClass('kb-data-list-cancel-btn')
+    		$btnTd.append($('<button>').addClass('kb-data-list-cancel-btn')
                     .append('Cancel')
                     .click(function() {
 			self.stopTimer();
@@ -220,6 +242,7 @@
         showError: function(msg) {
         	var self = this;
 		self.$statusDivContent.empty();
+		self.$elem.find('.kb-data-list-btn').prop('disabled', false); // error is final state, so reactivate!
 		self.$statusDivContent.append($('<span>').css({color:'#F44336'}).append('Error: '+msg));
         },
         

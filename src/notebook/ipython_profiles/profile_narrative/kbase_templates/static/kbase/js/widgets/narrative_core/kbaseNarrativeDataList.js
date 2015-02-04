@@ -1225,7 +1225,6 @@
                             match = false; // no match if we are not the selected type!
                         }
                     }
-                    console.log(info[1],match);
                     if (match) {
                         // matches must always switch to show if they are rendered
                         if (self.currentMatch[k].$div) {

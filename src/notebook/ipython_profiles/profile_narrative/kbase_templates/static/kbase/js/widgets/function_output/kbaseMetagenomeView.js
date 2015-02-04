@@ -93,17 +93,17 @@
         		    tabPane.kbaseTabs({canDelete : false, tabs : []});
                 
                     // overview tab
-                    var oTabDiv = $('<div id="'+pref+'overview"> ');
+                    var oTabDiv = $('<div id="'+pref+'overview">');
                     tabPane.kbaseTabs('addTab', {tab: 'Overview', content: oTabDiv, canDelete : false, show: true});
 				    var html = '<h4>Info</h4>';
-				    html += '<p><table>';
-				    html += '<tr><td style="padding-right: 25px;"><b>Metagenome ID</b></td><td>'+d.id+'</td></tr>';
-				    html += '<tr><td style="padding-right: 25px;"><b>Metagenome Name</b></td><td>'+d.name+'</td></tr>';
-				    html += '<tr><td style="padding-right: 25px;"><b>Project ID</b></td><td>'+d.metadata.project.id+'</td></tr>';
-				    html += '<tr><td style="padding-right: 25px;"><b>Project Name</b></td><td>'+d.metadata.project.name+'</td></tr>';
-                    html += '<tr><td style="padding-right: 25px;"><b>PI</b></td><td>'+d.metadata.project.data.PI_firstname+' '+d.metadata.project.data.PI_lastname+'</td></tr>';
-                    html += '<tr><td style="padding-right: 25px;"><b>Organization</b></td><td>'+d.metadata.project.data.PI_organization+'</td></tr>';
-                    html += '<tr><td style="padding-right: 25px;"><b>Sequence Type</b></td><td>'+d.sequence_type+'</td></tr>';
+				    html += '<p><table class="table table-striped table-bordered" style="width: 50%;">';
+				    html += '<tr><td style="padding-right: 25px; width: 165px;"><b>Metagenome ID</b></td><td>'+d.id+'</td></tr>';
+				    html += '<tr><td style="padding-right: 25px; width: 165px;"><b>Metagenome Name</b></td><td>'+d.name+'</td></tr>';
+				    html += '<tr><td style="padding-right: 25px; width: 165px;"><b>Project ID</b></td><td>'+d.metadata.project.id+'</td></tr>';
+				    html += '<tr><td style="padding-right: 25px; width: 165px;"><b>Project Name</b></td><td>'+d.metadata.project.name+'</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 165px;"><b>PI</b></td><td>'+d.metadata.project.data.PI_firstname+' '+d.metadata.project.data.PI_lastname+'</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 165px;"><b>Organization</b></td><td>'+d.metadata.project.data.PI_organization+'</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 165px;"><b>Sequence Type</b></td><td>'+d.sequence_type+'</td></tr>';
 				    html += '</table></p>';
 				    html += '<h4>Summary</h4>';
 				    html += '<p>The dataset '+d.name+' was uploaded on '+d.created+' and contains '+stats.sequence_count_raw+' sequences totaling '+stats.bp_count_raw+' basepairs with an average length of '+stats.average_length_raw+' bps.</p>';
@@ -133,12 +133,33 @@
     		        tableMeta.settings.data = { header: ['Category', 'Field', 'Value'], data: mdata };
 		            tableMeta.settings.width = 400;
 		            tableMeta.settings.height = 600;
-		            tableMeta.settings.rows_per_page = 15;
+		            tableMeta.settings.rows_per_page = 10;
 		            tableMeta.settings.sort_autodetect = true;
 		            tableMeta.settings.filter_autodetect = true;
 		            tableMeta.settings.hide_options = false;
 		            tableMeta.render(tlen);
-                                
+                    
+                    // seq stats tab
+                    var oTabDiv = $('<div id="'+pref+'stats">');
+                    tabPane.kbaseTabs('addTab', {tab: 'Statistics', content: oTabDiv, canDelete : false, show: false});
+                    html = '<p><table class="table table-striped table-bordered" style="width: 65%;">';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Upload: bp Count</b></td><td>'+stats.bp_count_raw+' bp</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Upload: Sequences Count</b></td><td>'+stats.sequence_count_raw+'</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Upload: Mean Sequence Length</b></td><td>'+stats.average_length_raw+" ± "+stats.standard_deviation_length_raw+' bp</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Upload: Mean GC percent</b></td><td>'+stats.average_gc_content_raw+" ± "+stats.standard_deviation_gc_content_raw+' %</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Artificial Duplicate Reads: Sequence Count</b></td><td>'+stats.sequence_count_dereplication_removed+'</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Post QC: bp Count</b></td><td>'+stats.bp_count_preprocessed+'</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Post QC: Sequences Count</b></td><td>'+stats.sequence_count_preprocessed+'</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Post QC: Mean Sequence Length</b></td><td>'+stats.average_length_preprocessed+" ± "+stats.standard_deviation_length_preprocessed+' bp</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Post QC: Mean GC percent</b></td><td>'+stats.average_gc_content_preprocessed+" ± "+stats.standard_deviation_gc_content_preprocessed+' %</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Processed: Predicted Protein Features</b></td><td>'+stats.sequence_count_processed_aa+'</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Processed: Predicted rRNA Features</b></td><td>'+stats.sequence_count_processed_rna+'</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Alignment: Identified Protein Features</b></td><td>'+stats.sequence_count_sims_aa+'</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Alignment: Identified rRNA Features</b></td><td>'+stats.sequence_count_sims_rna+'</td></tr>';
+                    html += '<tr><td style="padding-right: 25px; width: 325px;"><b>Annotation: Identified Functional Categories</b></td><td>'+stats.sequence_count_ontology+'</td></tr>';
+                    html += '</table></p>';
+                    $('#'+pref+'stats').append(html);
+                    
 		            // drisee tab
 		            var drisee_cols = d.statistics.qc.drisee.percents.columns;
 		            var drisee_data = d.statistics.qc.drisee.percents.data;

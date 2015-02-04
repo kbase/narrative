@@ -12,7 +12,7 @@
 
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
+            lp_url: "/functional-site/#/dataview/",
 
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
 
@@ -86,7 +86,6 @@
         init: function(options) {
             this._super(options);
             var self = this;
-            this.getLandingPageMap();  //start off this request so that we hopefully get something back right away
 
             this.$controllerDiv = $('<div>');
             this.$elem.append(this.$controllerDiv);
@@ -123,6 +122,10 @@
             this.data_icons = window.kbconfig.icons.data;
             this.icon_colors = window.kbconfig.icons.colors;
 
+            if (window.kbconfig.urls.landing_pages) {
+                this.options.lp_url = window.kbconfig.urls.landing_pages;
+            }
+            
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
@@ -384,16 +387,7 @@
                                         .click(function(e) {
                                             e.stopPropagation(); $alertContainer.empty();
                                             var typeTokens = object_info[2].split('-')[0].split('.');
-                                            var landingPageLink = self.options.default_landing_page_url +object_info[7]+ '/' + object_info[1];
-                                            if (self.ws_landing_page_map) {
-                                                if (self.ws_landing_page_map[typeTokens[0]]) {
-                                                    if (self.ws_landing_page_map[typeTokens[0]][typeTokens[1]]) {
-                                                        landingPageLink = self.options.landing_page_url +
-                                                            self.ws_landing_page_map[typeTokens[0]][typeTokens[1]] + "/" +
-                                                            object_info[7]+ '/' + object_info[1];
-                                                    }
-                                                }
-                                            }
+                                            var landingPageLink = self.options.lp_url +object_info[6]+ '/' + object_info[1];
                                             window.open(landingPageLink);
                                         });
 

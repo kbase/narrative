@@ -39,7 +39,7 @@
             workspaceURL: "https://kbase.us/services/ws",
             wsBrowserURL: "/functional-site/#/ws/",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
+            lp_url: "/functional-site/#/dataview/",
             container: null,
             ws_name: null,
         },
@@ -66,6 +66,9 @@
                 this.options.workspaceURL = window.kbconfig.urls.workspace;
                 this.options.wsBrowserURL = window.kbconfig.urls.ws_browser;
                 this.options.landingPageURL = window.kbconfig.urls.landing_pages;
+                if (window.kbconfig.urls.landing_pages) {
+                    this.options.lp_url = window.kbconfig.urls.landing_pages;
+                }
             }
             this.data_icons = window.kbconfig.icons.data;
             this.icon_colors = window.kbconfig.icons.colors;
@@ -1025,12 +1028,7 @@
                 var type = type_tokens[1].split('-')[0];
                 var unversioned_full_type = type_module + '.' + type;
                 var logo_name = "";
-                var landingPageLink = self.options.default_landing_page_url + object_info[7] + '/' + object_info[1];
-                                            var ws_landing_page_map = window.kbconfig.landing_page_map;
-                                            if (ws_landing_page_map && ws_landing_page_map[type_module] && ws_landing_page_map[type_module][type]) {
-                                                landingPageLink = self.options.landing_page_url +
-                                                                ws_landing_page_map[type_module][type] + "/" + object_info[7] + '/' + object_info[1];
-                                            }
+                var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
                 var icons = self.data_icons;
                 var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
                 var $logo = $('<span>')

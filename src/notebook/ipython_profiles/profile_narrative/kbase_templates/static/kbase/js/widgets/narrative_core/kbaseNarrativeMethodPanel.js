@@ -210,12 +210,12 @@ kb_require(['kbaseMethodGallery'],
                            .click($.proxy(function(event) {
                                this.$searchDiv.slideToggle(400);
                            }, this)));
-            this.addButton($('<button>')
+            /*this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="fa fa-arrow-right"></span>')
                            .click($.proxy(function(event) {
                                this.trigger('toggleSidePanelOverlay.Narrative', this.$methodGallery);
-                           }, this)));
+                           }, this)));*/
 
             if (!NarrativeMethodStore) {
                 this.showError('Unable to connect to KBase Method Store!');

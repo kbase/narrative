@@ -423,7 +423,8 @@ p#site-title {
 
 .kb-side-header.overlay-active {
     background-color: gray;
-    border: 6px solid gray;
+    border-bottom: 6px solid gray;
+    border-top: 6px solid gray;
 }
 
 .kb-side-header:hover {

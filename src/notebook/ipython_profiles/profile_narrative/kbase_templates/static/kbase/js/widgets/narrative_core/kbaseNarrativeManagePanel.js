@@ -705,22 +705,26 @@
                         }
                         // should really put this in the addDatacontrols; so refactor at some point!
                         $shareToolbar.append(
-                                $('<span>')   
-                                    .addClass('btn btn-xs btn-default').css({'color':'#888', 'margin':'0px'})
-                                    .tooltip({title:'View share settings', 'container':'body'})
-                                                .append($('<span>').addClass('fa fa-share-alt').css({'color':'#888','margin':'0px','font-size':'10pt'})
-                                                    .append(' '+shareCount)
-                                                    .on('click',function() {
-                                                        $alertContainer.hide();
-                                                        $shareContainer.slideToggle('fast');
-                                                        if($shareContainer.is(':empty')) {
-                                                            var $share = $('<div>');
-                                                            // just use the share panel, max height is practically unlimited because we are already
-                                                            // in a scrollable pane
-                                                            $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
-                                                            $shareContainer.append($share);
-                                                        }
-                                                    })));
+                            $('<span>')
+                            .addClass('btn btn-xs btn-default')
+                            .css({'color':'#888', 'margin':'0px'})
+                            .tooltip({title:'View share settings', 'container':'body'})
+                            .append($('<span>')
+                                    .addClass('fa fa-share-alt')
+                                    .css({'color':'#888','margin':'0px','font-size':'10pt'}))
+                            .append(' '+shareCount)
+                            .on('click',function() {
+                                $alertContainer.hide();
+                                $shareContainer.slideToggle('fast');
+                                if($shareContainer.is(':empty')) {
+                                    var $share = $('<div>');
+                                    // just use the share panel, max height is practically unlimited because we are already
+                                    // in a scrollable pane
+                                    $share.kbaseNarrativeSharePanel({ws_name_or_id:data.ws_info[0],max_list_height:'none', add_user_input_width:'280px'});
+                                    $shareContainer.append($share);
+                                }
+                            })
+                        );
                     },
                     function(error) {
                         console.error('error getting permissions for manage panel');

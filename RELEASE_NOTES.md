@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.5.1 - 2/4/2015
+__Changes__
+- Updated data and app icons, and docs about them
+- Added stats tab to metagenome collection view
+- Fixed minor issue with tab highlighting still being bezeled
+- Hid button for method gallery :(
+- Fixed more inconsistent font issues on buttons
+
 ### Version 0.5.0 - 2/3/2015
 __Changes__
 - Refactor to parts of Narrative init module
@@ -20,11 +28,12 @@ __Changes__
   - Icons should now be shared between the different data panels and slideout
   - Added blue color to markdown and code cell buttons, embiggened their icon
   - Removed superfluous separator line from the top of side panels
-- Javascript files are now compiled, minified, and tagged with a hash versioning during deployment - the browser should download only one substantial file instead of nearly 100 (!) smallish ones
-- Cleaned out (commented out) old Javascript widgets that are not necessary for the February release
-- Added test script for the backend shutdown command to verify it's only possible for an authenticated user to only shut down their own narrative
-- Added improvements to suggested next steps functionality - now it should pull from the method store instead of being hard-coded
-
+  - Javascript files are now compiled, minified, and tagged with a hash versioning during deployment - the browser should download only one substantial file instead of nearly 100 (!) smallish ones
+  - Cleaned out (commented out) old Javascript widgets that are not necessary for the February release
+  - Added test script for the backend shutdown command to verify it's only possible for an authenticated user to only shut down their own narrative
+  - Added improvements to suggested next steps functionality - now it should pull from the method store instead of being hard-coded
+  - Added custom icons for several datatypes
+  
 __Bugfixes__
 - JIRA NAR-586 - fixed error with quotation marks not being used correctly in App info boxes, and links not being rendered properly
 - Fixed several font mismatch issues - in kernel menu, new/copy narrative buttons, error buttons

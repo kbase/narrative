@@ -210,7 +210,7 @@
             var $addDiv =
                 $('<div>').append(
                     $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
-                        .append($('<span>').addClass('fa fa-chevron-circle-left').append(' Add'))
+                        .append($('<span>').addClass('fa fa-chevron-circle-left')).append(' Add')
                         .on('click',function() { // probably should move action outside of render func, but oh well
                             $(this).attr("disabled","disabled");
                             $(this).html('<img src="'+self.options.loadingImage+'">');
@@ -303,11 +303,20 @@
             .append($('<i>')
             .addClass("fa fa-circle fa-stack-2x")
             .css({'color': this.logoColorLookup(type)}));
-            // add stack of font-awesome icons
-            _.each(icon, function(cls) {
-              $logo.append($('<i>')
-              .addClass("fa fa-inverse fa-stack-1x " + cls));
-            });
+            if (this.isCustomIcon(icon)) {
+                // add custom icons (side-by-side? not really defined..)
+                _.each(icon, function (cls) {
+                    $logo.append($('<i>')
+                      .addClass("icon fa-inverse fa-stack-2x " + cls));
+                });
+            }
+            else {
+                // add stack of font-awesome icons
+                _.each(icon, function(cls) {
+                  $logo.append($('<i>')
+                    .addClass("fa fa-inverse fa-stack-1x " + cls));
+                });
+            }
 
             var $topTable = $('<table>')
                                  .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
@@ -339,7 +348,10 @@
             return $row;
         },
 
-
+        isCustomIcon: function (icon_list) {
+            return (icon_list.length > 0 && icon_list[0].length > 4 &&
+            icon_list[0].substring(0, 4) == 'icon');
+        },
 
         renderMore: function() {
             var self=this;

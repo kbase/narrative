@@ -14,7 +14,7 @@
 // as injecting require.js make marked not to put itself in the globals,
 // which make both this file fail at setting marked configuration, and textcell.js
 // which search marked into global.
-require(['components/marked/lib/marked', 'jim'],
+require(['components/marked/lib/marked', 'kbaseMethodGallery'],
 
 function (marked) {
 
@@ -62,6 +62,7 @@ function (marked) {
     IPython.notification_area.init_notification_widgets();
 
     // Monkey patch to get the narrative 'start me up' event registered at the right time.
+    var narrative = new Narrative();
     narrative.init();
     // End Monkey patch.
 

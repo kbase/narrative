@@ -693,7 +693,7 @@
 		    if (sorttype[sortcol]) {
 			switch (sorttype[sortcol]) {
 			case "number":
-			    if (typeof(a[header[sortcol]].replace) != 'function') {
+			    if ((typeof(a[header[sortcol]].replace) != 'function') || (typeof(b[header[sortcol]].replace) != 'function')) {
 				if (a[header[sortcol]]==b[header[sortcol]]) return 0;
 				if (a[header[sortcol]]<b[header[sortcol]]) return -1;
 			    } else {
@@ -709,7 +709,7 @@
 			    break;
 			}
 		    } else {
-			if (typeof(a[header[sortcol]].replace) != 'function') {
+			if ((typeof(a[header[sortcol]].replace) != 'function') || (typeof(b[header[sortcol]].replace) != 'function')) {
 			    if (a[header[sortcol]]==b[header[sortcol]]) return 0;
 			    if (a[header[sortcol]]<b[header[sortcol]]) return -1;
 			    return 1;

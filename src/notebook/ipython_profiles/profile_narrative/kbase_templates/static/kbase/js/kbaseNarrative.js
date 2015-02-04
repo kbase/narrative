@@ -6,6 +6,7 @@
  */
 "use strict";
 
+// Bind all page buttons right at startup.
 (function() {
     $(document).on('workspaceIdQuery.Narrative', function(e, callback) {
         if (callback) {
@@ -17,7 +18,7 @@
     $('#kb-save-btn').click(function(e) {
         if (IPython && IPython.notebook) {
             var narrName = IPython.notebook.notebook_name;
-            // we do not allow users to leave thier narratives untitled
+            // we do not allow users to leave their narratives untitled
             if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
                 IPython.save_widget.rename_notebook("Please name your Narrative before saving.", false);
             } else {
@@ -134,16 +135,108 @@ var KBFail = function(is_fatal, where, what) {
 var KBError = function(where, what) {
   return KBFail(false, where, what);
 }
+
+/**
+ * KBFatal will, in addition to calling KBFail(),
+ * put up a modal dialog showing the error
+ * and providing some advice to users on what to do next.
+ *
+ * @param where (string) Where the error occurred
+ * @param what  (string) What happened
+ */
 var KBFatal = function(where, what) {
-  return KBFail(true, where, what);
+
+  var res = KBFail(true, where, what);
+
+  var version = 'unknown';
+  if (window.kbconfig !== undefined &&
+      window.kbconfig.version !== undefined) {
+    version = window.kbconfig.version;
+  }
+  var hash = 'unkown';
+  if (window.kbconfig !== undefined &&
+    window.kbconfig.git_commit_hash !== undefined) {
+    hash = window.kbconfig.git_commit_hash;
+  }
+  var full_version = 'unknown';
+  if (version != 'unknown') {
+    if (hash == 'unknown') {
+      full_version = version;
+    }
+    else {
+      full_version = version + ' (hash=' + hash + ')';
+    }
+  }
+  var $fatal =
+    $('<div tabindex=-1 role="dialog" aria-labelledby="kb-fatal-error" aria-hidden="true">')
+      .addClass('modal fade')
+    .append($('<div>').addClass('modal-dialog')
+      .append($('<div>').addClass('modal-content').addClass('kb-error-dialog')
+        .append($('<div>').addClass('modal-header')
+          .append($('<h4>').addClass('modal-title')
+            .append('KBase Narrative Error')))
+        .append($('<div>').addClass('modal-body'))
+          .append($('<p>').css({'margin': '-1em 0 0 1em'})
+            .text('Hmmm, your narrative seemed to hit a fatal error.'))
+          .append($('<p>').css({'margin-left': '1em'})
+            .html('But, as a wise man once said, ' +
+                  '<strong>"Don\'t Panic!"</strong>'))
+          .append($('<p>').css({'margin': '1em 0 0 1em'})
+            .text('Some errors are caused by the ' +
+                    'way browsers cache information. Try manually clearing your ' +
+                    'browser cache and reloading the page.')
+            .append($('<span>')
+              .append($('<a>')
+                .attr({href:"http://www.refreshyourcache.com/en/home/",
+                       target: "_blank"})
+                .text('This page'))
+              .append($('<span>')
+                .text(' has instructions on how to clear the cache on all major browsers.'))))
+          .append($('<p>').css({'margin': '1em 0 0 1em'})
+            .html('If that doesn\'t work, please ' +
+              'contact us at ' +
+              '<a href="mailto:help@kbase.us">help@kbase.us</a> ' +
+              'and include the following information in your email:'))
+        .append($('<p>').css({margin: '1em 0 0 2em'}).addClass('kb-err-text')
+            .text('Version: ' + full_version))
+        .append($('<p>').css({margin: '0 0 0 2em'}).addClass('kb-err-text')
+            .text('Error location: ' + where))
+        .append($('<p>').css({margin: '0 0 0 2em'}).addClass('kb-err-text')
+            .text('Error message: ' + what))
+        .append($('<div>').addClass('modal-footer')
+          .append($('<div>')
+              .append($('<span>').css({float: 'left'}).addClass('kb-err-warn')
+                .text("Note: the Narrative may not work properly until this error is fixed"))
+            .append($('<button type="button" data-dismiss="modal">')
+              .addClass('btn btn-default')
+              .append('Close').click(function(e) { $fatal.modal('close'); })
+    )))));
+  $fatal.modal('show');
 }
 
-var narrative = {};
-narrative.init = function() {
-    var narr_ws = null;
-    var readonly = false; /* whether whole narrative is read-only */
-    var authToken = null;
 
+var Narrative = function() {
+    this.narr_ws = null;
+    this.readonly = false; /* whether whole narrative is read-only */
+    this.authToken = null;
+    this.versionCheckTime = 6000*60*1000;
+    this.versionHtml = 'KBase Narrative<br>Alpha version';
+    this.selectedCell = null;
+    this.currentVersion = window.kbconfig.version;
+
+    return this;
+};
+
+Narrative.prototype.showIPythonCellToolbar = function(cell) {
+    if (this.selectedCell && cell != this.selectedCell)
+        this.selectedCell.celltoolbar.hide();
+    this.selectedCell = cell;
+    // show the new one
+    if (this.selectedCell && !this.selectedCell.metadata['kb-cell'])
+        this.selectedCell.celltoolbar.show();
+};
+
+Narrative.prototype.registerEvents = function() {
     $([IPython.events]).on('status_idle.Kernel',function () {
         $("#kb-kernel-icon").removeClass().addClass('fa fa-circle-o');
     });
@@ -152,8 +245,88 @@ narrative.init = function() {
         $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
     });
 
-    var versionHtml = 'KBase Narrative<br>Alpha version';
-    var endpointTesters = [];
+    $([IPython.events]).on('select.Cell', $.proxy(function(event, data) {
+        this.showIPythonCellToolbar(data.cell);
+    }, this));
+
+    $([IPython.events]).on('create.Cell', $.proxy(function(event, data) {
+        this.showIPythonCellToolbar(data.cell);
+    }, this));
+
+    $([IPython.events]).on('delete.Cell', $.proxy(function(event, data) {
+        this.showIPythonCellToolbar(IPython.notebook.get_selected_cell());
+    }, this));
+};
+
+Narrative.prototype.initUpgradeDialog = function() {
+    var $newVersion = $('<span>')
+                      .append('<b>No new version</b>');  // init to the current version
+    var $cancelBtn = $('<button type="button" data-dismiss="modal">')
+                     .addClass('btn btn-default')
+                     .append('Cancel');
+    var $upgradeBtn = $('<button type="button" data-dismiss="modal">')
+                      .addClass('btn btn-success')
+                      .append('Update and Reload')
+                      .click($.proxy(function(e) {
+                          this.updateVersion();
+                      }, this));
+    var $upgradeModal = $('<div tabindex=-1 role="dialog" aria-hidden="true">')
+                        .addClass('modal fade')
+                        .append($('<div>')
+                                .addClass('modal-dialog')
+                                .append($('<div>')
+                                    .addClass('modal-content')
+                                    .append($('<div>')
+                                            .addClass('modal-header')
+                                            .append($('<h4>')
+                                                    .addClass('modal-title')
+                                                    .attr('id', 'kb-version-label')
+                                                    .append('New Narrative Version available!')))
+                                    .append($('<div>')
+                                            .addClass('modal-body')
+                                            .append($('<span>').append('Your current version of the Narrative is <b>' + this.currentVersion + '</b>. Version '))
+                                            .append($newVersion)
+                                            .append($('<span>').append(' is now available.<br><br>' + 
+                                                                       'See <a href="' + window.kbconfig.release_notes + '" target="_blank">here</a> for current release notes.<br>' +
+                                                                       'Click "Update and Reload" to reload with the latest version!<br><br>' + 
+                                                                       '<b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b>')))
+                                    .append($('<div>')
+                                            .addClass('modal-footer')
+                                            .append($('<div>')
+                                                    .append($cancelBtn)
+                                                    .append($upgradeBtn)))));
+    $('#kb-update-btn').click(function(event) {
+        $upgradeModal.modal('show');
+    });
+    this.checkVersion($newVersion);
+    // ONLY CHECK AT STARTUP FOR NOW.
+    // setInterval(function() {
+    //     self.checkVersion($newVersion);
+    // }, this.versionCheckTime);
+};
+
+Narrative.prototype.checkVersion = function($newVersion) {
+    // look up new version here.
+    var self = this;
+    $.ajax({
+        url: window.kbconfig.urls.version_check,
+        async: true,
+        dataType: 'text',
+        crossDomain: true,
+        success: function(ver) {
+            ver = $.parseJSON(ver);
+            if (self.currentVersion !== ver.version) {
+                $newVersion.empty().append('<b>' + ver.version + '</b>');
+                $('#kb-update-btn').fadeIn('fast'); 
+            }
+        },
+        fail: function(err) {
+            console.log('err');
+        }
+    });
+};
+
+Narrative.prototype.initAboutDialog = function() {
     if (window.kbconfig &&
         window.kbconfig.name &&
         window.kbconfig.version) {
@@ -172,6 +345,9 @@ narrative.init = function() {
                 function(idx, val) {
                     var url = window.kbconfig.urls[val].toString();
                     // if url looks like a url (starts with http), include it.
+                    // ignore job proxy and submit ticket
+                    if (val === 'narrative_job_proxy' || val === 'submit_jira_ticket')
+                        return;
                     if (url && url.toLowerCase().indexOf('http') == 0) {
                         var $testTarget = $('<td>');
                         $versionTable.append($('<tr>')
@@ -180,30 +356,24 @@ narrative.init = function() {
                     }
                 }
             );
-            $versionDiv.append($versionTable);
+            var $verAccordion = $('<div style="margin-top:15px">');
+            $verAccordion.kbaseAccordion({
+                elements: [{
+                    title: 'KBase Service URLs',
+                    body: $versionTable
+                }]
+            })
+            $versionDiv.append($verAccordion);
         }
     }
-
 
     var $shutdownButton = $('<button>')
                           .attr({'type':'button', 'data-dismiss':'modal'})
                           .addClass('btn btn-danger')
                           .append('Okay. Shut it all down!')
-                          .click(function(e) {
-                              var user = $('#signin-button').kbaseLogin('session', 'user_id');
-                              var prom = $.ajax({
-                                  contentType: 'applcation/json',
-                                  url: '/narrative_shutdown/' + user,
-                                  type: 'DELETE',
-                                  crossDomain: true
-                              });
-                              prom.done(function(jqXHR, response, status) {
-                                  setTimeout(function(){window.close();}, 200);
-                              });
-                              prom.fail(function(jqXHR, response, error) {
-                                  alert('Unable to close your Narrative session\nError: ' + jqXHR.status + ' ' + error);
-                              });
-                          });
+                          .click($.proxy(function(e) {
+                              this.updateVersion();
+                          }, this));
     var $reallyShutdownPanel = $('<div style="margin-top:10px">')
                                .append('This will shutdown your Narrative session and close this window.<br><b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b><br>')
                                .append($shutdownButton)
@@ -245,31 +415,21 @@ narrative.init = function() {
                                             .append($reallyShutdownPanel))));
 
     $('#kb-about-btn').click(function(event) {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          $versionModal.modal('show');
-                          for (var i=0; i<endpointTesters.length; i++) {
-                              endpointTesters[i].test();
-                          }
-                      });
-
+        $versionModal.modal('show');
+    });
     $('#notebook').append($versionModal);
+};
+
+Narrative.prototype.init = function() {
+    this.registerEvents();
+    this.initAboutDialog();
+    this.initUpgradeDialog();
+
     $('[data-toggle="tooltip"]').tooltip()
     /*
      * Before we get everything loading, just grey out the whole %^! page
      */
     var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
-
-    var curCell = null;
-    var showIPythonCellToolbar = function(cell) {
-        // hide the previously selected cell's toolbar
-        if (curCell && cell != curCell)
-            curCell.celltoolbar.hide();
-        curCell = cell;
-        // show the new one
-        if (curCell && !curCell.metadata['kb-cell'])
-            curCell.celltoolbar.show();
-    };
 
     /*
      * Once everything else is loaded and the Kernel is idle,
@@ -279,21 +439,8 @@ narrative.init = function() {
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0,0);
         
-        $([IPython.events]).on('select.Cell', function(event, data) {
-            showIPythonCellToolbar(data.cell);
-        });
-
-        $([IPython.events]).on('create.Cell', function(event, data) {
-            showIPythonCellToolbar(data.cell);
-        });
-
-        $([IPython.events]).on('delete.Cell', function(event, data) {
-            showIPythonCellToolbar(IPython.notebook.get_selected_cell());
-        });
-
         IPython.notebook.set_autosave_interval(0);
         IPython.CellToolbar.activate_preset("KBase");
-
 
         var ws_name = null;
         if (IPython && IPython.notebook && IPython.notebook.metadata) {
@@ -337,5 +484,21 @@ narrative.init = function() {
         else {
             // ?
         }
+    });
+};
+
+Narrative.prototype.updateVersion = function() {
+    var user = $('#signin-button').kbaseLogin('session', 'user_id');
+    var prom = $.ajax({
+        contentType: 'application/json',
+        url: '/narrative_shutdown/' + user,
+        type: 'DELETE',
+        crossDomain: true
+    });
+    prom.done(function(jqXHR, response, status) {
+        setTimeout(function() { location.reload(true); }, 200);
+    });
+    prom.fail(function(jqXHR, response, error) {
+        alert('Unable to update your Narrative session\nError: ' + jqXHR.status + ' ' + error);
     });
 };

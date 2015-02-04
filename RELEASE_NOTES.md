@@ -3,6 +3,36 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.5.0 - 2/3/2015
+__Changes__
+- Refactor to parts of Narrative init module
+  - JIRA NAR-561 Added a version check mechanism - when a new version is deployed, a green button should appear in the header with a prompt to reload
+  - Wired deployment script to emit a version text file that sits in /kb/deployment/ui-common's root
+- Made several style changes - see https://github.com/kbase/narrative/issues/161
+  - Removed edged corners from remaining KBase cells and IPython cells
+  - JIRA NAR-421 - removed header styling from markdown and code cells
+  - KBASE-1196 - changed red ring around running methods to blue ring
+  - Red ring around a cell now only means it's in an error state
+  - Made all separator lines slightly bolder - #CECECE
+  - Added some spacing between login icon and buttons
+  - Updated tab color to a slightly different blue
+  - Added green highlight color as the general use (selected tabs, buttons, etc)
+  - Icons should now be shared between the different data panels and slideout
+  - Added blue color to markdown and code cell buttons, embiggened their icon
+  - Removed superfluous separator line from the top of side panels
+- Javascript files are now compiled, minified, and tagged with a hash versioning during deployment - the browser should download only one substantial file instead of nearly 100 (!) smallish ones
+- Cleaned out (commented out) old Javascript widgets that are not necessary for the February release
+- Added test script for the backend shutdown command to verify it's only possible for an authenticated user to only shut down their own narrative
+- Added improvements to suggested next steps functionality - now it should pull from the method store instead of being hard-coded
+
+__Bugfixes__
+- JIRA NAR-586 - fixed error with quotation marks not being used correctly in App info boxes, and links not being rendered properly
+- Fixed several font mismatch issues - in kernel menu, new/copy narrative buttons, error buttons
+- Fixed logic error that led to log proxy causing the CPU to spin
+- Only show job queue position if > 0
+- JIRA KBASE-1304 - fixed race condition that would prevent certain output cells from appearing in apps properly when restarted without saving the output
+- Re-added ability to run the narrative_shutdown command from external hosts
+
 ### Version 0.4.9 - 1/30/2015
 __Changes__
 - Added some missing metagenome viewer widgets.
@@ -12,6 +42,7 @@ __Changes__
 - Improved styling for data view/selector buttons
 - Added downloaders for FBA models, paired-end reads, and single-end reads.
 - Added a 'Copy Narrative' button to narrative panel
+- Added a friendly and potentially helpful message for narrative fatal errors.
 
 __Bugfixes__
 - JIRA NAR-530 - fixed issue with long object names not wrapping in dropdown selectors.

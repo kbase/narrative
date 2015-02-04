@@ -39,9 +39,9 @@
 
             parentControlPanel: null
         },
-
         // private variables
         mainListPanelHeight : '340px',
+        refreshTimer: null,
 
         ws_name: null,
         ws: null,
@@ -116,25 +116,20 @@
 
             if (window.kbconfig === undefined || window.kbconfig.urls === undefined ||
                 window.kbconfig.icons === undefined) {
-              // bail out now
-              alert("Failed to load base configuration! Aborting narrative now.");
-              window.location = "/"; //XXX: Need to load the error page!!
+                KBFatal("kbaseNarrativeDataList.init", "Failed to load base configuration");
             }
             this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             this.options.ws_url = window.kbconfig.urls.workspace;
             this.data_icons = window.kbconfig.icons.data;
             this.icon_colors = window.kbconfig.icons.colors;
 
-
-
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
-            setInterval(function(){self.refresh();}, this.options.refresh_interval); // check if there is new data every X ms
 
             // listener for refresh
             $(document).on('updateDataList.Narrative', function() {
-                self.refresh()
+                self.refresh();
             })
 
             this.showLoading();
@@ -156,6 +151,12 @@
 
         refresh: function() {
             var self = this;
+
+            // Set the refresh timer on the first refresh. From  here, it'll refresh itself
+            // every this.options.refresh_interval (30000) ms
+            if (self.refreshTimer === null) {
+                self.refreshTimer = setInterval(function(){self.refresh();}, this.options.refresh_interval); // check if there is new data every X ms
+            }
             if (self.ws_name && self.ws) {
                 self.ws.get_workspace_info({
                         workspace: this.ws_name
@@ -191,14 +192,13 @@
                     });
             }
             else {
-              // XXX: We should probably DO something
-              var where = "kbaseNarrativeDataList.refresh";
-              if (!self.ws) {
-                KBError(where, "workspace not connected");
-              }
-              else {
-                KBError(where, "workspace name is empty");
-              }
+                var where = "kbaseNarrativeDataList.refresh";
+                if (!self.ws) {
+                    KBFatal(where, "Workspace not connected");
+                }
+                else {
+                    KBFatal(where, "Workspace name is empty");
+                }
             }
         },
 
@@ -1316,7 +1316,8 @@
             //this.user_profile = new UserProfile(this.options.user_profile_url, auth);
             this.my_user_id = auth.user_id;
             this.isLoggedIn = true;
-            this.refresh();
+            if (this.ws_name)
+                this.refresh();
             return this;
         },
 
@@ -1330,7 +1331,8 @@
             this.ws = null;
             this.isLoggedIn = false;
             this.my_user_id = null;
-            this.refresh();
+            if (this.ws_name)
+                this.refresh();
             return this;
         },
 

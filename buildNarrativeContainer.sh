@@ -1,5 +1,6 @@
 #!/bin/bash
 
+VER_OUTFILE="/kb/deployment/ui-common/narrative_version"
 DS=$( date +%Y%m%d%H )
 
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
@@ -11,11 +12,16 @@ git submodule init
 git submodule update
 
 # Start by updating the config file to include the current git commit hash and timestamp
-src/scripts/kb-git-version -f src/config.json
+src/scripts/kb-git-version -f src/config.json -o $VER_OUTFILE
+
+# Compile Javascript down into an itty-bitty ball.
+cd src/notebook/ipython_profiles/profile_narrative/kbase_templates
+npm install
+grunt build
 
 # For everything else to flow right, the container needs to be built from one level above the narrative directory.
 # It needs these files, so temporarily copy them outside.
-cd ..
+cd ../../../../../../
 
 docker images |grep "^$NAR_NAME "|grep " $NAR_BASE " > /dev/null
 

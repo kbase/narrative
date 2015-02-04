@@ -99,6 +99,7 @@
                         this.refreshFunctionInputs(!this.inputsRendered);
                         if (!this.inputsRendered) {
                             this.loadAllRecentCellStates();
+                            this.trigger('refreshJobs.Narrative');
                         }
 
                         this.inputsRendered = true;
@@ -180,9 +181,10 @@
             );
 
             $(document).on('showNextSteps.Narrative',
-              $.proxy(function(event, obj) {
-                this.showNextSteps(obj);
-              }, this));
+                $.proxy(function(event, obj) {
+                    this.showNextSteps(obj);
+                }, this)
+            );
 
             $(document).on('createViewerCell.Narrative',
                 $.proxy(function(event, data) {
@@ -2085,7 +2087,7 @@
             this.loadAllRecentCellStates();
             // Check for older version of data dependencies
             // update them if necessary.
-            this.trigger('updateData.Narrative');
+            // this.trigger('updateData.Narrative');
 
             return this;
         },

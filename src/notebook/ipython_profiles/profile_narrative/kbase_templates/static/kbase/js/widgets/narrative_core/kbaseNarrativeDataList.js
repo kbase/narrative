@@ -1051,6 +1051,11 @@
                                         .change(function() {
                                             var optionSelected = $(this).find("option:selected");
                                             var typeSelected  = optionSelected.val();
+                                            
+                                            // whenever we change the type filter, we need to clear the current match
+                                            // so that the complete filter can rerun
+                                            self.currentMatch = self.objectList;
+                                            
                                             self.filterByType(typeSelected);
                                         });
 
@@ -1214,13 +1219,13 @@
                         }
                     }
 
-
+                    
                     if (type) { // if type is defined, then our sort must also filter by the type
                         if (type !== info[2].split('-')[0].split('.')[1]) {
                             match = false; // no match if we are not the selected type!
                         }
                     }
-
+                    console.log(info[1],match);
                     if (match) {
                         // matches must always switch to show if they are rendered
                         if (self.currentMatch[k].$div) {

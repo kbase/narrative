@@ -425,13 +425,23 @@
       .append($('<i>')
       .addClass("fa fa-circle fa-stack-2x")
       .css({'color': this.logoColorLookup(type)}));
-      // add stack of font-awesome icons
-      _.each(icon, function(cls) {
-        $logo.append($('<i>')
-        .addClass("fa fa-inverse fa-stack-1x " + cls));
-      });
+			if (this.isCustomIcon(icon)) {
+				// add custom icons (side-by-side? not really defined..)
+				_.each(icon, function (cls) {
+					$logo.append($('<i>')
+						.addClass("icon fa-inverse fa-stack-2x " + cls));
+				});
+			}
+			else {
+				// add stack of font-awesome icons
+				_.each(icon, function (cls) {
+					$logo.append($('<i>')
+						.addClass("fa fa-inverse fa-stack-1x " + cls));
+				});
+			}
 
-	    var $topTable = $('<table>')
+
+					var $topTable = $('<table>')
                                  .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
                                  .append($('<tr>')
                                          .append($('<td>')
@@ -471,7 +481,12 @@
             return $rowWithHr;
         },
 
-        showError: function(error) {
+			isCustomIcon: function (icon_list) {
+				return (icon_list.length > 0 && icon_list[0].length > 4 &&
+				icon_list[0].substring(0, 4) == 'icon');
+			},
+
+			showError: function(error) {
         	console.log(error);
         	var errorMsg = error;
         	if (error.error && error.error.message)

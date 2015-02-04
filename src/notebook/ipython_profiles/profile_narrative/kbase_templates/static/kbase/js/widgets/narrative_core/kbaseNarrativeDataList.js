@@ -574,14 +574,23 @@
             var $logo = $('<div>')
               // background circle
               .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
-              .append($('<i>')
+                .append($('<i>')
                 .addClass("fa fa-circle fa-stack-2x")
                 .css({'color':this.logoColorLookup(type)}));
-            // add stack of font-awesome icons
-            _.each(icon, function(cls) {
-              $logo.append($('<i>')
-                .addClass("fa fa-inverse fa-stack-1x " + cls));
-            });
+            if (this.isCustomIcon(icon)) {
+                // add custom icons (side-by-side? not really defined..)
+                _.each(icon, function (cls) {
+                    $logo.append($('<i>')
+                      .addClass("icon fa-inverse fa-stack-2x " + cls));
+                });
+            }
+            else {
+                // add stack of font-awesome icons
+                _.each(icon, function(cls) {
+                  $logo.append($('<i>')
+                    .addClass("fa fa-inverse fa-stack-1x " + cls));
+                });
+            }
             // add behavior
             $logo.click(function(e) {
                 e.stopPropagation();
@@ -701,6 +710,11 @@
                                 .append($row);
 
             return $rowWithHr;
+        },
+
+        isCustomIcon: function(icon_list) {
+          return (icon_list.length > 0 && icon_list[0].length > 4 &&
+                  icon_list[0].substring(0, 4) == 'icon');
         },
 
         // ============= DnD ==================

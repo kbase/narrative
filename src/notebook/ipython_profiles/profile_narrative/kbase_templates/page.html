@@ -24,6 +24,9 @@
     <link rel="stylesheet" href="{{ static_url("custom/custom.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrative.css") }}" type="text/css" />
+    <link rel="stylesheet"
+          href="{{ static_url("kbase/css/kbaseIcons.css") }}"
+          type="text/css"/>
     <link rel="stylesheet" href="{{ static_url("kbase/js/ui-common/ext/font-awesome/4.2.0/css/font-awesome.min.css") }}" type="text/css" />
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
 
@@ -185,13 +188,14 @@
                     </button>
                     <ul class="dropdown-menu" role="menu" aria-labelledby="kb-nav-menu">
                         <!-- li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li -->
+                        <li><a href="/functional-site/#/dashboard" target="_blank">Dashboard</a></li>
                         <li><a href="/functional-site/#/search/?q=*" target="_blank">Search Data</a></li>
                         <li><a id="kb-status-btn" href="" target="_blank">KBase Service Status</a></li>
                         <li role="presentation" class="divider"></li>
                         <li><a id="kb-jira-btn" href="" target="_blank">Submit JIRA ticket</a></li>
                         <li role="presentation" class="divider"></li>
                         <li><a id="kb-about-btn">About</a></li>
-                        <li><a target="_blank" href="https://staging.kbase.us/narrative-guide/">Narrative Tutorial</a></li>
+                        <li><a target="_blank" href="https://staging.kbase.us/narrative-guide/">Narrative User Guide</a></li>
                         <li><a target="_blank" href="mailto:help@kbase.us">Email help@kbase.us</a></li>
                     </ul>
                 </div>

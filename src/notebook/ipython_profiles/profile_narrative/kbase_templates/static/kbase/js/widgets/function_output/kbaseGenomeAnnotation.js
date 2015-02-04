@@ -12,16 +12,13 @@
         ws_id: null,
         ws_name: null,
         token: null,
-        job_id: null,
         width: 1150,
         options: {
             ws_id: null,
-            ws_name: null,
-            job_id: null
+            ws_name: null
         },
-        jobSrvUrl: "https://kbase.us/services/userandjobstate/",
         loadingImage: "static/kbase/images/ajax-loader.gif",
-        wsUrl: "https://kbase.us/services/ws/",
+        wsUrl: window.kbconfig.urls.workspace,
         timer: null,
 
         init: function(options) {
@@ -29,8 +26,6 @@
 
             this.ws_name = options.ws_name;
             this.ws_id = options.ws_id;
-            if (options.job_id)
-            	this.job_id = options.job_id;
             if (options.ws && options.id) {
                   this.ws_id = options.id;
                   this.ws_name = options.ws;
@@ -42,9 +37,6 @@
             var self = this;
         	var pref = this.uuid();
 
-
-            var wsUrl = 'https://kbase.us/services/ws/';
-	    
             var container = this.$elem;
             if (self.token == null) {
             	container.empty();
@@ -83,11 +75,12 @@
             		////////////////////////////// Overview Tab //////////////////////////////
             		$('#'+pref+'overview').append('<table class="table table-striped table-bordered" \
             				style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-            		var overviewLabels = ['Id', 'Name', 'Domain', 'Genetic code', 'Source', "Source id", "GC", "Taxonomy", "Size"];
+            		var overviewLabels = ['KBase ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size"];
             		var tax = gnm.taxonomy;
             		if (tax == null)
             			tax = '';
-            		var overviewData = [gnm.id, gnm.scientific_name, gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gnm.gc_content, tax, gnm.dna_size];
+            		var overviewData = [gnm.id, '<a href="/functional-site/#/genomes/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>', 
+            		                    gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gnm.gc_content, tax, gnm.dna_size];
             		var overviewTable = $('#'+pref+'overview-table');
             		for (var i=0; i<overviewData.length; i++) {
             			if (overviewLabels[i] === 'Taxonomy') {
@@ -160,6 +153,7 @@
             		var genesSettings = {
             				"sPaginationType": "full_numbers",
             				"iDisplayLength": 10,
+            				"aaSorting": [[ 1, "asc" ], [2, "asc"]],
             				"aoColumns": [
             				              {sTitle: "Gene ID", mData: "id"}, 
             				              {sTitle: "Contig", mData: "contig"},
@@ -180,8 +174,10 @@
             		genesTable.fnAddData(genesData);
 
             		////////////////////////////// Contigs Tab //////////////////////////////
-            		$('#'+pref+'contigs').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'contigs-table" \
-            		class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
+            		$('#'+pref+'contigs').append($('<div>').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'contigs-table" '+
+            			'class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>'));
+            		$('#'+pref+'contigs').append($('<div style="margin: 14px 0px 0px 0px">').append($('<span style="font-size: 75%; color: #898989;">')
+							.append('(only contigs containing features are shown)')));
             		var contigsData = [];
 
             		function contigEvents() {
@@ -201,6 +197,7 @@
             		var contigsSettings = {
             				"sPaginationType": "full_numbers",
             				"iDisplayLength": 10,
+            				"aaSorting": [],
             				"aoColumns": [
             				              {sTitle: "Contig name", mData: "name"},
             				              {sTitle: "Length", mData: "length"},
@@ -216,7 +213,7 @@
             		var contigsTable = $('#'+pref+'contigs-table').dataTable(contigsSettings);
             		contigsTable.fnAddData(contigsData);
 
-            		////////////////////////////// Overview Tab //////////////////////////////
+            		////////////////////////////// New Tab //////////////////////////////
             		var lastElemTabNum = 0;
 
             		function openTabGetId(tabName) {
@@ -225,7 +222,9 @@
             			lastElemTabNum++;
             			var tabId = '' + pref + 'elem' + lastElemTabNum;
             			var tabDiv = $('<div id="'+tabId+'"> ');
-            			tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: (i == 0)});
+            			tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: (i == 0), deleteCallback: function(name) {
+            				tabPane.kbaseTabs('removeTab', name);
+            			}});
             			return tabId;
             		}
 
@@ -254,7 +253,7 @@
             			$('#'+tabId).append('<table class="table table-striped table-bordered" \
             					style="margin-left: auto; margin-right: auto;" id="'+tabId+'-table"/>');
             			var elemLabels = ['Gene ID', 'Contig name', 'Gene start', 'Strand', 'Gene length', "Gene type", "Function", "Annotations"];
-            			var elemData = [geneId, '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>', geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
+            			var elemData = ['<a href="/functional-site/#/genes/'+self.ws_name+'/'+self.ws_id+'/'+geneId+'" target="_blank">'+geneId+'</a>', '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>', geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
             			var elemTable = $('#'+tabId+'-table');
             			for (var i=0; i<elemData.length; i++) {
             				if (elemLabels[i] === 'Function') {
@@ -295,6 +294,7 @@
             			cgb.data.options.onClickFunction = function(svgElement, feature) {
             				showGene(feature.feature_id);
             			};
+            			cgb.data.options.token = self.token;
             			cgb.data.$elem = $('<div style="width:100%; height: 200px;"/>');
             			cgb.data.$elem.show(function(){
             				cgb.data.update();
@@ -319,45 +319,7 @@
             		container.append('<p>[Error] ' + data.error.message + '</p>');
             	});            	
             };
-
-            if (self.job_id) {
-            	container.empty();
-                var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.token});
-            	var panel = $('<div class="loader-table"/>');
-            	container.append(panel);
-            	var table = $('<table class="table table-striped table-bordered" \
-            			style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-            	panel.append(table);
-            	table.append('<tr><td>Job was created with id</td><td>'+self.job_id+'</td></tr>');
-            	table.append('<tr><td>Genome will have the id</td><td>'+self.ws_id+'</td></tr>');
-            	table.append('<tr><td>Current job state is</td><td id="'+pref+'job"></td></tr>');
-            	var timeLst = function(event) {
-            		jobSrv.get_job_status(self.job_id, function(data) {
-            			var status = data[2];
-            			var complete = data[5];
-            			var wasError = data[6];
-        				var tdElem = $('#'+pref+'job');
-        				tdElem.html(status);
-					if (status === 'running') {
-                                            tdElem.html(status+"... &nbsp &nbsp <img src=\""+self.loadingImage+"\">");
-                                        }
-            			if (complete === 1) {
-            				clearInterval(self.timer);
-            				if (wasError === 0) {
-            		            ready();
-            				}
-            			}
-            		}, function(data) {
-        				clearInterval(self.timer);
-        				var tdElem = $('#'+pref+'job');
-        				tdElem.html("Error accessing job status: " + data.error.message);
-            		});
-            	};
-            	self.timer = setInterval(timeLst, 5000);
-            	timeLst();
-            } else {
-            	ready();
-            }
+            ready();
             return this;
         },
         

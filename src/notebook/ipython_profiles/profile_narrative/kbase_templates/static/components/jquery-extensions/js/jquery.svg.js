@@ -19,7 +19,6 @@
 	}
     }
 
-
     /* SVG manager.
        Use the singleton instance of this class, jQuery.svg, 
        to interact with the SVG functionality. */
@@ -1570,52 +1569,7 @@
     function roundNumber(num, dec) {
 	return Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec);
     }
-    
-    /* get a nice number */
-    function niceNum (range, round) {
-        var exponent = Math.floor(Math.log10(range)); /** exponent of range */
-        var fraction = range / Math.pow(10, exponent); /** fractional part of range */
-        var niceFraction; /** nice, rounded fraction */
-	
-        if (round) {
-            if (fraction < 1.5) {
-                niceFraction = 1;
-	    } else if (fraction < 3) {
-                niceFraction = 2;
-            } else if (fraction < 7) {
-                niceFraction = 5;
-            } else {
-                niceFraction = 10;
-	    }
-        } else {
-            if (fraction <= 1) {
-                niceFraction = 1;
-            } else if (fraction <= 2) {
-                niceFraction = 2;
-            } else if (fraction <= 5) {
-                niceFraction = 5;
-            } else {
-                niceFraction = 10;
-	    }
-        }
-	
-        return niceFraction * Math.pow(10, exponent);
-    }
-    
-    /* get a nice scale, min, max and tick interval */
-    function niceScale (params) {
- 	var minPoint = params.min;
-	var maxPoint = params.max;
-	var maxTicks = params.ticks || 10;
-	var tickSpacing = niceNum(range / (maxTicks - 1), true);
-	var range = niceNum(maxPoint - minPoint, false);
-	var niceMin = Math.floor(minPoint / tickSpacing) * tickSpacing;;
-	var niceMax = Math.ceil(maxPoint / tickSpacing) * tickSpacing;
-	
-	return (niceMin, niceMax, tickSpacing);
-    }
-    
-    
+
     // Singleton primary SVG interface
     jQuery.svg = new SVGManager();
 
@@ -1678,7 +1632,7 @@
 	this.yAxis = new SVGGraphAxis(this); // The main y-axis
 	this.yAxis.title('', 40);
 	this.x2Axis = null; // The secondary x-axis
-	this.y2Axis = null; // The secondary y-axis
+	this.y2Axis = new SVGGraphAxis(this); // The secondary y-axis
 	this.legend = new SVGGraphLegend(this); // The chart legend
 	this._drawNow = true;
     }
@@ -2037,6 +1991,7 @@
 	    }
 	    if (this.yAxis) {
 		if (this.yAxis._title) {
+		    this.yAxis._titleOffset = dims[this.X] - (this.yAxis._titleFontSize || 14);
 		    this._wrapper.text(this._chartCont, 0, 0, this.yAxis._title, jQuery.extend({textAnchor: 'middle',
 												transform: 'translate(' + (dims[this.X] - this.yAxis._titleOffset) + ',' +
 												(dims[this.Y] + dims[this.H] / 2) + ') rotate(-90)'}, this.yAxis._titleFormat || {}));
@@ -2054,9 +2009,10 @@
 	    }
 	    if (this.y2Axis) {
 		if (this.y2Axis._title) {
+		    var titlePos = this._getValue(this._chartCont, 'width') - 10;
 		    this._wrapper.text(this._chartCont, 0, 0, this.y2Axis._title, jQuery.extend({textAnchor: 'middle',
-												 transform: 'translate(' + (dims[this.X] + dims[this.W] + this.y2Axis._titleOffset) +
-												 ',' + (dims[this.Y] + dims[this.H] / 2) + ') rotate(-90)'}, this.y2Axis._titleFormat || {}));
+												 transform: 'translate(' + titlePos +
+												 ',' + (dims[this.Y] + dims[this.H] / 2) + ') rotate(90)'}, this.y2Axis._titleFormat || {}));
 		}
 		this._drawAxis(this.y2Axis, 'y2Axis', dims[this.X] + dims[this.W], dims[this.Y],
 			       dims[this.X] + dims[this.W], dims[this.Y] + dims[this.H]);
@@ -2074,7 +2030,7 @@
 	    var horiz = (y1 == y2);
 	    var gl = this._wrapper.group(this._chartCont, jQuery.extend({class_: id}, axis._lineFormat));
 	    var gt = this._wrapper.group(this._chartCont, jQuery.extend({class_: id + 'Labels',
-									 textAnchor: (horiz ? 'middle' : 'end')}, axis._labelFormat));
+									 textAnchor: (horiz ? 'middle' : (id=='y2Axis' ? 'left' : 'end'))}, axis._labelFormat));
 	    this._wrapper.line(gl, x1, y1, x2, y2);
 	    if (axis._ticks.major) {
 		var bottomRight = (x2 > (this._getValue(this._chartCont, 'width') / 2) &&
@@ -2093,12 +2049,32 @@
 		    var len = (cur == major ? size : size / 2);
 		    var v = (horiz ? x1 : y1) +
 			(horiz ? cur - axis._scale.min : axis._scale.max - cur) * scale;
-		    this._wrapper.line(gl, (horiz ? v : x1 + len * offsets[0]),
+		    if (cur == major) {
+
+			// fix floating point error
+			var maj_str = cur.toString();
+			var tick_str = axis._ticks.major.toString();
+		    
+			// round to a maximum of 3 significant digits
+			if (tick_str.substr(tick_str.indexOf('.')+1).length > 3) {
+			    tick_str = tick_str.substr(0, tick_str.indexOf('.')+4);
+			}
+			
+			// fail if the max is smaller than the smallest number displayable with
+			// three significant digits
+			if (parseFloat(tick_str) < 0.001) {
+			    return;
+			}
+			if (maj_str.substr(maj_str.indexOf('.')+1).length > tick_str.substr(tick_str.indexOf('.')+1).length) {
+			    maj_str = parseFloat(major.toFixed(tick_str.substr(tick_str.indexOf('.')+1).length));
+			}
+			
+			this._wrapper.line(gl, (horiz ? v : x1 + len * offsets[0]),
 				       (horiz ? y1 + len * offsets[0] : v),
 				       (horiz ? v : x1 + len * offsets[1]),
 				       (horiz ? y1 + len * offsets[1] : v));
-		    if (cur == major) {
-			var pretty_cur = cur;
+		    
+			var pretty_cur = maj_str;
 			if (this.shortAxisLabels) {
 			    pretty_cur = Math.floor(pretty_cur) + '';
 			    if (pretty_cur.length > 12) {
@@ -2117,7 +2093,7 @@
 			}
 
 			var logtext = this._wrapper.createText().string('10').span(cur, {dy: -10, fontSize: 10});
-			this._wrapper.text(gt, (horiz ? v : x1 - size), (horiz ? y1 + 2 * size : v),
+			this._wrapper.text(gt, (horiz ? v : (id=='y2Axis' ? x1 + size + 5 : x1 - size - 5)), (horiz ? y1 + 2 * size : v + 5),
 					   (axis._labels ? axis._labels[count++] : ((axis._scale.type == 'log') ? logtext : pretty_cur)));
 		    }
 		    
@@ -2524,6 +2500,125 @@
     
     var barOptions = ['barWidth (number) - the width of each bar',
 		      'barGap (number) - the gap between sets of bars'];
+
+    /* Draw a deviation chart. */
+    function SVGDeviationChart() {
+    }
+    
+    jQuery.extend(SVGDeviationChart.prototype, {
+	
+	/* Retrieve the display title for this chart type.
+	   @return  the title */
+	title: function() {
+	    return 'deviation chart';
+	},
+	
+	/* Retrieve a description of this chart type.
+	   @return  its description */
+	description: function() {
+	    return 'Compare sets of values as vertical bars with deviations in grouped categories.';
+	},
+	
+	/* Retrieve a list of the options that may be set for this chart type.
+	   @return  options list */
+	options: function() {
+	    return barOptions;
+	},
+	
+	/* Actually draw the graph in this type's style.
+	   @param  graph  (object) the SVGGraph object */
+	drawGraph: function(graph) {
+	    graph._drawChartBackground(true);
+	    var barWidth = graph._chartOptions.barWidth || 20;
+	    var barGap = graph._chartOptions.barGap || 10;
+	    var numSer = graph._series.length;
+	    var numVal = (numSer ? (graph._series[0])._values.length : 0);
+	    var dims = graph._getDims();
+	    var xScale = dims[graph.W] / ((numSer * barWidth + barGap) * numVal + barGap);
+	    var yScale = dims[graph.H] / (graph.yAxis._scale.max - graph.yAxis._scale.min);
+	    this._chart = graph._wrapper.group(graph._chartCont, {class_: 'chart'});
+	    for (var i = 0; i < numSer; i++) {
+		this._drawSeries(graph, i, numSer, barWidth, barGap, dims, xScale, yScale);
+	    }
+	    graph._drawTitle();
+	    graph._drawAxes(true);
+	    this._drawXAxis(graph, numSer, numVal, barWidth, barGap, dims, xScale);
+	    graph._drawLegend();
+	},
+	
+	/* Plot an individual series. */
+	_drawSeries: function(graph, cur, numSer, barWidth, barGap, dims, xScale, yScale, type) {
+	    var series = graph._series[cur];
+	    var g; 
+	    if (typeof(series._fill) == 'object') {
+		g = graph._wrapper.group(this._chart,
+					 jQuery.extend({class_: 'series' + cur, stroke: series._stroke,
+							strokeWidth: series._strokeWidth}, series._settings || {}));
+	    } else {
+		g = graph._wrapper.group(this._chart,
+					 jQuery.extend({class_: 'series' + cur, fill: series._fill, stroke: series._stroke,
+							strokeWidth: series._strokeWidth}, series._settings || {}));
+	    }
+	    for (var i = 0; i < series._values.length; i++) {
+		var xoffset = dims[graph.X] + xScale * (barGap + i * (numSer * barWidth + barGap) + (cur * barWidth));
+		var data = series._values[i];
+		
+		if (graph.yAxis._scale.type == 'log') {
+		    data.upper = log10(data.upper);
+		    data.median = log10(data.median);
+		    data.max = log10(data.max);
+		    data.lower = log10(data.lower);
+		    data.min = log10(data.min);
+		}
+
+		var yshift = dims[graph.Y];
+		// median - upper
+		graph._wrapper.rect(g, xoffset + 1, Math.ceil((graph.yAxis._scale.max - data.upper) * yScale + yshift), parseInt(barWidth - 2), parseInt((data.upper - data.median) * yScale), 0, 0, { stroke: 'black', strokeWidth: 1, fill: series._fill[i] });
+		
+		// median - lower
+		graph._wrapper.rect(g, xoffset + 1, parseInt((graph.yAxis._scale.max - data.median) * yScale + yshift), parseInt(barWidth - 2), parseInt((data.median - data.lower) * yScale), 0, 0, { stroke: 'black', strokeWidth: 1, fill: series._fill[i] });
+
+		// max - upper
+		var mu = 
+		graph._wrapper.line(g, xoffset + 1 + parseInt(barWidth / 6), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), parseInt(xoffset + 1 + barWidth - 2 - parseInt(barWidth / 6)), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), { stroke: 'black', strokeWidth: 1 });
+		graph._wrapper.line(g, xoffset + parseInt(barWidth / 2), parseInt((graph.yAxis._scale.max - data.max) * yScale + 1 + yshift), parseInt(xoffset + parseInt(barWidth / 2)), parseInt((graph.yAxis._scale.max - data.upper) * yScale + 1 + yshift), { stroke: 'black', strokeWidth: 1, strokeDashArray: "2,2" });
+
+		
+		// lower - min
+		graph._wrapper.line(g, xoffset + 1 + parseInt(barWidth / 6), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), parseInt(xoffset + 1 + barWidth - 2 - parseInt(barWidth / 6)), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), { stroke: 'black', strokeWidth: 1 });
+		graph._wrapper.line(g, xoffset + parseInt(barWidth / 2), parseInt((graph.yAxis._scale.max - data.lower) * yScale - 1 + yshift), parseInt(xoffset + parseInt(barWidth / 2)), parseInt((graph.yAxis._scale.max - data.min) * yScale - 1 + yshift), { stroke: 'black', strokeWidth: 1, strokeDashArray: "2,2" });
+	    }
+	},
+	
+	/* Draw the x-axis and its ticks. */
+	_drawXAxis: function(graph, numSer, numVal, barWidth, barGap, dims, xScale) {
+	    var axis = graph.xAxis;
+	    if (axis._title) {
+		graph._wrapper.text(graph._chartCont, dims[graph.X] + dims[graph.W] / 2,
+				    parseInt(graph._chartCont.attributes[3].value),//dims[graph.Y] + dims[graph.H] + axis._titleOffset,
+				    axis._title, jQuery.extend({textAnchor: 'middle'}, axis._titleFormat || {}));
+	    }
+	    var gl = graph._wrapper.group(graph._chartCont, jQuery.extend({class_: 'xAxis'}, axis._lineFormat));
+	    var labelTextAnchor = axis.labelRotation ? "end" : "middle";
+	    var gt = graph._wrapper.group(graph._chartCont, jQuery.extend({class_: 'xAxisLabels',
+									   textAnchor: labelTextAnchor}, axis._labelFormat));
+	    graph._wrapper.line(gl, dims[graph.X], dims[graph.Y] + dims[graph.H],
+				dims[graph.X] + dims[graph.W], dims[graph.Y] + dims[graph.H]);
+	    if (axis._ticks.major) {
+		var offsets = graph._getTickOffsets(axis, true);
+		for (var i = 0; i < numSer; i++) {
+		    var x = dims[graph.X] + (xScale * barGap) + (barWidth / 2) + (i * (barWidth * xScale));
+		    graph._wrapper.line(gl, x, dims[graph.Y] + dims[graph.H] + offsets[0] * axis._ticks.size,
+					x, dims[graph.Y] + dims[graph.H] + offsets[1] * axis._ticks.size);
+		}
+		for (var i = 0; i < numSer; i++) {
+		    var x = dims[graph.X] + (xScale * barGap) + (barWidth / 2) + (i * (barWidth * xScale));
+		    graph._wrapper.text(gt, x, dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size,
+					(axis._labels ? axis._labels[i] : graph._series[i]._name), (axis.labelRotation ? { textAnchor: "end", transform: "rotate("+axis.labelRotation+", "+x+", "+(dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size)+")"} : { textAnchor: "end", transform: "rotate(-50, "+x+", "+(dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size)+")"}));
+		}
+	    }
+	}
+    });
     
     /* Draw a standard grouped column bar chart. */
     function SVGColumnChart() {
@@ -2556,39 +2651,79 @@
 	    var barWidth = graph._chartOptions.barWidth || 10;
 	    var barGap = graph._chartOptions.barGap || 10;
 	    var numSer = graph._series.length;
+	    var barCount = 0;
+	    for (var i=0; i<numSer; i++) {
+		if (! graph._series[i]._settings.hasOwnProperty('seriesType') || graph._series[i]._settings.seriesType!='line') {
+		    barCount++;
+		}
+	    }
 	    var numVal = (numSer ? (graph._series[0])._values.length : 0);
 	    var dims = graph._getDims();
-	    var xScale = dims[graph.W] / ((numSer * barWidth + barGap) * numVal + barGap);
+	    var xScale = dims[graph.W] / ((barCount * barWidth + barGap) * numVal + barGap);
 	    var yScale = dims[graph.H] / (graph.yAxis._scale.max - graph.yAxis._scale.min);
+	    var y2Scale = graph.y2Axis ? dims[graph.H] / (graph.y2Axis._scale.max - graph.y2Axis._scale.min) : 0;
 	    this._chart = graph._wrapper.group(graph._chartCont, {class_: 'chart'});
+	    var barNum = 0;
 	    for (var i = 0; i < numSer; i++) {
-		this._drawSeries(graph, i, numSer, barWidth, barGap, dims, xScale, yScale);
+		if (graph._series[i]._settings.isY2) {
+		    this._drawSeries(graph, barNum, barCount, barWidth, barGap, dims, xScale, y2Scale);
+		} else {
+		    this._drawSeries(graph, barNum, barCount, barWidth, barGap, dims, xScale, yScale);
+		}
+		if (! graph._series[i]._settings.hasOwnProperty('seriesType') || graph._series[i]._settings.seriesType!='line') {
+		    barNum++;
+		}
 	    }
 	    graph._drawTitle();
 	    graph._drawAxes(true);
-	    this._drawXAxis(graph, numSer, numVal, barWidth, barGap, dims, xScale);
+	    this._drawXAxis(graph, barNum, numVal, barWidth, barGap, dims, xScale);
 	    graph._drawLegend();
 	},
 	
 	/* Plot an individual series. */
 	_drawSeries: function(graph, cur, numSer, barWidth, barGap, dims, xScale, yScale, type) {
 	    var series = graph._series[cur];
-	    var g; 
-	    if (typeof(series._fill) == 'object') {
-		g = graph._wrapper.group(this._chart,
-					 jQuery.extend({class_: 'series' + cur, stroke: series._stroke,
-							strokeWidth: series._strokeWidth}, series._settings || {}));
+	    if (series._settings.hasOwnProperty('seriesType') && series._settings.seriesType=='line') {
+		var path = graph._wrapper.createPath();
+		var circles = [];
+		for (var i = 0; i < series._values.length; i++) {
+		    var x = dims[graph.X] + xScale * (barGap / 2 + (i + 0.5) * (numSer * barWidth + barGap));
+		    var y = dims[graph.Y] + ((series._settings.isY2 ? graph.y2Axis._scale.max : graph.yAxis._scale.max) - series._values[i]) * yScale;
+		    if (i === 0) {
+			path.move(x, y);
+		    }
+		    else {
+			path.line(x, y);
+		    }
+		    circles.push( [ x, y ]);
+		}
+		if (! series._settings.noLines) {
+		    graph._wrapper.path(this._chart, path,
+					jQuery.extend({id: 'series' + cur, fill: 'none', stroke: (series._stroke=="white") ? "black" : series._stroke,
+						       strokeWidth: series._strokeWidth}, series._settings || {}));
+		}
+		for (i=0;i<circles.length;i++) {
+		    var c = graph._wrapper.circle(this._chart, circles[i][0], circles[i][1], 3, { fill: 'white', strokeWidth: 1, stroke: (series._stroke=="white") ? "black" : series._stroke, onmouseover: "this.setAttribute('r', parseInt(this.getAttribute('r')) + 1)", onmouseout: "this.setAttribute('r', parseInt(this.getAttribute('r')) - 1)" });
+		    graph._showStatus(c, series._name, series._values[i]);
+		}
 	    } else {
-		g = graph._wrapper.group(this._chart,
-					 jQuery.extend({class_: 'series' + cur, fill: series._fill, stroke: series._stroke,
-							strokeWidth: series._strokeWidth}, series._settings || {}));
-	    }
-	    for (var i = 0; i < series._values.length; i++) {
-		var r = graph._wrapper.rect(g,
-					    dims[graph.X] + xScale * (barGap + i * (numSer * barWidth + barGap) + (cur * barWidth)),
-					    dims[graph.Y] + yScale * (graph.yAxis._scale.max - ((graph.yAxis._scale.type == 'log') ? log10(series._values[i]) : series._values[i])),
-					    xScale * barWidth, yScale * ((graph.yAxis._scale.type == 'log') ? log10(series._values[i]) : series._values[i]), (typeof(series._fill) == 'object') ? { fill: series._fill[i] } : {});
-		graph._showStatus(r, series._name, series._values[i]);
+		var g; 
+		if (typeof(series._fill) == 'object') {
+		    g = graph._wrapper.group(this._chart,
+					     jQuery.extend({class_: 'series' + cur, stroke: series._stroke,
+							    strokeWidth: series._strokeWidth}, series._settings || {}));
+		} else {
+		    g = graph._wrapper.group(this._chart,
+					     jQuery.extend({class_: 'series' + cur, fill: series._fill, stroke: series._stroke,
+							    strokeWidth: series._strokeWidth}, series._settings || {}));
+		}
+		for (var i = 0; i < series._values.length; i++) {
+		    var r = graph._wrapper.rect(g,
+						dims[graph.X] + xScale * (barGap + i * (numSer * barWidth + barGap) + (cur * barWidth)),
+						dims[graph.Y] + yScale * (graph.yAxis._scale.max - ((graph.yAxis._scale.type == 'log') ? log10(series._values[i]) : series._values[i])),
+						xScale * barWidth, yScale * ((graph.yAxis._scale.type == 'log') ? log10(series._values[i]) : series._values[i]), (typeof(series._fill) == 'object') ? { fill: series._fill[i] } : {});
+		    graph._showStatus(r, series._name, series._values[i]);
+		}
 	    }
 	},
 	
@@ -2597,7 +2732,7 @@
 	    var axis = graph.xAxis;
 	    if (axis._title) {
 		graph._wrapper.text(graph._chartCont, dims[graph.X] + dims[graph.W] / 2,
-				    dims[graph.Y] + dims[graph.H] + axis._titleOffset,
+				    parseInt(graph._chartCont.attributes[3].value),//dims[graph.Y] + dims[graph.H] + axis._titleOffset,
 				    axis._title, jQuery.extend({textAnchor: 'middle'}, axis._titleFormat || {}));
 	    }
 	    var gl = graph._wrapper.group(graph._chartCont, jQuery.extend({class_: 'xAxis'}, axis._lineFormat));
@@ -3108,6 +3243,9 @@
 	drawGraph: function(graph) {
 	    graph._drawChartBackground();
 	    var dims = graph._getDims();
+
+	    graph.xAxis._scale.max = graph._series[0]._values.length - 1;
+
 	    var xScale = dims[graph.W] / (graph.xAxis._scale.max - graph.xAxis._scale.min);
 	    var yScale = dims[graph.H] / (graph.yAxis._scale.max - graph.yAxis._scale.min);
 	    this._chart = graph._wrapper.group(graph._chartCont, {class_: 'chart'});
@@ -3115,7 +3253,8 @@
 		this._drawSeries(graph, i, dims, xScale, yScale);
 	    }
 	    graph._drawTitle();
-	    graph._drawAxes();
+	    graph._drawAxes(true);
+	    this._drawXAxis(graph, graph._series[0]._values.length, dims, xScale);
 	    graph._drawLegend();
 	},
 	
@@ -3135,12 +3274,43 @@
 		}
 		circles.push( [ x, y ]);
 	    }
-	    var p = graph._wrapper.path(this._chart, path,
-					jQuery.extend({id: 'series' + cur, fill: 'none', stroke: series._stroke,
-						       strokeWidth: series._strokeWidth}, series._settings || {}));
+	    if (! series._settings.noLines) {
+		graph._wrapper.path(this._chart, path,
+				    jQuery.extend({id: 'series' + cur, fill: 'none', stroke: (series._stroke=="white") ? "black" : series._stroke,
+						   strokeWidth: series._strokeWidth}, series._settings || {}));
+	    }
 	    for (i=0;i<circles.length;i++) {
-		var c = graph._wrapper.circle(this._chart, circles[i][0], circles[i][1], 4, { fill: 'white', strokeWidth: 2, stroke: series._stroke, onmouseover: "this.setAttribute('r', parseInt(this.getAttribute('r')) + 1)", onmouseout: "this.setAttribute('r', parseInt(this.getAttribute('r')) - 1)" });
+		var c = graph._wrapper.circle(this._chart, circles[i][0], circles[i][1], 3, { fill: 'white', strokeWidth: 1, stroke: (series._stroke=="white") ? "black" : series._stroke, onmouseover: "this.setAttribute('r', parseInt(this.getAttribute('r')) + 1)", onmouseout: "this.setAttribute('r', parseInt(this.getAttribute('r')) - 1)" });
 		graph._showStatus(c, series._name, series._values[i]);
+	    }
+	},
+
+	/* Draw the x-axis and its ticks. */
+	_drawXAxis: function(graph, numVal, dims, xScale) {
+	    var axis = graph.xAxis;
+	    if (axis._title) {
+		graph._wrapper.text(graph._chartCont, dims[graph.X] + dims[graph.W] / 2,
+				    dims[graph.Y] + dims[graph.H] + axis._titleOffset,
+				    axis._title, jQuery.extend({textAnchor: 'middle'}, axis._titleFormat || {}));
+	    }
+	    var gl = graph._wrapper.group(graph._chartCont, jQuery.extend({class_: 'xAxis'}, axis._lineFormat));
+	    var labelTextAnchor = axis.labelRotation ? "end" : "middle";
+	    var gt = graph._wrapper.group(graph._chartCont, jQuery.extend({class_: 'xAxisLabels',
+									   textAnchor: labelTextAnchor}, axis._labelFormat));
+	    graph._wrapper.line(gl, dims[graph.X], dims[graph.Y] + dims[graph.H],
+				dims[graph.X] + dims[graph.W], dims[graph.Y] + dims[graph.H]);
+	    if (axis._ticks.major) {
+		var offsets = graph._getTickOffsets(axis, true);
+		for (var i = 1; i < numVal; i++) {
+		    var x = dims[graph.X] + xScale * i;
+		    graph._wrapper.line(gl, x, dims[graph.Y] + dims[graph.H] + offsets[0] * axis._ticks.size,
+					x, dims[graph.Y] + dims[graph.H] + offsets[1] * axis._ticks.size);
+		}
+		for (var i = 0; i < numVal; i++) {
+		    var x = dims[graph.X] + xScale * i;
+		    graph._wrapper.text(gt, x, dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size,
+					(axis._labels ? axis._labels[i] : '' + i), (axis.labelRotation ? { transform: "rotate("+axis.labelRotation+", "+x+", "+(dims[graph.Y] + dims[graph.H] + 2 * axis._ticks.size)+")"} : null));
+		}
 	    }
 	}
     });
@@ -3190,7 +3360,7 @@
 	    var numSer = graph._series.length;
 	    var numVal = (numSer ? (graph._series[0])._values.length : 0);
 	    var path = graph._wrapper.createPath();
-	    var explode = graph._chartOptions.explode || [];
+	    var explode = []; //graph._chartOptions.explode || [];
 	    explode = (isArray(explode) ? explode : [explode]);
 	    var explodeDist = graph._chartOptions.explodeDist || 10;
 	    var pieGap = (numVal <= 1 ? 0 : graph._chartOptions.pieGap || 10);
@@ -3233,7 +3403,7 @@
 		    graph._showStatus(p, series._name,
 				      roundNumber((end - start) / 2 / Math.PI * 100, 2));
 		}
-		if (graph.xAxis) {
+		if (graph.xAxis && graph.xAxis._labels[i]) {
 		    graph._wrapper.text(gt, cx, dims[graph.Y] + dims[graph.H] + graph.xAxis._titleOffset,
 					graph.xAxis._labels[i]);
 		}
@@ -3249,6 +3419,7 @@
     jQuery.svg.graphing.addChartType('line', new SVGLineChart());
     jQuery.svg.graphing.addChartType('pie', new SVGPieChart());
     jQuery.svg.graphing.addChartType('stackedArea', new SVGStackedAreaChart());
+    jQuery.svg.graphing.addChartType('deviation', new SVGDeviationChart());
     
     //============
     /* Plotting */
@@ -3700,7 +3871,7 @@
 	    var dims = this._getDims();
 	    var zerox = dims[0] - (this.xAxis._scale.min * scales[0]);
 	    var zeroy = dims[1] + dims[3] + (this.yAxis._scale.min * scales[1]);
-	    var psettings = { size: 6, shape: this.series[series].shape, 'filled': this.series[series].filled || false, color: this.series[series].color };
+	    var psettings = { size: this.series[series].pointSize || 6, shape: this.series[series].shape, 'filled': this.series[series].filled || false, color: this.series[series].color };
 	    for (i=0;i<points.length;i++) {
 		var p = points[i];
 		jQuery.extend(p, psettings);
@@ -4157,9 +4328,29 @@
 	    return this._plot;
 	}
     });
+
+    // css
+    jQuery("<style>")
+	.prop("type", "text/css")
+	.html("\
+svg:svg {\
+    display: none;\
+}\
+\
+.svg_error {\
+    color: red;\
+    font-weight: bold;\
+}\
+\
+.marquee {\
+    fill-opacity: 0.2;\
+    stroke: #000;\
+    stroke-dasharray: 2,4;\
+    vector-effect:non-scaling-stroke;\
+}")
+	.appendTo("head");
     
 })(jQuery);
-
 
 //===================
 /* Drag-Select-Box */

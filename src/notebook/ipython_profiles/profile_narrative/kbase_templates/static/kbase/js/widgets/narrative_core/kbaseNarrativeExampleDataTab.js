@@ -11,27 +11,30 @@
             ws_name: null, // must be the WS name, not the WS Numeric ID
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/ws/json/", // ws_name/obj_name,
+            default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             exampleWsId: 2901, // designed to be a workspace with just a handful of objects
+	    $importStatus:$('<div>'),
             exampleTypeOrder: [
-                {name:'AssemblyInput', displayName: "Example Assembly Inputs", header:'Read data configured for sequence assembly.'},
-                {name:'ContigSet', displayName: "Example Contig Sets", header:'A set of DNA sequences'},
-                {name:'Genome', displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
-                {name:'FBAModel', displayName: "Example FBAModels", header:'A metabolic model of an organism'},
-                {name:'Media', displayName: "Example Media", header:'Specification of an environmental condition'}
+                {name:['AssemblyInput','SingleEndLibrary','PairedEndLibrary','ReferenceAssembly'], displayName: "Example Sequence Assembly Inputs", header:'Various types of read data configured for sequence assembly.'},
+                {name:['ContigSet'], displayName: "Example Contig Sets", header:'A set of DNA sequences'},
+                {name:['Genome'], displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
+                {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
+                {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'},
+                {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data Sets", header:'Sets of WGS and amplicon metagenomes'},
+                {name:['TranscriptomeHack'], displayName: "Example Sorghum Transcriptomes", header:'Sorghum bicolor transcriptome data in response to ABA and osmotic stress'}
                 ]
-            
+
         },
 
         ws: null,
         narWs:null,
         ws_landing_page_map: {},
-        
+
         $mainPanel:null,
         $loadingDiv:null,
-        
-        
+
+
         /**
          * @method init
          * Builds the DOM structure for the widget.
@@ -45,19 +48,21 @@
             this._super(options);
             var self = this;
             this.getLandingPageMap();  //start off this request so that we hopefully get something back right away
-            
+
             this.$loadingDiv = $('<div>').addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">');
             this.$elem.append(this.$loadingDiv);
             this.$mainPanel = $('<div>')
-                .css({'overflow-y':'auto'});
+                .css({'overflow-y':'auto','height':'604px'});
             this.$elem.append(this.$mainPanel);
-            
+
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.ws_url = window.kbconfig.urls.workspace;
+                this.data_icons = window.kbconfig.icons.data;
+                this.icon_colors = window.kbconfig.icons.colors;
             }
             this.showLoading();
-            
+
             var self = this;
             $(document).on('setWorkspaceName.Narrative', function(e, info){
                 self.narWs = info.wsId;
@@ -65,11 +70,11 @@
             })
             return this;
         },
-        
+
         refresh: function() { },
-        
+
         objectList:null,
-        
+
         getExampleDataAndRender: function() {
             var self = this;
             if (self.narWs && self.ws) {
@@ -87,6 +92,9 @@
                         for (var i=0; i<infoList.length; i++) {
                             // skip narrative objects
                             if (infoList[i][2].indexOf('KBaseNarrative') == 0) { continue; }
+                            if (infoList[i][1].indexOf('Transcriptome') == 0) {
+                                infoList[i][2] = 'TranscriptomeHack';
+                            }
                             self.objectList.push({
                                     $div:self.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
                                     info:infoList[i]
@@ -94,7 +102,7 @@
                             );
                         }
                         self.renderData();
-                    }, 
+                    },
                     function(error) {
                         self.$mainPanel.show();
                         self.$mainPanel.append("error: ");
@@ -103,28 +111,26 @@
                         self.hideLoading();
                     });
             }
-            
+
         },
-        
-        
+
+
         renderData: function() {
             var self = this;
             if (!self.objectList) { return; }
-            
+
             var typeDivs = {};
             for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
                 var typeInfo = self.options.exampleTypeOrder[t];
-                var name = typeInfo.name;
-                if (typeInfo.displayName) {
-                    name = typeInfo.displayName;
-                }
                 var $tc = $('<div>')
                             .append($('<div>').css({'margin':'15px'})
                                 .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
-                                        .append(name))
+                                        .append(typeInfo.displayName))
                                 .append($('<div>').css({'margin':'4px','color':'#555'})
                                         .append(typeInfo.header)));
-                typeDivs[typeInfo.name] = $tc;
+                for(var k=0; k<typeInfo.name.length; k++) {
+                    typeDivs[typeInfo.name[k]] = $tc;
+                }
             }
             var $tc = $('<div>')
                             .append($('<div>').css({'margin':'15px'})
@@ -133,11 +139,24 @@
                                 .append($('<div>').css({'margin':'4px','color':'#555'})
                                         .append('Assorted data types used in more advanced analyses')));
             typeDivs['other.types'] = $tc;
-            
+
             var hasOthers = false;
+            self.objectList.sort(function(a,b) {
+                                        if (a.info[2].toUpperCase() > b.info[2].toUpperCase()) return -1; // sort by type
+                                        if (a.info[2].toUpperCase() < b.info[2].toUpperCase()) return 1;
+                                        if (a.info[1].toUpperCase() > b.info[1].toUpperCase()) return -1; // then by name
+                                        if (a.info[1].toUpperCase() < b.info[1].toUpperCase()) return 1;
+                                        return 0;
+                                    });
             for (var k=0; k<self.objectList.length; k++) {
                 var obj = self.objectList[k];
-                var typeName = obj.info[2].split('-')[0].split('.')[1];
+                var typeName='';
+                if (obj.info[2]==='TranscriptomeHack') {
+                    typeName=obj.info[2];
+                } else {
+                    typeName = obj.info[2].split('-')[0].split('.')[1];
+                }
+
                 if (typeDivs.hasOwnProperty(typeName)) {
                     typeDivs[typeName].append(obj.$div);
                 } else {
@@ -145,17 +164,17 @@
                     hasOthers = true;
                 }
             }
-            
+
             for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
-                self.$mainPanel.append(typeDivs[self.options.exampleTypeOrder[t].name]);
+                self.$mainPanel.append(typeDivs[self.options.exampleTypeOrder[t].name[0]]);
             }
             if (hasOthers) {
                 self.$mainPanel.append(typeDivs['other.types']);
             }
-            
+
             self.hideLoading();
         },
-        
+
         getObjData: function(type, ignoreVersion) {
             if (type) {
                 var dataSet = {};
@@ -169,9 +188,9 @@
                 }
                 return dataSet;
             }
-            return this.obj_data;  
+            return this.obj_data;
         },
-        
+
         renderObjectRowDiv: function(object_info) {
             var self = this;
             // object_info:
@@ -179,18 +198,23 @@
             // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
             // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
             // [9] : int size // [10] : usermeta meta
-            var type_tokens = object_info[2].split('.')
-            var type_module = type_tokens[0];
-            var type = type_tokens[1].split('-')[0];
-            
+            var type = '';
+            if (object_info[2]==='TranscriptomeHack') {
+                type='Genome';
+            } else {
+                var type_tokens = object_info[2].split('.')
+                var type_module = type_tokens[0];
+                type = type_tokens[1].split('-')[0];
+            }
+
             var $addDiv =
-                $('<div>').addClass('col-md-2').append(
-                    $('<button>').addClass('btn btn-default')
+                $('<div>').append(
+                    $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
                         .append($('<span>').addClass('fa fa-chevron-circle-left').append(' Add'))
                         .on('click',function() { // probably should move action outside of render func, but oh well
                             $(this).attr("disabled","disabled");
                             $(this).html('<img src="'+self.options.loadingImage+'">');
-                            
+
                             var thisBtn = this;
                             self.ws.copy_object({
                                 to:   {ref: self.narWs     + "/" + object_info[1]},
@@ -201,11 +225,20 @@
                                 },
                                 function(error) {
                                     $(thisBtn).html('Error');
+                                    if (error.error && error.error.message) {
+                                        if (error.error.message.indexOf('may not write to workspace')>=0) {
+                                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: you do not have permission to add data to this Narrative.'));
+                                        } else {
+                                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: '+error.error.message));
+                                        }
+                                    } else {
+                                        self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
+                                    }
                                     console.error(error);
                                 });
-                            
+
                         }));
-            
+
             var shortName = object_info[1]; var isShortened=false;
             /*if (shortName.length>this.options.max_name_length) {
                 shortName = shortName.substring(0,this.options.max_name_length-3)+'...';
@@ -213,7 +246,8 @@
             }*/
             var $name = $('<span>').addClass("kb-data-list-name").append(shortName);
             if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom'}); }
-           
+            var $type = $('<span>').addClass("kb-data-list-type").append(type);
+
             var metadata = object_info[10];
             var metadataText = '';
             for(var key in metadata) {
@@ -221,7 +255,12 @@
                     metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
                 }
             }
-            
+            if (type==='Genome') {
+                if (metadata.hasOwnProperty('Name')) {
+                    $type.html('Genome: '+metadata['Name']);
+                }
+            }
+            /*
             var landingPageLink = this.options.default_landing_page_url +object_info[7]+ '/' + object_info[1];
             if (this.ws_landing_page_map) {
                 if (this.ws_landing_page_map[type_module]) {
@@ -232,7 +271,7 @@
                     }
                 }
             }
-            
+
             var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
                                 .append($('<div>').css({'text-align':'center','margin':'5pt'})
                                             .append('<a href="'+landingPageLink+'" target="_blank">'+
@@ -243,7 +282,7 @@
                                     $('<table style="width=100%">')
                                         .append("<tr><th>Permament Id</th><td>" +object_info[6]+ "/" +object_info[0]+ "/" +object_info[4] + '</td></tr>')
                                         .append(metadataText));
-            
+
             var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
                 .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
                 .on('click',function() {
@@ -255,28 +294,69 @@
                             $more.slideToggle('fast');
                             $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
                         }
-                    });
-                    
-            var $mainDiv  = $('<div>').addClass('col-md-10 kb-data-list-info')
-                                .append($('<span>')
-                                            .addClass("kb-data-list-logo")
-                                            .css({'background-color':this.logoColorLookup(type)})
-                                            .append(type.substring(0,1)))
-                                .append($('<span>').css({'margin':'10px'}).append($name));
-        
-            var $row = $('<div>').css({'margin':'5px'}).append(
-                            $('<div>').addClass('row kb-data-list-obj-row-main')
-                                .append($addDiv)
-                                .append($mainDiv));
+                    });*/
+            var icons = this.data_icons;
+            var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
+            var $logo = $('<span>')
+            // background circle
+            .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
+            .append($('<i>')
+            .addClass("fa fa-circle fa-stack-2x")
+            .css({'color': this.logoColorLookup(type)}));
+            if (this.isCustomIcon(icon)) {
+                // add custom icons (side-by-side? not really defined..)
+                _.each(icon, function (cls) {
+                    $logo.append($('<i>')
+                      .addClass("icon fa-inverse fa-stack-2x " + cls));
+                });
+            }
+            else {
+                // add stack of font-awesome icons
+                _.each(icon, function(cls) {
+                  $logo.append($('<i>')
+                    .addClass("fa fa-inverse fa-stack-1x " + cls));
+                });
+            }
+
+            var $topTable = $('<table>')
+                                 .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
+                                 .append($('<tr>')
+                                         .append($('<td>')
+                                                 .css({'width':'90px'})
+                                                .append($addDiv.hide()))
+                                         .append($('<td>')
+                                                 .css({'width':'50px'})
+                                                 .append($logo))/*$('<span>')
+                                            		 	.addClass("kb-data-list-logo")
+                                            		 	.css({'background-color':this.logoColorLookup(type)})
+                                            		 	.append(type.substring(0,1))))*/
+                                         .append($('<td>')
+                                                 .append($name).append('<br>').append($type)));
+
+	    var $row = $('<div>')
+                                .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
+                                //.addClass('kb-data-list-obj-row')
+                                .append($('<div>').addClass('kb-data-list-obj-row-main')
+                                            .append($topTable))
+                                .mouseenter(function(){
+                                    $addDiv.show();
+                                })
+                                .mouseleave(function(){
+                                    $addDiv.hide();
+                                });
+
             return $row;
         },
-        
-        
+
+        isCustomIcon: function (icon_list) {
+            return (icon_list.length > 0 && icon_list[0].length > 4 &&
+            icon_list[0].substring(0, 4) == 'icon');
+        },
 
         renderMore: function() {
             var self=this;
             if (self.objectList) {
-                
+
                 if (!self.searchFilterOn) { // if search filter is off, then we just are showing everything
                     var start = self.n_objs_rendered;
                     for(var i=start; i<self.objectList.length; i++) {
@@ -302,7 +382,7 @@
                 }
             }
         },
-        
+
         attachRow: function(index) {
             if (this.objectList[index].attached) { return; }
             if (this.objectList[index].$div) {
@@ -325,7 +405,7 @@
             row.attached = true;
             this.n_objs_rendered++;
         },
-        
+
         detachAllRows: function() {
             for (var i=0; i<this.objectList.length; i++) {
                 this.detachRow(i);
@@ -343,14 +423,14 @@
                 this.n_objs_rendered--;
             }
         },
-        
-        
+
+
         renderList: function() {
             var self = this;
             self.showLoading();
-            
+
             self.detachAllRows();
-            
+
             if (self.objectList.length>0) {
                 for(var i=0; i<self.objectList.length; i++) {
                     // only show up to the given number
@@ -364,13 +444,13 @@
                 // todo: show an upload button or some other message if there are no elements
                 self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'}).append("No data added yet."));
             }
-            
+
             self.hideLoading();
         },
-        
+
         renderController: function() {
             var self = this;
-            
+
             var $byDate = $('<label id="nar-data-list-default-sort-label" class="btn btn-default">').addClass('btn btn-default')
                                 .append($('<input type="radio" name="options" id="nar-data-list-default-sort-option" autocomplete="off">'))
                                 .append("date")
@@ -381,18 +461,18 @@
                                         return 0;
                                     });
                                 });
-                                
+
             var $byName = $('<label class="btn btn-default">')
                                 .append($('<input type="radio" name="options" id="option2" autocomplete="off">'))
                                 .append("name")
                                 .on('click',function() {
                                     self.sortData(function(a,b) {
                                         if (a.info[1].toUpperCase() < b.info[1].toUpperCase()) return -1; // sort by name
-                                        if (a.info[1].toUpperCase() > b.info[1].toUpperCase()) return 1; 
+                                        if (a.info[1].toUpperCase() > b.info[1].toUpperCase()) return 1;
                                         return 0;
                                     });
                                 });
-                                
+
             var $byType = $('<label class="btn btn-default">')
                                 .append($('<input type="radio" name="options" id="option3" autocomplete="off">'))
                                 .append("type")
@@ -408,14 +488,14 @@
                                 .on('click',function() {
                                     self.reverseData();
                                 });
-            
+
             var $sortByGroup = $('<div data-toggle="buttons">')
                                     .addClass("btn-group btn-group-sm")
                                     .css({"margin":"2px"})
                                     .append($byDate)
                                     .append($byName)
                                     .append($byType);
-            
+
             var $addDataBtn = $('<button>')
                                 .addClass("btn btn-warning kb-data-list-get-data-button")
                                 .append('<span class="fa fa-plus" style="color:#fff" aria-hidden="true" /> Get Data')
@@ -432,8 +512,8 @@
                                           }
                                       );*/
                                 });
-            
-            
+
+
             var $openSearch = $('<span>').addClass('btn btn-default kb-data-list-nav-buttons')
                 .html('<span class="fa fa-search" style="color:#666" aria-hidden="true"/>')
                 .on('click',function() {
@@ -467,7 +547,7 @@
                         self.$filterTypeDiv.hide();
                     }
                 });
-            
+
             self.$searchInput = $('<input type="text">').addClass('form-control');
             self.$searchDiv = $('<div>').addClass("input-group").css({'margin-bottom':'10px'})
                                 .append(self.$searchInput)
@@ -483,7 +563,7 @@
                                 .append("<small>sort by: </small>")
                                 .append($sortByGroup)
                                 .append($upOrDown);
-            
+
             self.$filterTypeSelect = $('<select>').addClass("form-control")
                                         .append($('<option value="">'))
                                         .change(function() {
@@ -492,12 +572,12 @@
                                             //var textSelected   = optionSelected.text();
                                             self.filterByType(typeSelected);
                                         });
-            
+
             self.$filterTypeDiv = $('<div>').css({'margin':'3px','margin-left':'5px','margin-bottom':'10px'})
                                 .append(self.$filterTypeSelect);
-                                
-                                
-            
+
+
+
             var $header = $('<div>').addClass('row').css({'margin':'5px'})
                     .append($('<div>').addClass('col-xs-7').css({'margin':'0px','padding':'0px'})
                         .append($openSearch)
@@ -505,24 +585,24 @@
                         .append($openFilter))
                     .append($('<div>').addClass('col-xs-5').css({'margin':'0px','padding':'0px','text-align':'right'})
                         .append($addDataBtn));
-            
-            
+
+
             self.$sortByDiv.hide();
             self.$searchDiv.hide();
             self.$filterTypeDiv.hide();
-            
+
             var $filterDiv = $('<div>')
                                 .append(self.$sortByDiv)
                                 .append(self.$searchDiv)
                                 .append(self.$filterTypeDiv);
-                                
+
             self.$controllerDiv.append($header).append($filterDiv);
         },
-        
+
         populateAvailableTypes: function() {
             var self = this;
             if (self.availableTypes && self.$filterTypeSelect) {
-                
+
                 var types = [];
                 for(var type in self.availableTypes) {
                     if(self.availableTypes.hasOwnProperty(type)) {
@@ -530,7 +610,7 @@
                     }
                 }
                 types.sort();
-                
+
                 self.$filterTypeSelect.empty();
                 self.$filterTypeSelect.append($('<option value="">'));
                 for(var i=0; i<types.length; i++) {
@@ -541,58 +621,58 @@
                 }
             }
         },
-        
-        
+
+
         reverseData: function() {
             var self = this;
             if (!self.objectList) { return; }
-            
+
             self.objectList.reverse();
             self.renderList();
             self.search();
-            
+
             self.hideLoading();
         },
-        
+
         sortData: function(sortfunction) {
             var self = this;
             if (!self.objectList) { return; }
             //should add spinning wait bar ....
             self.showLoading();
-            
+
             self.objectList.sort(sortfunction);
             self.renderList();
             self.search();  // always refilter on the search term search if there is something there
-            
+
             self.hideLoading();
-            
+
             // go back to the top on sort
             self.$mainListDiv.animate({
                 scrollTop:0
             }, 300); // fast = 200, slow = 600
         },
-        
-        
+
+
         currentMatch: [],
         currentTerm: '',
         searchFilterOn: false,
         n_filteredObjsRendered: null,
-        
+
         search: function(term, type) {
             var self = this;
             if (!self.objectList) { return; }
-            
+
             if (!term && self.$searchInput) {
                 term = self.$searchInput.val();
             }
-            
+
             // if type wasn't selected, then we try to get something that was set
             if (!type) {
                 if (self.$filterTypeSelect) {
                     type = self.$filterTypeSelect.find("option:selected").val();
                 }
             }
-            
+
             term = term.trim();
             if (term.length>0 || type) {
                 self.searchFilterOn = true;
@@ -612,9 +692,9 @@
                 term = term.replace(/\|/g,'\\|').replace(/\\\\\|/g,'|'); // bars are common in kb ids, so escape them unless we have \\|
                 term = term.replace(/\./g,'\\.').replace(/\\\\\./g,'.'); // dots are common in names, so we escape them, but
                                                                          // if a user writes '\\.' we assume they want the regex '.'
-                
+
                 var regex = new RegExp(term, 'i');
-                
+
                 var n_matches = 0; self.n_filteredObjsRendered = 0;
                 for(var k=0; k<self.currentMatch.length; k++) {
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
@@ -626,38 +706,38 @@
                     if (regex.test(info[1])) { match = true; } // match on name
                     else if (regex.test(info[2].split('.')[1].split('-'))) { match = true; } // match on type name
                     else if (regex.test(info[5])) { match = true; } // match on saved_by user
-                    
+
                     if (!match && info[10]) { // match on metadata values
                         for(var metaKey in info[10]) {
                             if (info[10].hasOwnProperty(metaKey)) {
                                 if (regex.test(info[10][metaKey])) { match = true; break; }
                                 else if (regex.test(metaKey+"::"+info[10][metaKey])) {
-                                    match = true; break; 
+                                    match = true; break;
                                 }
                             }
                         }
                     }
-                    
-                    
+
+
                     if (type) { // if type is defined, then our sort must also filter by the type
                         if (type !== info[2].split('-')[0].split('.')[1]) {
                             match = false; // no match if we are not the selected type!
                         }
                     }
-                    
+
                     if (match) {
                         // matches must always switch to show if they are rendered
                         if (self.currentMatch[k].$div) {
                             self.currentMatch[k].$div.show();
                         }
-                        
+
                         // todo: add check so we only show up to the number we render... switching to this will require that
                         // we revise the renderMore logic...
                         if (n_matches < self.options.objs_to_render_to_start) {
                             self.attachRowElement(self.currentMatch[k]);
                             self.n_filteredObjsRendered++;
                         }
-                        
+
                         newMatch.push(self.currentMatch[k]);
                         n_matches++;
                     }
@@ -680,19 +760,19 @@
             }
             self.currentTerm = term;
         },
-        
-        
+
+
         filterByType: function(type) {
             var self = this;
             self.search(null,type);
         },
-        
+
         getRichData: function(object_info,$moreRow) {
             var self = this;
             var $usernameTd = $moreRow.find(".kb-data-list-username-td");
             self.displayRealName(object_info[5],$usernameTd);
         },
-        
+
         showLoading : function() {
             this.$loadingDiv.show();
             this.$mainPanel.hide();
@@ -701,12 +781,12 @@
             this.$loadingDiv.hide();
             this.$mainPanel.show();
         },
-        
+
         displayRealName: function(username,$targetSpan) {
 	    var self = this;
 	    // todo : use globus to populate user names, but we use a hack because of globus CORS headers
 	    if (self.ws) { // make sure we are logged in and have some things
-		
+
                 if (self.real_name_lookup[username]) {
                     $targetSpan.html(self.real_name_lookup[username]+" ("+username+")");
                 } else {
@@ -730,11 +810,11 @@
                 }
 	    }
         },
-        
+
         getLandingPageMap: function() {
             this.ws_landing_page_map = window.kbconfig.landing_page_map;
         },
-        
+
         loggedInCallback: function(event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
             this.getExampleDataAndRender();
@@ -746,54 +826,13 @@
             this.isLoggedIn = false;
             return this;
         },
-        
+
         logoColorLookup:function(type) {
-            var colors = [
-                            '#F44336', //red
-                            '#E91E63', //pink
-                            '#9C27B0', //purple
-                            '#673AB7', //deep purple
-                            '#3F51B5', //indigo
-                            '#2196F3', //blue
-                            '#03A9F4', //light blue
-                            '#00BCD4', //cyan
-                            '#009688', //teal
-                            '#4CAF50', //green
-                            '#8BC34A', //lime green
-                            '#CDDC39', //lime
-                            '#FFEB3B', //yellow
-                            '#FFC107', //amber
-                            '#FF9800', //orange
-                            '#FF5722', //deep orange
-                            '#795548', //brown
-                            '#9E9E9E', //grey
-                            '#607D8B'  //blue grey
-                         ];
-            
-            // first, if there are some colors we want to catch...
-            switch (type) {
-                case "Genome":
-                    return '#2196F3'; //blue
-                case "FBAModel":
-                    return '#4CAF50'; //green
-                case "FBA":
-                    return '#F44336'; //red
-                case "ContigSet":
-                    return '#FF9800'; //orange
-                case "ProteomeComparison":
-                    return '#3F51B5'; //indigo
-                case "Tree":
-                    return '#795548'; //brown
-            }
-            
-            // pick one based on the characters
-            var code = 0;
-            for(var i=0; i<type.length; i++) {
-                code += type.charCodeAt(i);
-            }
-            return colors[ code % colors.length ];
+          var code = 0;
+          for (var i=0; i < type.length; code += type.charCodeAt(i++));
+          return this.icon_colors[ code % this.icon_colors.length ];
         }
-        
+
     })
 
 })(jQuery);

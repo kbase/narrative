@@ -1,0 +1,28 @@
+{% extends "page.html" %}
+
+{% block stylesheet %}
+    {{ super() }}
+{% endblock %}
+
+{% block site %}
+    <style>
+        body {
+            overflow: auto;
+        }
+        #site {
+            display: block;
+            padding: 0 50px;
+        }
+    </style>
+
+    <h1>Narrative object (<small>{{ narr_id }}</small>) not found, or you do not have permissions to read
+        it.</h1>
+    <p>Please click the back button to return to the previous page, or
+      <a href="{{base_project_url}}">click here</a> to go to the home page.
+    </p>
+    <br/>
+    <p>If you think this is an error, please notify <a href="mailto:help@kbase.us"
+      target="_blank">help@kbase.us</a>.
+
+    </p>
+{% endblock %}

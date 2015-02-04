@@ -1,0 +1,70 @@
+@charset "UTF-8";
+
+@font-face {
+  font-family: "untitled-font-1";
+  src:url("../fonts/kbase-icons.eot");
+  src:url("../fonts/kbase-icons.eot?#iefix") format("embedded-opentype"),
+    url("../fonts/kbase-icons.woff") format("woff"),
+    url("../fonts/kbase-icons.ttf") format("truetype"),
+    url("../fonts/kbase-icons.svg#untitled-font-1") format("svg");
+  font-weight: normal;
+  font-style: normal;
+
+}
+
+[data-icon]:before {
+  font-family: "untitled-font-1" !important;
+  content: attr(data-icon);
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[class^="icon-"]:before,
+[class*=" icon-"]:before {
+  font-family: "untitled-font-1" !important;
+  font-style: normal !important;
+  font-weight: normal !important;
+  font-variant: normal !important;
+  text-transform: none !important;
+  speak: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-flow-tree:before {
+  content: "a";
+}
+.icon-switch:before {
+  content: "b";
+}
+.icon-microscope:before {
+  content: "d";
+}
+.icon-bug:before {
+  content: "c";
+}
+.icon-compare:before {
+  content: "e";
+}
+.icon-genome:before {
+  content: "f";
+}
+.icon-horiz-tree:before {
+  content: "h";
+}
+.icon-metagenome:before {
+  content: "i";
+}
+.icon-metabolism:before {
+  content: "g";
+}
+.icon-dzone:before {
+  content: "j";
+}

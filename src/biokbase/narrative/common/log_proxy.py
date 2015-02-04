@@ -20,7 +20,7 @@ import time
 import yaml
 # Local
 from biokbase import narrative
-from biokbase.narrative.common.util import parse_kvp
+from biokbase.narrative.common.kvp import parse_kvp
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import log_common
 
@@ -319,35 +319,50 @@ class LogStreamForwarder(asyncore.dispatcher):
         asyncore.dispatcher.__init__(self, sock)
         self._meta, self._hnd = meta, hnd
         self._hdr, self._dbg = '', g_log.isEnabledFor(logging.DEBUG)
+        self._body, self._body_remain = '', 0
+
+    def writable(self):
+        return False
 
     def handle_read(self):
-        # Read header
-        chunk = self.recv(4 - len(self._hdr))
-        self._hdr += chunk
-        if len(self._hdr) < 4:
-            return
-        # Parse data
-        size = struct.unpack('>L', self._hdr)[0]
-        if size > 65536:
-            g_log.error("Log message size ({:d}) > 64K, possibly corrupt header"
-                        ": <{}>".format(size, self._hdr))
+        # read header
+        if self._body_remain == 0:
+            chunk = self.recv(4 - len(self._hdr))
+            self._hdr += chunk
+            if len(self._hdr) < 4:
+                return
+            # Parse data and calc. body
+            size = struct.unpack('>L', self._hdr)[0]
+            if size > 65536:
+                g_log.error("Log message size ({:d}) > 64K, possibly corrupt header"
+                            ": <{}>".format(size, self._hdr))
+                self._hdr = ''
+                return
+            self._body_remain = size
             self._hdr = ''
-            return
-        self._hdr = ''
-        chunk = self.recv(size)
-        while len(chunk) < size:
-            chunk = chunk + self.recv(size - len(chunk))
-        record = pickle.loads(chunk)
-
-        if self._dbg:
-            g_log.debug("handle_read: record={}".format(record))
-
-        meta = self._meta or {}
-        # Dispatch to handlers
-        for h in self._hnd:
             if self._dbg:
-                g_log.debug("Dispatch to handler {}".format(h))
-            h.handle(record, meta)
+                g_log.debug("Expect msg size={}".format(size))
+        # read body data
+        if self._body_remain > 0:
+            chunk = self.recv(self._body_remain)
+            self._body += chunk
+            self._body_remain -= len(chunk)
+            if self._body_remain == 0:
+                # got whole body, now process it
+                try:
+                    record = pickle.loads(chunk)
+                except Exception as err:
+                    g_log.error("Could not unpickle record: {}".format(err))
+                    self._body = ''
+                    return
+                if self._dbg:
+                    g_log.debug("handle_read: record={}".format(record))
+                meta = self._meta or {}
+                # Dispatch to handlers
+                for h in self._hnd:
+                    if self._dbg:
+                        g_log.debug("Dispatch to handler {}".format(h))
+                    h.handle(record, meta)
 
 # Handlers
 
@@ -357,7 +372,7 @@ class Handler(object):
     EXTRACT_META = {
         'session': 'session_id',
         'narrative': 'narr',
-        'client_ip': 'client.ip',
+        'client_ip': 'client_ip',
         'user': 'user'}
 
     def _get_record_meta(self, record):
@@ -375,7 +390,7 @@ class MongoDBHandler(Handler):
             g_log.error("Bad input to 'handle_read': {}".format(err))
             return
         kbrec.record.update(meta)
-        kbrec.record.update(self._get_record_meta())
+        kbrec.record.update(self._get_record_meta(kbrec.record))
         self._coll.insert(kbrec.record)
 
 class SyslogHandler(Handler):
@@ -451,8 +466,11 @@ class DBRecord(object):
         # Event gets its own field, too
         rec['event'] = event
         # Levelname is too long
-        rec['level'] = rec['levelname']
-        del rec['levelname']
+        if 'levelname' in rec:
+            rec['level'] = rec['levelname']
+            del rec['levelname']
+        else:
+            rec['level'] = logging.getLevelName(logging.INFO)
 
     def _strip_logging_junk(self):
         """Delete/rename fields from logging library."""
@@ -551,4 +569,3 @@ def run(args):
     g_log.debug("Stop main loop")
 
     return 0
-

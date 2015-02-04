@@ -13,7 +13,8 @@
         	addToNarrativeButton: null,
         	selectedItems: null,
         	landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/json/" // ws_name/obj_name,
+		lp_url: "/functional-site/#/dataview/"
+	    
         },
         token: null,
         wsName: null,
@@ -50,6 +51,11 @@
         init: function(options) {
             this._super(options);
             var self = this;
+	    if (window.kbconfig.urls) {
+		if (window.kbconfig.urls.landing_pages) {
+		    this.options.lp_url = window.kbconfig.urls.landing_pages;
+		}
+	    }
             $(document).on(
             		'setWorkspaceName.Narrative', $.proxy(function(e, info) {
                         //console.log('side panel import tab -- setting ws to ' + info.wsId);
@@ -374,12 +380,7 @@
                 shortName = shortName.substring(0,this.maxNameLength-3)+'...';
                 isShortened=true;
             }
-            var landingPageLink = this.options.default_landing_page_url + object.ws + '/' + object.id;
-            var ws_landing_page_map = window.kbconfig.landing_page_map;
-            if (ws_landing_page_map && ws_landing_page_map[type_module] && ws_landing_page_map[type_module][type]) {
-            	landingPageLink = this.options.landing_page_url +
-            			ws_landing_page_map[type_module][type] + "/" + object.ws + '/' + object.id;
-            }
+            var landingPageLink = this.options.lp_url + object.ws + '/' + object.id;
             var $name = $('<span>').addClass("kb-data-list-name").append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
             if (isShortened) { $name.tooltip({title:object.name, placement:'bottom'}); }
 

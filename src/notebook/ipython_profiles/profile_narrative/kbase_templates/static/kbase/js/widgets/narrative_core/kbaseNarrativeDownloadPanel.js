@@ -36,14 +36,14 @@
 		'KBaseFile.PairedEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
 		
 		'KBaseFBA.FBAModel':[{name: "SBML", external_type: 'SBML.FBAModel', transform_options: {}},
-				     {name: "CSV", external_type: 'CSV.FBAModel', transform_options: {}}],
+				     {name: "TSV", external_type: 'CSV.FBAModel', transform_options: {}}],
 		
-		'KBaseFBA.FBA':[{name: "CSV", external_type: 'CSV.FBA', transform_options: {}}],
+		'KBaseFBA.FBA':[{name: "TSV", external_type: 'CSV.FBA', transform_options: {}}],
 		
-		'KBaseBiochem.Media':[{name: "CSV", external_type: 'CSV.Media', transform_options: {}}],
+		'KBaseBiochem.Media':[{name: "TSV", external_type: 'CSV.Media', transform_options: {}}],
 		
-		'KBasePhenotypes.PhenotypeSet':[{name: "CSV", external_type: 'CSV.PhenotypeSet', transform_options: {}}],
-		'KBasePhenotypes.PhenotypeSimulationSet':[{name: "CSV", external_type: 'CSV.PhenotypeSimulationSet', transform_options: {}}]
+		'KBasePhenotypes.PhenotypeSet':[{name: "TSV", external_type: 'CSV.PhenotypeSet', transform_options: {}}],
+		'KBasePhenotypes.PhenotypeSimulationSet':[{name: "TSV", external_type: 'CSV.PhenotypeSimulationSet', transform_options: {}}]
 	},
 
         init: function(options) {

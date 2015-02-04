@@ -11,7 +11,6 @@
             ws_name: null, // must be the WS name, not the WS Numeric ID
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             exampleWsId: 2901, // designed to be a workspace with just a handful of objects
 	    $importStatus:$('<div>'),
@@ -29,7 +28,6 @@
 
         ws: null,
         narWs:null,
-        ws_landing_page_map: {},
 
         $mainPanel:null,
         $loadingDiv:null,
@@ -47,7 +45,6 @@
         init: function(options) {
             this._super(options);
             var self = this;
-            this.getLandingPageMap();  //start off this request so that we hopefully get something back right away
 
             this.$loadingDiv = $('<div>').addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">');
@@ -261,17 +258,7 @@
                 }
             }
             /*
-            var landingPageLink = this.options.default_landing_page_url +object_info[7]+ '/' + object_info[1];
-            if (this.ws_landing_page_map) {
-                if (this.ws_landing_page_map[type_module]) {
-                    if (this.ws_landing_page_map[type_module][type]) {
-                        landingPageLink = this.options.landing_page_url +
-                            this.ws_landing_page_map[type_module][type] + "/" +
-                            object_info[7]+ '/' + object_info[1];
-                    }
-                }
-            }
-
+            
             var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
                                 .append($('<div>').css({'text-align':'center','margin':'5pt'})
                                             .append('<a href="'+landingPageLink+'" target="_blank">'+
@@ -809,10 +796,6 @@
                         });
                 }
 	    }
-        },
-
-        getLandingPageMap: function() {
-            this.ws_landing_page_map = window.kbconfig.landing_page_map;
         },
 
         loggedInCallback: function(event, auth) {

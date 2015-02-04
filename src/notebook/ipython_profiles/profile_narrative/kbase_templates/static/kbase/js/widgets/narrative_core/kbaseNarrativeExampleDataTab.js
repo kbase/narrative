@@ -45,7 +45,6 @@
         init: function(options) {
             this._super(options);
             var self = this;
-            this.getLandingPageMap();  //start off this request so that we hopefully get something back right away
 
             this.$loadingDiv = $('<div>').addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">');

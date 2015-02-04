@@ -10,6 +10,7 @@ __Changes__
 - Fixed minor issue with tab highlighting still being bezeled
 - Hid button for method gallery :(
 - Fixed more inconsistent font issues on buttons
+- Modified text on 3-bar menu, added link to dashboard
 
 ### Version 0.5.0 - 2/3/2015
 __Changes__

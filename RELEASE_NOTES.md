@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.5.1 - 2/4/2015
+__Changes__
+- Updated data and app icons, and docs about them
+- Added stats tab to metagenome collection view
+- Fixed minor issue with tab highlighting still being bezeled
+- Hid button for method gallery :(
+- Fixed more inconsistent font issues on buttons
+
 ### Version 0.5.0 - 2/3/2015
 __Changes__
 - Refactor to parts of Narrative init module

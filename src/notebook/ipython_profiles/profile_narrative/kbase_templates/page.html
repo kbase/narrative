@@ -291,13 +291,17 @@
                 dataType: 'json'
             }).responseText
         );
-        var landingPageMap = $.parseJSON(
+        var landingPageMap = {}; /*
+	we no longer use the crazy landing page map, but keep the variable here
+	so things we don't know about don't break
+	
+	$.parseJSON(
             $.ajax({
                 url: "{{ static_url('kbase/landing_page_map.json') }}",
                 async: false,
                 dataType: 'json'
             }).responseText
-        );
+        );*/
         var icons = $.parseJSON(
           $.ajax({
             url: "{{ static_url('kbase/icons.json') }}",

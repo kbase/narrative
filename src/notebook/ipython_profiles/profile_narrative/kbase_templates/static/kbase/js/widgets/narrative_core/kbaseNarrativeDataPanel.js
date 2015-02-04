@@ -129,8 +129,6 @@
                 this)
             );
 
-            this.landingPageMap = window.kbconfig.landing_page_map;
-
             // initialize the importer
             this.dataImporter();
 
@@ -1236,15 +1234,11 @@
             }
 
             function objURL(module, type, ws, name) {
-                var mapping = window.kbconfig.landing_page_map;
-                if (mapping[module] && mapping[module][type]) {
-                    return self.options.landingPageURL+mapping[module][type]+'/'+ws+'/'+name;
-                }
-                return self.options.landingPageURL+'json/'+ws+'/'+name;
+                return self.options.lp_url+ws+'/'+name;
             }
 
             function wsURL(ws) {
-                return self.options.landingPageURL+'ws/'+ws;
+                return ''; // no more links to WS Browser
             }
 
             var monthLookup = ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"];

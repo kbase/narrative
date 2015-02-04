@@ -50,7 +50,6 @@
 
         n_objs_rendered:0,
 
-        ws_landing_page_map: {},
         real_name_lookup: {},
 
         $searchInput: null,
@@ -1306,10 +1305,6 @@
                         });
                 }
 	    }
-        },
-
-        getLandingPageMap: function() {
-            this.ws_landing_page_map = window.kbconfig.landing_page_map;
         },
 
         /**

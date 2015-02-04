@@ -105,6 +105,8 @@ There’s a little tweaking that needs to happen here - the `lua_package_path` l
 
 One last step before getting Docker and the Narrative installed is the installation of a couple of Javascript packages. These are used by the build script to concatenate and minify the Narrative front end extensions to the IPython Notebook
 
+    sudo apt-get nodejs           # needed on Ubuntu 14.04/trusty systems
+    sudo apt-get nodejs-legacy    # needed on Ubuntu 14.04/trusty systems
     sudo apt-get install npm
     sudo npm install -g grunt-cli
 

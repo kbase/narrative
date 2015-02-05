@@ -120,8 +120,6 @@
             }
             this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             this.options.ws_url = window.kbconfig.urls.workspace;
-            this.data_icons = window.kbconfig.icons.data;
-            this.icon_colors = window.kbconfig.icons.colors;
 
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
@@ -568,29 +566,9 @@
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
             var unversioned_full_type = type_module + '.' + type;
-            var icons = this.data_icons;
-            var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
-            var icon_cls = icon.join(' ');
-            var $logo = $('<div>')
-              // background circle
-              .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
-                .append($('<i>')
-                .addClass("fa fa-circle fa-stack-2x")
-                .css({'color':this.logoColorLookup(type)}));
-            if (this.isCustomIcon(icon)) {
-                // add custom icons (side-by-side? not really defined..)
-                _.each(icon, function (cls) {
-                    $logo.append($('<i>')
-                      .addClass("icon fa-inverse fa-stack-2x " + cls));
-                });
-            }
-            else {
-                // add stack of font-awesome icons
-                _.each(icon, function(cls) {
-                  $logo.append($('<i>')
-                    .addClass("fa fa-inverse fa-stack-1x " + cls));
-                });
-            }
+            var $logo = $('<div>');
+            // set icon
+            $(document).trigger("setDataIcon.Narrative", {elt: $logo, type: type});
             // add behavior
             $logo.click(function(e) {
                 e.stopPropagation();
@@ -710,11 +688,6 @@
                                 .append($row);
 
             return $rowWithHr;
-        },
-
-        isCustomIcon: function(icon_list) {
-          return (icon_list.length > 0 && icon_list[0].length > 4 &&
-                  icon_list[0].substring(0, 4) == 'icon');
         },
 
         // ============= DnD ==================
@@ -1348,12 +1321,6 @@
             if (this.ws_name)
                 this.refresh();
             return this;
-        },
-
-        logoColorLookup:function(type) {
-          var code = 0;
-          for (var i=0; i < type.length; code += type.charCodeAt(i++));
-          return this.icon_colors[ code % this.icon_colors.length ];
         },
 
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site

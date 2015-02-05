@@ -69,6 +69,10 @@
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+                // For generating data/method icons
+                this.data_icons = window.kbconfig.icons.data;
+                this.meth_icons = window.kbconfig.icons.methods;
+                this.icon_colors = window.kbconfig.icons.colors;
             }
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
 
@@ -191,6 +195,18 @@
                     this.createViewerCell(data.nearCellIdx, data, data.widget);
                 }, this)
             );
+
+            // Global functions for setting icons
+            $(document).on('setDataIcon.Narrative',
+              $.proxy(function (e, param) {
+                    this.setDataIcon(param.elt, param.type)
+                },
+                this));
+            $(document).on('setMethodIcon.Narrative',
+              $.proxy(function (e, param) {
+                    this.setMethodIcon(param.elt, param.is_app)
+                },
+                this));
 
             this.initDeleteCellModal();
             // Initialize the data table.
@@ -2195,6 +2211,85 @@
                 }
             }
         },
+
+        /**
+         * Set the visual icon for a data object shown in a
+         * list or panel of the narrative.
+         *
+         * @param $logo - Target element
+         * @param type - Name of data type
+         */
+        setDataIcon: function ($logo, type) {
+            if ($logo.hasClass('exampleDataIcon')) {
+                console.debug("SET EXAMPLE ICON");
+            }
+            var icons = this.data_icons;
+            var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
+            // background circle
+            $logo.addClass("fa-stack fa-2x").css({'cursor': 'pointer'})
+              .append($('<i>')
+                .addClass("fa fa-circle fa-stack-2x")
+                .css({'color': this.logoColorLookup(type)}));
+            if (this.isCustomIcon(icon)) {
+                // add custom icons (more than 1 will look weird, though)
+                _.each(icon, function (cls) {
+                    $logo.append($('<i>')
+                      .addClass("icon fa-inverse fa-stack-1x " + cls));
+                });
+            }
+            else {
+                // add stack of font-awesome icons
+                _.each(icon, function (cls) {
+                    $logo.append($('<i>')
+                      .addClass("fa fa-inverse fa-stack-1x " + cls));
+                });
+            }
+        },
+
+        /**
+         * Set the visual icon for a method or app.
+         *
+         * @param $logo - Target element
+         * @param is_app - Boolean for app or method
+         */
+        setMethodIcon: function ($logo, is_app) {
+            var name = is_app ? "app" : "method";
+            var ci = is_app ? 9 : 5; // color index
+            var icon = this.meth_icons[name];
+            // background
+            $logo.addClass("fa-stack fa-2x").css({'cursor': 'pointer'})
+              .append($('<i>')
+                .addClass("fa fa-square fa-stack-2x")
+                .css({'color': this.icon_colors[ci]}));
+            // add stack of font-awesome icons
+            _.each(icon, function (cls) {
+                $logo.append($('<i>')
+                  .addClass("fa fa-inverse fa-stack-1x " + cls));
+            });
+        },
+
+        /**
+         * Whether the stack of icons is using font-awesome
+         * or our own custom set.
+         *
+         * @param icon_list {list of str} Icon classes, from icons.json
+         * @returns {boolean}
+         */
+        isCustomIcon: function (icon_list) {
+            return (icon_list.length > 0 && icon_list[0].length > 4 &&
+            icon_list[0].substring(0, 4) == 'icon');
+        },
+
+        /**
+         * Get color for data or method icon.
+         * @param type
+         * @returns {string} Color code
+         */
+        logoColorLookup: function (type) {
+            var code = 0;
+            for (var i = 0; i < type.length; code += type.charCodeAt(i++));
+            return this.icon_colors[code % this.icon_colors.length];
+        }
 
     });
 

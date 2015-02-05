@@ -547,8 +547,8 @@
                                                                             });
                                                                     
                                                                     },
-                                                                    function name(error) {
-                                                                        
+                                                                    function (error) {
+                                                                        console.log('Error when setting ws metadata!', error);
                                                                     });
                                                                 
                                                                 
@@ -822,7 +822,7 @@
                                                                                             ]},
                                                                                             function(info) {
                                                                                                 console.log('copying complete',info);
-                                                                                                $thisBtn.prop('disabled', false).empty().append($active);
+                                                                                                $thisBtn.prop('disabled', false).empty().append(active);
                                                                                                 $alertContainer.empty();
                                                                                                 self.refresh();
                                                                                             },
@@ -856,7 +856,7 @@
                                                     .append($('<button>').addClass('kb-data-list-cancel-btn')
                                                         .append('Cancel')
                                                         .click(function() {
-                                                            $cpyBtn.prop('disabled', false).empty().append($active);
+                                                            $cpyBtn.prop('disabled', false).empty().append(active);
                                                             $alertContainer.empty();
                                                         } )));
                                     },

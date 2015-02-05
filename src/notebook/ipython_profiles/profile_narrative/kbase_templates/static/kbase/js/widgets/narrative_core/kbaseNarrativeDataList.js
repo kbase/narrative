@@ -1093,6 +1093,7 @@
                 } else {
                     self.$filterTypeSelect.prepend($('<option value="">').append("Show All Types ("+runningCount+" objects)"));
                 }
+                self.$filterTypeSelect.val("");
             }
         },
 

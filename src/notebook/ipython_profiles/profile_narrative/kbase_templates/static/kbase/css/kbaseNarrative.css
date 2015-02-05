@@ -2119,10 +2119,14 @@ div[class="tooltip-inner"] {
   margin-right: 3px;
 }
 .kb-data-icon-unudge {
-  margin-bottom: 0.5em;
+  margin-bottom: 3px;
 }
 .kb-data-icon-dnudge {
-  margin-top: 0.5em;
+  margin-top: 3px;
+}
+
+.kb-data-icon-dnudge2 {
+    margin-top: 6px;
 }
 
 .kb-data-list-info {

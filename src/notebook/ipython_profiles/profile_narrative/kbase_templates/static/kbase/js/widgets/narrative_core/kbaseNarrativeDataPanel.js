@@ -1029,26 +1029,7 @@
                 var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
                 var icons = self.data_icons;
                 var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
-                var $logo = $('<span>')
-                  // background circle
-                  .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
-                  .append($('<i>')
-                    .addClass("fa fa-circle fa-stack-2x")
-                    .css({'color': self.logoColorLookup(type)}));
-                if (self.isCustomIcon(icon)) {
-                    // add custom icons (side-by-side? not really defined..)
-                    _.each(icon, function (cls) {
-                        $logo.append($('<i>')
-                          .addClass("icon fa-inverse fa-stack-2x " + cls));
-                    });
-                }
-                else {
-                    // add stack of font-awesome icons
-                    _.each(icon, function (cls) {
-                        $logo.append($('<i>')
-                          .addClass("fa fa-inverse fa-stack-1x " + cls));
-                    });
-                }
+                var $logo = $('<span>');
 
                 var shortName = object_info[1]; var isShortened=false;
                 if (shortName.length>50) {
@@ -1197,6 +1178,11 @@
                                                  .append($logo))
                                          .append($('<td>')
                                                  .append($mainDiv)));
+                // set icon for data item
+                $(document).trigger("setDataIcon.Narrative", {
+                    elt: $logo,
+                    type: type
+                });
 
                 var $row = $('<div>')
                                 .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
@@ -1299,6 +1285,7 @@
             for (var i=0; i < type.length; code += type.charCodeAt(i++));
             return this.icon_colors[ code % this.icon_colors.length ];
         }
+
 
     });
 

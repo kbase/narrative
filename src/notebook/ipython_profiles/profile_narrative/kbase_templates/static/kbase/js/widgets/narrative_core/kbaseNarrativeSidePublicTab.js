@@ -413,49 +413,23 @@
             	titleElement.append('<br>').append(value);
             }
 
-      var icons = this.data_icons;
-      var icon = null;
-      if (icons) {
-    	  icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
-      } else {
-    	  ison = [];
-      }
-      var $logo = $('<span>')
-      // background circle
-      .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
-      .append($('<i>')
-      .addClass("fa fa-circle fa-stack-2x")
-      .css({'color': this.logoColorLookup(type)}));
-			if (this.isCustomIcon(icon)) {
-				// add custom icons (side-by-side? not really defined..)
-				_.each(icon, function (cls) {
-					$logo.append($('<i>')
-						.addClass("icon fa-inverse fa-stack-2x " + cls));
-				});
-			}
-			else {
-				// add stack of font-awesome icons
-				_.each(icon, function (cls) {
-					$logo.append($('<i>')
-						.addClass("fa fa-inverse fa-stack-1x " + cls));
-				});
-			}
-
+					// Set data icon
+					var $logo = $('<span>');
+					console.debug("setDataIcon:public type=", type);
+					$(document).trigger('setDataIcon.Narrative', {elt: $logo, type: type});
 
 					var $topTable = $('<table>')
-                                 .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
-                                 .append($('<tr>')
-                                         .append($('<td>')
-                                                 .css({'width':'90px'})
-                                                .append($addDiv.hide()))
-                                         .append($('<td>')
-                                                 .css({'width':'50px'})
-                                                 .append($logo))/*$('<span>')
-                                            		 	.addClass("kb-data-list-logo")
-                                            		 	.css({'background-color':this.logoColorLookup(type)})
-                                            		 	.append(type.substring(0,1))))*/
-                                         .append($('<td>')
-                                                 .append(titleElement)));
+						// set background to white looks better on DnD
+						.css({'width':'100%','background':'#fff'})
+						.append($('<tr>')
+							.append($('<td>')
+								.css({'width':'90px'})
+												.append($addDiv.hide()))
+								 .append($('<td>')
+												 .css({'width':'50px'})
+												 .append($logo))
+								 .append($('<td>')
+												 .append(titleElement)));
 
 	    var $row = $('<div>')
                                 .css({margin:'2px',padding:'4px','margin-bottom': '5px'})

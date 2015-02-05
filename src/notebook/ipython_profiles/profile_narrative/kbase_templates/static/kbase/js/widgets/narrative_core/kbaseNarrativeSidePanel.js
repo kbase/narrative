@@ -21,10 +21,11 @@
         init: function(options) {
             this._super(options);
 
-            // make sure we pick up the proper config urls
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.workspaceURL = window.kbconfig.urls.workspace;
+            if (!window.kbconfig || !window.kbconfig.urls || !window.kbconfig.urls.workspace) {
+                KBFatal('kbaseNarrativeSidePanel.init', 'Failed to load base configuration');
+                return this;
             }
+            this.options.workspaceURL = window.kbconfig.urls.workspace;
 
             var analysisWidgets = this.buildPanelSet([
                 {
@@ -266,7 +267,6 @@
 
         render: function() {
             this.initOverlay();
-
             this.$methodsWidget.refreshFromService();
         }
 

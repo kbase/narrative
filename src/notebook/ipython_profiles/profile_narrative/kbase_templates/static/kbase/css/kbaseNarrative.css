@@ -423,7 +423,8 @@ p#site-title {
 
 .kb-side-header.overlay-active {
     background-color: gray;
-    border: 6px solid gray;
+    border-bottom: 6px solid gray;
+    border-top: 6px solid gray;
 }
 
 .kb-side-header:hover {
@@ -2118,10 +2119,14 @@ div[class="tooltip-inner"] {
   margin-right: 3px;
 }
 .kb-data-icon-unudge {
-  margin-bottom: 0.5em;
+  margin-bottom: 3px;
 }
 .kb-data-icon-dnudge {
-  margin-top: 0.5em;
+  margin-top: 3px;
+}
+
+.kb-data-icon-dnudge2 {
+    margin-top: 6px;
 }
 
 .kb-data-list-info {
@@ -2362,4 +2367,18 @@ div[class="tooltip-inner"] {
 
 .kb-import-status {
     margin: 20px;
+}
+
+/* Error dialog */
+.kb-error-dialog strong {
+    color: darkgreen; /*  Douglas Adams forever */
+}
+.kb-err-text {
+    color: black;
+    font-family: Consolas, "Courier New", monospace;
+}
+.kb-err-warn {
+    color: firebrick;
+    font-style: italic;
+    margin-top: 0.5em;
 }

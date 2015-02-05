@@ -13,7 +13,8 @@
         	addToNarrativeButton: null,
         	selectedItems: null,
         	landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/json/" // ws_name/obj_name,
+		lp_url: "/functional-site/#/dataview/"
+	    
         },
         token: null,
         wsName: null,
@@ -50,6 +51,11 @@
         init: function(options) {
             this._super(options);
             var self = this;
+	    if (window.kbconfig.urls) {
+		if (window.kbconfig.urls.landing_pages) {
+		    this.options.lp_url = window.kbconfig.urls.landing_pages;
+		}
+	    }
             $(document).on(
             		'setWorkspaceName.Narrative', $.proxy(function(e, info) {
                         //console.log('side panel import tab -- setting ws to ' + info.wsId);
@@ -334,7 +340,7 @@
             var $addDiv =
                 $('<div>').append(
                     $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
-                        .append($('<span>').addClass('fa fa-chevron-circle-left').append(' Add'))
+                        .append($('<span>').addClass('fa fa-chevron-circle-left')).append(' Add')
                         .on('click',function() { // probably should move action outside of render func, but oh well
                             $(this).attr("disabled","disabled");
                             $(this).html('<img src="'+self.loadingImage+'">');
@@ -374,12 +380,7 @@
                 shortName = shortName.substring(0,this.maxNameLength-3)+'...';
                 isShortened=true;
             }
-            var landingPageLink = this.options.default_landing_page_url + object.ws + '/' + object.id;
-            var ws_landing_page_map = window.kbconfig.landing_page_map;
-            if (ws_landing_page_map && ws_landing_page_map[type_module] && ws_landing_page_map[type_module][type]) {
-            	landingPageLink = this.options.landing_page_url +
-            			ws_landing_page_map[type_module][type] + "/" + object.ws + '/' + object.id;
-            }
+            var landingPageLink = this.options.lp_url + object.ws + '/' + object.id;
             var $name = $('<span>').addClass("kb-data-list-name").append('<a href="'+landingPageLink+'" target="_blank">' + shortName + '</a>');
             if (isShortened) { $name.tooltip({title:object.name, placement:'bottom'}); }
 
@@ -412,39 +413,23 @@
             	titleElement.append('<br>').append(value);
             }
 
-      var icons = this.data_icons;
-      var icon = null;
-      if (icons) {
-    	  icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
-      } else {
-    	  ison = [];
-      }
-      var $logo = $('<span>')
-      // background circle
-      .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
-      .append($('<i>')
-      .addClass("fa fa-circle fa-stack-2x")
-      .css({'color': this.logoColorLookup(type)}));
-      // add stack of font-awesome icons
-      _.each(icon, function(cls) {
-        $logo.append($('<i>')
-        .addClass("fa fa-inverse fa-stack-1x " + cls));
-      });
+					// Set data icon
+					var $logo = $('<span>');
+					//console.debug("setDataIcon:public type=", type);
+					$(document).trigger('setDataIcon.Narrative', {elt: $logo, type: type});
 
-	    var $topTable = $('<table>')
-                                 .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
-                                 .append($('<tr>')
-                                         .append($('<td>')
-                                                 .css({'width':'90px'})
-                                                .append($addDiv.hide()))
-                                         .append($('<td>')
-                                                 .css({'width':'50px'})
-                                                 .append($logo))/*$('<span>')
-                                            		 	.addClass("kb-data-list-logo")
-                                            		 	.css({'background-color':this.logoColorLookup(type)})
-                                            		 	.append(type.substring(0,1))))*/
-                                         .append($('<td>')
-                                                 .append(titleElement)));
+					var $topTable = $('<table>')
+						// set background to white looks better on DnD
+						.css({'width':'100%','background':'#fff'})
+						.append($('<tr>')
+							.append($('<td>')
+								.css({'width':'90px'})
+												.append($addDiv.hide()))
+								 .append($('<td>')
+												 .css({'width':'50px'})
+												 .append($logo))
+								 .append($('<td>')
+												 .append(titleElement)));
 
 	    var $row = $('<div>')
                                 .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
@@ -471,7 +456,12 @@
             return $rowWithHr;
         },
 
-        showError: function(error) {
+			isCustomIcon: function (icon_list) {
+				return (icon_list.length > 0 && icon_list[0].length > 4 &&
+				icon_list[0].substring(0, 4) == 'icon');
+			},
+
+			showError: function(error) {
         	console.log(error);
         	var errorMsg = error;
         	if (error.error && error.error.message)

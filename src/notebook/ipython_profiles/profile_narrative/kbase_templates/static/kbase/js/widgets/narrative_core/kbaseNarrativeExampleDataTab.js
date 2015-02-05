@@ -11,7 +11,6 @@
             ws_name: null, // must be the WS name, not the WS Numeric ID
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             exampleWsId: 2901, // designed to be a workspace with just a handful of objects
 	    $importStatus:$('<div>'),
@@ -29,7 +28,6 @@
 
         ws: null,
         narWs:null,
-        ws_landing_page_map: {},
 
         $mainPanel:null,
         $loadingDiv:null,
@@ -47,7 +45,6 @@
         init: function(options) {
             this._super(options);
             var self = this;
-            this.getLandingPageMap();  //start off this request so that we hopefully get something back right away
 
             this.$loadingDiv = $('<div>').addClass('kb-data-loading')
                                  .append('<img src="' + this.options.loadingImage + '">');
@@ -67,7 +64,7 @@
             $(document).on('setWorkspaceName.Narrative', function(e, info){
                 self.narWs = info.wsId;
                 self.getExampleDataAndRender();
-            })
+            });
             return this;
         },
 
@@ -210,7 +207,7 @@
             var $addDiv =
                 $('<div>').append(
                     $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
-                        .append($('<span>').addClass('fa fa-chevron-circle-left').append(' Add'))
+                        .append($('<span>').addClass('fa fa-chevron-circle-left')).append(' Add')
                         .on('click',function() { // probably should move action outside of render func, but oh well
                             $(this).attr("disabled","disabled");
                             $(this).html('<img src="'+self.options.loadingImage+'">');
@@ -261,17 +258,7 @@
                 }
             }
             /*
-            var landingPageLink = this.options.default_landing_page_url +object_info[7]+ '/' + object_info[1];
-            if (this.ws_landing_page_map) {
-                if (this.ws_landing_page_map[type_module]) {
-                    if (this.ws_landing_page_map[type_module][type]) {
-                        landingPageLink = this.options.landing_page_url +
-                            this.ws_landing_page_map[type_module][type] + "/" +
-                            object_info[7]+ '/' + object_info[1];
-                    }
-                }
-            }
-
+            
             var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
                                 .append($('<div>').css({'text-align':'center','margin':'5pt'})
                                             .append('<a href="'+landingPageLink+'" target="_blank">'+
@@ -297,32 +284,21 @@
                     });*/
             var icons = this.data_icons;
             var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
-            var $logo = $('<span>')
-            // background circle
-            .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
-            .append($('<i>')
-            .addClass("fa fa-circle fa-stack-2x")
-            .css({'color': this.logoColorLookup(type)}));
-            // add stack of font-awesome icons
-            _.each(icon, function(cls) {
-              $logo.append($('<i>')
-              .addClass("fa fa-inverse fa-stack-1x " + cls));
-            });
-
+            var $logo = $('<span>');
             var $topTable = $('<table>')
-                                 .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
-                                 .append($('<tr>')
-                                         .append($('<td>')
-                                                 .css({'width':'90px'})
-                                                .append($addDiv.hide()))
-                                         .append($('<td>')
-                                                 .css({'width':'50px'})
-                                                 .append($logo))/*$('<span>')
-                                            		 	.addClass("kb-data-list-logo")
-                                            		 	.css({'background-color':this.logoColorLookup(type)})
-                                            		 	.append(type.substring(0,1))))*/
-                                         .append($('<td>')
-                                                 .append($name).append('<br>').append($type)));
+                .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
+                .append($('<tr>')
+                    .append($('<td>')
+                        .css({'width':'90px'})
+                        .append($addDiv.hide()))
+                    .append($('<td>')
+                        .css({'width':'50px'})
+                        .append($logo))/*$('<span>')
+                              .addClass("kb-data-list-logo")
+                              .css({'background-color':this.logoColorLookup(type)})
+                              .append(type.substring(0,1))))*/
+                    .append($('<td>')
+                         .append($name).append('<br>').append($type)));
 
 	    var $row = $('<div>')
                                 .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
@@ -335,11 +311,14 @@
                                 .mouseleave(function(){
                                     $addDiv.hide();
                                 });
+            // set icon
+            $(document).trigger("setDataIcon.Narrative", {
+                elt: $logo,
+                type: type
+            });
 
             return $row;
         },
-
-
 
         renderMore: function() {
             var self=this;
@@ -799,10 +778,6 @@
 	    }
         },
 
-        getLandingPageMap: function() {
-            this.ws_landing_page_map = window.kbconfig.landing_page_map;
-        },
-
         loggedInCallback: function(event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
             this.getExampleDataAndRender();
@@ -814,12 +789,6 @@
             this.isLoggedIn = false;
             return this;
         },
-
-        logoColorLookup:function(type) {
-          var code = 0;
-          for (var i=0; i < type.length; code += type.charCodeAt(i++));
-          return this.icon_colors[ code % this.icon_colors.length ];
-        }
 
     })
 

@@ -9,6 +9,7 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
+kb_require(['kbaseMethodGallery'], 
 (function( $, undefined ) {
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
@@ -47,7 +48,6 @@
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
-                this.meth_icons = window.kbconfig.icons.methods;
                 this.icon_colors = window.kbconfig.icons.colors;
             }
 
@@ -209,12 +209,12 @@
                            .click($.proxy(function(event) {
                                this.$searchDiv.slideToggle(400);
                            }, this)));
-            this.addButton($('<button>')
-                           .addClass('btn btn-xs btn-default')
-                           .append('<span class="fa fa-arrow-right"></span>')
-                           .click($.proxy(function(event) {
-                               this.trigger('toggleSidePanelOverlay.Narrative', this.$methodGallery);
-                           }, this)));
+            // this.addButton($('<button>')
+            //                .addClass('btn btn-xs btn-default')
+            //                .append('<span class="fa fa-arrow-right"></span>')
+            //                .click($.proxy(function(event) {
+            //                    this.trigger('toggleSidePanelOverlay.Narrative', this.$methodGallery);
+            //                }, this)));
 
             if (!NarrativeMethodStore) {
                 this.showError('Unable to connect to KBase Method Store!');
@@ -392,25 +392,13 @@
          * @private
          */
         buildMethod: function(icon, method, triggerFn) {
-            /* Logos */
-            var icon_name = (icon == "A") ? "app" : "method";
-            var icon_color = (icon == "A") ? this.icon_colors[9] : this.icon_colors[5];
-            //var icon_url = "static/kbase/images/" + icon_name + "-icon.png";
-            var icons = this.meth_icons;
-            var icon = icons[icon_name];
-            var $logo = $('<div>')
-              // background
-              .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
-              .append($('<i>')
-                .addClass("fa fa-square fa-stack-2x")
-                .css({'color': icon_color}));
-            // add stack of font-awesome icons
-            _.each(icon, function(cls) {
-              $logo.append($('<i>')
-              .addClass("fa fa-inverse fa-stack-1x " + cls));
-            });
-            // add behavior
-            $logo.click($.proxy(function(e) {
+          // add icon (logo)
+          var $logo = $('<div>');
+          this.trigger('setMethodIcon.Narrative',
+            {elt: $logo, is_app: icon == 'A'});
+          // add behavior
+          $logo.click($.proxy(
+            function(e) {
               e.stopPropagation();
               triggerFn(method);
             }, this));
@@ -874,4 +862,5 @@
             this.trigger('toggleSidePanelOverlay.Narrative');
         },
     });
-})( jQuery );
+})( jQuery )
+);

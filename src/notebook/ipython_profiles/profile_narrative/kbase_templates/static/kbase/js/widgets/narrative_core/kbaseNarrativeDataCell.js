@@ -146,7 +146,14 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
     output.widget_title = this.type_names[o.bare_type];  //spec.info.name;
     output.landing_page_url_prefix = this.landing_page_urls[o.bare_type];
     var output_widget = spec.widgets.output;
-    return elt[output_widget](output);
+    try {
+      var w = elt[output_widget](output);
+      return w;
+    }
+    catch(err){
+      console.error("error making widget: " + output_widget);
+    }
+    // return elt[output_widget](output);
 };
 
 /**
@@ -189,7 +196,8 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
         version: '0.0.1',
         options: {
             info: null, // object info
-            cell: null  // IPython cell
+            cell: null,  // IPython cell
+	    lp_url: "/functional-site/#/dataview/",
         },
         obj_info: null,
         // for 'method_store' service
@@ -208,6 +216,11 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             this.obj_info.simple_date = /[^+]*/.exec(this.obj_info.save_date);
             this.ip_cell = options.cell;
             this._initMethodStoreClient();
+	    
+	    if (window.kbconfig.urls.landing_pages) {
+                this.options.lp_url = window.kbconfig.urls.landing_pages;
+            }
+	    
             if (kb_g_viewers == null) {
 		// we have to wait until the type/method specs are loaded the first time
 		var self = this;
@@ -224,7 +237,7 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
 		//console.debug("kbaseNarrativeDataCell.init.done");
 		this.render(options.info);
 	    }
-            
+	    
             return this; 
         },
 
@@ -263,14 +276,9 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             self.$elem.append(mainPanel);
             var $view = this.all_viewers.create_viewer(mainPanel, self);
 
-            var landing_page_url_prefix = null;
             var type_tokens = self.obj_info.type.split('.')
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
-            var ws_landing_page_map = window.kbconfig.landing_page_map;
-            if (ws_landing_page_map && ws_landing_page_map[type_module] && ws_landing_page_map[type_module][type]) {
-            	landing_page_url_prefix = ws_landing_page_map[type_module][type];
-            }
             var widget_title = '';
             if (_.isNull($view)) {
                 KBaseNarrativeDefaultViewer(mainPanel, self);
@@ -279,15 +287,11 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             }
             else {
                 widget_title = $view.options.widget_title;
-                if (!landing_page_url_prefix)
-                	landing_page_url_prefix = $view.options.landing_page_url_prefix;
             }
-            if (!landing_page_url_prefix)
-            	landing_page_url_prefix = 'json';
             widgetTitleElem.empty();
             widgetTitleElem.append(widget_title);
             widgetTitleElem.append('&nbsp;<a href="'+self.shortMarkdownDesc(self.obj_info, 
-            		landing_page_url_prefix)+'" target="_blank">'+self.obj_info.name+'</a>');
+            		this.options.lp_url)+'" target="_blank">'+self.obj_info.name+'</a>');
             // Return the rendered widget
             return this;
         },
@@ -300,8 +304,8 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
           }
           else {
             link += window.location.host;
-          }
-          link += "/functional-site/#/" + landing_page_url_prefix + "/" + o.ws_name + "/" + o.name;
+          } 
+          link += landing_page_url_prefix + o.ws_name + "/" + o.name;
           return link;
         },
 

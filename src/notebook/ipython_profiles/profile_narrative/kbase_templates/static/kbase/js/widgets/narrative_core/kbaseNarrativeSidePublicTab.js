@@ -415,7 +415,7 @@
 
 					// Set data icon
 					var $logo = $('<span>');
-					console.debug("setDataIcon:public type=", type);
+					//console.debug("setDataIcon:public type=", type);
 					$(document).trigger('setDataIcon.Narrative', {elt: $logo, type: type});
 
 					var $topTable = $('<table>')

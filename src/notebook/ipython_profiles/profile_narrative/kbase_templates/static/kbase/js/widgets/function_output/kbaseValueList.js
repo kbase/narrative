@@ -20,7 +20,7 @@
             values: null
         },
 
-        wsUrl: "https://kbase.us/services/ws/",
+        wsUrl: window.kbconfig.urls.workspace,
 
         init: function(options) {
             var vals = options.values;

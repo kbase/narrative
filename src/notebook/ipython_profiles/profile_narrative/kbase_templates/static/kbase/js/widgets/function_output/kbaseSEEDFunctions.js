@@ -13,7 +13,7 @@
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
 
-        wsUrl:"https://kbase.us/services/ws",
+        wsUrl:window.kbconfig.urls.workspace,
 
         options: {
             objNameOrId: null,

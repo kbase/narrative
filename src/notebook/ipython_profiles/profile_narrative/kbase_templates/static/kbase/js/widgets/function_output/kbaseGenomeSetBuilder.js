@@ -19,7 +19,7 @@
         useSelect2: true,
         IGNORE_VERSION: true,
         pref: null,
-        wsUrl: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
+        wsUrl: window.kbconfig.urls.workspace,
         genomeList: null,
         	
         init: function(options) {

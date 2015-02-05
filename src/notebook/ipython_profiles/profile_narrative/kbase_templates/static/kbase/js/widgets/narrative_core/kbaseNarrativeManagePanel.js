@@ -180,9 +180,14 @@
                                             (function(errorIndex) {
                                                 self.ws.get_object_info_new({objects:[narRefsToLookup[errorIndex]],includeMetadata:1,ignoreErrors:0},
                                                     function(error_obj_info) {
+                                                        if(error_obj_info[0][2].indexOf('KBaseNarrative.Narrative')===0) {
                                                         // this should not work!! but if it does, fine, remove the error and save the info
-                                                        self.allNarData[errorIndex].error = false;
-                                                        self.allNarData[errorIndex].nar_info = error_obj_info[0];
+                                                            self.allNarData[errorIndex].error = false;
+                                                            self.allNarData[errorIndex].nar_info = error_obj_info[0];
+                                                        } else {
+                                                            // could give an error message here stating that the workspace is pointing to a non-narrative object
+                                                            //self.allNarData[errorIndex].error_msg = error.error.message;
+                                                        }
                                                     },
                                                     function(error) {
                                                         // this shouldn't happen often, so if it does, just take the time to refresh
@@ -736,11 +741,19 @@
                 $narDiv
                     .mouseenter(function(){ $btnToolbar.show(); })
                     .mouseleave(function(){ $btnToolbar.hide(); });
-            } else if (data.error_msg) {
-                 $dataCol.append($('<span>').addClass('kb-data-list-narrative-error').append(
+            } else if (data.error) {
+                if(data.error_msg) {
+                    $dataCol.append($('<span>').addClass('kb-data-list-narrative-error').append(
                                  'This Narrative has been corrupted: '+data.error_msg));
+                } else {
+                    $dataCol.append($('<span>').addClass('kb-data-list-narrative-error').append(
+                                 'This Narrative has been corrupted.'));
+                }
                 var $btnToolbar = self.addDataControls(data.nar_info,$alertContainer, data.ws_info, true);
                 $ctrContent.append($btnToolbar);
+                $narDiv
+                    .mouseenter(function(){ $btnToolbar.show(); })
+                    .mouseleave(function(){ $btnToolbar.hide(); });
             }
             $narDiv.append($('<table>').css({'width':'100%'})
                            .append($('<tr>').append($dataCol).append($ctrCol)));

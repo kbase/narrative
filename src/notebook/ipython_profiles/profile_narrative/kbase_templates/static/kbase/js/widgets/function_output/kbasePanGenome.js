@@ -17,7 +17,7 @@
         },
 
         pref: null,
-        wsUrl: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
+        wsUrl: window.kbconfig.urls.workspace,
         token: null,
         kbws: null,
         geneIndex: {},   // {genome_ref -> {feature_id -> feature_index}}

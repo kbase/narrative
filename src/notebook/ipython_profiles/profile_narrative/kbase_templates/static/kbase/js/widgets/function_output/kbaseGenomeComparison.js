@@ -106,9 +106,9 @@ $.KBWidget({
     					count2hits++;
     			}
             	table.append(createTableRow("Comparison object", self.ws_id));
-            	table.append(createTableRow("Genome1 (x-axis)", '<a href="/functional-site/#/genomes/'+self.genome1wsName+'/'+self.genome1objName+'" target="_blank">' + genome1id + '</a>' +
+            	table.append(createTableRow("Genome1 (x-axis)", '<a href="/functional-site/#/dataview/'+self.genome1wsName+'/'+self.genome1objName+'" target="_blank">' + genome1id + '</a>' +
             			" (" + self.cmp.proteome1names.length + " genes, " + count1hits + " have hits)"));
-            	table.append(createTableRow("Genome2 (y-axis)", '<a href="/functional-site/#/genomes/'+self.genome2wsName+'/'+self.genome2objName+'" target="_blank">' + genome2id + '</a>' + 
+            	table.append(createTableRow("Genome2 (y-axis)", '<a href="/functional-site/#/dataview/'+self.genome2wsName+'/'+self.genome2objName+'" target="_blank">' + genome2id + '</a>' + 
             			" (" + self.cmp.proteome2names.length + " genes, " + count2hits + " have hits)"));
             	if (self.scale == null)
             		self.scale = self.size * 100 / Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length);

@@ -778,6 +778,14 @@
                         runTime = this.calcTimeDiffReadable(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
                     }
                 }
+                else if (jobState.state.ujs_info) {
+                    if (jobState.state.ujs_info[5] !== null) {
+                        completedTime = this.makePrettyTimestamp(jobState.state.ujs_info[5]);
+                        if (jobState.state.ujs_info[3]) {
+                            runTime = this.calcTimeDiffReadable(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
+                        }
+                    }
+                }
             }
 
             if (completedTime)
@@ -901,12 +909,27 @@
             // from the click time. so don't use that.
             var state = jobState.state;
             if (state) {
-                var compTime = state.complete_time ? state.complete_time : null;
-                var startTime = state.start_time ? state.start_time : null;
-                var subTime = state.submit_time ? state.submit_time : null;
+                var compTime = null;
+                var startTime = null;
+                var subTime = null;
 
-                var queueTime = null;
-                var runTime = null;
+                if (state.ujs_info) {
+                    if (state.ujs_info[5])
+                        compTime = state.ujs_info[5];
+                    if (state.ujs_info[3])
+                        startTime = state.ujs_info[3];
+                }
+                else {
+                    if (state.complete_time)
+                        compTime = state.complete_time;
+                    if (state.start_time)
+                        startTime = state.start_time;
+                    if (state.submit_time)
+                        subTime = state.submit_time;
+                }
+
+                var queueTime = 0;
+                var runTime = 0;
                 // 1. calc total queue time
                 if (startTime && subTime) {
                     queueTime = new Date(startTime) - new Date(subTime);
@@ -1266,7 +1289,7 @@
                 }
             }
 
-            return '~' + timeDiff.toFixed(1) + unit;
+            return timeDiff.toFixed(1) + unit;
         },
 
         /**

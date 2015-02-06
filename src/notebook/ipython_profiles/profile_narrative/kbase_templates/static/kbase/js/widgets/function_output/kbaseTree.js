@@ -14,9 +14,8 @@
             workspaceID: null,
             treeObjVer: null,
             kbCache: null,
-            workspaceURL: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
+            workspaceURL: window.kbconfig.urls.workspace,
             loadingImage: "static/kbase/images/ajax-loader.gif",
-            ujsServiceURL: "https://kbase.us/services/userandjobstate/",
             height: null,
         },
 
@@ -116,7 +115,7 @@
                 	var ref = tree.ws_refs[node.id]['g'][0];
                 	var objInfo = refToInfoMap[ref];
                 	if (objInfo) {
-                		var url = "/functional-site/#/genomes/" + objInfo[7] + "/" + objInfo[1];
+                		var url = "/functional-site/#/dataview/" + objInfo[7] + "/" + objInfo[1];
                         window.open(url, '_blank');
                 	}
                 }, function(node) {

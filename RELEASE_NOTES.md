@@ -3,6 +3,22 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.5.2 - 2/5/2015
+__Changes__
+- More minor icon changes.
+- Changed hard-coded urls to be relative to the config file in many widgets.
+
+### Version 0.5.2 - 2/5/2015
+__Changes__
+- Rerouted landing pages to new endpoint
+- Updated Docker container cleanup script to kill unused containers then images
+- Added new gapfill output widget
+- Added new icons, some code cleanup for setting icons
+- Made "corrupt" narrative labels slightly more obvious
+
+__Bugfixes__
+- Fixed problem where data list filter gets confused when searching and changing type filters
+
 ### Version 0.5.1 - 2/4/2015
 __Changes__
 - Updated data and app icons, and docs about them

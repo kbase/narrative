@@ -12,7 +12,7 @@
 
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
+            lp_url: "/functional-site/#/dataview/",
 
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
 
@@ -50,7 +50,6 @@
 
         n_objs_rendered:0,
 
-        ws_landing_page_map: {},
         real_name_lookup: {},
 
         $searchInput: null,
@@ -86,7 +85,6 @@
         init: function(options) {
             this._super(options);
             var self = this;
-            this.getLandingPageMap();  //start off this request so that we hopefully get something back right away
 
             this.$controllerDiv = $('<div>');
             this.$elem.append(this.$controllerDiv);
@@ -120,9 +118,11 @@
             }
             this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             this.options.ws_url = window.kbconfig.urls.workspace;
-            this.data_icons = window.kbconfig.icons.data;
-            this.icon_colors = window.kbconfig.icons.colors;
 
+            if (window.kbconfig.urls.landing_pages) {
+                this.options.lp_url = window.kbconfig.urls.landing_pages;
+            }
+            
             if (this._attributes.auth) {
                 this.ws = new Workspace(this.options.ws_url, this._attributes.auth);
             }
@@ -384,16 +384,7 @@
                                         .click(function(e) {
                                             e.stopPropagation(); $alertContainer.empty();
                                             var typeTokens = object_info[2].split('-')[0].split('.');
-                                            var landingPageLink = self.options.default_landing_page_url +object_info[7]+ '/' + object_info[1];
-                                            if (self.ws_landing_page_map) {
-                                                if (self.ws_landing_page_map[typeTokens[0]]) {
-                                                    if (self.ws_landing_page_map[typeTokens[0]][typeTokens[1]]) {
-                                                        landingPageLink = self.options.landing_page_url +
-                                                            self.ws_landing_page_map[typeTokens[0]][typeTokens[1]] + "/" +
-                                                            object_info[7]+ '/' + object_info[1];
-                                                    }
-                                                }
-                                            }
+                                            var landingPageLink = self.options.lp_url +object_info[6]+ '/' + object_info[1];
                                             window.open(landingPageLink);
                                         });
 
@@ -568,29 +559,9 @@
             var type_module = type_tokens[0];
             var type = type_tokens[1].split('-')[0];
             var unversioned_full_type = type_module + '.' + type;
-            var icons = this.data_icons;
-            var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
-            var icon_cls = icon.join(' ');
-            var $logo = $('<div>')
-              // background circle
-              .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
-                .append($('<i>')
-                .addClass("fa fa-circle fa-stack-2x")
-                .css({'color':this.logoColorLookup(type)}));
-            if (this.isCustomIcon(icon)) {
-                // add custom icons (side-by-side? not really defined..)
-                _.each(icon, function (cls) {
-                    $logo.append($('<i>')
-                      .addClass("icon fa-inverse fa-stack-2x " + cls));
-                });
-            }
-            else {
-                // add stack of font-awesome icons
-                _.each(icon, function(cls) {
-                  $logo.append($('<i>')
-                    .addClass("fa fa-inverse fa-stack-1x " + cls));
-                });
-            }
+            var $logo = $('<div>');
+            // set icon
+            $(document).trigger("setDataIcon.Narrative", {elt: $logo, type: type});
             // add behavior
             $logo.click(function(e) {
                 e.stopPropagation();
@@ -710,11 +681,6 @@
                                 .append($row);
 
             return $rowWithHr;
-        },
-
-        isCustomIcon: function(icon_list) {
-          return (icon_list.length > 0 && icon_list[0].length > 4 &&
-                  icon_list[0].substring(0, 4) == 'icon');
         },
 
         // ============= DnD ==================
@@ -1058,6 +1024,11 @@
                                         .change(function() {
                                             var optionSelected = $(this).find("option:selected");
                                             var typeSelected  = optionSelected.val();
+                                            
+                                            // whenever we change the type filter, we need to clear the current match
+                                            // so that the complete filter can rerun
+                                            self.currentMatch = self.objectList;
+                                            
                                             self.filterByType(typeSelected);
                                         });
 
@@ -1122,6 +1093,7 @@
                 } else {
                     self.$filterTypeSelect.prepend($('<option value="">').append("Show All Types ("+runningCount+" objects)"));
                 }
+                self.$filterTypeSelect.val("");
             }
         },
 
@@ -1221,13 +1193,12 @@
                         }
                     }
 
-
+                    
                     if (type) { // if type is defined, then our sort must also filter by the type
                         if (type !== info[2].split('-')[0].split('.')[1]) {
                             match = false; // no match if we are not the selected type!
                         }
                     }
-
                     if (match) {
                         // matches must always switch to show if they are rendered
                         if (self.currentMatch[k].$div) {
@@ -1314,10 +1285,6 @@
 	    }
         },
 
-        getLandingPageMap: function() {
-            this.ws_landing_page_map = window.kbconfig.landing_page_map;
-        },
-
         /**
          * @method loggedInCallback
          * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
@@ -1348,12 +1315,6 @@
             if (this.ws_name)
                 this.refresh();
             return this;
-        },
-
-        logoColorLookup:function(type) {
-          var code = 0;
-          for (var i=0; i < type.length; code += type.charCodeAt(i++));
-          return this.icon_colors[ code % this.icon_colors.length ];
         },
 
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site

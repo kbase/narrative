@@ -79,7 +79,7 @@
             		var tax = gnm.taxonomy;
             		if (tax == null)
             			tax = '';
-            		var overviewData = [gnm.id, '<a href="/functional-site/#/genomes/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>', 
+            		var overviewData = [gnm.id, '<a href="/functional-site/#/dataview/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>', 
             		                    gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gnm.gc_content, tax, gnm.dna_size];
             		var overviewTable = $('#'+pref+'overview-table');
             		for (var i=0; i<overviewData.length; i++) {

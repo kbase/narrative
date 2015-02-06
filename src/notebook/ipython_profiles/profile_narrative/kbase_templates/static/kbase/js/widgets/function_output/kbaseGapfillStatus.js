@@ -30,7 +30,7 @@
         options: {
         },
 
-        wsUrl: "https://kbase.us/services/workspace",
+        wsUrl: window.kbconfig.urls.workspace,
         loadingImage: "static/kbase/images/ajax-loader.gif",
         
         /**

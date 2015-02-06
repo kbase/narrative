@@ -39,7 +39,7 @@
             workspaceURL: "https://kbase.us/services/ws",
             wsBrowserURL: "/functional-site/#/ws/",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            default_landing_page_url: "/functional-site/#/json/", // ws_name/obj_name,
+            lp_url: "/functional-site/#/dataview/",
             container: null,
             ws_name: null,
         },
@@ -66,6 +66,9 @@
                 this.options.workspaceURL = window.kbconfig.urls.workspace;
                 this.options.wsBrowserURL = window.kbconfig.urls.ws_browser;
                 this.options.landingPageURL = window.kbconfig.urls.landing_pages;
+                if (window.kbconfig.urls.landing_pages) {
+                    this.options.lp_url = window.kbconfig.urls.landing_pages;
+                }
             }
             this.data_icons = window.kbconfig.icons.data;
             this.icon_colors = window.kbconfig.icons.colors;
@@ -125,8 +128,6 @@
                 },
                 this)
             );
-
-            this.landingPageMap = window.kbconfig.landing_page_map;
 
             // initialize the importer
             this.dataImporter();
@@ -1025,34 +1026,10 @@
                 var type = type_tokens[1].split('-')[0];
                 var unversioned_full_type = type_module + '.' + type;
                 var logo_name = "";
-                var landingPageLink = self.options.default_landing_page_url + object_info[7] + '/' + object_info[1];
-                                            var ws_landing_page_map = window.kbconfig.landing_page_map;
-                                            if (ws_landing_page_map && ws_landing_page_map[type_module] && ws_landing_page_map[type_module][type]) {
-                                                landingPageLink = self.options.landing_page_url +
-                                                                ws_landing_page_map[type_module][type] + "/" + object_info[7] + '/' + object_info[1];
-                                            }
+                var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
                 var icons = self.data_icons;
                 var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
-                var $logo = $('<span>')
-                  // background circle
-                  .addClass("fa-stack fa-2x").css({'cursor':'pointer'})
-                  .append($('<i>')
-                    .addClass("fa fa-circle fa-stack-2x")
-                    .css({'color': self.logoColorLookup(type)}));
-                if (self.isCustomIcon(icon)) {
-                    // add custom icons (side-by-side? not really defined..)
-                    _.each(icon, function (cls) {
-                        $logo.append($('<i>')
-                          .addClass("icon fa-inverse fa-stack-2x " + cls));
-                    });
-                }
-                else {
-                    // add stack of font-awesome icons
-                    _.each(icon, function (cls) {
-                        $logo.append($('<i>')
-                          .addClass("fa fa-inverse fa-stack-1x " + cls));
-                    });
-                }
+                var $logo = $('<span>');
 
                 var shortName = object_info[1]; var isShortened=false;
                 if (shortName.length>50) {
@@ -1201,6 +1178,11 @@
                                                  .append($logo))
                                          .append($('<td>')
                                                  .append($mainDiv)));
+                // set icon for data item
+                $(document).trigger("setDataIcon.Narrative", {
+                    elt: $logo,
+                    type: type
+                });
 
                 var $row = $('<div>')
                                 .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
@@ -1238,15 +1220,11 @@
             }
 
             function objURL(module, type, ws, name) {
-                var mapping = window.kbconfig.landing_page_map;
-                if (mapping[module] && mapping[module][type]) {
-                    return self.options.landingPageURL+mapping[module][type]+'/'+ws+'/'+name;
-                }
-                return self.options.landingPageURL+'json/'+ws+'/'+name;
+                return self.options.lp_url+ws+'/'+name;
             }
 
             function wsURL(ws) {
-                return self.options.landingPageURL+'ws/'+ws;
+                return ''; // no more links to WS Browser
             }
 
             var monthLookup = ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"];
@@ -1307,6 +1285,7 @@
             for (var i=0; i < type.length; code += type.charCodeAt(i++));
             return this.icon_colors[ code % this.icon_colors.length ];
         }
+
 
     });
 

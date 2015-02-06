@@ -13,9 +13,8 @@
             msaID: null,
             workspaceID: null,
             kbCache: null,
-            workspaceURL: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
+            workspaceURL: window.kbconfig.urls.workspace,
             loadingImage: "static/kbase/images/ajax-loader.gif",
-            ujsServiceURL: "https://kbase.us/services/userandjobstate/",
             height: null,
         },
 

@@ -149,7 +149,7 @@
             this.refresh();
         },
 
-        refresh: function() {
+        refresh: function(showError) {
             var self = this;
 
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
@@ -182,13 +182,14 @@
                         }
                     },
                     function(error) {
-                        console.error(error);
-
-                        self.$mainListDiv.show();
-                        self.$mainListDiv.empty();
-                        self.$mainListDiv.append($('<div>').css({'color':'#F44336','margin':'10px'})
-                                                 .append('Error: '+error.error.message));
-                        self.hideLoading();
+                        console.error('DataList: when checking for updates:',error);
+                        if (showError) {
+                            self.$mainListDiv.show();
+                            self.$mainListDiv.empty();
+                            self.$mainListDiv.append($('<div>').css({'color':'#F44336','margin':'10px'})
+                                                     .append('Error: Unable to connect to KBase data.'));
+                            self.hideLoading();
+                        }
                     });
             }
             else {

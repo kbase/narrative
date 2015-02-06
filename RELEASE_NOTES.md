@@ -5,6 +5,11 @@ This is built on the IPython Notebook (more notes will follow).
 
 ### Version 0.5.2 - 2/5/2015
 __Changes__
+- More minor icon changes.
+- Changed hard-coded urls to be relative to the config file in many widgets.
+
+### Version 0.5.2 - 2/5/2015
+__Changes__
 - Rerouted landing pages to new endpoint
 - Updated Docker container cleanup script to kill unused containers then images
 - Added new gapfill output widget

@@ -454,7 +454,7 @@
                 this.showLoadingMessage('Loading running jobs...');
 
             // This contains all the job info like this:
-            // { jobId: {spec: {}, state: {}}}
+            // { jobId: {spec: {}, state: {}} }
             var jobInfo = {};
             // This contains the list of lookup parameters for each job.
             // We pass back all specs/parameters so the back end can munge them into the right 

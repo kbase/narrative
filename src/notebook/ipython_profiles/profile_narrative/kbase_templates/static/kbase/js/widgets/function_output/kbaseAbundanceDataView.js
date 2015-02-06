@@ -68,17 +68,19 @@
 		                }
 		            }
 		            // add values
+		            var maxval = 0;
 		            var tdata = new Array(rownum);
 		            for (var r = 0; r < rownum; r++) {
 			            tdata[r] = new Array(clength);
 			            tdata[r][0] = biom['rows'][r]['id'];
 			            for (var c = 0; c < colnum; c++) {
-			                var value = matrix[r][c];
+                            maxval = Math.max(maxval, matrix[r][c]);
+                            divdata[c]['data'].push(matrix[r][c]);
+			                var value = Math.round(matrix[r][c] * 1000) / 1000;
 			                if (! value) {
 				                value = "0";
 			                }
-			                tdata[r][c+1] = value;
-			                divdata[c]['data'].push(matrix[r][c]);
+                            tdata[r][c+1] = value;
 			            }
 		            }
 		            // set tabs
@@ -109,9 +111,14 @@
 			        tableTest.settings.minwidths = mw;
 			        tableTest.render(tlen);
 			        // DEVIATION PLOT
+			        var ab_type = 'normalized';
+			        if (maxval > 1) {
+			            ab_type = 'raw';
+			        }
                     var devTest = standaloneGraph.create({index: glen});
 			        devTest.settings.target = document.getElementById("outputGraph"+glen);
                     devTest.settings.data = divdata;
+                    devTest.settings.y_title = ab_type+' abundance';
                     devTest.settings.show_legend = false;
                     devTest.settings.height = 400;
                     devTest.settings.chartArea = [ 0.1, 0.1, 0.95, 0.8 ];

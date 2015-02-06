@@ -101,6 +101,8 @@
                     var plotTest = standalonePlot.create({index: plen});
                     plotTest.settings.target = document.getElementById("outputPlot"+plen);
                     plotTest.settings.data = plotdata;
+                    plotTest.settings.x_title = 'PC'+(x_pos+1).toString();
+                    plotTest.settings.y_title = 'PC'+(y_pos+1).toString();
                     plotTest.settings.x_min = x_min - Math.abs((x_max - x_min) * 0.1);
                     plotTest.settings.x_max = x_max + Math.abs((x_max - x_min) * 0.1);
                     plotTest.settings.y_min = y_min - Math.abs((y_max - y_min) * 0.1);

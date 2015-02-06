@@ -22,7 +22,8 @@
             if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
                 IPython.save_widget.rename_notebook("Please name your Narrative before saving.", false);
             } else {
-                IPython.notebook.save_checkpoint();
+                IPython.narrative.saveNarrative();
+//                IPython.notebook.save_checkpoint();
             }
         }
     });
@@ -519,7 +520,8 @@ Narrative.prototype.updateVersion = function() {
  * @method
  * @public
  * This triggers a save, but does a few steps first:
+ * ....or, it will soon.
  */
 Narrative.prototype.saveNarrative = function() {
-
+    IPython.notebook.save_checkpoint();
 };

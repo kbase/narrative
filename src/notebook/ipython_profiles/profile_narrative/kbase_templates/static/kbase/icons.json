@@ -4,7 +4,7 @@
     "app": ["fa-cubes"]
   },
   "data": {
-    "DEFAULT": ["fa-folder-o"],
+    "DEFAULT": ["fa-file-o"],
     "AssemblyInput": ["fa-align-justify"],
     "Collection": ["fa-list-ul"],
     "ContigSet": ["icon icon-contigs kb-data-icon-dnudge"],
@@ -20,7 +20,7 @@
     "Heatmap": ["fa-th"],
     "Media": ["fa-flask"],
     "Metagenome": ["icon icon-metagenome kb-data-icon-dnudge"],
-    "Network": ["icon icon-dzone"],
+    "Network": ["fa-code-fork"],
     "PairedEndLibrary": ["fa-align-justify"],
     "Pangenome": ["fa-bullseye"],
     "PhenotypeSet": ["fa-list-ul"],

@@ -772,7 +772,7 @@
                 status = this.makeJobErrorButton(jobId, jobInfo, 'Network Error');
             }
             else if (jobState.state && jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0) {
-                var $errBtn = this.makeJobErrorButton(jobId, jobInfo, status);
+                var $errBtn = this.makeJobErrorButton(jobId, jobInfo);
                 status = $('<span>').append(status + ' ')
                                     .append($errBtn);
             }

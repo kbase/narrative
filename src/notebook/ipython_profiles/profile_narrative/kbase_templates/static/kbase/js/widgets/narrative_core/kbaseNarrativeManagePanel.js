@@ -168,6 +168,8 @@
                                 }
                             }
                         }
+                        if (narRefsToLookup.length === 0)
+                            return self.renderPanel();
                         self.ws.get_object_info_new({objects:narRefsToLookup,includeMetadata:1,ignoreErrors:1},
                                 function(objList) {
                                     for(var i=0; i<objList.length; i++) {

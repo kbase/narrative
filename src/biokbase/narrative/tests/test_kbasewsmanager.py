@@ -254,7 +254,8 @@ class NarrDocumentTestCase(NarrBaseTestCase):
             'data_dependencies': [],
             'ws_name': '',
             'type': 'KBaseNarrative.Narrative',
-            'name': ''
+            'name': '',
+            'job_ids': []
         }
         for key in metadata_check.keys():
             if key in nb['metadata']:

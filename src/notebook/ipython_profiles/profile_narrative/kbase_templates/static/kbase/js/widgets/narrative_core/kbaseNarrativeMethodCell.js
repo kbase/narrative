@@ -248,18 +248,18 @@
 
         /* Show/hide running icon */
         displayRunning: function(is_running, had_error) {
-          if (is_running) {
-            this.cellMenu.$runningIcon.show();
-            // never show error icon while running
-            this.cellMenu.$errorIcon.hide();
-          }
-          else {
-            this.cellMenu.$runningIcon.hide();
-            // only display error when not running
-            if (had_error) { this.cellMenu.$errorIcon.show(); }
-            else { this.cellMenu.$errorIcon.hide(); }
+            if (is_running) {
+                this.cellMenu.$runningIcon.show();
+                // never show error icon while running
+                this.cellMenu.$errorIcon.hide();
             }
-          },
+            else {
+                this.cellMenu.$runningIcon.hide();
+                // only display error when not running
+                if (had_error) { this.cellMenu.$errorIcon.show(); }
+                else { this.cellMenu.$errorIcon.hide(); }
+            }
+        },
 
         /**
          * @method
@@ -433,9 +433,9 @@
                 // Show the 'next-steps' to take, if there are any
                 var self = this;
                 this.getNextSteps( function(next_steps) {
-                  data.next_steps = next_steps;
-                  self.trigger('createOutputCell.Narrative', data);
-                  self.changeState('complete');
+                    data.next_steps = next_steps;
+                    self.trigger('createOutputCell.Narrative', data);
+                    self.changeState('complete');
                 });
             }
         },

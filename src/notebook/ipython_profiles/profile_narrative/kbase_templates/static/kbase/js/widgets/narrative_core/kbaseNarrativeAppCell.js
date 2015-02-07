@@ -695,7 +695,7 @@
                         // set the output states
                         if (state.step[id].outputState) {
                             if (state.step[id].outputState.output) {
-                                this.setStepOutput(id,state.step[id].outputState.output, state.step[id].outputState.widgetState);
+                                this.setStepOutput(id, state.step[id].outputState.output, state.step[id].outputState.widgetState, true);
                             }
                         }
                     }
@@ -810,7 +810,7 @@
 
         /* optional state parameter, if null then no state is set on the widget */
         /** ALSO TRIGGERS A SAVE! **/
-        setStepOutput: function(stepId, output, state) {
+        setStepOutput: function(stepId, output, state, preventSave) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
                     if (this.inputStepLookup[stepId].outputWidget) {
@@ -841,7 +841,7 @@
                         output: objCopy
                     };
 
-                    if (IPython && IPython.narrative)
+                    if (IPython && IPython.narrative && !preventSave)
                         IPython.narrative.saveNarrative();
                 }
             }

@@ -794,7 +794,7 @@
                              .append(this.makeInfoRow('Status', status));
             if (task !== null)
                 $infoTable.append(this.makeInfoRow('Task', task));
-            if (position !== null)
+            if (position !== null && status.toLowerCase().indexOf('queue') != -1)
                 $infoTable.append(this.makeInfoRow('Queue Position', position));
 
             if (runTime) {

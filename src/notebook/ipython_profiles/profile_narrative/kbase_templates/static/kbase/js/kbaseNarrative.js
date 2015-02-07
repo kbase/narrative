@@ -521,6 +521,7 @@ Narrative.prototype.updateVersion = function() {
  * @public
  * This triggers a save, but does a few steps first:
  * ....or, it will soon.
+ * for now, it just passes through to the usual save.
  */
 Narrative.prototype.saveNarrative = function() {
     IPython.notebook.save_checkpoint();

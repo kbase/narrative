@@ -881,6 +881,7 @@
                 else {
                     $cell.kbaseNarrativeMethodCell('changeState', 'error');
                 }
+                this.completeJob(jobId, this.jobStates[jobId]);
             }
             // ...and if it's done, we need to signal that, too. Note that it can be both (i.e. done with errors)
             if (status.indexOf('complete') !== -1 || status.indexOf('done') !== -1) {

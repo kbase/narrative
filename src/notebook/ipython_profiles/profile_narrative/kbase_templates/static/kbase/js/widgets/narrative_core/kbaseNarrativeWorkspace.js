@@ -819,9 +819,9 @@
         /**
          * Activate "normal" R/W mode
          */
-         activateReadwriteMode: function() {
+        activateReadwriteMode: function() {
             console.debug("activate read-write mode");
-         },
+        },
 
         /**
          * Bind the 'Copy narrative' button to

@@ -7,6 +7,7 @@ import unittest
 from getpass import getpass
 from biokbase.narrative.kbasewsmanager import KBaseWSNotebookManager
 from biokbase.workspace.client import Workspace
+import biokbase.workspace
 import biokbase.auth
 import os
 import re

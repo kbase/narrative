@@ -723,6 +723,26 @@
             var position = null;
             var task = null;
 
+            // Calculate run time if applicable
+            var completedTime = null;
+            var runTime = null;
+            if (jobState.state) {
+                if (jobState.state.complete_time) {
+                    completedTime = this.makePrettyTimestamp(jobState.state.complete_time);
+                    if (jobState.state.start_time) {
+                        runTime = this.calcTimeDiffReadable(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
+                    }
+                }
+                else if (jobState.state.ujs_info) {
+                    if (jobState.state.ujs_info[5] !== null) {
+                        completedTime = this.makePrettyTimestamp(jobState.state.ujs_info[5]);
+                        if (jobState.state.ujs_info[3]) {
+                            runTime = this.calcTimeDiffReadable(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
+                        }
+                    }
+                }
+            }
+
             /* Lots of cases for status:
              * suspend, error, unknown, awe_error - do the usual blocked error thing.
              * deleted - treat job as deleted
@@ -752,7 +772,7 @@
                 status = this.makeJobErrorButton(jobId, jobInfo, 'Network Error');
             }
             else if (jobState.state && jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0) {
-                var $errBtn = this.makeJobErrorButton(jobId, jobInfo);
+                var $errBtn = this.makeJobErrorButton(jobId, jobInfo, status);
                 status = $('<span>').append(status + ' ')
                                     .append($errBtn);
             }
@@ -766,30 +786,10 @@
                 }
                 if (jobState.state && jobState.state.position !== undefined && jobState.state.position !== null && jobState.state.position > 0)
                     position = jobState.state.position;
+                if (completedTime)
+                    status += ' ' + completedTime;
             }
 
-            // Calculate run time if applicable
-            var completedTime = null;
-            var runTime = null;
-            if (jobState.state) {
-                if (jobState.state.complete_time) {
-                    completedTime = this.makePrettyTimestamp(jobState.state.complete_time);
-                    if (jobState.state.start_time) {
-                        runTime = this.calcTimeDiffReadable(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
-                    }
-                }
-                else if (jobState.state.ujs_info) {
-                    if (jobState.state.ujs_info[5] !== null) {
-                        completedTime = this.makePrettyTimestamp(jobState.state.ujs_info[5]);
-                        if (jobState.state.ujs_info[3]) {
-                            runTime = this.calcTimeDiffReadable(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
-                        }
-                    }
-                }
-            }
-
-            if (completedTime)
-                status += ' ' + completedTime;
             var $infoTable = $('<table class="kb-jobs-info-table">')
                              .append(this.makeInfoRow('Status', status));
             if (task !== null)

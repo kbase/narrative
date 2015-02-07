@@ -464,8 +464,8 @@ class KBaseWSNotebookManager(NotebookManager):
             # This gets auto-updated on the front end, and is easier to manage.
             if not hasattr(nb.metadata, 'data_dependencies'):
                 nb.metadata.data_dependencies = list()
-            # if not hasattr(nb.metadata, 'job_ids'):
-            #     nb.metadata.job_ids = { 'methods' : [], 'apps' : [], 'job_usage': { 'queue_time': 0, 'run_time': 0 } }
+            if not hasattr(nb.metadata, 'job_ids'):
+                nb.metadata.job_ids = { 'methods' : [], 'apps' : [], 'job_usage': { 'queue_time': 0, 'run_time': 0 } }
             nb.metadata.format = self.node_format
 
         except Exception as e:

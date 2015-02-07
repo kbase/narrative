@@ -7,6 +7,7 @@ import unittest
 from getpass import getpass
 from biokbase.narrative.kbasewsmanager import KBaseWSNotebookManager
 from biokbase.workspace.client import Workspace
+import biokbase.workspace
 import biokbase.auth
 import os
 import re
@@ -253,7 +254,8 @@ class NarrDocumentTestCase(NarrBaseTestCase):
             'data_dependencies': [],
             'ws_name': '',
             'type': 'KBaseNarrative.Narrative',
-            'name': ''
+            'name': '',
+            'job_ids': []
         }
         for key in metadata_check.keys():
             if key in nb['metadata']:

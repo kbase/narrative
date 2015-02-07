@@ -189,7 +189,7 @@
                         continue;
                     for (var i=0; i<jobIds[jobType].length; i++) {
                         var job = jobIds[jobType][i];
-                        this.jobStates[job.id] = $.extend({}, job, { 'status' : null, '$elem' : null, 'id' : job.id });
+                        this.jobStates[job.id] = $.extend({}, { 'status' : null, '$elem' : null, 'id' : job.id }, job);
                         this.source2Job[job.source] = job.id;
                     }
                 }
@@ -454,7 +454,7 @@
                 this.showLoadingMessage('Loading running jobs...');
 
             // This contains all the job info like this:
-            // { jobId: {spec: {}, state: {}}}
+            // { jobId: {spec: {}, state: {}} }
             var jobInfo = {};
             // This contains the list of lookup parameters for each job.
             // We pass back all specs/parameters so the back end can munge them into the right 
@@ -662,7 +662,6 @@
             // get the state from this.jobStates[jobInfo.]
             var jobState = this.jobStates[jobId];
 
-
             /* Cases:
              * 1. have job, have info
              *    a. job has 'error' property
@@ -724,6 +723,26 @@
             var position = null;
             var task = null;
 
+            // Calculate run time if applicable
+            var completedTime = null;
+            var runTime = null;
+            if (jobState.state) {
+                if (jobState.state.complete_time) {
+                    completedTime = this.makePrettyTimestamp(jobState.state.complete_time);
+                    if (jobState.state.start_time) {
+                        runTime = this.calcTimeDiffReadable(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
+                    }
+                }
+                else if (jobState.state.ujs_info) {
+                    if (jobState.state.ujs_info[5] !== null) {
+                        completedTime = this.makePrettyTimestamp(jobState.state.ujs_info[5]);
+                        if (jobState.state.ujs_info[3]) {
+                            runTime = this.calcTimeDiffReadable(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
+                        }
+                    }
+                }
+            }
+
             /* Lots of cases for status:
              * suspend, error, unknown, awe_error - do the usual blocked error thing.
              * deleted - treat job as deleted
@@ -752,8 +771,8 @@
             else if (status === 'Network_error') {
                 status = this.makeJobErrorButton(jobId, jobInfo, 'Network Error');
             }
-            else if (jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0) {
-                var $errBtn = this.makeJobErrorButton(jobId, jobInfo);
+            else if (jobState.state && jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0) {
+                var $errBtn = this.makeJobErrorButton(jobId, jobInfo, status);
                 status = $('<span>').append(status + ' ')
                                     .append($errBtn);
             }
@@ -767,17 +786,24 @@
                 }
                 if (jobState.state && jobState.state.position !== undefined && jobState.state.position !== null && jobState.state.position > 0)
                     position = jobState.state.position;
+                if (completedTime)
+                    status += ' ' + completedTime;
             }
-            if (jobState.timestamp) {
-                started = this.makePrettyTimestamp(jobState.timestamp);
-            }
+
             var $infoTable = $('<table class="kb-jobs-info-table">')
                              .append(this.makeInfoRow('Status', status));
             if (task !== null)
                 $infoTable.append(this.makeInfoRow('Task', task));
-            if (position !== null)
+            if (position !== null && status.toLowerCase().indexOf('queue') != -1)
                 $infoTable.append(this.makeInfoRow('Queue Position', position));
-            $infoTable.append(this.makeInfoRow('Started', started));
+
+            if (runTime) {
+                $infoTable.append(this.makeInfoRow('Run Time', runTime));
+            }
+            else if (jobState.timestamp) {
+                started = this.makePrettyTimestamp(jobState.timestamp);
+                $infoTable.append(this.makeInfoRow('Started', started));
+            }
 
             $jobDiv.append($jobInfoDiv)
                    .append($infoTable);
@@ -855,15 +881,84 @@
                 else {
                     $cell.kbaseNarrativeMethodCell('changeState', 'error');
                 }
+                this.completeJob(jobId, this.jobStates[jobId]);
             }
             // ...and if it's done, we need to signal that, too. Note that it can be both (i.e. done with errors)
             if (status.indexOf('complete') !== -1 || status.indexOf('done') !== -1) {
                 if (jobType === 'njs') {
                     $cell.kbaseNarrativeAppCell('setRunningState', 'complete');
                 }
+                this.completeJob(jobId, this.jobStates[jobId]);
             }
 
             // other statuses - network_error, not_found_error, unauthorized_error, etc. - are ignored for now.
+        },
+
+        /**
+         * Internally "completes" a job by serializing its final state in the job metadata
+         * and updating the total queue time and run time that it went through.
+         * This'll have to make its way to the object metadata on save, as well.
+         * Maybe it should trigger a save?
+         */
+        completeJob: function(jobId, jobState) {
+            // from the jobState, need 3 things:
+            // jobState.state.complete_time
+            // jobState.state.start_time
+            // jobState.state.submit_time
+
+            // these are all a little off (due to clock skew)
+            // from the click time. so don't use that.
+            var state = jobState.state;
+            if (state) {
+                var compTime = null;
+                var startTime = null;
+                var subTime = null;
+
+                if (state.ujs_info) {
+                    if (state.ujs_info[5])
+                        compTime = state.ujs_info[5];
+                    if (state.ujs_info[3])
+                        startTime = state.ujs_info[3];
+                }
+                else {
+                    if (state.complete_time)
+                        compTime = state.complete_time;
+                    if (state.start_time)
+                        startTime = state.start_time;
+                    if (state.submit_time)
+                        subTime = state.submit_time;
+                }
+
+                var queueTime = 0;
+                var runTime = 0;
+                // 1. calc total queue time
+                if (startTime && subTime) {
+                    queueTime = new Date(startTime) - new Date(subTime);
+                }
+                if (compTime && startTime) {
+                    runTime = new Date(compTime) - new Date(startTime);
+                }
+                if (IPython.notebook.metadata.job_ids.job_usage) {
+                    IPython.notebook.metadata.job_ids.job_usage.run_time += runTime;
+                    IPython.notebook.metadata.job_ids.job_usage.queue_time += queueTime;
+                }
+                else {
+                    IPython.notebook.metadata.job_ids.job_usage = {
+                        run_time : runTime,
+                        queue_time : queueTime
+                    };
+                }
+                // I kinda hate how I did this to begin with, but here's the least-resistant path.
+                // We basically have to search. Lame.
+                for (var i=0; i<IPython.notebook.metadata.job_ids.apps.length; i++) {
+                    if (IPython.notebook.metadata.job_ids.apps[i].id === jobId)
+                        IPython.notebook.metadata.job_ids.apps[i] = jobState;
+                }
+                for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {
+                    if (IPython.notebook.metadata.job_ids.methods[i].id === jobId)
+                        IPython.notebook.metadata.job_ids.methods[i] = jobState;
+                }
+            }
         },
 
         /**
@@ -1049,10 +1144,10 @@
             var d = this.parseDate(timestamp);
 
             var parsedTime = this.parseTimestamp(null, d);
-            var timediff = this.calcTimeDifference(null, d);
+            var timediff = this.calcTimeDiffRelative(null, d);
             var timeMillis = d ? d.getTime() : "";
 
-            var timeHtml = '<div href="#" data-toggle="tooltip" title="' + parsedTime + '" millis="' + timeMillis + '" >' + timediff + '</div>';
+            var timeHtml = '<span href="#" data-toggle="tooltip" title="' + parsedTime + '" millis="' + timeMillis + '" >' + timediff + '</span>';
             return timeHtml;
         },
 
@@ -1148,13 +1243,65 @@
 
         /**
          * @method calcTimeDifference
+         * Turns the difference between two Date objects
+         * into something human readable, e.g. "-1.5 hrs"
+         *
+         * essentially does d2-d1, and makes it legible.
+         */
+        calcTimeDiffReadable: function(d1, d2) {
+            // start with seconds
+            var timeDiff = Math.abs((d2 - d1) / 1000 );
+
+            var unit = ' sec';
+
+            // if > 60 seconds, go to minutes.
+            if (timeDiff >= 60) {
+                timeDiff /= 60;
+                unit = ' min';
+
+                // if > 60 minutes, go to hours.
+                if (timeDiff >= 60) {
+                    timeDiff /= 60;
+                    unit = ' hrs';
+
+                    // if > 24 hours, go to days
+                    if (timeDiff >= 24) {
+                        timeDiff /= 24;
+                        unit = ' days';
+                    }
+
+                    // now we're in days. if > 364.25, go to years)
+                    if (timeDiff >= 364.25) {
+                        timeDiff /= 364.25;
+                        unit = ' yrs';
+
+                        // now we're in years. just for fun, if we're over a century, do that too.
+                        if (timeDiff >= 100) {
+                            timeDiff /= 100;
+                            unit = ' centuries';
+
+                            // ok, fine, i'll do millennia, too.
+                            if (timeDiff >= 10) {
+                                timeDiff /= 10;
+                                unit = ' millennia';
+                            }
+                        }
+                    }
+                }
+            }
+
+            return timeDiff.toFixed(1) + unit;
+        },
+
+        /**
+         * @method calcTimeDifference
          * From two timestamps (i.e. Date.parse() parseable), calculate the
          * time difference and return it as a human readable string.
          *
          * @param {String} time - the timestamp to calculate a difference from
          * @returns {String} - a string representing the time difference between the two parameter strings
          */
-        calcTimeDifference: function(timestamp, dateObj) {
+        calcTimeDiffRelative: function(timestamp, dateObj) {
             var now = new Date();
             var time = null;
 
@@ -1166,48 +1313,9 @@
             if (time === null)
                 return 'Unknown time';
 
-            // start with seconds
-            var timeRem = Math.abs((time - now) / 1000 );
-            var unit = ' sec';
+            // so now, 'time' and 'now' are both Date() objects
+            var timediff = this.calcTimeDiffReadable(now, time);
 
-            // if > 60 seconds, go to minutes.
-            if (timeRem >= 60) {
-                timeRem /= 60;
-                unit = ' min';
-
-                // if > 60 minutes, go to hours.
-                if (timeRem >= 60) {
-                    timeRem /= 60;
-                    unit = ' hrs';
-
-                    // if > 24 hours, go to days
-                    if (timeRem >= 24) {
-                        timeRem /= 24;
-                        unit = ' days';
-                    }
-
-                    // now we're in days. if > 364.25, go to years)
-                    if (timeRem >= 364.25) {
-                        timeRem /= 364.25;
-                        unit = ' yrs';
-
-                        // now we're in years. just for fun, if we're over a century, do that too.
-                        if (timeRem >= 100) {
-                            timeRem /= 100;
-                            unit = ' centuries';
-
-                            // ok, fine, i'll do millennia, too.
-                            if (timeRem >= 10) {
-                                timeRem /= 10;
-                                unit = ' millennia';
-                            }
-                        }
-                    }
-                }
-            }
-
-
-            var timediff = '~' + timeRem.toFixed(1) + unit;
             if (time > now)
                 timediff += ' from now';
             else

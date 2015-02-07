@@ -203,7 +203,7 @@ class KBaseWSNotebookManager(NotebookManager):
             nb.metadata.description = ''
             nb.metadata.name = new_name
             nb.metadata.data_dependencies = []
-            nb.metadata.job_ids = { 'methods' : [], 'apps' : [] }
+            nb.metadata.job_ids = { 'methods' : [], 'apps' : [], 'job_usage' : { 'run_time': 0, 'queue_time': 0 } }
             nb.metadata.format = self.node_format
         except Exception as e:
             raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
@@ -464,8 +464,8 @@ class KBaseWSNotebookManager(NotebookManager):
             # This gets auto-updated on the front end, and is easier to manage.
             if not hasattr(nb.metadata, 'data_dependencies'):
                 nb.metadata.data_dependencies = list()
-            if not hasattr(nb.metadata, 'job_ids'):
-                nb.metadata.job_ids = { 'methods' : [], 'apps' : [] }
+            # if not hasattr(nb.metadata, 'job_ids'):
+            #     nb.metadata.job_ids = { 'methods' : [], 'apps' : [], 'job_usage': { 'queue_time': 0, 'run_time': 0 } }
             nb.metadata.format = self.node_format
 
         except Exception as e:
@@ -526,9 +526,29 @@ class KBaseWSNotebookManager(NotebookManager):
             # We flatten the data_dependencies array into a json string so that the
             # workspace service will accept it
             wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
-            wsobj['meta']['job_ids'] = json.dumps(wsobj['meta']['job_ids'])
             wsobj['meta']['methods'] = json.dumps(self.extract_cell_info(nb))
 
+            # Sort out job info we want to keep
+            # Gonna look like this, so init it that way
+            job_info = {
+                'queue_time': nb.metadata.job_ids['job_usage']['queue_time'],
+                'run_time': nb.metadata.job_ids['job_usage']['run_time'],
+                'running': 0,
+                'completed': 0,
+                'error': 0
+            }
+            for job in nb.metadata.job_ids['methods'] + nb.metadata.job_ids['apps']:
+                status = job.get('status', 'running')
+                if status.startswith('complete'):
+                    job_info['completed'] += 1
+                elif 'error' in status:
+                    job_info['error'] += 1
+                else:
+                    job_info['running'] += 1
+
+            wsobj['meta']['job_info'] = json.dumps(job_info)
+            if 'job_ids' in wsobj['meta']:
+                wsobj['meta'].pop('job_ids')
             # # ------
             # # If we're given a notebook id, try to parse it for the save parameters
             # if notebook_id:

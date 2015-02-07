@@ -396,103 +396,6 @@
                    "method('" + appSpecJSON + "', '" + methodSpecJSON + "', '" + paramsJSON + "')";
         },
 
-        /** DEPRECATED / OBSOLETED - use buildMethodCell or buildAppCell instead. **/
-        // /**
-        //  * @method buildFunctionCell
-        //  * @param {Object} method - the JSON schema version of the method to invoke. This will
-        //  * include a list of parameters and outputs.
-        //  */
-        // buildFunctionCell: function(method) {
-        //     var cell = IPython.notebook.insert_cell_below('markdown');
-        //     cell.celltoolbar.hide();
-        //     // make this a function input cell, as opposed to an output cell
-        //     this.setFunctionCell(cell, method);
-
-        //     // THIS IS WRONG! FIX THIS LATER!
-        //     // But it should work for now... nothing broke up to this point, right?
-        //     var cellIndex = IPython.notebook.ncells() - 1;
-        //     var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
-
-        //     // The various components are HTML STRINGS, not jQuery objects.
-        //     // This is because the cell expects a text input, not a jQuery input.
-        //     // Yeah, I know it's ugly, but that's how it goes.
-        //     var cellContent;
-
-        //     if (this.validateMethod(method)) {
-        //         // This is the list of parameters for the given method
-        //         var inputWidget = this.defaultInputWidget;
-        //         if (method.properties.widgets.input)
-        //             inputWidget = method.properties.widgets.input;
-
-        //         var inputDiv = "<div id='inputs'></div>";
-
-        //         // These are the 'delete' and 'run' buttons for the cell
-        //         var button_content;
-        //         if (this.readonly) {
-        //             button_content = "";
-        //         }
-        //         else {
-        //             button_content = "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default btn-sm'>Delete</button> " +
-        //                              "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary btn-sm'>Run</button>";
-        //                              //style='margin-top:10px'>" +
-        //         }
-        //         var buttons = "<div class='buttons pull-right'>" + button_content +
-        //                       "</div>";
-
-        //         // The progress bar remains hidden until invoked by running the cell
-        //         var progressBar = "<div id='kb-func-progress' class='pull-left' style='display:none;'>" +
-        //                             "<div class='progress progress-striped active kb-cell-progressbar'>" +
-        //                                 "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
-        //                                 "aria-valuemin='0' aria-valuemax='100' style='width:0%'/>" +
-        //                             "</div>" +
-        //                             "<p class='text-success'/>" +
-        //                           "</div>";
-
-        //         // Associate method title with description via BS3 collapsing
-        //         var methodId = cellId + "-method-details";
-        //         var buttonLabel = "...";
-        //         var methodDesc = method.description.replace(/"/g, "'"); // double-quotes hurt markdown rendering
-        //         var methodInfo = "<span class='kb-func-desc'>" +
-        //                            "<h1 style='display:inline'><b>" + method.title + "</b></h1>" +
-        //                            "<span class='pull-right kb-func-timestamp' id='last-run'></span>" +
-        //                            "<button class='btn btn-default btn-xs' type='button' data-toggle='collapse'" +
-        //                               " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
-        //                             "<div><h2 class='collapse' id='" + methodId + "'>" +
-        //                               methodDesc + "</h2></div>" +
-        //                          "</span>";
-
-        //         // Bringing it all together...
-        //         cellContent = "<div class='panel kb-func-panel kb-cell-run' id='" + cellId + "'>" +
-        //                           "<div class='panel-heading'>" +
-        //                               methodInfo +
-        //                           "</div>" +
-        //                           "<div class='panel-body'>" +
-        //                               inputDiv +
-        //                           "</div>" +
-        //                           "<div class='panel-footer' style='overflow:hidden'>" +
-        //                               progressBar +
-        //                               buttons +
-        //                           "</div>" +
-        //                       "</div>" +
-        //                       "\n<script>" +
-        //                       "$('#" + cellId + " > div > div#inputs')." + inputWidget + "({ method:'" +
-        //                        this.safeJSONStringify(method) + "'});" +
-        //                       "</script>";
-        //         console.debug("created input cell '", methodDesc, "', id = ", cellId);
-        //     }
-        //     else {
-        //         cellContent = "Error - the selected method is invalid.";
-        //     }
-        //     cell.set_text(cellContent);
-
-        //     cell.rendered = false;
-        //     cell.render();
-
-        //     // restore the input widget's state.
-        //     this.removeCellEditFunction(cell);
-        //     this.bindActionButtons(cell);
-        // },
-
         /**
          * A TEMPORARY FUNCTION that should refresh and update the given cell's metadata to the new(er) version,
          * if it needs to happen.
@@ -819,9 +722,9 @@
         /**
          * Activate "normal" R/W mode
          */
-         activateReadwriteMode: function() {
+        activateReadwriteMode: function() {
             console.debug("activate read-write mode");
-         },
+        },
 
         /**
          * Bind the 'Copy narrative' button to
@@ -1804,6 +1707,8 @@
          * data - the object to be passed in to the widget
          * embed - if true, then embed the widget and render it.
          * Returns unique id (string) of output cell <div>
+         *
+         * Also triggers a save.
          */
         createOutputCell: function(cell, result, isError, widget) {
             if (typeof result === 'string' && !isError) {
@@ -1893,10 +1798,12 @@
             outputCell.render();
             // If present, add list of "next steps"
             if (result.next_steps.apps || result.next_steps.methods) {
-              var $body = $('#' + outCellId).find('.panel-body');
-              this.showNextSteps({elt: $body, next_steps: result.next_steps});
+                var $body = $('#' + outCellId).find('.panel-body');
+                this.showNextSteps({elt: $body, next_steps: result.next_steps});
             }
             this.resetProgress(cell);
+            if (IPython && IPython.narrative)
+                IPython.narrative.saveNarrative();
             this.trigger('updateData.Narrative');
             return outCellId;
         },

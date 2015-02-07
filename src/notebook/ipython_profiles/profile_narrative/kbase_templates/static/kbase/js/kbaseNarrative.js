@@ -22,7 +22,8 @@
             if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
                 IPython.save_widget.rename_notebook("Please name your Narrative before saving.", false);
             } else {
-                IPython.notebook.save_checkpoint();
+                IPython.narrative.saveNarrative();
+//                IPython.notebook.save_checkpoint();
             }
         }
     });
@@ -214,9 +215,21 @@ var KBFatal = function(where, what) {
   $fatal.modal('show');
 }
 
-
+/**
+ * @constructor
+ * The base, namespaced Narrative object. This is mainly used at start-up time, and
+ * gets injected into the IPython namespace.
+ * 
+ * Most of its methods below - init, registerEvents, initAboutDialog, initUpgradeDialog,
+ * checkVersion, updateVersion - are set up at startup time.
+ * This is all done by an injection into static/notebook/js/main.js where the
+ * Narrative object is set up, and Narrative.init is run.
+ *
+ * But, this also has a noteable 'Save' method, that implements another Narrative-
+ * specific piece of functionality. See Narrative.prototype.saveNarrative below.
+ */
 var Narrative = function() {
-    this.narr_ws = null;
+    this.narrController = null;
     this.readonly = false; /* whether whole narrative is read-only */
     this.authToken = null;
     this.versionCheckTime = 6000*60*1000;
@@ -435,16 +448,16 @@ Narrative.prototype.init = function() {
      * Once everything else is loaded and the Kernel is idle,
      * Go ahead and fill in the rest of the Javascript stuff.
      */
-    $([IPython.events]).one('status_started.Kernel', function() {
+    $([IPython.events]).one('status_started.Kernel', $.proxy(function() {
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0,0);
         
         IPython.notebook.set_autosave_interval(0);
         IPython.CellToolbar.activate_preset("KBase");
 
-        var ws_name = null;
+        this.ws_name = null;
         if (IPython && IPython.notebook && IPython.notebook.metadata) {
-            ws_name = IPython.notebook.metadata.ws_name;
+            this.ws_name = IPython.notebook.metadata.ws_name;
             var narrname = IPython.notebook.notebook_name;
             var username = IPython.notebook.metadata.creator;
             $('#kb-narr-name #name').text(narrname);
@@ -471,20 +484,20 @@ Narrative.prototype.init = function() {
             // This puts the cell menu in the right place.
             $([IPython.events]).trigger('select.Cell', {cell: IPython.notebook.get_selected_cell()});
         }
-        if (ws_name) {
+        if (this.ws_name) {
             /* It's ON like DONKEY KONG! */
-            $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + ws_name);
-            var narr_ws = $('#notebook_panel').kbaseNarrativeWorkspace({
+            $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + this.ws_name);
+            this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
                 loadingImage: "/static/kbase/images/ajax-loader.gif",
                 ws_id: IPython.notebook.metadata.ws_name
             });
             $sidePanel.render();
-            $(document).trigger('setWorkspaceName.Narrative', {'wsId' : ws_name, 'narrController': narr_ws});
+            $(document).trigger('setWorkspaceName.Narrative', {'wsId' : this.ws_name, 'narrController': this.narrController});
         }
         else {
-            // ?
+            KBFatal("Narrative.init", "Unable to locate workspace name from the Narrative object!");
         }
-    });
+    }, this));
 };
 
 Narrative.prototype.updateVersion = function() {
@@ -501,4 +514,15 @@ Narrative.prototype.updateVersion = function() {
     prom.fail(function(jqXHR, response, error) {
         alert('Unable to update your Narrative session\nError: ' + jqXHR.status + ' ' + error);
     });
+};
+
+/**
+ * @method
+ * @public
+ * This triggers a save, but does a few steps first:
+ * ....or, it will soon.
+ * for now, it just passes through to the usual save.
+ */
+Narrative.prototype.saveNarrative = function() {
+    IPython.notebook.save_checkpoint();
 };

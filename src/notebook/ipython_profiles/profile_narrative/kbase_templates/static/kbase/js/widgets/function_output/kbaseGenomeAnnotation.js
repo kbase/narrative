@@ -46,22 +46,8 @@
 
             var kbws = new Workspace(self.wsUrl, {'token': self.token});
             
-            var ready = function() {
-            	container.empty();
-            	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
-
-            	kbws.get_objects([{ref: self.ws_name +"/"+ self.ws_id}], function(data) {
+            var ready = function(gnm, ctg) {
             		container.empty();
-            		var type = data[0].info[2];
-            		if (type.indexOf('-') >= 0) {
-            			type = type.substring(0, type.indexOf('-'));
-            		}
-            		var reqType = 'KBaseGenomes.Genome';
-            		if (!(type === reqType)) {
-            			container.append('<p>[Error] Object is of type "' + type + '" but expected type is "' + reqType + '"</p>');
-            			return;
-            		}
-            		var gnm = data[0].data;
             		var tabPane = $('<div id="'+pref+'tab-content">');
             		container.append(tabPane);
             		tabPane.kbaseTabs({canDelete : true, tabs : []});
@@ -105,6 +91,12 @@
             				var contigLen = gnm.contig_lengths[pos];
             				contigMap[contigId] = {name: contigId, length: contigLen, genes: []};
             			}
+            		} else if (ctg && ctg.contigs) {
+            		    for (var pos in ctg.contigs) {
+                            var contigId = ctg.contigs[pos].id;
+                            var contigLen = ctg.contigs[pos].length;
+                            contigMap[contigId] = {name: contigId, length: contigLen, genes: []};
+            		    }
             		}
             		
             		function geneEvents() {
@@ -197,7 +189,7 @@
             		var contigsSettings = {
             				"sPaginationType": "full_numbers",
             				"iDisplayLength": 10,
-            				"aaSorting": [],
+            				"aaSorting": [[ 1, "desc" ]],
             				"aoColumns": [
             				              {sTitle: "Contig name", mData: "name"},
             				              {sTitle: "Length", mData: "length"},
@@ -313,13 +305,35 @@
             				text += "" + key + "->" + value + " ";
             			}
             		}
-
-            	}, function(data) {
-            		container.empty();
-            		container.append('<p>[Error] ' + data.error.message + '</p>');
-            	});            	
             };
-            ready();
+            
+            container.empty();
+            container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
+            
+            var included = ["/complete","/contig_ids","/contig_lengths","contigset_ref","/dna_size",
+                            "/domain","/gc_content","/genetic_code","/id","/md5","num_contigs",
+                            "/scientific_name","/source","/source_id","/tax_id","/taxonomy",
+                            "/features/[*]/aliases","/features/[*]/annotations",
+                            "/features/[*]/function","/features/[*]/id","/features/[*]/location",
+                            "/features/[*]/protein_translation_length","/features/[*]/type"];
+            kbws.get_object_subset([{ref: self.ws_name + "/" + self.ws_id, included: included}], function(data) {
+                var gnm = data[0].data;
+                if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
+                    ready(gnm, null);
+                } else {
+                    var contigSetRef = gnm.contigset_ref;
+                    kbws.get_object_subset([{ref: contigSetRef, included: ['contigs/[*]/id', 'contigs/[*]/length']}], function(data2) {
+                        var ctg = data2[0].data;
+                        ready(gnm, ctg);
+                    }, function(data2) {
+                        container.empty();
+                        container.append('<p>[Error] ' + data.error.message + '</p>');
+                    });
+                }
+            }, function(data) {
+                container.empty();
+                container.append('<p>[Error] ' + data.error.message + '</p>');
+            });            	
             return this;
         },
         

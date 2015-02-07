@@ -466,6 +466,12 @@ class KBaseWSNotebookManager(NotebookManager):
                 nb.metadata.data_dependencies = list()
             if not hasattr(nb.metadata, 'job_ids'):
                 nb.metadata.job_ids = { 'methods' : [], 'apps' : [], 'job_usage': { 'queue_time': 0, 'run_time': 0 } }
+            if 'methods' not in nb.metadata['job_ids']:
+                nb.metadata.job_ids['methods'] = list()
+            if 'apps' not in nb.metadata['job_ids']:
+                nb.metadata.job_ids['apps'] = list()
+            if 'job_usage' not in nb.metadata['job_usage']:
+                nb.metadata.job_ids['job_usage'] = { 'queue_time': 0, 'run_time': 0 }
             nb.metadata.format = self.node_format
 
         except Exception as e:
@@ -530,9 +536,10 @@ class KBaseWSNotebookManager(NotebookManager):
 
             # Sort out job info we want to keep
             # Gonna look like this, so init it that way
+            nb_job_usage = nb.metadata.job_ids.get('job_usage', {'queue_time':0, 'run_time':0})
             job_info = {
-                'queue_time': nb.metadata.job_ids['job_usage']['queue_time'],
-                'run_time': nb.metadata.job_ids['job_usage']['run_time'],
+                'queue_time': nb_job_usage.get('queue_time', 0),
+                'run_time': nb_job_usage.get('run_time', 0),
                 'running': 0,
                 'completed': 0,
                 'error': 0

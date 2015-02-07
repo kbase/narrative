@@ -3,7 +3,20 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
-### Version 0.5.2 - 2/5/2015
+### Version 0.5.4 - 2/6/2015
+__Changes__
+- JIRA NAR-639, KBASE-1384 - Added completion time, run time, and queue time tracking for jobs
+  - a new 'job_info' property was added to object metadata, containing the following keys:
+    - 'completed', 'error', 'running' = the number of jobs in each state, >= 0
+    - 'queue_time' = total time jobs in this narrative have spent in the 'queued' state
+    - 'run_time' = total runtime reported by jobs in this narrative
+  - these changes become visible in the jobs panel for finished jobs
+- Optimized genome viewer widget
+- Updated Metagenome viewers
+- JIRA NAR-640 - Added autosaving whenever an output or error cells is created by job status change
+- JIRA NAR-650 - Block view of any queue position unless a job is in the 'queued' state.
+
+### Version 0.5.3 - 2/5/2015
 __Changes__
 - More minor icon changes.
 - Changed hard-coded urls to be relative to the config file in many widgets.

@@ -193,13 +193,14 @@
                     });
             }
             else {
+                /*Not really an error yet because we don't know what order things are being called
                 var where = "kbaseNarrativeDataList.refresh";
                 if (!self.ws) {
-                    KBFatal(where, "Workspace not connected");
+                    console.error(where, "Workspace not connected");
                 }
                 else {
-                    KBFatal(where, "Workspace name is empty");
-                }
+                    console.error(where, "Workspace name is empty");
+                }*/
             }
         },
 
@@ -574,7 +575,7 @@
                 shortName = shortName.substring(0,this.options.max_name_length-3)+'...';
                 isShortened=true;
             }
-            var $name = $('<span>').addClass("kb-data-list-name").append(shortName)
+            var $name = $('<span>').addClass("kb-data-list-name").append('<a>'+shortName+'</a>')
                             .css({'cursor':'pointer'})
                             .click(function(e) {
                                 e.stopPropagation();
@@ -606,7 +607,7 @@
                     $type.text(type+': '+metadata['Name']);
                 }
             }
-
+            
             var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td');
             this.displayRealName(object_info[5],$savedByUserSpan);
 
@@ -623,9 +624,10 @@
                                         .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
                                         .append(metadataText));
 
-            var $toggleAdvancedViewBtn = $('<span>').addClass("kb-data-list-more")//.addClass('btn btn-default btn-xs kb-data-list-more-btn')
-                .hide()
-                .html('<span class="fa fa-ellipsis-h" style="color:#999" aria-hidden="true"/>');
+            var $toggleAdvancedViewBtn =
+                $('<span>').addClass("kb-data-list-more")//.addClass('btn btn-default btn-xs kb-data-list-more-btn')
+                    .hide()
+                    .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">').append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
             var toggleAdvanced = function() {
                     if (self.selectedObject == object_info[0] && $moreRow.is(':visible')) {
                         // assume selection handling occurs before this is called
@@ -634,18 +636,22 @@
                     }
                     if ($moreRow.is(':visible')) {
                         $moreRow.slideUp('fast');
-                        $toggleAdvancedViewBtn.show();
+                        //$toggleAdvancedViewBtn.show();
                     } else {
                         self.getRichData(object_info,$moreRow);
                         $moreRow.slideDown('fast');
-                        $toggleAdvancedViewBtn.hide();
+                        //$toggleAdvancedViewBtn.hide();
                     }
                 };
 
             var $mainDiv  = $('<div>').addClass('kb-data-list-info').css({padding:'0px',margin:'0px'})
                                 .append($name).append($version).append('<br>')
-                                .append($type).append('<br>').append($date).append($byUser)
-                                .append($toggleAdvancedViewBtn)
+                                .append($('<table>').css({width:'100%'})
+                                    .append($('<tr>')
+                                            .append($('<td>').css({width:'85%'})
+                                                .append($type).append('<br>').append($date).append($byUser))
+                                            .append($('<td>')
+                                                    .append($toggleAdvancedViewBtn))))
                                 .click(
                                     function() {
                                         self.setSelected($(this).closest('.kb-data-list-obj-row'),object_info);
@@ -667,7 +673,7 @@
                             .append($moreRow)
                             // show/hide ellipses on hover, show extra info on click
                             .mouseenter(function(){
-                                if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
+                                $toggleAdvancedViewBtn.show();
                             })
                             .mouseleave(function(){ $toggleAdvancedViewBtn.hide(); });
 

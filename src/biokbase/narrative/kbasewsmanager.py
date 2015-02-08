@@ -470,7 +470,7 @@ class KBaseWSNotebookManager(NotebookManager):
                 nb.metadata.job_ids['methods'] = list()
             if 'apps' not in nb.metadata['job_ids']:
                 nb.metadata.job_ids['apps'] = list()
-            if 'job_usage' not in nb.metadata['job_usage']:
+            if 'job_usage' not in nb.metadata['job_ids']:
                 nb.metadata.job_ids['job_usage'] = { 'queue_time': 0, 'run_time': 0 }
             nb.metadata.format = self.node_format
 

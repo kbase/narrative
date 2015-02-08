@@ -288,7 +288,8 @@
             $.ajax({
                 url: "{{ static_url('kbase/config.json') }}",
                 async: false,
-                dataType: 'json'
+                dataType: 'json',
+                cache: false,
             }).responseText
         );
         var landingPageMap = {}; /*
@@ -299,14 +300,16 @@
             $.ajax({
                 url: "{{ static_url('kbase/landing_page_map.json') }}",
                 async: false,
-                dataType: 'json'
+                dataType: 'json',
+                cache: false,
             }).responseText
         );*/
         var icons = $.parseJSON(
           $.ajax({
             url: "{{ static_url('kbase/icons.json') }}",
             async: false,
-            dataType: 'json'
+            dataType: 'json',
+            cache: false,
           }).responseText
         );
         window.kbconfig = { urls: configJSON[configJSON['config']],

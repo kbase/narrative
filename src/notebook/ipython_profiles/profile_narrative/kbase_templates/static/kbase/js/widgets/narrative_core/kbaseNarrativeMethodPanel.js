@@ -444,7 +444,7 @@ kb_require(['kbaseMethodGallery'],
                                              .css({'width':'15%'})
                                              .append($logo))
                                      .append($('<td>')
-                                             // .css({'width':'80%'})
+                                             .css({'width':'70%'})
                                              .append($mainDiv))
                                      .append($('<td>')
                                              .append($moreBtn.hide())));

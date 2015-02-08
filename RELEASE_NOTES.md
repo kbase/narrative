@@ -3,6 +3,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.5.5 - 2/7/2015
+__Changes__
+- Minor changes to icons
+
+__Bugfixes__
+- JIRA NAR-657, KBASE-1527 - Fixed problem where a new narrative that hasn't had any jobs in it would fail to save.
+- JIRA NAR-651 - Fixed problem where a user with no narratives would see a constant spinner under the Narrative panel
+- Fixed issue where the Narrative panel would refresh twice on startup
+
 ### Version 0.5.4 - 2/6/2015
 __Changes__
 - JIRA NAR-639, KBASE-1384 - Added completion time, run time, and queue time tracking for jobs

@@ -584,7 +584,7 @@
             if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom', delay: { show: 750, hide: 0 } }); }
 
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
-            var $type = $('<span>').addClass("kb-data-list-type").append(type);
+            var $type = $('<div>').addClass("kb-data-list-type").append(type);
 
             var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]));
             var $byUser = $('<span>').addClass("kb-data-list-edit-by");
@@ -648,8 +648,8 @@
                                 .append($name).append($version).append('<br>')
                                 .append($('<table>').css({width:'100%'})
                                     .append($('<tr>')
-                                            .append($('<td>').css({width:'85%'})
-                                                .append($type).append('<br>').append($date).append($byUser))
+                                            .append($('<td>').css({width:'80%'})
+                                                .append($type).append($date).append($byUser))
                                             .append($('<td>')
                                                     .append($toggleAdvancedViewBtn))))
                                 .click(

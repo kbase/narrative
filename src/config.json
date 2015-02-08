@@ -64,5 +64,5 @@
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md", 
-    "version": "0.5.5"
+    "version": "0.5.6"
 }

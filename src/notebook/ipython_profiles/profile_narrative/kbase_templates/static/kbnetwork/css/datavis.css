@@ -737,6 +737,6 @@ a.ui-slider-handle:focus {
 ul.dropdown-menu {
     list-style: none;
 }
-.dropdown-menu > li > a, .rendered_html :link {
+.dropdown-menu > li > a {
     text-decoration: none;
 }

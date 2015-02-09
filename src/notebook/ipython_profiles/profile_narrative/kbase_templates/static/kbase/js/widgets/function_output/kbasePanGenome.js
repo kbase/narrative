@@ -399,7 +399,7 @@
         		$('.show-genomes_'+pref2).unbind('click');
         		$('.show-genomes_'+pref2).click(function() {
         			var id = $(this).data('id');
-            		var url = "/functional-site/#/genomes/" + id;
+            		var url = "/functional-site/#/dataview/" + id;
                     window.open(url, '_blank');
         		})
         		$('.show-genes_'+pref2).unbind('click');

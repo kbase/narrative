@@ -662,11 +662,13 @@
         
         showError: function(error) {
         	console.log(error);
-        	var errorMsg = error;
-        	if (error.error && error.error.message)
-        		errorMsg = error.error.message;
+        	if (typeof error === 'object' && error.error) {
+        	    error = error.error;
+        	    if (typeof error === 'object' && error.message)
+        	        error = error.message;
+        	}
         	this.infoPanel.empty();
-        	this.infoPanel.append('<pre style="text-align: left; background-color: #ffe0e0;">Error:\n'+errorMsg+'</pre>');
+        	this.infoPanel.append('<pre style="text-align: left; background-color: #ffe0e0;">Error:\n'+error+'</pre>');
         },
 
         showInfo: function(message, spinner) {

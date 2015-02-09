@@ -8,7 +8,7 @@ $.KBWidget({
     },
     loadingImage: "static/kbase/images/ajax-loader.gif",
     //fbaURL: "http://140.221.84.183:7036",
-    fbaURL: "https://kbase.us/services/KBaseFBAModeling",
+    fbaURL: window.kbconfig.urls.fba,
     
     init: function(options) {
         this._super(options);

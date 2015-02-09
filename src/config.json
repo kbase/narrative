@@ -4,7 +4,7 @@
         "awe": "http://140.221.67.185:7080", 
         "cdmi": "https://kbase.us/services/cdmi_api/", 
         "data_import_export": "https://kbase.us/services/data_import_export", 
-        "fba": "http://kbase.us/services/fba_model_services/", 
+        "fba": "https://kbase.us/services/KBaseFBAModeling/", 
         "gene_families": "http://140.221.67.203:8123/", 
         "genomeCmp": "http://dev06.berkeley.kbase.us:8283/jsonrpc", 
         "glamm": "http://140.221.84.217:7040/glamm/#", 
@@ -37,7 +37,7 @@
     "prod": {
         "awe": "https://kbase.us/services/awe-api", 
         "data_import_export": "https://kbase.us/services/data_import_export", 
-        "fba": "https://kbase.us/services/fba_model_services/", 
+        "fba": "https://kbase.us/services/KBaseFBAModeling/", 
         "gene_families": "https://kbase.us/services/gene_families", 
         "genomeCmp": "https://kbase.us/services/genome_comparison/jsonrpc", 
         "invocation": "https://kbase.us/services/invocation", 

@@ -18,9 +18,9 @@
         },
         token: null,
         wsName: null,
-        searchUrlPrefix: 'https://kbase.us/services/search/getResults',
+        searchUrlPrefix: window.kbconfig.urls.search,
         loadingImage: "static/kbase/images/ajax-loader.gif",
-        wsUrl: "https://kbase.us/services/ws/",
+        wsUrl: window.kbconfig.urls.workspace,
         wsClient: null,
         categories: ['genomes', 'metagenomes', 'media', 'plant_gnms'
                      /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations',

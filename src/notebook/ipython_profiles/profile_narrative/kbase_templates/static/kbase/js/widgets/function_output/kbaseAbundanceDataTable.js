@@ -61,11 +61,11 @@
 			            tdata[r] = new Array(clength);
 			            tdata[r][0] = biom['rows'][r]['id'];
 			            for (var c = 0; c < matrix[r].length; c++) {
-			                var value = matrix[r][c];
+                            var value = Math.round(matrix[r][c] * 1000) / 1000;
 			                if (! value) {
 				                value = "0";
 			                }
-			                tdata[r][c+1] = value
+                            tdata[r][c+1] = value;
 			            }
 		            }
 			        // TABLE
@@ -98,10 +98,10 @@
 
 	    sparse2dense: function(sparse, rmax, cmax) {
 	        var dense = new Array(rmax);
+	        // dense matrix of 0's
 	        for (var i = 0; i < rmax; i++) {
 		        dense[i] = Array.apply(null, new Array(cmax)).map(Number.prototype.valueOf, 0);
 	        }
-	        // 0 values are undefined
 	        for (var i = 0; i < sparse.length; i++) {
 		        dense[ sparse[i][0] ][ sparse[i][1] ] = sparse[i][2];
 	        }

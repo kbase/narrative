@@ -189,7 +189,7 @@ var NarrativeManager = function(options, auth, auth_cb) {
             function() {
                 // now we can create the metadata and populate the cells
                 var metadata = {
-                    job_ids: { methods:[], apps:[] },
+                    job_ids: { methods:[], apps:[], job_usage:{'queue_time':0, 'run_time':0} },
                     format:'ipynb',
                     creator:self.user_id,
                     ws_name:ws_name,

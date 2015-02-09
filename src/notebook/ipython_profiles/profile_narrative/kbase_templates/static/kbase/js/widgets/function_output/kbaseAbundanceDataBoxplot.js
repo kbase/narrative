@@ -57,9 +57,11 @@
 	                    }
 	                }
 		            // values
+		            var maxval = 0;
 		            for (var r = 0; r < rownum; r++) {
 		                for (var c = 0; c < colnum; c++) {
-		                    divdata[c]['data'].push(matrix[r][c]);
+                            maxval = Math.max(maxval, matrix[r][c]);
+                            divdata[c]['data'].push(matrix[r][c]);
 	                    }
 	                }
                     // DEVIATION PLOT
@@ -68,9 +70,14 @@
                         glen = rendererGraph.length;
                     }
 			        container.append("<div id='outputGraph"+glen+"' style='width: 95%;'></div>");
+			        var ab_type = 'normalized';
+			        if (maxval > 1) {
+			            ab_type = 'raw';
+			        }
                     var devTest = standaloneGraph.create({index: glen});
                     devTest.settings.target = document.getElementById("outputGraph"+glen);
                     devTest.settings.data = divdata;
+                    devTest.settings.y_title = ab_type+' abundance';
                     devTest.settings.show_legend = false;
                     devTest.settings.height = 400;
                     devTest.settings.type = "deviation";

@@ -406,11 +406,11 @@ kb_require(['kbaseMethodGallery'],
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
                         .css({'white-space':'normal', 'cursor':'pointer'})
-                        .append(method.info.name)
-                        .click($.proxy(function(e) {
-                            e.stopPropagation();
-                            triggerFn(method);
-                        }, this));
+                        .append($('<a>').append(method.info.name)
+                                    .click($.proxy(function(e) {
+                                        e.stopPropagation();
+                                        triggerFn(method);
+                                    }, this)));
             var $version = $('<span>').addClass("kb-data-list-type").append('v'+method.info.ver); // use type because it is a new line
 
             var $more = $('<div>')
@@ -423,10 +423,11 @@ kb_require(['kbaseMethodGallery'],
                                         .attr('target', '_blank')
                                         .attr('href', this.options.methodHelpLink + method.info.id)));
 
-            var $moreBtn = $('<span>')
-                           .addClass('kb-data-list-more fa fa-ellipsis-h')
-                           .attr('aria-hidden', 'true')
-                           .css({'color' : '#999'});
+            var $moreBtn =
+                    $('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
+                        .append($('<span>')
+                                    .addClass('fa fa-ellipsis-h')
+                                    .css({'color' : '#999'}));
 
             var $mainDiv = $('<div>')
                            .addClass('kb-data-list-info')
@@ -443,8 +444,10 @@ kb_require(['kbaseMethodGallery'],
                                              .css({'width':'15%'})
                                              .append($logo))
                                      .append($('<td>')
-                                             // .css({'width':'80%'})
-                                             .append($mainDiv)));
+                                             .css({'width':'70%'})
+                                             .append($mainDiv))
+                                     .append($('<td>')
+                                             .append($moreBtn.hide())));
 
             return $('<div>')
                    .append($('<hr>').addClass('kb-data-list-row-hr').css({'margin-left':'65px'}))
@@ -453,14 +456,11 @@ kb_require(['kbaseMethodGallery'],
                            .append($newMethod)
                            .append($more.hide())
                            .mouseenter(function() {
-                                if (!$more.is(':visible')) { $moreBtn.show(); }
+                                $moreBtn.show();
                            })
                            .mouseleave(function() { $moreBtn.hide(); })
                            .click(function() {
-                                $more.slideToggle('fast', $.proxy(function() {
-                                    if (!$more.is(':visible')) { $moreBtn.show(); }
-                                    else { $moreBtn.hide(); }
-                                }, this));
+                                $more.slideToggle('fast');
                            } ));
 
         },

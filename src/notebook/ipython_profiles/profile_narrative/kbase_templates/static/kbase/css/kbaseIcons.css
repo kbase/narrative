@@ -41,16 +41,16 @@
 .icon-compare:before {
   content: "a";
 }
-.icon-contigs:before {
+.icon-genome:before {
   content: "b";
 }
-.icon-genome:before {
+.icon-metabolism:before {
   content: "c";
 }
-.icon-metabolism:before {
+.icon-metagenome:before {
   content: "d";
 }
-.icon-metagenome:before {
+.icon-reads:before {
   content: "e";
 }
 .icon-tree:before {

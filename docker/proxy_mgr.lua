@@ -640,6 +640,7 @@ set_proxy = function(self)
             if action == "sync" then
                 -- sync maps with existing containers
                 sync_containers()
+                response["msg"] = "Synced docker memory map with docker container state"
             else
                 response["error"] = "Invalid action specified: "..action
                 ngx.status = ngx.HTTP_BAD_REQUEST
@@ -657,7 +658,7 @@ set_proxy = function(self)
         if key then
             -- immediatly delete all provisioned containers
             if key == "provisioned" then
-                response = { message = "", deleted = {}, error = {} }
+                response = { msg = "", deleted = {}, error = {} }
                 -- get locker
                 local dock_lock = locklib:new(M.lock_name, lock_opts)
                 -- loop through ids
@@ -693,10 +694,10 @@ set_proxy = function(self)
                             end
                         end
                         dock_lock:unlock() -- unlock if it worked
-                        response.message = "Sucessfully killed "..del.." containers"
+                        response["msg"] = "Sucessfully killed "..del.." containers"
                     else
                         ngx.log(ngx.ERR, "Error: "..err)
-                        response.message = "Error: "..err
+                        response["msg"] = "Error: "..err
                         ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
                     end
                 end

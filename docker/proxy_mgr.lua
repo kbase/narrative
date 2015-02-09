@@ -336,7 +336,7 @@ end
 -- do not provision containers that would cause total to be > than container_max
 provisioner = function()
     ngx.log(ngx.INFO, "provisioner running")
-    -- sync docker_map with existing containers
+    -- sync maps with existing containers
     sync_containers()
     local queued = 0
     local total = 0
@@ -633,46 +633,19 @@ set_proxy = function(self)
         ngx.say(json.encode(response))
     elseif method == "PUT" then
         local response = {}
-        -- Check URI to make sure a specific session key is being asked for
-        -- and assign given container id to it
-        local key = string.match(ngx.var.uri, uri_key_rx)
-        if key then
-            -- see if we have a uri of the form
-            -- $uri_base/{key}/{id}
-            local id = string.match(ngx.var.uri, uri_pair_rx)
-            if id == nil then
-                id = ngx.req:get_body_data()
-                id = string.match(id, id_regex)
-            end
-            if id then
-                local val = docker_map:get(id)
-                if val then
-                    -- info = { state, ip:port, session, last_time, last_ip }
-                    local info = notemgr:split(val)
-                    local success, err, forcible = session_map:set(key, table.concat({info[2], id}, " "))
-                    if success then
-                        info = {"active", info[2], key, os.time(), client_ip}
-                        success, err, forcible = docker_map:set(id, table.concat(info, " "))
-                        if success then
-                            response["msg"] = "Assigned container "..id.." to "..key
-                        else
-                            response["error"] = err
-                            ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-                        end
-                    else
-                        response["error"] = err
-                        ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-                    end
-                else
-                    response["error"] = "Docker container "..id.." does not exist"
-                    ngx.status = ngx.HTTP_NOT_FOUND
-                end
+        -- PUT method performs changes on memory maps
+        -- Check URI for action to perform
+        local action = string.match(ngx.var.uri, uri_key_rx)
+        if action then
+            if action == "sync" then
+                -- sync maps with existing containers
+                sync_containers()
             else
-                response["error"] = "No valid container Id provided for session key"
-                ngx.status = ngx.HTTP_BAD_REQUEST     
+                response["error"] = "Invalid action specified: "..action
+                ngx.status = ngx.HTTP_BAD_REQUEST
             end
         else
-            response["error"] = "No valid session key specified"
+            response["error"] = "No action specified"
             ngx.status = ngx.HTTP_NOT_FOUND
         end
         ngx.say(json.encode(response))
@@ -923,6 +896,7 @@ sync_containers = function()
     local portmap = notemgr:get_notebooks()
     local ids = docker_map:get_keys()
     local dock_lock = locklib:new(M.lock_name, lock_opts)
+    local session_lock = locklib:new(M.lock_name, lock_opts)
     -- delete from memory if not a container
     for num = 1, #ids do
         id = ids[num]
@@ -931,7 +905,19 @@ sync_containers = function()
         if elapsed then
             val = docker_map:get(id)  -- make sure its still there
             if val and not portmap[id] then
+                -- info = { state, ip:port, session, last_time, last_ip }
+                local info = notemgr:split(val)
+                ngx.log(ngx.WARN, "memory maps are stale, deleting "..info[3]..", "..id)
                 docker_map:delete(id)
+                -- delete from session map if deleting from docker_map
+                elapsed, err = session_lock:lock(info[3])
+                if elapsed then
+                    target = session_map:get(info[3])
+                    if target then
+                        session_map:delete(info[3])
+                    end
+                    session_lock:unlock() -- unlock if it worked
+                end
             end
             dock_lock:unlock() -- unlock if it worked
         end
@@ -982,7 +968,7 @@ end
 -- returns session info, nil if error
 --
 assign_container = function(session_id, client_ip)
-    -- sync map with state
+    -- sync maps with existing containers
     sync_containers()
     ngx.log(ngx.INFO, "Assigning container from queue")
     -- get list of queued ids, oldest to newest

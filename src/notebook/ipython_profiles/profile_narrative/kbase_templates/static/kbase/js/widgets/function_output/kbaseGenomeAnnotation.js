@@ -148,8 +148,8 @@
             		////////////////////////////// Contigs Tab //////////////////////////////
             		$('#'+pref+'contigs').append($('<div>').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'contigs-table" '+
             			'class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>'));
-            		$('#'+pref+'contigs').append($('<div style="margin: 14px 0px 0px 0px">').append($('<span style="font-size: 75%; color: #898989;">')
-							.append('(only contigs containing features are shown)')));
+            		//$('#'+pref+'contigs').append($('<div style="margin: 14px 0px 0px 0px">').append($('<span style="font-size: 75%; color: #898989;">')
+					//		.append('(only contigs containing features are shown)')));
             		var contigsData = [];
 
             		function contigEvents() {

@@ -147,6 +147,7 @@ div#notebook {
     margin: 0;
     box-shadow: 0 0 3px #CECECE;
     margin-right: 5px;
+    min-width: 50px;
 }
 .navbar-right .fa::before { /* color nav icons */
     color: #2196F3;
@@ -2381,4 +2382,9 @@ div[class="tooltip-inner"] {
     color: firebrick;
     font-style: italic;
     margin-top: 0.5em;
+}
+
+/* View-only (read-only) */
+#kb-ro-btn {
+    margin-right: 20px;
 }

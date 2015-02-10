@@ -698,7 +698,8 @@
          * @param on If true, turn them on; else turn them off
          */
         toggleRunButtons: function(on) {
-            var classes = ['.kb-app-run', '.kb-method-run'];
+            var classes = ['.kb-app-run', '.kb-method-run',
+                'span.pull-right.kb-func-timestamp span>span'];
             if (on) {
                 _.map(this.readonly_buttons, function(b) {
                    b.show();

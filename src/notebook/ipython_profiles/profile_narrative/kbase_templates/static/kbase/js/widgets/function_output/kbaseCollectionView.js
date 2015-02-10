@@ -32,10 +32,10 @@
 
 	        var kbws = new Workspace(self.ws_url, {'token': self.token});
 	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
-	            container.empty();
 		        // parse data
 		        if (data.length == 0) {
 		            var msg = "[Error] Object "+self.options.id+" does not exist in workspace "+self.options.ws;
+		            container.empty();
 		            container.append('<div><p>'+msg+'>/p></div>');
 		        } else {
 			        // parse data		            
@@ -68,6 +68,7 @@
                             }
 				        
 				            var html = '<h4>Metagenome Collection '+d.name+'</h4><div id="collectionTable'+tlen+'" style="width: 95%;"></div>';
+		            	    container.empty();
 		            	    container.append(html);
 
 				            var tableCollection = standaloneTable.create({index: tlen});
@@ -81,7 +82,7 @@
     		            main.append($('<p>')
     		                .css({'padding': '10px 20px'})
     		                .text('[Error] collection is empty'));
-    		                container.append(main);
+    		            container.append(main);
 		            }
 	            }
 	        }, function(data) {

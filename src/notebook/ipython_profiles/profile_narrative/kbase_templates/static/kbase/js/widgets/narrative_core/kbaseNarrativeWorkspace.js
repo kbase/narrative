@@ -239,6 +239,7 @@
               'container': 'body',
               delay: {"show": 400, "hide": 50}
             });
+
             this.initDeleteCellModal();
             // Initialize the data table.
             this.render();

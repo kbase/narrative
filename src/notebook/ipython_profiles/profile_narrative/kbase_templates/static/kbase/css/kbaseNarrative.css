@@ -2389,8 +2389,9 @@ div[class="tooltip-inner"] {
     margin-right: 20px;
 }
 #kb-view-mode {
-    font-size: 14pt;
-    margin-left: 1em;
+    font-size: 13pt;
+    margin: -15px 0 0 1em;
+    padding: 0;
 }
 #kb-view-mode span.fa-ban {
     display: none;

@@ -248,12 +248,7 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
         },
 
         _getMethodStoreURL: function() {
-            var methodStoreURL = null;
-            if (window.kbconfig && window.kbconfig.urls) {
-                methodStoreURL = window.kbconfig.urls.narrative_method_store;
-            } else {
-                methodStoreURL = 'http://dev19.berkeley.kbase.us/narrative_method_store';
-            }
+            var methodStoreURL = window.kbconfig.urls.narrative_method_store;
             return methodStoreURL;
         },
 

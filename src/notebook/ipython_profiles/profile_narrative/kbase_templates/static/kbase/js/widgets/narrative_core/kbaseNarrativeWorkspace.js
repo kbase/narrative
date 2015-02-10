@@ -28,7 +28,7 @@
             tableElem: null,
             controlsElem: null,
             ws_id: null,
-            methodStoreURL: 'https://kbase.us/services/narrative_method_store',
+            methodStoreURL: 'https://kbase.us/services/narrative_method_store'
         },
         ws_client: null,
         ws_id: null,
@@ -66,8 +66,11 @@
         init: function(options) {
             this._super(options);
             this.ws_id = this.options.ws_id;
+
             this.is_readonly = null; // null => unset, force a check
             this.last_readonly_check = null; // avoid frequent checks
+            this.user_readonly = false; // user-defined override
+            this.readonly_buttons = []; // list of buttons toggled
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
@@ -217,7 +220,25 @@
                 },
                 this)
             );
-
+            // related: click on edit-mode toggles state
+            $('#kb-view-mode').click($.proxy(function() {
+                if (this.is_readonly == false) {
+                    this.user_readonly = !this.user_readonly;
+                    if (this.user_readonly) {
+                        this.readOnlyMode(true);
+                        $('#kb-view-mode span.fa-ban').show();
+                    }
+                    else {
+                        this.readWriteMode(true);
+                        $('#kb-view-mode span.fa-ban').hide();
+                    }
+                }
+            }, this));
+            $('#kb-view-mode').tooltip({
+              title: 'Toggle view-only mode',
+              'container': 'body',
+              delay: {"show": 400, "hide": 50}
+            });
             this.initDeleteCellModal();
             // Initialize the data table.
             this.render();
@@ -234,7 +255,7 @@
                     callback : function(e, $prompt) {
                         this.cellToDelete = null;
                         $prompt.closePrompt();
-                    },
+                    }
                 },
                 {
                     name : 'Delete',
@@ -342,7 +363,7 @@
                 'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput); },
                 'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
                 'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-                'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
+                'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
             };
 
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
@@ -388,7 +409,7 @@
                 'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, "app"); },
                 'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
                 'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-                'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
+                'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
             };
 
             var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
@@ -405,7 +426,6 @@
                    "method = Service.get_service('app_service').get_method('app_call')\n" +
                    "method('" + appSpecJSON + "', '" + methodSpecJSON + "', '" + paramsJSON + "')";
         },
-
 
         /**
          * A TEMPORARY FUNCTION that should refresh and update the given cell's metadata to the new(er) version,
@@ -601,9 +621,11 @@
                         }
                         else if (readonly == true) {
                             this.readOnlyMode();
+                            $('#kb-view-mode').css({display: 'none'});
                         }
                         else {
                             this.readWriteMode();
+                            $('#kb-view-mode').css({display: 'inline-block'});
                         }
                         this.is_readonly = readonly;
                     }
@@ -658,158 +680,116 @@
               });
         },
 
+        getReadOnlySelectors: function() {
+            return ['.kb-app-next',                         // next steps
+                    '#kb-add-code-cell', '#kb-add-md-cell', // edit btns
+                    '#kb-share-btn', '#kb-save-btn',        // action btns
+                    '#kb-ipy-menu'];                        // kernel
+        },
+
+        /**
+         * Toggle the run/cancel/reset buttons on and off,
+         * saving them in this.readonly_buttons when they are turned off.
+         *
+         * @param on If true, turn them on; else turn them off
+         */
+        toggleRunButtons: function(on) {
+            var classes = ['.kb-app-run', '.kb-method-run'];
+            if (on) {
+                _.map(this.readonly_buttons, function(b) {
+                   b.show();
+                });
+                this.readonly_buttons = []; // don't do it twice
+            }
+            else {
+                var ro = [];
+                _.map(classes, function(c) {
+                   _.map($(c), function(b) {
+                       var $btn = $(b);
+                       if ($btn.css('display') != "none") {
+                           // it is visible, so hide it and remember it
+                           ro.push($btn);
+                           $btn.hide();
+                       }
+                   });
+                });
+                this.readonly_buttons = ro;
+            }
+        },
+
         /**
          * Set narrative into read-only mode.
          */
-        readOnlyMode: function() {
-            console.debug('set_readonly_mode.begin');
-            // Hide delete and run buttons
-            $('.kb-app-run').hide();
+        readOnlyMode: function(from_user) {
+            console.debug('set_readonly_mode.begin from-user=' + from_user);
             // Hide side-panel
             $('#left-column').hide();
             // Move content flush left
-            $('#content-column').css({'margin-left': 90});
-            // Take out some buttons
-            _.each(['#kb-add-code-cell', '#kb-add-md-cell', // edit btns
-                    '#kb-share-btn', '#kb-save-btn',        // action btns
-                    '#kb-ipy-menu'],                        // kernel
-                    function (id) {$(id).hide()});
+            $('#content-column').css({'margin-left': '0px'});
+            // Hide things
+            _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
+            this.toggleRunButtons(false);
             // Add copy button
-            $('.navbar-right').prepend(
-              $('<button>').addClass('btn btn-default navbar-btn kb-nav-btn')
-                .append($('<div>').addClass('fa fa-copy'))
-                .append($('<div>').text("copy").addClass('kb-nav-btn-txt'))
-                .click(function() {
-                    var $dlg = $('#kb-ro-copy-dlg');
-                    $dlg.modal();
-                    var $panel = $dlg.find(".modal-body");
-                    var $jump = $("<div>").css({'margin-top': '20px'})
-                      .append($("<button>").addClass('btn btn-info')
-                        .text("Open this narrative"));
-                    $(document).trigger('copyThis.Narrative', [$panel, null, $jump]);
-                    return '';
-                })
-            );
-            // Add view-only info
-            $('.navbar-right').prepend(
-              $('<div>').addClass("btn btn-info")
-                .attr({'id':'kb-ro-btn'})
-                .text('View-only mode')
-                .popover({
-                    html: true,
-                    placement: "bottom",
-                    trigger: 'hover',
-                    content: 'You do not have permissions to modify ' +
-                      'this narrative. If you want to make your own ' +
-                      'copy that can be modified, use the ' +
-                      '"Copy" button.'
-              }));
+            if (from_user == true) {
+                $('.navbar-right').prepend(
+                  $('<div>').addClass("btn btn-warning")
+                    .text('View-only mode'));
+            }
+            else {
+                $('.navbar-right').prepend(
+                  $('<button>').addClass('btn btn-default navbar-btn kb-nav-btn')
+                    .append($('<div>').addClass('fa fa-copy'))
+                    .append($('<div>').text("copy").addClass('kb-nav-btn-txt'))
+                    .click(function () {
+                        var $dlg = $('#kb-ro-copy-dlg');
+                        $dlg.modal();
+                        var $panel = $dlg.find(".modal-body");
+                        var $jump = $("<div>").css({'margin-top': '20px'})
+                          .append($("<button>").addClass('btn btn-info')
+                            .text("Open this narrative"));
+                        $(document).trigger('copyThis.Narrative', [$panel, null, $jump]);
+                        return '';
+                    })
+                );
+                // Add view-only info
+                $('.navbar-right').prepend(
+                  $('<div>').addClass("btn btn-warning")
+                    .attr({'id': 'kb-ro-btn'})
+                    .text('View-only mode')
+                    .popover({
+                        html: true,
+                        placement: "bottom",
+                        trigger: 'hover',
+                        content: 'You do not have permissions to modify ' +
+                        'this narrative. If you want to make your own ' +
+                        'copy that can be modified, use the ' +
+                        '"Copy" button.'
+                    }));
+            }
             console.debug('set_readonly_mode.end');
             return;
-
-            var self = this;
-
-            console.debug("activate read-only mode");
-
-            // Delete left-side panel!
-            $('#left-column').detach(); //hide();
-
-            // Hide IPython toolbar
-            $('#maintoolbar').hide();
-
-            // Move content panels to the left
-            $('#ipython-main-app').css({'left': '10px'});
-            $('#menubar-container').css({'left': '10px'});
-
-            // Disable text fields
-            console.debug("readonly: Disable text fields");
-            $(".cell input").attr('disabled', 'disabled');
-
-            // Disable buttons
-            console.debug("readonly: Disable internal buttons");
-            $(".cell button").hide();  //attr('disabled', 'disabled');
-
-            // Hide save/checkpoint status
-            $('#autosave_status').text("(read-only)");
-            $('#checkpoint_status').hide();
-
-            var input_titles = [];
-
-            // Remove h1 from input titles
-            $('div.kb-func-desc h1').each(function(idx) {
-                var title = $(this).text();
-                var title_span = $('<span>' + title + '</span>');
-                var desc = $(this).parent();
-                desc.prepend(title_span);
-                $(this).remove();
-                input_titles.push([title, desc]);
-                desc.prepend(
-                    '<span class="label label-info" style="margin-right: 8px;" ' +
-                    ' id="kb-input-' + idx + '">' +
-                    'Input' +
-                    '</span>');
-            });
-
-            // Add label before input titles
-            // $('.kb-func-panel .panel-heading .kb-func-desc').prepend(
-            //     '<span class="label label-info" style="margin-right: 8px;">' +
-            //     ' id="kb-input-' + idx +
-            //     'Input' +
-            //     '</span>');
-
-            // Remove trailing ' - Output' junk from output titles
-            // and add label before them.
-            // If a matching input title can be found, store in 'connectable'
-            var matched_input = 0;
-            var connectable = {};
-            $('.kb-cell-output').each(function(idx) {
-                var desc = $(this).find('.kb-out-desc');
-                var title_full = desc.text();
-                var otitle = title_full.replace(/\s*-\s*Output/,'');
-                if (title_full != otitle) {
-                    desc.text(otitle); // replace
-                }
-                var title_span = $('<span class="label label-primary" style="margin-right: 8px;"' +
-                    ' id="kb-output-' + idx + '">' +
-                'Output' +
-                '</span>')
-                desc.prepend(title_span);
-                // Look for matching input
-                for (var i=matched_input; i < input_titles.length; i++) {
-                    var ititle = input_titles[i][0];
-                    //console.debug('input title="'+ ititle + '" output title="' + otitle + '"');
-                    if (ititle == otitle) {
-                        matched_input = i + 1;
-                        connectable[i] = idx;
-                        break;
-                    }
-                }
-            });
-
-            // Add 'Copy' button after narrative title
-            var narr_copy_id = "narr-copy";
-            var button = $('<button type="button" ' +
-                           'class="btn btn-success" ' +
-                           'id="'  + narr_copy_id + '" ' +
-                           'data-toggle="tooltip" ' +
-                           'title="Copy this narrative to a workspace ' +
-                           'where you can modify and run it" ' +
-                           '>Copy</button>');
-            button.css({'line-height': '1em',
-                        'margin-top': '-15px',
-                        'margin-left': '5em'});
-            e = $('#menubar').append(button);
-            this.bindCopyButton($('#' + narr_copy_id));
-
-            this.connectable = connectable;
         },
 
         /**
          * Set narrative from read-only mode to read-write mode
          *
          */
-        readWriteMode: function() {
+        readWriteMode: function(from_user) {
             console.debug("set_readwrite_mode.begin");
+            // Remove the view-only buttons (first 1 or 2 children)
+            if (from_user === undefined) { // copy button not present if from user
+                $('.navbar-right > button')[0].remove();
+            }
+            $('.navbar-right > div')[0].remove();
+            // Restore side-panel
+            $('#left-column').show();
+            // Restore margin for content
+            $('#content-column').css({'margin-left': '380px'});
+            // Show hidden things
+            _.map(this.getReadOnlySelectors(), function (id) {
+                $(id).show();
+            });
+            this.toggleRunButtons(true);
             console.debug("set_readwrite_mode.end");
         },
 
@@ -856,38 +836,10 @@
         /**
          * Activate "normal" R/W mode
          */
-         activateReadwriteMode: function() {
+        activateReadwriteMode: function() {
             console.debug("activate read-write mode");
-         },
-
-        /**
-         * Bind the 'Copy narrative' button to
-         * a function that copies the narrative.
-         */
-        bindCopyButton: function(element) {
-            var oid = this.getNarrId();
-            element.click(function() {
-                console.debug("Make a copy for narr. obj = ", oid);
-                // XXX: Complete and utter FAKE!
-                // XXX: Just jump to a hardcoded read/write narrative based on the input one
-                var copy_id_map = {
-                    'ws.2590.obj.8': 'ws.2615.obj.8', // comparative genomics
-                };
-                var copy_id = copy_id_map[oid];
-                if (copy_id !== undefined) {
-                    // Open new narrative
-                    var oldpath = window.location.pathname;
-                    var parts = oldpath.split('/');
-                    parts.pop(); // pop off old id
-                    parts.push(copy_id); // add new one
-                    var newpath = parts.join('/'); // rejoin as a path
-                    var newurl = window.location.protocol + '//' + window.location.host + newpath;
-                    console.debug("Moving to new URL: ", newurl);
-                    window.location.replace(newurl);
-                }
-            });
-            return;
         },
+
 
         /**
          * Object identifier of current narrative, extracted from page URL.
@@ -1494,7 +1446,7 @@
                     'output' : function(msgType, content) { self.handleOutput(cell, msgType, content); },
                     'clear_output' : function(content) { self.handleClearOutput(cell, content); },
                     'set_next_input' : function(text) { self.handleSetNextInput(cell, content); },
-                    'input_request' : function(content) { self.handleInputRequest(cell, content); },
+                    'input_request' : function(content) { self.handleInputRequest(cell, content); }
                 };
 
                 // ignore making code cells for now.
@@ -1610,7 +1562,7 @@
             if (content.status === 'error') {
                 var errorBlob = {
                     msg : content.evalue,
-                    type : content.ename,
+                    type : content.ename
                 };
 
                 if (cell && cell.metadata && cell.metadata['kb-cell'] &&
@@ -1841,6 +1793,8 @@
          * data - the object to be passed in to the widget
          * embed - if true, then embed the widget and render it.
          * Returns unique id (string) of output cell <div>
+         *
+         * Also triggers a save.
          */
         createOutputCell: function(cell, result, isError, widget) {
             if (typeof result === 'string' && !isError) {
@@ -1930,10 +1884,12 @@
             outputCell.render();
             // If present, add list of "next steps"
             if (result.next_steps.apps || result.next_steps.methods) {
-              var $body = $('#' + outCellId).find('.panel-body');
-              this.showNextSteps({elt: $body, next_steps: result.next_steps});
+                var $body = $('#' + outCellId).find('.panel-body');
+                this.showNextSteps({elt: $body, next_steps: result.next_steps});
             }
             this.resetProgress(cell);
+            if (IPython && IPython.narrative)
+                IPython.narrative.saveNarrative();
             this.trigger('updateData.Narrative');
             return outCellId;
         },

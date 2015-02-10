@@ -46,22 +46,8 @@
 
             var kbws = new Workspace(self.wsUrl, {'token': self.token});
             
-            var ready = function() {
-            	container.empty();
-            	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
-
-            	kbws.get_objects([{ref: self.ws_name +"/"+ self.ws_id}], function(data) {
+            var ready = function(gnm, ctg) {
             		container.empty();
-            		var type = data[0].info[2];
-            		if (type.indexOf('-') >= 0) {
-            			type = type.substring(0, type.indexOf('-'));
-            		}
-            		var reqType = 'KBaseGenomes.Genome';
-            		if (!(type === reqType)) {
-            			container.append('<p>[Error] Object is of type "' + type + '" but expected type is "' + reqType + '"</p>');
-            			return;
-            		}
-            		var gnm = data[0].data;
             		var tabPane = $('<div id="'+pref+'tab-content">');
             		container.append(tabPane);
             		tabPane.kbaseTabs({canDelete : true, tabs : []});
@@ -70,26 +56,6 @@
             		for (var i=0; i<tabIds.length; i++) {
             			var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
             			tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
-            		}
-
-            		////////////////////////////// Overview Tab //////////////////////////////
-            		$('#'+pref+'overview').append('<table class="table table-striped table-bordered" \
-            				style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-            		var overviewLabels = ['KBase ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size"];
-            		var tax = gnm.taxonomy;
-            		if (tax == null)
-            			tax = '';
-            		var overviewData = [gnm.id, '<a href="/functional-site/#/dataview/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>', 
-            		                    gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gnm.gc_content, tax, gnm.dna_size];
-            		var overviewTable = $('#'+pref+'overview-table');
-            		for (var i=0; i<overviewData.length; i++) {
-            			if (overviewLabels[i] === 'Taxonomy') {
-            				overviewTable.append('<tr><td>' + overviewLabels[i] + '</td> \
-            						<td><textarea style="width:100%;" cols="2" rows="5" readonly>'+overviewData[i]+'</textarea></td></tr>');
-            			} else {
-            				overviewTable.append('<tr><td>'+overviewLabels[i]+'</td> \
-            						<td>'+overviewData[i]+'</td></tr>');
-            			}
             		}
 
             		////////////////////////////// Genes Tab //////////////////////////////
@@ -105,6 +71,12 @@
             				var contigLen = gnm.contig_lengths[pos];
             				contigMap[contigId] = {name: contigId, length: contigLen, genes: []};
             			}
+            		} else if (ctg && ctg.contigs) {
+            		    for (var pos in ctg.contigs) {
+                            var contigId = ctg.contigs[pos].id;
+                            var contigLen = ctg.contigs[pos].length;
+                            contigMap[contigId] = {name: contigId, length: contigLen, genes: []};
+            		    }
             		}
             		
             		function geneEvents() {
@@ -132,8 +104,8 @@
             			var geneFunc = gene['function'];
             			if (!geneFunc)
             				geneFunc = '-';
-            			genesData[genesData.length] = {id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>', 
-            					contig: contigName, start: geneStart, dir: geneDir, len: geneLen, type: geneType, func: geneFunc};
+            			genesData.push({id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>', 
+            					contig: contigName, start: geneStart, dir: geneDir, len: geneLen, type: geneType, func: geneFunc});
             			geneMap[geneId] = gene;
             			var contig = contigMap[contigName];
             			if (contigName != null && !contig) {
@@ -176,8 +148,8 @@
             		////////////////////////////// Contigs Tab //////////////////////////////
             		$('#'+pref+'contigs').append($('<div>').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'contigs-table" '+
             			'class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>'));
-            		$('#'+pref+'contigs').append($('<div style="margin: 14px 0px 0px 0px">').append($('<span style="font-size: 75%; color: #898989;">')
-							.append('(only contigs containing features are shown)')));
+            		//$('#'+pref+'contigs').append($('<div style="margin: 14px 0px 0px 0px">').append($('<span style="font-size: 75%; color: #898989;">')
+					//		.append('(only contigs containing features are shown)')));
             		var contigsData = [];
 
             		function contigEvents() {
@@ -189,15 +161,16 @@
             		}
 
             		for (var key in contigMap) {
+            		    if (!contigMap.hasOwnProperty(key))
+            		        continue;
             			var contig = contigMap[key];
             			contigsData.push({name: '<a class="'+pref+'contig-click" data-contigname="'+contig.name+'">'+contig.name+'</a>', 
             				length: contig.length, genecount: contig.genes.length});
-
             		}
             		var contigsSettings = {
             				"sPaginationType": "full_numbers",
             				"iDisplayLength": 10,
-            				"aaSorting": [],
+            				"aaSorting": [[ 1, "desc" ]],
             				"aoColumns": [
             				              {sTitle: "Contig name", mData: "name"},
             				              {sTitle: "Length", mData: "length"},
@@ -212,6 +185,31 @@
             		};
             		var contigsTable = $('#'+pref+'contigs-table').dataTable(contigsSettings);
             		contigsTable.fnAddData(contigsData);
+
+                    ////////////////////////////// Overview Tab //////////////////////////////
+                    $('#'+pref+'overview').append('<table class="table table-striped table-bordered" \
+                            style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
+                    var overviewLabels = ['KBase ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size", 
+                                          "Number of Contigs", "Number of Genes"];
+                    var tax = gnm.taxonomy;
+                    if (tax == null)
+                        tax = '';
+                    var gc_content = gnm.gc_content;
+                    if (gc_content < 1.0)
+                        gc_content *= 100;
+                    var overviewData = [gnm.id, '<a href="/functional-site/#/dataview/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>', 
+                                        gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gc_content + " %", tax, gnm.dna_size,
+                                        contigsData.length, genesData.length];
+                    var overviewTable = $('#'+pref+'overview-table');
+                    for (var i=0; i<overviewData.length; i++) {
+                        if (overviewLabels[i] === 'Taxonomy') {
+                            overviewTable.append('<tr><td  width="33%">' + overviewLabels[i] + '</td> \
+                                    <td><textarea style="width:100%;" cols="2" rows="3" readonly>'+overviewData[i]+'</textarea></td></tr>');
+                        } else {
+                            overviewTable.append('<tr><td>'+overviewLabels[i]+'</td> \
+                                    <td>'+overviewData[i]+'</td></tr>');
+                        }
+                    }
 
             		////////////////////////////// New Tab //////////////////////////////
             		var lastElemTabNum = 0;
@@ -313,13 +311,40 @@
             				text += "" + key + "->" + value + " ";
             			}
             		}
-
-            	}, function(data) {
-            		container.empty();
-            		container.append('<p>[Error] ' + data.error.message + '</p>');
-            	});            	
             };
-            ready();
+            
+            container.empty();
+            container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
+            
+            var included = ["/complete","/contig_ids","/contig_lengths","contigset_ref","/dna_size",
+                            "/domain","/gc_content","/genetic_code","/id","/md5","num_contigs",
+                            "/scientific_name","/source","/source_id","/tax_id","/taxonomy",
+                            "/features/[*]/aliases","/features/[*]/annotations",
+                            "/features/[*]/function","/features/[*]/id","/features/[*]/location",
+                            "/features/[*]/protein_translation_length","/features/[*]/type"];
+            kbws.get_object_subset([{ref: self.ws_name + "/" + self.ws_id, included: included}], function(data) {
+                var gnm = data[0].data;
+                if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
+                    ready(gnm, null);
+                } else {
+                    var contigSetRef = gnm.contigset_ref;
+                    if (gnm.domain === 'Plant' || !gnm.contigset_ref) {
+                        container.empty();
+                        container.append('Plant transcriptomes are not supported');
+                    } else {
+                        kbws.get_object_subset([{ref: contigSetRef, included: ['contigs/[*]/id', 'contigs/[*]/length']}], function(data2) {
+                            var ctg = data2[0].data;
+                            ready(gnm, ctg);
+                        }, function(data2) {
+                            container.empty();
+                            container.append('<p>[Error] ' + data2.error.message + '</p>');
+                        });
+                    }
+                }
+            }, function(data) {
+                container.empty();
+                container.append('<p>[Error] ' + data.error.message + '</p>');
+            });            	
             return this;
         },
         

@@ -13,7 +13,7 @@ $.KBWidget({
     },
 
     wsUrl: window.kbconfig.urls.workspace,
-    uploadUrl: "https://kbase.us/services/genome_comparison/uploader",
+    uploadUrl: "https://kbase.us/services/xxx/uploader",
 
     init: function(options) {
         this._super(options);

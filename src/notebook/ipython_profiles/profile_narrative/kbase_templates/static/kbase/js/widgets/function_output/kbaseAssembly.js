@@ -31,7 +31,7 @@
             //self.arURL = 'http://140.221.84.121:8000/'
             self.ws_url = options.ws_url;
             self.ws_name = options.ws_name;
-            self.fba_url = "http://kbase.us/services/KBaseFBAModeling/";
+            self.fba_url = window.kbconfig.urls.fba;
 
             var arRequest = {
                 "data_id": null,

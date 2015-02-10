@@ -695,7 +695,7 @@
                         // set the output states
                         if (state.step[id].outputState) {
                             if (state.step[id].outputState.output) {
-                                this.setStepOutput(id,state.step[id].outputState.output, state.step[id].outputState.widgetState);
+                                this.setStepOutput(id, state.step[id].outputState.output, state.step[id].outputState.widgetState, true);
                             }
                         }
                     }
@@ -809,7 +809,8 @@
         },
 
         /* optional state parameter, if null then no state is set on the widget */
-        setStepOutput: function(stepId, output, state) {
+        /** ALSO TRIGGERS A SAVE! **/
+        setStepOutput: function(stepId, output, state, preventSave) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
                     if (this.inputStepLookup[stepId].outputWidget) {
@@ -839,10 +840,14 @@
                     this.state.step[stepId].outputState = {
                         output: objCopy
                     };
+
+                    if (IPython && IPython.narrative && !preventSave)
+                        IPython.narrative.saveNarrative();
                 }
             }
         },
 
+        /** ALSO TRIGGERS A SAVE! **/
         setStepError: function(stepId, error) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
@@ -853,6 +858,8 @@
                         showMenu: false,
                         time: new Date().getTime()
                     });
+                    if (IPython && IPython.narrative)
+                        IPython.narrative.saveNarrative();
                 }
             }
         },

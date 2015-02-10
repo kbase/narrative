@@ -91,14 +91,15 @@
             this.ws = new Workspace(this.options.ws_url, auth);
             this.manager = new NarrativeManager({ws_url:this.options.ws_url, nms_url:this.options.nms_url},auth);
             this.my_user_id = auth.user_id;
-            this.refresh();
+            if (this.ws_name && this.nar_name)
+                this.refresh();
             return this;
         },
         loggedOutCallback: function(event, auth) {
             this.ws = null;
             this.manager=null;
             this.my_user_id = null;
-            this.refresh();
+//            this.refresh();
             return this;
         },
         
@@ -176,6 +177,8 @@
                                 }
                             }
                         }
+                        if (narRefsToLookup.length === 0)
+                            return self.renderPanel();
                         self.ws.get_object_info_new({objects:narRefsToLookup,includeMetadata:1,ignoreErrors:1},
                                 function(objList) {
                                     for(var i=0; i<objList.length; i++) {
@@ -859,15 +862,17 @@
                                                                                 }
                                                                                 if ($jump_btn) {
                                                                                     var name = info[0][10].name;
-                                                                                    var url = "ws." + info[0][6] + ".obj." + info[0][4];
-                                                                                    $dialog.append($('<div>').html('Created copy: <i>' + name + '</i>'));
+                                                                                    var copy_id = "ws." + info[0][6] + ".obj." + info[0][4];
+                                                                                    var oldpath = window.location.pathname;
+                                                                                    var parts = oldpath.split('/');
+                                                                                    parts.pop();                    // pop off old id
+                                                                                    parts.push(copy_id);            // add new one
+                                                                                    var newpath = parts.join('/'); // rejoin as a path
+                                                                                    var newurl = window.location.protocol + '//' + window.location.host + newpath;
+                                                                                    $dialog.append($('<div>').html('Created new copy: <i>' + name + '</i>'));
                                                                                     $dialog.append($jump_btn);
                                                                                     $jump_btn.click(function() {
-                                                                                        $dialog.empty();
-                                                                                        if (_.has($dialog, 'modal')) {
-                                                                                            $dialog.modal('hide');
-                                                                                        }
-                                                                                        window.open(url);
+                                                                                        window.location.replace(newurl);
                                                                                     });
                                                                                 }
                                                                             },

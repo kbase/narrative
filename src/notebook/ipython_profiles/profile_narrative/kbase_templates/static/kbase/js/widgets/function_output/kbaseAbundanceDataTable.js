@@ -3,31 +3,36 @@
  */
 (function($, undefined) {
     $.KBWidget({
-            name: 'AbundanceDataTable',
-            version: '1.0.0',
-            options: {
-	            id: null,
-	            ws: null,
-	            auth: null,
-	            name: 0
+        name: 'AbundanceDataTable',
+        parent: "kbaseAuthenticatedWidget",
+        version: '1.0.0',
+        token: null,
+        options: {
+	        id: null,
+	        ws: null,
+	        name: 0
         },
 	    ws_url: window.kbconfig.urls.workspace,
 	    loading_image: "static/kbase/images/ajax-loader.gif",
-        
+
 	    init: function(options) {
             this._super(options);
-            return this.render();
+            return this;
         },
-	
+
         render: function() {
 	        var self = this;
 	        var pref = this.uuidv4();
-	        var container = this.$elem;
-	        var kbws = new Workspace(self.ws_url, {'token': self.options.auth});
-            
-	        container.empty();
-	        container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
 
+	        var container = this.$elem;
+	        container.empty();
+            if (self.token == null) {
+                container.append("<div>[Error] You're not logged in</div>");
+                return;
+            }
+            container.append("<div><img src=\""+self.loading_image+"\">&nbsp;&nbsp;loading data...</div>");
+
+	        var kbws = new Workspace(self.ws_url, {'token': self.token});
 	        kbws.get_objects([{ref: self.options.ws+"/"+self.options.id}], function(data) {
 	            container.empty();
 		        // parse data
@@ -61,11 +66,11 @@
 			            tdata[r] = new Array(clength);
 			            tdata[r][0] = biom['rows'][r]['id'];
 			            for (var c = 0; c < matrix[r].length; c++) {
-			                var value = matrix[r][c];
+                            var value = Math.round(matrix[r][c] * 1000) / 1000;
 			                if (! value) {
 				                value = "0";
 			                }
-			                tdata[r][c+1] = value
+                            tdata[r][c+1] = value;
 			            }
 		            }
 			        // TABLE
@@ -96,12 +101,24 @@
 	        return self;
         },
 
+        loggedInCallback: function(event, auth) {
+            this.token = auth.token;
+            this.render();
+            return this;
+        },
+
+        loggedOutCallback: function(event, auth) {
+            this.token = null;
+            this.render();
+            return this;
+        },
+
 	    sparse2dense: function(sparse, rmax, cmax) {
 	        var dense = new Array(rmax);
+	        // dense matrix of 0's
 	        for (var i = 0; i < rmax; i++) {
 		        dense[i] = Array.apply(null, new Array(cmax)).map(Number.prototype.valueOf, 0);
 	        }
-	        // 0 values are undefined
 	        for (var i = 0; i < sparse.length; i++) {
 		        dense[ sparse[i][0] ][ sparse[i][1] ] = sparse[i][2];
 	        }

@@ -8,14 +8,14 @@
             this._super(options);
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
-                              .css({"background-color": "transparent"})
+                             .css({"background-color": "transparent"})
                              .append($('<span class="fa fa-trash-o" style="font-size:14pt; padding-left: 5px;">'))
                              .click($.proxy(function() {
-                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
-                }, this));
+                                 this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
+                             }, this));
 
             var $btn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
-                      .css({"background-color": "transparent"})
+                       .css({"background-color": "transparent"})
                        .append($('<span class="fa fa-cog" style="font-size:14pt">'));
 
             this.$menu = $('<ul>')

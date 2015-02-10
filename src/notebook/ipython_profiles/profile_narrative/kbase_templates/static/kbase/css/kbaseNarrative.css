@@ -2388,3 +2388,11 @@ div[class="tooltip-inner"] {
 #kb-ro-btn {
     margin-right: 20px;
 }
+#kb-view-mode {
+    font-size: 14pt;
+    margin-left: 1em;
+}
+#kb-view-mode span.fa-ban {
+    display: none;
+    color: #f99;
+}

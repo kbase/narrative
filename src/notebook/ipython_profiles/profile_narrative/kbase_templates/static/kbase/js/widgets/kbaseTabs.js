@@ -178,11 +178,14 @@
                     .append(
                         $('<button></button>')
                             .addClass('btn btn-default btn-xs')
-                            .append($('<i></i>').addClass(this.closeIcon()))
+                            //.append($('<i></i>').addClass(this.closeIcon()))
+                            .append($('<span>').append("&#x2716;"))
                             .css('padding', '0px')
-                            .css('width', '22px')
-                            .css('height', '22px')
+                            .css('width', '12px')
+                            .css('height', '12px')
                             .css('margin-left', '10px')
+                            .css('font-size', '10px')
+                            .css('margin-bottom', '3px')
                             .attr('title', this.deleteTabToolTip(tab.tab))
                             .tooltip()
                             .bind('click', $.proxy(function (e) {

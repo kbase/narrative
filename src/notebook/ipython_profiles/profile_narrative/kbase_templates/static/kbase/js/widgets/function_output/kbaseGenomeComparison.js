@@ -138,14 +138,13 @@ $.KBWidget({
             			'</td><td'+sd+'>' + 
             			'<button id="'+self.pref+'btn-mdr"'+sb+'>&#8600;</button>'+
             			'</td></tr></table></center>' +
-            			'</td><td><table'+st+'><tr'+sr+'>' +
-            			'<td width="'+(self.size+100)+'"'+sd+'>'+
+            			'</td><td><div style="float:left;width:'+(self.size+40)+'px;max-width:'+(self.size+40)+'px">'+
             			'<div style="position:relative">'+
             			'<img id="'+self.pref+'img" src=""/>'+
             			'<div id="'+self.pref+'rect" style="position:absolute; z-index: 2; border: 1px; border-style: solid; border-color: red; background-color: transparent; display:none; pointer-events:none;"/>'+
             			'</div>'+
-            			'</td>'+
-            			'<td width="300"'+sd+'><table id="'+self.pref+'genes"'+st+'><tr'+st+'><td'+st+'>'+self.selectHitsMessage+'</td></tr></table></td></tr></table></td></tr>');
+            			'</div>'+
+            			'<div style="float:left;width:300px;max-width:300px"><table id="'+self.pref+'genes"'+st+'><tr'+st+'><td'+st+'>'+self.selectHitsMessage+'</td></tr></table></div></td></tr>');
             	self.refreshImage();
             	self.refreshGenes();
             	var zoom = function(mult) {

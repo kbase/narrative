@@ -212,7 +212,13 @@
                         <span id="autosave_status"></span>
                     </span>
                 </div>
-                <div>Created by: <span id="kb-narr-creator">KBase User</span></div>
+                <div>Created by: <span id="kb-narr-creator">KBase User</span>
+                    <span id="kb-view-mode" class="fa-stack">
+                        <span class="fa fa-pencil fa-stack-1x"></span>
+                        <span class="fa fa-ban fa-stack-2x fa-flip-horizontal"></span>
+                    </span>
+                </div>
+
             </div>
 
             <div class="navbar-right">
@@ -305,7 +311,8 @@
             $.ajax({
                 url: "{{ static_url('kbase/config.json') }}",
                 async: false,
-                dataType: 'json'
+                dataType: 'json',
+                cache: false
             }).responseText
         );
         var landingPageMap = {}; /*
@@ -316,14 +323,16 @@
             $.ajax({
                 url: "{{ static_url('kbase/landing_page_map.json') }}",
                 async: false,
-                dataType: 'json'
+                dataType: 'json',
+                cache: false
             }).responseText
         );*/
         var icons = $.parseJSON(
           $.ajax({
             url: "{{ static_url('kbase/icons.json') }}",
             async: false,
-            dataType: 'json'
+            dataType: 'json',
+            cache: false
           }).responseText
         );
         window.kbconfig = { urls: configJSON[configJSON['config']],

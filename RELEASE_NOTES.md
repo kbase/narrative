@@ -3,6 +3,50 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.5.7 - 2/9/2015
+__Changes__
+- Updates to provisioning service to deal with JIRA NAR-660 and overall stability and control
+- Updated urls for FBA service
+- Added new FBAModelSet output viewer
+- Fixed Search API url
+- Adjusted Abundance data table so it can be used as a drag-and-drop widget
+- Updated intro cell text and links from the Narrative side (for this to be actually visible a deploy of ui-common is necessary)
+- Improved genome viewer widget to show all contigs
+
+### Version 0.5.6 - 2/7/2015
+__Changes__
+- Updates to FBA model viewer widgets
+
+__Bugfixes__
+- JIRA KBASE-1461 - The config file that contains the Narrative version should no longer be cached in the browser
+
+### Version 0.5.5 - 2/7/2015
+__Changes__
+- Minor changes to icons
+
+__Bugfixes__
+- JIRA NAR-657, KBASE-1527 - Fixed problem where a new narrative that hasn't had any jobs in it would fail to save.
+- JIRA NAR-651 - Fixed problem where a user with no narratives would see a constant spinner under the Narrative panel
+- Fixed issue where the Narrative panel would refresh twice on startup
+
+### Version 0.5.4 - 2/6/2015
+__Changes__
+- JIRA NAR-639, KBASE-1384 - Added completion time, run time, and queue time tracking for jobs
+  - a new 'job_info' property was added to object metadata, containing the following keys:
+    - 'completed', 'error', 'running' = the number of jobs in each state, >= 0
+    - 'queue_time' = total time jobs in this narrative have spent in the 'queued' state
+    - 'run_time' = total runtime reported by jobs in this narrative
+  - these changes become visible in the jobs panel for finished jobs
+- Optimized genome viewer widget
+- Updated Metagenome viewers
+- JIRA NAR-640 - Added autosaving whenever an output or error cells is created by job status change
+- JIRA NAR-650 - Block view of any queue position unless a job is in the 'queued' state.
+
+### Version 0.5.3 - 2/5/2015
+__Changes__
+- More minor icon changes.
+- Changed hard-coded urls to be relative to the config file in many widgets.
+
 ### Version 0.5.2 - 2/5/2015
 __Changes__
 - Rerouted landing pages to new endpoint

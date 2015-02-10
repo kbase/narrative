@@ -180,6 +180,9 @@
                             self.ws_obj_count = workspace_info[4];
                             self.reloadWsData();
                         }
+                        // Update RO or RW mode
+                        self.trigger("updateReadOnlyMode.Narrative",
+                                     [self.ws, self.ws_name]);
                     },
                     function(error) {
                         console.error(error);

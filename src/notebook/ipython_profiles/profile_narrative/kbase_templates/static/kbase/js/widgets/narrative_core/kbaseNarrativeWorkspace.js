@@ -66,6 +66,8 @@
         init: function(options) {
             this._super(options);
             this.ws_id = this.options.ws_id;
+            this.is_readonly = null; // null => unset, force a check
+            this.last_readonly_check = null; // avoid frequent checks
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
@@ -207,6 +209,14 @@
                     this.setMethodIcon(param.elt, param.is_app)
                 },
                 this));
+
+            // Refresh the read-only or View-only mode
+            $(document).on('updateReadOnlyMode.Narrative',
+              $.proxy(function (e, ws, name) {
+                    this.updateReadOnlyMode(ws, name);
+                },
+                this)
+            );
 
             this.initDeleteCellModal();
             // Initialize the data table.
@@ -396,102 +406,6 @@
                    "method('" + appSpecJSON + "', '" + methodSpecJSON + "', '" + paramsJSON + "')";
         },
 
-        /** DEPRECATED / OBSOLETED - use buildMethodCell or buildAppCell instead. **/
-        // /**
-        //  * @method buildFunctionCell
-        //  * @param {Object} method - the JSON schema version of the method to invoke. This will
-        //  * include a list of parameters and outputs.
-        //  */
-        // buildFunctionCell: function(method) {
-        //     var cell = IPython.notebook.insert_cell_below('markdown');
-        //     cell.celltoolbar.hide();
-        //     // make this a function input cell, as opposed to an output cell
-        //     this.setFunctionCell(cell, method);
-
-        //     // THIS IS WRONG! FIX THIS LATER!
-        //     // But it should work for now... nothing broke up to this point, right?
-        //     var cellIndex = IPython.notebook.ncells() - 1;
-        //     var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
-
-        //     // The various components are HTML STRINGS, not jQuery objects.
-        //     // This is because the cell expects a text input, not a jQuery input.
-        //     // Yeah, I know it's ugly, but that's how it goes.
-        //     var cellContent;
-
-        //     if (this.validateMethod(method)) {
-        //         // This is the list of parameters for the given method
-        //         var inputWidget = this.defaultInputWidget;
-        //         if (method.properties.widgets.input)
-        //             inputWidget = method.properties.widgets.input;
-
-        //         var inputDiv = "<div id='inputs'></div>";
-
-        //         // These are the 'delete' and 'run' buttons for the cell
-        //         var button_content;
-        //         if (this.readonly) {
-        //             button_content = "";
-        //         }
-        //         else {
-        //             button_content = "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default btn-sm'>Delete</button> " +
-        //                              "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary btn-sm'>Run</button>";
-        //                              //style='margin-top:10px'>" +
-        //         }
-        //         var buttons = "<div class='buttons pull-right'>" + button_content +
-        //                       "</div>";
-
-        //         // The progress bar remains hidden until invoked by running the cell
-        //         var progressBar = "<div id='kb-func-progress' class='pull-left' style='display:none;'>" +
-        //                             "<div class='progress progress-striped active kb-cell-progressbar'>" +
-        //                                 "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
-        //                                 "aria-valuemin='0' aria-valuemax='100' style='width:0%'/>" +
-        //                             "</div>" +
-        //                             "<p class='text-success'/>" +
-        //                           "</div>";
-
-        //         // Associate method title with description via BS3 collapsing
-        //         var methodId = cellId + "-method-details";
-        //         var buttonLabel = "...";
-        //         var methodDesc = method.description.replace(/"/g, "'"); // double-quotes hurt markdown rendering
-        //         var methodInfo = "<span class='kb-func-desc'>" +
-        //                            "<h1 style='display:inline'><b>" + method.title + "</b></h1>" +
-        //                            "<span class='pull-right kb-func-timestamp' id='last-run'></span>" +
-        //                            "<button class='btn btn-default btn-xs' type='button' data-toggle='collapse'" +
-        //                               " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
-        //                             "<div><h2 class='collapse' id='" + methodId + "'>" +
-        //                               methodDesc + "</h2></div>" +
-        //                          "</span>";
-
-        //         // Bringing it all together...
-        //         cellContent = "<div class='panel kb-func-panel kb-cell-run' id='" + cellId + "'>" +
-        //                           "<div class='panel-heading'>" +
-        //                               methodInfo +
-        //                           "</div>" +
-        //                           "<div class='panel-body'>" +
-        //                               inputDiv +
-        //                           "</div>" +
-        //                           "<div class='panel-footer' style='overflow:hidden'>" +
-        //                               progressBar +
-        //                               buttons +
-        //                           "</div>" +
-        //                       "</div>" +
-        //                       "\n<script>" +
-        //                       "$('#" + cellId + " > div > div#inputs')." + inputWidget + "({ method:'" +
-        //                        this.safeJSONStringify(method) + "'});" +
-        //                       "</script>";
-        //         console.debug("created input cell '", methodDesc, "', id = ", cellId);
-        //     }
-        //     else {
-        //         cellContent = "Error - the selected method is invalid.";
-        //     }
-        //     cell.set_text(cellContent);
-
-        //     cell.rendered = false;
-        //     cell.render();
-
-        //     // restore the input widget's state.
-        //     this.removeCellEditFunction(cell);
-        //     this.bindActionButtons(cell);
-        // },
 
         /**
          * A TEMPORARY FUNCTION that should refresh and update the given cell's metadata to the new(er) version,
@@ -669,19 +583,133 @@
         },
 
         /**
+         * If read-only status has changed (or this is the
+         * first time checking it) then update the read-only
+         * state of the narrative.
+         *
+         * @param ws Workspace client
+         * @param name Workspace name
+         *
+         * Side-effects: modifies this.is_readonly to reflect current value.
+         */
+        updateReadOnlyMode: function (ws, name) {
+            this.checkReadOnly(ws, name, $.proxy(function (readonly) {
+                if (readonly != null) {
+                    if (this.is_readonly != readonly) {
+                        if (this.is_readonly == null && readonly == false) {
+                            // pass: first time, and it is the default read/write
+                        }
+                        else if (readonly == true) {
+                            this.readOnlyMode();
+                        }
+                        else {
+                            this.readWriteMode();
+                        }
+                        this.is_readonly = readonly;
+                    }
+                }
+            }, this));
+            return this.is_readonly;
+        },
+
+        /** Check if narrative is read-only.
+         *
+         * @param ws Workspace client
+         * @param name Workspace name
+         * @param callback Call this with one argument, whose value is
+         *          true if it is readonly
+         *          false if it is read/write
+         *          null if workspace service error or null, or if this
+         *               check is too soon after the last one
+         */
+        checkReadOnly: function(ws, name, callback) {
+            console.debug("check_readonly_mode.begin");
+            // stop if no workspace client
+            if (ws == null) {
+                console.debug("set_readonly_mode.end: WS client not initialized");
+                return callback(null);
+            }
+            // stop if this is too-soon after last check
+            var sec = new Date() / 1000; // will use this either way
+            if (this.last_readonly_check != null) {
+                var delta = sec - this.last_readonly_check;
+                if (delta < 60) {
+                    console.debug("check_readonly_mode.end: skip, too soon delta=" + delta);
+                    return callback(null);
+                }
+            }
+            // update the last check time
+            this.last_readonly_check = sec;
+            // check the workspace, and invoke callback with result
+            ws.get_workspace_info({workspace: name},
+              function (info) {
+                  var is_ro = true;
+                  if (info[5] == 'w' || info[5] == 'a') {
+                      is_ro = false;
+                  }
+                  console.debug("set_readonly_mode.end: callback_value=" + is_ro);
+                  return callback(is_ro);
+              },
+              function (error) {
+                  KBError("kbaseNarrativeWorkspace.checkReadOnly",
+                    "get_workspace_info had an error for ID=" + name +
+                    ": " + error);
+                  return callback(null);
+              });
+        },
+
+        /**
          * Set narrative into read-only mode.
          */
-        activateReadonlyMode: function() {
+        readOnlyMode: function() {
+            console.debug('set_readonly_mode.begin');
+            // Hide delete and run buttons
+            $('.kb-app-run').hide();
+            // Hide side-panel
+            $('#left-column').hide();
+            // Move content flush left
+            $('#content-column').css({'margin-left': 90});
+            // Take out some buttons
+            _.each(['#kb-add-code-cell', '#kb-add-md-cell', // edit btns
+                    '#kb-share-btn', '#kb-save-btn',        // action btns
+                    '#kb-ipy-menu'],                        // kernel
+                    function (id) {$(id).hide()});
+            // Add copy button
+            $('.navbar-right').prepend(
+              $('<button>').addClass('btn btn-default navbar-btn kb-nav-btn')
+                .append($('<div>').addClass('fa fa-copy'))
+                .append($('<div>').text("copy").addClass('kb-nav-btn-txt'))
+                .click(function() {
+                    var $dlg = $('#kb-ro-copy-dlg');
+                    $dlg.modal();
+                    var $panel = $dlg.find(".modal-body");
+                    var $jump = $("<div>").css({'margin-top': '20px'})
+                      .append($("<button>").addClass('btn btn-info')
+                        .text("Open this narrative"));
+                    $(document).trigger('copyThis.Narrative', [$panel, null, $jump]);
+                    return '';
+                })
+            );
+            // Add view-only info
+            $('.navbar-right').prepend(
+              $('<div>').addClass("btn btn-info")
+                .attr({'id':'kb-ro-btn'})
+                .text('View-only mode')
+                .popover({
+                    html: true,
+                    placement: "bottom",
+                    trigger: 'hover',
+                    content: 'You do not have permissions to modify ' +
+                      'this narrative. If you want to make your own ' +
+                      'copy that can be modified, use the ' +
+                      '"Copy" button.'
+              }));
+            console.debug('set_readonly_mode.end');
+            return;
+
             var self = this;
 
             console.debug("activate read-only mode");
-            // Hide delete and run buttons
-            cells = IPython.notebook.get_cells();
-            cells.forEach(function(cell) {
-               ['delete', 'run'].forEach(function (e) {
-                    $(this.element).find(".buttons [id*=" + e + "]").hide();
-                }, cell);
-            });
 
             // Delete left-side panel!
             $('#left-column').detach(); //hide();
@@ -774,6 +802,15 @@
             this.bindCopyButton($('#' + narr_copy_id));
 
             this.connectable = connectable;
+        },
+
+        /**
+         * Set narrative from read-only mode to read-write mode
+         *
+         */
+        readWriteMode: function() {
+            console.debug("set_readwrite_mode.begin");
+            console.debug("set_readwrite_mode.end");
         },
 
         /**
@@ -2101,14 +2138,14 @@
                 this.checkCellMetadata(cells[i]);
             }
             this.loadAllRecentCellStates();
-            // Check for older version of data dependencies
-            // update them if necessary.
-            // this.trigger('updateData.Narrative');
+
+            this.updateReadOnlyMode(this.ws_client, this.ws_id);
 
             return this;
         },
 
-        /*
+
+        /**
          * Show input/output cell connections.
          */
          show_connections: function() {

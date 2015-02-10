@@ -862,7 +862,7 @@
                                                                                 }
                                                                                 if ($jump_btn) {
                                                                                     var name = info[0][10].name;
-                                                                                    var copy_id = "ws." + info[0][6] + ".obj." + info[0][4];
+                                                                                    var copy_id = "ws." + info[0][6] + ".obj." + info[0][0];
                                                                                     var oldpath = window.location.pathname;
                                                                                     var parts = oldpath.split('/');
                                                                                     parts.pop();                    // pop off old id

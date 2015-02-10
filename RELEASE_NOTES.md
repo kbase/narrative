@@ -3,6 +3,16 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.5.7 - 2/9/2015
+__Changes__
+- Updates to provisioning service to deal with JIRA NAR-660 and overall stability and control
+- Updated urls for FBA service
+- Added new FBAModelSet output viewer
+- Fixed Search API url
+- Adjusted Abundance data table so it can be used as a drag-and-drop widget
+- Updated intro cell text and links from the Narrative side (for this to be actually visible a deploy of ui-common is necessary)
+- Improved genome viewer widget to show all contigs
+
 ### Version 0.5.6 - 2/7/2015
 __Changes__
 - Updates to FBA model viewer widgets

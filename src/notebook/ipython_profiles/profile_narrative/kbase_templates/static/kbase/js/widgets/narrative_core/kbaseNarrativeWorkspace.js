@@ -684,7 +684,10 @@
             return ['.kb-app-next',                         // next steps
                     '#kb-add-code-cell', '#kb-add-md-cell', // edit btns
                     '#kb-share-btn', '#kb-save-btn',        // action btns
-                    '#kb-ipy-menu'];                        // kernel
+                    '#kb-ipy-menu',                         // kernel
+                    '.kb-app-panel .pull-right',            // app icons
+                    '.kb-func-panel .pull-right'            // method icons
+            ];
         },
 
         /**

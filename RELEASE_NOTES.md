@@ -3,6 +3,18 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.6.0 - 2/10/2015
+__Changes__
+- Added a read-only mode for narratives. Users with read-only privileges can only view a narrative, but not change anything, including running functions, since they do not have write privileges anyway. This does come with a copy function that will allow a fork to be made and owned by the user.
+- Header style update, some consistency issues
+- Include old narrative objects under "My Data" and "Shared with me"
+- Show loading icon in communities widgets
+- Renamed CSV Transform API arguments to TSV
+
+__Bugfixes__
+- JIRA KBASE-1411 fix - render issue for protein comparison widget 
+- Fixed case where genome object doesn't have any contig info.
+
 ### Version 0.5.7 - 2/9/2015
 __Changes__
 - Updates to provisioning service to deal with JIRA NAR-660 and overall stability and control

@@ -179,6 +179,20 @@
         </div>
     </noscript>
 
+    <div id="kb-wait-for-ws">
+        <img src="{{ static_url("kbase/images/kbase_logo_rect.png") }}"
+                class="kb-logo"></img>
+        <div id="kb-wait-for-ws-loader">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <p>Connecting to KBase services...</p>
+    </div>
+
     <nav class="navbar-kbase navbar-fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -212,7 +226,13 @@
                         <span id="autosave_status"></span>
                     </span>
                 </div>
-                <div>Created by: <span id="kb-narr-creator">KBase User</span></div>
+                <div>Created by: <span id="kb-narr-creator">KBase User</span>
+                    <span id="kb-view-mode" class="fa-stack">
+                        <span class="fa fa-pencil fa-stack-1x"></span>
+                        <span class="fa fa-ban fa-stack-2x fa-flip-horizontal"></span>
+                    </span>
+                </div>
+
             </div>
 
             <div class="navbar-right">
@@ -268,6 +288,25 @@
         {% block site %}
         {% endblock %}
     </div>
+
+    <!-- Modal dialog for copying a narrative in view-only mode -->
+    <div class="modal fade" tabIndex="-1" role="dialog"
+         aria-labelledby="myModalLabel" aria-hidden="true"
+         id="kb-ro-copy-dlg">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Copy a
+                        narrative</h4>
+                </div>
+                <div class="modal-body"></div>
+            </div>
+        </div>
+    </div>
+
 
     <div id="app" class="wrapper" ui-view></div>
 

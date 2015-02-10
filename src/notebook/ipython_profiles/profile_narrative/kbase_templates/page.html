@@ -179,6 +179,20 @@
         </div>
     </noscript>
 
+    <div id="kb-wait-for-ws">
+        <img src="{{ static_url("kbase/images/kbase_logo_rect.png") }}"
+                class="kb-logo"></img>
+        <div id="kb-wait-for-ws-loader">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <p>Connecting to KBase services...</p>
+    </div>
+
     <nav class="navbar-kbase navbar-fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -274,6 +288,7 @@
         {% endblock %}
     </div>
 
+    <!-- Modal dialog for copying a narrative in view-only mode -->
     <div class="modal fade" tabIndex="-1" role="dialog"
          aria-labelledby="myModalLabel" aria-hidden="true"
          id="kb-ro-copy-dlg">

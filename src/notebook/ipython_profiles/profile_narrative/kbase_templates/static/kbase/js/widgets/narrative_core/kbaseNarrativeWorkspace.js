@@ -68,6 +68,7 @@
             this.ws_id = this.options.ws_id;
 
             this.is_readonly = null; // null => unset, force a check
+            this.first_readonly = true; // still trying for first check?
             this.last_readonly_check = null; // avoid frequent checks
             this.user_readonly = false; // user-defined override
             this.readonly_buttons = []; // list of buttons toggled
@@ -630,6 +631,13 @@
                         }
                         this.is_readonly = readonly;
                     }
+                    // if this is the first time we got a yes/no answer
+                    // from the workspace, make the narrative visible!
+                    if (this.first_readonly) {
+                        // show narrative by removing overlay
+                        $('#kb-wait-for-ws').remove();
+                        this.first_readonly = false;
+                    }
                 }
             }, this));
             return this.is_readonly;
@@ -654,7 +662,12 @@
             }
             // stop if this is too-soon after last check
             var sec = new Date() / 1000; // will use this either way
-            if (this.last_readonly_check != null) {
+            if (this.last_readonly_check == null) {
+                // first successful check! allow narrative to be shown on
+                // next refresh
+                this.show_narrative = true;
+            }
+            else {
                 var delta = sec - this.last_readonly_check;
                 if (delta < 60) {
                     console.debug("check_readonly_mode.end: skip, too soon delta=" + delta);

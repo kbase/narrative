@@ -12,6 +12,7 @@
 ## Narrative development
 
 Last updated: Dan Gunter <dkgunter@lbl.gov> 7/31/2014
+Minor update by John-Marc Chandonia <jmchandonia@lbl.gov> 2/3/2015
 
 To report bugs, login using your KBase developer user/pass at: https://atlassian.kbase.us
 
@@ -44,7 +45,7 @@ the Narrative work. These are all Python based.
     
     The set of Python dependencies you'll need to install are located in the KBase Bootstrap git repo. Grab that and use pip to install the list of dependencies.
 
-        > git clone kbase@git.kbase.us:bootstrap
+        > git clone https://github.com/kbase/bootstrap
         > pip install -r bootstrap/kb_python_runtime/python-pip-list-narrative
 
     If you have any problems at this stage, make sure that your Python and pip versions are up to date and in sync with each other.
@@ -70,7 +71,7 @@ First, however, you'll need to get a necessary submodule initialized:
 If there are any problems with this step, run the following commands:
 
     cd modules/ui-common
-    git checkout hardy
+    git checkout narrative-dev
     git pull
 
 Now you're set up with the correct Narrative environment.
@@ -161,7 +162,7 @@ This section covers how and when to reset your Narrative during development.
 
 This document schedules how to deploy the Narrative on a fresh developer’s server instance with Docker provisioning
 
-Last updated: Dan Gunter <dkgunter@lbl.gov> 7/18/2014
+Last udated: John-Marc Chandonia <jmchandonia@lbl.gov>, 2/10/15
 
 Bill Riehl <wjriehl@lbl.gov> 7/15/2014
 Keith Keller <kkeller@lbl.gov>
@@ -176,6 +177,9 @@ Dan Gunter <dkgunter@lbl.gov>
 
 This document will walk through the server building process. For this developer’s tutorial, we built a local VM using Vagrant through Virtualbox. The base Vagrant image we used was hashicorp/precise64, which provides a clean Ubuntu 12.04 LTS image.  
 <http://www.vagrantup.com>
+
+Note that instead of using Vagrant, KBase developers can start up a
+new instance on Magellan.
 
 After installing Vagrant and Virtualbox, run  
 
@@ -217,21 +221,29 @@ Next, bring in the Narrative and Bootstrap repos (as yourself):
     git clone http://github.com/kbase/bootstrap
     git clone http://github.com/kbase/ui-common
 
+# note that as of 2/10/15, narrative-test.kbase.us is using the
+# develop branch of both narrative and ui-common
+
 # Set up the Nginx environment
 
 This uses Nginx with the embedded Lua module from the nginx-extras package, described here: <http://wiki.nginx.org/Install>.
-
 
 ## Install Nginx
 
     sudo su - root
     # these next two should add the nginx repo properly
-    apt-get install-y  python-software-properties
+    apt-get install -y  python-software-properties
     add-apt-repository ppa:nginx/stable
     apt-get update
     apt-get install -y nginx-extras
     # verify this worked before going on
     exit
+
+## Install the right version of Nodejs (including npm)
+
+   sudo add-apt-repository ppa:chris-lea/node.js
+   sudo apt-get update
+   sudo apt-get install nodejs
 
 ## Install the Lua dependencies.
 
@@ -258,6 +270,9 @@ There’s a little tweaking that needs to happen here - the `lua_package_path` l
     
     # change lua path (all one line)
     lua_package_path "/kb/deployment/services/narrative/docker/?;/kb/deployment/services/narrative/docker/?.lua;;";
+
+    # install it    
+    cp narrative/src/nginx/default /etc/nginx/sites-enabled/default 
 
 # Install and set up Docker
 
@@ -345,6 +360,9 @@ Finally, deploy the rest of the functional site (this is external to the Narrati
 
     cd ~/kb_narr/ui-common
     sudo ./deployFunctionalSite.sh
+
+# note that you may have to modify the nginx configuration as well;
+# see README.deploy in ui-common
 
 # Using your deployment
 

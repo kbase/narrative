@@ -18,6 +18,7 @@
         "narrative_method_store": "http://dev19.berkeley.kbase.us/narrative_method_store/rpc", 
         "protein_info": "https://kbase.us/services/protein_info_service", 
         "reset_password": "https://gologin.kbase.us/ResetPassword", 
+        "search": "https://kbase.us/services/search/getResults",
         "shock": "https://kbase.us/services/shock-api", 
         "status_page": "http://kbase.us/internal/status", 
         "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1", 
@@ -50,6 +51,7 @@
         "narrative_method_store": "https://kbase.us/services/narrative_method_store/rpc", 
         "protein_info": "https://kbase.us/services/protein_info_service", 
         "reset_password": "https://gologin.kbase.us/ResetPassword", 
+        "search": "https://kbase.us/services/search/getResults",
         "shock": "https://kbase.us/services/shock-api", 
         "status_page": "http://kbase.us/internal/status", 
         "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version", 
@@ -64,5 +66,5 @@
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md", 
-    "version": "0.5.6"
+    "version": "0.5.7"
 }

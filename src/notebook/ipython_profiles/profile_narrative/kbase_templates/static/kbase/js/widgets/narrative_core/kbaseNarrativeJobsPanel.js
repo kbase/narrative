@@ -705,7 +705,7 @@
             if (jobInfo && jobInfo.spec && jobInfo.spec[specType] && jobInfo.spec[specType].info)
                 jobName = jobInfo.spec[specType].info.name;
 
-            var $jobInfoDiv = $('<div class="kb-data-list-name">')
+            var $jobInfoDiv = $('<div class="kb-data-list-name kb-data-list-job-name">')
                                .append(jobName);
             var $jobControlDiv = $('<span class="pull-right">')
                                  .append(this.makeJobClearButton(jobId, jobState.status))

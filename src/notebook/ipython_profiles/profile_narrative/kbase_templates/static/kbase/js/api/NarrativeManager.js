@@ -388,28 +388,65 @@ var NarrativeManager = function(options, auth, auth_cb) {
     
     
     
-    this.introText =
-        "Welcome to KBase!\n============\n\n"+
-        "Add Data to this Narrative\n------------\n\n"+
-        "Click on '<b>Add Data</b>' and browse for KBase data or upload your own."+
-        "Select the data and click 'Add to narrative'.  Perhaps start by "+
-        "importing your favorite Genome.  Once your data has been loaded, "+
-        "you can inspect it in the data list.\n<br>\n\n"+
-        "Perform an Analysis\n------------\n\n"+
-        "When you're ready, select an App or Method to run on your data.  "+
-        "Simply click on an App or Method on the side bar, and it will appear "+
-        "directly in your Narrative.  Fill in the parameters and click run.  "+
-        "Output will be generated and new data objects may be created and added "+
-        "to your data list.  Add and run as many Apps and Methods as you like!\n\n"+
-        "Long running computations can be tracked in your Jobs panel, located on "+
-        "the side panel under the 'Manage' tab.\n<br>\n\n"+
-        "Save & Share your Results\n------------\n\n"+
-        "When you're ready, name this Narrative and save it.  Once it is saved, "+
-        "click on the 'share' button above to let others view your analysis.  Or if you're "+
-        "brave, make it public for the world to see.\n<br><br>\n\n"+
-        "\nThat's it!\n\n"+
-        "<b>Questions?</b> Visit https://kbase.us to search for more detailed tutorials and documentation.\n\n"+
-        "<b>More Questions?</b> Email: [help@kbase.us](mailto:help@kbase.us)\n\n\n";
+    // this.introText =
+    //     "Welcome to KBase!\n============\n\n"+
+    //     "Add Data to this Narrative\n------------\n\n"+
+    //     "Click on '<b>Add Data</b>' and browse for KBase data or upload your own."+
+    //     "Select the data and click 'Add to narrative'.  Perhaps start by "+
+    //     "importing your favorite Genome.  Once your data has been loaded, "+
+    //     "you can inspect it in the data list.\n<br>\n\n"+
+    //     "Perform an Analysis\n------------\n\n"+
+    //     "When you're ready, select an App or Method to run on your data.  "+
+    //     "Simply click on an App or Method on the side bar, and it will appear "+
+    //     "directly in your Narrative.  Fill in the parameters and click run.  "+
+    //     "Output will be generated and new data objects may be created and added "+
+    //     "to your data list.  Add and run as many Apps and Methods as you like!\n\n"+
+    //     "Long running computations can be tracked in your Jobs panel, located on "+
+    //     "the side panel under the 'Manage' tab.\n<br>\n\n"+
+    //     "Save & Share your Results\n------------\n\n"+
+    //     "When you're ready, name this Narrative and save it.  Once it is saved, "+
+    //     "click on the 'share' button above to let others view your analysis.  Or if you're "+
+    //     "brave, make it public for the world to see.\n<br><br>\n\n"+
+    //     "\nThat's it!\n\n"+
+    //     "<b>Questions?</b> Visit https://kbase.us to search for more detailed tutorials and documentation.\n\n"+
+    //     "<b>More Questions?</b> Email: [help@kbase.us](mailto:help@kbase.us)\n\n\n";
+
+    this.introText = 
+        "![KBase Logo](/static/kbase/images/kbase_logo.png) Welcome to the " +
+        "Narrative Interface!\n" +
+        "===\n\n" + 
+        "<a href='https://staging.kbase.us/narrative-guide/' style='text-decoration:underline'>What's a Narrative?</a>\n" +
+        "---\n" +
+        "Design and carry out collaborative computational experiments while " + 
+        "creating Narratives: interactive, shareable, and reproducible records " +
+        "of your data, computational steps, and thought processes.\n\n" +
+        "<a href='https://staging.kbase.us/narrative-guide/explore-data/' style='text-decoration:underline'>Get Some Data</a>\n" +
+        "---\n" +
+        "Click the Add Data button in the Data Panel to browse for KBase data or " +
+        "upload your own. Mouse over a data object to add it to your Narrative, and " + 
+        "check out more details once the data appears in your list.\n\n" +
+        "<a href='https://staging.kbase.us/narrative-guide/browse-apps-and-methods/' style='text-decoration:underline'>Analyze It</a>\n" + 
+        "---\n" +
+        "Browse available analyses that can be run using KBase apps or methods " +
+        "(apps are just multi-step methods that make some common analyses more " +
+        "convenient). Select an analysis, fill in the fields, and click Run. " +
+        "Output will be generated, and new data objects will be created and added " +
+        "to your data list. Add to your results by running follow-on apps or methods.\n\n" +
+        "<a href='https://staging.kbase.us/narrative-guide/share-narratives/' style='text-decoration:underline'>Save and Share Your Narrative</a>\n" +
+        "---\n" +
+        "Be sure to save your Narrative frequently. When you’re ready, click " + 
+        "the share button above to let collaborators view your analysis steps " +
+        "and results. Or better yet, make your Narrative public and help expand " +
+        "the social web that KBase is building to make systems biology research " +
+        "open, collaborative, and more effective.\n\n" +
+        "<a href='https://staging.kbase.us/narrative-guide/' style='text-decoration:underline'>Find Documentation and Help</a>\n" +
+        "---\n" +
+        "For more information, please see the " +
+        "<a href='http://staging.kbase.us/narrative-guide/' style='text-decoration:underline'>Narrative Interface User Guide</a> " +
+        "or the <a href='http://staging.kbase.us/apps/' style='text-decoration:underline'>app/method tutorials</a>.\n\n" +
+        "Questions? <a href='http://staging.kbase.us/contact-us' style='text-decoration:underline'>Contact us</a>!\n\n" +
+        "Ready to begin adding to your Narrative? You can keep this Welcome cell or " +
+        "delete it with the trash icon in the top right corner.";
 };
 
 

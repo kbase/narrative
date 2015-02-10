@@ -686,7 +686,8 @@
                     '#kb-share-btn', '#kb-save-btn',        // action btns
                     '#kb-ipy-menu',                         // kernel
                     '.kb-app-panel .pull-right',            // app icons
-                    '.kb-func-panel .pull-right'            // method icons
+                    '.kb-func-panel .pull-right',           // method icons
+                    '.celltoolbar .button_container'        // ipython icons
             ];
         },
 

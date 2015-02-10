@@ -85,7 +85,6 @@ class KBjobManager():
         # return self.ujs.get_job_info(job_id)
         if ujs_proxy is None:
             ujs_proxy = self.__proxy_client()
-
         return ujs_proxy.get_job_info(job_id)
 
     def poll_jobs(self, jobs, as_json=False):

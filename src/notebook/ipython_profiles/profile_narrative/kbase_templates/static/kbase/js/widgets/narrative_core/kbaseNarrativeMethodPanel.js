@@ -392,16 +392,16 @@ kb_require(['kbaseMethodGallery'],
          * @private
          */
         buildMethod: function(icon, method, triggerFn) {
-          // add icon (logo)
-          var $logo = $('<div>');
-          this.trigger('setMethodIcon.Narrative',
-            {elt: $logo, is_app: icon == 'A'});
-          // add behavior
-          $logo.click($.proxy(
-            function(e) {
-              e.stopPropagation();
-              triggerFn(method);
-            }, this));
+            // add icon (logo)
+            var $logo = $('<div>');
+            this.trigger('setMethodIcon.Narrative',
+                         {elt: $logo, is_app: icon == 'A'});
+            // add behavior
+            $logo.click($.proxy(
+                function(e) {
+                    e.stopPropagation();
+                    triggerFn(method);
+                }, this));
 
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
@@ -552,60 +552,6 @@ kb_require(['kbaseMethodGallery'],
             }
             return colors[ code % colors.length ];
         },
-
-        /**
-         * @method
-         * A simple tester to see if a service.method call exists in the currently loaded set
-         * @param {string} service - the name of the service to test
-         * @param {string} method - the name of the method to test
-         * @return {boolean} true if the call exists, false otherwise
-         */
-        // hasFunction: function(service, method) {
-        //     if (!this.services)
-        //         return true;
-
-        //     console.debug("looking up '" + service + "'.'" + method + "'");
-        //     if (this.services.hasOwnProperty(service))
-        //         return this.services[service].hasOwnProperty(method);
-        //     return false;
-        // },
-
-
-        /**
-         * Creates a new function field in the functions list.
-         * This 'function' is represented as a DOM element. It has a name (styled as
-         * a button, or something buttonish) and a help button.
-         *
-         * Clicking the function button triggers a function_clicked.Narrative event,
-         * and clicking the help button triggers a function_help.Narrative event.
-         *
-         * Both of these events have the relevant data passed along with them for
-         * population by the responding element.
-         *
-         * @param {object} method - the method object returned from the kernel.
-         * @private
-         */
-        // addFunction: function(method) {
-        //     var self = this;
-        //     var $funcButton = $('<button>')
-        //                       .attr('type', 'button')
-        //                       .addClass('btn btn-default')
-        //                       .append(method.title)
-        //                       .click(function(event) { self.trigger('function_clicked.Narrative', method); });
-
-        //     var $helpButton = $('<span>')
-        //                       .addClass('glyphicon glyphicon-question-sign')
-        //                       .css({'float': 'right',
-        //                             'cursor': 'pointer',
-        //                             'font-size': '14pt',
-        //                             'color': '#0064b6'})
-        //                       .click(function(event) { self.showHelpPopup(method); });
-
-        //     this.$functionList.append($('<li>')
-        //                                 .append($funcButton)
-        //                                 .append($helpButton)
-        //                              );
-        // },
 
         /**
          * Shows a loading spinner or message on top of the panel.

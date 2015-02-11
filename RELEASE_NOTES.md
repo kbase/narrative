@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.6.1 - 2/10/2015
+__Changes__
+- Made adjustments to Gapfill viewer widget
+- Added downloaders for PhenotypeSimulationSet and Pangenome
+
 ### Version 0.6.0 - 2/10/2015
 __Changes__
 - Added a read-only mode for narratives. Users with read-only privileges can only view a narrative, but not change anything, including running functions, since they do not have write privileges anyway. This does come with a copy function that will allow a fork to be made and owned by the user.

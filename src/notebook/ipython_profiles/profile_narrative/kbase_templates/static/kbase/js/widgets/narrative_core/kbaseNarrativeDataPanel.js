@@ -450,35 +450,38 @@
                     return [];
                 }
                 var params = {includeMetadata:1};
-                if (!ws_name) {
-                    var ws_ids = [], obj_count = 0;
-                    for (var i in workspaces) {
-                        ws_ids.push(workspaces[i].id);
-                        obj_count = workspaces[i].count + obj_count;
+                var ws_ids = [], obj_count = 0;
+                for (var i in workspaces) {
+                    if ((!ws_name) || (workspaces[i].name === ws_name)) {
+                        if (workspaces[i].id > 0) {
+                            ws_ids.push(workspaces[i].id);
+                            obj_count = workspaces[i].count + obj_count;
+                        } else if (workspaces[i].legacy) {
+                            for (var n in workspaces[i].legacy) {
+                                var w = workspaces[i].legacy[n];
+                                ws_ids.push(w.id);
+                                obj_count = w.count + obj_count;
+                            }
+                        }
                     }
-
-                    params.ids = ws_ids;
-                } else
-                    params.workspaces = [ws_name];
+                }
+                params.ids = ws_ids;
 
                 if (type) params.type = type;
 
                 if (obj_count > maxObjFetch)
                     console.error("user's object count for owned workspaces was", obj_count);
 
-                //console.log('total owned data is', obj_count)
-
                 var req_count = Math.ceil(obj_count/10000);
-
+                
                 var proms = [];
                 proms.push( ws.list_objects(params) );
                 for (var i=1; i < req_count; i++) {
                     params.skip = 10000 * i;
                     proms.push( ws.list_objects(params) );
                 }
-
-                var p = ws.list_objects(params);
-                return $.when(p).then(function(d) {
+                
+                return $.when.apply($, proms).then(function() {
                     // update model
                     myData = [].concat.apply([], arguments);
                     myData.sort(function(a,b) {
@@ -498,23 +501,27 @@
                     return null;
                 }
                 var params = {includeMetadata:1};
-                if (!ws_name) {
-                    var ws_ids = [], obj_count = 0;
-                    for (var i in workspaces) {
-                        ws_ids.push(workspaces[i].id);
-                        obj_count = workspaces[i].count + obj_count;
+                var ws_ids = [], obj_count = 0;
+                for (var i in workspaces) {
+                    if ((!ws_name) || (workspaces[i].name === ws_name)) {
+                        if (workspaces[i].id > 0) {
+                            ws_ids.push(workspaces[i].id);
+                            obj_count = workspaces[i].count + obj_count;
+                        } else if (workspaces[i].legacy) {
+                            for (var n in workspaces[i].legacy) {
+                                var w = workspaces[i].legacy[n];
+                                ws_ids.push(w.id);
+                                obj_count = w.count + obj_count;
+                            }
+                        }
                     }
-
-                    params.ids = ws_ids;
-                } else
-                    params.workspaces = [ws_name];
+                }
+                params.ids = ws_ids;
 
                 if (type) params.type = type;
 
                 if (obj_count > maxObjFetch)
                     console.error("user's object count for shared workspaces was", obj_count);
-
-                //console.log('total shared data', obj_count);
 
                 var req_count = Math.ceil(obj_count/10000);
 
@@ -580,6 +587,7 @@
                 return ws.list_workspace_info({owners: [user]})
                         .then(function(d) {
                             var workspaces = [];
+                            var legacyItems = []; // {id:..., name:..., count:...}
                             for (var i in d) {
                                 if (d[i][8].is_temporary) {
                                     if (d[i][8].is_temporary === 'true') { continue; }
@@ -606,8 +614,12 @@
                                                      displayName:displayName,
                                                      count: d[i][4]});
                                         narrativeNameLookup[d[i][1]] = displayName;
+                                        continue;
                                     }
                                 }
+                                
+                                legacyItems.push({id: d[i][0], name: d[i][1], count: d[i][4]});
+                                narrativeNameLookup[d[i][1]] = 'Legacy (' + d[i][1] + ')';
                             }
 
                             // add to model for filter
@@ -619,6 +631,10 @@
                                     if (a.displayName.toUpperCase() > b.displayName.toUpperCase()) return 1;
                                     return 0;
                                 });
+                            
+                            if (legacyItems.length > 0) {
+                                myWorkspaces.push({id: -1, name: '#legacy#', displayName: 'Legacy (old version)', count: 0, legacy: legacyItems})
+                            }
                             return workspaces;
                         })
             }
@@ -627,6 +643,7 @@
                 return ws.list_workspace_info({excludeGlobal: 1})
                         .then(function(d) {
                             var workspaces = [];
+                            var legacyItems = []; // {id:..., name:..., count:...}
                             for (var i in d) {
                                 // skip owned workspaced
                                 if (d[i][2] == user) {
@@ -658,8 +675,12 @@
                                                      displayName:displayName,
                                                      count: d[i][4]});
                                         narrativeNameLookup[d[i][1]] = displayName;
+                                        continue;
                                     }
                                 }
+                                
+                                legacyItems.push({id: d[i][0], name: d[i][1], count: d[i][4]});
+                                narrativeNameLookup[d[i][1]] = 'Legacy (' + d[i][1] + ')';
                             }
 
                             // add to model for filter
@@ -669,6 +690,10 @@
                                     if (a.displayName.toUpperCase() > b.displayName.toUpperCase()) return 1;
                                     return 0;
                                 });
+
+                            if (legacyItems.length > 0) {
+                                sharedWorkspaces.push({id: -1, name: '#legacy#', displayName: 'Legacy (old version)', count: 0, legacy: legacyItems})
+                            }
                             return workspaces;
                         })
             }

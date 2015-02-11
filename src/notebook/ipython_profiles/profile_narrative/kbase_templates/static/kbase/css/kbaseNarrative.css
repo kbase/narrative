@@ -51,6 +51,13 @@ body {
     moz-box-shadow: none;
 }
 
+.kb-navbar-buttons {
+    display: inline-block;
+    padding-right: 15px;
+    margin-right: 15px;
+    border-right: 2px solid #CECECE;
+}
+
 header[role="banner"] {
     position: absolute;
     top: 0;
@@ -147,6 +154,7 @@ div#notebook {
     margin: 0;
     box-shadow: 0 0 3px #CECECE;
     margin-right: 5px;
+    min-width: 50px;
 }
 .navbar-right .fa::before { /* color nav icons */
     color: #2196F3;
@@ -220,7 +228,7 @@ div#notebook {
     margin-bottom: 0px;
     margin-top: 5px;
     padding-left: 20px;
-    border-left: 2px solid #e0e0e0;
+    border-left: 2px solid #CECECE;
     display: none;
 }
 
@@ -2137,7 +2145,9 @@ div[class="tooltip-inner"] {
     font-weight: bold;
     margin: 2px;
 }
-
+.kb-data-list-name:hover {
+    text-decoration: underline;
+}
 .kb-data-list-version {
     color:#777;
     font-size: 9pt;
@@ -2252,6 +2262,9 @@ div[class="tooltip-inner"] {
     text-align: left;
     margin: 2px;
     padding-left: 8px;
+}
+.kb-data-list-job-name:hover {
+    text-decoration: none;
 }
 
 
@@ -2381,4 +2394,236 @@ div[class="tooltip-inner"] {
     color: firebrick;
     font-style: italic;
     margin-top: 0.5em;
+}
+
+/* View-only (read-only) */
+#kb-ro-btn {
+    margin-right: 20px;
+}
+#kb-view-mode {
+    font-size: 13pt;
+    margin: -15px 0 0 1em;
+    padding: 0;
+}
+#kb-view-mode span.fa-ban {
+    display: none;
+    color: #f99;
+}
+/* Show this over the whole narrative UI until the
+   workspace becomes active.
+
+   This animation was taken from:
+   http://cssdeck.com/labs/load
+
+   It was created by José Barcelon-Godfrey
+   http://cssdeck.com/user/Jmbarcelonco
+
+   -Dan Gunter, Feb 10, 2015
+*/
+#kb-wait-for-ws {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: white;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+}
+
+@keyframes load {
+    0% {
+        height: 10px;
+        margin: 20px 2px;
+    }
+    50% {
+        height: 50px;
+        margin: 0px 2px;
+    }
+    100% {
+        height: 10px;
+        margin: 20px 2px;
+    }
+}
+
+@-o-keyframes load {
+    0% {
+        height: 10px;
+        margin: 20px 2px;
+    }
+    50% {
+        height: 50px;
+        margin: 0px 2px;
+    }
+    100% {
+        height: 10px;
+        margin: 20px 2px;
+    }
+}
+
+@-ms-keyframes load {
+    0% {
+        height: 10px;
+        margin: 20px 2px;
+    }
+    50% {
+        height: 50px;
+        margin: 0px 2px;
+    }
+    100% {
+        height: 10px;
+        margin: 20px 2px;
+    }
+}
+
+@-moz-keyframes load {
+    0% {
+        height: 10px;
+        margin: 20px 2px;
+    }
+    50% {
+        height: 50px;
+        margin: 0px 2px;
+    }
+    100% {
+        height: 10px;
+        margin: 20px 2px;
+    }
+}
+
+@-webkit-keyframes load {
+    0% {
+        height: 10px;
+        margin: 20px 2px;
+    }
+    50% {
+        height: 50px;
+        margin: 0px 2px;
+    }
+    100% {
+        height: 10px;
+        margin: 20px 2px;
+    }
+}
+
+#kb-wait-for-ws-loader {
+    width: 85px;
+    height: 55px;
+    margin: 50px auto;
+}
+
+#kb-wait-for-ws .bar {
+    float: left;
+    margin: 0px 2px;
+    width: 10px;
+    height: 50px;
+    background: #7bf;
+    border-top: 3px solid #7af;
+    border-bottom: 3px solid #7af;
+    /*border-radius*/
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+}
+
+#kb-wait-for-ws .bar:nth-child(1) {
+    /*animation*/
+    -webkit-animation: load 1s linear infinite;
+    -moz-animation: load 1s linear infinite;
+    -ms-animation: load 1s linear infinite;
+    -o-animation: load 1s linear infinite;
+    animation: load 1s linear infinite;
+}
+
+#kb-wait-for-ws .bar:nth-child(2) {
+    /*animation*/
+    -webkit-animation: load 1s linear infinite;
+    -moz-animation: load 1s linear infinite;
+    -ms-animation: load 1s linear infinite;
+    -o-animation: load 1s linear infinite;
+    animation: load 1s linear infinite;
+    /*animation-delay*/
+    -webkit-animation-delay: .2s;
+    -moz-animation-delay: .2s;
+    -ms-animation-delay: .2s;
+    -o-animation-delay: .2s;
+    animation-delay: .2s;
+}
+
+#kb-wait-for-ws .bar:nth-child(3) {
+    /*animation*/
+    -webkit-animation: load 1s linear infinite;
+    -moz-animation: load 1s linear infinite;
+    -ms-animation: load 1s linear infinite;
+    -o-animation: load 1s linear infinite;
+    animation: load 1s linear infinite;
+    /*animation-delay*/
+    -webkit-animation-delay: .4s;
+    -moz-animation-delay: .4s;
+    -ms-animation-delay: .4s;
+    -o-animation-delay: .4s;
+    animation-delay: .4s;
+}
+
+#kb-wait-for-ws .bar:nth-child(4) {
+    /*animation*/
+    -webkit-animation: load 1s linear infinite;
+    -moz-animation: load 1s linear infinite;
+    -ms-animation: load 1s linear infinite;
+    -o-animation: load 1s linear infinite;
+    animation: load 1s linear infinite;
+    /*animation-delay*/
+    -webkit-animation-delay: .6s;
+    -moz-animation-delay: .6s;
+    -ms-animation-delay: .6s;
+    -o-animation-delay: .6s;
+    animation-delay: .6s;
+}
+
+#kb-wait-for-ws .bar:nth-child(5) {
+    /*animation*/
+    -webkit-animation: load 1s linear infinite;
+    -moz-animation: load 1s linear infinite;
+    -ms-animation: load 1s linear infinite;
+    -o-animation: load 1s linear infinite;
+    animation: load 1s linear infinite;
+    /*animation-delay*/
+    -webkit-animation-delay: .8s;
+    -moz-animation-delay: .8s;
+    -ms-animation-delay: .8s;
+    -o-animation-delay: .8s;
+    animation-delay: .8s;
+}
+
+#kb-wait-for-ws .bar:nth-child(6) {
+    /*animation*/
+    -webkit-animation: load 1s linear infinite;
+    -moz-animation: load 1s linear infinite;
+    -ms-animation: load 1s linear infinite;
+    -o-animation: load 1s linear infinite;
+    animation: load 1s linear infinite;
+    /*animation-delay*/
+    -webkit-animation-delay: 1s;
+    -moz-animation-delay: 1s;
+    -ms-animation-delay: 1s;
+    -o-animation-delay: 1s;
+    animation-delay: 1s;
+}
+
+#kb-wait-for-ws img.kb-logo {
+    margin-left: 40%;
+    margin-bottom: 25px;
+    margin-top: 50px;
+    width: 20%;
+    border: 0;
+}
+
+#kb-wait-for-ws p {
+    text-align: center;
+    font-size: 24px;
+    font-family: "OxygenBold" helvetica neue;
+}
+
+#kb-wait-for-ws a {
+    color: #7bf;
+    text-decoration: none;
 }

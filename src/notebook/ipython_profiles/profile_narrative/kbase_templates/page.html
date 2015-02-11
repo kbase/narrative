@@ -179,6 +179,20 @@
         </div>
     </noscript>
 
+    <div id="kb-wait-for-ws">
+        <img src="{{ static_url("kbase/images/kbase_logo_rect.png") }}"
+                class="kb-logo"></img>
+        <div id="kb-wait-for-ws-loader">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <p>Connecting to KBase services...</p>
+    </div>
+
     <nav class="navbar-kbase navbar-fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -188,15 +202,15 @@
                     </button>
                     <ul class="dropdown-menu" role="menu" aria-labelledby="kb-nav-menu">
                         <!-- li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li -->
-                        <li><a href="/functional-site/#/dashboard" target="_blank">Dashboard</a></li>
                         <li><a href="/functional-site/#/search/?q=*" target="_blank">Search Data</a></li>
+                        <li><a href="/functional-site/#/dashboard" target="_blank">Dashboard</a></li>
                         <li><a id="kb-status-btn" href="" target="_blank">KBase Service Status</a></li>
                         <li role="presentation" class="divider"></li>
                         <li><a id="kb-jira-btn" href="" target="_blank">Submit JIRA ticket</a></li>
                         <li role="presentation" class="divider"></li>
-                        <li><a id="kb-about-btn">About</a></li>
+                        <li><a id="kb-about-btn">About the Narrative</a></li>
                         <li><a target="_blank" href="https://staging.kbase.us/narrative-guide/">Narrative User Guide</a></li>
-                        <li><a target="_blank" href="mailto:help@kbase.us">Email help@kbase.us</a></li>
+                        <li><a target="_blank" href="https://staging.kbase.us/contact-us/">Contact Us</a></li>
                     </ul>
                 </div>
                 <a href="http://www.kbase.us">
@@ -212,34 +226,41 @@
                         <span id="autosave_status"></span>
                     </span>
                 </div>
-                <div>Created by: <span id="kb-narr-creator">KBase User</span></div>
+                <div>Created by: <span id="kb-narr-creator">KBase User</span>
+                    <span id="kb-view-mode" class="fa-stack">
+                        <span class="fa fa-pencil fa-stack-1x"></span>
+                        <span class="fa fa-ban fa-stack-2x fa-flip-horizontal"></span>
+                    </span>
+                </div>
+
             </div>
 
             <div class="navbar-right">
-                <button id="kb-update-btn" class="btn btn-default navbar-btn kb-nav-btn kb-nav-btn-upgrade">
-                    <div class="fa fa-refresh fa-spin"></div>
-                    <div class="kb-nav-btn-txt">New Version Available!</div>
-                </button>
-                <div class="btn-group">
-                    <button id="kb-ipy-menu" class="btn btn-default navbar-btn kb-nav-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <div id="kb-kernel-icon" class="fa fa-circle-o"><span class="caret"></div>
-                        <div class="kb-nav-btn-txt">kernel</div>
+                <span class="kb-navbar-buttons">
+                    <button id="kb-update-btn" class="btn btn-default navbar-btn kb-nav-btn kb-nav-btn-upgrade">
+                        <div class="fa fa-refresh fa-spin"></div>
+                        <div class="kb-nav-btn-txt">New Version Available!</div>
                     </button>
-                    <ul class="dropdown-menu" aria-labelledby="kb-ipy-menu">
-                        <li><a id="kb-kernel-int-btn"><span class="fa fa-times"></span> Interrupt</a></li>
-                        <li><a id="kb-kernel-ref-btn"><span class="fa fa-refresh"></span> Restart</a></li>
-                        <li><a id="kb-kernel-rec-btn"><span class="fa fa-power-off"></span> Reconnect</a></li>
-                    </ul>
-                </div>
-                <button id="kb-share-btn" class="btn btn-default navbar-btn kb-nav-btn">
-                  <div class="fa fa-share-alt"></div>
-                  <div class="kb-nav-btn-txt">share</div>
-                </button>
-                <button id="kb-save-btn" class="btn btn-default navbar-btn kb-nav-btn">
-                    <div class="fa fa-save"></div>
-                    <div class="kb-nav-btn-txt">save</div>
-                </button>
-                <span style="margin-right: 10px"></span>
+                    <div class="btn-group">
+                        <button id="kb-ipy-menu" class="btn btn-default navbar-btn kb-nav-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <div id="kb-kernel-icon" class="fa fa-circle-o"><span class="caret"></div>
+                            <div class="kb-nav-btn-txt">kernel</div>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="kb-ipy-menu">
+                            <li><a id="kb-kernel-int-btn"><span class="fa fa-times"></span> Interrupt</a></li>
+                            <li><a id="kb-kernel-ref-btn"><span class="fa fa-refresh"></span> Restart</a></li>
+                            <li><a id="kb-kernel-rec-btn"><span class="fa fa-power-off"></span> Reconnect</a></li>
+                        </ul>
+                    </div>
+                    <button id="kb-share-btn" class="btn btn-default navbar-btn kb-nav-btn">
+                      <div class="fa fa-share-alt"></div>
+                      <div class="kb-nav-btn-txt">share</div>
+                    </button>
+                    <button id="kb-save-btn" class="btn btn-default navbar-btn kb-nav-btn">
+                        <div class="fa fa-save"></div>
+                        <div class="kb-nav-btn-txt">save</div>
+                    </button>
+                </span>
                 <span id="signin-button"></span>
             </div>
         </div>
@@ -267,6 +288,25 @@
         {% block site %}
         {% endblock %}
     </div>
+
+    <!-- Modal dialog for copying a narrative in view-only mode -->
+    <div class="modal fade" tabIndex="-1" role="dialog"
+         aria-labelledby="myModalLabel" aria-hidden="true"
+         id="kb-ro-copy-dlg">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Copy a
+                        narrative</h4>
+                </div>
+                <div class="modal-body"></div>
+            </div>
+        </div>
+    </div>
+
 
     <div id="app" class="wrapper" ui-view></div>
 

@@ -328,10 +328,7 @@
                     ready(gnm, null);
                 } else {
                     var contigSetRef = gnm.contigset_ref;
-                    if (gnm.domain === 'Plant' || !gnm.contigset_ref) {
-                        container.empty();
-                        container.append('Plant transcriptomes are not supported');
-                    } else {
+                    if (gnm.contigset_ref) {
                         kbws.get_object_subset([{ref: contigSetRef, included: ['contigs/[*]/id', 'contigs/[*]/length']}], function(data2) {
                             var ctg = data2[0].data;
                             ready(gnm, ctg);
@@ -339,6 +336,9 @@
                             container.empty();
                             container.append('<p>[Error] ' + data2.error.message + '</p>');
                         });
+                    } else {
+                        container.empty();
+                        container.append('Genome object has unsupported structure (no contig-set)');
                     }
                 }
             }, function(data) {

@@ -73,7 +73,7 @@
             this.user_readonly = false; // user-defined override
             this.readonly_buttons = []; // list of buttons toggled
             this.readonly_params = []; // list of params toggled
-            this.first_show_narrative_manage_panel = true; // 1st panel show
+            this.first_show_controls = true; // 1st panel show
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
@@ -681,6 +681,7 @@
                   if (info[5] == 'w' || info[5] == 'a') {
                       is_ro = false;
                   }
+                  IPython.narrative.readonly = is_ro; // set globally
                   console.debug("set_readonly_mode.end: callback_value=" + is_ro);
                   return callback(is_ro);
               },
@@ -813,19 +814,19 @@
                         'copy that can be modified, use the ' +
                         '"Copy" button.'
                     }));
-                // Add button to unhide the narrative management panel
+                // Add button to unhide the controls
                 $('#main-container').prepend(
                   $('<div>').attr({'id': 'kb-view-mode-narr'})
                     .append($('<div>').css({cursor: 'pointer'})
                       .append($('<span>')
                         .css({'padding-left':'1em'})
-                        .text('Narratives'))
+                        .text('Controls'))
                       .append($('<span>')
                         .css({'margin-left': '0.5em'})
                         .addClass('fa fa-caret-down'))
                   )
                     .click($.proxy(function() {
-                        this.showNarrativeManagePanel();
+                        this.showControlPanels();
                     }, this))
                 );
                 // Disable clicking on name of narrative
@@ -873,11 +874,11 @@
         /**
          * Show the narrative management panel (but not the other 2)
          */
-        showNarrativeManagePanel: function() {
+        showControlPanels: function() {
             var self = this;
-            if (this.first_show_narrative_manage_panel) {
+            if (this.first_show_controls) {
                 var $panel = $('#kb-side-panel');
-                var hide_idx = [0, 2], narr = 1;
+                var hide_idx = [2], keep_idx = [1], narr = 1;
                 // Hide and show panels
                 _.map(['tab', 'header'], function (subdiv) {
                     var divs = $panel.find('div.kb-side-' + subdiv);
@@ -889,17 +890,18 @@
                         $(divs[narr]).find('.kb-title').hide();
                     }
                     else {
-                        // Plop a 'hide' button onto the tab bar
+                        // Plop a 'hide' button before the tab bar
                         var $hide_btn = $('<div>').attr({id: 'kb-view-mode-narr-hide'})
-                          .append($('<span>').text('hide'))
+                          .append($('<span>').addClass('fa fa-caret-up'))
                           .click(function () {
-                              self.hideNarrativeManagePanel();
+                              self.hideControlPanels();
                           });
-                        $(divs[narr]).prepend($hide_btn);
+                        //$(divs[0]).prepend($hide_btn);
+                        $panel.prepend($hide_btn);
                     }
-                    $(divs[narr]).addClass('active').css({'width': '366px'});
+                    //$(divs[narr]).addClass('active').css({'width': '366px'});
                 });
-                this.first_show_narrative_manage_panel = false;
+                this.first_show_controls = false;
             }
             // Hide the button we used to activate this
             $('#kb-view-mode-narr').hide();
@@ -912,7 +914,7 @@
         /**
          * Hide the narrative management panel (again).
          */
-        hideNarrativeManagePanel: function() {
+        hideControlPanels: function() {
             // Hide the parent
             $('#left-column').hide();
             // Resize body again

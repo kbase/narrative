@@ -2416,19 +2416,27 @@ div[class="tooltip-inner"] {
     font-size: 16px;
     font-weight: bold;
     padding: 3px;
-    /*border: 3px solid #2196F3;*/
     margin-top: -3px;
     width: 147px;
     text-align: left;
     position: fixed;
 }
 
+/* little space for control-close icon */
 #kb-view-mode-narr-hide {
-    display: inline-block;
+    display: block;
+    height: 41px;
+    width: 15px;
     float: left;
-    font-size: 12px;
+    font-size: 16px;
     cursor: pointer;
     color: #BBDEFB;
+    background-color: #2196F3;
+    padding-left: 5px;
+}
+/* move icon down a bit */
+#kb-view-mode-narr-hide span {
+    margin-top: 10px;
 }
 /* this is the banner for readonly mode */
 .navbar-right div.label-warning {
@@ -2654,4 +2662,9 @@ div[class="tooltip-inner"] {
 #kb-wait-for-ws a {
     color: #7bf;
     text-decoration: none;
+}
+
+/* Override the default max-width of the narrative box */
+.container {
+    max-width: 2000px !important;
 }

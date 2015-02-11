@@ -3,6 +3,8 @@
  * the login session, fires up the data and function widgets, and creates
  * the kbaseNarrativeWorkspace wrapper around the IPython notebook that
  * does fun things like manage widgets and cells and kernel events to talk to them.
+ *
+ * To set global variables, use: IPython.narrative.<name> = value
  */
 "use strict";
 

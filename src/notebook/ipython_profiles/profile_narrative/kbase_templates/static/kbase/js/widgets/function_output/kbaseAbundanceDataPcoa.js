@@ -45,7 +45,7 @@
 		            var plen = pcoa['data'].length;
                     var x_pos = parseInt(self.options.x_axis, 10) - 1;
                     var y_pos = parseInt(self.options.y_axis, 10) - 1;
-                    if ((x_pos < 0) || (x_pos > (plen-1)) || (y_pos < 0) || (y_pos > (plen-1))) {
+                    if (isNaN(x_pos) || isNaN(y_pos) || (x_pos < 0) || (x_pos > (plen-1)) || (y_pos < 0) || (y_pos > (plen-1))) {
                         x_pos = 0;
                         y_pos = 1;
                     }

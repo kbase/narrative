@@ -179,6 +179,7 @@
         </div>
     </noscript>
 
+    {% block loading_message %}
     <div id="kb-wait-for-ws">
         <img src="{{ static_url("kbase/images/kbase_logo_rect.png") }}"
                 class="kb-logo"></img>
@@ -192,6 +193,7 @@
         </div>
         <p>Connecting to KBase services...</p>
     </div>
+    {% endblock %}
 
     <nav class="navbar-kbase navbar-fixed-top">
         <div class="container-fluid">

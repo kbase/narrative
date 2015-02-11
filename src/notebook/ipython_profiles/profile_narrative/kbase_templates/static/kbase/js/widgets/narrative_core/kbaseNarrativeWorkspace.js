@@ -779,7 +779,7 @@
             this.toggleSelectBoxes(false);
             if (from_user == true) {
                 $('.navbar-right').prepend(
-                  $('<div>').addClass("btn btn-warning")
+                  $('<div>').addClass("label label-warning")
                     .text('View-only mode'));
             }
             else {
@@ -801,10 +801,10 @@
                 );
                 // Add view-only info/badge
                 $('.navbar-right').prepend(
-                  $('<div>').addClass("btn btn-warning")
-                    .attr({'id': 'kb-ro-btn'})
-                    .text('View-only mode')
-                    .popover({
+                    $('<div>').addClass("label label-warning")
+                      .attr({'id': 'kb-ro-btn'})
+                      .text('View-only mode')
+                      .popover({
                         html: true,
                         placement: "bottom",
                         trigger: 'hover',

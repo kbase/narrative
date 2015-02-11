@@ -2430,9 +2430,11 @@ div[class="tooltip-inner"] {
     cursor: pointer;
     color: #BBDEFB;
 }
-
- a:hover {
-    text-decoration: underline;
+/* this is the banner for readonly mode */
+.navbar-right div.label-warning {
+    font-family: 'OxygenRegular', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
 }
 
 /* Show this over the whole narrative UI until the

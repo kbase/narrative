@@ -531,7 +531,22 @@
             				'object_name': params['outputObject'],
             				'optional_arguments': {'validate':{},'transform':options},
             				'url_mapping': urlMapping};
-            	} else {
+            	} else if (methodId === 'import_fbamodel_excel_file') {
+                    var urlMapping = {'Excel.FBAModel': self.shockURL + '/node/' + params['inputFile']};
+                    var options = {};
+                    var genome = params['genomeObject'];
+                    if (genome)
+                        options['genome'] = genome;
+                    var biomass = params['biomass'];
+                    if (biomass)
+                        options['biomass'] = biomass;
+                    args = {'external_type': 'Excel.FBAModel', 
+                            'kbase_type': 'KBaseFBA.FBAModel', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':options},
+                            'url_mapping': urlMapping};
+                } else {
             		self.showError(methodId + " import mode for FBAModel type is not supported yet");
             	}
             } else if (self.selectedType === 'KBaseBiochem.Media') {
@@ -542,7 +557,14 @@
             				'object_name': params['outputObject'],
             				'optional_arguments': {'validate':{},'transform':{}},
             				'url_mapping': {'TSV.Media': self.shockURL + '/node/' + params['csvFile']}};
-            	} else {
+            	} else if (methodId === 'import_media_excel_file') {
+                    args = {'external_type': 'Excel.Media', 
+                            'kbase_type': 'KBaseBiochem.Media', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':{}},
+                            'url_mapping': {'Excel.Media': self.shockURL + '/node/' + params['inputFile']}};
+                } else {
             		self.showError(methodId + " import mode for Media type is not supported yet");
             	}
             } else if (self.selectedType === 'KBasePhenotypes.PhenotypeSet') {

@@ -35,6 +35,7 @@
             //$('#kb-narr-name #name').text(narrName);
         }
     });
+
     $('#kb-kernel-int-btn').click(function(e) {
         if (IPython && IPython.notebook && IPython.notebook.kernel) {
             IPython.notebook.kernel.interrupt();

@@ -2402,12 +2402,16 @@ div[class="tooltip-inner"] {
 }
 #kb-view-mode {
     font-size: 13pt;
-    margin: -15px 0 0 1em;
+    margin: -33px 0 0 0;
     padding: 0;
+    cursor: pointer;
 }
 #kb-view-mode span.fa-ban {
     display: none;
     color: #f99;
+}
+#kb-view-mode.fa-stack {
+    height: auto;
 }
 /* Show this over the whole narrative UI until the
    workspace becomes active.

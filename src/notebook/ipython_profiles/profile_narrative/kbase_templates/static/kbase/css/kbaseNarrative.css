@@ -2401,18 +2401,40 @@ div[class="tooltip-inner"] {
     margin-right: 20px;
 }
 #kb-view-mode {
+    display: inline-block;
     font-size: 13pt;
-    margin: -33px 0 0 0;
+    margin: -15px 0 0 1em;
     padding: 0;
     cursor: pointer;
 }
-#kb-view-mode span.fa-ban {
-    display: none;
-    color: #f99;
+#kb-view-mode-narr div {
+    display: inline-block;
+    /*background-color: #2196F3;
+    color: #BBDEFB;*/
+    color: #2196F3;
+    font-family: 'OxygenRegular', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 3px;
+    /*border: 3px solid #2196F3;*/
+    margin-top: -3px;
+    width: 147px;
+    text-align: left;
+    position: fixed;
 }
-#kb-view-mode.fa-stack {
-    height: auto;
+
+#kb-view-mode-narr-hide {
+    display: inline-block;
+    float: left;
+    font-size: 12px;
+    cursor: pointer;
+    color: #BBDEFB;
 }
+
+ a:hover {
+    text-decoration: underline;
+}
+
 /* Show this over the whole narrative UI until the
    workspace becomes active.
 

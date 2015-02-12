@@ -550,6 +550,17 @@
             // a container to put data in.
             // It produces a scrollable dataset
             function render(data, container, selected, template) {
+                var setDataIconTrigger = $._data($(document)[0], "events")["setDataIcon"];
+                if (setDataIconTrigger) {
+                    renderOnIconsReady(data, container, selected, template);
+                } else {
+                    setTimeout(function(){
+                        renderOnIconsReady(data, container, selected, template);
+                    }, 100);
+                }
+            }
+            
+            function renderOnIconsReady(data, container, selected, template) {
                 var start = 0, end = 30;
 
                 // remove items from only current container being rendered

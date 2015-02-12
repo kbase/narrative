@@ -3,6 +3,8 @@
  * the login session, fires up the data and function widgets, and creates
  * the kbaseNarrativeWorkspace wrapper around the IPython notebook that
  * does fun things like manage widgets and cells and kernel events to talk to them.
+ *
+ * To set global variables, use: IPython.narrative.<name> = value
  */
 "use strict";
 
@@ -35,6 +37,7 @@
             //$('#kb-narr-name #name').text(narrName);
         }
     });
+
     $('#kb-kernel-int-btn').click(function(e) {
         if (IPython && IPython.notebook && IPython.notebook.kernel) {
             IPython.notebook.kernel.interrupt();
@@ -438,7 +441,7 @@ Narrative.prototype.init = function() {
     this.initAboutDialog();
     this.initUpgradeDialog();
 
-    $('[data-toggle="tooltip"]').tooltip()
+    $('[data-toggle="tooltip"]').tooltip();
     /*
      * Before we get everything loading, just grey out the whole %^! page
      */

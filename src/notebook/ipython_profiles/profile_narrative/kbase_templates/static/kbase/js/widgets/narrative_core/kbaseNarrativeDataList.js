@@ -166,6 +166,11 @@
                         //[4] int object, [5] permission user_permission, [6] permission globalread,
                         //[7] lock_status lockstat, [8] usermeta metadata
                         //console.log('I have: '+self.ws_last_update_timestamp+ " remote has: "+workspace_info[3]);
+
+                        // Update RO or RW mode
+                        self.trigger("updateReadOnlyMode.Narrative",
+                                     [self.ws, self.ws_name]);
+
                         if (self.ws_last_update_timestamp) {
                             if (self.ws_last_update_timestamp !== workspace_info[3]) {
                                 self.ws_last_update_timestamp = workspace_info[3];
@@ -180,9 +185,6 @@
                             self.ws_obj_count = workspace_info[4];
                             self.reloadWsData();
                         }
-                        // Update RO or RW mode
-                        self.trigger("updateReadOnlyMode.Narrative",
-                                     [self.ws, self.ws_name]);
                     },
                     function(error) {
                         console.error('DataList: when checking for updates:',error);
@@ -541,13 +543,15 @@
                                                             .click(function() {$alertContainer.empty();} )));
                                         });
 
-            $btnToolbar
-                .append($openLandingPage)
-                .append($openHistory)
-                .append($openProvenance)
-                .append($download)
-                .append($rename)
-                .append($delete);
+            $btnToolbar.append($openLandingPage);
+            if (!IPython.narrative.readonly)
+                $btnToolbar.append($openHistory);
+            $btnToolbar.append($openProvenance);
+            if (!IPython.narrative.readonly) {
+                $btnToolbar.append($download)
+                           .append($rename)
+                           .append($delete);
+            }
 
             return $btnToolbar;
         },
@@ -900,16 +904,23 @@
                     }
                     self.attachRow(i);
                 }
-                this.$addDataButton.show();
+                this.$addDataButton.toggle(!(IPython.narrative && IPython.narrative.readonly === true));
             } else {
                 // todo: show an upload button or some other message if there are no elements
-                self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'})
-                                         .append("This Narrative has no data yet.<br><br>")
-                                         .append($("<button>").append('Add Data').addClass('kb-data-list-add-data-text-button').css({'margin':'20px'})
-                                                 .click(function() {
-                                                        self.trigger('hideGalleryPanelOverlay.Narrative');
-                                                        self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);
-                                                    })));
+                var $noDataDiv = $('<div>')
+                                 .css({'text-align':'center', 'margin':'20pt'})
+                                 .append('This Narrative has no data yet.<br><br>');
+                if (IPython && IPython.narrative && !IPython.narrative.readonly) {
+                    $noDataDiv.append($("<button>")
+                                      .append('Add Data')
+                                      .addClass('kb-data-list-add-data-text-button')
+                                      .css({'margin':'20px'})
+                                      .click(function() {
+                                          self.trigger('hideGalleryPanelOverlay.Narrative');
+                                          self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);
+                                      }));
+                }
+                self.$mainListDiv.append($noDataDiv);
             }
 
             self.hideLoading();

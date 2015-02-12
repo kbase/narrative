@@ -3,6 +3,18 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.6.2 - 2/11/2015
+__Changes__
+- Adjustments to readonly mode
+  - Added reduced-functionality side panel
+  - Improved copy dialog
+- Added support for uploading Microsoft Excel files with Media and FBAModels
+
+__Bugfixes__
+- https://atlassian.kbase.us/browse/NAR-681 - loading screen blocks out valid HTTP error pages
+- https://atlassian.kbase.us/browse/NAR-682 - loading screen persists when it shouldn't
+- https://atlassian.kbase.us/browse/NAR-688 - 401 errors when unauthenticated don't redirect to kbase.us
+
 ### Version 0.6.1 - 2/10/2015
 __Changes__
 - Made adjustments to Gapfill viewer widget

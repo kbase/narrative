@@ -179,6 +179,7 @@
         </div>
     </noscript>
 
+    {% block loading_message %}
     <div id="kb-wait-for-ws">
         <img src="{{ static_url("kbase/images/kbase_logo_rect.png") }}"
                 class="kb-logo"></img>
@@ -192,6 +193,7 @@
         </div>
         <p>Connecting to KBase services...</p>
     </div>
+    {% endblock %}
 
     <nav class="navbar-kbase navbar-fixed-top">
         <div class="container-fluid">
@@ -227,9 +229,8 @@
                     </span>
                 </div>
                 <div>Created by: <span id="kb-narr-creator">KBase User</span>
-                    <span id="kb-view-mode" class="fa-stack">
-                        <span class="fa fa-pencil fa-stack-1x"></span>
-                        <span class="fa fa-ban fa-stack-2x fa-flip-horizontal"></span>
+                    <span id="kb-view-mode">
+                        <span class="fa fa-pencil"></span>
                     </span>
                 </div>
             </div>

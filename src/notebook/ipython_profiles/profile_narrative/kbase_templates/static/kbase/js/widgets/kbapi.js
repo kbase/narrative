@@ -102,9 +102,9 @@ function KBCacheClient(token) {
         ujs_url = "http://140.221.84.180:7083"
     }*/
 
-    fba_url = window.kbconfig.urls.fba; //"https://kbase.us/services/KBaseFBAModeling/";
-    ws_url = window.kbconfig.urls.workspace; //"https://kbase.us/services/ws/";
-    ujs_url = window.kbconfig.urls.user_and_job_state; //"https://kbase.us/services/userandjobstate";
+    fba_url = window.kbconfig.urls.fba;
+    ws_url = window.kbconfig.urls.workspace;
+    ujs_url = window.kbconfig.urls.user_and_job_state;
 
     // console.log('FBA URL is:', fba_url);
     // console.log('Workspace URL is:', ws_url);

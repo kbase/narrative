@@ -1,15 +1,14 @@
 /**
  * Output widget to vizualize DomainAnnotation object.
- * Pavel Novichkov <psnovichkov@lbl.gov>
+ * Pavel Novichkov <psnovichkov@lbl.gov>, John-Marc Chandonia <jmchandonia@lbl.gov>
  * @public
  */
-
 
 (function($, undefined) {
     $.KBWidget({
         name: 'kbaseDomainAnnotation',
         parent: 'kbaseAuthenticatedWidget',
-        version: '1.0.1',
+        version: '1.0.2',
         options: {
             domainAnnotationID: null,
             workspaceID: null,
@@ -31,10 +30,8 @@
         annotatedGenesCount: 0,
         annotatedDomainsCount: 0,
 
-
         init: function(options) {
             this._super(options);
-
 
             // TEMPORARY
             if(this.options.domainAnnotationID == null){
@@ -51,8 +48,7 @@
         },
 
         loggedInCallback: function(event, auth) {
-
-            // Cretae a new workspace client
+            // Create a new workspace client
             this.ws = new Workspace(this.options.workspaceURL, auth);
            
             // Let's go...
@@ -60,22 +56,20 @@
            
             return this;
         },
+
         loggedOutCallback: function(event, auth) {
             this.ws = null;
             this.isLoggedIn = false;
             return this;
         },
-
   
         render: function(){
-
             var self = this;
             self.pref = this.uuid();
             self.loading(true);
 
             var container = this.$elem;
             var kbws = this.ws;
-
 
             //self.options.workspaceID + "/" + self.options.domainAnnotationID;
             //kbws.get_objects([{ref: domainAnnotationRef}], function(data) {
@@ -86,7 +80,6 @@
                 self.domainAnnotationData = data[0].data;
                 self.genomeRef = self.domainAnnotationData.genome_ref;
                 self.domainModelSetRef = self.domainAnnotationData.used_dms_ref;
-
 
                 // Job to get properties of AnnotationDomain object: name and id of the annotated genome
                 var jobGetDomainAnnotationProperties = kbws.get_object_subset(
@@ -124,7 +117,6 @@
                     var tabPane = $('<div id="'+self.pref+'tab-content">');
                     container.append(tabPane);
                     tabPane.kbaseTabs({canDelete : true, tabs : []});                    
-
                     ///////////////////////////////////// Overview table ////////////////////////////////////////////           
                     var tabOverview = $("<div/>");
                     tabPane.kbaseTabs('addTab', {tab: 'Overview', content: tabOverview, canDelete : false, show: true});
@@ -200,8 +192,7 @@
                         );
                     };
                     domainTableSettings.aaData = domainsTableData;
-                    tableDomains.dataTable(domainTableSettings);
-
+                    tableDomains = tableDomains.dataTable(domainTableSettings);
 
                     ///////////////////////////////////// Events ////////////////////////////////////////////          
 
@@ -220,7 +211,6 @@
                             ////////////////////////////// Build Gene Domains table //////////////////////////////
                             var tabContent = $("<div/>");
 
-
                             var tableGeneDomains = $('<table class="table table-striped table-bordered" '+
                                 'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="' + self.pref + id + '-table"/>');
                             tabContent.append(tableGeneDomains);
@@ -235,12 +225,13 @@
                                     {sTitle: "Location", mData: "image"},
                                     {sTitle: "Start", mData: "domainStart"},
                                     {sTitle: "End", mData: "domainEnd"},
-                                    {sTitle: "eValue", mData: "eValue"},
+                                    {sTitle: "E-value", mData: "eValue"},
                                 ],
                                 "oLanguage": {
                                     "sEmptyTable": "No domains found!",
                                     "sSearch": "Search: "
-                                }
+                                },
+				'fnDrawCallback': events2
                             };
                             var geneDomainsTableData = [];
 
@@ -249,8 +240,18 @@
                             var geneStart = gene[1];
                             var geneEnd = gene[2];
                             var domainsInfo = gene[4];
+			    var geneLength = (geneEnd - geneStart + 1)/3;
 
-
+			    // hack to deal with genes with incorrect lengths
+                            for(var domainId in domainsInfo){
+                                var domainsArray = domainsInfo[domainId];
+                                for(var i = 0 ; i < domainsArray.length; i++){
+                                    var domainEnd = domainsArray[i][1];
+                                    if (domainEnd > geneLength)
+					geneLength = domainEnd;
+				}
+			    }
+			    
                             for(var domainId in domainsInfo){
                                 var domainsArray = domainsInfo[domainId];
                                 for(var i = 0 ; i < domainsArray.length; i++){
@@ -258,22 +259,25 @@
                                     var domainEnd = domainsArray[i][1];
                                     var eValue = domainsArray[i][2];
 
-                                    var geneLength = (geneEnd - geneStart + 1)/3;
                                     var domainImgWidth = (domainEnd - domainStart)*100/geneLength;
                                     var domainImgleftShift = (domainStart)*100/geneLength;
+
+				    var domainRef = '<a class="show-domain' + self.pref  + '"'
+					+ ' data-id="' + domainId + '">'
+					+ domainId + '</a>';
 
                                     geneDomainsTableData.push({
                                         'contigId' : contigId,
                                         'geneId' : geneId,
                                         'geneStart' : geneStart,
                                         'geneEnd' : geneEnd,
-                                        'domainId' : domainId,
+                                        'domainId' : domainRef,
                                         'domainDescription' : self.domainAccession2Description[domainId],
                                         'domainStart': domainStart, 
                                         'domainEnd' : domainEnd, 
                                         'eValue' : eValue,
                                         'image' : 
-                                                '<div style="widht: 100%; height:100%; vertical-align: middle; margin-top: 1em; margin-bottom: 1em;">'
+                                                '<div style="width: 100%; height:100%; vertical-align: middle; margin-top: 1em; margin-bottom: 1em;">'
                                                 + '<div style="position:relative; border: 1px solid gray; width:100%; height:2px;">' 
                                                 + '<div style="position:relative; left: ' + domainImgleftShift +'%;' 
                                                 + ' width:' + domainImgWidth + '%;'
@@ -286,7 +290,19 @@
                             tableGeneDomains.dataTable(geneDomainTableSettings);
                             tabPane.kbaseTabs('addTab', {tab: id, content: tabContent, canDelete : true, show: true});
                         });
+		    };
+
+                    function events2() {
+			console.log("events2");
+                        $('.show-domain'+self.pref).unbind('click');
+                        $('.show-domain'+self.pref).click(function() {
+                            var domainId = $(this).attr('data-id');
+			    console.log("showing "+domainId);
+			    tableDomains.fnFilter(domainId);
+                            tabPane.kbaseTabs('showTab', 'Domains');
+			});
                     };
+
                 });                
             });
         },

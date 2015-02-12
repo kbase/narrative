@@ -450,6 +450,11 @@
                 return;
             }
 
+            // If we're in readonly mode, don't lookup job info.
+            if (!IPython.narrative || IPython.narrative.readonly === true) {
+                return;
+            }
+
             if (!hideLoadingMessage)
                 this.showLoadingMessage('Loading running jobs...');
 

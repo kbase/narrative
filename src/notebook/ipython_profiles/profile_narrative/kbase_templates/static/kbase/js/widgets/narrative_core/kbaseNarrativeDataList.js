@@ -259,6 +259,7 @@
                         if (infoList[i][2].indexOf('KBaseNarrative') == 0) { continue; }
                         self.objectList.push(
                             {
+                                key:self.genUUID(), // always generate the DnD key
                                 $div:null, //self.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
                                 info:infoList[i],
                                 attached:false
@@ -745,7 +746,7 @@
                     // // Get object info
                     var key = $elt.attr('kb-oid');
                     var obj = _.findWhere(self.objectList, {key: key});
-                    console.debug('drag-n-drop: key=' + key, obj);
+                    //console.debug('drag-n-drop: key=' + key, obj);
                     var info = self.createInfoObject(obj.info);
                     // // Insert the narrative data cell into the div we just rendered
                     // $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
@@ -787,7 +788,7 @@
             	$(cell.element).off('dblclick');
             	$(cell.element).off('keydown');
             }
-            console.log(cell, near_idx);
+            //console.log(cell, near_idx);
 
             //var cell_id = self.genUUID();
             //cell.rendered = false;
@@ -816,9 +817,6 @@
                         // only show them as we scroll to them
                         if (self.n_objs_rendered >= start+self.options.objs_to_render_on_scroll) {
                             break;
-                        }
-                        if (self.objectList[i].key == undefined) {
-                            self.objectList[i].key = self.genUUID();
                         }
                         self.attachRow(i);
                     }

@@ -543,10 +543,10 @@
                                                             .click(function() {$alertContainer.empty();} )));
                                         });
 
-            $btnToolbar
-                .append($openLandingPage)
-                .append($openHistory)
-                .append($openProvenance);
+            $btnToolbar.append($openLandingPage);
+            if (!IPython.narrative.readonly)
+                $btnToolbar.append($openHistory);
+            $btnToolbar.append($openProvenance);
             if (!IPython.narrative.readonly) {
                 $btnToolbar.append($download)
                            .append($rename)

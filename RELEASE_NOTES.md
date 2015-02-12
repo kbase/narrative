@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 0.6.3 - 2/12/2015
+__Bugfixes__
+- https://atlassian.kbase.us/browse/NAR-690 - Missing data types in data panel filter
+- https://atlassian.kbase.us/browse/NAR-692 - Fixed issue that led to drag and drop not working
+
 ### Version 0.6.2 - 2/11/2015
 __Changes__
 - Adjustments to readonly mode

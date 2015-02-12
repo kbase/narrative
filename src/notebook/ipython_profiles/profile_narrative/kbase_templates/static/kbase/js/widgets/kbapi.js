@@ -796,11 +796,11 @@ function UIUtils() {
 
 
 function getBio(type, loaderDiv, callback) {
-    var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
+    var fba = new fbaModelServices(window.kbconfig.urls.fba);
 //    var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 //    var kbws = new workspaceService('http://140.221.84.209:7058');
 
-    var kbws = new Workspace('http://kbase.us/services/ws');
+    var kbws = new Workspace(window.kbconfig.urls.workspace);
 
     // This is not cached yet; waiting to compare performanced.
     loaderDiv.append('<div class="progress">\

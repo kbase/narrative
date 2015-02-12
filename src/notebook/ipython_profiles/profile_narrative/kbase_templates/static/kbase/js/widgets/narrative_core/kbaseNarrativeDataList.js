@@ -746,7 +746,7 @@
                     // // Get object info
                     var key = $elt.attr('kb-oid');
                     var obj = _.findWhere(self.objectList, {key: key});
-                    console.debug('drag-n-drop: key=' + key, obj);
+                    //console.debug('drag-n-drop: key=' + key, obj);
                     var info = self.createInfoObject(obj.info);
                     // // Insert the narrative data cell into the div we just rendered
                     // $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
@@ -788,7 +788,7 @@
             	$(cell.element).off('dblclick');
             	$(cell.element).off('keydown');
             }
-            console.log(cell, near_idx);
+            //console.log(cell, near_idx);
 
             //var cell_id = self.genUUID();
             //cell.rendered = false;

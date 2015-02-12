@@ -40,7 +40,7 @@
                 this.options.domainAnnotationVer = 8;
             }
 
-            // Create a message pain
+            // Create a message pane
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
 
@@ -128,7 +128,7 @@
                             'Annotated genome', 
                             $('<span />').append(self.genomeName).css('font-style', 'italic') ) )
                         .append( self.makeRow( 
-                            'Domain models set', 
+                            'Domain model set', 
                             self.domainSetName ) )
                         .append( self.makeRow( 
                             'Annotated genes', 
@@ -287,17 +287,15 @@
                                 }
                             }                            
                             geneDomainTableSettings.aaData = geneDomainsTableData;
-                            tableGeneDomains.dataTable(geneDomainTableSettings);
                             tabPane.kbaseTabs('addTab', {tab: id, content: tabContent, canDelete : true, show: true});
+                            tableGeneDomains.dataTable(geneDomainTableSettings);
                         });
 		    };
 
                     function events2() {
-			console.log("events2");
                         $('.show-domain'+self.pref).unbind('click');
                         $('.show-domain'+self.pref).click(function() {
                             var domainId = $(this).attr('data-id');
-			    console.log("showing "+domainId);
 			    tableDomains.fnFilter(domainId);
                             tabPane.kbaseTabs('showTab', 'Domains');
 			});
@@ -326,7 +324,7 @@
                     var domainsInfo = genesArray[i][4];
                     if( $.isEmptyObject(domainsInfo)) continue;
 
-                    // If we have somthing in domainsIno, then the gene was anntoated
+                    // If we have somthing in domainsInfo, then the gene was anntoated
                     genesCount ++;
                     for(var domainId in domainsInfo){
                         var domainData = domains[domainId];
@@ -389,6 +387,7 @@
             this.$messagePane.hide();
             this.$messagePane.empty();
         },
+
         uuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
                 function(c) {
@@ -396,6 +395,7 @@
                     return v.toString(16);
                 });
         },
+
         buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
             var obj = {};
             if (wsRef) {
@@ -417,6 +417,7 @@
             }
             return obj;
         },        
+
         clientError: function(error){
             this.loading(false);
             this.showMessage(error.error.error);

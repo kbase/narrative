@@ -218,8 +218,8 @@
 
             // Refresh the read-only or View-only mode
             $(document).on('updateReadOnlyMode.Narrative',
-              $.proxy(function (e, ws, name) {
-                    this.updateReadOnlyMode(ws, name);
+              $.proxy(function (e, ws, name, callback) {
+                    this.updateReadOnlyMode(ws, name, callback);
                 },
                 this)
             );
@@ -617,7 +617,7 @@
          *
          * Side-effects: modifies this.is_readonly to reflect current value.
          */
-        updateReadOnlyMode: function (ws, name) {
+        updateReadOnlyMode: function (ws, name, callback) {
             this.checkReadOnly(ws, name, $.proxy(function (readonly) {
                 if (readonly != null) {
                     if (this.is_readonly != readonly) {
@@ -642,6 +642,8 @@
                         this.first_readonly = false;
                     }
                 }
+                if (callback)
+                    callback(this.is_readonly);
             }, this));
             return this.is_readonly;
         },
@@ -705,7 +707,8 @@
                     '#kb-ipy-menu',                         // kernel
                     '.kb-app-panel .pull-right',            // app icons
                     '.kb-func-panel .pull-right',           // method icons
-                    '.celltoolbar .button_container'        // ipython icons
+                    '.celltoolbar .button_container',       // ipython icons
+                    '.kb-title .btn-toolbar .btn .fa-arrow-right', // data panel slideout
             ];
         },
 
@@ -877,30 +880,32 @@
         showControlPanels: function() {
             var self = this;
             if (this.first_show_controls) {
-                var $panel = $('#kb-side-panel');
-                var hide_idx = [2], keep_idx = [1], narr = 1;
-                // Hide and show panels
-                _.map(['tab', 'header'], function (subdiv) {
-                    var divs = $panel.find('div.kb-side-' + subdiv);
-                    _.map(hide_idx, function (i) {
-                        $(divs[i]).hide();
-                        $(divs[i]).removeClass('active');
-                    });
-                    if (subdiv == 'tab') {
-                        $(divs[narr]).find('.kb-title').hide();
-                    }
-                    else {
-                        // Plop a 'hide' button before the tab bar
-                        var $hide_btn = $('<div>').attr({id: 'kb-view-mode-narr-hide'})
-                          .append($('<span>').addClass('fa fa-caret-up'))
-                          .click(function () {
-                              self.hideControlPanels();
-                          });
-                        //$(divs[0]).prepend($hide_btn);
-                        $panel.prepend($hide_btn);
-                    }
-                    //$(divs[narr]).addClass('active').css({'width': '366px'});
-                });
+                $panel = $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true, this.hideControlPanels);
+
+                // var $panel = $('#kb-side-panel');
+                // var hide_idx = [2], keep_idx = [1], narr = 1;
+                // // Hide and show panels
+                // _.map(['tab', 'header'], function (subdiv) {
+                //     var divs = $panel.find('div.kb-side-' + subdiv);
+                //     _.map(hide_idx, function (i) {
+                //         $(divs[i]).hide();
+                //         $(divs[i]).removeClass('active');
+                //     });
+                //     if (subdiv == 'tab') {
+                //         $(divs[narr]).find('.kb-title').hide();
+                //     }
+                //     else {
+                //         // Plop a 'hide' button before the tab bar
+                //         var $hide_btn = $('<div>').attr({id: 'kb-view-mode-narr-hide'})
+                //           .append($('<span>').addClass('fa fa-caret-up'))
+                //           .click(function () {
+                //               self.hideControlPanels();
+                //           });
+                //         //$(divs[0]).prepend($hide_btn);
+                //         $panel.prepend($hide_btn);
+                //     }
+                //     //$(divs[narr]).addClass('active').css({'width': '366px'});
+                // });
                 this.first_show_controls = false;
             }
             // Hide the button we used to activate this

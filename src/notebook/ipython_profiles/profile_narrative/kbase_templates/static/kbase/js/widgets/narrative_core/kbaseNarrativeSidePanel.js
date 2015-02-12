@@ -60,7 +60,7 @@
             this.$jobsWidget = jobsWidget['kbaseNarrativeJobsPanel'];
             var $jobsPanel = jobsWidget['panelSet'];
 
-            var $tabs = this.buildTabs([
+            this.$tabs = this.buildTabs([
                 {
                     tabName : 'Analyze',
                     content : $analysisPanel
@@ -76,7 +76,8 @@
             ], true);
 
             this.$elem.addClass('kb-side-panel');
-            this.$elem.append($tabs.header).append($tabs.body);
+            this.$elem.append(this.$tabs.header)
+                      .append(this.$tabs.body);
 
             $(document).on('showSidePanelOverlay.Narrative', $.proxy(function(event, panel) {
                 this.showOverlay(panel);
@@ -102,6 +103,64 @@
 
         /**
          * @method
+         * @public
+         * A bit of a hack. Set a specific read-only mode where we don't see the jobs or methods panel,
+         * only the data panel and narratives panel.
+         * So we need to remove the 'Jobs' header all together, then hide the methods panel,
+         * and (maybe) expand the data panel to fill the screen
+         */
+        setReadOnlyMode: function(readOnly, minimizeFn) {
+            // toggle off the methods and jobs panels
+            this.$methodsWidget.$elem.toggle(!readOnly);
+            this.$jobsWidget.$elem.toggle(!readOnly);
+            this.$dataWidget.$elem.css({'height': (readOnly ? '100%' : '50%')});
+
+            // toggle off the jobs header
+            // omg this is a hack, but i'm out of time.
+            this.$tabs.header.find('div:nth-child(3).kb-side-header').toggle(!readOnly);
+            this.$tabs.header.find('div.kb-side-header').css({'width': (readOnly ? '48%' : '33.333%')});
+
+            var $hide_btn = $('<div>')
+                            .attr({id: 'kb-view-mode-narr-hide'})
+                            .append($('<span>')
+                                    .addClass('fa fa-caret-up'))
+                            .css({'width':'4%'})
+                            .click(function() {
+                                minimizeFn();
+                            });
+            //$(divs[0]).prepend($hide_btn);
+            this.$tabs.header.prepend($hide_btn);
+            // $panel.prepend($hide_btn);
+
+                // var $panel = $('#kb-side-panel');
+                // var hide_idx = [2], keep_idx = [1], narr = 1;
+                // // Hide and show panels
+                // _.map(['tab', 'header'], function (subdiv) {
+                //     var divs = $panel.find('div.kb-side-' + subdiv);
+                //     _.map(hide_idx, function (i) {
+                //         $(divs[i]).hide();
+                //         $(divs[i]).removeClass('active');
+                //     });
+                //     if (subdiv == 'tab') {
+                //         $(divs[narr]).find('.kb-title').hide();
+                //     }
+                //     else {
+                //         // Plop a 'hide' button before the tab bar
+                //         var $hide_btn = $('<div>').attr({id: 'kb-view-mode-narr-hide'})
+                //           .append($('<span>').addClass('fa fa-caret-up'))
+                //           .click(function () {
+                //               self.hideControlPanels();
+                //           });
+                //         //$(divs[0]).prepend($hide_btn);
+                //         $panel.prepend($hide_btn);
+                //     }
+                //     //$(divs[narr]).addClass('active').css({'width': '366px'});
+                // });
+
+        },
+
+        /**
+         * @method
          * @private
          * Builds a very simple set of tabs.
          * @param {Array} tabs - a list of objects where each has a 'tabName' and 'content' property.
@@ -120,10 +179,12 @@
                 $header.append($('<div>')
                                .addClass('kb-side-header')
                                .css('width', (100/tabs.length)+'%')
-                               .append(tab.tabName));
+                               .append(tab.tabName)
+                               .attr('kb-data-id', i));
                 $body.append($('<div>')
                              .addClass('kb-side-tab')
-                             .append(tab.content));
+                             .append(tab.content)
+                             .attr('kb-data-id', i));
             }
 
             $header.find('div').click($.proxy(function(event) {
@@ -132,11 +193,12 @@
                 var $headerDiv = $(event.currentTarget);
 
                 if (!$headerDiv.hasClass('active')) {
-                    var idx = $headerDiv.index();
+                    var idx = $headerDiv.attr('kb-data-id');
                     $header.find('div').removeClass('active');
                     $headerDiv.addClass('active');
                     $body.find('div.kb-side-tab').removeClass('active');
-                    $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
+                    // $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
+                    $body.find('[kb-data-id=' + idx + ']').addClass('active');
                     if (isOuter)
                         this.hideOverlay();
                 }

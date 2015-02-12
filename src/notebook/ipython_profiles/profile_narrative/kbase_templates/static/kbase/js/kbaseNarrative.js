@@ -441,7 +441,7 @@ Narrative.prototype.init = function() {
     this.initAboutDialog();
     this.initUpgradeDialog();
 
-    $('[data-toggle="tooltip"]').tooltip()
+    $('[data-toggle="tooltip"]').tooltip();
     /*
      * Before we get everything loading, just grey out the whole %^! page
      */

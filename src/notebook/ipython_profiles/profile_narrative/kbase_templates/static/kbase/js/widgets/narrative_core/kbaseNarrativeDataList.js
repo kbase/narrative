@@ -259,6 +259,7 @@
                         if (infoList[i][2].indexOf('KBaseNarrative') == 0) { continue; }
                         self.objectList.push(
                             {
+                                key:self.genUUID(), // always generate the DnD key
                                 $div:null, //self.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
                                 info:infoList[i],
                                 attached:false
@@ -816,9 +817,6 @@
                         // only show them as we scroll to them
                         if (self.n_objs_rendered >= start+self.options.objs_to_render_on_scroll) {
                             break;
-                        }
-                        if (self.objectList[i].key == undefined) {
-                            self.objectList[i].key = self.genUUID();
                         }
                         self.attachRow(i);
                     }

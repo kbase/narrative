@@ -324,11 +324,15 @@
             var types = ["KBaseGenomes.Genome",
                          "KBaseSearch.GenomeSet",
                          "KBaseGenomes.Pangenome",
+                         "KBaseGeneDomains.DomainAnnotation",
                          "KBaseGenomes.GenomeComparison",
                          "KBaseGenomes.GenomeDomainData",
                          "GenomeComparison.ProteomeComparison",
                          "KBaseGenomes.ContigSet",
+                         "KBaseAssembly.SingleEndLibrary",
+                         "KBaseAssembly.PairedEndLibrary",
                          "KBaseAssembly.AssemblyInput",
+                         "KBaseAssembly.AssemblyReport",
                          "KBaseRegulation.Regulome",
                          "KBaseTrees.MSA",
                          "KBaseTrees.Tree",
@@ -341,9 +345,17 @@
                          "KBasePhenotypes.PhenotypeSimulationSet",
                          "KBaseFBA.ReactionSensitivityAnalysis",
                          "KBaseGenomes.MetagenomeAnnotation",
-                         "Communities.SequenceFile",
                          "KBaseExpression.ExpressionSeries",
-                         "KBaseExpression.ExpressionSample"
+                         "KBaseExpression.ExpressionSample",
+                         "Communities.Metagenome",
+                         "Communities.SequenceFile",
+                         "Communities.Collection",
+                         "Communities.FunctionalMatrix",
+                         "Communities.FunctionalProfile",
+                         "Communities.Heatmap",
+                         "Communities.PCoA",
+                         "Communities.TaxonomicMatrix",
+                         "Communities.TaxonomicProfile"
                          ];
 
             // tab panels

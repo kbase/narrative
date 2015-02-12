@@ -48,7 +48,7 @@
                 },
             ]);
 
-            this.$narrativesWidget = manageWidgets['kbaseNarrativeAppsPanel'];
+            this.$narrativesWidget = manageWidgets['kbaseNarrativeManagePanel'];
             var $managePanel = manageWidgets['panelSet'];
 
             var jobsWidget = this.buildPanelSet([
@@ -128,9 +128,7 @@
                             .click(function() {
                                 minimizeFn();
                             });
-            //$(divs[0]).prepend($hide_btn);
             this.$tabs.header.prepend($hide_btn);
-            // $panel.prepend($hide_btn);
 
                 // var $panel = $('#kb-side-panel');
                 // var hide_idx = [2], keep_idx = [1], narr = 1;

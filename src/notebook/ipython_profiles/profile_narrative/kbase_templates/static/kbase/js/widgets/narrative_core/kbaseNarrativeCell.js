@@ -18,7 +18,7 @@
          * Init cell.
          */
         init: function(options) {
-            console.debug("kbaseNarrativeCell.init");
+            //console.debug("kbaseNarrativeCell.init");
             this._super(options);
         },
     });

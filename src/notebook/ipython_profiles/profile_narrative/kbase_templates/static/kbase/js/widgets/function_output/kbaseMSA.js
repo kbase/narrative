@@ -12,15 +12,12 @@
         options: {
             msaID: null,
             workspaceID: null,
-            jobID: null,
             kbCache: null,
-            workspaceURL: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
+            workspaceURL: window.kbconfig.urls.workspace,
             loadingImage: "static/kbase/images/ajax-loader.gif",
-            ujsServiceURL: "https://kbase.us/services/userandjobstate/",
             height: null,
         },
 
-        msaWsRef: null,
         pref: null,
         timer: null,
         loadingImage: "static/kbase/images/ajax-loader.gif",
@@ -80,60 +77,12 @@
         render: function() {
         	this.wsClient = new Workspace(this.options.workspaceURL, {token: this.token});
             this.loading(false);
-            if (this.msaWsRef || this.options.jobID == null) {
-            	this.loadMSA();
-            } else {
-                var self = this;
-                var jobSrv = new UserAndJobState(self.options.ujsServiceURL, {token: this.token});
-                self.$elem.empty();
-
-            	var panel = $('<div class="loader-table"/>');
-            	self.$elem.append(panel);
-            	var table = $('<table class="table table-striped table-bordered" \
-            			style="margin-left: auto; margin-right: auto;" id="'+self.pref+'overview-table"/>');
-            	panel.append(table);
-            	table.append('<tr><td>Job was created with id</td><td>'+self.options.jobID+'</td></tr>');
-            	table.append('<tr><td>Output result will be stored as</td><td>'+self.options.msaID+'</td></tr>');
-            	table.append('<tr><td>Current job state is</td><td id="'+self.pref+'job"></td></tr>');
-            	var timeLst = function(event) {
-            		jobSrv.get_job_status(self.options.jobID, function(data) {
-            			var status = data[2];
-            			var complete = data[5];
-            			var wasError = data[6];
-        				var tdElem = $('#'+self.pref+'job');
-        				if (status === 'running') {
-        					tdElem.html(status+"... &nbsp &nbsp <img src=\""+self.loadingImage+"\">");
-                        } else {
-            				tdElem.html(status);
-                        }
-            			if (complete === 1) {
-            				clearInterval(self.timer);
-            				if (this.msaWsRef) {
-            					// Just skip all this cause data was already showed through setState()
-            				} else {
-            					if (wasError === 0) {
-            						self.loadMSA();
-            					}
-            				}
-            			}
-            		}, function(data) {
-        				clearInterval(self.timer);
-        				if (this.msaWsRef) {
-        					// Just skip all this cause data was already showed through setState()
-        				} else {
-        					var tdElem = $('#'+self.pref+'job');
-        					tdElem.html("Error accessing job status: " + data.error.message);
-        				}
-            		});
-            	};
-            	timeLst();
-            	self.timer = setInterval(timeLst, 5000);
-            }
+            this.loadMSA();
         },
         
         loadMSA: function() {
             var prom;
-            var objId = this.buildObjectIdentity(this.options.workspaceID, this.options.msaID, null, this.msaWsRef);
+            var objId = this.buildObjectIdentity(this.options.workspaceID, this.options.msaID, null, null);
             if (this.options.kbCache)
                 prom = this.options.kbCache.req('ws', 'get_objects', [objId]);
             else
@@ -292,22 +241,6 @@
                     var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
                 });
-        },
-
-        getState: function() {
-            var self = this;
-            var state = {
-            	msaWsRef: self.msaWsRef
-            };
-            return state;
-        },
-
-        loadState: function(state) {
-            var self = this;
-            if (state && state.msaWsRef) {
-                self.msaWsRef = state.msaWsRef;
-                self.render();
-            }
         },
 
         loggedInCallback: function(event, auth) {

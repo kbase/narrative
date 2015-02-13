@@ -10,7 +10,7 @@
             ws: null,
             id: null
         },
-        wsUrl: "https://kbase.us/services/ws/",
+        wsUrl: window.kbconfig.urls.workspace,
 
         init: function(options) {
             this._super(options);

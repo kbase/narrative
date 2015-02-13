@@ -11,7 +11,7 @@
             id: null,
             ws: null
         },
-        wsUrl: "https://kbase.us/services/ws/",
+        wsUrl: window.kbconfig.urls.workspace,
         loadingImage: "static/kbase/images/ajax-loader.gif",
 
         init: function(options) {

@@ -441,6 +441,28 @@
                                         errorDetectedHere = true;
                                         errorMessages.push("value must be an integer in field "+self.spec.ui_name);
                                     }
+                                    else {
+                                        if (self.spec.text_options.max_int) {
+                                            if (n>self.spec.text_options.max_int) {
+                                                self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
+                                                self.rowInfo[i].$error.html("the maximum value for this parameter is "+self.spec.text_options.max_int);
+                                                self.rowInfo[i].$error.show();
+                                                self.rowInfo[i].$feedback.removeClass();
+                                                errorDetectedHere = true;
+                                                errorMessages.push("the maximum value for this parameter is "+self.spec.text_options.max_int+" in " +self.spec.ui_name);
+                                            }
+                                        }
+                                        if (self.spec.text_options.min_int) {
+                                            if (n<self.spec.text_options.min_int) {
+                                                self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
+                                                self.rowInfo[i].$error.html("the minimum value for this parameter is "+self.spec.text_options.min_int);
+                                                self.rowInfo[i].$error.show();
+                                                self.rowInfo[i].$feedback.removeClass();
+                                                errorDetectedHere = true;
+                                                errorMessages.push("the minimum value for this parameter is "+self.spec.text_options.min_int+" in " +self.spec.ui_name);
+                                            }
+                                        }
+                                    }
                                 }
                             } else if ("float" === fieldtype.toLowerCase()) {
                                 if(isNaN(pVal)) {
@@ -450,6 +472,29 @@
                                     self.rowInfo[i].$feedback.removeClass();
                                     errorDetectedHere = true;
                                     errorMessages.push("value must be a number in field "+self.spec.ui_name);
+                                }
+                                else {
+                                    var n = parseFloat(pVal);;
+                                    if (self.spec.text_options.max_float) {
+                                            if (n>self.spec.text_options.max_float) {
+                                                self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
+                                                self.rowInfo[i].$error.html("the maximum value for this parameter is "+self.spec.text_options.max_float);
+                                                self.rowInfo[i].$error.show();
+                                                self.rowInfo[i].$feedback.removeClass();
+                                                errorDetectedHere = true;
+                                                errorMessages.push("the maximum value for this parameter is "+self.spec.text_options.max_float+" in " +self.spec.ui_name);
+                                            }
+                                        }
+                                        if (self.spec.text_options.min_float) {
+                                            if (n<self.spec.text_options.min_float) {
+                                                self.rowInfo[i].$row.addClass("kb-method-parameter-row-error");
+                                                self.rowInfo[i].$error.html("the minimum value for this parameter is "+self.spec.text_options.min_float);
+                                                self.rowInfo[i].$error.show();
+                                                self.rowInfo[i].$feedback.removeClass();
+                                                errorDetectedHere = true;
+                                                errorMessages.push("the minimum value for this parameter is "+self.spec.text_options.min_float+" in " +self.spec.ui_name);
+                                            }
+                                        }
                                 }
                             }
                         }

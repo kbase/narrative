@@ -57,7 +57,11 @@
 		                if (self.options.name == 0) {
 			                cnames[c+1] = biom['columns'][c]['id'];
 		                } else {
-		                    cnames[c+1] = biom['columns'][c]['name'];
+		                    if (biom['columns'][c].hasOwnProperty('name')) {
+		                        cnames[c+1] = biom['columns'][c]['name'];
+		                    } else {
+		                        cnames[c+1] = biom['columns'][c]['id'];
+	                        }
 		                }
 		            }
 		            // add values

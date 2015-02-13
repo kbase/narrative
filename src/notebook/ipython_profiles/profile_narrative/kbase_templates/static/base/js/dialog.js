@@ -60,14 +60,15 @@ IPython.dialog = (function (IPython) {
         
         
         // hook up on-open event
-        dialog.on("shown", function() {
+        var onShown = function() {
             setTimeout(function() {
                 footer.find("button").last().focus();
                 if (options.open) {
                     $.proxy(options.open, dialog)();
                 }
             }, 0);
-        });
+        };
+        dialog.on("shown", onShown());
         
         // destroy dialog on hide, unless explicitly asked not to
         if (options.destroy == undefined || options.destroy) {

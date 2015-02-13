@@ -42,7 +42,7 @@ kb_require(['kbaseMethodGallery'],
          */
         init: function(options) {
             this._super(options);
-
+            var self = this;
             // DOM structure setup here.
             // After this, just need to update the function list
 
@@ -69,6 +69,12 @@ kb_require(['kbaseMethodGallery'],
                                             this.visualFilter(this.textFilter, txt);
                                     }, this)
                                 );
+            
+            self.$searchInput.on('keyup', function(e){
+                if (e.keyCode == 27) 
+                    self.$searchDiv.hide();
+            });
+            
             this.$numHiddenSpan = $('<span>0</span>');
             this.$showHideSpan = $('<span>show</span>');
             this.$toggleHiddenDiv = $('<div>')
@@ -149,6 +155,7 @@ kb_require(['kbaseMethodGallery'],
                         this.$searchDiv.show();
                         this.$searchInput.val(filterString);
                         this.$searchInput.trigger('input');
+                        //this.$searchInput.focus();
                     }
                 }, this)
             );
@@ -208,6 +215,7 @@ kb_require(['kbaseMethodGallery'],
                            .append('<span class="fa fa-search"></span>')
                            .click($.proxy(function(event) {
                                this.$searchDiv.slideToggle(400);
+                               this.$searchInput.focus();
                            }, this)));
             // this.addButton($('<button>')
             //                .addClass('btn btn-xs btn-default')

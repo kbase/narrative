@@ -161,7 +161,7 @@
                     if (!self.token)
                         console.error("Token is not defined");
                 }
-            }, 1000);
+            }, 5000);
             
             return this;
         },
@@ -340,9 +340,15 @@
             })
 
             var self = this;
-            var user = $("#signin-button").kbaseLogin('session', 'user_id');  // TODO: use
+            var user = $("#signin-button").kbaseLogin('session', 'user_id');
             if (!user) {
-                console.error("User is not defined");
+                console.error("NarrativeDataPanel: user is not defined, parsing token instead...");
+                var tokenParts = this.token.split("|");
+                for (var i in tokenParts) {
+                    var keyValue = tokenParts[i].split("=");
+                    if (keyValue.length == 2 && keyValue[0] === "un")
+                        user = keyValue[1];
+                }
             }
 
             // models

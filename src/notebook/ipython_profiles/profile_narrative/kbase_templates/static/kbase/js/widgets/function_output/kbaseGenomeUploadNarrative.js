@@ -14,10 +14,8 @@ $.KBWidget({
     	type: null
     },
 
-    uploadUrl: "https://kbase.us/services/genome_comparison/uploader",  
-    //uploadUrl: "http://dev06.berkeley.kbase.us:8283/uploader",
-    //uploadUrl: "http://localhost:18888/uploader",
-    wsUrl: "https://kbase.us/services/ws",
+    uploadUrl: "https://kbase.us/services/xxx/uploader",  
+    wsUrl: window.kbconfig.urls.workspace,
 
     init: function(options) {
         this._super(options);

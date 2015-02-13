@@ -1,5 +1,7 @@
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
+ * @author Michael Sneddon <mwsneddon@lbl.gov>
+ * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
  * This is a generalized class for an input cell that sits in an IPython markdown cell.
  * It handles all of its rendering here (no longer in HTML in markdown), and invokes
@@ -19,7 +21,7 @@
             cellId: null,
             loadingImage: 'static/kbase/images/ajax-loader.gif',
             methodStoreURL: 'https://kbase.us/services/narrative_method_store',
-            
+
             appHelpLink: '/functional-site/#/narrativestore/app/',
             methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
@@ -31,15 +33,17 @@
         methodSpecs: null,
         inputSteps: null,
         inputStepLookup: null,
-        
+
         $runButton: null,
         $stopButton: null,
-        
+
         $errorModal: null,
         $errorModalContent:null,
-        
+
+        OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
+
         state: null,
-        
+
         /**
          * @private
          * @method
@@ -48,7 +52,7 @@
          * TODO: add checks and failures for this.
          *
          * This renders by calling fetchMethodInfo, which grabs all the specs
-         * for the intermediate steps, then renders the whole mess and 
+         * for the intermediate steps, then renders the whole mess and
          * refreshes to update with jobs and results and such.
          *
          */
@@ -70,7 +74,7 @@
             // initialize the state
             this.state = {
                     runningState: {
-                        appRunState: "input", // could be 'input' || 'running' || something else?
+                        appRunState: "input", // could be 'input' || 'running' || 'error' || 'done', something else?
                         runningStep: null
                     },
                     step: { }
@@ -78,13 +82,14 @@
             this.initErrorModal();
 
             this.fetchMethodInfo();
-            
+
             return this;
         },
 
         fetchMethodInfo: function() {
             if (!this.appSpec.steps || this.appSpec.steps.length === 0) {
-                this.showError('App "' + this.appSpec.info.name + '" has no steps!');
+                KBError("App::" + this.appSpec.info.name, "has no steps");
+                this.showAppLoadingError('App "' + this.appSpec.info.name + '" has no steps!');
             }
             // get the list of method ids
             var methodIds = [];
@@ -97,12 +102,18 @@
                     this.render(specs);
                 }, this),
                 $.proxy(function(error) {
-                    this.showError(error);
+                    KBError('get_method_spec', error);
+                    this.showAppLoadingError(error);
                 }, this)
             );
         },
 
-        showError: function(error) {
+        /**
+         * Shows an error that occurred while loading app information. This essentially breaks the cell.
+         * @method
+         * @private
+         */
+        showAppLoadingError: function(error) {
             console.error(error);
             var $errorHeader = $('<div>')
                                .addClass('alert alert-danger')
@@ -139,7 +150,11 @@
             this.$elem.empty().append($errorPanel);
         },
 
-        /* temp hack to deal with current state of NJS */
+        /**
+         * Fetches the app spec, method specs, and parameter values
+         * These are used elsewhere to set up the NJS job and to send
+         * returned output values to the right place.
+         */
         getSpecAndParameterInfo: function() {
             return {
                 appSpec : this.appSpec,
@@ -147,7 +162,7 @@
                 parameterValues: this.getAllParameterValues()
             };
         },
-        
+
         /**
          * Renders this cell and its contained input widget.
          */
@@ -158,17 +173,17 @@
             this.$runButton = $('<button>')
                               .attr('type', 'button')
                               .attr('value', 'Run')
-                              .addClass('btn btn-success btn-sm')
+                              .addClass('kb-app-run')
                               .append('Run')
                               .click(
                                   $.proxy(function(event) {
                                       self.$submitted.html("submitted on "+this.readableTimestamp(new Date().getTime()));
-                                      
+
                                       var isGood = self.startAppRun();
                                       if (!isGood) { return; }
-                                    
+
                                       event.preventDefault();
-                                      this.trigger('runApp.Narrative', { 
+                                      this.trigger('runApp.Narrative', {
                                           cell: IPython.notebook.get_selected_cell(),
                                           appSpec: this.appSpec,
                                           methodSpecs: this.methodSpecs,
@@ -190,21 +205,35 @@
                                       }
                                   );
 
-            
+
             //We cannot stop a method from running, so this button for now is gone.
             this.$stopButton = $('<button>')
                               .attr('type', 'button')
-                              .attr('value', 'Stop')
-                              .addClass('btn btn-warning btn-sm')
-                              .append('Stop')
+                              .attr('value', 'Cancel')
+                              .addClass('kb-app-run kb-app-cancel')
+                              .append('Cancel')
+                              .css({'margin-right':'5px'})
                               .click(
                                   $.proxy(function(event) {
                                       self.stopAppRun();
                                   }, this)
                               )
                               .hide();
-            
-            this.$submitted = $('<span>').addClass("pull-right kb-func-timestamp").hide();
+            // Reset the inputs and prepare for another "run"
+            this.$resetButton = $('<button>')
+                .attr('type', 'button')
+                .attr('value', 'Reset')
+                .addClass('kb-app-run kb-app-reset')
+                .append('Reset')
+                .css({'margin-right':'5px'})
+                .click(
+                    $.proxy(function(event) {
+                    self.resetAppRun(true);
+                }, this)
+            )
+            .hide();
+
+            this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
 
             var appInfo = this.appSpec.info.name;
             this.$methodPanel = $('<div>')
@@ -220,26 +249,35 @@
             }
 
             var $buttons = $('<div>')
-                           .addClass('buttons pull-right')
+                           .addClass('buttons pull-left')
                            .append(this.$runButton)
-                           //.append(this.$stopButton)
+                           .append(this.$stopButton)
+                           .append(this.$resetButton)
                            //.append(this.$stateDebugBtn)
                            .append(this.$submitted);
 
             var $appSubtitleDiv = $("<div>")
                                         .addClass('kb-app-panel-description')
-                                        .append(this.appSpec.info.subtitle);
-            
-            var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, "")
+                                        .append(this.appSpec.info.subtitle)
+                                        .append('&nbsp;&nbsp;<a href="'+this.options.appHelpLink+this.appSpec.info.id+'" target="_blank">more...</a>');
+
+            var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, '"')
             var $appHeaderDiv = $("<div>")
                                         .addClass('kb-app-panel-header')
-                                        .append(headerCleaned);
+                                        .html(headerCleaned);
 
             var $menuSpan = $('<div class="pull-right">');
-            
+
+            // Controls (minimize)
+            var $controlsSpan = $('<div>').addClass("pull-left");
+            var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
+                        .css({color: "#888", fontSize: "14pt"});
+            $controlsSpan.append($minimizeControl);
+
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
                              .append($menuSpan)
+                             .append($controlsSpan)
                              .append($('<div>')
                                      .addClass('panel-heading app-panel-heading')
                                      .append($('<div>')
@@ -257,15 +295,53 @@
                                      .css({'overflow' : 'hidden'})
                                      .append($buttons));
 
-            $menuSpan.kbaseNarrativeCellMenu();
+            this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
+
+
             //now we link the step parameters together that are linked
             this.linkStepsTogether();
-            
+
             // then we show the result
             this.$elem.empty().append($cellPanel);
-            
+
+            // Add minimize/restore actions.
+            // These mess with the CSS on the cells!
+            var $mintarget = $cellPanel;
+            this.panel_minimized = false;
+            var self = this;
+            $controlsSpan.click(function() {
+                if (self.panel_minimized) {
+                    console.debug("restore full panel");
+                    $mintarget.find(".panel-body").slideDown();
+                    $mintarget.find(".panel-footer").show();
+                    $minimizeControl.removeClass("glyphicon-chevron-right")
+                                    .addClass("glyphicon-chevron-down");
+                    // restore original padding (20px)
+                    $mintarget.find(".app-panel-heading").css({padding: "20px"});
+                    self.panel_minimized = false;
+                }
+                else {
+                    console.debug("minimize panel");
+                    $mintarget.find(".panel-footer").hide();
+                    $mintarget.find(".panel-body").slideUp();
+                    $minimizeControl.removeClass("glyphicon-chevron-down")
+                                    .addClass("glyphicon-chevron-right");
+                    // reduce padding so it lines up
+                    $mintarget.find(".app-panel-heading").css({padding: "5px"});
+                    self.panel_minimized = true;
+                }
+            });
+
             // finally, we refresh so that our drop down or other boxes can be populated
             this.refresh();
+        },
+
+        minimizePanel: function() {
+            // console.debug("minimize panel");
+        },
+
+        showFullPanel: function() {
+            // console.debug("restore panel to full size");
         },
 
         // given a method spec, returns a jquery div that is rendered but not added yet to the dom
@@ -273,11 +349,11 @@
         // stepHeading - something to show in front of the method title, e.g. Step 1, Step 2 ...
         renderStepDiv: function (stepId, stepSpec, stepHeading) {
             var $stepPanel = $("<div>").addClass('kb-app-step-container');
-            
+
             var $statusPanel = $('<div>');
             var $outputPanel = $('<div>');
-            
-            
+
+
             var $inputWidgetDiv = $("<div>");
             var methodId = stepSpec.info.id + '-step-details-' + this.genUUID();
             var buttonLabel = 'details';
@@ -285,15 +361,9 @@
             var $methodInfo = $('<div>')
                               .addClass('kb-func-desc')
                               .append('<h1><b>' + stepHeading +'&nbsp&nbsp-&nbsp '+ stepSpec.info.name + '</b></h1>')
-                              .append($('<button>')
-                                      .addClass('btn btn-default btn-xs')
-                                      .attr('type', 'button')
-                                      .attr('data-toggle', 'collapse')
-                                      .attr('data-target', '#' + methodId)
-                                      .append(buttonLabel))
                               .append($('<div>')
                                       .attr('id', methodId)
-                                      .addClass('collapse')
+                                      //.addClass('collapse')
                                       .append($('<h2>')
                                          .append(methodDesc +
                                                  ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + stepSpec.info.id +
@@ -327,12 +397,12 @@
             var inputStepData = {id:stepId ,methodId: stepSpec.info.id, widget:inputWidget, $stepContainer:$stepPanel, $statusPanel:$statusPanel, $outputPanel:$outputPanel, outputWidgetName:outputWidgetName }
             this.inputSteps.push(inputStepData);
             this.inputStepLookup[stepId] = inputStepData;
-            
+
             this.state.step[stepId] = { };
-            
+
             return $stepPanel;
         },
-        
+
         linkStepsTogether: function() {
             var self = this;
             if(this.appSpec && this.inputSteps) {
@@ -345,19 +415,21 @@
                             this.inputStepLookup[steps[s].step_id].widget.disableParameterEditing(input_mapping[m].to);
                             // connect the values
                             if(this.inputStepLookup[input_mapping[m].step_source]) {
-                                var step_target = this.inputStepLookup[steps[s].step_id].widget;
-                                var step_source = this.inputStepLookup[input_mapping[m].step_source].widget;
-                                var from = input_mapping[m].from;
-                                var to = input_mapping[m].to;
-                                // set the value to the original value
-                                step_target.setParameterValue(to, step_source.getParameterValue(from));
-                                // make sure the value changes every time the source input changes
-                                step_source.addInputListener(
-                                    from,
-                                    function() {
-                                        step_target.setParameterValue(to, step_source.getParameterValue(from));
-                                    }
-                                );
+                                (function(localS, localM) {
+                                    var step_target = self.inputStepLookup[steps[localS].step_id].widget;
+                                    var step_source = self.inputStepLookup[input_mapping[localM].step_source].widget;
+                                    var from = input_mapping[localM].from;
+                                    var to = input_mapping[localM].to;
+                                    // set the value to the original value
+                                    step_target.setParameterValue(to, step_source.getParameterValue(from));
+                                    // make sure the value changes every time the source input changes
+                                    step_source.addInputListener(
+                                        from,
+                                        function() {
+                                            step_target.setParameterValue(to, step_source.getParameterValue(from));
+                                        }
+                                    );
+                                })(s,m);
                             } else {
                                 console.error("invalid input mapping in spec for "+steps[s].step_id+", from step does not exist.");
                                 console.error(this.appSpec);
@@ -368,9 +440,14 @@
             }
             return;
         },
-        
-        
-        isValid : function() {
+
+        /**
+         * Checks all parameters across all steps for validity. If any are invalid,
+         * this returns them in {stepErrors: []} and the valid state in {isValid:boolean}
+         * @method
+         * @private
+         */
+        validateParameters : function() {
             var isValidRet = {isValid:true, stepErrors:[]}
             if (this.inputSteps) {
                 for(var i=0; i<this.inputSteps.length; i++) {
@@ -386,11 +463,11 @@
             }
             return isValidRet;
         },
-        
+
         /*
          * This function is invoked every time we run app. This is the difference between it
-         * and getAllParameterValues/getParameterValue which could be invoked many times before running 
-         * (e.g. when widget is rendered). 
+         * and getAllParameterValues/getParameterValue which could be invoked many times before running
+         * (e.g. when widget is rendered).
          */
         prepareDataBeforeRun: function() {
             if (this.inputSteps) {
@@ -399,15 +476,17 @@
             }
         },
 
-        /* locks inputs and updates display properties to reflect the running state
-            returns true if everything is valid and we can start, false if there were errors
-        */
+        /**
+         * locks inputs and updates display properties to reflect the running state
+         * returns true if everything is valid and we can start, false if there were errors
+         */
         startAppRun: function(ignoreValidCheck) {
             var self = this;
             if (ignoreValidCheck) {
                 //code
             } else {
-                var v = self.isValid();
+                var v = self.validateParameters();
+                // Take these action if the app input is not valid?
                 if (!v.isValid) {
                     var errorCount = 1;
                     self.$errorModalContent.empty();
@@ -419,6 +498,7 @@
                             errorCount = errorCount+1;
                         }
                         self.$errorModalContent.append($errorStep);
+                        KBError("App::" + this.appSpec.info.name, "errors=" + errorCount);
                     }
                     self.$errorModal.modal('show');
                     return false;
@@ -434,33 +514,87 @@
                 }
             }
             this.state.runningState.appRunState = "running";
+            this.displayRunning(true);
             return true;
         },
-        
-        /* unlocks inputs and updates display properties to reflect the not running state */
-        stopAppRun: function() {
-            var self = this;
-            self.$stopButton.hide();
-            self.$runButton.show();
+
+        /* Show/hide running icon */
+        displayRunning: function(is_running, had_error) {
+            if (is_running) {
+                this.cellMenu.$runningIcon.show();
+                // never show error icon while running
+                this.cellMenu.$errorIcon.hide();
+            }
+            else {
+                this.cellMenu.$runningIcon.hide();
+                // only display error when not running
+                if (had_error) { this.cellMenu.$errorIcon.show(); }
+                else { this.cellMenu.$errorIcon.hide(); }
+            }
+        },
+
+        /*
+         * Reset parameters and allow to re-run
+         */
+        resetAppRun: function(clear_inputs) {
+            this.displayRunning(false);
+            // buttons
+            this.$stopButton.hide();
+            this.$resetButton.hide();
+            this.$submitted.hide();
+            // clear inputs
             if (this.inputSteps) {
                 for(var i=0; i<this.inputSteps.length; i++) {
                     this.inputSteps[i].widget.unlockInputs();
+                    this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                    // If invoked from "Reset" button, then clear_inputs will be
+                    // true and we need to get back to the original state.
+                    // If invoked from "Cancel" button we skip this step and
+                    // allow the user to Reset later.
+                    if (clear_inputs) {
+                        var c = this.inputSteps[i].$stepContainer;
+                        // clear text fields
+                        c.find("span.kb-parameter-data-selection").text("");
+                        // remove old output
+                        c.find(".kb-cell-output").remove();
+                    }
                 }
             }
-            this.$submitted.hide();
-            this.state.runningState.appRunState = "input";
+            if (clear_inputs) {
+                this.setErrorState(false);
+                this.state.runningState.appRunState = "input";
+                this.$runButton.show();
+            }
+            else {
+                this.state.runningState.appRunState = "canceled"; // XXX?
+                this.$runButton.hide();
+                this.$resetButton.show();
+            }
         },
-        
-        
-        
+
+        /* unlocks inputs and updates display properties to reflect the not running state */
+        stopAppRun: function() {
+            // trigger a cancel job action
+            // if that returns something truthy (i.e. auto canceled, or user chose to cancel),
+            // then continue and reset the state to input.
+            // Otherwise, bail.
+            var self = this;
+            this.trigger('cancelJobCell.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
+                if (isCanceled) {
+                  self.resetAppRun(false);
+
+                }
+            }, this)]);
+        },
+
         /**
          * DO NOT USE!!  use getAllParameterValues instead from now on...
          */
         getParameters: function() {
             return this.getAllParameterValues();
         },
-        
-        
+
+
         /**
          * returns structure that preserves method/parameter ordering in original spec
          * [
@@ -506,6 +640,10 @@
             return this.state;
         },
 
+        getRunningState: function() {
+            return this.state.runningState.appRunState;
+        },
+
         /**
          * @method
          * Passes along the state to its contained input widget.
@@ -529,7 +667,7 @@
                     }
                 }
             }
-            
+
             // if we were in the running state before, set the values
             if (state.runningState) {
                 if (state.runningState.runningStep) {
@@ -542,9 +680,13 @@
                     if (state.runningState.appRunState === "running") {
                         this.startAppRun();
                     }
+                    else if (state.runningState.appRunState === "done") {
+                        this.$submitted.show();
+                        this.$runButton.hide();
+                    }
                 }
             }
-            
+
             // set the output state (we do this last so that in case we run into an error, we still show that we are running)
             if (this.inputSteps && state.step) {
                 for(var i=0; i<this.inputSteps.length; i++) {
@@ -553,7 +695,7 @@
                         // set the output states
                         if (state.step[id].outputState) {
                             if (state.step[id].outputState.output) {
-                                this.setStepOutput(id,state.step[id].outputState.output, state.step[id].outputState.widgetState);
+                                this.setStepOutput(id, state.step[id].outputState.output, state.step[id].outputState.widgetState, true);
                             }
                         }
                     }
@@ -561,7 +703,7 @@
             }
             return;
         },
-        
+
         /** methods for setting the app state based on the job status **/
         setRunningStep: function(stepId) {
             if (this.inputSteps) {
@@ -574,7 +716,7 @@
                 }
             }
         },
-        
+
         updateStepStatus: function(stepId, status) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
@@ -587,9 +729,88 @@
                 }
             }
         },
-        
+
+        setRunningState: function(state) {
+            state = state.toLowerCase();
+            if (state === 'error') {
+                this.setErrorState(true);
+                for (var i=0; i<this.inputSteps.length; i++) {
+                    if (this.inputSteps[i].$stepContainer.hasClass('kb-app-step-running')) {
+                        this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                        this.inputSteps[i].$stepContainer.addClass('kb-app-step-error');
+                    }
+                }
+            }
+            else if (state === 'complete') {
+                for (var i=0; i<this.inputSteps.length; i++) {
+                    this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                }
+                this.state.runningState.runningStep = null;
+                this.state.runningState.appRunState = state;
+                this.$stopButton.hide();
+                // Show the 'next-steps' to take, if there are any
+                this.getNextSteps(
+                  $.proxy(function(next_steps) {
+                    if (next_steps.apps || next_steps.methods) {
+                      this.trigger("showNextSteps.Narrative",
+                        {elt: this.$elem, "next_steps": next_steps});
+                    }
+                  }, this)
+                );
+            }
+        },
+
+
+    /**
+    * Get next steps, and invoke `render_cb` to render
+    * the specs returned by the trigger:getFunctionSpecs.Narrative for
+    * each of the possible apps/methods.
+    */
+    getNextSteps: function(render_cb) {
+      var app = this.appSpec;
+      //console.debug("Find next steps for app", app);
+      // fetch full info, which contains suggested next steps
+      var params = {ids: [app.info.id]};
+      var result = {};
+      this.methClient.get_app_full_info(params,
+        $.proxy(function(info_list) {
+          //console.debug("Got full info for app:", info_list);
+          var sugg = info_list[0].suggestions;
+          //console.debug("Suggestions for app:", sugg);
+          var params = {apps: sugg.next_apps,methods: sugg.next_methods };
+          //console.debug("Getting function specs, params=", params);
+          // Pass callback to render each retrieved function spec
+          this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
+            render_cb(specs);
+          }]);
+        }, this),
+        $.proxy(function() {
+          KBError("kbaseNarrativeMethodCell.getNextSteps",
+          "Could not get full info for app:" + app.info.id);
+        }, this));
+      },
+
+        /*
+         * Handle error in app.
+         */
+        setErrorState: function(isError) {
+            if (isError) {
+                this.state.runningState.appRunState = "error";
+                this.displayRunning(false, true);
+                this.$elem.find('.kb-app-panel').addClass('kb-app-error');
+                this.$runButton.hide();
+                this.$stopButton.hide();
+                this.$resetButton.show();
+                this.$submitted.show();
+            }
+            else {
+                this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
+            }
+        },
+
         /* optional state parameter, if null then no state is set on the widget */
-        setStepOutput: function(stepId, output, state) {
+        /** ALSO TRIGGERS A SAVE! **/
+        setStepOutput: function(stepId, output, state, preventSave) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
                     if (this.inputStepLookup[stepId].outputWidget) {
@@ -599,50 +820,52 @@
                     // clear the output panel, and assume we are no longer running this step
                     this.inputStepLookup[stepId].$outputPanel.empty();
                     this.inputStepLookup[stepId].$stepContainer.removeClass("kb-app-step-running");
-                    
+
                     var widgetName = this.inputStepLookup[stepId].outputWidgetName;
-                    var $outputWidget = $('<div>'); 
-                    var widget;
-                    if (widgetName !== "kbaseDefaultNarrativeOutput")
-                        widget = $outputWidget[widgetName](output);
-                    else
-                        widget = $outputWidget[widgetName]({data:output});
+                    var $outputWidget = $('<div>').css({'padding':'5px 0'});
+                    $outputWidget.kbaseNarrativeOutputCell({
+                        widget: widgetName,
+                        data: output,
+                        type: 'app',
+                        title: this.methodSpecs[this.inputStepLookup[stepId].methodId].info.name,
+                        showMenu: false,
+                        time: new Date().getTime()
+                    });
                     if (state) {
-                        widget.loadState(state);
+                        $outputWidget.loadState(state);
                     }
-                    
-                    var header = '<span class="kb-out-desc">Output</span><span class="pull-right kb-func-timestamp">' + 
-                                    this.readableTimestamp(new Date().getTime()) +
-                                    '</span>';
-        
-                    var $outputCell = $("<div>").addClass("kb-cell-output").css({"padding-top":"5px","padding-bottom":"5px"}).append(
-                                            $('<div>').addClass("panel panel-default")
-                                                .append($('<div>').addClass("panel-heading").append(header))
-                                                .append($('<div>').addClass("panel-body").append($outputWidget))
-                                            );
-        
-                    this.inputStepLookup[stepId].$outputPanel.append($outputCell);
-                    
-                    this.inputStepLookup[stepId].outputWidget = widget;
+                    this.inputStepLookup[stepId].$outputPanel.append($outputWidget);
+                    this.inputStepLookup[stepId].outputWidget = $outputWidget;
                     var objCopy = $.extend(true, {}, output);
                     this.state.step[stepId].outputState = {
                         output: objCopy
                     };
+
+                    if (IPython && IPython.narrative && !preventSave)
+                        IPython.narrative.saveNarrative();
                 }
             }
         },
-        
+
+        /** ALSO TRIGGERS A SAVE! **/
         setStepError: function(stepId, error) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
-                    this.inputStepLookup[stepId].$outputPanel.html(error);
-                    // todo: actually render with the error widget
+                    this.inputStepLookup[stepId].kbaseNarrativeOutputCell({
+                        widget: this.OUTPUT_ERROR_WIDGET,
+                        data: error,
+                        type: 'error',
+                        showMenu: false,
+                        time: new Date().getTime()
+                    });
+                    if (IPython && IPython.narrative)
+                        IPython.narrative.saveNarrative();
                 }
             }
         },
-        
+
         /** end methods for setting the app state based on the job status **/
-        
+
         initErrorModal: function() {
             var self=this;
             var errorModalId = "app-error-modal-"+ self.genUUID();
@@ -662,7 +885,7 @@
                 ));
             self.$elem.append(self.$errorModal);
         },
-        
+
         /**
          * Refreshes the input widget according to its own method.
          */
@@ -673,14 +896,14 @@
                 }
             }
         },
-        
+
         genUUID: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
             });
         },
-        
+
          /**
          * Converts a timestamp to a simple string.
          * Do this American style - HH:MM:SS MM/DD/YYYY

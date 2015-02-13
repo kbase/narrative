@@ -19,8 +19,7 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("components/bootstrap-extensions/css/dataTables.bootstrap.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("components/bootstrap-extensions/css/bootstrap-fileupload.min.css") }}" type="text/css" />
-    
-    
+
     <link rel="stylesheet" href="{{ static_url("select2-v3.5.2/select2.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("select2-v3.5.2/select2-bootstrap.css") }}" type="text/css" />
 
@@ -50,153 +49,18 @@ class="notebook_app"
     </div>
 
     <div id="content-column">
-<!--         <div id="menubar-container" class="narrative-menu-container pull-left">
-            <div id="menubar">
-                <div class="navbar">
-                    <div>
-                        <div>
- -->                            <!-- <ul id="menus" class="nav navbar-nav ">
-                                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">File</a>
-                                    <ul class="dropdown-menu">
-                                        <li id="new_notebook"><a href="#">New</a></li>
-                                        <li id="open_notebook"><a href="#">Open...</a></li>
-                                         <hr/>
-                                        <li class="divider"></li>
-                                        <li id="copy_notebook"><a href="#">Make a Copy...</a></li>
-                                        <li id="rename_notebook"><a href="#">Rename...</a></li>
-                                        <li id="save_checkpoint"><a href="#">Save</a></li>
-                                        <li id="save_checkpoint"><a href="#">Save and Checkpoint</a></li>
-                                         <hr/>
-                                        <li class="divider"></li>
-                                        <li id="restore_checkpoint" class="dropdown-submenu"><a href="#">Revert to Checkpoint</a>
-                                          <ul class="dropdown-menu">
-                                            <li><a href="#"></a></li>
-                                            <li><a href="#"></a></li>
-                                            <li><a href="#"></a></li>
-                                            <li><a href="#"></a></li>
-                                            <li><a href="#"></a></li>
-                                          </ul>
-                                        </li>
-                                        <li class="divider"></li>
-                                        <li class="dropdown-submenu"><a href="#">Download as</a>
-                                            <ul class="dropdown-menu">
-                                                <li id="download_ipynb"><a href="#">IPython (.ipynb)</a></li>
-                                                <li id="download_py"><a href="#">Python (.py)</a></li>
-                                            </ul>
-                                        </li>
-                                        <li class="divider"></li>
+        <span id="kb-add-code-cell"
+              class="kb-data-list-add-data-button fa fa-terminal fa-2x"
+              style="position:fixed; bottom:15px; right:75px; z-index:5"
+              data-toggle="tooltip" data-placement="top" Title="Add Code Cell"></span>
+        <span id="kb-add-md-cell"
+              class="kb-data-list-add-data-button fa fa-paragraph fa-2x"
+              style="position:fixed; bottom:15px; right:10px; z-index:5"
+              data-toggle="tooltip" data-placement="top" Title="Add Markdown Cell"></span>
 
-                                        <li id="kill_and_exit"><a href="#" >Close and halt</a></li>
-                                    </ul>
-                                </li>
-                                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Edit</a>
-                                    <ul class="dropdown-menu">
-                                        <li id="cut_cell"><a href="#">Cut Cell</a></li>
-                                        <li id="copy_cell"><a href="#">Copy Cell</a></li>
-                                        <li id="paste_cell_above" class="disabled"><a href="#">Paste Cell Above</a></li>
-                                        <li id="paste_cell_below" class="disabled"><a href="#">Paste Cell Below</a></li>
-                                        <li id="paste_cell_replace" class="disabled"><a href="#">Paste Cell &amp; Replace</a></li>
-                                        <li id="delete_cell"><a href="#">Delete Cell</a></li>
-                                        <li id="undelete_cell" class="disabled"><a href="#">Undo Delete Cell</a></li>
-                                        <li class="divider"></li>
-                                        <li id="split_cell"><a href="#">Split Cell</a></li>
-                                        <li id="merge_cell_above"><a href="#">Merge Cell Above</a></li>
-                                        <li id="merge_cell_below"><a href="#">Merge Cell Below</a></li>
-                                        <li class="divider"></li>
-                                        <li id="move_cell_up"><a href="#">Move Cell Up</a></li>
-                                        <li id="move_cell_down"><a href="#">Move Cell Down</a></li>
-                                        <li class="divider"></li>
-                                        <li id="select_previous"><a href="#">Select Previous Cell</a></li>
-                                        <li id="select_next"><a href="#">Select Next Cell</a></li>
-                                    </ul>
-                                </li>
-                                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">View</a>
-                                    <ul class="dropdown-menu">
-                                        <li id="toggle_header"><a href="#">Toggle Header</a></li>
-                                        <li id="toggle_toolbar"><a href="#">Toggle Toolbar</a></li>
-                                    </ul>
-                                </li>
-                                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Insert</a>
-                                    <ul class="dropdown-menu">
-                                        <li id="insert_cell_above"><a href="#">Insert Cell Above</a></li>
-                                        <li id="insert_cell_below"><a href="#">Insert Cell Below</a></li>
-                                        <li id="insert_rickroll_cell_below"><a href="#">Insert Rickroll Widget Below</a></li>
-                                    </ul>
-                                </li>
-                               <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Cell</a>
-                                    <ul class="dropdown-menu">
-                                        <li id="run_cell"><a href="#">Run</a></li>
-                                        <li id="run_cell_in_place"><a href="#">Run in Place</a></li>
-                                        <li id="run_all_cells"><a href="#">Run All</a></li>
-                                        <li id="run_all_cells_above"><a href="#">Run All Above</a></li>
-                                        <li id="run_all_cells_below"><a href="#">Run All Below</a></li>
-                                        <li class="divider"></li>
-                                        <li id="change_cell_type" class="dropdown-submenu"><a href="#">Cell Type</a>
-                                            <ul class="dropdown-menu">
-                                              <li id="to_code"><a href="#">Code</a></li>
-                                              <li id="to_markdown"><a href="#">Markdown </a></li>
-                                              <li id="to_raw"><a href="#">Raw Text</a></li>
-                                              <li id="to_heading1"><a href="#">Heading 1</a></li>
-                                              <li id="to_heading2"><a href="#">Heading 2</a></li>
-                                              <li id="to_heading3"><a href="#">Heading 3</a></li>
-                                              <li id="to_heading4"><a href="#">Heading 4</a></li>
-                                              <li id="to_heading5"><a href="#">Heading 5</a></li>
-                                              <li id="to_heading6"><a href="#">Heading 6</a></li>
-                                            </ul>
-                                        </li>
-                                        <li class="divider"></li>
-                                        <li id="toggle_output"><a href="#">Toggle Current Output</a></li>
-                                        <li id="all_outputs" class="dropdown-submenu"><a href="#">All Output</a>
-                                            <ul class="dropdown-menu">
-                                                <li id="expand_all_output"><a href="#">Expand</a></li>
-                                                <li id="scroll_all_output"><a href="#">Scroll Long</a></li>
-                                                <li id="collapse_all_output"><a href="#">Collapse</a></li>
-                                                <li id="clear_all_output"><a href="#">Clear</a></li>
-                                            </ul>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Kernel</a>
-                                    <ul class="dropdown-menu">
-                                        <li id="int_kernel"><a href="#">Interrupt</a></li>
-                                        <li id="restart_kernel"><a href="#">Restart</a></li>
-                                    </ul>
-                                </li>
-                                <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Help</a>
-                                    <ul class="dropdown-menu">
-                                        <li><a href="http://ipython.org/documentation.html" target="_blank">IPython Help</a></li>
-                                        <li><a href="http://ipython.org/ipython-doc/stable/interactive/htmlnotebook.html" target="_blank">Notebook Help</a></li>
-                                        <li id="keyboard_shortcuts"><a href="#">Keyboard Shortcuts</a></li>
-                                        <li class="divider"></li>
-                                        <li><a href="http://docs.python.org" target="_blank">Python</a></li>
-                                        <li><a href="http://docs.scipy.org/doc/numpy/reference/" target="_blank">NumPy</a></li>
-                                        <li><a href="http://docs.scipy.org/doc/scipy/reference/" target="_blank">SciPy</a></li>
-                                        <li><a href="http://docs.sympy.org/dev/index.html" target="_blank">SymPy</a></li>
-                                        <li><a href="http://matplotlib.sourceforge.net/" target="_blank">Matplotlib</a></li>
-                                    </ul>
-                                </li>
-                            </ul>
-                            <div id="notification_area"></div> -->
-<!--                         </div>
-                    </div>
-                </div>
-                <div id="maintoolbar" class="navbar" style="z-index:100;">
-                    <div class="toolbar-inner navbar-nobg pull-left">
-                        <div id="maintoolbar-container" class="container"></div>
-                    </div>
-                    <div id="kb-version-stamp" class="version-stamp pull-right">KBase Narrative<br></div>
-                </div>
-                <div id="narrative-title">
-                    <span id="save_widget" class="nav pull-left">
-                        <span id="notebook_name"></span>
-                        <span id="checkpoint_status"></span>
-                        <span id="autosave_status"></span>
-                    </span>
-                </div>
-                <div class="creator-stamp pull-right"></div>
-            </div>
-        </div>
- -->
+
+
+
         <div id="ipython-main-app">
             <div id="notebook_panel">
                 <div id="notebook"></div>
@@ -214,7 +78,7 @@ class="notebook_app"
 
 <div id='tooltip' class='ipython_tooltip' style='display:none'></div>
 <div id='widget-tooltip' class='ipython_tooltip' style='display:none; min-height: 25px;'>Test message</div>
-
+<div id='kb-error-dialog'></div>
 {% endblock %}
 
 {% block script %}
@@ -222,32 +86,30 @@ class="notebook_app"
 {{super()}}
 
 <script src="{{ static_url("components/jquery-extensions/js/jquery.dataTables.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
 
+<!-- ALL JAVASCRIPT BELOW THIS TAG WILL BE COMPILED AND MINIFIED -->
+<!-- build:js kbase/js/kbase-narrative.min.js -->
 
-<!-- inserted KBase Javascript below -->
-<script src="{{ static_url("components/bootstrap-extensions/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
+<!-- Core util JS that should be loaded first -->
 <script src="{{ static_url("kbase/js/kbaseLogging.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/api/InvocationService.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/api/KBaseTrees.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/api/genomeComparisonClient.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgetMaxWidthCorrection.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseTabs2.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbwidget.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/kbasePromptNew.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("components/bootstrap-extensions/js/datatables-bootstrap-paging.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseAccordion.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseDeletePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/genomes/kbaseContigBrowserButtons.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/genomes/kbasePhenotypeSet.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseLoginFuncSite.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("select2-v3.5.2/select2.min.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgetMaxWidthCorrection.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("components/bootstrap-extensions/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("components/bootstrap-extensions/js/dataTables.bootstrap.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/d3/d3.v3.min.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("components/jquery-extensions/js/jquery.svg.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/api/shockClient.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseShockFileUploader.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/api/transformClient.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/api/aweClient.js") }}" type="text/javascript" charset="utf-8"></script>
-
+<script src="{{ static_url("kbase/js/widgets/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseUpload.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseAccordion.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbaseDeletePrompt.js") }}" type="text/javascript" charset="utf-8"></script>
+<!-- end core util -->
+<script src="{{ static_url("kbase/js/api/NarrativeManager.js") }}" type="text/javascript" charset="utf-8"></script>
+<!-- Narrative Core JS that should be compiled together -->
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNarrativeMethodInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterInput.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -256,9 +118,9 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCheckboxInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextareaInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterFileInput.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseJobWatcher.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeSideImportTab.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeSidePublicTab.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeExampleDataTab.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeCellMenu.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -267,20 +129,21 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeControlPanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeMethodPanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeDataPanel.js") }}" type="text/javascript" charset="utf-8"></script>
-
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/api/NarrativeManager.js") }}" type="text/javascript" charset="utf-8"></script>
-
+<script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeDataList.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeAppPanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeJobsPanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeWorkspace.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/kbaseNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
-
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeCell.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/narrative_core/kbaseNarrativeDataCell.js") }}" type="text/javascript" charset="utf-8"></script>
-
+<script src="{{ static_url("kbase/js/kbaseNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseNarrativeError.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/genomes/kbaseContigBrowserButtons.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_input/devDataViz.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_input/create_metagenome_set.js") }}" type="text/javascript" charset="utf-8"></script>
 <!-- function input JS widgets -->
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseTabbedInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseDefaultNarrativeInput.js") }}" type="text/javascript" charset="utf-8"></script>
@@ -288,67 +151,98 @@ class="notebook_app"
 <script src="{{ static_url("kbase/js/widgets/function_input/rastGenomeImportInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_input/kbaseGenomeImportInput.js") }}" type="text/javascript" charset="utf-8"></script>
-
+<script src="{{ static_url("kbase/js/widgets/function_input/kbStandaloneListselect.js") }}" type="text/javascript" charset="utf-8"></script>
 <!-- function output JS widgets -->
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseNarrativeError.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseAssembly.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelMetaNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelTabsNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelCoreNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaTabsNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseMediaEditorNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseMediaViewer.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeView.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseAssemblyView.js") }}" type="text/javascript" charset="utf-8"></script>
+<!-- this stuff shall replace all modeling output widgets (and has no clients) -->
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/KBObjects.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModelSet.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBA.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/KBaseBiochem.Media.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSet.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSimulationSet.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/kbaseTabs.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable.js") }}" type="text/javascript" charset="utf-8"></script>
+<!-- end revised widgets -->
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaModelComparison.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/contigBrowserPanel.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeAnnotation.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbasePhenotypeUploader.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbasePhenotypeSimulation.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseContigSetView.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeComparison.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeComparisonViewer.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseImageView.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseKeggMap.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseMGOverview.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseDisplayText.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseDownloadFile.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseUploadFile.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseGraph.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseDrilldownHeatmap.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseCategoryView.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaModelComparison.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseContigSetUploadNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeUploadNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseGapfillStatus.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseIntegrateGapfillOutput.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseMetagenomeListUploader.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseValueList.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/kbaseTable.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseTree.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbasePromConstraint.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseSimulationSet.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeSetBuilder.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseCompareFBAs.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/function_output/kbaseSEEDFunctions.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbasePanGenome.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("kbase/js/widgets/function_output/kbaseMSA.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbnetwork/js/datavis.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ static_url("kbmanhattan/js/manhattan.js") }}" type="text/javascript" charset="utf-8"></script>
-
-<!-- <in development> Phylogenetic tree widget code -->
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseAbundanceDataView.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseAbundanceDataTable.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseAbundanceDataBoxplot.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseAbundanceDataHeatmap.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseAbundanceDataPcoa.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseRankAbundancePlot.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseMetagenomeView.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseCollectionView.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseAnnotationSetTable.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseDomainAnnotation.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeSetBuilder.js") }}" type="text/javascript" charset="utf-8"></script>
+<!-- helper functions for input / output widgets -->
+<script src="{{ static_url("kbase/js/widgets/kbStandaloneTable.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbStandaloneGraph.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbStandalonePlot.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/kbStandaloneHeatmap.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/rgbcolor.js") }}" type="text/javascript" charset="utf-8"></script>
+<!-- Phylogenetic tree widget code -->
 <script src="{{ static_url("knhxtree/js/menu.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("knhxtree/js/excanvas.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("knhxtree/js/canvastext.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("knhxtree/js/knhx.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("knhxtree/js/easytree.js") }}" type="text/javascript" charset="utf-8"></script>
 
+<!-- endbuild -->
+<!-- ALL JAVASCRIPT ABOVE THIS TAG WILL BE COMPILED AND MINIFIED -->
+
+
+
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseShockFileUploader.js") }}" type="text/javascript" charset="utf-8"></script> -->
+
+<!-- OLD FBA MODEL WIDGETS
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelCoreNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseFbaTabsNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseMediaEditorNarrative.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/function_output/kbaseMediaViewer.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/genomes/kbasePhenotypeSet.js") }}" type="text/javascript" charset="utf-8"></script>
+-->
+
+<!-- potentially deprecated widgets -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeView.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbasePhenotypeUploader.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbasePhenotypeSimulation.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseImageView.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseKeggMap.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDisplayText.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDownloadFile.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseUploadFile.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseCategoryView.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseContigSetUploadNarrative.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeUploadNarrative.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGapfillStatus.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseIntegrateGapfillOutput.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseMetagenomeListUploader.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseValueList.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbasePromConstraint.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseCompareFBAs.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseSEEDFunctions.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDataDump.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseCheckObject.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelMetaNarrative.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- end deprecated widgets -->
+<!-- <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbmanhattan/js/manhattan.js") }}" type="text/javascript" charset="utf-8"></script>
+ -->
+
 <!-- Standard IPython Notebook Javascript -->
-
-<!-- include select 2 lib -->
-<script src="{{ static_url("select2-v3.5.2/select2.min.js") }}" type="text/javascript" charset="utf-8"></script>
-<!-- end select 2 libs -->
-
-
 <script src="{{ static_url("components/codemirror/lib/codemirror.js") }}" charset="utf-8"></script>
 <script type="text/javascript">
     CodeMirror.modeURL = "{{ static_url("components/codemirror/mode/%N/%N.js") }}";
@@ -398,9 +292,9 @@ class="notebook_app"
 <script src="{{ static_url("notebook/js/main.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("notebook/js/contexthint.js") }}" charset="utf-8"></script>
-<script src="{{ static_url("kbase/js/widgets/narrative_core/ipythonCellMenu.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("notebook/js/celltoolbarpresets/default.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("notebook/js/celltoolbarpresets/slideshow.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbase/js/widgets/narrative_core/ipythonCellMenu.js") }}" type="text/javascript" charset="utf-8"></script>
 
 <script src="{{ static_url("auth/js/loginwidget.js") }}" type="text/javascript" charset="utf-8"></script>
 

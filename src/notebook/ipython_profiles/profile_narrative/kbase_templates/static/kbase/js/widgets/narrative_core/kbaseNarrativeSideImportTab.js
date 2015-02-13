@@ -13,13 +13,12 @@
         token: null,
         wsName: null,
         loadingImage: "static/kbase/images/ajax-loader.gif",
-        wsUrl: "https://kbase.us/services/ws/",
-        methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
+        wsUrl: window.kbconfig.urls.workspace,
+        methodStoreURL: window.kbconfig.urls.narrative_method_store,
         methClient: null,
-        //uploaderURL: 'http://140.221.67.172:7778',
-        uploaderURL: 'https://narrative-dev.kbase.us/transform',
-        //aweURL: 'http://140.221.67.172:7080',
-        ujsURL: 'https://kbase.us/services/userandjobstate/',
+        uploaderURL: window.kbconfig.urls.transform,
+        ujsURL: window.kbconfig.urls.user_and_job_state,
+        shockURL: window.kbconfig.urls.shock,
         methods: null,			// {method_id -> method_spec}
         types: null,			// {type_name -> type_spec}
         selectedType: null,		// selected type name
@@ -27,8 +26,9 @@
         widgetPanelCard1: null, // first page with importer type combobox (this page will be put on widgetPanel) 
         widgetPanelCard2: null, // second page with import widget (this page will be put on widgetPanel) 
         infoPanel: null,
-        inputWidget: null,		// widget for selected type
-        methodSpec: null,		// method spec-file for selected type
+        inputWidget: null,		// {methodId -> widget for selected type}
+        tabs: null,				// mapping {methodId -> div}
+        
         init: function(options) {
             this._super(options);
             var self = this;
@@ -43,10 +43,12 @@
         
         render: function() {
         	var self = this;
+        	this.inputWidget = {};
+        	this.tabs = {};
             var errorModalId = "app-error-modal-"+ self.uuid();
             var modalLabel = "app-error-modal-lablel-"+ self.uuid();
             self.$errorModalContent = $('<div>');
-            self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="z-index: 1000000;">').addClass("modal fade");
+            self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="position:auto">').addClass("modal fade");
             self.$errorModal.append(
                 $('<div>').addClass('modal-dialog').append(
                     $('<div>').addClass('modal-content').append(
@@ -55,12 +57,12 @@
                        $('<div>').addClass('modal-body').append(self.$errorModalContent)
                     ).append(
                         $('<div>').addClass('modal-footer').append(
-                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
+                            $('<button type="button" data-dismiss="modal">').addClass("kb-default-btn").append("Dismiss"))
                     )
                 ));
-            self.$elem.append(self.$errorModal);
+            $('body').append(self.$errorModal);
             self.$warningModalContent = $('<div>');
-            self.$warningModal =  $('<div tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="z-index: 1000000;">').addClass("modal fade");
+            self.$warningModal =  $('<div tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true" style="position:auto">').addClass("modal fade");
             var confirmButton = $('<button type="button" data-dismiss="modal">').addClass("btn").append("Confirm");
             confirmButton.click($.proxy(function(event) {
             	self.stopTimer();
@@ -74,20 +76,20 @@
                        $('<div>').addClass('modal-body').append(self.$warningModalContent)
                     ).append(
                         $('<div>').addClass('modal-footer').append(confirmButton).append(
-                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Cancel"))
+                            $('<button type="button" data-dismiss="modal">').addClass("kb-default-btn").append("Cancel"))
                     )
                 ));
-            self.$elem.append(self.$warningModal);
+            $('body').append(self.$warningModal);
 
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.methodStoreURL = window.kbconfig.urls.narrative_method_store;
             }
             var upperPanel = $('<div>');
-            this.widgetPanel = $('<div style="margin: 50px 50px 0px 30px; width: 600px;">');
-            this.widgetPanelCard1 = $('<div>');
+            this.widgetPanel = $('<div>');
+            this.widgetPanelCard1 = $('<div style="margin: 30px 30px 0px 30px;">');
             this.widgetPanel.append(this.widgetPanelCard1);
-            this.widgetPanelCard1.append("Use your own data or data from another data source in your narrative. First, select the type of data you wish to import.<hr>");
+            this.widgetPanelCard1.append("<div class='kb-cell-run'><h2 class='collapse in'>Use your own data or data from another data source in your narrative. First, select the type of data you wish to import.</h2></div><hr>");
             
             var $nameDiv = $('<div>').addClass("kb-method-parameter-name").css("text-align", "left")
             	.append("DATA TYPE");
@@ -97,7 +99,7 @@
                               .attr('id', this.cellId + '-next')
                               .attr('type', 'button')
                               .attr('value', 'Next')
-                              .addClass('btn btn-primary btn-sm')
+                              .addClass('kb-primary-btn')
                               .css({'border' : '4px'})
                               .append('Next');
             var $hintDiv  = $('<div>').addClass("kb-method-parameter-hint")
@@ -118,10 +120,10 @@
             	.append('<div style="height: 30px">')
             	.append($('<div>').append($nextButton));
             
-            this.widgetPanelCard2 = $('<div style="display: none;">');
+            this.widgetPanelCard2 = $('<div style="display: none; margin: 0px;">');
             this.widgetPanel.append(this.widgetPanelCard2);
 
-            this.infoPanel = $('<div style="margin: 20px 0px 0px 30px;">');
+            this.infoPanel = $('<div style="margin: 20px 30px 0px 30px;">');
 
             this.$elem.append(upperPanel);
             this.$elem.append(this.widgetPanel);
@@ -139,8 +141,10 @@
                     		}
                     		if (aTypes[key]["import_method_ids"].length > 0) {
                     			self.types[key] = aTypes[key];
-                    			var methodId = aTypes[key]["import_method_ids"][0];
-                    			methodIds.push(methodId);
+                    			for (var methodPos in aTypes[key]["import_method_ids"]) {
+                    				var methodId = aTypes[key]["import_method_ids"][methodPos];
+                    				methodIds.push(methodId);
+                    			}
                     		}
                     	}
                         self.methClient.get_method_spec({ 'ids' : methodIds },
@@ -149,8 +153,13 @@
                                 	for (var i in specs) {
                                 		self.methods[specs[i].info.id] = specs[i];
                                 	}
+                                	var keys = [];
                                 	for (var key in self.types) {
-                                		addItem(key);
+                                		keys.push(key);
+                                	}
+                                	keys.sort(function(a,b) {return self.types[a]["name"].localeCompare(self.types[b]["name"])});
+                                	for (var keyPos in keys) {
+                                		addItem(keys[keyPos]);                                		
                                 	}
                                     $dropdown.select2({
                                         minimumResultsForSearch: -1,
@@ -163,11 +172,6 @@
                                 	function addItem(key) {
                                 		var name = self.types[key]["name"];
                                         $dropdown.append($('<option value="'+key+'">').append(name));
-                                		/*var btn = $('<button>' + name + '</button>');
-                                    	btn.click(function() {
-                                        	self.showWidget(key);                                	
-                                    	});
-                                    	self.widgetPanelCard1.append(btn);*/
                                 	}
                                 }, this),
                                 $.proxy(function(error) {
@@ -186,49 +190,79 @@
             var self = this;
             this.selectedType = type;
             this.widgetPanelCard1.css('display', 'none');
-        	this.widgetPanelCard2.css('display', '');
-        	this.widgetPanelCard2.empty();
-        	//this.widgetPanel.addClass('panel kb-func-panel kb-cell-run')
-        	var methodId = this.types[type]["import_method_ids"][0];
-        	this.methodSpec = this.methods[methodId];
-            var inputWidgetName = this.methodSpec.widgets.input;
-            if (!inputWidgetName || inputWidgetName === 'null')
-                inputWidgetName = "kbaseNarrativeMethodInput";
-            var methodJson = JSON.stringify(this.methodSpec);
-            
-            var $inputDiv = $('<div>');
-
-            // These are the 'delete' and 'run' buttons for the cell
-            var $runButton = $('<button>')
+            this.widgetPanelCard2.css('display', '');
+            this.widgetPanelCard2.empty();
+            var $header = null;
+            var $body = null;
+            var numberOfTabs = this.types[type]["import_method_ids"].length;
+            if (numberOfTabs > 1) {
+            	var $header = $('<div>');
+            	var $body = $('<div>');
+            	this.widgetPanelCard2.append($header).append($body);
+            }
+            for (var methodPos in this.types[type]["import_method_ids"]) {
+            	self.showTab(type, methodPos, $header, $body, numberOfTabs);
+            }
+            var $importButton = $('<button>')
                              .attr('id', this.cellId + '-run')
                              .attr('type', 'button')
                              .attr('value', 'Import')
-                             .addClass('btn btn-primary btn-sm')
+                             .addClass('kb-primary-btn')
                              .append('Import');
-            $runButton.click(
+
+            var $cancelButton = $('<button>')
+                             .attr('id', this.cellId + '-run')
+                             .attr('type', 'button')
+                             .attr('value', 'Cancel')
+                             .addClass('kb-primary-btn')
+                             .append('Cancel');
+
+            var btnImport = function(show) {
+            	if (show) {
+            		$importButton.show();
+            		$cancelButton.hide();
+            	} else {
+            		$importButton.hide();
+            		$cancelButton.show();
+            	}
+            };
+            
+            $importButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
-                    var v = self.inputWidget.isValid();
+                    var v = self.getInputWidget().isValid();
                     if (v.isValid) {
-                    	self.runImport();
+                    	btnImport(false);
+                    	self.runImport(function() {
+                        	btnImport(true);
+                    	});
                     } else {
-                        var errorCount = 1;
-                        self.$errorModalContent.empty();
-                        var $errorStep = $('<div>');
-                        for (var e=0; e<v.errormssgs.length; e++) {
-                        	$errorStep.append($('<div>').addClass("kb-app-step-error-mssg").append('['+errorCount+']: ' + v.errormssgs[e]));
-                        	errorCount = errorCount+1;
-                        }
-                        self.$errorModalContent.append($errorStep);
-                        self.$errorModal.modal('show');
-                    }
+                    	var errorCount = 1;
+                    	self.$errorModalContent.empty();
+                    	var $errorStep = $('<div>');
+                    	for (var e=0; e<v.errormssgs.length; e++) {
+                    		$errorStep.append($('<div>')
+                    				.addClass("kb-app-step-error-mssg")
+                    				.append('['+errorCount+']: ' + v.errormssgs[e]));
+                    		errorCount = errorCount+1;
+                    	}
+                    	self.$errorModalContent.append($errorStep);
+                    	self.$errorModal.modal('show');
+                    	}
                 }, this)
             );
+            
+            $cancelButton.click(function() {
+            	self.stopTimer();
+            	btnImport(true);
+				self.showInfo("Import job was cancelled");
+            });
+            
             var $backButton = $('<button>')
                              .attr('id', this.cellId + '-back')
                              .attr('type', 'button')
                              .attr('value', 'Back')
-                             .addClass('btn btn-primary btn-sm')
+                             .addClass('kb-primary-btn')
                              .append('Back');
             $backButton.click(
                 $.proxy(function(event) {
@@ -237,59 +271,102 @@
                 }, this)
             );
 
-            var $buttons = $('<div>')
+            var $buttons = $('<div style="margin: 0px 30px 0px 33px;">')
                            .addClass('buttons')
-                           .append($runButton)
+                           .append($importButton)
+                           .append('&nbsp;')
+                           .append($cancelButton)
                            .append('&nbsp;')
                            .append($backButton);
 
-            var $progressBar = $('<div>')
-                               .attr('id', 'kb-func-progress')
-                               .addClass('pull-left')
-                               .css({'display' : 'none'})
-                               .append($('<div>')
-                                       .addClass('progress progress-striped active kb-cell-progressbar')
-                                       .append($('<div>')
-                                               .addClass('progress-bar progress-bar-success')
-                                               .attr('role', 'progressbar')
-                                               .attr('aria-valuenow', '0')
-                                               .attr('aria-valuemin', '0')
-                                               .attr('aria-valuemax', '100')
-                                               .css({'width' : '0%'})))
-                               .append($('<p>')
-                                       .addClass('text-success'));
+        	$cancelButton.hide();
+        	self.widgetPanelCard2.append($buttons);
+        },
+        
+        showTab: function(type, methodPos, $header, $body, numberOfTabs) {
+            var self = this;
+        	var methodId = this.types[type]["import_method_ids"][methodPos];
+        	var methodSpec = this.methods[methodId];
+            var inputWidgetName = methodSpec.widgets.input;
+            if (!inputWidgetName || inputWidgetName === 'null')
+                inputWidgetName = "kbaseNarrativeMethodInput";
+            var methodJson = JSON.stringify(methodSpec);
+            
+            var $inputDiv = $('<div>');
 
-            var methodId = 'import-method-details-'+this.uuid();
+            // These are the 'delete' and 'run' buttons for the cell
+
+            var methodUuid = 'import-method-details-'+this.uuid();
             var buttonLabel = 'details';
-            var methodDesc = this.methodSpec.info.tooltip;
-            var $menuSpan = $('<div class="pull-right">');
+            var methodDesc = methodSpec.info.tooltip;
             var $methodInfo = $('<div>')
                     .addClass('kb-func-desc')
-                    .append('<h1><b>' + this.methodSpec.info.name + '</b></h1>')
-                    .append($menuSpan)
-                    .append($('<span>')
-                    .addClass('pull-right kb-func-timestamp')
-                    .attr('id', 'last-run'))
-            .append($('<h2>')
-                    .attr('id', methodId)
+                    .css({'margin' : '25px 0px 0px 15px'})
+            		.append($('<h2>')
+                    .attr('id', methodUuid)
                     .addClass('collapse in')
                     .append(methodDesc));
             
-            this.widgetPanelCard2
+            var tab = $('<div style="margin: 0px 30px 0px 15px;">')
                     .append($('<div>')
                     .addClass('kb-func-panel kb-cell-run')
                     .append($methodInfo))
-                    .append("<hr>")
+                    .append($('<div>').css({'margin' : '25px 0px 0px 15px'}).append("<hr>"))
                     .append($('<div>')
-                    //.addClass('panel-body')
                     .append($inputDiv))
                     .append($('<div>')
-                    //.addClass('panel kb-func-panel kb-cell-run panel-footer')
-                    .css({'overflow' : 'hidden'})
-                    //.append($progressBar)
-                    .append($buttons));
-            
-            this.inputWidget = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
+                    .css({'overflow' : 'hidden', 'margin' : '0px 0px 0px 18px'}));
+                        
+        	var isShown = methodPos == 0;
+        	var tabName = methodSpec.info.name;
+        	var params = {tab: tabName, content: tab, canDelete : false, show: isShown};
+    		if (numberOfTabs == 1) {
+    			this.widgetPanelCard2.append(tab);
+    		} else {
+    			var tabHeader = $('<div>')
+    				.addClass('kb-side-header');
+    			tabHeader.css('width', (100/numberOfTabs)+'%');
+    			tabHeader.append($('<small>').append(params.tab));
+    			$header.append(tabHeader);
+    			var tabContent = $('<div>')
+    				.addClass('kb-side-tab3')
+    				.css("display", "none")
+    				.append(params.content);
+    			$body.append(tabContent);
+    			if (params.show) {
+    				tabHeader.addClass('active');
+    				tabContent.css('display', '');
+    			}
+    			tabHeader.click($.proxy(function(event) {
+    				event.preventDefault();
+    				event.stopPropagation();
+    				var $headerDiv = $(event.currentTarget);
+    				if (!$headerDiv.hasClass('active')) {
+    					var idx = $headerDiv.index();
+    					$header.find('div').removeClass('active');
+    					$headerDiv.addClass('active');
+    					$body.find('div.kb-side-tab3').css('display', 'none');
+    					$body.find('div:nth-child(' + (idx+1) + ').kb-side-tab3').css('display', '');
+    				}
+    			}, this));
+    		}
+            this.inputWidget[methodId] = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
+
+        	this.tabs[methodId] = tab;
+        },
+        
+        getSelectedTabId: function() {
+            var ret = null;
+            for (var tabId in this.tabs) {
+            	var tab = this.tabs[tabId];
+            	if (tab.is(':visible'))
+            		ret = tabId;
+            }
+            return ret;
+        },
+
+        getInputWidget: function() {
+        	return this.inputWidget[this.getSelectedTabId()];
         },
         
         back: function() {
@@ -307,55 +384,241 @@
             this.widgetPanelCard1.css('display', '');
         },
         
-        runImport: function() {
+        runImport: function(callback) {
         	var self = this;
-        	var paramValueArray = self.inputWidget.getParameters();
+        	var paramValueArray = this.getInputWidget().getParameters();
         	var params = {};
-        	for(var i in self.methodSpec.parameters) {
-            	var paramId = self.methodSpec.parameters[i].id;
+        	var methodId = self.getSelectedTabId();
+        	var methodSpec = self.methods[methodId];
+        	for (var i in methodSpec.parameters) {
+            	var paramId = methodSpec.parameters[i].id;
             	var paramValue = paramValueArray[i];
             	params[paramId] = paramValue;
         	}
-        	//console.log(params);
-        	//alert(JSON.stringify(params));
             var uploaderClient = new Transform(this.uploaderURL, {'token': self.token});
+            var args = null;
             if (self.selectedType === 'KBaseGenomes.Genome') {
-            	var mode = params["mode"];
-            	if (mode === 'uploadGbk') {
-            		var contigsetId = null;
-            		if (params['contigObject'].length > 0) {
-            			contigsetId = params['contigObject'];
+            	var url = null;
+            	if (methodId === 'import_genome_gbk_file') {
+            		url = self.shockURL + '/node/' + params['gbkFile'];
+            	} else if (methodId === 'import_genome_gbk_ftp') {
+            		url = params['ftpFolder'];
+            	}
+            	if (url) {
+            		var options = {};
+            		if (params['contigObject'] && params['contigObject'].length > 0) {
+            			options['contigset_object_name'] = params['contigObject'];
             		} else {
-            			contigsetId = params['outputObject'] + '.contigset';
+            			options['contigset_object_name'] = params['outputObject'] + '.contigset';
             		}
-            		var args = {'etype': 'KBaseGenomes.GBK', 
-            				'kb_type': 'KBaseGenomes.Genome', 
-            				'in_id': params['gbkFile'], 
-            				'ws_name': self.wsName, 
-            				'obj_name': params['outputObject']};
-            				//'opt_args': '{"validator":{},"transformer":{"contigset_ref":"'+self.wsName+'/'+contigsetId+'"}}'}
-            		console.log(args);
-    				self.showInfo("Sending data...", true);
-            		uploaderClient.upload(args,
-            				$.proxy(function(data) {
-            					console.log(data);
-            					self.waitForJob(data[1]);
-                            }, this),
-                            $.proxy(function(error) {
-                                self.showError(error);
-                            }, this)
-                        );
+            		args = {'external_type': 'Genbank.Genome', 
+            				'kbase_type': 'KBaseGenomes.Genome', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':options},
+            				'url_mapping': {'Genbank.Genome': url}};
             	} else {
-            		self.showError(mode + " import mode for Genome type is not supported yet");
+            		self.showError(methodId + " import mode for Genome type is not supported yet");
+            	}
+            } else if (self.selectedType === 'Transcript') {
+            	if (methodId === 'import_transcript_file') {
+            		var options = {'dna':self.asInt(params['dna']),
+            				"output_file_name": "transcripts.json"};
+            		var genomeId = params['genomeId'];
+            		if (genomeId)
+            			options['genome_id'] = genomeId;
+            		args = {'external_type': 'FASTA.Transcripts', 
+            				'kbase_type': 'KBaseGenomes.Genome', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':options},
+            				'url_mapping': {'FASTA.Transcripts': self.shockURL + '/node/' + params['fastaFile']}};
+            	} else {
+            		self.showError(methodId + " import mode for Genome type is not supported yet");
             	}
             } else if (self.selectedType === 'KBaseGenomes.ContigSet') {
-            	self.showError("Support for ContigSet is coming.");
+            	var url = null;
+            	if (methodId === 'import_contigset_fasta_file') {
+            		url = self.shockURL + '/node/' + params['fastaFile'];
+            	} else if (methodId === 'import_contigset_fasta_ftp') {
+            		url = params['ftpFolder'];
+            	}
+            	if (url) {
+            		args = {'external_type': 'FASTA.DNA.Assembly', 
+            				'kbase_type': 'KBaseGenomes.ContigSet', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':
+            						{"fasta_reference_only":self.asBool(params['fastaReferenceOnly'])}},
+            				'url_mapping': {'FASTA.DNA.Assembly': url}};
+            	} else {
+            		self.showError(methodId + " import mode for ContigSet type is not supported yet");
+            	}
+            } else if (self.selectedType === 'ShortReads') {
+            	if (methodId === 'import_reads_fasta_file') {
+            		var options = {'output_file_name': 'reflib.fasta.json'};
+            		var refName = params['refname'];
+            		if (refName)
+            			options['refname'] = refName;
+            		args = {'external_type': 'FASTA.DNA.Assembly', 
+            				'kbase_type': 'KBaseAssembly.ReferenceAssembly', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':options},
+            				'url_mapping': {'FASTA.DNA.Assembly': self.shockURL + '/node/' + params['fastaFile']}};
+            	} else if (methodId === 'import_reads_pe_fastq_file') {
+            		var urlMapping = {'SequenceReads.1': self.shockURL + '/node/' + params['fastqFile1']};
+            		if (params['fastqFile2'] && params['fastqFile2'].length > 0)
+            			urlMapping['SequenceReads.2'] = self.shockURL + '/node/' + params['fastqFile2'];
+            		var options = {'outward':self.asInt(params['readOrientationOutward']),
+            				'output_file_name': 'pelib.fastq.json'};
+            		var optInsert = params['insertSizeMean'];
+            		if (optInsert)
+            			options['insert'] = optInsert;
+            		var optStdev = params['insertSizeStDev'];
+            		if (optStdev)
+            			options['stdev'] = optStdev;
+            		args = {'external_type': 'SequenceReads', 
+            				'kbase_type': 'KBaseAssembly.PairedEndLibrary', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':options},
+            				'url_mapping': urlMapping};
+            	} else if (methodId === 'import_reads_se_fastq_file') {
+            		args = {'external_type': 'SequenceReads', 
+            				'kbase_type': 'KBaseAssembly.SingleEndLibrary', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':{'output_file_name': 'selib.fastq.json'}},
+            				'url_mapping': {'SequenceReads': self.shockURL + '/node/' + params['fastqFile']}};
+            	} else {
+            		self.showError(methodId + " import mode for ShortReads type is not supported yet");
+            	}
+            } else if (self.selectedType === 'KBaseFBA.FBAModel') {
+            	if (methodId === 'import_fbamodel_csv_file') {
+            		var options = {};
+            		var genome = params['genomeObject'];
+            		if (genome)
+            			options['genome'] = genome;
+            		var biomass = params['biomass'];
+            		if (biomass)
+            			options['biomass'] = biomass;
+            		args = {'external_type': 'TSV.FBAModel', 
+            				'kbase_type': 'KBaseFBA.FBAModel', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':options},
+            				'url_mapping': {
+            					'TSV.FBAModel': self.shockURL + '/node/' + params['reactionFile'],
+            					'TSV.Compounds': self.shockURL + '/node/' + params['compoundFile']
+            				}
+            		};
+            	} else if (methodId === 'import_fbamodel_sbml_file') {
+            		var urlMapping = {'SBML.FBAModel': self.shockURL + '/node/' + params['reactionFile']};
+            		var compoundFile = params['compoundFile'];
+            		if (compoundFile)
+            			urlMapping['TSV.Compounds'] = self.shockURL + '/node/' + compoundFile;
+            		var options = {};
+            		var genome = params['genomeObject'];
+            		if (genome)
+            			options['genome'] = genome;
+            		var biomass = params['biomass'];
+            		if (biomass)
+            			options['biomass'] = biomass;
+            		args = {'external_type': 'SBML.FBAModel', 
+            				'kbase_type': 'KBaseFBA.FBAModel', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':options},
+            				'url_mapping': urlMapping};
+            	} else if (methodId === 'import_fbamodel_excel_file') {
+                    var urlMapping = {'Excel.FBAModel': self.shockURL + '/node/' + params['inputFile']};
+                    var options = {};
+                    var genome = params['genomeObject'];
+                    if (genome)
+                        options['genome'] = genome;
+                    var biomass = params['biomass'];
+                    if (biomass)
+                        options['biomass'] = biomass;
+                    args = {'external_type': 'Excel.FBAModel', 
+                            'kbase_type': 'KBaseFBA.FBAModel', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':options},
+                            'url_mapping': urlMapping};
+                } else {
+            		self.showError(methodId + " import mode for FBAModel type is not supported yet");
+            	}
+            } else if (self.selectedType === 'KBaseBiochem.Media') {
+            	if (methodId === 'import_media_csv_file') {
+            		args = {'external_type': 'TSV.Media', 
+            				'kbase_type': 'KBaseBiochem.Media', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':{}},
+            				'url_mapping': {'TSV.Media': self.shockURL + '/node/' + params['csvFile']}};
+            	} else if (methodId === 'import_media_excel_file') {
+                    args = {'external_type': 'Excel.Media', 
+                            'kbase_type': 'KBaseBiochem.Media', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':{}},
+                            'url_mapping': {'Excel.Media': self.shockURL + '/node/' + params['inputFile']}};
+                } else {
+            		self.showError(methodId + " import mode for Media type is not supported yet");
+            	}
+            } else if (self.selectedType === 'KBasePhenotypes.PhenotypeSet') {
+            	if (methodId === 'import_phenotypeset_csv_file') {
+            		var options = {};
+            		var genome = params['genomeObject'];
+            		if (genome)
+            			options['genome'] = genome;
+            		args = {'external_type': 'TSV.PhenotypeSet', 
+            				'kbase_type': 'KBasePhenotypes.PhenotypeSet', 
+            				'workspace_name': self.wsName, 
+            				'object_name': params['outputObject'],
+            				'optional_arguments': {'validate':{},'transform':options},
+            				'url_mapping': {'TSV.PhenotypeSet': self.shockURL + '/node/' + params['csvFile']}};
+            	} else {
+            		self.showError(methodId + " import mode for PhenotypeSet type is not supported yet");
+            	}
             } else {
             	self.showError("Import for [" + self.selectedType + "] type is not supported yet.");
             }
+            if (args) {
+        		console.log("Data to be sent to transform service:");
+        		console.log(JSON.stringify(args));
+				self.showInfo("Sending data...", true);
+        		uploaderClient.upload(args,
+        				$.proxy(function(data) {
+        					console.log(data);
+        					self.waitForJob(data[1], callback);
+                        }, this),
+                        $.proxy(function(error) {
+                            self.showError(error);
+                        	callback(false);
+                        }, this)
+                    );
+            } else {
+            	callback(false);
+            }
         },
         
-        waitForJob: function(jobId) {
+        asBool: function(val) {
+        	if (!val)
+        		return false;
+        	return (val == 1 || val === "1");
+        },
+
+        asInt: function(val) {
+        	if (!val)
+        		return 0;
+        	if (val == 1 || val === "1")
+        		return 1;
+        	return 0;
+        },
+
+        waitForJob: function(jobId, callback) {
         	var self = this;
         	/*var aweClient = new AweClient({url: self.aweURL, token: self.token});
         	var timeLst = function(event) {
@@ -386,17 +649,25 @@
         			var wasError = data[6];
         			if (complete === 1) {
         				self.stopTimer();
+        				callback(wasError === 0);
         				if (wasError === 0) {
+                            self.trigger('updateDataList.Narrative');
             				self.showInfo("Import job is done");
         				} else {
-            				self.showError(status);
+    						self.showError('loading detailed error...');
+        					jobSrv.get_detailed_error(jobId, function(data) {
+        						self.showError(data);
+        					}, function(data) {
+        						self.showError(data.error.message);
+        	        		});
         				}
         			} else {
         				self.showInfo("Import job has status: " + status, true);
         			}
         		}, function(data) {
         			self.stopTimer();
-    				console.log(data.error.message);
+        			self.showError(data.error.message);
+    				callback(false);
         		});
         	};
         	self.timer = setInterval(timeLst, 5000);
@@ -413,11 +684,13 @@
         
         showError: function(error) {
         	console.log(error);
-        	var errorMsg = error;
-        	if (error.error && error.error.message)
-        		errorMsg = error.error.message;
+        	if (typeof error === 'object' && error.error) {
+        	    error = error.error;
+        	    if (typeof error === 'object' && error.message)
+        	        error = error.message;
+        	}
         	this.infoPanel.empty();
-        	this.infoPanel.append('<span class="label label-danger">Error: '+errorMsg+'"</span>');
+        	this.infoPanel.append('<pre style="text-align: left; background-color: #ffe0e0;">Error:\n'+error+'</pre>');
         },
 
         showInfo: function(message, spinner) {

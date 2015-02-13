@@ -8,7 +8,7 @@
 
     var $kbMenu = $('<span>');
     var makeKBaseMenu = function(div, cell) {
-        $(div).kbaseNarrativeCellMenu();
+        $(div).kbaseNarrativeCellMenu({cell: cell});
     };
 
     CellToolbar.register_callback('kbase.menu', makeKBaseMenu);
@@ -16,5 +16,5 @@
     kbasePreset.push('kbase.menu');
 
     CellToolbar.register_preset('KBase', kbasePreset);
-    console.log('KBase extension cell toolbar loaded.');
+    // console.log('KBase extension cell toolbar loaded.');
 }(IPython));

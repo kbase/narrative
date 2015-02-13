@@ -1,7 +1,7 @@
 __all__ = ['magics', 'mongonbmanager', 'ws_util', 'common', 'kbasewsmanager', 'services']
 
 from semantic_version import Version
-__version__ = Version("0.3.4")
+__version__ = Version("1.0.0")
 version = lambda: __version__
 
 # if run directly:

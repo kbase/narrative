@@ -12,7 +12,7 @@
             genome_id: null,
             ws_name: null
         },
-        wsUrl: "https://kbase.us/services/ws/",
+        wsUrl: window.kbconfig.urls.workspace,
         //fmUrl: "https://kbase.us/services/fba_model_services/",
         loadingImage: "static/kbase/images/ajax-loader.gif",
 

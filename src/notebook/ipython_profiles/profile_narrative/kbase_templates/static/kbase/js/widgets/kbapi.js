@@ -102,14 +102,13 @@ function KBCacheClient(token) {
         ujs_url = "http://140.221.84.180:7083"
     }*/
 
-    fba_url = "http://kbase.us/services/KBaseFBAModeling/";
-    //ws_url = "https://kbase.us/services/ws/"
-    ws_url = "http://dev04.berkeley.kbase.us:7058";
-    ujs_url = "http://140.221.84.180:7083";
+    fba_url = window.kbconfig.urls.fba;
+    ws_url = window.kbconfig.urls.workspace;
+    ujs_url = window.kbconfig.urls.user_and_job_state;
 
-    console.log('FBA URL is:', fba_url);
-    console.log('Workspace URL is:', ws_url);
-    console.log('User Job State URL is:', ujs_url);
+    // console.log('FBA URL is:', fba_url);
+    // console.log('Workspace URL is:', ws_url);
+    // console.log('User Job State URL is:', ujs_url);
 
     var fba = new fbaModelServices(fba_url, auth);
     var kbws = new Workspace(ws_url, auth);
@@ -797,11 +796,11 @@ function UIUtils() {
 
 
 function getBio(type, loaderDiv, callback) {
-    var fba = new fbaModelServices('https://kbase.us/services/fba_model_services/');
+    var fba = new fbaModelServices(window.kbconfig.urls.fba);
 //    var kbws = new workspaceService('http://kbase.us/services/workspace_service/');
 //    var kbws = new workspaceService('http://140.221.84.209:7058');
 
-    var kbws = new Workspace('http://kbase.us/services/ws');
+    var kbws = new Workspace(window.kbconfig.urls.workspace);
 
     // This is not cached yet; waiting to compare performanced.
     loaderDiv.append('<div class="progress">\

@@ -11,10 +11,18 @@ export NARRATIVEDIR=$d/src
 export IPYTHONDIR=$NARRATIVEDIR/notebook/ipython_profiles
 
 cfgdir=$IPYTHONDIR/profile_narrative/kbase_templates/static/kbase
-if [ -e $cfgdir/config.json ]
+do_copy="no"
+if [ ! -e $cfgdir/config.json ]
 then
-    log "File config.json already in $cfgdir, copy skipped"
+    do_copy="yes: No config.json in $cfgdir"
 else
+    diff -q $NARRATIVEDIR/config.json $cfgdir/config.json
+    if [ $? != 0 ]; then
+        do_copy="yes: config.json in $NARRATIVEDIR and $cfgdir differ"
+    fi
+fi
+log "Copy 'config.json'? $do_copy"
+if [ "$do_copy" != "no" ]; then
     log "Copy config.json from $NARRATIVEDIR to $cfgdir"
     cp $NARRATIVEDIR/config.json $cfgdir
 fi
@@ -24,4 +32,4 @@ log "Generate services dynamically from $svcjson"
 python $NARRATIVEDIR/biokbase/narrative/common/service_root.py -f $svcjson
 
 log "Start notebook"
-ipython notebook $* --NotebookManager.notebook_dir=~/.narrative --profile=narrative
+ipython notebook $* --ip=0.0.0.0 --NotebookManager.notebook_dir=~/.narrative --profile=narrative

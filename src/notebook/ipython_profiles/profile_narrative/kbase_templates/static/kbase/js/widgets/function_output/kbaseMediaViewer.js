@@ -13,7 +13,7 @@
         options: {
             loadingImage: "../images/ajax-loader.gif",
             // fbaURL: "https://kbase.us/services/fba_model_services",
-            fbaURL: "https://kbase.us/services/KBaseFBAModeling",
+            fbaURL: window.kbconfig.urls.fba,
             metadata: null,
             media: null
         },

@@ -19,7 +19,7 @@
 (function( $, undefined ) {
 
     $.KBWidget({
-        name: "kbaseNarrativeDataPanel", 
+        name: "kbaseNarrativeDataPanel",
         parent: "kbaseNarrativeControlPanel",
         version: "1.0.0",
         wsClient: null,
@@ -38,9 +38,8 @@
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: "https://kbase.us/services/ws",
             wsBrowserURL: "/functional-site/#/ws/",
-            landingPageURL: "/functional-site/#/",
-            uploaderURL: "//kbase.us/services/docs/uploader/uploader.html",
-            defaultLandingPage: "/functional-site/#/ws/json/", // ws_name/obj_name
+            landing_page_url: "/functional-site/#/", // !! always include trailing slash
+            lp_url: "/functional-site/#/dataview/",
             container: null,
             ws_name: null,
         },
@@ -49,9 +48,9 @@
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
 
-        
+
         dataListWidget: null,
-        
+
         init: function(options) {
             this._super(options);
 
@@ -64,30 +63,34 @@
             }
 
             if (window.kbconfig && window.kbconfig.urls) {
-                this.options.uploaderURL = window.kbconfig.urls.uploader;
                 this.options.workspaceURL = window.kbconfig.urls.workspace;
                 this.options.wsBrowserURL = window.kbconfig.urls.ws_browser;
                 this.options.landingPageURL = window.kbconfig.urls.landing_pages;
+                if (window.kbconfig.urls.landing_pages) {
+                    this.options.lp_url = window.kbconfig.urls.landing_pages;
+                }
             }
-            
+            this.data_icons = window.kbconfig.icons.data;
+            this.icon_colors = window.kbconfig.icons.colors;
+
             var $dataList = $('<div>');
             this.body().append($dataList);
             this.dataListWidget = $dataList["kbaseNarrativeDataList"](
                                     {
                                         ws_name: this.ws_name,
                                         ws_url: this.options.workspaceURL,
-                                        loadingImage: this.options.loadingImage
+                                        loadingImage: this.options.loadingImage,
+                                        parentControlPanel: this
                                     });
-            
+
             $(document).on(
                 'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-                    console.log('data panel -- setting ws to ' + info.wsId);
                     this.ws_name = info.wsId;
                     this.narrWs = info.narrController;
                     this.dataListWidget.setWorkspace(this.ws_name);
                 }, this)
             );
-            
+
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
              */
@@ -100,8 +103,8 @@
                 },
                 this)
             );
-            
-            
+
+
             /**
              * This should be triggered when something updates the available data in either the narrative or
              * in the workspace.
@@ -113,7 +116,7 @@
                 },
                 this )
             );
-            
+
             /**
              * This should be triggered when something wants to know what workspace this widget is currently linked to.
              */
@@ -122,79 +125,32 @@
                     if (callback) {
                         callback(this.ws_name);
                     }
-                }, 
-                this)
-            );
-            
-            this.landingPageMap = window.kbconfig.landing_page_map;
-            /**
-             * Get the landing page map.
-             * First, try getting it from /functional-site/landing_page_map.json.
-             * If that fails, try /static/kbase/js/widgets/landing_page_map.json.
-             
-            $.ajax({
-                url: '/functional-site/landing_page_map.json',
-                async: true,
-                dataType: 'json',
-                success: $.proxy(function(response) {
-                    this.landingPageMap = response;
-                }, this),
-                error: $.proxy(function(error) {
-                    this.dbg("Unable to get standard landing page map, looking for backup...");
-                    $.ajax({
-                        url: '/static/kbase/js/widgets/landing_page_map.json',
-                        async: true,
-                        dataType: 'json',
-                        success: $.proxy(function(response) {
-                            this.landingPageMap = response;
-                        }, this),
-                        error: $.proxy(function(error) {
-                            this.dbg("Unable to get any landing page map! Landing pages mapping unavailable...");
-                            this.landingPageMap = null;
-                        }, this)
-                    })
-                }, this)
-            });*/
-            
-            if (this.ws_name)
-                this.trigger('workspaceUpdated.Narrative', this.ws_name);
-
-            this.addButton($('<button>')
-                           .addClass('btn btn-xs btn-default')
-                           .append('<span class="glyphicon glyphicon-play"></span>')
-                           .click($.proxy(function(event) {
-                               this.trigger('hideGalleryPanelOverlay.Narrative');
-                               this.trigger('toggleSidePanelOverlay.Narrative');
-                           }, this)));
-            
-            return this;
-            
-            
-            
-            /**
-             * This should be triggered whenever something clicks on a data info button (or just
-             * wants the info modal to appear).
-             */
-            $(document).on(
-                'dataInfoClicked.Narrative', $.proxy(function(e, workspace, id) {
-                    this.showInfoModal(workspace, id);
-                }, 
-                this)
-            );
-
-            $(document).on(
-                'updateNarrativeDataTab.Narrative', $.proxy(function(e) {
-                    this.refreshNarrativeTab();
                 },
                 this)
             );
 
+            // initialize the importer
+            this.dataImporter();
 
-            this.createStructure()
-                .createMessages();
+            if (this.ws_name)
+                this.trigger('workspaceUpdated.Narrative', this.ws_name);
 
+            this.dataImporter();
+
+            this.addButton($('<button>')
+                           .addClass('btn btn-xs btn-default')
+                           .tooltip({title:'Hide / Show data browser', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                           .append('<span class="fa fa-arrow-right"></span>')
+                           .click($.proxy(function(event) {
+                               this.trigger('hideGalleryPanelOverlay.Narrative');
+                               this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
+                           }, this)));
 
             return this;
+        },
+
+        addButtonToControlPanel: function($btn) {
+            this.addButton($btn);
         },
 
         /**
@@ -207,7 +163,8 @@
         loggedInCallback: function(event, auth) {
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
             this.isLoggedIn = true;
-            this.refresh();
+            if (this.ws_name)
+                this.refresh();
             return this;
         },
 
@@ -220,13 +177,15 @@
         loggedOutCallback: function(event, auth) {
             this.wsClient = null;
             this.isLoggedIn = false;
-            this.refresh();
+            this.ws_name = null;
+            // this.refresh();
             return this;
         },
 
         setWorkspace: function(ws_name) {
             this.ws_name = ws_name;
-            this.refresh();
+            if (this.wsClient)
+                this.refresh();
         },
 
         /**
@@ -242,296 +201,6 @@
         },
 
         /**
-         * Test if this narrative is in a workspace that this user is not
-         * able to modify.
-         *
-         * XXX: 
-         * XXX: DISABLED! To re-enable see TODO: comment below
-         * XXX:
-         */
-        isReadonlyWorkspace: function (ws_client, ws_name, callback) {
-            var workspace_id = {workspace: ws_name};
-            ws_client.get_workspace_info(workspace_id,
-                // success callback
-                $.proxy(function(info) {
-                    var ro = false;
-                    // TODO: re-enable by uncommenting the next 3 lines
-                    // var perms = info[5];
-                    // console.debug("workspace perms = ",perms);
-                    // ro = (perms != 'a' && perms != 'w');
-                    console.info("WS(" + ws_name + ") read-only: " + ro);
-                    callback(ro);
-                }, this),
-                // error callback
-                $.proxy(function(obj) {
-                    console.debug("isReadonlyWorkspace: error!", obj);
-                    callback(false);
-                }, this)
-            );
-        },
-
-        /**
-         * @method createStructure
-         * Create the overall apparatus for the widget.
-         * Makes the header, table, etc. DOM elements.
-         * @returns this
-         * @private
-         */
-        createStructure: function() {
-            /*********** OUTER STRUCTURE ***********/
-
-            /**
-             * The outer structure is now a Bootstrap Panel.
-             * So it's got a panel-heading (just the blue Data part and refresh button)
-             * a panel-body - everything else
-             * - no footer
-             */
-
-            // header bar.
-            // var $headerDiv = $('<div>')
-            //                   .append('Data')
-            //                   .append($('<button>')
-            //                           .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
-            //                           .css({'margin-top': '-4px',
-            //                                 'margin-right': '4px'})
-            //                           .click($.proxy(function(event) { this.refresh(); }, this))
-            //                           .append($('<span>')
-            //                                   .addClass('glyphicon glyphicon-refresh')));
-
-            var $refreshBtn = $('<button>')
-                              .addClass('btn btn-xs btn-default')
-                              .click($.proxy(function(event) { this.refresh(); }, this))
-                              .append($('<span>')
-                                      .addClass('glyphicon glyphicon-refresh'));
-
-            // encapsulating data panel - all the data-related stuff goes in here.
-            // this way, it can all be hidden easily.
-            this.$dataPanel = $('<div id="data-tabs">');
-
-            // a loading panel that just has a spinning gif sitting in the middle.
-            this.$loadingPanel = $('<div>')
-                                 .addClass('kb-data-loading')
-                                 .append('<img src="' + this.options.loadingImage + '">')
-                                 .append($('<div>')
-                                         .attr('id', 'message'))
-                                 .hide();
-
-            // Something similar for the info modal
-            this.$infoModalLoadingPanel = $('<div>')
-                                 .addClass('kb-data-loading')
-                                 .append('<img src="' + this.options.loadingImage + '">')
-                                 .hide();
-
-            // this just sits outside and gets crammed into the info modal if necessary.
-            this.$infoModalError = $('<div>').hide();
-
-            // The error panel should overlap everything.
-            this.$errorPanel = $('<div>')
-                               .addClass('kb-error')
-                               .hide();
-
-            this.addButton($refreshBtn);
-
-            this.body().append($('<div>')
-                               .addClass('kb-narr-panel-body')
-                               .append(this.$dataPanel)
-                               .append(this.$loadingPanel)
-                               .append(this.$errorPanel));
-
-            // this.$elem.append($('<div>')
-            //                   .addClass('panel panel-primary kb-data-main-panel')
-            //                   .append($('<div>')
-            //                           .addClass('panel-heading')
-            //                           .append($('<div>')
-            //                                   .addClass('panel-title')
-            //                                   .css({'text-align': 'center'})
-            //                                   .append($headerDiv)))
-            //                   .append($('<div>')
-            //                           .addClass('panel-body kb-narr-panel-body')
-            //                           .append(this.$dataPanel)
-            //                           .append(this.$loadingPanel)
-            //                           .append(this.$errorPanel)));
-            
-
-
-            /*********** MAIN DATA TABLES ***********/
-            // Contains all of a user's data
-            // XXX: Initially just data from the current workspace.
-            this.$myDataDiv = $('<div id="my-data">');
-
-            // Contains all data in the current narrative.
-            this.$narrativeDiv = $('<div id="narrative-data">');
-
-
-            // Put these into tabs.
-            this.$dataPanel.kbaseTabs(
-                {
-                    tabs : [
-                        {
-                            tab: 'My Workspace Data',
-//                            tab : 'My Workspace Data&nbsp;&nbsp;&nbsp;<span data-toggle="tooltip" class="glyphicon glyphicon-new-window ws-link"></span>',       //name of the tab
-                            content : this.$myDataDiv,       //jquery object to stuff into the content
-                            active: true
-                        },
-                        {
-                            tab : 'Narrative',
-                            content : this.$narrativeDiv,
-                        },
-                    ],
-                }
-            );
-
-            //add the click event to open the workspace from the workspace link in the
-            //'My Workspace Data' tab
-            $that = this;
-            this.$dataPanel.find("#data-tabs .ws-link").bind('click',
-                function (e) {
-                    var url = $that.options.wsBrowserURL + "/objtable/" + $that.wsId;
-                    window.open(url,'_blank');
-                }   
-            );
-
-            //add the tooltip to the workspace list
-            this.$dataPanel.find("#data-tabs .ws-link").tooltip({
-                title: "Open this workspace in a new window.",
-                placement: "bottom"
-            });
-
-            this.$dataPanel.find('a').on('click', 
-                $.proxy(function() {
-                    setTimeout($.proxy(function() {
-                        this.$myDataDiv.kbaseNarrativeDataTable('poke');
-                        this.$narrativeDiv.kbaseNarrativeDataTable('poke');
-                    }, this), 0);
-                }, this)
-            );
-            this.$myDataDiv.kbaseNarrativeDataTable({ noDataText: 'No data found! Click <a href="' + this.options.uploaderURL + '" target="_new">here</a> to upload.'});
-            this.$narrativeDiv.kbaseNarrativeDataTable({ noDataText: 'No data used in this Narrative yet!'});
-
-
-
-
-            /************ OBJECT DETAILS MODAL *************/
-            // separate so it can be hidden
-            this.$infoModalPanel = $('<div>');
-
-            // the properties table
-            this.$infoModalPropTable = $('<table>')
-                                       .addClass('table table-bordered table-striped');
-            // the metadata div
-            this.$metadataDiv = $('<pre>');
-
-            // the version selector
-            this.$versionSelect = $('<select>')
-                                  .addClass('form-control')
-                                  .change($.proxy(function(event) {
-                                      this.populateInfoModal(this.$versionSelect.find('option:selected').val()); 
-                                  }, this));
-
-            var $infoAccordion = $('<div>');
-
-            // The footer should have 3 buttons - a link to the type spec, object landing page, and a close button.
-            var $footerButtons = $('<div>')
-                                 .append($('<button>')
-                                         .attr({
-                                             'type' : 'button',
-                                             'class' : 'btn btn-default',
-                                             'id' : 'obj-details-btn',
-                                         })
-                                         .append('View Landing Page'))
-                                         .tooltip()
-                                 .append($('<button>')
-                                         .attr({
-                                             'type' : 'button',
-                                             'class' : 'btn btn-default',
-                                             'id' : 'obj-type-btn',
-                                         })
-                                         .append('Object Type Details'))
-                                 .append($('<button>')
-                                         .attr({
-                                             'type' : 'button',
-                                             'class' : 'btn btn-primary',
-                                             'data-dismiss' : 'modal'
-                                         })
-                                         .append('Close'));
-
-            // The overall info modal structure.
-            // Thanks, Bootstrap!
-            this.$infoModal = $('<div>')
-                              .addClass('modal fade')
-                              .append($('<div>')
-                                      .addClass('modal-dialog')
-                                      .append($('<div>')
-                                              .addClass('modal-content')
-                                              .append($('<div>')
-                                                      .addClass('modal-header')
-                                                      .append($('<button>')
-                                                              .attr({
-                                                                'type' : 'button',
-                                                                'class' : 'close',
-                                                                'data-dismiss' : 'modal',
-                                                                'aria-hidden' : 'true'
-                                                              })
-                                                              .append('&times;')
-                                                              )
-                                                      .append($('<h3>')
-                                                              .addClass('modal-title'))
-                                                      )
-                                              .append($('<div>')
-                                                      .addClass('modal-body')
-                                                      .append(this.$infoModalError)
-                                                      .append(this.$infoModalLoadingPanel)
-                                                      .append(this.$infoModalPanel
-                                                              .append($('<div>')
-                                                                      .append($('<h3>')
-                                                                              .append('Properties'))
-                                                                      .append(this.$infoModalPropTable))
-                                                              .append($infoAccordion)
-                                                              .append($('<form class="form-inline">')
-                                                                      .append('Version: ')
-                                                                      .append(this.$versionSelect))))
-                                              .append($('<div>')
-                                                      .addClass('modal-footer')
-                                                      .append($footerButtons))));
-
-            // Add behaviors
-            // XXX: Nothing here yet
-            this.$infoAccordion.on('click', function() {
-              console.debug("I pity the fool who clicks on infoModal!");
-            });
-
-            // Appending this to body since the left panels are now fixed.
-            $('body').append(this.$infoModal);
-            $infoAccordion.kbaseAccordion(
-                {
-                    elements:
-                    [
-                        { 'title' : 'Metadata', 'body' : $('<div>').append(this.$metadataDiv) }
-                    ]
-                }
-            );
-
-            return this;
-
-        },
-
-        /**
-         * @method createMessages
-         * Create the message elements.
-         * @returns this
-         * @private
-         */
-        createMessages: function() {
-            this.$loginMessage = $('<span>')
-                .text(this.options.notLoggedInMsg);
-            this.$loadingMessage = $('<div>')
-                                   .css({'text-align': 'center'})
-                                   .append($('<img>')
-                                           .attr('src', this.options.loadingImage));
-            return this;
-        },
-
-        /**
          * @method refresh
          * This reloads any data that this panel should display.
          * It uses the existing workspace client to fetch data from workspaces and populates the
@@ -541,348 +210,8 @@
          * @public
          */
         refresh: function() {
-            
-            this.dataListWidget.refresh();
-            
+//            this.dataListWidget.refresh();
             return;
-            console.debug("kbWS.refresh.start");
-            if (this.wsClient && this.wsId) {
-                console.debug("kbWS.refresh.test-for-readonly");
-                this.isReadonlyWorkspace(this.wsClient, this.wsId, 
-                    $.proxy(function(ro) {
-                        if (ro) {
-                            // hide in readonly mode
-                            this.deactivateDataPanel();
-                            // tell parent to hide as well
-                            this.narrWs.activateReadonlyMode();
-                        }
-                        else {
-                            this.narrWs.activateReadwriteMode();
-                        }
-                        $('#main-container').show();
-                        // now show connections-- once it works!
-                        // this.narrWs.show_connections();
-                    }, this));
-            }
-
-            if (!this.wsClient) {
-                this.showLoadingMessage("Unable to load workspace data!<br>No user credentials found!");
-                console.debug("kbWS.refresh.end msg=no-client");
-                return;
-            }
-            else if (!this.wsId) {
-                console.debug("kbWS.refresh.end msg=no-wsId");
-            }
-
-            this.showLoadingMessage("Loading workspace data...");
-
-            this.refreshWorkspaceTab();
-            this.refreshNarrativeTab();
-        },
-
-        refreshWorkspaceTab: function() {
-            // Fetch data from the current workspace.
-            this.wsClient.list_objects({
-                    workspaces : [this.wsId],
-                },
-                $.proxy(function(list) {
-                    // first, go through the list and pull out Narrative objects.
-                    // otherwise it's a little recursive. Including a Narrative within its narrative 
-                    // would give me nightmares.
-
-                    this.loadedData = {};
-                    var renderedData = {};
-                    for (var i=0; i<list.length; i++) {
-                        var type = list[i][2];
-
-                        if (type.indexOf('KBaseNarrative') == 0) {
-                            list.splice(i, 1);
-                            i--;
-                        }
-                        else {
-                            // type = KBaseBlahblah.Blah-v#.#
-                            var parsedType = /^(\S+)-/.exec(type);
-                            // if it works, turn type into KBaseBlahblah.Blah w/o the version.
-                            if (parsedType && parsedType[1])
-                                type = parsedType[1];
-
-                            if (!this.loadedData[type]) {
-                                this.loadedData[type] = [];
-                                renderedData[type] = [];
-                            }
-                            this.loadedData[type].push(list[i]);
-                            renderedData[type].push([list[i][7], list[i][1], type]);
-                        }
-                    }
-
-                    this.$myDataDiv.kbaseNarrativeDataTable('setData', renderedData);
-
-                    this.trigger('dataUpdated.Narrative');
-                    this.showDataPanel();
-                    this.$myDataDiv.kbaseNarrativeDataTable('poke');
-                    this.$narrativeDiv.kbaseNarrativeDataTable('poke');
-
-                }, this), 
-                $.proxy(function(error) {
-                    this.showError(error);
-                }, this)
-            );
-        },
-
-        refreshNarrativeTab: function() {
-            // Fetch dependent data from the narrative
-            // The main Narrative javascript keeps the IPython.notebook.metadata.data_dependencies up to date.
-            // So grab our list of deps from there!
-
-            // XXX: Currently a mashup of old and new. Update to only the new later.
-            if (IPython.notebook) {
-                var narrData = IPython.notebook.metadata.data_dependencies;
-                var dataList = {};
-                var lookupList = [];
-
-                if (narrData) {
-                    // format things to be how we want them.
-                    $.each(narrData, $.proxy(function(idx, val) {
-                        val = val.split(/\s+/);
-                        var type = val[0];
-
-                        var ws = "";
-                        var name = "";
-
-                        if (val.length === 1) {
-                            lookupList.push(val[0]);
-                        }
-
-                        else {
-                            // if there's a forward slash, it'll be ws/name
-                            if (val[1].indexOf('/') !== -1) {
-                                var arr = val[1].split('/');
-                                ws = arr[0];
-                                name = arr[1];
-                            }
-                            else if (/ws\.(\d+)\.obj\.(\d+)/.exec(val[1])) {
-                                var qualId = /ws\.(\d+)\.obj\.(\d+)/.exec(val[1]);
-                                if (qualId.length === 3) {
-                                    ws = qualId[1];
-                                    name = qualId[2];
-                                }
-                            }
-                            // otherwise-otherwise, it'll be just name, and we provide the workspace
-                            else {
-                                ws = this.wsId;
-                                name = val[1];
-                            }
-                            if (!dataList[type])
-                                dataList[type] = [];
-
-                            // Workaround for dealing with the occasional blank name.
-                            if (name) {
-                                name = name.trim();
-                                if (name.length > 0)
-                                    dataList[type].push([ws, name, type]);
-                            }
-                        }
-                    }, this));
-                }
-
-                // XXX: part of the hack above.
-                // lookupList is a list of object refs to be fetched from the workspace.
-                if (lookupList.length > 0) {
-                    var idList = [];
-                    // Make the ObjectIdentity list to pass to the workspace client
-                    for (var i=0; i<lookupList.length; i++) {
-                        idList.push({'ref': lookupList[i]});
-                    }
-                    // Fetch the info
-                    this.wsClient.get_object_info(idList, 0, $.proxy(
-                        function(objInfo) {
-                            var dataList = {};
-                            // Parse out the info we want to put in the data table.
-                            for (var i=0; i<objInfo.length; i++) {
-                                if (!dataList[objInfo[i][2]])
-                                    dataList[objInfo[i][2]] = [];
-                                dataList[objInfo[i][2]].push([objInfo[i][6], objInfo[i][1], objInfo[i][2]]);
-                            }
-                            // ...and put it there!
-                            this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
-                        }, this)
-                    );
-                }
-                else {
-                    this.$narrativeDiv.kbaseNarrativeDataTable('setData', dataList);
-                }
-            }
-        },
-
-        /**
-         * @method showInfoModal
-         * Populates and shows an informative modal window with metadata about the given object.
-         * This has links out to the landing pages for that object, as well.
-         * @param {String} workspace - the NAME (not id) of the workspace for the given object.
-         * @param {String} id - the NAME (not numerical id... I know.) of the object to display.
-         * @private
-         */
-        showInfoModal: function(workspace, id) {
-            this.$infoModal.find('.modal-title').html(id);
-            this.$infoModalPanel.hide();
-            this.$infoModalError.hide();
-            this.$infoModalLoadingPanel.show();
-            this.$infoModal.modal();
-
-
-            var obj = {};
-            // if workspace is all numeric, assume its a workspace id, not a name.
-            if (/^\d+$/.exec(workspace))
-                obj['wsid'] = workspace;
-            else
-                obj['workspace'] = workspace;
-
-            // same for the id
-            if (/^\d+$/.exec(id))
-                obj['objid'] = id;
-            else
-                obj['name'] = id;
-
-            // Fetch the workspace object.
-            this.wsClient.get_object_history(obj, 
-                $.proxy(function(infoList) {
-                    infoList.sort(function(a, b) { return b[4]-a[4]; });
-                    this.objInfoList = infoList;
-
-                    this.$versionSelect.empty();
-                    for (var i=0; i<this.objInfoList.length; i++) {
-                        var verStr = this.objInfoList[i][4] + ' - ' + this.prettyTimestamp(this.objInfoList[i][3]);
-                        if (i === 0)
-                            verStr += ' (most recent)';
-                        this.$versionSelect.append($('<option>')
-                                                   .attr('value', i)
-                                                   .append(verStr));
-                    }
-
-                    this.populateInfoModal(i);
-
-                    this.$infoModalLoadingPanel.hide();
-                    this.$infoModalPanel.show();
-                    this.$infoModal.find('.modal-footer .btn-default').show();
-                }, this),
-
-                $.proxy(function(error) {
-                    this.$infoModalError.empty().append(this.buildWorkspaceErrorPanel("Sorry, an error occurred while loading object data", error));
-                    this.$infoModalLoadingPanel.hide();
-                    this.$infoModalPanel.hide();
-                    this.$infoModal.find('.modal-footer .btn-default').hide();
-                    this.$infoModalError.show();
-                }, this)
-            );
-        },
-
-        /**
-         * @method populateInfoModal
-         * Populates the info modal with currently loaded metadata from the given version index.
-         * This assumes this.objInfoList has a metadata array at versionIndex.
-         * It currently doesn't catch errors very well.
-         * @param {Integer} versionIndex - the index of the metadata version to show.
-         * @private
-         */
-        populateInfoModal: function(versionIndex) {
-            if (!versionIndex || versionIndex < 0 || versionIndex >= this.objInfoList.length)
-                versionIndex = 0;
-
-            var info = this.objInfoList[versionIndex];
-
-            // A simple table row builder for two elements. The first column is bold.
-            var addRow = function(a, b) {
-                return "<tr><td><b>" + a + "</b></td><td>" + b + "</td></tr>";
-            };
-
-            /* Fill in the property table */
-            this.$infoModalPropTable.empty()
-                                    .append(addRow('ID', info[0]))
-                                    .append(addRow('Name', info[1]))
-                                    .append(addRow('Type', info[2]))
-                                    .append(addRow('Save Date', this.prettyTimestamp(info[3])))
-                                    .append(addRow('Version', info[4]))
-                                    .append(addRow('Saved By', info[5]))
-                                    .append(addRow('Workspace ID', info[6]))
-                                    .append(addRow('Workspace Name', info[7]))
-                                    .append(addRow('Checksum', info[8]))
-                                    .append(addRow('Size (B)', info[9]));
-
-            // Parse the user metadata field.
-            var metadataJson = this.prettyJson(info[10]);
-            if (metadataJson === "{}")
-                metadataJson = "No metadata found for this object.";
-            this.$metadataDiv.empty().append(metadataJson);
-
-            var dataType = info[2];
-            var workspace = info[7];
-            var id = info[1];
-
-            // Set up the typespec page.
-            var specPage = this.options.landingPageURL + 'spec/type/' + dataType;
-            this.$infoModal.find('.modal-footer > div > button#obj-type-btn').off('click').click(function(event) { window.open(specPage); });
-
-            // Figure out the landingPageType. e.g. KBaseGenomes.Genome-1.0 should go to /genomes/
-            var landingPageType = null;
-            if (this.landingPageMap !== null) {
-                var parsedType = /^(\S+)\.(\S+)-/.exec(dataType);
-                if (parsedType) {
-                    // module = idx 1, type = idx 2
-                    if (this.landingPageMap[parsedType[1]] && this.landingPageMap[parsedType[1]][parsedType[2]]) {
-                        landingPageType = this.landingPageMap[parsedType[1]][parsedType[2]];
-                    }
-                }
-            }
-
-            var detailsBtn = this.$infoModal.find('.modal-footer > div > button#obj-details-btn');
-            detailsBtn.off('click');
-            // If we don't havea a landingPageType (it's still null), then we don't have a landing page for that
-            // object. Remove the clicky function and add a tooltip.
-            var landingPage = this.options.defaultLandingPage + workspace + '/' + id;
-            if (landingPageType) {
-                landingPage = this.options.landingPageURL + landingPageType + '/' + encodeURIComponent(workspace) + '/' + encodeURIComponent(id);
-            }
-            detailsBtn.click(function(event) { window.open(landingPage); });
-            detailsBtn.html("View Landing Page");
-            // else {
-            //     detailsBtn.html("Landing Page Unavailable");
-            // }
-
-        },
-
-        /**
-         * Returns a jQuery div object containing information about the given error that's been passed from the workspace.
-         */
-        buildWorkspaceErrorPanel: function(msg, error) {
-            var $errorPanel = $('<div>');
-            var $errorHeader = $('<div>')
-                               .addClass('alert alert-danger')
-                               .append('<b>' + msg + '</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20data%20loading%20error">help@kbase.us</a> with the information below.');
-
-            $errorPanel.append($errorHeader);
-
-            // If it's a string, just dump the string.
-            if (typeof error === 'string') {
-                $errorPanel.append($('<div>').append(error));
-            }
-
-            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
-            else if (typeof error === 'object') {
-                var $details = $('<div>');
-                $details.append($('<div>').append('<b>Code:</b> ' + error.error.code))
-                        .append($('<div>').append('<b>Message:</b> ' + error.error.message));
-
-                var $tracebackDiv = $('<div>')
-                                 .addClass('kb-function-error-traceback')
-                                 .append(error.error.error);
-
-                var $tracebackPanel = $('<div>');
-                var tracebackAccordion = [{'title' : 'Details', 'body' : $tracebackDiv}];
-
-                $errorPanel.append($details);
-            }
-
-            return $errorPanel;
         },
 
         /**
@@ -891,12 +220,12 @@
          *
          * If 'type' is a string, then it returns only objects matching that
          * object type (this is case-sensitive!).
-         * 
+         *
          * If 'type' is an array, then it returns only objects matching all of
          * those types.
          *
          * Returns data like this:
-         * { 
+         * {
          *   type1 : [ [metadata1], [metadata2], ... ],
          *   type2 : [ [metadata3], [metadata4], ... ]
          * }
@@ -908,7 +237,7 @@
             } else {
                 return {};
             }
-            
+
         },
 
         /**
@@ -924,99 +253,1088 @@
             this.$loadingPanel.show();
         },
 
-        /**
-         * Shows the full-size data panel and hides all others.
-         * @private
-         */
-        showDataPanel: function() {
-            this.$loadingPanel.hide();
-            this.$errorPanel.hide();
-            this.$dataPanel.show();
-        },
 
-        /**
-         * Shows data panel, but does not allow clicks on it.
-         *
-         * @param error
-         */
-        deactivateDataPanel: function() {
-            this.$loadingPanel.find('#message').empty();
-            this.$loadingPanel.hide();
-            this.$errorPanel.hide();
-            //this.$dataPanel.find('a').off();
-            this.$dataPanel.show();
-        },
 
-        /**
-         * Shows an error text message on top of the panel. All other pieces are hidden.
-         * @param {string} error - the text of the error message
-         * @private
-         */
-        showError: function(error) {
-            this.$errorPanel = this.buildWorkspaceErrorPanel("Sorry, an error occurred while loading data.", error);
-            this.$dataPanel.hide();
-            this.$loadingPanel.hide();
-            this.$errorPanel.show();
-        },
 
-        /**
-         * @method prettyJson
-         * Prettifies a JSON string or object into a nicely formatted, colorized block.
-         * @param {String|Object} s - either a JSON string or a Javascript object
-         * @return {String} a prettified JSON string with some nice HTML color tags.
-         * @private
-         */
-        prettyJson: function(s) {
-            if (typeof s != 'string') {
-                s = JSON.stringify(s, undefined, 2);
+        buildTabs: function(tabs, isOuter) {
+            var $header = $('<div>');
+            var $body = $('<div>');
+
+            for (var i=0; i<tabs.length; i++) {
+                var tab = tabs[i];
+                $header.append($('<div>')
+                               .addClass('kb-side-header')
+                               .css('width', (100/tabs.length)+'%')
+                               .append(tab.tabName));
+                $body.append($('<div>')
+                             .addClass('kb-side-tab')
+                             .append(tab.content));
             }
-            s = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            s = s.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
-                function (match) {
-                    var cls = 'number';
-                    if (/^"/.test(match)) {
-                        if (/:$/.test(match)) {
-                            cls = 'key';
-                        } else {
-                            cls = 'string';
-                        }
-                    } else if (/true|false/.test(match)) {
-                        cls = 'boolean';
-                    } else if (/null/.test(match)) {
-                        cls = 'null';
-                    }
-                    return '<span class="' + cls + '">' + match + '</span>';
+
+            $header.find('div').click($.proxy(function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                var $headerDiv = $(event.currentTarget);
+
+                if (!$headerDiv.hasClass('active')) {
+                    var idx = $headerDiv.index();
+                    $header.find('div').removeClass('active');
+                    $headerDiv.addClass('active');
+                    $body.find('div.kb-side-tab').removeClass('active');
+                    $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
+                    if (isOuter)
+                        this.hideOverlay();
                 }
-            );
-            return s;
+            }, this));
+
+            $header.find('div:first-child').addClass('active');
+            $body.find('div:first-child.kb-side-tab').addClass('active');
+
+            return {
+                header: $header,
+                body: $body
+            };
         },
 
         /**
-         * Formats a given timestamp to look pretty.
-         * Takes any timestamp that the Javascript Date object can handle, and 
-         * returns it formatted as: MM/DD/YYYY, HH:MM:SS (in 24-hour time)
-         * @param {String} timestamp - the timestamp string
-         * @returns a formatted timestamp
-         * @private
+         * Renders the data importer panel
+         * I'm throwing this here because I have no idea how to
+         * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
-        prettyTimestamp: function(timestamp) {
-            var format = function(x) {
-                if (x < 10)
-                    x = '0' + x;
-                return x;
+        dataImporter: function() {
+            var self = this;
+            var maxObjFetch = 300000;
+
+            var narWSName;
+            $(document).on('setWorkspaceName.Narrative', function(e, info){
+                narWSName = info.wsId;
+            })
+
+            var self = this;
+            var user = $("#signin-button").kbaseLogin('session', 'user_id');  // TODO: use
+
+            // models
+            var myData = [], sharedData = [];
+
+            var myWorkspaces = [], sharedWorkspaces = [];
+
+            // model for selected objects to import
+            var mineSelected = [], sharedSelected = [];
+
+            var types = ["KBaseGenomes.Genome",
+                         "KBaseSearch.GenomeSet",
+                         "KBaseGenomes.Pangenome",
+                         "KBaseGeneDomains.DomainAnnotation",
+                         "KBaseGenomes.GenomeComparison",
+                         "KBaseGenomes.GenomeDomainData",
+                         "GenomeComparison.ProteomeComparison",
+                         "KBaseGenomes.ContigSet",
+                         "KBaseAssembly.SingleEndLibrary",
+                         "KBaseAssembly.PairedEndLibrary",
+                         "KBaseAssembly.AssemblyInput",
+                         "KBaseAssembly.AssemblyReport",
+                         "KBaseRegulation.Regulome",
+                         "KBaseTrees.MSA",
+                         "KBaseTrees.Tree",
+                         "KBaseFBA.FBAModel",
+                         "KBaseFBA.ModelTemplate",
+                         "KBaseFBA.PromConstraint",
+                         "KBaseBiochem.Media",
+                         "KBaseFBA.FBA",
+                         "KBasePhenotypes.PhenotypeSet",
+                         "KBasePhenotypes.PhenotypeSimulationSet",
+                         "KBaseFBA.ReactionSensitivityAnalysis",
+                         "KBaseGenomes.MetagenomeAnnotation",
+                         "KBaseExpression.ExpressionSeries",
+                         "KBaseExpression.ExpressionSample",
+                         "Communities.Metagenome",
+                         "Communities.SequenceFile",
+                         "Communities.Collection",
+                         "Communities.FunctionalMatrix",
+                         "Communities.FunctionalProfile",
+                         "Communities.Heatmap",
+                         "Communities.PCoA",
+                         "Communities.TaxonomicMatrix",
+                         "Communities.TaxonomicProfile"
+                         ];
+
+            // tab panels
+            var minePanel = $('<div class="kb-import-content kb-import-mine">'),
+                sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
+                publicPanel = $('<div class="kb-import-content kb-import-public">'),
+                importPanel = $('<div class="kb-import-content kb-import-import">'),
+                examplePanel = $('<div class="kb-import-content">');
+
+
+
+            // add tabs
+            var $tabs = this.buildTabs([
+                    {tabName: '<small>My Data</small>', content: minePanel},
+                    {tabName: '<small>Shared With Me</small>', content: sharedPanel},
+                    {tabName: '<small>Public</small>', content: publicPanel},
+                    {tabName: '<small>Example</small>', content: examplePanel},
+                    {tabName: '<small>Import</small>', content: importPanel},
+                ]);
+
+
+            // hack to keep search on top
+
+            var $mineFilterRow = $('<div class="row">');
+            minePanel.append($mineFilterRow);
+            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
+            setLoading($mineScrollPanel);
+            minePanel.append($mineScrollPanel);
+
+            var $sharedFilterRow = $('<div class="row">');
+            sharedPanel.append($sharedFilterRow);
+            var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
+            setLoading($sharedScrollPanel);
+            sharedPanel.append($sharedScrollPanel);
+
+            var body = $('<div>');
+            var footer = $('<div>');
+            body.addClass('kb-side-panel');
+            body.append($tabs.header, $tabs.body);
+
+            // add footer status container and buttons
+            var importStatus = $('<div class="pull-left kb-import-status">');
+            footer.append(importStatus)
+            var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>').css({'margin':'10px'});
+            var closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin':'10px'});
+
+            // Setup the panels that are defined by widgets
+            publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus});
+            importPanel.kbaseNarrativeSideImportTab({});
+            examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus});
+
+            // It is silly to invoke a new object for each widget
+            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
+            var ws = new Workspace(this.options.workspaceURL, auth);
+
+
+            closeBtn.click(function() {
+                self.trigger('hideSidePanelOverlay.Narrative');
+            })
+            footer.append(closeBtn);
+
+            // start with my data, then fetch other data
+            // this is because data sets can be large and
+            // makes things more fluid
+            updateView('mine').done(function() {
+                updateView('shared')
+            });
+
+            var narrativeNameLookup={};
+            this.$overlayPanel = body.append(footer);
+
+            function updateView(view) {
+                var p;
+                if (view == 'mine') {
+                    p = getMyWS();
+                } else if (view == 'shared') {
+                    p = getSharedWS();
+                }
+
+                return $.when(p).done(function(workspaces) {
+                    if (view == 'mine') {
+                        prom = getMyData(workspaces);
+                    } else if (view == 'shared') {
+                        prom = getSharedData(workspaces);
+                    }
+                    $.when(prom).done(function() {
+                        if (view == 'mine') {
+                           // minePanel.detach();  // arg!! why isn't the filter bar it's own div?
+                           // minePanel.append($mineScrollPanel);
+                            addMyFilters();
+                        } else if(view == 'shared') {
+                          //  minePanel.detach();  // arg!! why isn't the filter bar it's own div?
+                          //  minePanel.append($mineScrollPanel);
+                            addSharedFilters();
+                        }
+                    });
+                });
+            }
+
+            // function used to update my data list
+            function getMyData(workspaces, type, ws_name) {
+                if (workspaces.length==0) {
+                    render([], $mineScrollPanel, {});
+                    return [];
+                }
+                var params = {includeMetadata:1};
+                var ws_ids = [], obj_count = 0;
+                for (var i in workspaces) {
+                    if ((!ws_name) || (workspaces[i].name === ws_name)) {
+                        if (workspaces[i].id > 0) {
+                            ws_ids.push(workspaces[i].id);
+                            obj_count = workspaces[i].count + obj_count;
+                        } else if (workspaces[i].legacy) {
+                            for (var n in workspaces[i].legacy) {
+                                var w = workspaces[i].legacy[n];
+                                ws_ids.push(w.id);
+                                obj_count = w.count + obj_count;
+                            }
+                        }
+                    }
+                }
+                params.ids = ws_ids;
+
+                if (type) params.type = type;
+
+                if (obj_count > maxObjFetch)
+                    console.error("user's object count for owned workspaces was", obj_count);
+
+                var req_count = Math.ceil(obj_count/10000);
+                
+                var proms = [];
+                proms.push( ws.list_objects(params) );
+                for (var i=1; i < req_count; i++) {
+                    params.skip = 10000 * i;
+                    proms.push( ws.list_objects(params) );
+                }
+                
+                return $.when.apply($, proms).then(function() {
+                    // update model
+                    myData = [].concat.apply([], arguments);
+                    myData.sort(function(a,b) {
+                            if (a[3] > b[3]) return -1; // sort by name
+                            if (a[3] < b[3]) return 1;
+                            return 0;
+                        });
+                    render(myData, $mineScrollPanel, mineSelected);
+                });
+            }
+
+
+            // function used to update shared with me data list
+            function getSharedData(workspaces, type, ws_name) {
+                if (workspaces.length==0) {
+                    render([], $sharedScrollPanel, {});
+                    return null;
+                }
+                var params = {includeMetadata:1};
+                var ws_ids = [], obj_count = 0;
+                for (var i in workspaces) {
+                    if ((!ws_name) || (workspaces[i].name === ws_name)) {
+                        if (workspaces[i].id > 0) {
+                            ws_ids.push(workspaces[i].id);
+                            obj_count = workspaces[i].count + obj_count;
+                        } else if (workspaces[i].legacy) {
+                            for (var n in workspaces[i].legacy) {
+                                var w = workspaces[i].legacy[n];
+                                ws_ids.push(w.id);
+                                obj_count = w.count + obj_count;
+                            }
+                        }
+                    }
+                }
+                params.ids = ws_ids;
+
+                if (type) params.type = type;
+
+                if (obj_count > maxObjFetch)
+                    console.error("user's object count for shared workspaces was", obj_count);
+
+                var req_count = Math.ceil(obj_count/10000);
+
+                var proms = [];
+                proms.push( ws.list_objects(params) );
+                for (var i=1; i < req_count; i++) {
+                    params.skip = 10000 * i;
+                    proms.push( ws.list_objects(params) );
+                }
+
+                return $.when.apply($, proms).then(function() {
+                    // update model
+                    sharedData = [].concat.apply([], arguments);
+
+                    sharedData.sort(function(a,b) {
+                            if (a[3] > b[3]) return -1; // sort by name
+                            if (a[3] < b[3]) return 1;
+                            return 0;
+                        });
+
+                    render(sharedData, $sharedScrollPanel, sharedSelected);
+                })
+            }
+
+            // This function takes data to render and
+            // a container to put data in.
+            // It produces a scrollable dataset
+            function render(data, container, selected, template) {
+                var setDataIconTrigger = $._data($(document)[0], "events")["setDataIcon"];
+                if (setDataIconTrigger) {
+                    renderOnIconsReady(data, container, selected, template);
+                } else {
+                    setTimeout(function(){
+                        renderOnIconsReady(data, container, selected, template);
+                    }, 100);
+                }
+            }
+            
+            function renderOnIconsReady(data, container, selected, template) {
+                var start = 0, end = 30;
+
+                // remove items from only current container being rendered
+                container.empty();
+
+                if (data.length == 0){
+                    container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
+                    return;
+                } else if (data.length-1 < end)
+                    end = data.length;
+
+                var rows = buildMyRows(data, start, end, template);
+                container.append(rows);
+                events(container, selected);
+
+                if (rows.children().length==0) {
+                    container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
+                    return;
+                }
+
+                // infinite scroll
+                var currentPos = end;
+                container.unbind('scroll');
+                container.on('scroll', function() {
+                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
+                        currentPos = currentPos+end;
+                        var rows = buildMyRows(data, currentPos, end, template);
+                        container.append(rows);
+                    }
+                    events(container, selected);
+                });
+            }
+
+            function getMyWS() {
+                return ws.list_workspace_info({owners: [user]})
+                        .then(function(d) {
+                            var workspaces = [];
+                            var legacyItems = []; // {id:..., name:..., count:...}
+                            for (var i in d) {
+                                if (d[i][8].is_temporary) {
+                                    if (d[i][8].is_temporary === 'true') { continue; }
+                                }
+                                var displayName = d[i][1];
+                                if (d[i][8].narrative) {
+                                    if (d[i][8].narrative_nice_name) {
+                                        displayName = d[i][8].narrative_nice_name;
+                                        // todo: should skip temporary narratives
+                                        workspaces.push({id: d[i][0],
+                                                         name: d[i][1],
+                                                         displayName: displayName,
+                                                         count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                        continue;
+                                    }
+                                }
+
+                                if (d[i][8].show_in_narrative_data_panel) {
+                                    if(d[i][8].show_in_narrative_data_panel==='1') {
+                                        displayName = "(data only) "+d[i][1];
+                                        workspaces.push({id: d[i][0],
+                                                     name: d[i][1],
+                                                     displayName:displayName,
+                                                     count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                        continue;
+                                    }
+                                }
+                                
+                                legacyItems.push({id: d[i][0], name: d[i][1], count: d[i][4]});
+                                narrativeNameLookup[d[i][1]] = 'Legacy (' + d[i][1] + ')';
+                            }
+
+                            // add to model for filter
+                            myWorkspaces = workspaces;
+
+                            // sort by name
+                            myWorkspaces.sort(function(a,b) {
+                                    if (a.displayName.toUpperCase() < b.displayName.toUpperCase()) return -1; // sort by name
+                                    if (a.displayName.toUpperCase() > b.displayName.toUpperCase()) return 1;
+                                    return 0;
+                                });
+                            
+                            if (legacyItems.length > 0) {
+                                myWorkspaces.push({id: -1, name: '#legacy#', displayName: 'Legacy (old version)', count: 0, legacy: legacyItems})
+                            }
+                            return workspaces;
+                        })
+            }
+
+            function getSharedWS() {
+                return ws.list_workspace_info({excludeGlobal: 1})
+                        .then(function(d) {
+                            var workspaces = [];
+                            var legacyItems = []; // {id:..., name:..., count:...}
+                            for (var i in d) {
+                                // skip owned workspaced
+                                if (d[i][2] == user) {
+                                    continue;
+                                }
+
+                                if (d[i][8].is_temporary) {
+                                    if (d[i][8].is_temporary === 'true') { continue; }
+                                }
+                                var displayName = d[i][1];
+                                if (d[i][8].narrative) {
+                                    if (d[i][8].narrative_nice_name) {
+                                        displayName = d[i][8].narrative_nice_name;
+                                        // todo: should skip temporary narratives
+                                        workspaces.push({id: d[i][0],
+                                                         name: d[i][1],
+                                                         displayName: displayName,
+                                                         count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                        continue;
+                                    }
+                                }
+
+                                if (d[i][8].show_in_narrative_data_panel) {
+                                    if(d[i][8].show_in_narrative_data_panel==='1') {
+                                        displayName = "(data only) "+d[i][1];
+                                        workspaces.push({id: d[i][0],
+                                                     name: d[i][1],
+                                                     displayName:displayName,
+                                                     count: d[i][4]});
+                                        narrativeNameLookup[d[i][1]] = displayName;
+                                        continue;
+                                    }
+                                }
+                                
+                                legacyItems.push({id: d[i][0], name: d[i][1], count: d[i][4]});
+                                narrativeNameLookup[d[i][1]] = 'Legacy (' + d[i][1] + ')';
+                            }
+
+                            // add to model for filter
+                            sharedWorkspaces = workspaces;
+                            sharedWorkspaces.sort(function(a,b) {
+                                    if (a.displayName.toUpperCase() < b.displayName.toUpperCase()) return -1; // sort by name
+                                    if (a.displayName.toUpperCase() > b.displayName.toUpperCase()) return 1;
+                                    return 0;
+                                });
+
+                            if (legacyItems.length > 0) {
+                                sharedWorkspaces.push({id: -1, name: '#legacy#', displayName: 'Legacy (old version)', count: 0, legacy: legacyItems})
+                            }
+                            return workspaces;
+                        })
+            }
+
+            function typeList(data) {
+                var types = [];
+
+                for (var i in data) {
+                    var mod_type = data[i][2].split('-')[0];
+                    // update model for types dropdown
+                    if (types.indexOf(mod_type) == -1) types.push(mod_type);
+                }
+                return types;
+            }
+
+            function copyObjects(objs, nar_ws_name) {
+                importStatus.html('Adding <i>'+objs.length+'</i> objects to narrative...');
+
+                var proms = [];
+                for (var i in objs) {
+                    var ref = objs[i].ref;
+                    var name = objs[i].name;
+                    console.log('copying ', ref, 'to', nar_ws_name);
+                    proms.push( ws.copy_object({to: {workspace: nar_ws_name, name: name},
+                                                from: {ref: ref} }) );
+                }
+                return proms;
+            }
+
+
+            function events(panel, selected) {
+                panel.find('.kb-import-item').unbind('click');
+                panel.find('.kb-import-item').click(function(){
+                    var item = $(this);
+                    var ref = item.data('ref').replace(/\./g, '/');
+                    var name = item.data('obj-name');
+
+                    var checkbox = $(this).find('.kb-import-checkbox');
+                    checkbox.toggleClass('fa-check-square-o')
+                            .toggleClass('fa-square-o');
+
+                    // update model for selected items
+                    if (checkbox.hasClass('fa-check-square-o') ) {
+                        selected.push({ref: ref, name: name});
+                    }
+                    else {
+                        for (var i=0; i<selected.length; i++) {
+                            if (selected[i].ref == ref)
+                                selected.splice(i, 1);
+                        }
+                    }
+
+                    // disable/enable button
+                    if (selected.length > 0) btn.prop('disabled', false);
+                    else btn.prop('disabled', true);
+
+                    // import items on button click
+                    btn.unbind('click');
+                    btn.click(function() {
+                        if (selected.length == 0) return;
+
+                        //uncheck all checkboxes, disable add button
+                        $('.kb-import-checkbox').removeClass('fa-check-square-o', false);
+                        $('.kb-import-checkbox').addClass('fa-square-o', false);
+                        $(this).prop('disabled', true);
+
+                        var proms = copyObjects(selected, narWSName);
+                        $.when.apply($, proms).done(function(data) {
+                            importStatus.html('');
+                            var status = $('<span class="text-success">done.</span>');
+                            importStatus.append(status);
+                            status.delay(1000).fadeOut();
+
+                            // update sidebar data list
+                            self.trigger('updateDataList.Narrative');
+                        });
+
+                        selected = [];
+
+                        // um... reset events until my rendering issues are solved
+                        events(panel, selected)
+                    });
+                });
+
+                panel.find('.kb-import-item').unbind('hover');
+                panel.find('.kb-import-item').hover(function() {
+                    $(this).find('hr').css('visibility', 'hidden');
+                    $(this).prev('.kb-import-item').find('hr').css('visibility', 'hidden');
+                    $(this).find('.kb-import-checkbox').css('opacity', '.8');
+                }, function() {
+                    $(this).find('hr').css('visibility', 'visible');
+                    $(this).prev('.kb-import-item').find('hr').css('visibility', 'visible');
+                    $(this).find('.kb-import-checkbox').css('opacity', '.4');
+                })
+
+                // prevent checking when clicking link
+                panel.find('.kb-import-item a').unbind('click');
+                panel.find('.kb-import-item a').click(function(e) {
+                    e.stopPropagation();
+                })
+
+            }
+
+            function filterData(data, f) {
+                if (data.length == 0) return [];
+
+                var filteredData = [];
+                // add each item to view
+                for (var i=0; i<data.length; i< i++) {
+                    var obj = data[i];
+
+                    var mod_type = obj[2].split('-')[0],
+                        ws = obj[7],
+                        name = obj[1];
+                    var kind = mod_type.split('.')[1];
+
+                    // filter conditions
+                    if (f.query) {
+                        //query filter
+                        var query = f.query.toLowerCase();
+                        if (name.toLowerCase().indexOf(query) >= 0) {
+                            filteredData.push(obj);
+                        } else if (kind.toLowerCase().indexOf(query)>=0) {
+                            filteredData.push(obj);
+                        } else if (obj[5].toLowerCase().indexOf(query)>=0) {
+                            filteredData.push(obj);
+                        }
+                    } else if (f.type) {
+                        //type filter
+                        if (f.type.split('.')[1] === kind) {
+                            filteredData.push(obj);
+                        }
+                    } else if (f.ws) {
+                        // workspace filter
+                        if (f.ws === ws) {
+                            filteredData.push(obj);
+                        }
+                    } else {
+                        // no filter is on, so add it
+                        filteredData.push(obj);
+                    }
+
+                }
+                return filteredData;
+            }
+
+
+            function buildMyRows(data, start, end, template) {
+
+                // add each set of items to container to be added to DOM
+                var rows = $('<div class="kb-import-items">');
+
+                for (var i=start; i< (start+end); i++) {
+                    var obj = data[i];
+                    // some logic is not right
+                    if (!obj) {
+                        continue;
+                    }
+                    var mod_type = obj[2].split('-')[0];
+                    var item = {id: obj[0],
+                                name: obj[1],
+                                mod_type: mod_type,
+                                version: obj[4],
+                                kind: mod_type.split('.')[1],
+                                module: mod_type.split('.')[0],
+                                wsID: obj[6],
+                                ws: obj[7],
+                                info: obj, // we need to have this all on hand!
+                                relativeTime: getTimeStampStr(obj[3])} //use the same one as in data list for consistencey  kb.ui.relativeTime( Date.parse(obj[3]) ) }
+
+                    if (item.module=='KBaseNarrative') {
+                        continue;
+                    }
+                    if (template)
+                        var item = template(item);
+                    else
+                        var item = rowTemplate(item);
+
+                    rows.append(item);
+                }
+
+                return rows;
+            }
+
+
+            function addMyFilters() {
+                //var types = typeList(myData);
+                var wsList = myWorkspaces;
+
+                // possible filters via input
+                var type, ws, query;
+
+                // create filter (search)
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
+                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
+
+                // create workspace filter
+                var wsInput = $('<select class="form-control kb-import-filter">');
+                wsInput.append('<option>All narratives...</option>');
+                for (var i=0; i < wsList.length; i++) {
+                    wsInput.append('<option data-id="'+[i].id+'" data-name="'+wsList[i].name+'">'+
+                                          wsList[i].displayName+
+                                   '</option>');
+                }
+                var wsFilter = $('<div class="col-sm-4">').append(wsInput);
+
+                // event for type dropdown
+                wsInput.change(function() {
+                    ws = $(this).children('option:selected').data('name');
+                    filterInput.val('');
+                    // request again with filted type
+                    setLoading($mineScrollPanel);
+                    getMyData(myWorkspaces, type, ws);
+                })
+
+                // create type filter
+                var typeInput = $('<select class="form-control kb-import-filter">');
+                typeInput.append('<option>All types...</option>');
+                for (var i=0; i < types.length; i++) {
+                    typeInput.append('<option data-type="'+types[i]+'">'+
+                                          types[i].split('.')[1]+
+                                     '</option>');
+                }
+                var typeFilter = $('<div class="col-sm-3">').append(typeInput);
+
+                // event for type dropdown
+                typeInput.change(function() {
+                    type = $(this).children('option:selected').data('type');
+                    filterInput.val('');
+                    // request again with filted type
+                    //minePanel.loading(); // loading puts the loading image in the wrong place..
+                    setLoading($mineScrollPanel);
+                    getMyData(myWorkspaces, type, ws);
+                })
+
+
+                // event for filter (search)
+                filterInput.keyup(function(e){
+                    query = $(this).val();
+                    setLoading($mineScrollPanel);
+                    var filtered = filterData(myData, {type: type, ws:ws, query:query})
+                    render(filtered, $mineScrollPanel, mineSelected);
+                });
+
+
+                var $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align':'center'}).append(
+                                        $('<button>')
+                                            .css({'margin-top':'12px'})
+                                            .addClass('btn btn-xs btn-default')
+                                            .click(function(event) {
+                                                $mineScrollPanel.empty();
+                                                setLoading($mineScrollPanel);
+                                                updateView('mine').done(function() {
+                                                    updateView('shared'); });
+                                                })
+                                            .append($('<span>')
+                                                .addClass('glyphicon glyphicon-refresh')));
+
+
+                // add search, type, ws filter to dom
+                $mineFilterRow.empty();
+                $mineFilterRow.append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
+                //minePanel.prepend(row);
+            }
+
+            function addSharedFilters() {
+                //var types = typeList(sharedData);
+                var wsList = sharedWorkspaces
+
+                // possible filters via input
+                var type, ws, query;
+
+                // create filter (search)
+                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
+                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
+
+                // create workspace filter
+                var wsInput = $('<select class="form-control kb-import-filter">');
+                wsInput.append('<option>All narratives...</option>');
+                for (var i=0; i < wsList.length; i++) {
+                    wsInput.append('<option data-id="'+wsList[i].id+'" data-name="'+wsList[i].name+'">'+
+                                          wsList[i].displayName+
+                                    '</option>');
+                }
+                var wsFilter = $('<div class="col-sm-4">').append(wsInput);
+
+                // event for type dropdown
+                wsInput.change(function() {
+                    filterInput.val('');
+                    ws = $(this).children('option:selected').data('name');
+                    // request again with filted type
+                    setLoading($sharedScrollPanel);
+                    getSharedData(sharedWorkspaces, type, ws);
+                })
+
+
+                // create type filter
+                var typeInput = $('<select class="form-control kb-import-filter">');
+                typeInput.append('<option>All types...</option>');
+                for (var i=0; i < types.length; i++) {
+                    typeInput.append('<option data-type="'+types[i]+'">'+
+                                          types[i].split('.')[1]+
+                                     '</option>');
+                }
+                var typeFilter = $('<div class="col-sm-3">').append(typeInput);
+
+                // event for type dropdown
+                typeInput.change(function() {
+                    type = $(this).children('option:selected').data('type');
+                    filterInput.val('');
+
+                    // request again with filted type
+                    setLoading($sharedScrollPanel);
+                    getSharedData(sharedWorkspaces, type, ws);
+                })
+
+
+
+                // event for filter (search)
+                filterInput.keyup(function(e){
+                    query = $(this).val();
+                    var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
+                    render(filtered, $sharedScrollPanel, sharedSelected);
+                });
+
+
+                var $refreshBtnDiv = $('<div>').addClass('col-sm-1').append(
+                                        $('<button>')
+                                            .css({'margin-top':'12px'})
+                                            .addClass('btn btn-xs btn-default')
+                                            .click(function(event) {
+                                                $sharedScrollPanel.empty();
+                                                setLoading($sharedScrollPanel);
+                                                updateView('shared').done(function() {
+                                                    updateView('mine'); });
+                                                })
+                                            .append($('<span>')
+                                                .addClass('glyphicon glyphicon-refresh')));
+
+                // add search, type, ws filter to dom
+                $sharedFilterRow.empty();
+                $sharedFilterRow.append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
+                //sharedPanel.prepend(row);
+            }
+
+            function rowTemplate(obj) {
+                var object_info = obj.info;
+                // object_info:
+                // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+                // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+                // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+                // [9] : int size // [10] : usermeta meta
+                var type_tokens = object_info[2].split('.')
+                var type_module = type_tokens[0];
+                var type = type_tokens[1].split('-')[0];
+                var unversioned_full_type = type_module + '.' + type;
+                var logo_name = "";
+                var landingPageLink = self.options.lp_url + object_info[6] + '/' + object_info[1];
+                var icons = self.data_icons;
+                var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
+                var $logo = $('<span>');
+
+                var shortName = object_info[1]; var isShortened=false;
+                if (shortName.length>50) {
+                    shortName = shortName.substring(0,50)+'...';
+                    isShortened=true;
+                }
+                var $name = $('<span>').addClass("kb-data-list-name").append('<a href="'+landingPageLink+'" target="_blank">'+shortName+'</a>'); // TODO: make link!!
+                if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom', delay: { show: 750, hide: 0 } }); }
+
+                var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
+                var $type = $('<span>').addClass("kb-data-list-type").append(type);
+
+                var $date = $('<span>').addClass("kb-data-list-date").append(getTimeStampStr(object_info[3]));
+                var $byUser = $('<span>').addClass("kb-data-list-edit-by");
+                if (object_info[5] !== self.my_user_id) {
+                    $byUser.append(' by '+object_info[5])
+                        .click(function(e) {
+                            e.stopPropagation();
+                            window.open(self.options.landing_page_url+'people/'+object_info[5]);
+                        });
+                }
+
+                var metadata = object_info[10];
+                var metadataText = '';
+                for(var key in metadata) {
+                    if (metadata.hasOwnProperty(key)) {
+                        metadataText += '<tr><th>'+ key +'</th><td>'+ metadata[key] + '</td></tr>';
+                    }
+                }
+                if (type==='Genome') {
+                    if (metadata.hasOwnProperty('Name')) {
+                        $type.text(type+': '+metadata['Name']);
+                    }
+                }
+
+                var narName = obj.ws;
+                if (narrativeNameLookup[obj.ws]) {
+                    narName = narrativeNameLookup[obj.ws];
+                }
+                var $narName = $('<span>').addClass("kb-data-list-narrative").append(narName);
+                //var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td').append(object_info[5]);
+                //this.displayRealName(object_info[5],$savedByUserSpan);
+
+                //var typeLink = '<a href="'+this.options.landing_page_url+'spec/module/'+type_module+'" target="_blank">' +type_module+"</a>.<wbr>" +
+                //                '<a href="'+this.options.landing_page_url+'spec/type/'+object_info[2]+'" target="_blank">' +(type_tokens[1].replace('-','&#8209;')) + '.' + type_tokens[2] + '</a>';
+                //var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
+                //                .append(
+                //                    $('<table style="width:100%;">')
+                //                        .append("<tr><th>Permament Id</th><td>" +object_info[6]+ "/" +object_info[0]+ "/" +object_info[4] + '</td></tr>')
+                //                        .append("<tr><th>Full Type</th><td>"+typeLink+'</td></tr>')
+                //                        .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
+                //                        .append(metadataText));
+
+                //var $toggleAdvancedViewBtn = $('<span>').addClass("kb-data-list-more")//.addClass('btn btn-default btn-xs kb-data-list-more-btn')
+                //    .hide()
+                //    .html('<span class="fa fa-ellipsis-h" style="color:#999" aria-hidden="true"/>');
+                //var toggleAdvanced = function() {
+                //        if ($moreRow.is(':visible')) {
+                //            $moreRow.slideUp('fast');
+                //            $toggleAdvancedViewBtn.show();
+                //        } else {
+                //            $moreRow.slideDown('fast');
+                //            $toggleAdvancedViewBtn.hide();
+                //        }
+                //    };
+
+                var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
+                var btnClasses = "btn btn-xs btn-default";
+                var css = {'color':'#888'};
+                var $openLandingPage = $('<span>')
+                                        // tooltips showing behind pullout, need to fix!
+                                        //.tooltip({title:'Explore data', 'container':'#'+this.mainListId})
+                                        .addClass(btnClasses)
+                                        .append($('<span>').addClass('fa fa-binoculars').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation();
+                                            window.open(landingPageLink);
+                                        });
+
+                var $openProvenance = $('<span>')
+                                        .addClass(btnClasses).css(css)
+                                        //.tooltip({title:'View data provenance and relationships', 'container':'body'})
+                                        .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
+                                        .click(function(e) {
+                                            e.stopPropagation();
+                                            window.open(self.options.landing_page_url+'objgraphview/'+object_info[7]+'/'+object_info[1]);
+                                        });
+                $btnToolbar.append($openLandingPage).append($openProvenance);
+
+
+
+                var $mainDiv  = $('<div>').addClass('kb-data-list-info').css({padding:'0px',margin:'0px'})
+                                    .append($btnToolbar)
+                                    .append($name).append($version).append('<br>')
+                                    .append($type).append('<br>').append($narName).append('<br>').append($date).append($byUser);
+                                    //.append($toggleAdvancedViewBtn)
+                                    //.click(
+                                    //    function() {
+                                    //        toggleAdvanced();
+                                    //    });
+
+
+                var $addDiv =
+                    $('<div>').append(
+                        $('<button>').addClass('kb-primary-btn').css({'white-space':'nowrap', padding:'10px 15px'})
+                            .append($('<span>').addClass('fa fa-chevron-circle-left')).append(' Add')
+                            .on('click',function() { // probably should move action outside of render func, but oh well
+                                $(this).attr("disabled","disabled");
+                                $(this).html('<img src="'+self.options.loadingImage+'">');
+
+                                var thisBtn = this;
+                                var targetName = object_info[1];
+                                //console.log(object.name + " -> " + targetName);
+                                ws.copy_object({
+                                    to:   {ref: self.ws_name + "/" + targetName},
+                                    from: {ref: object_info[6] +   "/" + object_info[0]} },
+                                    function (info) {
+                                        $(thisBtn).html('Added');
+                                        self.trigger('updateDataList.Narrative');
+                                    },
+                                    function(error) {
+                                        $(thisBtn).html('Error');
+                                        if (error.error && error.error.message) {
+                                            if (error.error.message.indexOf('may not write to workspace')>=0) {
+                                                importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: you do not have permission to add data to this Narrative.'));
+                                            } else {
+                                                importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: '+error.error.message));
+                                            }
+                                        } else {
+                                            importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
+                                        }
+                                        console.error(error);
+                                    });
+
+                            }));
+
+
+                var $topTable = $('<table>')
+                                 .css({'width':'100%','background':'#fff'})  // set background to white looks better on DnD
+                                 .append($('<tr>')
+                                         .append($('<td>')
+                                                 .css({'width':'90px'})
+                                                .append($addDiv.hide()))
+                                         .append($('<td>')
+                                                 .css({'width':'50px'})
+                                                 .append($logo))
+                                         .append($('<td>')
+                                                 .append($mainDiv)));
+                // set icon for data item
+                $(document).trigger("setDataIcon.Narrative", {
+                    elt: $logo,
+                    type: type
+                });
+
+                var $row = $('<div>')
+                                .css({margin:'2px',padding:'4px','margin-bottom': '5px'})
+                                //.addClass('kb-data-list-obj-row')
+                                .append($('<div>').addClass('kb-data-list-obj-row-main')
+                                            .append($topTable))
+                                //.append($moreRow)
+                                // show/hide ellipses on hover, show extra info on click
+                                .mouseenter(function(){
+                                    //if (!$moreRow.is(':visible')) { $toggleAdvancedViewBtn.show(); }
+                                    $addDiv.show();
+                                    $btnToolbar.show();
+                                })
+                                .mouseleave(function(){
+                                    //$toggleAdvancedViewBtn.hide();
+                                    $addDiv.hide();
+                                    $btnToolbar.hide();
+                                });
+
+                var $rowWithHr = $('<div>').data('ref', obj.wsID+'.'+obj.id)
+                                .data('obj-name', obj.name)
+                                    .append($('<hr>')
+                                                .addClass('kb-data-list-row-hr')
+                                                .css({'margin-left':'150px'}))
+                                    .append($row);
+
+                return $rowWithHr;
+            }
+
+            // the existing .loading() .rmLoading() puts the loading icon in the wrong place
+            function setLoading($container) {
+                $container.empty();
+                $container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'})
+                                  .append('<img src="' + self.options.loadingImage + '">'));
+            }
+
+            function objURL(module, type, ws, name) {
+                return self.options.lp_url+ws+'/'+name;
+            }
+
+            function wsURL(ws) {
+                return ''; // no more links to WS Browser
+            }
+
+            var monthLookup = ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"];
+            // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
+            function getTimeStampStr(objInfoTimeStamp) {
+                var date = new Date(objInfoTimeStamp);
+                var seconds = Math.floor((new Date() - date) / 1000);
+
+                // f-ing safari, need to add extra ':' delimiter to parse the timestamp
+                if (isNaN(seconds)) {
+                    var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
+                    var newTimestamp = tokens[0] + '+'+tokens[0].substr(0,2) + ":" + tokens[1].substr(2,2);
+                    date = new Date(newTimestamp);
+                    seconds = Math.floor((new Date() - date) / 1000);
+                    if (isNaN(seconds)) {
+                        // just in case that didn't work either, then parse without the timezone offset, but
+                        // then just show the day and forget the fancy stuff...
+                        date = new Date(tokens[0]);
+                        return monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                    }
+                }
+
+                var interval = Math.floor(seconds / 31536000);
+                if (interval > 1) {
+                    return monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                }
+                interval = Math.floor(seconds / 2592000);
+                if (interval > 1) {
+                    if (interval<4) {
+                        return interval + " months ago";
+                    } else {
+                        return monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
+                    }
+                }
+                interval = Math.floor(seconds / 86400);
+                if (interval > 1) {
+                    return interval + " days ago";
+                }
+                interval = Math.floor(seconds / 3600);
+                if (interval > 1) {
+                    return interval + " hours ago";
+                }
+                interval = Math.floor(seconds / 60);
+                if (interval > 1) {
+                    return interval + " minutes ago";
+                }
+                return Math.floor(seconds) + " seconds ago";
             };
-
-            var d = new Date(timestamp);
-            var hours = format(d.getHours());
-
-            var minutes = format(d.getMinutes());
-            var seconds = format(d.getSeconds());
-            var month = d.getMonth()+1;
-            var day = format(d.getDate());
-            var year = d.getFullYear();
-
-            return month + "/" + day + "/" + year + ", " + hours + ":" + minutes + ":" + seconds;
         },
+
+        isCustomIcon: function (icon_list) {
+            return (icon_list.length > 0 && icon_list[0].length > 4 &&
+            icon_list[0].substring(0, 4) == 'icon');
+        },
+
+        logoColorLookup:function(type) {
+            var code = 0;
+            for (var i=0; i < type.length; code += type.charCodeAt(i++));
+            return this.icon_colors[ code % this.icon_colors.length ];
+        }
+
+
     });
 
 })( jQuery );

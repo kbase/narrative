@@ -151,7 +151,7 @@ var IPython = (function (IPython) {
                     return true;
                 }}
                 },
-            open : function (event, ui) {
+            open : function () {
                 var that = $(this);
                 // Upon ENTER, click the OK button.
                 that.find('input[type="text"]').keydown(function (event, ui) {

@@ -7,6 +7,7 @@ import unittest
 from getpass import getpass
 from biokbase.narrative.kbasewsmanager import KBaseWSNotebookManager
 from biokbase.workspace.client import Workspace
+import biokbase.workspace
 import biokbase.auth
 import os
 import re
@@ -253,7 +254,8 @@ class NarrDocumentTestCase(NarrBaseTestCase):
             'data_dependencies': [],
             'ws_name': '',
             'type': 'KBaseNarrative.Narrative',
-            'name': ''
+            'name': '',
+            'job_ids': []
         }
         for key in metadata_check.keys():
             if key in nb['metadata']:
@@ -271,12 +273,17 @@ class NarrDocumentTestCase(NarrBaseTestCase):
         ret_id = self.mgr.write_notebook_object(nb, notebook_id=self.nb_id)
         self.assertEquals(ret_id, self.nb_id)
 
+    # Without an id, we would expect it to create a new narrative object in the
+    # same workspace that Notebook knows about from its metadata
     def test_write_notebook_object_valid_without_id(self):
         self.login()
         (last_modified, nb) = self.mgr.read_notebook_object(self.nb_id)
         ret_id = self.mgr.write_notebook_object(nb)
         # we haven't changed the notebook's name, so it should be the same
-        self.assertEquals(ret_id, self.nb_id)
+        self.assertNotEquals(ret_id, self.nb_id)
+        # Do a little specific cleanup here.
+        if (ret_id is not self.nb_id):
+            self.mgr.delete_notebook(ret_id)
 
     def test_write_notebook_object_invalid(self):
         self.login()

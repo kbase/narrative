@@ -17,7 +17,7 @@
         },
 
         pref: null,
-        wsUrl: "https://kbase.us/services/ws/",  //"http://dev04.berkeley.kbase.us:7058",
+        wsUrl: window.kbconfig.urls.workspace,
         token: null,
         kbws: null,
         geneIndex: {},   // {genome_ref -> {feature_id -> feature_index}}
@@ -399,7 +399,7 @@
         		$('.show-genomes_'+pref2).unbind('click');
         		$('.show-genomes_'+pref2).click(function() {
         			var id = $(this).data('id');
-            		var url = "/functional-site/#/genomes/" + id;
+            		var url = "/functional-site/#/dataview/" + id;
                     window.open(url, '_blank');
         		})
         		$('.show-genes_'+pref2).unbind('click');

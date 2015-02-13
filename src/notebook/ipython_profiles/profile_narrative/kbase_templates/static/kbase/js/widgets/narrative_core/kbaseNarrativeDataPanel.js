@@ -47,13 +47,14 @@
         // Constants
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
-
-
+        token: null,
+        dataImporterStarted: false,
         dataListWidget: null,
 
         init: function(options) {
             this._super(options);
-
+            var self = this;
+            
             if (this.options.wsId) {
                 this.ws_name = options.wsId;
                 this.options.ws_name = options.wsId;
@@ -88,6 +89,7 @@
                     this.ws_name = info.wsId;
                     this.narrWs = info.narrController;
                     this.dataListWidget.setWorkspace(this.ws_name);
+                    this.setWorkspace(this.ws_name);
                 }, this)
             );
 
@@ -130,12 +132,12 @@
             );
 
             // initialize the importer
-            this.dataImporter();
+            //this.dataImporter();
 
             if (this.ws_name)
                 this.trigger('workspaceUpdated.Narrative', this.ws_name);
 
-            this.dataImporter();
+            //this.dataImporter();
 
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
@@ -146,6 +148,21 @@
                                this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
                            }, this)));
 
+            setTimeout(function() {
+                if (self.ws_name && self.token) {
+                    if (!self.dataImporterStarted) {
+                        self.dataImporter();
+                    } else {
+                        //console.log("DataPanel: dataImporter was already started");
+                    }
+                } else {
+                    if (!self.ws_name)
+                        console.error("Workspace name is not defined");
+                    if (!self.token)
+                        console.error("Token is not defined");
+                }
+            }, 1000);
+            
             return this;
         },
 
@@ -161,10 +178,15 @@
          * @private
          */
         loggedInCallback: function(event, auth) {
+            this.token = auth.token;
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
             this.isLoggedIn = true;
-            if (this.ws_name)
-                this.refresh();
+            if (this.ws_name) {
+                //this.refresh();
+                this.dataImporter();
+            } else {
+                //console.error("ws_name is not defined");
+            }
             return this;
         },
 
@@ -184,8 +206,12 @@
 
         setWorkspace: function(ws_name) {
             this.ws_name = ws_name;
-            if (this.wsClient)
-                this.refresh();
+            if (this.wsClient) {
+                //this.refresh();
+                this.dataImporter();
+            } else {
+                //console.error("token is not defined");
+            }
         },
 
         /**
@@ -302,6 +328,9 @@
          * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
         dataImporter: function() {
+            if (this.dataImporterStarted)
+                return;
+            this.dataImporterStarted = true;
             var self = this;
             var maxObjFetch = 300000;
 
@@ -312,6 +341,9 @@
 
             var self = this;
             var user = $("#signin-button").kbaseLogin('session', 'user_id');  // TODO: use
+            if (!user) {
+                console.error("User is not defined");
+            }
 
             // models
             var myData = [], sharedData = [];

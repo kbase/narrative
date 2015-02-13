@@ -184,7 +184,7 @@
                     var params = {'embed' : true,
                                   'data': this.safeJSONStringify(data.result)};
                     if (data.next_steps) {
-                      console.debug("adding next steps in create");
+                      // console.debug("adding next steps in create");
                       params.next_steps = data.next_steps;
                     }
                     this.createOutputCell(IPython.notebook.get_cell(cellIndex),
@@ -659,10 +659,10 @@
          *               check is too soon after the last one
          */
         checkReadOnly: function(ws, name, callback) {
-            console.debug("check_readonly_mode.begin");
+            // console.debug("check_readonly_mode.begin");
             // stop if no workspace client
             if (ws == null) {
-                console.debug("set_readonly_mode.end: WS client not initialized");
+                // console.debug("set_readonly_mode.end: WS client not initialized");
                 return callback(null);
             }
             // stop if this is too-soon after last check
@@ -670,7 +670,7 @@
             if (this.last_readonly_check != null) {
                 var delta = sec - this.last_readonly_check;
                 if (delta < 60) {
-                    console.debug("check_readonly_mode.end: skip, too soon delta=" + delta);
+                    // console.debug("check_readonly_mode.end: skip, too soon delta=" + delta);
                     return callback(null);
                 }
             }
@@ -684,7 +684,7 @@
                       is_ro = false;
                   }
                   IPython.narrative.readonly = is_ro; // set globally
-                  console.debug("set_readonly_mode.end: callback_value=" + is_ro);
+                  // console.debug("set_readonly_mode.end: callback_value=" + is_ro);
                   return callback(is_ro);
               },
               function (error) {
@@ -772,7 +772,7 @@
          * Set narrative into read-only mode.
          */
         readOnlyMode: function(from_user) {
-            console.debug('set_readonly_mode.begin from-user=' + from_user);
+            // console.debug('set_readonly_mode.begin from-user=' + from_user);
             // Hide side-panel
             $('#left-column').hide();
             // Move content flush left-ish
@@ -837,7 +837,7 @@
                 // Hide save status
                 $('#autosave_status').hide();
             }
-            console.debug('set_readonly_mode.end');
+            // console.debug('set_readonly_mode.end');
             return;
         },
 
@@ -846,7 +846,7 @@
          *
          */
         readWriteMode: function (from_user) {
-            console.debug("set_readwrite_mode.begin");
+            // console.debug("set_readwrite_mode.begin");
             // Remove the view-only buttons (first 1 or 2 children)
             if (from_user === undefined) {
                 // only remove copy button if not from user
@@ -871,7 +871,7 @@
             });
             this.toggleRunButtons(true);
             this.toggleSelectBoxes(true);
-            console.debug("set_readwrite_mode.end");
+            // console.debug("set_readwrite_mode.end");
         },
 
         /**
@@ -943,7 +943,7 @@
         connect: function(p, q, g, w, container, line_class) {
             var pc = $(p).position();
             var qc = $(q).position();
-            console.debug("connect ", pc, " to ", qc);
+            // console.debug("connect ", pc, " to ", qc);
             var py = pc.top + (p.height() - w) / 2.0;
             var qy = qc.top + (q.height() - w) / 2.0;
             var coords = [{
@@ -973,7 +973,7 @@
          * Activate "normal" R/W mode
          */
         activateReadwriteMode: function() {
-            console.debug("activate read-write mode");
+            // console.debug("activate read-write mode");
         },
 
 
@@ -2242,14 +2242,14 @@
          */
          show_connections: function() {
             var self = this;
-            console.debug("show_connections.start");
+            // console.debug("show_connections.start");
             _.each(_.pairs(this.connectable), function(pair) {
                 var e1 = $('#kb-input-' + pair[0]);
                 var e2 = $('#kb-output-' + pair[1]);
                 self.connect(e1, e2, 20, 2,
                     $('#notebook-container'), 'kb-line');
             });
-            console.debug("show_connections.end");
+            // console.debug("show_connections.end");
         },
 
         /**

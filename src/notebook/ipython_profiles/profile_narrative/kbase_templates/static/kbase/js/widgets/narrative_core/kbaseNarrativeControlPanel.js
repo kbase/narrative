@@ -104,7 +104,7 @@
                               .append($('<div>')
                                       .addClass('kb-narr-panel-body')
                                       .css({ 
-                                          'max-height' : this.options.maxHeight,
+//                                          'max-height' : this.options.maxHeight,
                                           'overflow-y' : 'auto'
                                       })
                                       .append(this.$bodyDiv)));

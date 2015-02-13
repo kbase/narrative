@@ -10,7 +10,7 @@ and standard KBase Makefile targets are in the works (still!). But a Docker-base
 provisioning system exists and has been deployed.
 
 This document will go over the installation and instantiation process of a local
-version of the Narrative Interface for development purposes. It's divided into 
+version of the Narrative Interface for development purposes. It's divided into
 four parts:
 
 1. Preparing your system
@@ -30,7 +30,7 @@ the Narrative work. These are all Python based.
     `> easy_install-2.7 pip`
 
 2.  **Install Python dependencies**
-    
+
     The set of Python dependencies you'll need to install are located in the KBase Bootstrap git repo. Grab that and use pip to install the list of dependencies.
 
         > git clone kbase@git.kbase.us:bootstrap
@@ -54,7 +54,7 @@ The Narrative Interface uses a virtual environment that captures the Python depe
 First, however, you'll need to get a necessary submodule initialized:
 
     git submodule init
-    git submodule update    
+    git submodule update
 
 If there are any problems with this step, run the following commands:
 
@@ -64,64 +64,58 @@ If there are any problems with this step, run the following commands:
 
 Now you're set up with the correct Narrative environment.
 
+### New install method
 
-The installation process takes a little time to run, as it downloads the IPython core code, builds a virtual environment to encapsulate it in, and puts that in a specified directory.
+The installation process takes a little time to run (the first time),
+as it downloads the IPython code, builds it, and also installs all the
+dependencies for biokbase. Run the script:
 
-The `install.sh` script in the root of this repo does all the work. There are a few options of how to use it.
 
-1.  **`> ./install.sh`**
+    ./install.sh
+
+
+If you are already in a Python virtual environment, it will install into that.
+If not, it will give you an error and point you to resources for creating
+a virtual environment. The option to auto-create a virtual environment
+has been removed because it is not a standard thing to do in Python and
+therefore there were subtle ways it could fail.
+
+#### Old install method
+
+If you still want to use the previous method, instead run `old-install.sh` and see the notes below:
+
+1.  `./old-install.sh`
 
     This creates a `narrative-venv/` directory where it's run, which contains your Narrative.
 
-2.  **`> ./install.sh -v my-narrative-venv`**
+2.  `./old-install.sh -v my-narrative-venv`
 
     The -v tag allows you to specify the name of the narrative venv directory.
 
-3. **`> ./install.sh -p /Users/kbaseuser/ -v my-narrative-venv`**
+3. `./old-install.sh -p /Users/kbaseuser/ -v my-narrative-venv`
 
     The -p tag allows you to specify where your narrative venvs should be stored.
 
 4. **Example**
 
-    `> ./install.sh -p ~/.virtualenvs -v kbase-narr`
+    `./old-install.sh -p ~/.virtualenvs -v kbase-narr`
 
     This uses the ~/.virtualenvs directory (a common use case for virtualenv) for your environment and makes a new kbase-narr virtual environment.
 
-#### Alternate installation for those with virtualenv already set up
-
-If you are comfortable with virtualenv, and already have it set up, there is another way to install:
-
-1. ** Activate your virtual environment **
-
-2. ** Install into it **
-
-    ./curenv-install.sh
-
-3. ** Use the `run_notebook` script ** The script file generated is called "run_notebook" instead of "run_notebook.sh", and does not require the extra "notebook" argument, so ignore the whole next section and just use:
-
-    run_notebook
-    
 ### Running the KBase Narrative
 
-Now that you have your Narrative installed, you need to route your system path to use the virtual environment you created, then fire up the system.
+Now that you have your Narrative installed, you need to run the wrapper script.
 
-1.  **Activate the virtual environment**
+`kbase-narrative`
 
-    `> source <my virtual environment>/bin/activate`
+This will start a new local Narrative notebook in your default browser.
 
-    (Optional) If you use the [virtualenvwrapper](http://virtualenvwrapper.readthedocs.org/en/latest/) module, and have installed the notebook under your usual virtual environment location, you can also simply use `workon <name>`, where `<name>` is whatever you chose to call the environment.
+**Old method**: If you used the old install method, you may need to first activate your virtual environment with:
+`source <my virtual environment>/bin/activate`, and instead run this command:
 
-2.  **Fire up the Narrative**
-
-    `> profile_name=narrative run_notebook.sh notebook`
-
-    This will start the Narrative server and open a browser window for you with the heavily modified IPython Notebook running in it.
-
-    (Optional) Leaving off the last 'notebook' part and just running `> run_notebook.sh` will open a command-line only version of the Narrative. This doesn't have very strong support, but can be useful for testing small things or debugging.
+`profile_name=narrative run_notebook.sh notebook`
 
 ### Managing your Narrative during development
-
-A developer's guide to building Narrative content can be found here: [KBase Narrative Documentation](http://matgen6.lbl.gov:8080/) (todo: move this to kbase.us/docs)
 
 This section covers how and when to reset your Narrative during development.
 
@@ -132,7 +126,7 @@ This section covers how and when to reset your Narrative during development.
     A.  Exit the Narrative (Ctrl-c a couple times on your running narrative console)  
     B.  (Option 1, the clean but slow way) Remove and reinstall the virtual environment  
     C.  (Option 2, the slightly-less-clean but much faster way) Run the part of the installer that compiles the src/biokbase directory  
-        
+
         With your virtual environment still active:  
         `> python src/setup.py install || abort`  
     D.  Restart your Narrative as above.
@@ -140,4 +134,3 @@ This section covers how and when to reset your Narrative during development.
 2.  **Modifying KBase widget code (or any other front-end Javascript/HTML code)**
 
     If you're just tweaking visualization or widget code, you only need to do whatever compilation process you use for your personal code, then do a cache-clearing refresh of your page (shift-F5 on most browsers). You don't need to reset the entire virtual environment.
-

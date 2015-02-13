@@ -10,7 +10,7 @@ $.KBWidget({
     loadingImage: "static/kbase/images/ajax-loader.gif",
     //fbaURL: "https://kbase.us/services/fba_model_services",
     //fbaURL: "http://140.221.84.183:7036",
-    fbaURL: "https://kbase.us/services/KBaseFBAModeling",
+    fbaURL: window.kbconfig.urls.fba,
 
     getData: function() {
         return {

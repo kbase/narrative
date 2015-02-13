@@ -71,8 +71,8 @@ def prepare_generic_method_input(token, workspace, methodSpec, paramValues, inpu
             paramValue = generate_value(mapping['generated_value'])
             if paramId is not None:
                 input[paramId] = paramValue
-        if paramValue is None:
-            raise ValueError("Value is not defined in input mapping: " + json.dumps(mapping))
+        #if paramValue is None:
+        #    raise ValueError("Value is not defined in input mapping: " + json.dumps(mapping))
         build_args(paramValue, mapping, workspace, rpcArgs)
     return rpcArgs
 
@@ -101,8 +101,8 @@ def prepare_generic_method_output(token, workspace, methodSpec, input, output):
             paramValue = get_sub_path(output, mapping['service_method_output_path'], 0)
         elif isScript and 'script_output_path' in mapping:
             paramValue = get_sub_path(output, mapping['script_output_path'], 0)
-        if paramValue is None:
-            raise ValueError("Value is not defined in output mapping [" + json.dumps(mapping) + "], actual output is: " + json.dumps(output))
+        #if paramValue is None:
+        #    raise ValueError("Value is not defined in output mapping [" + json.dumps(mapping) + "], actual output is: " + json.dumps(output))
         build_args(paramValue, mapping, workspace, outArgs)
     if len(outArgs) < 1:
         return {}
@@ -115,6 +115,7 @@ def correct_method_specs_json(method_specs_json):
 
 def app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut):
     methodOut = None
+    input = {}
     if 'kb_service_input_mapping' in methodSpec['behavior'] or 'script_input_mapping' in methodSpec['behavior']:
         if 'kb_service_input_mapping' in methodSpec['behavior']:
             try:
@@ -122,12 +123,13 @@ def app_state_output_into_method_output(workspace, token, wsClient, methodSpec, 
             except Exception as err:
                 ##raise ValueError("Error parsing: " + rpcOut)
                 pass
-        input = {}
         tempArgs = []
         prepare_njs_method_input(token, wsClient, workspace, methodSpec, methodInputValues, input);
-        methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, rpcOut)
     else:
-        methodOut = rpcOut
+        parameters = methodSpec['parameters']
+        for paramPos in range(0, len(parameters)):
+            input[parameters[paramPos]['id']] = methodInputValues[paramPos]
+    methodOut = prepare_generic_method_output(token, workspace, methodSpec, input, rpcOut)
     return methodOut
 
 def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_specs_json, param_values_json, app_job_id):
@@ -140,13 +142,20 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
         app_job_id = app_job_id[4:]
     appState = njsClient.check_app_state(app_job_id)
     appState['widget_outputs'] = {}
+    prevStepReady = True
     for stepSpec in appSpec['steps']:
         stepId = stepSpec['step_id']
-        if not stepId in appState['step_outputs']:
-            continue
-        rpcOut = appState['step_outputs'][stepId]
         methodId = stepSpec['method_id']
         methodSpec = methIdToSpec[methodId]
+        if stepId in appState['step_outputs']:
+            rpcOut = appState['step_outputs'][stepId]
+            prevStepReady = True
+        elif 'output_mapping' in methodSpec['behavior'] and prevStepReady:
+            rpcOut = None
+            prevStepReady = True
+        else:
+            prevStepReady = False
+            continue
         methodInputValues = extract_param_values(paramValues, stepId)
         appState['widget_outputs'][stepId] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
     appState['job_id'] = "njs:" + appState['job_id']
@@ -162,7 +171,7 @@ def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, par
         appState = njsClient.check_app_state(method_job_id)
         for stepId in appState['step_outputs']:
             rpcOut = appState['step_outputs'][stepId]
-            appState['widget_output'] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
+            appState['widget_outputs'] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
         appState['job_id'] = "method:" + appState['job_id']
         return appState
     else:
@@ -234,7 +243,14 @@ def transform_value(paramValue, workspace, targetTrans):
         return int(paramValue) 
     if targetTrans.startswith("list<") and targetTrans.endswith(">"):
         innerTrans = targetTrans[5:-1]
-        return [transform_value(paramValue, workspace, innerTrans)]
+        if isinstance(paramValue, list):
+            ret = []
+            for pos in range(0, len(paramValue)):
+                elem = paramValue[pos]
+                ret.append(transform_value(elem, workspace, innerTrans))
+            return ret
+        else:
+            return [transform_value(paramValue, workspace, innerTrans)]
     if targetTrans == "none":
         return paramValue
     raise ValueError("Transformation type is not supported: " + targetTrans)
@@ -275,15 +291,21 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
             if paramId is not None:
                 input[paramId] = paramValue
         if paramValue is None:
-            raise ValueError("Value is not defined in input mapping: " + json.dumps(mapping))
-        stepParam = build_args_njs(paramValue, mapping, workspace)
+            # might be dangerous!  but instead of throwing an error, null is an accepted value state because
+            # optional text fields left empty with no defaults can be set to null.  If this is the case, then
+            # we omit this value entirely from what is sent
+            continue
+            #raise ValueError("Value is not defined in input mapping: " + json.dumps(mapping))
+        paramSpec = None
+        if paramId is not None:
+            paramSpec = paramToSpecs[paramId]
+        stepParam = build_args_njs(paramValue, mapping, workspace, paramSpec)
         stepParam['step_source'] = ''
         isInput = 0
         workspaceName = ''
         objectType = ''
         isWorkspaceId = 0
-        if isScript and (paramId is not None) and (paramId in paramToSpecs) and (paramValue is not None) and (len(paramValue) > 0):
-            paramSpec = paramToSpecs[paramId]
+        if isScript and (paramSpec is not None) and (paramValue is not None) and (len(str(paramValue)) > 0):
             types = []
             is_output_name = False
             if 'text_options' in paramSpec:
@@ -296,8 +318,11 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
                 if len(types) == 1:
                     objectType = types[0]
                 else:
-                    objectType = wsClient.get_object_info_new({'objects' : [{'ref': workspace + "/" + paramValue}]})[0][2]
-                    objectType = objectType[0:objectType.index('-')]
+                    try:
+                        objectType = wsClient.get_object_info_new({'objects' : [{'ref': workspace + "/" + paramValue}]})[0][2]
+                        objectType = objectType[0:objectType.index('-')]
+                    except:
+                        objectType = types[0]
                 workspaceName = workspace
                 isWorkspaceId = 1
                 if not is_output_name:
@@ -307,7 +332,7 @@ def prepare_njs_method_input(token, wsClient, workspace, methodSpec, paramValues
         stepParams.append(stepParam)
     return stepParams
 
-def build_args_njs(paramValue, paramMapping, workspace):
+def build_args_njs(paramValue, paramMapping, workspace, paramSpec):
     targetProp = None
     targetTrans = "none"
     ret = {}
@@ -316,8 +341,24 @@ def build_args_njs(paramValue, paramMapping, workspace):
     if 'target_type_transform' in paramMapping and paramMapping['target_type_transform'] is not None:
         targetTrans = paramMapping['target_type_transform']
     paramValue = transform_value(paramValue, workspace, targetTrans)
+    njsType = 'string'
+    if paramSpec is not None:
+        if 'allow_multiple' in paramSpec and paramSpec['allow_multiple'] == 1:
+            njsType = 'array'
+            paramValue = json.dumps(paramValue)
+        else:
+            if 'text_options' in paramSpec:
+                textOptions = paramSpec['text_options']
+                if 'validate_as' in textOptions:
+                    type = textOptions['validate_as']
+                    if type == 'int' or type == 'float':
+                        njsType = type
+            paramValue = str(paramValue)
+    else:
+        paramValue = str(paramValue)        
     ret['label'] = targetProp
     ret['value'] = paramValue
+    ret['type'] = njsType
     return ret
 
 def is_script_method(methodSpec):

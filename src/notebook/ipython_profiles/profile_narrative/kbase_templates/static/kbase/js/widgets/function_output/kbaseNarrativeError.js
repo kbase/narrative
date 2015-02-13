@@ -79,10 +79,10 @@
                 if (err.traceback === undefined) {
                     s += "No traceback available.\n";
                 }
-                else {
+                else if (err.traceback instanceof Array) {
                     s += "Traceback (most recent call last):\n";
                     var tb = err.traceback;
-                    for (var i= 0, ctr=0; i < tb.length; i++) {
+                    for (var i=0, ctr=0; i < tb.length; i++) {
                         var entry = tb[i];
                         if (entry.function == "__call__")
                             continue;  // ignore wrapper
@@ -95,6 +95,14 @@
                         txt += entry.text;
                         s += ind + txt + "\n";
                     }
+                }
+                else if (err.traceback instanceof Object) {
+                    for (var i in err.traceback) {
+                        s += JSON.stringify(err.traceback[i]);
+                    }
+                }
+                else {
+                    s += err.traceback;
                 }
                 return s;
             };

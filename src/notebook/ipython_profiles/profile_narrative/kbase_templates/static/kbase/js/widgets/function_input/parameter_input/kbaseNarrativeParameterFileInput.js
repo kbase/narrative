@@ -8,8 +8,8 @@
         version: '1.0.0',
         options: {
         	isInSidePanel: false,
-            shockUrl: 'https://kbase.us/services/shock-api/',
-            ujsUrl: 'https://kbase.us/services/userandjobstate/',
+            shockUrl: window.kbconfig.urls.shock,
+            ujsUrl: window.kbconfig.urls.user_and_job_state,
             fullShockSearchToResume: false,
             serviceNameInUJS: "ShockUploader",
             maxFileStatesInUJS: 100,
@@ -21,6 +21,7 @@
         fileName: null,
         percentText: null,
         uploadIsReady: false,
+        uploadWasStarted: false,
         enabled: true,
         locked: false,
         required: true,
@@ -78,15 +79,11 @@
             //this.fileBrowse = realButton;
             this.$elem.append(realButton);
             
-            var td = $('<td/>');
-            td.css(cellCss);
-            td.css({'width' : '70%', 'padding' : '0px'});
-            tr.append(td);
-            td.append(this.fileName);
+            
             
             // create the visible upload button
             this.fakeButton = document.createElement('button');
-            this.fakeButton.setAttribute('class', 'btn btn-primary');
+            this.fakeButton.setAttribute('class', 'kb-primary-btn');
             this.selectFileMode(true);
             this.fakeButton.fb = realButton;
             this.fakeButton.addEventListener('click', function() {
@@ -98,14 +95,20 @@
             	} else {
             		self.cancelUpload = true;
                     self.selectFileMode(true);
+                    self.uploadWasStarted = false;
             	}
             });
-            $(this.fakeButton).css({"width": "90px"});
+            $(this.fakeButton);
             var td2 = $('<td/>');
             td2.css(cellCss);
-            td2.css({'width' : '90px', 'padding' : '0px'});
             tr.append(td2);
             td2.append(this.fakeButton);
+	    
+	    var td = $('<td/>');
+            td.css(cellCss);
+            td.css({'width' : '70%', 'padding' : '0px', 'margin':'2px'});
+            tr.append(td);
+            td.append(this.fileName);
 
             var td3 = $('<td/>');
             td3.css(cellCss);
@@ -138,6 +141,10 @@
             	.append($('<div>').css({"display":"inline-block", "height": "34px", "vertical-align":"top"}).append($feedbackTip));
             var $hintCol = $('<div>').addClass(hintColClass).addClass("kb-method-parameter-hint")
             	.append(spec.short_hint);
+	    if (spec.description && spec.short_hint !== spec.description) {
+                $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
+                                    .tooltip({title:spec.description, html:true}));
+            }
             $row.append($nameCol).append($inputCol).append($hintCol);
 
             var $errorPanel = $('<div>').addClass("kb-method-parameter-error-mssg").hide();
@@ -153,7 +160,7 @@
         
         selectFileMode: function(inSelectFileMode) {
             this.inSelectFileMode = inSelectFileMode;
-            this.fakeButton.innerHTML = inSelectFileMode ? "Select file" : "Cancel";
+            this.fakeButton.innerHTML = inSelectFileMode ? "Select File" : "Cancel";
         },
         
         fileSelected: function (nameText, prcText, realButton) {
@@ -163,6 +170,7 @@
             var prevShockNodeId = self.shockNodeId;
             self.shockNodeId = null;
             self.uploadIsReady = false;
+            self.uploadWasStarted = true;
     		self.isValid();
         	// get the selected file
         	var file = realButton.files[0];
@@ -233,6 +241,7 @@
             				self.uploadIsReady = true;
             				self.isValid();
             				self.selectFileMode(true);
+                            self.uploadWasStarted = false;
             				shockClient.change_node_file_name(self.shockNodeId, file.name, function(info) {
             					//showShockInfo(self.shockNodeId);
             				}, function(error) {
@@ -248,6 +257,7 @@
             		}
             	}, function(error) {
             		self.selectFileMode(true);
+                    self.uploadWasStarted = false;
             		alert("Error: " + error);
             	}, function() {
             		return self.cancelUpload;
@@ -277,13 +287,17 @@
             var errorDetected = false;
             var errorMessages = [];
             var pVal = self.getParameterValue();
-            if (self.enabled && self.required && !pVal) {
+            if (self.enabled && (self.required || self.uploadWasStarted) && !pVal) {
             	self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
             	self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
             	self.rowDivs[0].$feedback.show();
             	self.rowDivs[0].$error.hide();
             	errorDetectedHere = true;
-            	errorMessages.push("required field "+self.spec.ui_name+" missing.");
+            	if (self.uploadWasStarted) {
+            		errorMessages.push("required field "+self.spec.ui_name+" is not 100% ready.");
+            	} else {
+            		errorMessages.push("required field "+self.spec.ui_name+" missing.");
+            	}
             	errorDetected = true;
             } else {
             	self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");

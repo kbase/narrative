@@ -12,8 +12,8 @@ $.KBWidget({
     	contig_set: null
     },
 
-    wsUrl: "https://kbase.us/services/ws/",
-    uploadUrl: "https://kbase.us/services/genome_comparison/uploader",
+    wsUrl: window.kbconfig.urls.workspace,
+    uploadUrl: "https://kbase.us/services/xxx/uploader",
 
     init: function(options) {
         this._super(options);

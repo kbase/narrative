@@ -2,7 +2,7 @@
  * Top-level 'widget' for the workspace interaction with the KBase narrative.
  *
  * The widget lists the objects in the workspace and include a search field
- * to filter the list, as well as a button to 'Add' new items from sources 
+ * to filter the list, as well as a button to 'Add' new items from sources
  * like the CDS and local files.
  *
  * Options:
@@ -12,7 +12,7 @@
  *
  * Triggers events:
  * updateData.Narrative - when any externally represented data should be updated.
- * 
+ *
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
@@ -28,7 +28,7 @@
             tableElem: null,
             controlsElem: null,
             ws_id: null,
-            methodStoreURL: 'https://kbase.us/services/narrative_method_store',
+            methodStoreURL: 'https://kbase.us/services/narrative_method_store'
         },
         ws_client: null,
         ws_id: null,
@@ -67,28 +67,40 @@
             this._super(options);
             this.ws_id = this.options.ws_id;
 
+            this.is_readonly = null; // null => unset, force a check
+            this.first_readonly = true; // still trying for first check?
+            this.last_readonly_check = null; // avoid frequent checks
+            this.user_readonly = false; // user-defined override
+            this.readonly_buttons = []; // list of buttons toggled
+            this.readonly_params = []; // list of params toggled
+            this.first_show_controls = true; // 1st panel show
+
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+                // For generating data/method icons
+                this.data_icons = window.kbconfig.icons.data;
+                this.meth_icons = window.kbconfig.icons.methods;
+                this.icon_colors = window.kbconfig.icons.colors;
             }
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
 
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
-            $([IPython.events]).on('notebook_loaded.Notebook', 
+            $([IPython.events]).on('notebook_loaded.Notebook',
                 $.proxy(function() {
                     this.rebindActionButtons();
                     this.hideGeneratedCodeCells();
                 }, this)
             );
 
-            $(document).on('workspaceUpdated.Narrative', 
+            $(document).on('workspaceUpdated.Narrative',
                 $.proxy(function(e, ws_id) {
                     this.ws_id = ws_id;
-                }, 
+                },
                 this)
             );
 
-            $(document).on('dataUpdated.Narrative', 
+            $(document).on('dataUpdated.Narrative',
                 $.proxy(function(event) {
                     if (IPython && IPython.notebook) {
                         // XXX: This is a hell of a hack. I hate
@@ -99,9 +111,7 @@
                         this.refreshFunctionInputs(!this.inputsRendered);
                         if (!this.inputsRendered) {
                             this.loadAllRecentCellStates();
-                            this.updateNarrativeDependencies();
-                            // temp hack until I think of something better.
-                            this.trigger('updateNarrativeDataTab.Narrative');
+                            this.trigger('refreshJobs.Narrative');
                         }
 
                         this.inputsRendered = true;
@@ -110,17 +120,7 @@
                 this)
             );
 
-            // unused for now.
-            // maybe update to modify vis of KBase widgets.
-            // but nuking for the moment.
-            // $(document).on('servicesUpdated.Narrative',
-            //     $.proxy(function(event, serviceSet) {
-            //         console.log("listing services!");
-            //     },
-            //     this)
-            // );
-
-            $(document).on('narrativeDataQuery.Narrative', 
+            $(document).on('narrativeDataQuery.Narrative',
                 $.proxy(function(e, callback) {
                     var objList = this.getNarrativeDependencies();
                     if (callback) {
@@ -133,12 +133,15 @@
             // When a user clicks on a function, this event gets fired with
             // method information. This builds a function cell out of that method
             // and inserts it in the right place.
-            $(document).on('function_clicked.Narrative',
-                $.proxy(function(event, method) {
-                    this.buildFunctionCell(method);
-                }, 
-                this)
-            );
+            /** DEPRECATED **
+             * use methodClicked.Narrative or appClicked.Narrative instead *
+             */
+            // $(document).on('function_clicked.Narrative',
+            //     $.proxy(function(event, method) {
+            //         this.buildFunctionCell(method);
+            //     },
+            //     this)
+            // );
 
             $(document).on('methodClicked.Narrative',
                 $.proxy(function(event, method) {
@@ -178,16 +181,118 @@
             $(document).on('createOutputCell.Narrative',
                 $.proxy(function(event, data) {
                     var cellIndex = $('#'+data.cellId).nearest('.cell').index();
-                    this.createOutputCell(IPython.notebook.get_cell(cellIndex), 
-                        {'embed' : true, 'data' : this.safeJSONStringify(data.result)});
+                    var params = {'embed' : true,
+                                  'data': this.safeJSONStringify(data.result)};
+                    if (data.next_steps) {
+                      // console.debug("adding next steps in create");
+                      params.next_steps = data.next_steps;
+                    }
+                    this.createOutputCell(IPython.notebook.get_cell(cellIndex),
+                                          params);
                 }, this)
             );
 
+            $(document).on('showNextSteps.Narrative',
+                $.proxy(function(event, obj) {
+                    this.showNextSteps(obj);
+                }, this)
+            );
+
+            $(document).on('createViewerCell.Narrative',
+                $.proxy(function(event, data) {
+                    this.createViewerCell(data.nearCellIdx, data, data.widget);
+                }, this)
+            );
+
+            // Global functions for setting icons
+            $(document).on('setDataIcon.Narrative',
+              $.proxy(function (e, param) {
+                    this.setDataIcon(param.elt, param.type)
+                },
+                this));
+            $(document).on('setMethodIcon.Narrative',
+              $.proxy(function (e, param) {
+                    this.setMethodIcon(param.elt, param.is_app)
+                },
+                this));
+
+            // Refresh the read-only or View-only mode
+            $(document).on('updateReadOnlyMode.Narrative',
+              $.proxy(function (e, ws, name, callback) {
+                    this.updateReadOnlyMode(ws, name, callback);
+                },
+                this)
+            );
+            // related: click on edit-mode toggles state
+            $('#kb-view-mode').click($.proxy(function() {
+                if (this.is_readonly == false) {
+                    this.user_readonly = !this.user_readonly;
+                    if (this.user_readonly) {
+                        this.readOnlyMode(true);
+                    }
+                    else {
+                        this.readWriteMode(true);
+                    }
+                    var icon = $('#kb-view-mode span');
+                    icon.toggleClass("fa-eye", this.user_readonly);
+                    icon.toggleClass('fa-pencil', !this.user_readonly);
+                }
+            }, this));
+            $('#kb-view-mode').tooltip({
+              title: 'Toggle view-only mode',
+              'container': 'body',
+              delay: {"show": 400, "hide": 50}
+            });
+
+            this.initDeleteCellModal();
             // Initialize the data table.
             this.render();
             return this;
         },
-        
+
+        initDeleteCellModal: function() {
+            this.$deleteCellModalBody = $('<div>');
+
+            var buttonList = [
+                {
+                    name : 'Cancel',
+                    type : 'default',
+                    callback : function(e, $prompt) {
+                        this.cellToDelete = null;
+                        $prompt.closePrompt();
+                    }
+                },
+                {
+                    name : 'Delete',
+                    type : 'danger',
+                    callback : $.proxy(function(e, $prompt) {
+                        if (this.cellToDelete !== undefined && this.cellToDelete !== null) {
+                            var cell = IPython.notebook.get_cell(this.cellToDelete);
+                            var removeId = $(cell.element).find('[id^=kb-cell-]').attr('id');
+                            this.trigger('cancelJobCell.Narrative', removeId, false);
+                            IPython.notebook.delete_cell(this.cellToDelete);
+                            this.cellToDelete = null;
+                        }
+                        $prompt.closePrompt();
+                    }, this)
+                }
+            ];
+            this.$deleteCellModal = $('<div>').kbasePrompt({
+                title : 'Delete Cell and Job?',
+                body : this.$deleteCellModalBody,
+                controls : buttonList
+            });
+        },
+
+        showDeleteCellModal: function(index, cell, message) {
+            if (cell && cell.metadata[this.KB_CELL]) {
+                this.cellToDelete = index;
+                if (message)
+                    this.$deleteCellModalBody.empty().html(message);
+                this.$deleteCellModal.openPrompt();
+            }
+        },
+
         /**
          * @method buildMethodCell
          * @param {Object} method -
@@ -195,6 +300,8 @@
          */
         buildMethodCell: function(method) {
             var cell = IPython.notebook.insert_cell_below('markdown');
+            cell.celltoolbar.hide();
+
             // make this a function input cell, as opposed to an output cell
             this.setMethodCell(cell, method);
 
@@ -208,7 +315,7 @@
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(method) + "'});" +
+                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
                               "</script>";
 
             cell.set_text(cellContent);
@@ -229,10 +336,19 @@
             var self = this;
             var code = '';
             var showOutput = true;
+
+            // Three cases to NOT show immediately:
+            // 1. method.job_id_output_field is not null    -- long running (via UJS)
+            // 2. method.behavior.kb_service_method is not null && method.behavior.kb_service_url IS null    -- long running service call (via NJS)
+            // 3. method.behavior.script_module is not null -- AWE script backend (via NJS)
+
             // if there's a job_id_output_field in the method, then it's long-running, and we shouldn't show an output cell right away.
             // ...or maybe show a temporary one?
-            if (data.method.job_id_output_field && data.method.job_id_output_field != null)
+            if ((data.method.job_id_output_field && data.method.job_id_output_field != null) ||
+                (data.method.behavior.kb_service_method && (!data.method.behavior.kb_service_url || data.method.behavior.kb_service_url.length === 0)) ||
+                (data.method.behavior.script_module)) {
                 showOutput = false;
+            }
             // old, pre-njs style where the methods were all living in IPython-land
             if (data.method.behavior.python_class && data.method.behavior.python_function) {
                 code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
@@ -244,22 +360,24 @@
             }
             else {
                 // something else!
-                // do nothing for now.
+                // do the standard for now.
+                code = this.buildGenericRunCommand(data);
             }
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
                 'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput); },
                 'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
                 'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-                'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
+                'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
             };
 
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
         },
 
-        buildAppCell: function(appInfo) {
+        buildAppCell: function(appSpec) {
             var cell = IPython.notebook.insert_cell_below('markdown');
+            cell.celltoolbar.hide();
             this.removeCellEditFunction(cell);
 
             var tempContent = '<img src="' + this.options.loadingImage + '">';
@@ -267,28 +385,20 @@
             cell.rendered = false;
             cell.render();
 
-            this.methClient.get_app_spec({'ids': [appInfo.id]}, 
-                $.proxy(function(appSpec) {
-                    this.setAppCell(cell, appSpec[0]);
-                    var cellIndex = IPython.notebook.ncells() - 1;
-                    var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
+            this.setAppCell(cell, appSpec);
+            var cellIndex = IPython.notebook.ncells() - 1;
+            var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
 
-                    // The various components are HTML STRINGS, not jQuery objects.
-                    // This is because the cell expects a text input, not a jQuery input.
-                    // Yeah, I know it's ugly, but that's how it goes.
-                    var cellContent = "<div id='" + cellId + "'></div>" +
-                                      "\n<script>" +
-                                      "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec[0]) + "', 'cellId' : '" + cellId + "'});" +
-                                      "</script>";
-                    cell.set_text(cellContent);
-                    cell.rendered = false;
-                    cell.render();
-
-                }, this),
-                $.proxy(function(error) {
-
-                }, this)
-            );
+            // The various components are HTML STRINGS, not jQuery objects.
+            // This is because the cell expects a text input, not a jQuery input.
+            // Yeah, I know it's ugly, but that's how it goes.
+            var cellContent = "<div id='" + cellId + "'></div>" +
+                              "\n<script>" +
+                              "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec) + "', 'cellId' : '" + cellId + "'});" +
+                              "</script>";
+            cell.set_text(cellContent);
+            cell.rendered = false;
+            cell.render();
         },
 
         runAppCell: function(data) {
@@ -301,17 +411,18 @@
             var self = this;
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content); },
+                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, "app"); },
                 'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
                 'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-                'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
-            }
+                'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
+            };
 
             var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
         },
 
         buildAppCommand: function(appSpec, methodSpecs, parameters) {
+            console.log([appSpec, methodSpecs, parameters]);
             var appSpecJSON = this.safeJSONStringify(appSpec);
             var methodSpecJSON = this.safeJSONStringify(methodSpecs);
             var paramsJSON = this.safeJSONStringify(parameters);
@@ -319,101 +430,6 @@
             return "import biokbase.narrative.common.service as Service\n" +
                    "method = Service.get_service('app_service').get_method('app_call')\n" +
                    "method('" + appSpecJSON + "', '" + methodSpecJSON + "', '" + paramsJSON + "')";
-        },
-
-        /**
-         * @method buildFunctionCell
-         * @param {Object} method - the JSON schema version of the method to invoke. This will
-         * include a list of parameters and outputs.
-         */
-        buildFunctionCell: function(method) {
-            var cell = IPython.notebook.insert_cell_below('markdown');
-            // make this a function input cell, as opposed to an output cell
-            this.setFunctionCell(cell, method);
-
-            // THIS IS WRONG! FIX THIS LATER!
-            // But it should work for now... nothing broke up to this point, right?
-            var cellIndex = IPython.notebook.ncells() - 1;
-            var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
-
-            // The various components are HTML STRINGS, not jQuery objects.
-            // This is because the cell expects a text input, not a jQuery input.
-            // Yeah, I know it's ugly, but that's how it goes.
-            var cellContent;
-
-            if (this.validateMethod(method)) {
-                // This is the list of parameters for the given method
-                var inputWidget = this.defaultInputWidget;
-                if (method.properties.widgets.input)
-                    inputWidget = method.properties.widgets.input;
-
-                var inputDiv = "<div id='inputs'></div>";
-
-                // These are the 'delete' and 'run' buttons for the cell
-                var button_content;
-                if (this.readonly) {
-                    button_content = "";
-                }
-                else {
-                    button_content = "<button id='" + cellId + "-delete' type='button' value='Delete' class='btn btn-default btn-sm'>Delete</button> " +
-                                     "<button id='" + cellId + "-run' type='button' value='Run' class='btn btn-primary btn-sm'>Run</button>";
-                                     //style='margin-top:10px'>" +
-                }
-                var buttons = "<div class='buttons pull-right'>" + button_content +
-                              "</div>";
-
-                // The progress bar remains hidden until invoked by running the cell
-                var progressBar = "<div id='kb-func-progress' class='pull-left' style='display:none;'>" +
-                                    "<div class='progress progress-striped active kb-cell-progressbar'>" +
-                                        "<div class='progress-bar progress-bar-success' role='progressbar' aria-valuenow='0' " +
-                                        "aria-valuemin='0' aria-valuemax='100' style='width:0%'/>" +
-                                    "</div>" +
-                                    "<p class='text-success'/>" +
-                                  "</div>";
-
-                // Associate method title with description via BS3 collapsing
-                var methodId = cellId + "-method-details";
-                var buttonLabel = "...";
-                var methodDesc = method.description.replace(/"/g, "'"); // double-quotes hurt markdown rendering
-                var methodInfo = "<span class='kb-func-desc'>" +
-                                   "<h1 style='display:inline'><b>" + method.title + "</b></h1>" +
-                                   "<span class='pull-right kb-func-timestamp' id='last-run'></span>" +
-                                   "<button class='btn btn-default btn-xs' type='button' data-toggle='collapse'" +
-                                      " data-target='#" + methodId + "'>" + buttonLabel + "</button>" +
-                                    "<div><h2 class='collapse' id='" + methodId + "'>" +
-                                      methodDesc + "</h2></div>" +
-                                 "</span>";
-
-                // Bringing it all together...
-                cellContent = "<div class='panel kb-func-panel kb-cell-run' id='" + cellId + "'>" +
-                                  "<div class='panel-heading'>" +
-                                      methodInfo +
-                                  "</div>" +
-                                  "<div class='panel-body'>" +
-                                      inputDiv +
-                                  "</div>" +
-                                  "<div class='panel-footer' style='overflow:hidden'>" +
-                                      progressBar +
-                                      buttons +
-                                  "</div>" +
-                              "</div>" +
-                              "\n<script>" + 
-                              "$('#" + cellId + " > div > div#inputs')." + inputWidget + "({ method:'" +
-                               this.safeJSONStringify(method) + "'});" +
-                              "</script>";
-                console.debug("created input cell '", methodDesc, "', id = ", cellId);
-            }
-            else {
-                cellContent = "Error - the selected method is invalid.";
-            }
-            cell.set_text(cellContent);
-
-            cell.rendered = false;
-            cell.render();
-
-            // restore the input widget's state.
-            this.removeCellEditFunction(cell);
-            this.bindActionButtons(cell);
         },
 
         /**
@@ -473,7 +489,7 @@
          * @return {string} JSON string
          */
         safeJSONStringify: function(method) {
-            var esc = function(s) { 
+            var esc = function(s) {
                 return s.replace(/'/g, "&apos;")
                         .replace(/"/g, "&quot;");
             };
@@ -502,7 +518,6 @@
                     var cell = cells[i];
                     if (this.isFunctionCell(cell)) {
                         var method = cell.metadata[this.KB_CELL].method;
-                        var inputWidget = this.defaultInputWidget;
                         // legacy cells.
                         if (method.properties) {
                             var inputWidget = method.properties.widgets.input || this.defaultInputWidget;
@@ -593,112 +608,326 @@
         },
 
         /**
-         * Set narrative into read-only mode.
+         * If read-only status has changed (or this is the
+         * first time checking it) then update the read-only
+         * state of the narrative.
+         *
+         * @param ws Workspace client
+         * @param name Workspace name
+         *
+         * Side-effects: modifies this.is_readonly to reflect current value.
          */
-        activateReadonlyMode: function() {
-            var self = this;
-
-            console.debug("activate read-only mode");
-            // Hide delete and run buttons
-            cells = IPython.notebook.get_cells();
-            cells.forEach(function(cell) {
-               ['delete', 'run'].forEach(function (e) {
-                    $(this.element).find(".buttons [id*=" + e + "]").hide();
-                }, cell);
-            });
-
-            // Delete left-side panel!
-            $('#left-column').detach(); //hide();
-
-            // Hide IPython toolbar
-            $('#maintoolbar').hide();
-
-            // Move content panels to the left
-            $('#ipython-main-app').css({'left': '10px'});
-            $('#menubar-container').css({'left': '10px'});
-
-            // Disable text fields
-            console.debug("readonly: Disable text fields");
-            $(".cell input").attr('disabled', 'disabled');
-
-            // Disable buttons
-            console.debug("readonly: Disable internal buttons");
-            $(".cell button").hide();  //attr('disabled', 'disabled');
-
-            // Hide save/checkpoint status
-            $('#autosave_status').text("(read-only)");
-            $('#checkpoint_status').hide();
-
-            var input_titles = [];
-
-            // Remove h1 from input titles
-            $('div.kb-func-desc h1').each(function(idx) {
-                var title = $(this).text();
-                var title_span = $('<span>' + title + '</span>');
-                var desc = $(this).parent();
-                desc.prepend(title_span);
-                $(this).remove();
-                input_titles.push([title, desc]);
-                desc.prepend(
-                    '<span class="label label-info" style="margin-right: 8px;" ' +
-                    ' id="kb-input-' + idx + '">' +
-                    'Input' +
-                    '</span>');
-            });
-
-            // Add label before input titles
-            // $('.kb-func-panel .panel-heading .kb-func-desc').prepend(
-            //     '<span class="label label-info" style="margin-right: 8px;">' +
-            //     ' id="kb-input-' + idx +
-            //     'Input' +
-            //     '</span>');
-
-            // Remove trailing ' - Output' junk from output titles
-            // and add label before them.
-            // If a matching input title can be found, store in 'connectable'
-            var matched_input = 0;
-            var connectable = {};
-            $('.kb-cell-output').each(function(idx) {
-                var desc = $(this).find('.kb-out-desc');
-                var title_full = desc.text();
-                var otitle = title_full.replace(/\s*-\s*Output/,'');
-                if (title_full != otitle) {
-                    desc.text(otitle); // replace
-                }
-                var title_span = $('<span class="label label-primary" style="margin-right: 8px;"' +
-                    ' id="kb-output-' + idx + '">' +
-                'Output' +
-                '</span>')
-                desc.prepend(title_span);
-                // Look for matching input
-                for (var i=matched_input; i < input_titles.length; i++) {
-                    var ititle = input_titles[i][0];
-                    //console.debug('input title="'+ ititle + '" output title="' + otitle + '"');
-                    if (ititle == otitle) {
-                        matched_input = i + 1;
-                        connectable[i] = idx;
-                        break;
+        updateReadOnlyMode: function (ws, name, callback) {
+            this.checkReadOnly(ws, name, $.proxy(function (readonly) {
+                if (readonly != null) {
+                    if (this.is_readonly != readonly) {
+                        if (this.is_readonly == null && readonly == false) {
+                            // pass: first time, and it is the default read/write
+                        }
+                        else if (readonly == true) {
+                            this.readOnlyMode();
+                            $('#kb-view-mode').css({display: 'none'});
+                        }
+                        else {
+                            this.readWriteMode();
+                            $('#kb-view-mode').css({display: 'inline-block'});
+                        }
+                        this.is_readonly = readonly;
+                    }
+                    // if this is the first time we got a yes/no answer
+                    // from the workspace, make the narrative visible!
+                    if (this.first_readonly) {
+                        // show narrative by removing overlay
+                        $('#kb-wait-for-ws').remove();
+                        this.first_readonly = false;
                     }
                 }
-            });
-
-            // Add 'Copy' button after narrative title
-            var narr_copy_id = "narr-copy";
-            var button = $('<button type="button" ' +
-                           'class="btn btn-success" ' +
-                           'id="'  + narr_copy_id + '" ' +
-                           'data-toggle="tooltip" ' +
-                           'title="Copy this narrative to a workspace ' +
-                           'where you can modify and run it" ' +
-                           '>Copy</button>');
-            button.css({'line-height': '1em',
-                        'margin-top': '-15px',
-                        'margin-left': '5em'});
-            e = $('#menubar').append(button);
-            this.bindCopyButton($('#' + narr_copy_id));
-
-            this.connectable = connectable;
+                if (callback)
+                    callback(this.is_readonly);
+            }, this));
+            return this.is_readonly;
         },
+
+        /** Check if narrative is read-only.
+         *
+         * @param ws Workspace client
+         * @param name Workspace name
+         * @param callback Call this with one argument, whose value is
+         *          true if it is readonly
+         *          false if it is read/write
+         *          null if workspace service error or null, or if this
+         *               check is too soon after the last one
+         */
+        checkReadOnly: function(ws, name, callback) {
+            // console.debug("check_readonly_mode.begin");
+            // stop if no workspace client
+            if (ws == null) {
+                // console.debug("set_readonly_mode.end: WS client not initialized");
+                return callback(null);
+            }
+            // stop if this is too-soon after last check
+            var sec = new Date() / 1000; // will use this either way
+            if (this.last_readonly_check != null) {
+                var delta = sec - this.last_readonly_check;
+                if (delta < 60) {
+                    // console.debug("check_readonly_mode.end: skip, too soon delta=" + delta);
+                    return callback(null);
+                }
+            }
+            // update the last check time
+            this.last_readonly_check = sec;
+            // check the workspace, and invoke callback with result
+            ws.get_workspace_info({workspace: name},
+              function (info) {
+                  var is_ro = true;
+                  if (info[5] == 'w' || info[5] == 'a') {
+                      is_ro = false;
+                  }
+                  IPython.narrative.readonly = is_ro; // set globally
+                  // console.debug("set_readonly_mode.end: callback_value=" + is_ro);
+                  return callback(is_ro);
+              },
+              function (error) {
+                  KBError("kbaseNarrativeWorkspace.checkReadOnly",
+                    "get_workspace_info had an error for ID=" + name +
+                    ": " + error);
+                  return callback(null);
+              });
+        },
+
+        /**
+         * List of selectors to toggle for read-only mode.
+         *
+         * @returns {string[]}
+         */
+        getReadOnlySelectors: function() {
+            return ['.kb-app-next',                         // next steps
+                    '#kb-add-code-cell', '#kb-add-md-cell', // edit btns
+                    '#kb-share-btn', '#kb-save-btn',        // action btns
+                    '#kb-ipy-menu',                         // kernel
+                    '.kb-app-panel .pull-right',            // app icons
+                    '.kb-func-panel .pull-right',           // method icons
+                    '.celltoolbar .button_container',       // ipython icons
+                    '.kb-title .btn-toolbar .btn .fa-arrow-right', // data panel slideout
+            ];
+        },
+
+        /**
+         * Toggle the run/cancel/reset buttons on and off,
+         * saving them in this.readonly_buttons when they are turned off.
+         *
+         * @param on If true, turn them on; else turn them off
+         */
+        toggleRunButtons: function(on) {
+            var classes = ['.kb-app-run', '.kb-method-run',
+                'span.pull-right.kb-func-timestamp span>span'];
+            if (on) {
+                _.map(this.readonly_buttons, function(b) {
+                   b.show();
+                });
+                this.readonly_buttons = []; // don't do it twice
+            }
+            else {
+                var ro = [];
+                _.map(classes, function(c) {
+                   _.map($(c), function(b) {
+                       var $btn = $(b);
+                       if ($btn.css('display') != "none") {
+                           // it is visible, so hide it and remember it
+                           ro.push($btn);
+                           $btn.hide();
+                       }
+                   });
+                });
+                this.readonly_buttons = ro;
+            }
+        },
+
+        /**
+         * Toggle the parameter select boxes on and off,
+         * saving them in this.readonly_buttons when they are turned off.
+         *
+         * @param on {bool} If true, turn them on; else turn them off
+         */
+        toggleSelectBoxes: function(on) {
+            var disabled = 'select2-container-disabled';
+            if (on) {
+                _.map(this.readonly_params, function($c) {
+                    $c.removeClass(disabled);
+                });
+            }
+            else {
+                var params = [];
+                _.map($('.select2-container'), function (c) {
+                    if (!$(c).hasClass(disabled)) {
+                        params.push($(c));
+                        $(c).addClass(disabled)
+                    }
+                });
+                this.readonly_params = params;
+            }
+        },
+
+        /**
+         * Set narrative into read-only mode.
+         */
+        readOnlyMode: function(from_user) {
+            // console.debug('set_readonly_mode.begin from-user=' + from_user);
+            // Hide side-panel
+            $('#left-column').hide();
+            // Move content flush left-ish
+            $('#content-column').css({'margin-left': '120px'});
+            // Hide things
+            _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
+            this.toggleRunButtons(false);
+            this.toggleSelectBoxes(false);
+            if (from_user == true) {
+                $('.navbar-right').prepend(
+                  $('<div>').addClass("label label-warning")
+                    .text('View-only mode'));
+            }
+            else {
+                // Add copy button
+                $('.navbar-right').prepend(
+                  $('<button>').addClass('btn btn-default navbar-btn kb-nav-btn')
+                    .append($('<div>').addClass('fa fa-copy'))
+                    .append($('<div>').text("copy").addClass('kb-nav-btn-txt'))
+                    .click(function () {
+                        var $dlg = $('#kb-ro-copy-dlg');
+                        $dlg.modal();
+                        var $panel = $dlg.find(".modal-body");
+                        var $jump = $("<div>").css({'margin-top': '20px'})
+                          .append($("<button>").addClass('btn btn-info')
+                            .text("Open this narrative"));
+                        $(document).trigger('copyThis.Narrative', [$panel, null, $jump]);
+                        return '';
+                    })
+                );
+                // Add view-only info/badge
+                $('.navbar-right').prepend(
+                    $('<div>').addClass("label label-warning")
+                      .attr({'id': 'kb-ro-btn'})
+                      .text('View-only mode')
+                      .popover({
+                        html: true,
+                        placement: "bottom",
+                        trigger: 'hover',
+                        content: 'You do not have permissions to modify ' +
+                        'this narrative. If you want to make your own ' +
+                        'copy that can be modified, use the ' +
+                        '"Copy" button.'
+                    }));
+                // Add button to unhide the controls
+                $('#main-container').prepend(
+                  $('<div>').attr({'id': 'kb-view-mode-narr'})
+                    .append($('<div>').css({cursor: 'pointer'})
+                      .append($('<span>')
+                        .css({'padding-left':'1em'})
+                        .text('Controls'))
+                      .append($('<span>')
+                        .css({'margin-left': '0.5em'})
+                        .addClass('fa fa-caret-down'))
+                  )
+                    .click($.proxy(function() {
+                        this.showControlPanels();
+                    }, this))
+                );
+                // Disable clicking on name of narrative
+                $('#name').unbind();
+                // Hide save status
+                $('#autosave_status').hide();
+            }
+            // console.debug('set_readonly_mode.end');
+            return;
+        },
+
+        /**
+         * Set narrative from read-only mode to read-write mode
+         *
+         */
+        readWriteMode: function (from_user) {
+            // console.debug("set_readwrite_mode.begin");
+            // Remove the view-only buttons (first 1 or 2 children)
+            if (from_user === undefined) {
+                // only remove copy button if not from user
+                $('.navbar-right > button')[0].remove();
+                // re-enable clicking on narrative name
+                $('#name').click(function (e) {
+                    if (IPython && IPython.save_widget) {
+                        IPython.save_widget.rename_notebook("Rename your Narrative.", true);
+                    }
+                });
+                // re-enable auto-save status
+                $('#autosave_status').show();
+            }
+            $('.navbar-right > div')[0].remove();
+            // Restore side-panel
+            $('#left-column').show();
+            // Restore margin for content
+            $('#content-column').css({'margin-left': '380px'});
+            // Show hidden things
+            _.map(this.getReadOnlySelectors(), function (id) {
+                $(id).show();
+            });
+            this.toggleRunButtons(true);
+            this.toggleSelectBoxes(true);
+            // console.debug("set_readwrite_mode.end");
+        },
+
+        /**
+         * Show the narrative management panel (but not the other 2)
+         */
+        showControlPanels: function() {
+            var self = this;
+            if (this.first_show_controls) {
+                $panel = $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true, this.hideControlPanels);
+
+                // var $panel = $('#kb-side-panel');
+                // var hide_idx = [2], keep_idx = [1], narr = 1;
+                // // Hide and show panels
+                // _.map(['tab', 'header'], function (subdiv) {
+                //     var divs = $panel.find('div.kb-side-' + subdiv);
+                //     _.map(hide_idx, function (i) {
+                //         $(divs[i]).hide();
+                //         $(divs[i]).removeClass('active');
+                //     });
+                //     if (subdiv == 'tab') {
+                //         $(divs[narr]).find('.kb-title').hide();
+                //     }
+                //     else {
+                //         // Plop a 'hide' button before the tab bar
+                //         var $hide_btn = $('<div>').attr({id: 'kb-view-mode-narr-hide'})
+                //           .append($('<span>').addClass('fa fa-caret-up'))
+                //           .click(function () {
+                //               self.hideControlPanels();
+                //           });
+                //         //$(divs[0]).prepend($hide_btn);
+                //         $panel.prepend($hide_btn);
+                //     }
+                //     //$(divs[narr]).addClass('active').css({'width': '366px'});
+                // });
+                this.first_show_controls = false;
+            }
+            // Hide the button we used to activate this
+            $('#kb-view-mode-narr').hide();
+            // Show the parent
+            $('#left-column').show();
+            // Resize body to allow for it
+            $('#content-column').css({'margin-left': '380px'});
+        },
+
+        /**
+         * Hide the narrative management panel (again).
+         */
+        hideControlPanels: function() {
+            // Hide the parent
+            $('#left-column').hide();
+            // Resize body again
+            $('#content-column').css({'margin-left': '122px'});
+            // Show the button for unhiding
+            $('#kb-view-mode-narr').show();
+        },
+
 
         /**
          * Connect two elements with a 'line'.
@@ -714,7 +943,7 @@
         connect: function(p, q, g, w, container, line_class) {
             var pc = $(p).position();
             var qc = $(q).position();
-            console.debug("connect ", pc, " to ", qc);
+            // console.debug("connect ", pc, " to ", qc);
             var py = pc.top + (p.height() - w) / 2.0;
             var qy = qc.top + (q.height() - w) / 2.0;
             var coords = [{
@@ -743,38 +972,10 @@
         /**
          * Activate "normal" R/W mode
          */
-         activateReadwriteMode: function() {
-            console.debug("activate read-write mode");
-         },
-
-        /**
-         * Bind the 'Copy narrative' button to 
-         * a function that copies the narrative.
-         */
-        bindCopyButton: function(element) {
-            var oid = this.getNarrId();
-            element.click(function() {
-                console.debug("Make a copy for narr. obj = ", oid);
-                // XXX: Complete and utter FAKE!
-                // XXX: Just jump to a hardcoded read/write narrative based on the input one
-                var copy_id_map = {
-                    'ws.2590.obj.8': 'ws.2615.obj.8', // comparative genomics
-                };
-                var copy_id = copy_id_map[oid];
-                if (copy_id !== undefined) {
-                    // Open new narrative
-                    var oldpath = window.location.pathname;
-                    var parts = oldpath.split('/');
-                    parts.pop(); // pop off old id
-                    parts.push(copy_id); // add new one
-                    var newpath = parts.join('/'); // rejoin as a path
-                    var newurl = window.location.protocol + '//' + window.location.host + newpath;
-                    console.debug("Moving to new URL: ", newurl);
-                    window.location.replace(newurl);
-                }
-            });
-            return;
+        activateReadwriteMode: function() {
+            // console.debug("activate read-write mode");
         },
+
 
         /**
          * Object identifier of current narrative, extracted from page URL.
@@ -905,7 +1106,7 @@
                         }
                     }
                 }
-                
+
             }
 
             // look up the deps in the data panel.
@@ -1253,7 +1454,64 @@
          * @private
          */
         deleteCell: function(index) {
-            IPython.notebook.delete_cell(index);
+            if (index !== undefined && index !== null) {
+                var cell = IPython.notebook.get_cell(index);
+                if (cell) {
+                    // if it's a kbase method or app cell, trigger a popup
+                    if (cell.metadata[this.KB_CELL]) {
+                        widget = null; // default is app cell
+                        var state = 'input'; // default is input... also doubles as a proxy for output cells
+                        if (this.isFunctionCell(cell))
+                            widget = 'kbaseNarrativeMethodCell';
+                        else if (this.isAppCell(cell))
+                            widget = 'kbaseNarrativeAppCell';
+                        if (widget)
+                            state = $(cell.element).find('div[id^=kb-cell-]')[widget]('getRunningState');
+
+                        if (state === 'input') {
+                            IPython.notebook.delete_cell(index);
+                            return;
+                        }
+                        else {
+                            // if it's running, say so, and say it'll stop and delete the job
+                            // if it's done, say it'll clear the associated job, but won't delete data
+                            // if it's error, say it'll delete the assoc'd job
+
+                            var stateWarning = 'Deleting this cell will also delete any associated job. ' +
+                                               'Any generated data will be retained. Continue?';
+
+                            this.showDeleteCellModal(index, cell, stateWarning);
+                            // switch(state) {
+                            //     case 'running':
+                            //         // set some text
+                            //         stateWarning = 'This cell appears to have a running job associated with it. ' +
+                            //                        'Deleting this cell will also stop and delete the running job. ' +
+                            //                        'Any generated data will not be deleted. Continue?';
+                            //         break;
+                            //     case 'error':
+                            //         // set some text
+                            //         stateWarning = 'This cell appears to have produced an error while running. ' +
+                            //                        'Deleting this cell will also stop and delete the associated job. ' +
+                            //                        'Any generated data will be maintained. Continue?';
+                            //         break;
+                            //     case 'done':
+                            //         // set some text
+                            //         stateWarning = 'This cell has finished running but may have a job still associated with it. ' +
+                            //                        'Deleting this cell will also delete that job, but not any generated data. ' +
+                            //                        'Continue?';
+                            //         break;
+                            //     default:
+                            //         // set no text
+                            //         stateWarning = 'Deleting this cell will also delete any associated job. Any generated data will be retained. Continue?';
+                            //         break;
+                            // }
+                        }
+                    }
+                    else {
+                        IPython.notebook.delete_cell(index);
+                    }
+                }
+            }
         },
 
         /**
@@ -1262,7 +1520,7 @@
          */
         bindDeleteButton: function() {
             var self = this;
-            return( 
+            return(
                 function(event) {
                     event.preventDefault();
                     var idx = IPython.notebook.get_selected_index();
@@ -1283,7 +1541,7 @@
         rebindActionButtons: function() {
             if (!(IPython && IPython.notebook))
                 return;
-            
+
             // Rewrite the following to iterate using the IPython cell
             // based methods instead of DOM objects
 
@@ -1295,7 +1553,7 @@
                 var cellType = cell.metadata[this.KB_CELL];
                 if (cellType) {
                     this.removeCellEditFunction(cell);
-                    if (this.isFunctionCell(cell)) { 
+                    if (this.isFunctionCell(cell)) {
                         // added to only update the built-in non-widgetized function cells
                         if (cell.metadata[this.KB_CELL].method.properties) { // cheat to see if it's an old one!
                             this.bindActionButtons(cell);
@@ -1324,7 +1582,7 @@
                     'output' : function(msgType, content) { self.handleOutput(cell, msgType, content); },
                     'clear_output' : function(content) { self.handleClearOutput(cell, content); },
                     'set_next_input' : function(text) { self.handleSetNextInput(cell, content); },
-                    'input_request' : function(content) { self.handleInputRequest(cell, content); },
+                    'input_request' : function(content) { self.handleInputRequest(cell, content); }
                 };
 
                 // ignore making code cells for now.
@@ -1375,8 +1633,8 @@
                       "method = Service.get_service('" + escService + "').get_method('" + escMethod + "')\n";
 
             var paramList = params.map(
-                function(p) { 
-                    return "'" + addSlashes(p) + "'"; 
+                function(p) {
+                    return "'" + addSlashes(p) + "'";
                 }
             );
             cmd += "method(" + paramList + ")";
@@ -1440,7 +1698,7 @@
             if (content.status === 'error') {
                 var errorBlob = {
                     msg : content.evalue,
-                    type : content.ename,
+                    type : content.ename
                 };
 
                 if (cell && cell.metadata && cell.metadata['kb-cell'] &&
@@ -1461,7 +1719,7 @@
                 });
 
                 errorBlob.traceback = errTb;
-                this.createErrorCell(cell, JSON.stringify(errorBlob));
+                this.createOutputCell(cell, '{"error" :' + JSON.stringify(errorBlob) + '}', true);
 
             }
             this.showCellProgress(cell, "DONE", 0, 0);
@@ -1504,8 +1762,8 @@
             if (msgType === "stream") {
                 buffer += content.data;
                 var lines = buffer.split("\n");
-                var offs = 0, 
-                    done = false, 
+                var offs = 0,
+                    done = false,
                     self = this,
                     result = "";
 
@@ -1585,8 +1843,24 @@
                     // if we found progress markers, trim processed prefix from buffer
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
-                if (result.length > 0 && showOutput) {
-                    this.createOutputCell(cell, result);
+                if (result.length > 0) {
+                    if (showOutput === "app" && window.kbconfig && window.kbconfig.mode === "debug") {
+                        if (!cell.metadata[this.KB_CELL].stackTrace)
+                            cell.metadata[this.KB_CELL].stackTrace = [];
+                        // try to parse the result as JSON - if so, then it's a final result and we just
+                        // need the 'data' field
+                        try {
+                            var data = JSON.parse(result);
+                            if (data && typeof data === 'object')
+                                cell.metadata[this.KB_CELL].stackTrace.push(data.data);
+                        }
+                        catch (err) {
+                            // it's NOT JSON, and we should just append it.
+                            cell.metadata[this.KB_CELL].stackTrace.push(result);
+                        }
+                    }
+                    else if (showOutput)
+                        this.createOutputCell(cell, result);
                 }
             }
         },
@@ -1598,7 +1872,7 @@
          * XXX: Should this trigger a save?
          */
         registerJobId: function(jobId, sourceCell) {
-            // This is possibly the ugliest hack here. In the future, all cells should actually know their 
+            // This is possibly the ugliest hack here. In the future, all cells should actually know their
             // fancy UUIDs. But that *might* be backwards incompatible with existing narratives that we want
             // to show off.
             //
@@ -1623,6 +1897,30 @@
                 this.trigger('registerMethod.Narrative', jobInfo);
         },
 
+
+        createViewerCell: function(cellIndex, data, widget) {
+            var cell = this.addOutputCell(cellIndex, widget);
+            var title = "Data Viewer";
+            var type = "viewer";
+
+            var uuid = this.uuidgen();
+            var outCellId = 'kb-cell-out-' + uuid;
+            var outputData = '{"data":' + this.safeJSONStringify(data) + ', ' +
+                               '"type":"' + type + '", ' +
+                               '"widget":"' + widget + '", ' +
+                               '"cellId":"' + outCellId + '", ' +
+                               '"title":"' + title + '", ' +
+                               '"time":' + this.getTimestamp() + '}';
+
+            cellText = '<div id="' + outCellId + '"></div>\n' +
+                       '<script>' +
+                       '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
+                       '</script>';
+            cell.set_text(cellText);
+            cell.rendered = false; // force a render
+            cell.render();
+        },
+
         /**
          * Result is an object with this structure:
          * cell = the invoking function cell.
@@ -1630,8 +1928,11 @@
          * widget - the widget to use (if null, then use kbaseDefaultNarrativeOutput)
          * data - the object to be passed in to the widget
          * embed - if true, then embed the widget and render it.
+         * Returns unique id (string) of output cell <div>
+         *
+         * Also triggers a save.
          */
-        createOutputCell: function(cell, result, isError) {
+        createOutputCell: function(cell, result, isError, widget) {
             if (typeof result === 'string' && !isError) {
                 // try to parse it as JSON.
                 // if we fail, then it's not something we can deal with and shouldn't
@@ -1703,12 +2004,12 @@
 
             var uuid = this.uuidgen();
             var outCellId = 'kb-cell-out-' + uuid;
-            var outputData = '{"data":' + data + ', ' + 
+            var outputData = '{"data":' + data + ', ' +
                                '"type":"' + outputType + '", ' +
                                '"widget":"' + widget + '", ' +
                                '"cellId":"' + outCellId + '", ' +
                                '"title":"' + outputTitle + '", ' +
-                               '"time":' + this.getTimestamp() + '}'; 
+                               '"time":' + this.getTimestamp() + '}';
 
             cellText = '<div id="' + outCellId + '"></div>\n' +
                        '<script>' +
@@ -1717,9 +2018,67 @@
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render
             outputCell.render();
-
+            // If present, add list of "next steps"
+            if (result.next_steps.apps || result.next_steps.methods) {
+                var $body = $('#' + outCellId).find('.panel-body');
+                this.showNextSteps({elt: $body, next_steps: result.next_steps});
+            }
             this.resetProgress(cell);
+            if (IPython && IPython.narrative)
+                IPython.narrative.saveNarrative();
             this.trigger('updateData.Narrative');
+            return outCellId;
+        },
+
+        /**
+        * Show a list of suggested 'next steps' after we have finished the run.
+        * The input is an object of the form:
+        *   { next_steps: value is exactly the same type of object,
+        *                 returned by the `getfunctionSpecs.Narrative`
+        *                 trigger in `kbaseNarrativeMethodPanel`.
+        *     elt: Created <div> is added with .append()
+        *   }
+        * Returns the <div> that was populated.
+        */
+        showNextSteps: function(obj) {
+          var $elt = obj.elt, next_steps = obj.next_steps;
+          var $tgt = $('<div>').addClass('kb-app-next');
+          var $title = $('<h3>').text('Suggested next steps:');
+          $tgt.append($title);
+          // init hide/unhide behavior
+          $hide_btn = $('<span>').addClass('kb-app-next-hide').text('hide');
+          $unhide_btn = $('<span>').addClass('kb-app-next-unhide')
+                      .text('next steps').hide();
+          $hide_btn.click(function() {                  // hide
+            $title.hide(); $tgt.find('a').hide();
+            $hide_btn.hide(); $unhide_btn.show(); });
+          $unhide_btn.click(function() {                // unhide
+            $title.show(); $tgt.find('a').show();
+            $unhide_btn.hide(); $hide_btn.show(); });
+          $tgt.append($hide_btn).append($unhide_btn);
+          // add all the links to the next-step apps/methods
+          var $apps = $('<div>'), comma = {v: ''}, self = this;
+          // iterate over apps and methods in the result
+          var has_both = next_steps.apps && next_steps.methods;
+          _.each(['apps', 'methods'], function(mtype) {
+            if (has_both) { /* XXX: prefix with (App) or something? */ }
+            var specs = next_steps[mtype];
+            // Iterate over all specs in app/method section
+            _.each(_.values(specs), function(s) {
+              var name = s.info.name; // readable name, displayed to user
+              var href = $('<a>').attr({'href': 'javascript:;'})
+                                 .text(comma.v + name);
+              // insert app/method on click
+              href.click(function() {
+                self.trigger(mtype.slice(0, -1) + "Clicked.Narrative", s);
+              });
+              $apps.append(href);
+              comma.v = ', ';
+            });
+          });
+          $tgt.append($apps);
+          $elt.append($tgt);
+          return $tgt;
         },
 
         /**
@@ -1778,7 +2137,7 @@
          */
         addOutputCell: function(currentIndex, widget) {
             var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
-
+            cell.celltoolbar.hide();
             this.setOutputCell(cell, widget);
             this.removeCellEditFunction(cell);
 
@@ -1787,6 +2146,7 @@
 
         addErrorCell: function(currentIndex) {
             var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
+            cell.celltoolbar.hide();
             this.setErrorCell(cell);
             this.removeCellEditFunction(cell);
             return cell;
@@ -1870,26 +2230,26 @@
                 this.checkCellMetadata(cells[i]);
             }
             this.loadAllRecentCellStates();
-            // Check for older version of data dependencies
-            // update them if necessary.
-            this.trigger('updateData.Narrative');
+
+            this.updateReadOnlyMode(this.ws_client, this.ws_id);
 
             return this;
         },
 
-        /*
+
+        /**
          * Show input/output cell connections.
          */
          show_connections: function() {
             var self = this;
-            console.debug("show_connections.start");
+            // console.debug("show_connections.start");
             _.each(_.pairs(this.connectable), function(pair) {
                 var e1 = $('#kb-input-' + pair[0]);
                 var e2 = $('#kb-output-' + pair[1]);
                 self.connect(e1, e2, 20, 2,
                     $('#notebook-container'), 'kb-line');
             });
-            console.debug("show_connections.end");
+            // console.debug("show_connections.end");
         },
 
         /**
@@ -1924,7 +2284,7 @@
 
         /**
          * Returns a timestamp in milliseconds since the epoch.
-         * (This is a one-liner, but kept as a separate function in case our needs change. 
+         * (This is a one-liner, but kept as a separate function in case our needs change.
          * Maybe we'll want to use UTC or whatever...)
          * @public
          */
@@ -1980,6 +2340,85 @@
                 }
             }
         },
+
+        /**
+         * Set the visual icon for a data object shown in a
+         * list or panel of the narrative.
+         *
+         * @param $logo - Target element
+         * @param type - Name of data type
+         */
+        setDataIcon: function ($logo, type) {
+            if ($logo.hasClass('exampleDataIcon')) {
+                console.debug("SET EXAMPLE ICON");
+            }
+            var icons = this.data_icons;
+            var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
+            // background circle
+            $logo.addClass("fa-stack fa-2x").css({'cursor': 'pointer'})
+              .append($('<i>')
+                .addClass("fa fa-circle fa-stack-2x")
+                .css({'color': this.logoColorLookup(type)}));
+            if (this.isCustomIcon(icon)) {
+                // add custom icons (more than 1 will look weird, though)
+                _.each(icon, function (cls) {
+                    $logo.append($('<i>')
+                      .addClass("icon fa-inverse fa-stack-1x " + cls));
+                });
+            }
+            else {
+                // add stack of font-awesome icons
+                _.each(icon, function (cls) {
+                    $logo.append($('<i>')
+                      .addClass("fa fa-inverse fa-stack-1x " + cls));
+                });
+            }
+        },
+
+        /**
+         * Set the visual icon for a method or app.
+         *
+         * @param $logo - Target element
+         * @param is_app - Boolean for app or method
+         */
+        setMethodIcon: function ($logo, is_app) {
+            var name = is_app ? "app" : "method";
+            var ci = is_app ? 9 : 5; // color index
+            var icon = this.meth_icons[name];
+            // background
+            $logo.addClass("fa-stack fa-2x").css({'cursor': 'pointer'})
+              .append($('<i>')
+                .addClass("fa fa-square fa-stack-2x")
+                .css({'color': this.icon_colors[ci]}));
+            // add stack of font-awesome icons
+            _.each(icon, function (cls) {
+                $logo.append($('<i>')
+                  .addClass("fa fa-inverse fa-stack-1x " + cls));
+            });
+        },
+
+        /**
+         * Whether the stack of icons is using font-awesome
+         * or our own custom set.
+         *
+         * @param icon_list {list of str} Icon classes, from icons.json
+         * @returns {boolean}
+         */
+        isCustomIcon: function (icon_list) {
+            return (icon_list.length > 0 && icon_list[0].length > 4 &&
+            icon_list[0].substring(0, 4) == 'icon');
+        },
+
+        /**
+         * Get color for data or method icon.
+         * @param type
+         * @returns {string} Color code
+         */
+        logoColorLookup: function (type) {
+            var code = 0;
+            for (var i = 0; i < type.length; code += type.charCodeAt(i++));
+            return this.icon_colors[code % this.icon_colors.length];
+        }
 
     });
 

@@ -12,16 +12,13 @@
         ws_id: null,
         ws_name: null,
         token: null,
-        job_id: null,
         width: 1150,
         options: {
             ws_id: null,
-            ws_name: null,
-            job_id: null
+            ws_name: null
         },
-        jobSrvUrl: "https://kbase.us/services/userandjobstate/",
         loadingImage: "static/kbase/images/ajax-loader.gif",
-        wsUrl: "https://kbase.us/services/ws/",
+        wsUrl: window.kbconfig.urls.workspace,
         timer: null,
 
         init: function(options) {
@@ -29,8 +26,6 @@
 
             this.ws_name = options.ws_name;
             this.ws_id = options.ws_id;
-            if (options.job_id)
-            	this.job_id = options.job_id;
             if (options.ws && options.id) {
                   this.ws_id = options.id;
                   this.ws_name = options.ws;
@@ -42,9 +37,6 @@
             var self = this;
         	var pref = this.uuid();
 
-
-            var wsUrl = 'https://kbase.us/services/ws/';
-	    
             var container = this.$elem;
             if (self.token == null) {
             	container.empty();
@@ -54,22 +46,8 @@
 
             var kbws = new Workspace(self.wsUrl, {'token': self.token});
             
-            var ready = function() {
-            	container.empty();
-            	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
-
-            	kbws.get_objects([{ref: self.ws_name +"/"+ self.ws_id}], function(data) {
+            var ready = function(gnm, ctg) {
             		container.empty();
-            		var type = data[0].info[2];
-            		if (type.indexOf('-') >= 0) {
-            			type = type.substring(0, type.indexOf('-'));
-            		}
-            		var reqType = 'KBaseGenomes.Genome';
-            		if (!(type === reqType)) {
-            			container.append('<p>[Error] Object is of type "' + type + '" but expected type is "' + reqType + '"</p>');
-            			return;
-            		}
-            		var gnm = data[0].data;
             		var tabPane = $('<div id="'+pref+'tab-content">');
             		container.append(tabPane);
             		tabPane.kbaseTabs({canDelete : true, tabs : []});
@@ -78,25 +56,6 @@
             		for (var i=0; i<tabIds.length; i++) {
             			var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
             			tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
-            		}
-
-            		////////////////////////////// Overview Tab //////////////////////////////
-            		$('#'+pref+'overview').append('<table class="table table-striped table-bordered" \
-            				style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-            		var overviewLabels = ['Id', 'Name', 'Domain', 'Genetic code', 'Source', "Source id", "GC", "Taxonomy", "Size"];
-            		var tax = gnm.taxonomy;
-            		if (tax == null)
-            			tax = '';
-            		var overviewData = [gnm.id, gnm.scientific_name, gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gnm.gc_content, tax, gnm.dna_size];
-            		var overviewTable = $('#'+pref+'overview-table');
-            		for (var i=0; i<overviewData.length; i++) {
-            			if (overviewLabels[i] === 'Taxonomy') {
-            				overviewTable.append('<tr><td>' + overviewLabels[i] + '</td> \
-            						<td><textarea style="width:100%;" cols="2" rows="5" readonly>'+overviewData[i]+'</textarea></td></tr>');
-            			} else {
-            				overviewTable.append('<tr><td>'+overviewLabels[i]+'</td> \
-            						<td>'+overviewData[i]+'</td></tr>');
-            			}
             		}
 
             		////////////////////////////// Genes Tab //////////////////////////////
@@ -112,6 +71,12 @@
             				var contigLen = gnm.contig_lengths[pos];
             				contigMap[contigId] = {name: contigId, length: contigLen, genes: []};
             			}
+            		} else if (ctg && ctg.contigs) {
+            		    for (var pos in ctg.contigs) {
+                            var contigId = ctg.contigs[pos].id;
+                            var contigLen = ctg.contigs[pos].length;
+                            contigMap[contigId] = {name: contigId, length: contigLen, genes: []};
+            		    }
             		}
             		
             		function geneEvents() {
@@ -139,8 +104,8 @@
             			var geneFunc = gene['function'];
             			if (!geneFunc)
             				geneFunc = '-';
-            			genesData[genesData.length] = {id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>', 
-            					contig: contigName, start: geneStart, dir: geneDir, len: geneLen, type: geneType, func: geneFunc};
+            			genesData.push({id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>', 
+            					contig: contigName, start: geneStart, dir: geneDir, len: geneLen, type: geneType, func: geneFunc});
             			geneMap[geneId] = gene;
             			var contig = contigMap[contigName];
             			if (contigName != null && !contig) {
@@ -160,6 +125,7 @@
             		var genesSettings = {
             				"sPaginationType": "full_numbers",
             				"iDisplayLength": 10,
+            				"aaSorting": [[ 1, "asc" ], [2, "asc"]],
             				"aoColumns": [
             				              {sTitle: "Gene ID", mData: "id"}, 
             				              {sTitle: "Contig", mData: "contig"},
@@ -180,8 +146,10 @@
             		genesTable.fnAddData(genesData);
 
             		////////////////////////////// Contigs Tab //////////////////////////////
-            		$('#'+pref+'contigs').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'contigs-table" \
-            		class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
+            		$('#'+pref+'contigs').append($('<div>').append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'contigs-table" '+
+            			'class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>'));
+            		//$('#'+pref+'contigs').append($('<div style="margin: 14px 0px 0px 0px">').append($('<span style="font-size: 75%; color: #898989;">')
+					//		.append('(only contigs containing features are shown)')));
             		var contigsData = [];
 
             		function contigEvents() {
@@ -193,14 +161,16 @@
             		}
 
             		for (var key in contigMap) {
+            		    if (!contigMap.hasOwnProperty(key))
+            		        continue;
             			var contig = contigMap[key];
             			contigsData.push({name: '<a class="'+pref+'contig-click" data-contigname="'+contig.name+'">'+contig.name+'</a>', 
             				length: contig.length, genecount: contig.genes.length});
-
             		}
             		var contigsSettings = {
             				"sPaginationType": "full_numbers",
             				"iDisplayLength": 10,
+            				"aaSorting": [[ 1, "desc" ]],
             				"aoColumns": [
             				              {sTitle: "Contig name", mData: "name"},
             				              {sTitle: "Length", mData: "length"},
@@ -216,7 +186,32 @@
             		var contigsTable = $('#'+pref+'contigs-table').dataTable(contigsSettings);
             		contigsTable.fnAddData(contigsData);
 
-            		////////////////////////////// Overview Tab //////////////////////////////
+                    ////////////////////////////// Overview Tab //////////////////////////////
+                    $('#'+pref+'overview').append('<table class="table table-striped table-bordered" \
+                            style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
+                    var overviewLabels = ['KBase ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size", 
+                                          "Number of Contigs", "Number of Genes"];
+                    var tax = gnm.taxonomy;
+                    if (tax == null)
+                        tax = '';
+                    var gc_content = gnm.gc_content;
+                    if (gc_content < 1.0)
+                        gc_content *= 100;
+                    var overviewData = [gnm.id, '<a href="/functional-site/#/dataview/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>', 
+                                        gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gc_content + " %", tax, gnm.dna_size,
+                                        contigsData.length, genesData.length];
+                    var overviewTable = $('#'+pref+'overview-table');
+                    for (var i=0; i<overviewData.length; i++) {
+                        if (overviewLabels[i] === 'Taxonomy') {
+                            overviewTable.append('<tr><td  width="33%">' + overviewLabels[i] + '</td> \
+                                    <td><textarea style="width:100%;" cols="2" rows="3" readonly>'+overviewData[i]+'</textarea></td></tr>');
+                        } else {
+                            overviewTable.append('<tr><td>'+overviewLabels[i]+'</td> \
+                                    <td>'+overviewData[i]+'</td></tr>');
+                        }
+                    }
+
+            		////////////////////////////// New Tab //////////////////////////////
             		var lastElemTabNum = 0;
 
             		function openTabGetId(tabName) {
@@ -225,7 +220,9 @@
             			lastElemTabNum++;
             			var tabId = '' + pref + 'elem' + lastElemTabNum;
             			var tabDiv = $('<div id="'+tabId+'"> ');
-            			tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: (i == 0)});
+            			tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: (i == 0), deleteCallback: function(name) {
+            				tabPane.kbaseTabs('removeTab', name);
+            			}});
             			return tabId;
             		}
 
@@ -254,7 +251,7 @@
             			$('#'+tabId).append('<table class="table table-striped table-bordered" \
             					style="margin-left: auto; margin-right: auto;" id="'+tabId+'-table"/>');
             			var elemLabels = ['Gene ID', 'Contig name', 'Gene start', 'Strand', 'Gene length', "Gene type", "Function", "Annotations"];
-            			var elemData = [geneId, '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>', geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
+            			var elemData = ['<a href="/functional-site/#/genes/'+self.ws_name+'/'+self.ws_id+'/'+geneId+'" target="_blank">'+geneId+'</a>', '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>', geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
             			var elemTable = $('#'+tabId+'-table');
             			for (var i=0; i<elemData.length; i++) {
             				if (elemLabels[i] === 'Function') {
@@ -295,6 +292,7 @@
             			cgb.data.options.onClickFunction = function(svgElement, feature) {
             				showGene(feature.feature_id);
             			};
+            			cgb.data.options.token = self.token;
             			cgb.data.$elem = $('<div style="width:100%; height: 200px;"/>');
             			cgb.data.$elem.show(function(){
             				cgb.data.update();
@@ -313,51 +311,40 @@
             				text += "" + key + "->" + value + " ";
             			}
             		}
-
-            	}, function(data) {
-            		container.empty();
-            		container.append('<p>[Error] ' + data.error.message + '</p>');
-            	});            	
             };
-
-            if (self.job_id) {
-            	container.empty();
-                var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.token});
-            	var panel = $('<div class="loader-table"/>');
-            	container.append(panel);
-            	var table = $('<table class="table table-striped table-bordered" \
-            			style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-            	panel.append(table);
-            	table.append('<tr><td>Job was created with id</td><td>'+self.job_id+'</td></tr>');
-            	table.append('<tr><td>Genome will have the id</td><td>'+self.ws_id+'</td></tr>');
-            	table.append('<tr><td>Current job state is</td><td id="'+pref+'job"></td></tr>');
-            	var timeLst = function(event) {
-            		jobSrv.get_job_status(self.job_id, function(data) {
-            			var status = data[2];
-            			var complete = data[5];
-            			var wasError = data[6];
-        				var tdElem = $('#'+pref+'job');
-        				tdElem.html(status);
-					if (status === 'running') {
-                                            tdElem.html(status+"... &nbsp &nbsp <img src=\""+self.loadingImage+"\">");
-                                        }
-            			if (complete === 1) {
-            				clearInterval(self.timer);
-            				if (wasError === 0) {
-            		            ready();
-            				}
-            			}
-            		}, function(data) {
-        				clearInterval(self.timer);
-        				var tdElem = $('#'+pref+'job');
-        				tdElem.html("Error accessing job status: " + data.error.message);
-            		});
-            	};
-            	self.timer = setInterval(timeLst, 5000);
-            	timeLst();
-            } else {
-            	ready();
-            }
+            
+            container.empty();
+            container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
+            
+            var included = ["/complete","/contig_ids","/contig_lengths","contigset_ref","/dna_size",
+                            "/domain","/gc_content","/genetic_code","/id","/md5","num_contigs",
+                            "/scientific_name","/source","/source_id","/tax_id","/taxonomy",
+                            "/features/[*]/aliases","/features/[*]/annotations",
+                            "/features/[*]/function","/features/[*]/id","/features/[*]/location",
+                            "/features/[*]/protein_translation_length","/features/[*]/type"];
+            kbws.get_object_subset([{ref: self.ws_name + "/" + self.ws_id, included: included}], function(data) {
+                var gnm = data[0].data;
+                if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
+                    ready(gnm, null);
+                } else {
+                    var contigSetRef = gnm.contigset_ref;
+                    if (gnm.contigset_ref) {
+                        kbws.get_object_subset([{ref: contigSetRef, included: ['contigs/[*]/id', 'contigs/[*]/length']}], function(data2) {
+                            var ctg = data2[0].data;
+                            ready(gnm, ctg);
+                        }, function(data2) {
+                            container.empty();
+                            container.append('<p>[Error] ' + data2.error.message + '</p>');
+                        });
+                    } else {
+                        container.empty();
+                        container.append('Genome object has unsupported structure (no contig-set)');
+                    }
+                }
+            }, function(data) {
+                container.empty();
+                container.append('<p>[Error] ' + data.error.message + '</p>');
+            });            	
             return this;
         },
         

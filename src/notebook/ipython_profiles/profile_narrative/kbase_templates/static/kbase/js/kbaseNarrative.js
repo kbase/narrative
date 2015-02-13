@@ -329,6 +329,7 @@ Narrative.prototype.checkVersion = function($newVersion) {
         async: true,
         dataType: 'text',
         crossDomain: true,
+        cache: false,
         success: function(ver) {
             ver = $.parseJSON(ver);
             if (self.currentVersion !== ver.version) {

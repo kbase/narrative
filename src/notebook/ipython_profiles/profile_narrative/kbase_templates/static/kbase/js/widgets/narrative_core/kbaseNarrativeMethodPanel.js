@@ -22,7 +22,7 @@ kb_require(['kbaseMethodGallery'],
             methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
             methodHelpLink: '/functional-site/#/narrativestore/method/',
         },
-        ignoreCategories: { 'inactive' : 1, 'importers' : 1 },
+        ignoreCategories: { 'inactive' : 1, 'importers' : 1, 'viewers' : 1 },
         id2Elem: {},
         methodSpecs: {},  // id -> spec
         appSpecs: {},     // id -> spec

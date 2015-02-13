@@ -17,6 +17,7 @@
             workspaceURL: window.kbconfig.urls.workspace,
             loadingImage: "static/kbase/images/ajax-loader.gif",
             height: null,
+	    maxDescriptionLength: 100
         },
 
         // Data for vizualization
@@ -26,7 +27,10 @@
         genomeName: null,
         domainModelSetRef: null,
         domainModelSetName: null,
-        domainAccession2Description: {},
+        domainAccessionToShortDescription: {},
+        domainAccessionToLongDescription: {},
+	domainAccessionToPrefix: {},
+	prefixToUrl: {},
         annotatedGenesCount: 0,
         annotatedDomainsCount: 0,
 
@@ -99,8 +103,18 @@
                 var jobGetDomainModelSet =  kbws.get_objects(
                     [{ref: self.domainModelSetRef}], 
                     function(data) {
-                        self.domainSetName = data[0].data.set_name;
-                        self.domainAccession2Description = data[0].data.domain_accession_to_description;
+                        self.domainAccessionToShortDescription = data[0].data.domain_accession_to_description;
+			// make regex for each prefix to map to external URLs
+			$.each(data[0].data.domain_prefix_to_dbxref_url, function(prefix,url) {
+			    self.prefixToUrl['^'+prefix] = url;
+			});
+			// make short & long descriptions for ones that are too long
+			$.each(self.domainAccessionToShortDescription, function(domainId,description) {
+			    if (description.length > self.options.maxDescriptionLength) {
+				domainAccessionToLongDescription[domainId] = domainAccessionToShortDescription[domainId] + ' <a class="show-less' + self.pref  + '" data-id="' + domainId + '">(show less)</a>';
+				domainAccessionToShortDescription[domainId] = domainAccessionToShortDescription[domainId].substring(0,self.options.maxDescriptionLength) + ' <a class="show-more' + self.pref  + '" data-id="' + domainId + '">(show more)</a>';
+			    }
+			});
                     },
                     function(error){
                         self.clientError(error);
@@ -166,6 +180,18 @@
                     for(var domainId in domains){
                         var domain = domains[domainId];
 
+			// try to map each domain to a prefix,
+			// for external crossrefs and to show only
+			// the most relevant match per set
+			var domainRef = domainId;
+			$.each(self.prefixToUrl, function(prefix,url) {
+			    if (domainId.match(prefix)) {
+				self.domainToPrefix[domainId] = prefix;
+				domainRef += ' <a href="'+url+domainId+'">(more info)</a>';
+				return false;
+			    }
+			});
+
                         // Build concatenated list of gene references
                         var geneRefs = "";
                         for(var i = 0; i < domain.genes.length; i++){
@@ -183,8 +209,7 @@
                         // add table data row            
                         domainsTableData.push(
                             {
-                                //id: '<a class="' + self.pref + 'gene-click" data-domainid="' + domainId + '">' + domainId + '</a>', 
-                                id: domainId, 
+                                id: domainRef, 
                                 description: domain.description,
                                 geneCount: domain.genes.length,
                                 geneRefs: geneRefs
@@ -272,7 +297,7 @@
                                         'geneStart' : geneStart,
                                         'geneEnd' : geneEnd,
                                         'domainId' : domainRef,
-                                        'domainDescription' : self.domainAccession2Description[domainId],
+                                        'domainDescription' : self.domainAccessionToShortDescription[domainId],
                                         'domainStart': domainStart, 
                                         'domainEnd' : domainEnd, 
                                         'eValue' : eValue,
@@ -322,16 +347,16 @@
 //                    var geneStart = genesArray[i][1];
 //                    var geneEnd = genesArray[i][2];
                     var domainsInfo = genesArray[i][4];
-                    if( $.isEmptyObject(domainsInfo)) continue;
+                    if($.isEmptyObject(domainsInfo)) continue;
 
                     // If we have somthing in domainsInfo, then the gene was anntoated
-                    genesCount ++;
+                    genesCount++;
                     for(var domainId in domainsInfo){
                         var domainData = domains[domainId];
                         if(typeof domainData === 'undefined'){
                             domainData = {
                                 id: domainId,
-                                description: self.domainAccession2Description[domainId],
+                                description: self.domainAccessionToShortDescription[domainId],
                                 genes: []
                             };
                             domains[domainId] = domainData;

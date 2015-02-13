@@ -11,6 +11,7 @@ __Bugfixes__
 - In other dropdowns, the escape key didn't work properly
 - https://atlassian.kbase.us/browse/KBASE-1586 - fixed parameter checking for min/max ints
 - https://atlassian.kbase.us/browse/NAR-687 - fixed issue with non-loading reactions and compounds for certain gapfilled FBA models
+- https://atlassian.kbase.us/browse/NAR-633 - Rerouted urls to the production site in prep for production release tomorrow. Eep!
 
 ### Version 0.6.3 - 2/12/2015
 __Bugfixes__

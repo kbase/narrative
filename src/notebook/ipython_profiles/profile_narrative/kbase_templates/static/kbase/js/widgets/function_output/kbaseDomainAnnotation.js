@@ -17,20 +17,20 @@
             workspaceURL: window.kbconfig.urls.workspace,
             loadingImage: "static/kbase/images/ajax-loader.gif",
             height: null,
-	    maxDescriptionLength: 100
+	    maxDescriptionLength: 200
         },
 
         // Data for vizualization
         domainAnnotationData: null,
         genomeRef: null,
-        genomeId: null,
+        genomeID: null,
         genomeName: null,
         domainModelSetRef: null,
         domainModelSetName: null,
-        domainAccessionToShortDescription: {},
-        domainAccessionToLongDescription: {},
-	domainAccessionToPrefix: {},
-	prefixToUrl: {},
+        accessionToShortDescription: {},
+        accessionToLongDescription: {},
+	accessionToPrefix: {},
+	prefixToURL: {},
         annotatedGenesCount: 0,
         annotatedDomainsCount: 0,
 
@@ -75,9 +75,6 @@
             var container = this.$elem;
             var kbws = this.ws;
 
-            //self.options.workspaceID + "/" + self.options.domainAnnotationID;
-            //kbws.get_objects([{ref: domainAnnotationRef}], function(data) {
-
             var domainAnnotationRef = self.buildObjectIdentity(this.options.workspaceID, this.options.domainAnnotationID, this.options.domainAnnotationVer);
             kbws.get_objects([domainAnnotationRef], function(data) {
 
@@ -92,7 +89,7 @@
                         { 'ref':self.genomeRef, 'included':['/scientific_name'] }
                     ], 
                     function(data){
-                        self.genomeId = data[0].data.id;
+                        self.genomeID = data[0].data.id;
                         self.genomeName = data[1].data.scientific_name;
                     }, 
                     function(error){
@@ -103,16 +100,20 @@
                 var jobGetDomainModelSet =  kbws.get_objects(
                     [{ref: self.domainModelSetRef}], 
                     function(data) {
-                        self.domainAccessionToShortDescription = data[0].data.domain_accession_to_description;
+                        self.accessionToShortDescription = data[0].data.domain_accession_to_description;
 			// make regex for each prefix to map to external URLs
 			$.each(data[0].data.domain_prefix_to_dbxref_url, function(prefix,url) {
-			    self.prefixToUrl['^'+prefix] = url;
+			    self.prefixToURL['^'+prefix] = url;
 			});
 			// make short & long descriptions for ones that are too long
-			$.each(self.domainAccessionToShortDescription, function(domainId,description) {
+			$.each(self.accessionToShortDescription, function(domainID,description) {
+			    self.accessionToLongDescription[domainID] = "";
 			    if (description.length > self.options.maxDescriptionLength) {
-				domainAccessionToLongDescription[domainId] = domainAccessionToShortDescription[domainId] + ' <a class="show-less' + self.pref  + '" data-id="' + domainId + '">(show less)</a>';
-				domainAccessionToShortDescription[domainId] = domainAccessionToShortDescription[domainId].substring(0,self.options.maxDescriptionLength) + ' <a class="show-more' + self.pref  + '" data-id="' + domainId + '">(show more)</a>';
+				var pos = description.indexOf(" ",self.options.maxDescriptionLength);
+				if (pos > -1) {
+				    self.accessionToLongDescription[domainID] = description + ' <small><a class="show-less' + self.pref  + '" data-id="' + domainID + '">show&nbsp;less</a></small>';
+				    self.accessionToShortDescription[domainID] = description.substring(0,pos) + ' <small><a class="show-more' + self.pref  + '" data-id="' + domainID + '">more&#8230;</a></small>';
+				}
 			    }
 			});
                     },
@@ -161,33 +162,34 @@
                         "sPaginationType": "full_numbers",
                         "iDisplayLength": 10,
                         "aaData": [],
-                        "aaSorting": [[ 2, "asc" ], [0, "asc"]],
+                        "aaSorting": [[ 3, "asc" ], [0, "asc"]],
                         "aoColumns": [
-                                      { "sTitle": "Domain", 'mData': 'id'},
-                                      { "sTitle": "Description", 'mData': 'description'},
-                                      { "sTitle": "#Genes", 'mData': 'geneCount'},
-                                      { "sTitle": "Genes", 'mData': 'geneRefs'},
+                            { sTitle: "Domain", mData: "id"},
+                            { sTitle: "Description", mData: "domainDescription"},
+                            { sTitle: "LongDescription", mData: "longDomainDescription", bVisible: false, bSearchable: true},
+                            { sTitle: "#Genes", mData: "geneCount"},
+                            { sTitle: "Genes", mData: "geneRefs"},
                         ],
                         "oLanguage": {
                                     "sEmptyTable": "No domains found!",
                                     "sSearch": "Search: "
                         },
-                        'fnDrawCallback': events
+                        'fnDrawCallback': eventsDomainsTab
                     };
 
                     var domainsTableData = [];
                     var domains = self.domains;
-                    for(var domainId in domains){
-                        var domain = domains[domainId];
+                    for(var domainID in domains){
+                        var domain = domains[domainID];
 
 			// try to map each domain to a prefix,
 			// for external crossrefs and to show only
 			// the most relevant match per set
-			var domainRef = domainId;
-			$.each(self.prefixToUrl, function(prefix,url) {
-			    if (domainId.match(prefix)) {
-				self.domainToPrefix[domainId] = prefix;
-				domainRef += ' <a href="'+url+domainId+'">(more info)</a>';
+			var domainRef = domainID;
+			$.each(self.prefixToURL, function(prefix,url) {
+			    if (domainID.match(prefix)) {
+				self.accessionToPrefix[domainID] = prefix;
+				domainRef += ' <small><a href="'+url+domainID+'" target="_blank">(more&nbsp;info)</a></small>';
 				return false;
 			    }
 			});
@@ -200,32 +202,32 @@
                                 geneRefs += '<br />';
                             }                            
                             geneRefs += '<a class="show-gene' + self.pref  + '"'
-                                + ' data-id="' + gene['geneId'] + '"'
-                                + ' data-contigId="' + gene['contigId']  + '"'
+                                + ' data-id="' + gene['geneID'] + '"'
+                                + ' data-contigID="' + gene['contigID']  + '"'
                                 + ' data-geneIndex="' + gene['geneIndex']  + '"'
-                                + '>' + gene['geneId'] + '</a>';
+                                + '>' + gene['geneID'] + '</a>';
                         }
  
                         // add table data row            
                         domainsTableData.push(
                             {
-                                id: domainRef, 
-                                description: domain.description,
-                                geneCount: domain.genes.length,
-                                geneRefs: geneRefs
+                                'id': domainRef, 
+                                'domainDescription' : self.accessionToShortDescription[domainID],
+                                'longDomainDescription' : self.accessionToLongDescription[domainID],
+                                'geneCount': domain.genes.length,
+                                'geneRefs': geneRefs
                             }
                         );
                     };
                     domainTableSettings.aaData = domainsTableData;
                     tableDomains = tableDomains.dataTable(domainTableSettings);
 
-                    ///////////////////////////////////// Events ////////////////////////////////////////////          
-
-                    function events() {
+                    ///////////////////////////////////// Domains Tab Events ////////////////////////////////////////////          
+                    function eventsDomainsTab() {
                         $('.show-gene'+self.pref).unbind('click');
                         $('.show-gene'+self.pref).click(function() {
                             var id = $(this).attr('data-id');
-                            var contigId = $(this).attr('data-contigId');
+                            var contigID = $(this).attr('data-contigID');
                             var geneIndex = $(this).attr('data-geneIndex');
 
                             if (tabPane.kbaseTabs('hasTab', id)) {
@@ -243,10 +245,11 @@
                                 "sPaginationType": "full_numbers",
                                 "iDisplayLength": 10,
                                 "aaData": [],
-                                "aaSorting": [[ 3, "asc" ], [5, "desc"]],
+                                "aaSorting": [[ 4, "asc" ], [6, "desc"]],
                                 "aoColumns": [
-                                    {sTitle: "Domain", mData: "domainId"},
+                                    {sTitle: "Domain", mData: "domainID"},
                                     {sTitle: "Description", mData: "domainDescription", sWidth:"30%"},
+                                    {sTitle: "LongDescription", mData: "longDomainDescription", bVisible: false, bSearchable: true},
                                     {sTitle: "Location", mData: "image"},
                                     {sTitle: "Start", mData: "domainStart"},
                                     {sTitle: "End", mData: "domainEnd"},
@@ -256,20 +259,20 @@
                                     "sEmptyTable": "No domains found!",
                                     "sSearch": "Search: "
                                 },
-				'fnDrawCallback': events2
+				'fnDrawCallback': eventsGeneTab
                             };
                             var geneDomainsTableData = [];
 
-                            var gene = self.domainAnnotationData.data[contigId][geneIndex];
-                            var geneId = gene[0];
+                            var gene = self.domainAnnotationData.data[contigID][geneIndex];
+                            var geneID = gene[0];
                             var geneStart = gene[1];
                             var geneEnd = gene[2];
                             var domainsInfo = gene[4];
 			    var geneLength = (geneEnd - geneStart + 1)/3;
 
-			    // hack to deal with genes with incorrect lengths
-                            for(var domainId in domainsInfo){
-                                var domainsArray = domainsInfo[domainId];
+			    // hack to correct display bug in genes with incorrect stated lengths
+                            for(var domainID in domainsInfo){
+                                var domainsArray = domainsInfo[domainID];
                                 for(var i = 0 ; i < domainsArray.length; i++){
                                     var domainEnd = domainsArray[i][1];
                                     if (domainEnd > geneLength)
@@ -277,8 +280,8 @@
 				}
 			    }
 			    
-                            for(var domainId in domainsInfo){
-                                var domainsArray = domainsInfo[domainId];
+                            for(var domainID in domainsInfo){
+                                var domainsArray = domainsInfo[domainID];
                                 for(var i = 0 ; i < domainsArray.length; i++){
                                     var domainStart = domainsArray[i][0];
                                     var domainEnd = domainsArray[i][1];
@@ -288,16 +291,15 @@
                                     var domainImgleftShift = (domainStart)*100/geneLength;
 
 				    var domainRef = '<a class="show-domain' + self.pref  + '"'
-					+ ' data-id="' + domainId + '">'
-					+ domainId + '</a>';
+					+ ' data-id="' + domainID + '">'
+					+ domainID + '</a>';
 
                                     geneDomainsTableData.push({
-                                        'contigId' : contigId,
-                                        'geneId' : geneId,
-                                        'geneStart' : geneStart,
-                                        'geneEnd' : geneEnd,
-                                        'domainId' : domainRef,
-                                        'domainDescription' : self.domainAccessionToShortDescription[domainId],
+                                        'contigID' : contigID,
+                                        'geneID' : geneID,
+                                        'domainID' : domainRef,
+                                        'domainDescription' : self.accessionToShortDescription[domainID],
+                                        'longDomainDescription' : self.accessionToLongDescription[domainID],
                                         'domainStart': domainStart, 
                                         'domainEnd' : domainEnd, 
                                         'eValue' : eValue,
@@ -315,17 +317,37 @@
                             tabPane.kbaseTabs('addTab', {tab: id, content: tabContent, canDelete : true, show: true});
                             tableGeneDomains.dataTable(geneDomainTableSettings);
                         });
+			eventsMoreDescription();
 		    };
 
-                    function events2() {
+                    ///////////////////////////////////// Gene Tab Events ////////////////////////////////////////////          
+                    function eventsGeneTab() {
                         $('.show-domain'+self.pref).unbind('click');
                         $('.show-domain'+self.pref).click(function() {
-                            var domainId = $(this).attr('data-id');
-			    tableDomains.fnFilter(domainId);
+                            var domainID = $(this).attr('data-id');
+			    tableDomains.fnFilter(domainID);
                             tabPane.kbaseTabs('showTab', 'Domains');
 			});
+			eventsMoreDescription();
                     };
 
+                    //////////////////// Events for Show More/less Description  ////////////////////////////////////////////          
+                    function eventsMoreDescription() {
+                        $('.show-more'+self.pref).unbind('click');
+                        $('.show-more'+self.pref).click(function() {
+                            var domainID = $(this).attr('data-id');
+			    $(this).closest("td").html(self.accessionToLongDescription[domainID]);
+			    eventsLessDescription();
+			});
+		    }
+                    function eventsLessDescription() {
+                        $('.show-less'+self.pref).unbind('click');
+                        $('.show-less'+self.pref).click(function() {
+                            var domainID = $(this).attr('data-id');
+			    $(this).closest("td").html(self.accessionToShortDescription[domainID]);
+			    eventsMoreDescription();
+			});
+		    }
                 });                
             });
         },
@@ -339,11 +361,11 @@
             var domainsCount = 0;
             var genesCount = 0;
 
-            for(var contigId in dad.data){
+            for(var contigID in dad.data){
 
-                var genesArray = dad.data[contigId];
+                var genesArray = dad.data[contigID];
                 for(var i = 0 ; i < genesArray.length; i++){
-                    var geneId = genesArray[i][0];
+                    var geneID = genesArray[i][0];
 //                    var geneStart = genesArray[i][1];
 //                    var geneEnd = genesArray[i][2];
                     var domainsInfo = genesArray[i][4];
@@ -351,23 +373,22 @@
 
                     // If we have somthing in domainsInfo, then the gene was anntoated
                     genesCount++;
-                    for(var domainId in domainsInfo){
-                        var domainData = domains[domainId];
+                    for(var domainID in domainsInfo){
+                        var domainData = domains[domainID];
                         if(typeof domainData === 'undefined'){
                             domainData = {
-                                id: domainId,
-                                description: self.domainAccessionToShortDescription[domainId],
-                                genes: []
+                                'id': domainID,
+                                'genes': []
                             };
-                            domains[domainId] = domainData;
+                            domains[domainID] = domainData;
                             domainsCount++;
                         }
 
                         domainData.genes.push(
                             {
-                                geneId: geneId,
-                                contigId: contigId, 
-                                geneIndex: i
+                                'geneID': geneID,
+                                'contigID': contigID, 
+                                'geneIndex': i
                             }
                         );
                     }

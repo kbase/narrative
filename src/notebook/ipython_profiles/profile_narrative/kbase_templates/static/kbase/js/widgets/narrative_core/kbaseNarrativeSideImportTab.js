@@ -503,21 +503,21 @@
             		var biomass = params['biomass'];
             		if (biomass)
             			options['biomass'] = biomass;
-            		args = {'external_type': 'CSV.FBAModel', 
+            		args = {'external_type': 'TSV.FBAModel', 
             				'kbase_type': 'KBaseFBA.FBAModel', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
             				'optional_arguments': {'validate':{},'transform':options},
             				'url_mapping': {
-            					'CSV.FBAModel': self.shockURL + '/node/' + params['reactionFile'],
-            					'CSV.Compounds': self.shockURL + '/node/' + params['compoundFile']
+            					'TSV.FBAModel': self.shockURL + '/node/' + params['reactionFile'],
+            					'TSV.Compounds': self.shockURL + '/node/' + params['compoundFile']
             				}
             		};
             	} else if (methodId === 'import_fbamodel_sbml_file') {
             		var urlMapping = {'SBML.FBAModel': self.shockURL + '/node/' + params['reactionFile']};
             		var compoundFile = params['compoundFile'];
             		if (compoundFile)
-            			urlMapping['CSV.Compounds'] = self.shockURL + '/node/' + compoundFile;
+            			urlMapping['TSV.Compounds'] = self.shockURL + '/node/' + compoundFile;
             		var options = {};
             		var genome = params['genomeObject'];
             		if (genome)
@@ -531,18 +531,40 @@
             				'object_name': params['outputObject'],
             				'optional_arguments': {'validate':{},'transform':options},
             				'url_mapping': urlMapping};
-            	} else {
+            	} else if (methodId === 'import_fbamodel_excel_file') {
+                    var urlMapping = {'Excel.FBAModel': self.shockURL + '/node/' + params['inputFile']};
+                    var options = {};
+                    var genome = params['genomeObject'];
+                    if (genome)
+                        options['genome'] = genome;
+                    var biomass = params['biomass'];
+                    if (biomass)
+                        options['biomass'] = biomass;
+                    args = {'external_type': 'Excel.FBAModel', 
+                            'kbase_type': 'KBaseFBA.FBAModel', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':options},
+                            'url_mapping': urlMapping};
+                } else {
             		self.showError(methodId + " import mode for FBAModel type is not supported yet");
             	}
             } else if (self.selectedType === 'KBaseBiochem.Media') {
             	if (methodId === 'import_media_csv_file') {
-            		args = {'external_type': 'CSV.Media', 
+            		args = {'external_type': 'TSV.Media', 
             				'kbase_type': 'KBaseBiochem.Media', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
             				'optional_arguments': {'validate':{},'transform':{}},
-            				'url_mapping': {'CSV.Media': self.shockURL + '/node/' + params['csvFile']}};
-            	} else {
+            				'url_mapping': {'TSV.Media': self.shockURL + '/node/' + params['csvFile']}};
+            	} else if (methodId === 'import_media_excel_file') {
+                    args = {'external_type': 'Excel.Media', 
+                            'kbase_type': 'KBaseBiochem.Media', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':{}},
+                            'url_mapping': {'Excel.Media': self.shockURL + '/node/' + params['inputFile']}};
+                } else {
             		self.showError(methodId + " import mode for Media type is not supported yet");
             	}
             } else if (self.selectedType === 'KBasePhenotypes.PhenotypeSet') {
@@ -551,12 +573,12 @@
             		var genome = params['genomeObject'];
             		if (genome)
             			options['genome'] = genome;
-            		args = {'external_type': 'CSV.PhenotypeSet', 
+            		args = {'external_type': 'TSV.PhenotypeSet', 
             				'kbase_type': 'KBasePhenotypes.PhenotypeSet', 
             				'workspace_name': self.wsName, 
             				'object_name': params['outputObject'],
             				'optional_arguments': {'validate':{},'transform':options},
-            				'url_mapping': {'CSV.PhenotypeSet': self.shockURL + '/node/' + params['csvFile']}};
+            				'url_mapping': {'TSV.PhenotypeSet': self.shockURL + '/node/' + params['csvFile']}};
             	} else {
             		self.showError(methodId + " import mode for PhenotypeSet type is not supported yet");
             	}

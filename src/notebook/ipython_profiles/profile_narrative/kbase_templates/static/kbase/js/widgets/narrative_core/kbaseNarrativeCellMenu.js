@@ -2,10 +2,12 @@
     $.KBWidget({
         name: 'kbaseNarrativeCellMenu',
         parent: 'kbaseWidget',
-        options: {},
+        options: {cell: null},
 
         init: function(options) {
             this._super(options);
+
+            // console.log(['cell menu', this.options.cell]);
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
                              .css({"background-color": "transparent"})
@@ -80,14 +82,21 @@
                 }
             });
 
-            this.addMenuItem({
-                icon: 'fa fa-terminal',
-                text: 'Convert to code cell',
-                action: function() {
-                    //IPython.notebook.to_code();
-                },
-                disable: true
-            });
+            // if (this.options.cell && this.options.cell.metadata['kb-cell'] === undefined) {
+            //     this.addMenuItem({
+            //         icon: 'fa fa-terminal',
+            //         text: 'Toggle Cell Type',
+            //         action: function() {
+            //             if (this.options.cell.cell_type === "markdown") {
+            //                 IPython.notebook.to_code();
+            //             }
+            //             else {
+
+            //             }
+            //         },
+            //         disable: true
+            //     });
+            // }
 
             this.addMenuItem({
                 icon: 'fa fa-trash-o',

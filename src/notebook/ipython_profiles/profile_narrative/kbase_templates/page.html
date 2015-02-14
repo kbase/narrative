@@ -7,7 +7,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>{% block title %}User Testing Narrative{% endblock %}</title>
+    <title>{% block title %}KBase Narrative{% endblock %}</title>
     <link rel="shortcut icon" type="image/x-icon" href="{{static_url("kbase/images/KBase_favicon.ico") }}">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <link rel="stylesheet" href="{{static_url("components/jquery-ui/themes/smoothness/jquery-ui.min.css") }}" type="text/css" />
@@ -179,6 +179,22 @@
         </div>
     </noscript>
 
+    {% block loading_message %}
+    <div id="kb-wait-for-ws">
+        <img src="{{ static_url("kbase/images/kbase_logo_rect.png") }}"
+                class="kb-logo"></img>
+        <div id="kb-wait-for-ws-loader">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+        <p>Connecting to KBase services...</p>
+    </div>
+    {% endblock %}
+
     <nav class="navbar-kbase navbar-fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
@@ -192,11 +208,9 @@
                         <li><a href="/functional-site/#/dashboard" target="_blank">Dashboard</a></li>
                         <li><a id="kb-status-btn" href="" target="_blank">KBase Service Status</a></li>
                         <li role="presentation" class="divider"></li>
-                        <li><a id="kb-jira-btn" href="" target="_blank">Submit JIRA ticket</a></li>
-                        <li role="presentation" class="divider"></li>
                         <li><a id="kb-about-btn">About the Narrative</a></li>
-                        <li><a target="_blank" href="https://staging.kbase.us/narrative-guide/">Narrative User Guide</a></li>
-                        <li><a target="_blank" href="https://staging.kbase.us/contact-us/">Contact Us</a></li>
+                        <li><a target="_blank" href="https://kbase.us/narrative-guide/">Narrative User Guide</a></li>
+                        <li><a target="_blank" href="https://kbase.us/contact-us/">Contact Us</a></li>
                     </ul>
                 </div>
                 <a href="http://www.kbase.us">
@@ -212,7 +226,11 @@
                         <span id="autosave_status"></span>
                     </span>
                 </div>
-                <div>Created by: <span id="kb-narr-creator">KBase User</span></div>
+                <div>Created by: <span id="kb-narr-creator">KBase User</span>
+                    <span id="kb-view-mode">
+                        <span class="fa fa-pencil"></span>
+                    </span>
+                </div>
             </div>
 
             <div class="navbar-right">
@@ -268,6 +286,25 @@
         {% block site %}
         {% endblock %}
     </div>
+
+    <!-- Modal dialog for copying a narrative in view-only mode -->
+    <div class="modal fade" tabIndex="-1" role="dialog"
+         aria-labelledby="myModalLabel" aria-hidden="true"
+         id="kb-ro-copy-dlg">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close">
+                        <span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">Copy a
+                        narrative</h4>
+                </div>
+                <div class="modal-body"></div>
+            </div>
+        </div>
+    </div>
+
 
     <div id="app" class="wrapper" ui-view></div>
 

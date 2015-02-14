@@ -166,6 +166,11 @@
                         //[4] int object, [5] permission user_permission, [6] permission globalread,
                         //[7] lock_status lockstat, [8] usermeta metadata
                         //console.log('I have: '+self.ws_last_update_timestamp+ " remote has: "+workspace_info[3]);
+
+                        // Update RO or RW mode
+                        self.trigger("updateReadOnlyMode.Narrative",
+                                     [self.ws, self.ws_name]);
+
                         if (self.ws_last_update_timestamp) {
                             if (self.ws_last_update_timestamp !== workspace_info[3]) {
                                 self.ws_last_update_timestamp = workspace_info[3];
@@ -254,6 +259,7 @@
                         if (infoList[i][2].indexOf('KBaseNarrative') == 0) { continue; }
                         self.objectList.push(
                             {
+                                key:self.genUUID(), // always generate the DnD key
                                 $div:null, //self.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
                                 info:infoList[i],
                                 attached:false
@@ -281,6 +287,10 @@
                     self.$searchInput.on("change blur",function() { self.search(); });
                     if (self.objectList.length<=self.options.max_objs_to_prevent_filter_as_you_type_in_search) {
                         self.$searchInput.on("input",function() { self.search(); });
+                        self.$searchInput.on("keyup", function(e) {
+                            if (e.keyCode == 27) 
+                                self.$searchDiv.hide();
+                        });
                     }
 
                     self.trigger('dataUpdated.Narrative');
@@ -538,13 +548,15 @@
                                                             .click(function() {$alertContainer.empty();} )));
                                         });
 
-            $btnToolbar
-                .append($openLandingPage)
-                .append($openHistory)
-                .append($openProvenance)
-                .append($download)
-                .append($rename)
-                .append($delete);
+            $btnToolbar.append($openLandingPage);
+            if (!IPython.narrative.readonly)
+                $btnToolbar.append($openHistory);
+            $btnToolbar.append($openProvenance);
+            if (!IPython.narrative.readonly) {
+                $btnToolbar.append($download)
+                           .append($rename)
+                           .append($delete);
+            }
 
             return $btnToolbar;
         },
@@ -738,7 +750,7 @@
                     // // Get object info
                     var key = $elt.attr('kb-oid');
                     var obj = _.findWhere(self.objectList, {key: key});
-                    console.debug('drag-n-drop: key=' + key, obj);
+                    //console.debug('drag-n-drop: key=' + key, obj);
                     var info = self.createInfoObject(obj.info);
                     // // Insert the narrative data cell into the div we just rendered
                     // $('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
@@ -780,7 +792,7 @@
             	$(cell.element).off('dblclick');
             	$(cell.element).off('keydown');
             }
-            console.log(cell, near_idx);
+            //console.log(cell, near_idx);
 
             //var cell_id = self.genUUID();
             //cell.rendered = false;
@@ -809,9 +821,6 @@
                         // only show them as we scroll to them
                         if (self.n_objs_rendered >= start+self.options.objs_to_render_on_scroll) {
                             break;
-                        }
-                        if (self.objectList[i].key == undefined) {
-                            self.objectList[i].key = self.genUUID();
                         }
                         self.attachRow(i);
                     }
@@ -897,16 +906,23 @@
                     }
                     self.attachRow(i);
                 }
-                this.$addDataButton.show();
+                this.$addDataButton.toggle(!(IPython.narrative && IPython.narrative.readonly === true));
             } else {
                 // todo: show an upload button or some other message if there are no elements
-                self.$mainListDiv.append($('<div>').css({'text-align':'center','margin':'20pt'})
-                                         .append("This Narrative has no data yet.<br><br>")
-                                         .append($("<button>").append('Add Data').addClass('kb-data-list-add-data-text-button').css({'margin':'20px'})
-                                                 .click(function() {
-                                                        self.trigger('hideGalleryPanelOverlay.Narrative');
-                                                        self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);
-                                                    })));
+                var $noDataDiv = $('<div>')
+                                 .css({'text-align':'center', 'margin':'20pt'})
+                                 .append('This Narrative has no data yet.<br><br>');
+                if (IPython && IPython.narrative && !IPython.narrative.readonly) {
+                    $noDataDiv.append($("<button>")
+                                      .append('Add Data')
+                                      .addClass('kb-data-list-add-data-text-button')
+                                      .css({'margin':'20px'})
+                                      .click(function() {
+                                          self.trigger('hideGalleryPanelOverlay.Narrative');
+                                          self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);
+                                      }));
+                }
+                self.$mainListDiv.append($noDataDiv);
             }
 
             self.hideLoading();
@@ -978,6 +994,7 @@
                         self.$searchDiv.show();
                         self.$sortByDiv.hide();
                         self.$filterTypeDiv.hide();
+                        self.$searchInput.focus();
                     } else {
                         self.$searchDiv.hide();
                     }

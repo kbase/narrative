@@ -324,11 +324,15 @@
             var types = ["KBaseGenomes.Genome",
                          "KBaseSearch.GenomeSet",
                          "KBaseGenomes.Pangenome",
+                         "KBaseGeneDomains.DomainAnnotation",
                          "KBaseGenomes.GenomeComparison",
                          "KBaseGenomes.GenomeDomainData",
                          "GenomeComparison.ProteomeComparison",
                          "KBaseGenomes.ContigSet",
+                         "KBaseAssembly.SingleEndLibrary",
+                         "KBaseAssembly.PairedEndLibrary",
                          "KBaseAssembly.AssemblyInput",
+                         "KBaseAssembly.AssemblyReport",
                          "KBaseRegulation.Regulome",
                          "KBaseTrees.MSA",
                          "KBaseTrees.Tree",
@@ -341,9 +345,17 @@
                          "KBasePhenotypes.PhenotypeSimulationSet",
                          "KBaseFBA.ReactionSensitivityAnalysis",
                          "KBaseGenomes.MetagenomeAnnotation",
-                         "Communities.SequenceFile",
                          "KBaseExpression.ExpressionSeries",
-                         "KBaseExpression.ExpressionSample"
+                         "KBaseExpression.ExpressionSample",
+                         "Communities.Metagenome",
+                         "Communities.SequenceFile",
+                         "Communities.Collection",
+                         "Communities.FunctionalMatrix",
+                         "Communities.FunctionalProfile",
+                         "Communities.Heatmap",
+                         "Communities.PCoA",
+                         "Communities.TaxonomicMatrix",
+                         "Communities.TaxonomicProfile"
                          ];
 
             // tab panels
@@ -550,6 +562,17 @@
             // a container to put data in.
             // It produces a scrollable dataset
             function render(data, container, selected, template) {
+                var setDataIconTrigger = $._data($(document)[0], "events")["setDataIcon"];
+                if (setDataIconTrigger) {
+                    renderOnIconsReady(data, container, selected, template);
+                } else {
+                    setTimeout(function(){
+                        renderOnIconsReady(data, container, selected, template);
+                    }, 100);
+                }
+            }
+            
+            function renderOnIconsReady(data, container, selected, template) {
                 var start = 0, end = 30;
 
                 // remove items from only current container being rendered

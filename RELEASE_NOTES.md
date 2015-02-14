@@ -3,6 +3,57 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 1.0.0 - 2/13/2015
+## Production release!
+
+### Version 0.6.4 - 2/12/2015
+__Changes__
+- Removed most 'View' methods from the Methods panel, except for those required by the Communities tutorials
+- Set the default page title back to "KBase Narrative"
+
+__Bugfixes__
+- In the rename dialog:
+  - Text field wasn't autofocused
+  - Enter button didn't automatically work
+- In other dropdowns, the escape key didn't work properly
+- https://atlassian.kbase.us/browse/KBASE-1586 - fixed parameter checking for min/max ints
+- https://atlassian.kbase.us/browse/NAR-687 - fixed issue with non-loading reactions and compounds for certain gapfilled FBA models
+- https://atlassian.kbase.us/browse/NAR-633 - Rerouted urls to the production site in prep for production release tomorrow. Eep!
+
+### Version 0.6.3 - 2/12/2015
+__Bugfixes__
+- https://atlassian.kbase.us/browse/NAR-690 - Missing data types in data panel filter
+- https://atlassian.kbase.us/browse/NAR-692 - Fixed issue that led to drag and drop not working
+
+### Version 0.6.2 - 2/11/2015
+__Changes__
+- Adjustments to readonly mode
+  - Added reduced-functionality side panel
+  - Improved copy dialog
+- Added support for uploading Microsoft Excel files with Media and FBAModels
+
+__Bugfixes__
+- https://atlassian.kbase.us/browse/NAR-681 - loading screen blocks out valid HTTP error pages
+- https://atlassian.kbase.us/browse/NAR-682 - loading screen persists when it shouldn't
+- https://atlassian.kbase.us/browse/NAR-688 - 401 errors when unauthenticated don't redirect to kbase.us
+
+### Version 0.6.1 - 2/10/2015
+__Changes__
+- Made adjustments to Gapfill viewer widget
+- Added downloaders for PhenotypeSimulationSet and Pangenome
+
+### Version 0.6.0 - 2/10/2015
+__Changes__
+- Added a read-only mode for narratives. Users with read-only privileges can only view a narrative, but not change anything, including running functions, since they do not have write privileges anyway. This does come with a copy function that will allow a fork to be made and owned by the user.
+- Header style update, some consistency issues
+- Include old narrative objects under "My Data" and "Shared with me"
+- Show loading icon in communities widgets
+- Renamed CSV Transform API arguments to TSV
+
+__Bugfixes__
+- JIRA KBASE-1411 fix - render issue for protein comparison widget 
+- Fixed case where genome object doesn't have any contig info.
+
 ### Version 0.5.7 - 2/9/2015
 __Changes__
 - Updates to provisioning service to deal with JIRA NAR-660 and overall stability and control

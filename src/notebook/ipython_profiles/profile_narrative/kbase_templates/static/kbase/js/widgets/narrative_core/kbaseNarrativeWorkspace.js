@@ -28,7 +28,7 @@
             tableElem: null,
             controlsElem: null,
             ws_id: null,
-            methodStoreURL: 'https://kbase.us/services/narrative_method_store',
+            methodStoreURL: 'https://kbase.us/services/narrative_method_store'
         },
         ws_client: null,
         ws_id: null,
@@ -66,6 +66,14 @@
         init: function(options) {
             this._super(options);
             this.ws_id = this.options.ws_id;
+
+            this.is_readonly = null; // null => unset, force a check
+            this.first_readonly = true; // still trying for first check?
+            this.last_readonly_check = null; // avoid frequent checks
+            this.user_readonly = false; // user-defined override
+            this.readonly_buttons = []; // list of buttons toggled
+            this.readonly_params = []; // list of params toggled
+            this.first_show_controls = true; // 1st panel show
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
@@ -176,7 +184,7 @@
                     var params = {'embed' : true,
                                   'data': this.safeJSONStringify(data.result)};
                     if (data.next_steps) {
-                      console.debug("adding next steps in create");
+                      // console.debug("adding next steps in create");
                       params.next_steps = data.next_steps;
                     }
                     this.createOutputCell(IPython.notebook.get_cell(cellIndex),
@@ -208,6 +216,34 @@
                 },
                 this));
 
+            // Refresh the read-only or View-only mode
+            $(document).on('updateReadOnlyMode.Narrative',
+              $.proxy(function (e, ws, name, callback) {
+                    this.updateReadOnlyMode(ws, name, callback);
+                },
+                this)
+            );
+            // related: click on edit-mode toggles state
+            $('#kb-view-mode').click($.proxy(function() {
+                if (this.is_readonly == false) {
+                    this.user_readonly = !this.user_readonly;
+                    if (this.user_readonly) {
+                        this.readOnlyMode(true);
+                    }
+                    else {
+                        this.readWriteMode(true);
+                    }
+                    var icon = $('#kb-view-mode span');
+                    icon.toggleClass("fa-eye", this.user_readonly);
+                    icon.toggleClass('fa-pencil', !this.user_readonly);
+                }
+            }, this));
+            $('#kb-view-mode').tooltip({
+              title: 'Toggle view-only mode',
+              'container': 'body',
+              delay: {"show": 400, "hide": 50}
+            });
+
             this.initDeleteCellModal();
             // Initialize the data table.
             this.render();
@@ -224,7 +260,7 @@
                     callback : function(e, $prompt) {
                         this.cellToDelete = null;
                         $prompt.closePrompt();
-                    },
+                    }
                 },
                 {
                     name : 'Delete',
@@ -332,7 +368,7 @@
                 'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput); },
                 'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
                 'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-                'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
+                'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
             };
 
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
@@ -378,7 +414,7 @@
                 'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, "app"); },
                 'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
                 'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-                'input_request' : function(content) { self.handleInputRequest(data.cell, content); },
+                'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
             };
 
             var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
@@ -572,112 +608,326 @@
         },
 
         /**
-         * Set narrative into read-only mode.
+         * If read-only status has changed (or this is the
+         * first time checking it) then update the read-only
+         * state of the narrative.
+         *
+         * @param ws Workspace client
+         * @param name Workspace name
+         *
+         * Side-effects: modifies this.is_readonly to reflect current value.
          */
-        activateReadonlyMode: function() {
-            var self = this;
-
-            console.debug("activate read-only mode");
-            // Hide delete and run buttons
-            cells = IPython.notebook.get_cells();
-            cells.forEach(function(cell) {
-               ['delete', 'run'].forEach(function (e) {
-                    $(this.element).find(".buttons [id*=" + e + "]").hide();
-                }, cell);
-            });
-
-            // Delete left-side panel!
-            $('#left-column').detach(); //hide();
-
-            // Hide IPython toolbar
-            $('#maintoolbar').hide();
-
-            // Move content panels to the left
-            $('#ipython-main-app').css({'left': '10px'});
-            $('#menubar-container').css({'left': '10px'});
-
-            // Disable text fields
-            console.debug("readonly: Disable text fields");
-            $(".cell input").attr('disabled', 'disabled');
-
-            // Disable buttons
-            console.debug("readonly: Disable internal buttons");
-            $(".cell button").hide();  //attr('disabled', 'disabled');
-
-            // Hide save/checkpoint status
-            $('#autosave_status').text("(read-only)");
-            $('#checkpoint_status').hide();
-
-            var input_titles = [];
-
-            // Remove h1 from input titles
-            $('div.kb-func-desc h1').each(function(idx) {
-                var title = $(this).text();
-                var title_span = $('<span>' + title + '</span>');
-                var desc = $(this).parent();
-                desc.prepend(title_span);
-                $(this).remove();
-                input_titles.push([title, desc]);
-                desc.prepend(
-                    '<span class="label label-info" style="margin-right: 8px;" ' +
-                    ' id="kb-input-' + idx + '">' +
-                    'Input' +
-                    '</span>');
-            });
-
-            // Add label before input titles
-            // $('.kb-func-panel .panel-heading .kb-func-desc').prepend(
-            //     '<span class="label label-info" style="margin-right: 8px;">' +
-            //     ' id="kb-input-' + idx +
-            //     'Input' +
-            //     '</span>');
-
-            // Remove trailing ' - Output' junk from output titles
-            // and add label before them.
-            // If a matching input title can be found, store in 'connectable'
-            var matched_input = 0;
-            var connectable = {};
-            $('.kb-cell-output').each(function(idx) {
-                var desc = $(this).find('.kb-out-desc');
-                var title_full = desc.text();
-                var otitle = title_full.replace(/\s*-\s*Output/,'');
-                if (title_full != otitle) {
-                    desc.text(otitle); // replace
-                }
-                var title_span = $('<span class="label label-primary" style="margin-right: 8px;"' +
-                    ' id="kb-output-' + idx + '">' +
-                'Output' +
-                '</span>')
-                desc.prepend(title_span);
-                // Look for matching input
-                for (var i=matched_input; i < input_titles.length; i++) {
-                    var ititle = input_titles[i][0];
-                    //console.debug('input title="'+ ititle + '" output title="' + otitle + '"');
-                    if (ititle == otitle) {
-                        matched_input = i + 1;
-                        connectable[i] = idx;
-                        break;
+        updateReadOnlyMode: function (ws, name, callback) {
+            this.checkReadOnly(ws, name, $.proxy(function (readonly) {
+                if (readonly != null) {
+                    if (this.is_readonly != readonly) {
+                        if (this.is_readonly == null && readonly == false) {
+                            // pass: first time, and it is the default read/write
+                        }
+                        else if (readonly == true) {
+                            this.readOnlyMode();
+                            $('#kb-view-mode').css({display: 'none'});
+                        }
+                        else {
+                            this.readWriteMode();
+                            $('#kb-view-mode').css({display: 'inline-block'});
+                        }
+                        this.is_readonly = readonly;
+                    }
+                    // if this is the first time we got a yes/no answer
+                    // from the workspace, make the narrative visible!
+                    if (this.first_readonly) {
+                        // show narrative by removing overlay
+                        $('#kb-wait-for-ws').remove();
+                        this.first_readonly = false;
                     }
                 }
-            });
-
-            // Add 'Copy' button after narrative title
-            var narr_copy_id = "narr-copy";
-            var button = $('<button type="button" ' +
-                           'class="btn btn-success" ' +
-                           'id="'  + narr_copy_id + '" ' +
-                           'data-toggle="tooltip" ' +
-                           'title="Copy this narrative to a workspace ' +
-                           'where you can modify and run it" ' +
-                           '>Copy</button>');
-            button.css({'line-height': '1em',
-                        'margin-top': '-15px',
-                        'margin-left': '5em'});
-            e = $('#menubar').append(button);
-            this.bindCopyButton($('#' + narr_copy_id));
-
-            this.connectable = connectable;
+                if (callback)
+                    callback(this.is_readonly);
+            }, this));
+            return this.is_readonly;
         },
+
+        /** Check if narrative is read-only.
+         *
+         * @param ws Workspace client
+         * @param name Workspace name
+         * @param callback Call this with one argument, whose value is
+         *          true if it is readonly
+         *          false if it is read/write
+         *          null if workspace service error or null, or if this
+         *               check is too soon after the last one
+         */
+        checkReadOnly: function(ws, name, callback) {
+            // console.debug("check_readonly_mode.begin");
+            // stop if no workspace client
+            if (ws == null) {
+                // console.debug("set_readonly_mode.end: WS client not initialized");
+                return callback(null);
+            }
+            // stop if this is too-soon after last check
+            var sec = new Date() / 1000; // will use this either way
+            if (this.last_readonly_check != null) {
+                var delta = sec - this.last_readonly_check;
+                if (delta < 60) {
+                    // console.debug("check_readonly_mode.end: skip, too soon delta=" + delta);
+                    return callback(null);
+                }
+            }
+            // update the last check time
+            this.last_readonly_check = sec;
+            // check the workspace, and invoke callback with result
+            ws.get_workspace_info({workspace: name},
+              function (info) {
+                  var is_ro = true;
+                  if (info[5] == 'w' || info[5] == 'a') {
+                      is_ro = false;
+                  }
+                  IPython.narrative.readonly = is_ro; // set globally
+                  // console.debug("set_readonly_mode.end: callback_value=" + is_ro);
+                  return callback(is_ro);
+              },
+              function (error) {
+                  KBError("kbaseNarrativeWorkspace.checkReadOnly",
+                    "get_workspace_info had an error for ID=" + name +
+                    ": " + error);
+                  return callback(null);
+              });
+        },
+
+        /**
+         * List of selectors to toggle for read-only mode.
+         *
+         * @returns {string[]}
+         */
+        getReadOnlySelectors: function() {
+            return ['.kb-app-next',                         // next steps
+                    '#kb-add-code-cell', '#kb-add-md-cell', // edit btns
+                    '#kb-share-btn', '#kb-save-btn',        // action btns
+                    '#kb-ipy-menu',                         // kernel
+                    '.kb-app-panel .pull-right',            // app icons
+                    '.kb-func-panel .pull-right',           // method icons
+                    '.celltoolbar .button_container',       // ipython icons
+                    '.kb-title .btn-toolbar .btn .fa-arrow-right', // data panel slideout
+            ];
+        },
+
+        /**
+         * Toggle the run/cancel/reset buttons on and off,
+         * saving them in this.readonly_buttons when they are turned off.
+         *
+         * @param on If true, turn them on; else turn them off
+         */
+        toggleRunButtons: function(on) {
+            var classes = ['.kb-app-run', '.kb-method-run',
+                'span.pull-right.kb-func-timestamp span>span'];
+            if (on) {
+                _.map(this.readonly_buttons, function(b) {
+                   b.show();
+                });
+                this.readonly_buttons = []; // don't do it twice
+            }
+            else {
+                var ro = [];
+                _.map(classes, function(c) {
+                   _.map($(c), function(b) {
+                       var $btn = $(b);
+                       if ($btn.css('display') != "none") {
+                           // it is visible, so hide it and remember it
+                           ro.push($btn);
+                           $btn.hide();
+                       }
+                   });
+                });
+                this.readonly_buttons = ro;
+            }
+        },
+
+        /**
+         * Toggle the parameter select boxes on and off,
+         * saving them in this.readonly_buttons when they are turned off.
+         *
+         * @param on {bool} If true, turn them on; else turn them off
+         */
+        toggleSelectBoxes: function(on) {
+            var disabled = 'select2-container-disabled';
+            if (on) {
+                _.map(this.readonly_params, function($c) {
+                    $c.removeClass(disabled);
+                });
+            }
+            else {
+                var params = [];
+                _.map($('.select2-container'), function (c) {
+                    if (!$(c).hasClass(disabled)) {
+                        params.push($(c));
+                        $(c).addClass(disabled)
+                    }
+                });
+                this.readonly_params = params;
+            }
+        },
+
+        /**
+         * Set narrative into read-only mode.
+         */
+        readOnlyMode: function(from_user) {
+            // console.debug('set_readonly_mode.begin from-user=' + from_user);
+            // Hide side-panel
+            $('#left-column').hide();
+            // Move content flush left-ish
+            $('#content-column').css({'margin-left': '120px'});
+            // Hide things
+            _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
+            this.toggleRunButtons(false);
+            this.toggleSelectBoxes(false);
+            if (from_user == true) {
+                $('.navbar-right').prepend(
+                  $('<div>').addClass("label label-warning")
+                    .text('View-only mode'));
+            }
+            else {
+                // Add copy button
+                $('.navbar-right').prepend(
+                  $('<button>').addClass('btn btn-default navbar-btn kb-nav-btn')
+                    .append($('<div>').addClass('fa fa-copy'))
+                    .append($('<div>').text("copy").addClass('kb-nav-btn-txt'))
+                    .click(function () {
+                        var $dlg = $('#kb-ro-copy-dlg');
+                        $dlg.modal();
+                        var $panel = $dlg.find(".modal-body");
+                        var $jump = $("<div>").css({'margin-top': '20px'})
+                          .append($("<button>").addClass('btn btn-info')
+                            .text("Open this narrative"));
+                        $(document).trigger('copyThis.Narrative', [$panel, null, $jump]);
+                        return '';
+                    })
+                );
+                // Add view-only info/badge
+                $('.navbar-right').prepend(
+                    $('<div>').addClass("label label-warning")
+                      .attr({'id': 'kb-ro-btn'})
+                      .text('View-only mode')
+                      .popover({
+                        html: true,
+                        placement: "bottom",
+                        trigger: 'hover',
+                        content: 'You do not have permissions to modify ' +
+                        'this narrative. If you want to make your own ' +
+                        'copy that can be modified, use the ' +
+                        '"Copy" button.'
+                    }));
+                // Add button to unhide the controls
+                $('#main-container').prepend(
+                  $('<div>').attr({'id': 'kb-view-mode-narr'})
+                    .append($('<div>').css({cursor: 'pointer'})
+                      .append($('<span>')
+                        .css({'padding-left':'1em'})
+                        .text('Controls'))
+                      .append($('<span>')
+                        .css({'margin-left': '0.5em'})
+                        .addClass('fa fa-caret-down'))
+                  )
+                    .click($.proxy(function() {
+                        this.showControlPanels();
+                    }, this))
+                );
+                // Disable clicking on name of narrative
+                $('#name').unbind();
+                // Hide save status
+                $('#autosave_status').hide();
+            }
+            // console.debug('set_readonly_mode.end');
+            return;
+        },
+
+        /**
+         * Set narrative from read-only mode to read-write mode
+         *
+         */
+        readWriteMode: function (from_user) {
+            // console.debug("set_readwrite_mode.begin");
+            // Remove the view-only buttons (first 1 or 2 children)
+            if (from_user === undefined) {
+                // only remove copy button if not from user
+                $('.navbar-right > button')[0].remove();
+                // re-enable clicking on narrative name
+                $('#name').click(function (e) {
+                    if (IPython && IPython.save_widget) {
+                        IPython.save_widget.rename_notebook("Rename your Narrative.", true);
+                    }
+                });
+                // re-enable auto-save status
+                $('#autosave_status').show();
+            }
+            $('.navbar-right > div')[0].remove();
+            // Restore side-panel
+            $('#left-column').show();
+            // Restore margin for content
+            $('#content-column').css({'margin-left': '380px'});
+            // Show hidden things
+            _.map(this.getReadOnlySelectors(), function (id) {
+                $(id).show();
+            });
+            this.toggleRunButtons(true);
+            this.toggleSelectBoxes(true);
+            // console.debug("set_readwrite_mode.end");
+        },
+
+        /**
+         * Show the narrative management panel (but not the other 2)
+         */
+        showControlPanels: function() {
+            var self = this;
+            if (this.first_show_controls) {
+                $panel = $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true, this.hideControlPanels);
+
+                // var $panel = $('#kb-side-panel');
+                // var hide_idx = [2], keep_idx = [1], narr = 1;
+                // // Hide and show panels
+                // _.map(['tab', 'header'], function (subdiv) {
+                //     var divs = $panel.find('div.kb-side-' + subdiv);
+                //     _.map(hide_idx, function (i) {
+                //         $(divs[i]).hide();
+                //         $(divs[i]).removeClass('active');
+                //     });
+                //     if (subdiv == 'tab') {
+                //         $(divs[narr]).find('.kb-title').hide();
+                //     }
+                //     else {
+                //         // Plop a 'hide' button before the tab bar
+                //         var $hide_btn = $('<div>').attr({id: 'kb-view-mode-narr-hide'})
+                //           .append($('<span>').addClass('fa fa-caret-up'))
+                //           .click(function () {
+                //               self.hideControlPanels();
+                //           });
+                //         //$(divs[0]).prepend($hide_btn);
+                //         $panel.prepend($hide_btn);
+                //     }
+                //     //$(divs[narr]).addClass('active').css({'width': '366px'});
+                // });
+                this.first_show_controls = false;
+            }
+            // Hide the button we used to activate this
+            $('#kb-view-mode-narr').hide();
+            // Show the parent
+            $('#left-column').show();
+            // Resize body to allow for it
+            $('#content-column').css({'margin-left': '380px'});
+        },
+
+        /**
+         * Hide the narrative management panel (again).
+         */
+        hideControlPanels: function() {
+            // Hide the parent
+            $('#left-column').hide();
+            // Resize body again
+            $('#content-column').css({'margin-left': '122px'});
+            // Show the button for unhiding
+            $('#kb-view-mode-narr').show();
+        },
+
 
         /**
          * Connect two elements with a 'line'.
@@ -693,7 +943,7 @@
         connect: function(p, q, g, w, container, line_class) {
             var pc = $(p).position();
             var qc = $(q).position();
-            console.debug("connect ", pc, " to ", qc);
+            // console.debug("connect ", pc, " to ", qc);
             var py = pc.top + (p.height() - w) / 2.0;
             var qy = qc.top + (q.height() - w) / 2.0;
             var coords = [{
@@ -723,37 +973,9 @@
          * Activate "normal" R/W mode
          */
         activateReadwriteMode: function() {
-            console.debug("activate read-write mode");
+            // console.debug("activate read-write mode");
         },
 
-        /**
-         * Bind the 'Copy narrative' button to
-         * a function that copies the narrative.
-         */
-        bindCopyButton: function(element) {
-            var oid = this.getNarrId();
-            element.click(function() {
-                console.debug("Make a copy for narr. obj = ", oid);
-                // XXX: Complete and utter FAKE!
-                // XXX: Just jump to a hardcoded read/write narrative based on the input one
-                var copy_id_map = {
-                    'ws.2590.obj.8': 'ws.2615.obj.8', // comparative genomics
-                };
-                var copy_id = copy_id_map[oid];
-                if (copy_id !== undefined) {
-                    // Open new narrative
-                    var oldpath = window.location.pathname;
-                    var parts = oldpath.split('/');
-                    parts.pop(); // pop off old id
-                    parts.push(copy_id); // add new one
-                    var newpath = parts.join('/'); // rejoin as a path
-                    var newurl = window.location.protocol + '//' + window.location.host + newpath;
-                    console.debug("Moving to new URL: ", newurl);
-                    window.location.replace(newurl);
-                }
-            });
-            return;
-        },
 
         /**
          * Object identifier of current narrative, extracted from page URL.
@@ -1360,7 +1582,7 @@
                     'output' : function(msgType, content) { self.handleOutput(cell, msgType, content); },
                     'clear_output' : function(content) { self.handleClearOutput(cell, content); },
                     'set_next_input' : function(text) { self.handleSetNextInput(cell, content); },
-                    'input_request' : function(content) { self.handleInputRequest(cell, content); },
+                    'input_request' : function(content) { self.handleInputRequest(cell, content); }
                 };
 
                 // ignore making code cells for now.
@@ -1476,7 +1698,7 @@
             if (content.status === 'error') {
                 var errorBlob = {
                     msg : content.evalue,
-                    type : content.ename,
+                    type : content.ename
                 };
 
                 if (cell && cell.metadata && cell.metadata['kb-cell'] &&
@@ -1622,7 +1844,7 @@
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
                 if (result.length > 0) {
-                    if (showOutput === "app" && window.kbconfig && window.kbconfig.mode === "debug") {
+                    if (showOutput === "app") { //} && window.kbconfig && window.kbconfig.mode === "debug") {
                         if (!cell.metadata[this.KB_CELL].stackTrace)
                             cell.metadata[this.KB_CELL].stackTrace = [];
                         // try to parse the result as JSON - if so, then it's a final result and we just
@@ -2008,26 +2230,26 @@
                 this.checkCellMetadata(cells[i]);
             }
             this.loadAllRecentCellStates();
-            // Check for older version of data dependencies
-            // update them if necessary.
-            // this.trigger('updateData.Narrative');
+
+            this.updateReadOnlyMode(this.ws_client, this.ws_id);
 
             return this;
         },
 
-        /*
+
+        /**
          * Show input/output cell connections.
          */
          show_connections: function() {
             var self = this;
-            console.debug("show_connections.start");
+            // console.debug("show_connections.start");
             _.each(_.pairs(this.connectable), function(pair) {
                 var e1 = $('#kb-input-' + pair[0]);
                 var e2 = $('#kb-output-' + pair[1]);
                 self.connect(e1, e2, 20, 2,
                     $('#notebook-container'), 'kb-line');
             });
-            console.debug("show_connections.end");
+            // console.debug("show_connections.end");
         },
 
         /**

@@ -29,22 +29,46 @@
         downloaders: {  // type -> {name: ..., external_type: ...[, transform_options: ...[, unzip: <file_ext>]}
         	'KBaseGenomes.ContigSet': [{name: 'FASTA', external_type: 'FASTA.DNA.Assembly', transform_options: {"output_file_name": "?.fasta"}}],
         	'KBaseGenomes.Genome': [{name: "GENBANK", external_type: 'Genbank.Genome', transform_options: {}}],
+
+        	'KBaseAssembly.SingleEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+        	'KBaseAssembly.PairedEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+        	'KBaseFile.SingleEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+        	'KBaseFile.PairedEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
+
+        	'KBaseFBA.FBAModel':[{
+        	    name: "SBML", external_type: 'SBML.FBAModel', transform_options: {}
+        	}, {
+        	    name: "TSV", external_type: 'TSV.FBAModel', transform_options: {}
+        	}, {
+        	    name: "EXCEL", external_type: 'Excel.FBAModel', transform_options: {}
+        	}],
+
+        	'KBaseFBA.FBA':[{
+        	    name: "TSV", external_type: 'TSV.FBA', transform_options: {}
+        	}, {
+        	    name: "EXCEL", external_type: 'Excel.FBA', transform_options: {}
+        	}],
+
+        	'KBaseBiochem.Media':[{
+        	    name: "TSV", external_type: 'TSV.Media', transform_options: {}
+        	}, {
+        	    name: "EXCEL", external_type: 'Excel.Media', transform_options: {}
+        	}],
+
+        	'KBasePhenotypes.PhenotypeSet':[{name: "TSV", external_type: 'TSV.PhenotypeSet', transform_options: {}}],
         	
-		'KBaseAssembly.SingleEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
-		'KBaseAssembly.PairedEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
-		'KBaseFile.SingleEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
-		'KBaseFile.PairedEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
-		
-		'KBaseFBA.FBAModel':[{name: "SBML", external_type: 'SBML.FBAModel', transform_options: {}},
-				     {name: "TSV", external_type: 'CSV.FBAModel', transform_options: {}}],
-		
-		'KBaseFBA.FBA':[{name: "TSV", external_type: 'CSV.FBA', transform_options: {}}],
-		
-		'KBaseBiochem.Media':[{name: "TSV", external_type: 'CSV.Media', transform_options: {}}],
-		
-		'KBasePhenotypes.PhenotypeSet':[{name: "TSV", external_type: 'CSV.PhenotypeSet', transform_options: {}}],
-		'KBasePhenotypes.PhenotypeSimulationSet':[{name: "TSV", external_type: 'CSV.PhenotypeSimulationSet', transform_options: {}}]
-	},
+        	'KBasePhenotypes.PhenotypeSimulationSet':[{
+        	    name: "TSV", external_type: 'TSV.PhenotypeSimulationSet', transform_options: {}
+        	}, {
+                name: "EXCEL", external_type: 'Excel.PhenotypeSimulationSet', transform_options: {}
+            }],
+            
+        	'KBaseGenomes.Pangenome':[{
+        	    name: 'TSV', external_type: 'TSV.Pangenome', transform_options: {}
+        	}, {
+        	    name: "EXCEL", external_type: 'Excel.Pangenome', transform_options: {}
+        	}]
+        },
 
         init: function(options) {
             this._super(options);
@@ -83,8 +107,10 @@
     		$btnTd.append($('<button>').addClass('kb-data-list-btn')
                     .append('JSON')
                     .click(function() {
-                    	var url = self.exportURL + '/download?ws='+self.wsId+'&id='+self.objId+'&token='+self.token+
-                    		'&url='+encodeURIComponent(self.wsUrl) + "&wszip=1";
+                    	var url = self.exportURL + '/download?ws='+encodeURIComponent(self.wsId)+
+                    	    '&id='+encodeURIComponent(self.objId)+'&token='+encodeURIComponent(self.token)+
+                    		'&url='+encodeURIComponent(self.wsUrl) + '&wszip=1'+
+                    		'&name=' + encodeURIComponent(self.objId + '.JSON.zip');
                     	self.downloadFile(url);
                     }));
     		$btnTd.append($('<button>').addClass('kb-data-list-cancel-btn')
@@ -132,12 +158,13 @@
         	var args = {external_type: descr.external_type, kbase_type: type, workspace_name: wsId, object_name: objId, optional_arguments: {transform: transform_options}};
     		console.log("Downloader data to be sent to transform service:");
     		console.log(JSON.stringify(args));
+    		var nameSuffix = '.' + descr.name.replace(/[^a-zA-Z0-9|\.\-_]/g,'_');
             var transformSrv = new Transform(this.transformURL, {token: this.token});
             transformSrv.download(args,
             		$.proxy(function(data) {
             			console.log(data);
             			var jobId = data[1];
-            			self.waitForJob(jobId, objId, descr.unzip);
+            			self.waitForJob(jobId, objId + nameSuffix, descr.unzip);
             		}, this),
             		$.proxy(function(data) {
             			console.log(data.error.error);

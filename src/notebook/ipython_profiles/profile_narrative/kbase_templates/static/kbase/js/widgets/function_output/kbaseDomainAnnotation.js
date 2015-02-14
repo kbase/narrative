@@ -222,7 +222,7 @@
                     domainTableSettings.aaData = domainsTableData;
                     tableDomains = tableDomains.dataTable(domainTableSettings);
 
-                    ///////////////////////////////////// Domains Tab Events ////////////////////////////////////////////          
+                    ///////////////////////////////////// Domains Tab Events ////////////////////////////////////////////
                     function eventsDomainsTab() {
                         $('.show-gene'+self.pref).unbind('click');
                         $('.show-gene'+self.pref).click(function() {
@@ -245,7 +245,7 @@
                                 "sPaginationType": "full_numbers",
                                 "iDisplayLength": 10,
                                 "aaData": [],
-                                "aaSorting": [[ 4, "asc" ], [6, "desc"]],
+                                // "aaSorting": [[ 4, "asc" ], [6, "desc"]],
                                 "aoColumns": [
                                     {sTitle: "Domain", mData: "domainID"},
                                     {sTitle: "Description", mData: "domainDescription", sWidth:"30%"},
@@ -254,6 +254,7 @@
                                     {sTitle: "Start", mData: "domainStart"},
                                     {sTitle: "End", mData: "domainEnd"},
                                     {sTitle: "E-value", mData: "eValue"},
+                                    {sTitle: "NR", mData: "isNR"}
                                 ],
                                 "oLanguage": {
                                     "sEmptyTable": "No domains found!",
@@ -279,13 +280,21 @@
 					geneLength = domainEnd;
 				}
 			    }
+
+			    // keep track of the start/end points of
+			    // non-redundant domains, by prefix
+			    var nonredundant = {};
 			    
                             for(var domainID in domainsInfo){
+				var prefix = self.accessionToPrefix[domainID];
                                 var domainsArray = domainsInfo[domainID];
                                 for(var i = 0 ; i < domainsArray.length; i++){
+				    // assume domains are ordered in some logical way, so we want to 
                                     var domainStart = domainsArray[i][0];
                                     var domainEnd = domainsArray[i][1];
                                     var eValue = domainsArray[i][2];
+
+				    var isNR = addIfNonredundant(nonredundant, prefix, domainStart, domainEnd);
 
                                     var domainImgWidth = (domainEnd - domainStart)*100/geneLength;
                                     var domainImgleftShift = (domainStart)*100/geneLength;
@@ -295,14 +304,13 @@
 					+ domainID + '</a>';
 
                                     geneDomainsTableData.push({
-                                        'contigID' : contigID,
-                                        'geneID' : geneID,
                                         'domainID' : domainRef,
                                         'domainDescription' : self.accessionToShortDescription[domainID],
                                         'longDomainDescription' : self.accessionToLongDescription[domainID],
                                         'domainStart': domainStart, 
                                         'domainEnd' : domainEnd, 
                                         'eValue' : eValue,
+					'isNR' : isNR,
                                         'image' : 
                                                 '<div style="width: 100%; height:100%; vertical-align: middle; margin-top: 1em; margin-bottom: 1em;">'
                                                 + '<div style="position:relative; border: 1px solid gray; width:100%; height:2px;">' 
@@ -320,7 +328,7 @@
 			eventsMoreDescription();
 		    };
 
-                    ///////////////////////////////////// Gene Tab Events ////////////////////////////////////////////          
+                    ///////////////////////////////////// Gene Tab Events ////////////////////////////////////////////
                     function eventsGeneTab() {
                         $('.show-domain'+self.pref).unbind('click');
                         $('.show-domain'+self.pref).click(function() {
@@ -331,7 +339,7 @@
 			eventsMoreDescription();
                     };
 
-                    //////////////////// Events for Show More/less Description  ////////////////////////////////////////////          
+                    //////////////////// Events for Show More/less Description  ////////////////////////////////////////////
                     function eventsMoreDescription() {
                         $('.show-more'+self.pref).unbind('click');
                         $('.show-more'+self.pref).click(function() {
@@ -339,7 +347,8 @@
 			    $(this).closest("td").html(self.accessionToLongDescription[domainID]);
 			    eventsLessDescription();
 			});
-		    }
+		    };
+
                     function eventsLessDescription() {
                         $('.show-less'+self.pref).unbind('click');
                         $('.show-less'+self.pref).click(function() {
@@ -347,8 +356,36 @@
 			    $(this).closest("td").html(self.accessionToShortDescription[domainID]);
 			    eventsMoreDescription();
 			});
-		    }
-                });                
+		    };
+
+                    //////////////////// Show only the first of many overlapping domains  /////////////////////////////
+		    function addIfNonRedundant(nonredundant, prefix, domainStart, domainEnd) {
+			var accepted = nonredundant[prefix];
+                        if (typeof accepted === 'undefined')
+                            accepted = [];
+			for (var i=0; i<accepted.length; i+=2) {
+			    var start2 = accepted[i];
+			    var end2 = accepted[i+1];
+			    var olap = overlap(domainStart,start2,domainEnd,end2);
+			    if (olap > 0.5)
+				return false;
+			}
+			accepted.push(domainStart, domainEnd);
+			nonredundant[prefix] = accepted;
+			return true;
+		    };
+
+		    function overlap(start1, start2, end1, end2) {
+                        if ((start1 <= end2) &&
+                            (start2 <= end1)) {
+                            var overlap = Math.min(end1, end2) - Math.max(start1, start2) + 1;
+			    var shortest = Math.min(end1-start1, end2-start2) + 1;
+			    return (overlap/shortest);
+                        }
+			return 0;
+		    };
+
+                });
             });
         },
        
@@ -371,7 +408,7 @@
                     var domainsInfo = genesArray[i][4];
                     if($.isEmptyObject(domainsInfo)) continue;
 
-                    // If we have somthing in domainsInfo, then the gene was anntoated
+                    // If we have something in domainsInfo, then the gene was anntoated
                     genesCount++;
                     for(var domainID in domainsInfo){
                         var domainData = domains[domainID];

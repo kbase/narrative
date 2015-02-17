@@ -75,10 +75,16 @@
                     if (tax == null)
                         tax = '';
                     var gc_content = gnm.gc_content;
-                    if (gc_content < 1.0)
-                        gc_content *= 100;
+                    if (gc_content) {
+                        gc_content = Number(gc_content);
+                        if (gc_content < 1.0)
+                            gc_content *= 100;
+                        gc_content = gc_content.toFixed(2) + " %";
+                    } else {
+                        gc_content = "Unknown";
+                    }
                     var overviewData = [gnm.id, '<a href="/functional-site/#/dataview/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>', 
-                                        gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gc_content + " %", tax, gnm.dna_size,
+                                        gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gc_content, tax, gnm.dna_size,
                                         contigCount, gnm.features.length];
                     var overviewTable = $('#'+pref+'overview-table');
                     for (var i=0; i<overviewData.length; i++) {

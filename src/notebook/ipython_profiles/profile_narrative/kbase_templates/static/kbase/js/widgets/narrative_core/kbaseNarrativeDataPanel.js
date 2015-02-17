@@ -441,9 +441,9 @@
             var closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin':'10px'});
 
             // Setup the panels that are defined by widgets
-            publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus});
-            importPanel.kbaseNarrativeSideImportTab({});
-            examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus});
+            publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus, ws_name: this.ws_name});
+            importPanel.kbaseNarrativeSideImportTab({ws_name: this.ws_name});
+            examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus, ws_name: this.ws_name});
 
             // It is silly to invoke a new object for each widget
             var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}

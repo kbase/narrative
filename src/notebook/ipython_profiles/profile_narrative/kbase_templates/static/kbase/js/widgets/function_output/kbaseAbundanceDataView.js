@@ -63,8 +63,13 @@
 			                cnames[c+1] = biom['columns'][c]['id'];
 			                divdata[c] = {'name': biom['columns'][c]['id'], 'data': [], 'fill': colors[c]};
 		                } else {
-		                    cnames[c+1] = biom['columns'][c]['name'];
-		                    divdata[c] = {'name': biom['columns'][c]['name'], 'data': [], 'fill': colors[c]};
+		                    if (biom['columns'][c].hasOwnProperty('name')) {
+		                        cnames[c+1] = biom['columns'][c]['name'];
+    		                    divdata[c] = {'name': biom['columns'][c]['name'], 'data': [], 'fill': colors[c]};
+		                    } else {
+		                        cnames[c+1] = biom['columns'][c]['id'];
+    			                divdata[c] = {'name': biom['columns'][c]['id'], 'data': [], 'fill': colors[c]};
+	                        }
 		                }
 		            }
 		            // add values

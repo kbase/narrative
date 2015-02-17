@@ -3,6 +3,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 1.0.1 - 2/16/2015
+__Changes__
+- If a app/method finishes with a non-error status, then the results in the step_errors field of the job status aren't shown.
+
+__Bugfixes__
+- Fixed an issue where widgets would occasionally not load.
+
 ### Version 1.0.0 - 2/13/2015
 ## Production release!
 

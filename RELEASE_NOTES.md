@@ -7,6 +7,7 @@ This is built on the IPython Notebook (more notes will follow).
 __Changes__
 - JIRA NAR-716 - If a app/method finishes with a non-error status, then the results in the step_errors field of the job status aren't shown.
 - Added Lazy Loading to genome widget. Large genomes shouldn't take a long time to load now.
+- JIRA KBASE-1607 - Sort data types in the data slide out panel
 
 __Bugfixes__
 - Fixed an issue where widgets would occasionally not load.

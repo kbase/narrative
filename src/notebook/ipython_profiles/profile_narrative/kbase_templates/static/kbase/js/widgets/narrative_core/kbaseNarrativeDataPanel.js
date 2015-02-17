@@ -131,9 +131,6 @@
                 this)
             );
 
-            // initialize the importer
-            //this.dataImporter();
-
             if (this.ws_name)
                 this.trigger('workspaceUpdated.Narrative', this.ws_name);
 

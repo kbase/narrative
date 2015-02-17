@@ -9,6 +9,7 @@
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
+            ws_name: null
         },
         token: null,
         wsName: null,
@@ -38,6 +39,8 @@
                         self.wsName = info.wsId;
             		}, this)
             );
+            if (self.options.ws_name)
+                self.wsName = self.options.ws_name;
             return this;
         },
         

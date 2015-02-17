@@ -776,11 +776,11 @@
             else if (status === 'Network_error') {
                 status = this.makeJobErrorButton(jobId, jobInfo, 'Network Error');
             }
-            else if (jobState.state && jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0) {
-                var $errBtn = this.makeJobErrorButton(jobId, jobInfo);
-                status = $('<span>').append(status + ' ')
-                                    .append($errBtn);
-            }
+            // else if (jobState.state && jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0) {
+            //     var $errBtn = this.makeJobErrorButton(jobId, jobInfo);
+            //     status = $('<span>').append(status + ' ')
+            //                         .append($errBtn);
+            // }
             else {
                 if (jobType === "njs" && jobState.state) {
                     var stepId = jobState.state.running_step_id;
@@ -879,7 +879,7 @@
                 }
             }
             // if it's an error, then we need to signal the cell
-            if (status === "error" || (jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0)) {
+            if (status === "error") { // || (jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0)) {
                 if (jobType === 'njs') {
                     $cell.kbaseNarrativeAppCell('setRunningState', 'error');
                 }

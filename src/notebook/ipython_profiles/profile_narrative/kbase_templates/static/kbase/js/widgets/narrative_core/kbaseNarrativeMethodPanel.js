@@ -202,7 +202,7 @@ kb_require(['kbaseMethodGallery'],
             );
 
             this.$methodGalleryBody = $('<div>');
-            this.$methodGalleryBody.kbaseMethodGallery({sidePanel : this});
+//            this.$methodGalleryBody.kbaseMethodGallery({sidePanel : this});
             this.$methodGallery = $('<div>')
                                   .append($('<div>')
                                           .addClass('kb-side-header active')

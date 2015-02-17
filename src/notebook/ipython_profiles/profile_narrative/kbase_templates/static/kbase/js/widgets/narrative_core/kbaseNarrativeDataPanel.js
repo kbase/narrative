@@ -393,6 +393,14 @@
                          "Communities.TaxonomicProfile"
                          ];
 
+            types.sort(function(a,b){
+                var aName = a.split('.')[1].toUpperCase();
+                var bName = b.split('.')[1].toUpperCase();
+                if (aName < bName) return -1; // sort by name
+                if (aName > bName) return 1;
+                return 0;
+            });
+
             // tab panels
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),

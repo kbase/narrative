@@ -61,10 +61,15 @@
             this.showLoading();
 
             var self = this;
-            $(document).on('setWorkspaceName.Narrative', function(e, info){
-                self.narWs = info.wsId;
+            if (self.options.ws_name) {
+                self.narWs = self.options.ws_name;
                 self.getExampleDataAndRender();
-            });
+            } else {
+                $(document).on('setWorkspaceName.Narrative', function(e, info){
+                    self.narWs = info.wsId;
+                    self.getExampleDataAndRender();
+                });
+            }
             return this;
         },
 

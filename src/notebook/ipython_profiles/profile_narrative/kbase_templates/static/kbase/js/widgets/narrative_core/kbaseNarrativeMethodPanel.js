@@ -9,7 +9,7 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-kb_require(['kbaseMethodGallery'], 
+// kb_require(['kbaseMethodGallery'], 
 (function( $, undefined ) {
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
@@ -816,5 +816,5 @@ kb_require(['kbaseMethodGallery'],
             this.trigger('toggleSidePanelOverlay.Narrative');
         },
     });
-})( jQuery )
-);
+})( jQuery );
+//);

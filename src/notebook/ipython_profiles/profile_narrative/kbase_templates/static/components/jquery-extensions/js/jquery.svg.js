@@ -3795,31 +3795,19 @@
 			// always plot the axis text at the very left / bottom of the plot
 			var zeroo = (horiz ? dims[this.Y] + dims[this.H] : dims[this.X]);
 			var logtext = this._wrapper.createText().string('10').span(cur, {dy: -10, fontSize: 10});
+
+			// fix floating point error
+			var cur_str = cur.toString();
+                        if (cur_str.substr(cur_str.indexOf('.')+1).length > 3) {
+                                cur_str = cur.toFixed(3).toString();
+                        }
 			this._wrapper.text(this._plotCont, (horiz ? xy : zeroo - size),
 					   (horiz ? zeroo + size + 12 : xy + (size / 2)),
-					   (axis._scale.type == 'log') ? logtext : ''+cur,
+					   (axis._scale.type == 'log') ? logtext : cur_str,
 					   { textAnchor: (horiz ? 'middle' : 'end')});
 		    }
 		    major += (cur == major ? axis._ticks.major : 0);
 		    minor += (cur == minor ? axis._ticks.minor : 0);
-		    
-		    // fix floating point error
-		    var maj_str = major.toString();
-		    var tick_str = axis._ticks.major.toString();
-		    
-		    // round to a maximum of 3 significant digits
-		    if (tick_str.substr(tick_str.indexOf('.')+1).length > 3) {
-			tick_str = tick_str.substr(0, tick_str.indexOf('.')+4);
-		    }
-		    
-		    // fail if the max is smaller than the smallest number displayable with
-		    // three significant digits
-		    if (parseFloat(tick_str) < 0.001) {
-			return;
-		    }
-		    if (maj_str.substr(maj_str.indexOf('.')+1).length > tick_str.substr(tick_str.indexOf('.')+1).length) {
-			major = parseFloat(major.toFixed(tick_str.substr(tick_str.indexOf('.')+1).length));
-		    }
 		}
 	    }
 	    if (axis._title) {

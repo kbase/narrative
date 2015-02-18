@@ -2545,6 +2545,7 @@ div[class="tooltip-inner"] {
     width: 85px;
     height: 55px;
     margin: 50px auto;
+    text-align: center;
 }
 
 #kb-wait-for-ws .bar {

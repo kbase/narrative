@@ -29,8 +29,9 @@
 	    render: function() {
 		    var self = this;
 		    var container = this.$elem;
-            
-            container.empty();
+            var foots = container.parent().parent().children();
+	foots[foots.length - 1].style.display='none';
+	    container.empty();
             if (self.token == null) {
                 container.append("<div>[Error] You're not logged in</div>");
                 return;
@@ -57,8 +58,9 @@
 		    listSelect.settings.asynch_filter_attribute = 'name';
 		    listSelect.settings.value = "id";
 		    listSelect.settings.master = self;
+		    listSelect.settings.index = lslen;
 		    var r = document.createElement('div');
-		    r.setAttribute('id', 'myResultDiv');
+		    r.setAttribute('id', 'mgInputResultDiv'+lslen);
 		    container.append(r);
 
             // Get list of metagenome ids from workspace
@@ -119,9 +121,24 @@
             return this;
         },
     
-	    metagenomesSelected: function(items, listName) {
+	    metagenomesSelected: function(items, listName, index) {
 	        var self = this.master;
-	        var d = document.getElementById("myResultDiv");
+	        var d = document.getElementById("mgInputResultDiv"+this.index);
+
+		// check if amplicon and wgs are mixed
+		var amplicon = 0;
+		var wgs = 0;
+		for (var i=0; i<items.length; i++) {
+			if (items[i]["sequence type"] == "WGS") {
+				wgs++;
+			} else {
+				amplicon++;
+			}
+		}
+		if (wgs > 1 && amplicon > 1) {
+			alert("You selection contains both amplicon and whole genome shotgun datasets, which are not comparable.\nSelect 'sequence type' from the dropdown to remove datasets of the undesired type.");
+			return;
+		}
 
 	        // if data is selected create list and save it to ws
 	        var date = new Date();
@@ -149,7 +166,7 @@
 	   
 	        var kbws = new Workspace(self.ws_url, {'token': self.token});
 	        kbws.save_objects(save_params);
-	        d.innerHTML = "<h5>collection "+listName+" saved.</h5>";
+	        d.innerHTML += "<h5>collection "+listName+" saved.</h5>";
 	    }
     });
 })( jQuery );

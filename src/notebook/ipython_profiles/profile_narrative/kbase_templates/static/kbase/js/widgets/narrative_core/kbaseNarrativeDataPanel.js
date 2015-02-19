@@ -47,13 +47,14 @@
         // Constants
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
-
-
+        token: null,
+        dataImporterStarted: false,
         dataListWidget: null,
 
         init: function(options) {
             this._super(options);
-
+            var self = this;
+            
             if (this.options.wsId) {
                 this.ws_name = options.wsId;
                 this.options.ws_name = options.wsId;
@@ -88,6 +89,7 @@
                     this.ws_name = info.wsId;
                     this.narrWs = info.narrController;
                     this.dataListWidget.setWorkspace(this.ws_name);
+                    this.setWorkspace(this.ws_name);
                 }, this)
             );
 
@@ -129,13 +131,10 @@
                 this)
             );
 
-            // initialize the importer
-            this.dataImporter();
-
             if (this.ws_name)
                 this.trigger('workspaceUpdated.Narrative', this.ws_name);
 
-            this.dataImporter();
+            //this.dataImporter();
 
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
@@ -146,6 +145,21 @@
                                this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
                            }, this)));
 
+            setTimeout(function() {
+                if (self.ws_name && self.token) {
+                    if (!self.dataImporterStarted) {
+                        self.dataImporter();
+                    } else {
+                        //console.log("DataPanel: dataImporter was already started");
+                    }
+                } else {
+                    if (!self.ws_name)
+                        console.error("Workspace name is not defined");
+                    if (!self.token)
+                        console.error("Token is not defined");
+                }
+            }, 5000);
+            
             return this;
         },
 
@@ -161,10 +175,15 @@
          * @private
          */
         loggedInCallback: function(event, auth) {
+            this.token = auth.token;
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
             this.isLoggedIn = true;
-            if (this.ws_name)
-                this.refresh();
+            if (this.ws_name) {
+                //this.refresh();
+                this.dataImporter();
+            } else {
+                //console.error("ws_name is not defined");
+            }
             return this;
         },
 
@@ -184,8 +203,12 @@
 
         setWorkspace: function(ws_name) {
             this.ws_name = ws_name;
-            if (this.wsClient)
-                this.refresh();
+            if (this.wsClient) {
+                //this.refresh();
+                this.dataImporter();
+            } else {
+                //console.error("token is not defined");
+            }
         },
 
         /**
@@ -302,6 +325,9 @@
          * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
         dataImporter: function() {
+            if (this.dataImporterStarted)
+                return;
+            this.dataImporterStarted = true;
             var self = this;
             var maxObjFetch = 300000;
 
@@ -311,7 +337,16 @@
             })
 
             var self = this;
-            var user = $("#signin-button").kbaseLogin('session', 'user_id');  // TODO: use
+            var user = $("#signin-button").kbaseLogin('session', 'user_id');
+            if (!user) {
+                console.error("NarrativeDataPanel: user is not defined, parsing token instead...");
+                var tokenParts = this.token.split("|");
+                for (var i in tokenParts) {
+                    var keyValue = tokenParts[i].split("=");
+                    if (keyValue.length == 2 && keyValue[0] === "un")
+                        user = keyValue[1];
+                }
+            }
 
             // models
             var myData = [], sharedData = [];
@@ -358,6 +393,14 @@
                          "Communities.TaxonomicProfile"
                          ];
 
+            types.sort(function(a,b){
+                var aName = a.split('.')[1].toUpperCase();
+                var bName = b.split('.')[1].toUpperCase();
+                if (aName < bName) return -1; // sort by name
+                if (aName > bName) return 1;
+                return 0;
+            });
+
             // tab panels
             var minePanel = $('<div class="kb-import-content kb-import-mine">'),
                 sharedPanel = $('<div class="kb-import-content kb-import-shared">'),
@@ -403,9 +446,9 @@
             var closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin':'10px'});
 
             // Setup the panels that are defined by widgets
-            publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus});
-            importPanel.kbaseNarrativeSideImportTab({});
-            examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus});
+            publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus, ws_name: this.ws_name});
+            importPanel.kbaseNarrativeSideImportTab({ws_name: this.ws_name});
+            examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus, ws_name: this.ws_name});
 
             // It is silly to invoke a new object for each widget
             var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}

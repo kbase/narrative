@@ -9,12 +9,12 @@
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
-		$importStatus:$('<div>'),
+            $importStatus:$('<div>'),
         	addToNarrativeButton: null,
         	selectedItems: null,
         	landing_page_url: "/functional-site/#/", // !! always include trailing slash
-		lp_url: "/functional-site/#/dataview/"
-	    
+        	lp_url: "/functional-site/#/dataview/",
+		    ws_name: null
         },
         token: null,
         wsName: null,
@@ -51,25 +51,33 @@
         init: function(options) {
             this._super(options);
             var self = this;
-	    if (window.kbconfig.urls) {
-		if (window.kbconfig.urls.landing_pages) {
-		    this.options.lp_url = window.kbconfig.urls.landing_pages;
-		}
-	    }
-            $(document).on(
-            		'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-                        //console.log('side panel import tab -- setting ws to ' + info.wsId);
-                        self.wsName = info.wsId;
-                        self.data_icons = window.kbconfig.icons.data;
-                        this.icon_colors = window.kbconfig.icons.colors;
-                        self.render();
-            		}, this)
-            );
+            if (window.kbconfig.urls) {
+                if (window.kbconfig.urls.landing_pages) {
+                    this.options.lp_url = window.kbconfig.urls.landing_pages;
+                }
+            }
+            if (self.options.ws_name) {
+                self.wsName = self.options.ws_name;
+                self.render();
+            } else {
+                $(document).on(
+                        'setWorkspaceName.Narrative', $.proxy(function(e, info) {
+                            //console.log('side panel import tab -- setting ws to ' + info.wsId);
+                            self.wsName = info.wsId;
+                            self.render();
+                        }, this)
+                );
+            }
             return this;
         },
 
         render: function() {
         	var self = this;
+        	if ((!this.token) || (!this.wsName))
+        	    return;
+        	self.$elem.empty();
+            self.data_icons = window.kbconfig.icons.data;
+            self.icon_colors = window.kbconfig.icons.colors;
         	if (!self.data_icons)
         		return;
 

@@ -29,7 +29,7 @@ lua_shared_dict proxy_mgr 100k;
 lua_shared_dict lock_map 2m;
 
 # load lua files
-lua_package_path "/kb/deployment/services/narrative/docker/?;/kb/deployment/services/narrative/docker/?.lua;;";
+lua_package_path "/home/vagrant/dockerstuff/narrative/docker/?;/home/vagrant/dockerstuff/narrative/docker/?.lua;;";
 #lua_package_path "/home/ubuntu/narrative/docker/?;/home/ubuntu/narrative/docker/?.lua;;";
 # initilize proxymgr - set shared dictionaries
 init_by_lua '
@@ -99,13 +99,15 @@ server {
          proxy_read_timeout 86400;
     }
 
-       location / {
-                root /kb/deployment/ui-common;
-                index index.html;
-                #ssi on;
-                ssi_silent_errors off;
-                allow all;
-       }
+	#location / {
+#		# First attempt to serve request as file, then
+#		# as directory, then fall back to index.html
+#		#try_files $uri $uri/ /index.html;
+#		# Uncomment to enable naxsi on this location
+#		# include /etc/nginx/naxsi.rules
+#	}
+
+
 }
 
 # Proxy	for the nginx remote api

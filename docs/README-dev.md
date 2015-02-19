@@ -12,6 +12,7 @@
 ## Narrative development
 
 Last updated: Dan Gunter <dkgunter@lbl.gov> 7/31/2014
+Minor update by John-Marc Chandonia <jmchandonia@lbl.gov> 2/3/2015
 
 To report bugs, login using your KBase developer user/pass at: https://atlassian.kbase.us
 
@@ -70,7 +71,7 @@ First, however, you'll need to get a necessary submodule initialized:
 If there are any problems with this step, run the following commands:
 
     cd modules/ui-common
-    git checkout hardy
+    git checkout narrative-dev
     git pull
 
 Now you're set up with the correct Narrative environment.
@@ -221,8 +222,7 @@ Next, bring in the Narrative and Bootstrap repos (as yourself):
     git clone http://github.com/kbase/ui-common
 
 # note that as of 2/10/15, narrative-test.kbase.us is using the
-# staging branch of both narrative and ui-common.  Active development
-# is done on the develop branch of both repos
+# develop branch of both narrative and ui-common
 
 # Set up the Nginx environment
 
@@ -239,9 +239,10 @@ This uses Nginx with the embedded Lua module from the nginx-extras package, desc
     # verify this worked before going on
     exit
 
-## Install the right version of Nodejs (including npm) for Ubuntu 12.04
+## Install the right version of Nodejs (including npm)
 
-   curl -sL https://deb.nodesource.com/setup | sudo bash -
+   sudo add-apt-repository ppa:chris-lea/node.js
+   sudo apt-get update
    sudo apt-get install nodejs
 
 ## Install the Lua dependencies.

@@ -161,7 +161,7 @@ This section covers how and when to reset your Narrative during development.
 
 This document schedules how to deploy the Narrative on a fresh developer’s server instance with Docker provisioning
 
-Last udated: John-Marc Chandonia <jmchandonia@lbl.gov>, 2/10/15
+Last updated: John-Marc Chandonia <jmchandonia@lbl.gov>, 2/10/15
 
 Bill Riehl <wjriehl@lbl.gov> 7/15/2014
 Keith Keller <kkeller@lbl.gov>
@@ -232,7 +232,7 @@ This uses Nginx with the embedded Lua module from the nginx-extras package, desc
 
     sudo su - root
     # these next two should add the nginx repo properly
-    apt-get install -y  python-software-properties
+    apt-get install -y python-software-properties
     add-apt-repository ppa:nginx/stable
     apt-get update
     apt-get install -y nginx-extras

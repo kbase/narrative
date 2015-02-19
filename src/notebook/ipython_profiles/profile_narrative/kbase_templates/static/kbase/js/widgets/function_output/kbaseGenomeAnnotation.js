@@ -33,7 +33,52 @@
             }
             return this;
         },
-        
+
+        //Sam says that it's considered a transcriptome if there are no contigs, or if the features lack locations.
+        genomeType : function(genome) {
+            //return 'genome';
+
+            if (
+                (! genome.contig_ids || genome.contig_ids.length == 0)
+            ) {
+
+                var has_location = false;
+                $.each(
+                    genome.features,
+                    function (idx, feature) {
+                        if (feature.location && feature.location.length) {
+                            has_location = true;
+                            return;
+                        }
+                    }
+                );
+
+                if (! has_location) {
+                    return 'transcriptome';
+                }
+            }
+
+            return 'genome';
+        },
+
+        tabData : function(genome) {
+
+            var type = this.genomeType(genome);
+
+            if (type == 'transcriptome') {
+                return {
+                    names : ['Overview', 'Genes'],
+                    ids : ['overview', 'genes']
+                };
+            }
+            else {
+                return {
+                    names : ['Overview', 'Contigs', 'Genes'],
+                    ids : ['overview', 'contigs', 'genes']
+                };
+            }
+        },
+
         render: function() {
             var self = this;
         	var pref = this.uuid();
@@ -46,14 +91,19 @@
             }
 
             var kbws = new Workspace(self.wsUrl, {'token': self.token});
-            
+
             var ready = function(gnm, ctg) {
             		container.empty();
             		var tabPane = $('<div id="'+pref+'tab-content">');
             		container.append(tabPane);
             		tabPane.kbaseTabs({canDelete : true, tabs : []});
-            		var tabNames = ['Overview', 'Contigs', 'Genes'];
-            		var tabIds = ['overview', 'contigs', 'genes'];
+
+                    var genomeType = self.genomeType(gnm);
+
+            		var tabData = self.tabData(gnm);
+            		var tabNames = tabData.names;
+            		var tabIds = tabData.ids;
+
             		for (var i=0; i<tabIds.length; i++) {
             			var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
             			tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
@@ -69,7 +119,7 @@
                     ////////////////////////////// Overview Tab //////////////////////////////
                     $('#'+pref+'overview').append('<table class="table table-striped table-bordered" \
                             style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
-                    var overviewLabels = ['KBase ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size", 
+                    var overviewLabels = ['KBase ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size",
                                           "Number of Contigs", "Number of Genes"];
                     var tax = gnm.taxonomy;
                     if (tax == null)
@@ -83,9 +133,29 @@
                     } else {
                         gc_content = "Unknown";
                     }
-                    var overviewData = [gnm.id, '<a href="/functional-site/#/dataview/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>', 
+                    var overviewData = [gnm.id, '<a href="/functional-site/#/dataview/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>',
                                         gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gc_content, tax, gnm.dna_size,
                                         contigCount, gnm.features.length];
+
+                    //XXX this is hopelessly brittle since it relies upon injecting/removing specific fields at exact locations in the parallel arrays.
+                    //these should be refactored - a single master list of all possible fields as objects ( { name : 'Kbase ID', value : gnm.id, id : 'kbase_id' } )
+                    //and then different lists built with the lookup keys depending upon the genome type, the way that the tab ids are built up above. I don't want
+                    //to do that right now. :-/
+
+                    if (genomeType != 'genome') {
+                        overviewLabels.splice(3, 0, 'Subtype');
+                        overviewData.splice(3, 0, genomeType);
+                    }
+
+                    if (genomeType == 'transcriptome') {
+                        overviewLabels.splice(7,1);
+                        overviewData.splice(7,1);
+                        overviewLabels.splice(9,1);
+                        overviewData.splice(9,1);
+                    }
+                    //end brittleness.
+
+
                     var overviewTable = $('#'+pref+'overview-table');
                     for (var i=0; i<overviewData.length; i++) {
                         if (overviewLabels[i] === 'Taxonomy') {
@@ -104,7 +174,7 @@
                     var genesDiv = $('#'+pref+'genes');
                     genesDiv.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genes data...</div>");
                     var genesAreShown = false;
-                    
+
                     var liElems = tabPane.find('li');
                     for (var liElemPos = 0; liElemPos < liElems.length; liElemPos++) {
                         var liElem = $(liElems.get(liElemPos));
@@ -122,10 +192,10 @@
                         }
                     }
             };
-            
+
             container.empty();
             container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
-            
+
             var included = ["/complete","/contig_ids","/contig_lengths","contigset_ref","/dna_size",
                             "/domain","/gc_content","/genetic_code","/id","/md5","num_contigs",
                             "/scientific_name","/source","/source_id","/tax_id","/taxonomy",
@@ -152,13 +222,13 @@
             }, function(data) {
                 container.empty();
                 container.append('<p>[Error] ' + data.error.message + '</p>');
-            });            	
+            });
             return this;
         },
-        
+
         prepareGenesAndContigs: function(pref, kbws, gnm, tabPane) {
             var self = this;
-            var subsetRequests = [{ref: self.ws_name + "/" + self.ws_id, included: 
+            var subsetRequests = [{ref: self.ws_name + "/" + self.ws_id, included:
                 ["/features/[*]/aliases","/features/[*]/annotations",
                  "/features/[*]/function","/features/[*]/id","/features/[*]/location",
                  "/features/[*]/protein_translation_length","/features/[*]/type"]
@@ -169,7 +239,7 @@
             }
             kbws.get_object_subset(subsetRequests, function(data) {
                 gnm.features = data[0].data.features;
-                
+
                 ////////////////////////////// Genes Tab //////////////////////////////
                 var geneTab = $('#'+pref+'genes');
                 geneTab.empty();
@@ -193,13 +263,13 @@
                         contigMap[contigId] = {name: contigId, length: contigLen, genes: []};
                     }
                 }
-                
+
                 function geneEvents() {
                     $('.'+pref+'gene-click').unbind('click');
                     $('.'+pref+'gene-click').click(function() {
                         var geneId = [$(this).data('geneid')];
                         showGene(geneId);
-                    });            
+                    });
                 }
 
                 for (var genePos in gnm.features) {
@@ -219,7 +289,7 @@
                     var geneFunc = gene['function'];
                     if (!geneFunc)
                         geneFunc = '-';
-                    genesData.push({id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>', 
+                    genesData.push({id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>',
                             contig: contigName, start: geneStart, dir: geneDir, len: geneLen, type: geneType, func: geneFunc});
                     geneMap[geneId] = gene;
                     var contig = contigMap[contigName];
@@ -242,7 +312,7 @@
                         "iDisplayLength": 10,
                         "aaSorting": [[ 1, "asc" ], [2, "asc"]],
                         "aoColumns": [
-                                      {sTitle: "Gene ID", mData: "id"}, 
+                                      {sTitle: "Gene ID", mData: "id"},
                                       {sTitle: "Contig", mData: "contig"},
                                       {sTitle: "Start", mData: "start"},
                                       {sTitle: "Strand", mData: "dir"},
@@ -257,6 +327,17 @@
                                       },
                                       "fnDrawCallback": geneEvents
                 };
+
+                var genomeType = self.genomeType(gnm);
+                if (genomeType == 'transcriptome') {
+                    genesSettings.aoColumns = [
+                        {sTitle: "Gene ID", mData: "id"},
+                        {sTitle: "Length", mData: "len"},
+                        {sTitle: "Function", mData: "func"}
+                    ];
+                }
+
+
                 var genesTable = $('#'+pref+'genes-table').dataTable(genesSettings);
                 genesTable.fnAddData(genesData);
 
@@ -272,14 +353,14 @@
                     $('.'+pref+'contig-click').click(function() {
                         var contigId = [$(this).data('contigname')];
                         showContig(contigId);
-                    });            
+                    });
                 }
 
                 for (var key in contigMap) {
                     if (!contigMap.hasOwnProperty(key))
                         continue;
                     var contig = contigMap[key];
-                    contigsData.push({name: '<a class="'+pref+'contig-click" data-contigname="'+contig.name+'">'+contig.name+'</a>', 
+                    contigsData.push({name: '<a class="'+pref+'contig-click" data-contigname="'+contig.name+'">'+contig.name+'</a>',
                         length: contig.length, genecount: contig.genes.length});
                 }
                 var contigsSettings = {
@@ -341,8 +422,8 @@
                     $('#'+tabId).append('<table class="table table-striped table-bordered" \
                             style="margin-left: auto; margin-right: auto;" id="'+tabId+'-table"/>');
                     var elemLabels = ['Gene ID', 'Contig name', 'Gene start', 'Strand', 'Gene length', "Gene type", "Function", "Annotations"];
-                    var elemData = ['<a href="/functional-site/#/genes/'+self.ws_name+'/'+self.ws_id+'/'+geneId+'" target="_blank">'+geneId+'</a>', 
-                                    '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>', 
+                    var elemData = ['<a href="/functional-site/#/genes/'+self.ws_name+'/'+self.ws_id+'/'+geneId+'" target="_blank">'+geneId+'</a>',
+                                    '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>',
                                     geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
                     var elemTable = $('#'+tabId+'-table');
                     for (var i=0; i<elemData.length; i++) {
@@ -396,9 +477,9 @@
             }, function(data) {
                 container.empty();
                 container.append('<p>[Error] ' + data.error.message + '</p>');
-            });             
+            });
         },
-        
+
         getData: function() {
         	return {
         		type: "NarrativeTempCard",
@@ -419,9 +500,9 @@
             this.render();
             return this;
         },
-        
+
         uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
                 function(c) {
                     var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);

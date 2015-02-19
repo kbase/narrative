@@ -155,7 +155,9 @@
             	self.currentPage++;
             	var type = cat.type;
             	var ws = cat.ws;
-            	self.wsClient.list_objects({workspaces: [ws], type: type, includeMetadata: 1}, function(data) {
+            	self.list_objects(ws, type, self.currentQuery, function(data, origQuery) {
+                    if (origQuery !== self.currentQuery)
+                        return;
             		//console.log(data);
             		var query = self.currentQuery.replace(/[\*]/g,' ').trim().toLowerCase();
             		for (var i in data) {
@@ -300,6 +302,14 @@
         	}
         },
 
+        list_objects: function(ws, type, query, okCallback, errorCallback) {
+            this.wsClient.list_objects({workspaces: [ws], type: type, includeMetadata: 1}, function(data) {
+                okCallback(data, query);
+            }, function(error) {
+                errorCallback(error);
+            });
+        },
+        
         attachRow: function(index) {
             var obj = this.objectList[index];
             if (obj.attached) { return; }

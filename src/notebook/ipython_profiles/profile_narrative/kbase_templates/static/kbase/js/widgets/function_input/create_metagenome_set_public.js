@@ -89,10 +89,10 @@
 		var amplicon = 0;
 		var wgs = 0;
 		for (var i=0; i<items.length; i++) {
-			if (items[i]["sequence type"] == "WGS") {
-				wgs++;
+			if (items[i].sequence_type.toLowerCase() == "amplicon") {
+			    amplicon++;
 			} else {
-				amplicon++;
+				wgs++;
 			}
 		}
 		if (wgs > 1 && amplicon > 1) {
@@ -110,7 +110,7 @@
 	        };
 	    
 	        for (var i=0 ; i<items.length;i++){
-		        collection.members[i] = {'ID': items[i].id, 'URL': items[i].wsid+"/"+items[i].wsitem};
+		        collection.members[i] = {'ID': items[i].id, 'URL': "2703/"+items[i].id+"."+items[i].sequence_type.toLowerCase()+".metagenome"};
 	        }
 	    
 	        var object_data = {

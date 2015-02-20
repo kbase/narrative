@@ -46,6 +46,7 @@
                 $.each(
                     genome.features,
                     function (idx, feature) {
+
                         if (feature.location && feature.location.length) {
                             has_location = true;
                             return;
@@ -199,7 +200,7 @@
             var included = ["/complete","/contig_ids","/contig_lengths","contigset_ref","/dna_size",
                             "/domain","/gc_content","/genetic_code","/id","/md5","num_contigs",
                             "/scientific_name","/source","/source_id","/tax_id","/taxonomy",
-                            "/features/[*]/unknownfield"];
+                            "/features/[*]/unknownfield", "/features/[*]/location"];
             kbws.get_object_subset([{ref: self.ws_name + "/" + self.ws_id, included: included}], function(data) {
                 var gnm = data[0].data;
                 if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
@@ -231,7 +232,8 @@
             var subsetRequests = [{ref: self.ws_name + "/" + self.ws_id, included:
                 ["/features/[*]/aliases","/features/[*]/annotations",
                  "/features/[*]/function","/features/[*]/id","/features/[*]/location",
-                 "/features/[*]/protein_translation_length","/features/[*]/type"]
+                 "/features/[*]/protein_translation_length",
+                 "/features/[*]/dna_translation_length","/features/[*]/type"]
             }];
             if (!(gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length)) {
                 var contigSetRef = gnm.contigset_ref;
@@ -272,6 +274,8 @@
                     });
                 }
 
+                var genomeType = self.genomeType(gnm);
+
                 for (var genePos in gnm.features) {
                     var gene = gnm.features[genePos];
                     var geneId = gene.id;
@@ -285,6 +289,11 @@
                         geneDir = gene.location[0][2];
                         geneLen = gene.location[0][3];
                     }
+
+                    if (genomeType == 'transcriptome') {
+                        geneLen = gene.dna_translation_length || gene.protein_translation_length || '';
+                    }
+
                     var geneType = gene.type;
                     var geneFunc = gene['function'];
                     if (!geneFunc)
@@ -328,7 +337,7 @@
                                       "fnDrawCallback": geneEvents
                 };
 
-                var genomeType = self.genomeType(gnm);
+
                 if (genomeType == 'transcriptome') {
                     genesSettings.aoColumns = [
                         {sTitle: "Gene ID", mData: "id"},
@@ -336,7 +345,6 @@
                         {sTitle: "Function", mData: "func"}
                     ];
                 }
-
 
                 var genesTable = $('#'+pref+'genes-table').dataTable(genesSettings);
                 genesTable.fnAddData(genesData);

@@ -47,7 +47,7 @@
         loggedInCallback: function(event, auth) {
 	    // error if not properly initialized
             if (this.options.domainAnnotationID == null) {
-		showMessage("<div>[Error] Couldn't retrieve domain annotation data.</div>");
+		this.showMessage("[Error] Couldn't retrieve domain annotation data.");
 		return this;
             }
 

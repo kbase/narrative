@@ -37,19 +37,20 @@
         init: function(options) {
             this._super(options);
 
-            if (this.options.domainAnnotationID == null) {
-		this.$elem.append("<div>[Error] Couldn't retrieve domain annotation data.</div>");
-        	return;
-            }
-
             // Create a message pane
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
-
+	    
             return this;
         },
 
         loggedInCallback: function(event, auth) {
+	    // error if not properly initialized
+            if (this.options.domainAnnotationID == null) {
+		showMessage("<div>[Error] Couldn't retrieve domain annotation data.</div>");
+		return this;
+            }
+
             // Create a new workspace client
             this.ws = new Workspace(this.options.workspaceURL, auth);
            

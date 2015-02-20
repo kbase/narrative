@@ -27,7 +27,7 @@
                      'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'*/ ],
         categoryDescr: {  // search API category -> {}
         	'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV4',search:true},
-        	'metagenomes': {name: 'Metagenomes',type:'KBaseCommunities.Metagenome',ws:'KBasePublicMetagenomes',search:true},
+        	'metagenomes': {name: 'Metagenomes',type:'Communities.Metagenome',ws:'wilke:Data',search:true},
         	'media': {name:'Media',type:'KBaseBiochem.Media',ws:'KBaseMedia',search:false},
         	'plant_gnms': {name:'Plant Genomes',type:'KBaseGenomes.Genome',ws:'PlantCSGenomes',search:false}
         	/*'gwas_populations': {name:'GWAS Populations',type:'KBaseGwasData.GwasPopulation',ws:'KBasePublicGwasDataV2',search:true},
@@ -237,14 +237,14 @@
         				for (var i in data.items) {
         					var id = data.items[i].object_name;
         					var name = data.items[i].metagenome_name;
-        					var project = data.items[i].project_name;
-        					var sample = data.items[i].sample_name;
+        					var sequence_type = data.items[i].sequence_type;
+        					var mix_biome = data.items[i].mix_biome;
         					self.objectList.push({
         						$div: null,
         						info: null,
         						id: id,
         						name: name,
-        						metadata: {'Project': project, 'Sample': sample},
+        						metadata: {'Sequence Type': sequence_type, 'Biome': mix_biome},
         						ws: cat.ws,
         						type: cat.type,
         						attached: false
@@ -427,7 +427,12 @@
 
             var titleElement = $('<span>').css({'margin':'10px'}).append($btnToolbar.hide()).append($name);
             for (var key in object.metadata) {
-            	var value = $('<span>').addClass("kb-data-list-type").append('&nbsp;&nbsp;' + key + ':&nbsp;' + object.metadata[key]);
+                if (!object.metadata.hasOwnProperty(key))
+                    continue;
+                var val = object.metadata[key];
+                if (!val)
+                    val = '-';
+            	var value = $('<span>').addClass("kb-data-list-type").append('&nbsp;&nbsp;' + key + ':&nbsp;' + val);
             	titleElement.append('<br>').append(value);
             }
 

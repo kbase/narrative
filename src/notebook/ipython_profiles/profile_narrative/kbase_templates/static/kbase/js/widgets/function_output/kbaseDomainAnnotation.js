@@ -37,11 +37,9 @@
         init: function(options) {
             this._super(options);
 
-            // TEMPORARY
-            if(this.options.domainAnnotationID == null){
-                this.options.domainAnnotationID = 12;
-                this.options.workspaceID = 2959;
-                this.options.domainAnnotationVer = 8;
+            if (this.options.domainAnnotationID == null) {
+		this.$elem.append("<div>[Error] Couldn't retrieve domain annotation data.</div>");
+        	return;
             }
 
             // Create a message pane
@@ -371,7 +369,7 @@
                     var domainsInfo = genesArray[i][4];
                     if($.isEmptyObject(domainsInfo)) continue;
 
-                    // If we have somthing in domainsInfo, then the gene was anntoated
+                    // If we have something in domainsInfo, then the gene was anntoated
                     genesCount++;
                     for(var domainID in domainsInfo){
                         var domainData = domains[domainID];

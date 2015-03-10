@@ -1,0 +1,38 @@
+{
+   "user" : "jbischof",
+   "passwd" : "<pwd>",
+   "wsid" : "5821",
+   "app_name": "Build and Normalize Metagenomic Functional Abundance Data",
+   "params" : [
+      {
+         "name" : "metagenomes",
+         "type" : "text",
+         "value" : "wgs.collection"
+      },
+      {
+         "name" : "input",
+         "type" : "text",
+         "value" : "fun.1"
+      },
+      {
+         "name" : "level",
+         "type" : "dropdown",
+         "value" : "level3"
+      },
+      {
+         "name" : "source",
+         "type" : "dropdown",
+         "value" : "Subsystems"
+      },
+      {
+         "name" : "profile",
+         "type" : "text",
+         "value" : "fun.1"
+      },
+      {
+         "name" : "normalized_profile",
+         "type" : "text",
+         "value" : "normfun.1"
+      }
+   ]
+}

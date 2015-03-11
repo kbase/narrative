@@ -2,7 +2,9 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
+define(['jquery', 'kbwidget', 
+        'kbaseAuthenticatedWidget', 'kbaseNarrativeDownloadPanel'], 
+        function( $ ) {
 // (function( $, undefined ) {
     $.KBWidget({
         name: 'kbaseNarrativeDataList',

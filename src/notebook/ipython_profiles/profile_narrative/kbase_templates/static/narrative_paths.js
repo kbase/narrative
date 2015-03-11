@@ -1,17 +1,21 @@
-    define('kbpaths', [], function(paths) {
-        requirejs.config({
-        	//baseUrl: 'static/foo/bar/',
-            //urlArgs: "bust=" + (new Date()).getTime(),
+//    define('kbpaths', [], function(paths) {
+        require.config({
+            urlArgs: "v=" + (new Date()).getTime(),
+            baseUrl: 'static',
             waitSeconds : 30,
             paths : {
-                'jquery'      : 'kbase/js/ui-common/ext/jquery/jquery-1.10.2.min',
-                'jqueryui'    : 'kbase/js/ui-common/ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min',
-                'bootstrap'   : "kbase/js/ui-common/ext/bootstrap/3.1.1/js/bootstrap.min",
-                'd3'          : "kbase/js/ui-common/ext/d3/d3.v3.min",
-                'colorbrewer' : "kbase/js/ui-common/ext/colorbrewer/colorbrewer",
-                'handlebars'  : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
+            	'jquery' 							: 'components/jquery/jquery.min',
+//                'jquery'      						: 'kbase/js/ui-common/ext/jquery/jquery-1.10.2.min',
+				'jqueryui'							: 'components/jquery-ui/ui/minified/jquery-ui.min',
+//                'jqueryui'    						: 'kbase/js/ui-common/ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min',
+				'bootstrap'							: 'components/bootstrap-3/bootstrap.min',
+//                'bootstrap'   						: "kbase/js/ui-common/ext/bootstrap/3.1.1/js/bootstrap.min",
+				'underscore'						: 'components/underscore/1.8.2/underscore.min',
+                'd3'          						: 'kbase/js/ui-common/ext/d3/d3.v3.min',
+                'colorbrewer' 						: 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
+                'handlebars'  						: 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
 				'CDMI_API'                          : 'kbase/js/ui-common/src/widgets/../js/CDMI_API',
-                'narrativeMethodStore'                          : 'kbase/js/ui-common/src/widgets/../js/narrativeMethodStore',
+                'narrativeMethodStore'              : 'kbase/js/ui-common/src/widgets/../js/narrativeMethodStore',
 				'IdMapClient'                       : 'kbase/js/ui-common/src/widgets/../js/IdMapClient',
 				'KbaseNetworkServiceClient'         : 'kbase/js/ui-common/src/widgets/../js/KbaseNetworkServiceClient',
 				'MetaTool'                          : 'kbase/js/ui-common/src/widgets/../js/MetaTool',
@@ -194,7 +198,14 @@
 				'kbaseWSSelector'                   : 'kbase/js/ui-common/src/widgets/workspaces/kbaseWSSelector',
             },
             shim : {
-                bootstrap : {deps : ["jquery"]}
+                bootstrap : { 
+                	deps : ["jquery"] 
+                },
+                underscore : {
+                	exports : '_'
+                },
             }
         });
-    });
+	console.log('here');
+	require(['kbaseCircularHeatmap']);
+//    });

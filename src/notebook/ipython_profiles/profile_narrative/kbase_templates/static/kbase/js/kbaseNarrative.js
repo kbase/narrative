@@ -9,7 +9,7 @@
 "use strict";
 
 // Bind all page buttons right at startup.
-(function() {
+$(function() {
     $(document).on('workspaceIdQuery.Narrative', function(e, callback) {
         if (callback) {
             callback(workspaceId);
@@ -83,7 +83,7 @@
     $('#kb-add-code-cell').click(function() { IPython.notebook.insert_cell_below('code'); })
     $('#kb-add-md-cell').click(function() { IPython.notebook.insert_cell_below('markdown'); })
 
-})();
+});
 
 /**
  * Error logging for detectable failure conditions.

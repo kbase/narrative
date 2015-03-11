@@ -3,6 +3,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 1.0.3
+__Changes__
+- JIRA KBASE-1672 - updated text in upload dialogs
+- Added initial Selenium test scripts
+- Updated root README
+
+__Bugfixes__
+- Fixed issue where duplicated results can appear in the Public Data tab
+
 ### Version 1.0.2 - 2/19/2015
 __Bugfixes__
 - JIRA NAR-491 - modified public data panel to get metagenomes of the correct type from the updated search interface

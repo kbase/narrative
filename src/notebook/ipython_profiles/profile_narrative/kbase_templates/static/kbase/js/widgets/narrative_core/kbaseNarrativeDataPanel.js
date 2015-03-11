@@ -16,7 +16,9 @@
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
  */
-define(['jquery', 'underscore', 'kbwidget', 'kbaseNarrativeControlPanel'], function( $, _ ) {
+define(['jquery', 'underscore', 'kbwidget', 
+        'kbaseNarrativeControlPanel', 'kbaseNarrativeDataList'], 
+        function( $, _ ) {
 
     $.KBWidget({
         name: "kbaseNarrativeDataPanel",

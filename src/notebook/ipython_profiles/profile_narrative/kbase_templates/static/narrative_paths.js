@@ -14,6 +14,7 @@ require.config({
 		'kbaseNarrativeCellMenu'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeCellMenu',
 		'kbaseNarrativeControlPanel'		: 'kbase/js/widgets/narrative_core/kbaseNarrativeControlPanel',
 		'kbaseNarrativeDataPanel'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeDataPanel',
+		'kbaseNarrativeDataList'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeDataList',
 		'kbaseNarrativeSidePanel'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
 		'kbaseNarrativeJobsPanel'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeJobsPanel',
 		'kbaseNarrativeMethodPanel'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodPanel',

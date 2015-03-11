@@ -16,7 +16,7 @@
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
  */
-(function( $, undefined ) {
+define(['jquery', 'underscore', 'kbwidget', 'kbaseNarrativeControlPanel'], function( $, _ ) {
 
     $.KBWidget({
         name: "kbaseNarrativeDataPanel",
@@ -1380,4 +1380,4 @@
 
     });
 
-})( jQuery );
+});

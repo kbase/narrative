@@ -1,5 +1,5 @@
 require.config({
-    urlArgs: "v=" + (new Date()).getTime(),
+    // urlArgs: "v=" + (new Date()).getTime(),
     baseUrl: 'static',
     waitSeconds : 30,
     paths : {
@@ -9,9 +9,16 @@ require.config({
 //                'jqueryui'    						: 'kbase/js/ui-common/ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min',
 		'bootstrap'							: 'components/bootstrap-3/bootstrap.min',
 //                'bootstrap'   						: "kbase/js/ui-common/ext/bootstrap/3.1.1/js/bootstrap.min",
-		'underscore'						: 'components/underscore/1.8.2/underscore.min',
-		'kbaseNarrative'					: 'kbase/js/kbaseNarrative',
+		'underscore'						: 'components/underscore/1.8.2/underscore-min',
+		// 'kbaseNarrative'					: 'kbase/js/kbaseNarrative',
 		'kbaseNarrativeCellMenu'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeCellMenu',
+		'kbaseNarrativeControlPanel'		: 'kbase/js/widgets/narrative_core/kbaseNarrativeControlPanel',
+		'kbaseNarrativeDataPanel'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeDataPanel',
+		'kbaseNarrativeSidePanel'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
+		'kbaseNarrativeJobsPanel'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeJobsPanel',
+		'kbaseNarrativeMethodPanel'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodPanel',
+		'kbaseNarrativeManagePanel'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
+		
         'd3'          						: 'kbase/js/ui-common/ext/d3/d3.v3.min',
         'colorbrewer' 						: 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
         'handlebars'  						: 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',

@@ -1,6 +1,6 @@
 "use strict";
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbasePrompt', 'kbaseNarrativeControlPanel'], function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeJobsPanel',
         parent: 'kbaseNarrativeControlPanel',
@@ -1361,4 +1361,4 @@
             }
         },
     });
-})( jQuery );
+});

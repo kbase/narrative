@@ -1,4 +1,6 @@
-(function($, undefined) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeDataPanel', 
+        'kbaseNarrativeMethodPanel', 'kbaseNarrativeManagePanel', 
+        'kbaseNarrativeJobsPanel'], function($) {
     $.KBWidget({
         name: 'kbaseNarrativeSidePanel',
         parent: 'kbaseWidget',
@@ -331,4 +333,4 @@
         }
 
     })
-})( jQuery );
+});

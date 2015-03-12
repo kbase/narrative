@@ -294,8 +294,10 @@
                                      .addClass('panel-footer')
                                      .css({'overflow' : 'hidden'})
                                      .append($buttons));
+            require(['kbaseNarrativeCellMenu'], $.proxy(function() {
+                this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
+            }, this));
 
-            this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
 
 
             //now we link the step parameters together that are linked

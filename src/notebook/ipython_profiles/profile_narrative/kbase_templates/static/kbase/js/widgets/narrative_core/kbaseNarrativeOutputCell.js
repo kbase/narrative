@@ -48,8 +48,10 @@
         },
 
         renderViewerCell: function() {
-            var $label = $('<span>').addClass('label label-info').append('Viewer');
-            this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label);            
+            require(['kbaseNarrativeDataCell'], $.proxy(function() {
+                var $label = $('<span>').addClass('label label-info').append('Viewer');
+                this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label);
+            }, this));
         },
 
         renderMethodOutputCell: function() {

@@ -6,6 +6,8 @@
  * @public
  */
 
+define(['jquery', 'underscore', 'kbwidget', 'kbaseNarrativeCell'], function( $, _ ) {
+
 // Global singleton for viewers
 kb_g_viewers = null;
 
@@ -189,7 +191,7 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
  * the viewer.
 */
 
-(function($, undefined) {
+// (function($, undefined) {
     $.KBWidget({
         name: 'kbaseNarrativeDataCell',
         parent: 'kbaseNarrativeCell',
@@ -329,5 +331,6 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
             return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         }
 
-    })
-})(jQuery);
+    });
+// })(jQuery);
+});

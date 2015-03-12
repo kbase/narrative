@@ -17,7 +17,9 @@
  * @public
  */
 define(['jquery', 'underscore', 'kbwidget', 
-        'kbaseNarrativeControlPanel', 'kbaseNarrativeDataList'], 
+        'kbaseNarrativeControlPanel', 'kbaseNarrativeDataList',
+        'kbaseNarrativeSidePublicTab', 'kbaseNarrativeSideImportTab',
+        'kbaseNarrativeExampleDataTab'], 
         function( $, _ ) {
 
     $.KBWidget({

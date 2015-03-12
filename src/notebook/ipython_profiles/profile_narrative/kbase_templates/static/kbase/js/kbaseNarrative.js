@@ -8,7 +8,9 @@
  */
 "use strict";
 
-define(['jquery', 'kbaseNarrativeSidePanel', 'kbaseNarrativeOutputCell'], function( $ ) {
+define(['jquery', 'kbaseNarrativeSidePanel', 
+        'kbaseNarrativeOutputCell', 'kbaseNarrativeWorkspace'], 
+        function( $ ) {
 
 /**
  * @constructor

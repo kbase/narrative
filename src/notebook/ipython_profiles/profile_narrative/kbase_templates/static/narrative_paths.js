@@ -35,6 +35,7 @@ require.config({
 
 		'kbaseNarrativeAppCell'				: 'kbase/js/widgets/narrative_core/kbaseNarrativeAppCell',
 		'kbaseNarrativeMethodCell'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell',
+		'kbaseNarrativeWorkspace'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeWorkspace',
 
         'd3'          						: 'kbase/js/ui-common/ext/d3/d3.v3.min',
         'colorbrewer' 						: 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
@@ -233,13 +234,16 @@ require.config({
         	deps : ['kbaseNarrativeDataCell', 'kbaseNarrativeCellMenu']
         },
         'kbaseNarrativeAppCell' : {
-        	deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 'kbaseNarrativeCellMenu']
+        	deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 
+        			'kbaseNarrativeCellMenu']
         },
         'kbaseNarrativeMethodCell' : {
         	deps : ['kbaseNarrativeMethodInput', 'kbaseNarrativeCellMenu']
         },
         'kbaseNarrativeWorkspace' : {
-        	deps : []
+        	deps : ['kbaseNarrativeAppCell', 'kbaseNarrativeMethodCell', 
+        			'kbaseNarrativeOutputCell', 'kbaseNarrativeSidePanel', 
+        			'kbaseNarrativeDataPanel', 'underscore']
         }
     }
 });

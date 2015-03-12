@@ -1,7 +1,7 @@
 /**
  * KBase widget to upload file content into shock node.
  */
-(function($, undefined) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput'], function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeParameterFileInput',
         parent: "kbaseNarrativeParameterInput",
@@ -408,4 +408,4 @@
             return ret;
         }
     });
-})(jQuery);
+});

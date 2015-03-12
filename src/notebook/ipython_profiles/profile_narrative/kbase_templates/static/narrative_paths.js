@@ -37,6 +37,8 @@ require.config({
 		'kbaseNarrativeMethodCell'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell',
 		'kbaseNarrativeWorkspace'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeWorkspace',
 
+		'kbaseNarrativeError'				: 'kbase/js/widgets/function_output/kbaseNarrativeError',
+
         'd3'          						: 'kbase/js/ui-common/ext/d3/d3.v3.min',
         'colorbrewer' 						: 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
         'handlebars'  						: 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',

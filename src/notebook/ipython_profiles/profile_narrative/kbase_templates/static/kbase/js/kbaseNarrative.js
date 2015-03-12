@@ -8,6 +8,7 @@
  */
 "use strict";
 
+define(['jquery', 'kbaseNarrativeSidePanel', 'kbaseNarrativeOutputCell'], function( $ ) {
 
 /**
  * @constructor
@@ -240,7 +241,6 @@ Narrative.prototype.init = function() {
      * Go ahead and fill in the rest of the Javascript stuff.
      */
     $([IPython.events]).one('status_started.Kernel', $.proxy(function() {
-        require(['kbaseNarrativeSidePanel'], $.proxy(function() { 
         /*
          * Before we get everything loading, just grey out the whole %^! page
          */
@@ -295,7 +295,6 @@ Narrative.prototype.init = function() {
             KBFatal("Narrative.init", "Unable to locate workspace name from the Narrative object!");
         }
     }, this));
-    }, this));
 };
 
 Narrative.prototype.updateVersion = function() {
@@ -324,3 +323,6 @@ Narrative.prototype.updateVersion = function() {
 Narrative.prototype.saveNarrative = function() {
     IPython.notebook.save_checkpoint();
 };
+
+return Narrative;
+});

@@ -3,7 +3,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeParameterInput",
         parent: "kbaseAuthenticatedWidget",

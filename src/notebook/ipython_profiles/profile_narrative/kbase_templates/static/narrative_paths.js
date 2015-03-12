@@ -4,13 +4,10 @@ require.config({
     waitSeconds : 30,
     paths : {
     	'jquery' 							: 'components/jquery/jquery.min',
-//                'jquery'      						: 'kbase/js/ui-common/ext/jquery/jquery-1.10.2.min',
 		'jqueryui'							: 'components/jquery-ui/ui/minified/jquery-ui.min',
-//                'jqueryui'    						: 'kbase/js/ui-common/ext/jquery-ui/1.10.3/js/jquery-ui-1.10.3.custom.min',
 		'bootstrap'							: 'components/bootstrap-3/bootstrap.min',
-//                'bootstrap'   						: "kbase/js/ui-common/ext/bootstrap/3.1.1/js/bootstrap.min",
 		'underscore'						: 'components/underscore/1.8.2/underscore-min',
-		// 'kbaseNarrative'					: 'kbase/js/kbaseNarrative',
+		'kbaseNarrative'					: 'kbase/js/kbaseNarrative',
 		'kbaseNarrativeCellMenu'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeCellMenu',
 		'kbaseNarrativeControlPanel'		: 'kbase/js/widgets/narrative_core/kbaseNarrativeControlPanel',
 		'kbaseNarrativeDataPanel'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeDataPanel',
@@ -26,6 +23,19 @@ require.config({
 		'kbaseNarrativeSidePublicTab'		: 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePublicTab',
 		'kbaseNarrativeCell'				: 'kbase/js/widgets/narrative_core/kbaseNarrativeCell',
 		'kbaseNarrativeDataCell'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeDataCell',
+		'kbaseNarrativeOutputCell' 			: 'kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell',
+		'kbaseNarrativeInput'				: 'kbase/js/widgets/function_input/kbaseNarrativeInput',
+		'kbaseNarrativeMethodInput'			: 'kbase/js/widgets/function_input/kbaseNarrativeMethodInput',
+		'kbaseNarrativeParameterInput'		: 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterInput',
+		'kbaseNarrativeParameterTextInput'	: 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextInput',
+		'kbaseNarrativeParameterDropdownInput' : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterDropdownInput',
+		'kbaseNarrativeParameterCheckboxInput' : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCheckboxInput',
+		'kbaseNarrativeParameterTextareaInput' : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextareaInput',
+		'kbaseNarrativeParameterFileInput'     : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterFileInput',
+
+		'kbaseNarrativeAppCell'				: 'kbase/js/widgets/narrative_core/kbaseNarrativeAppCell',
+		'kbaseNarrativeMethodCell'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell',
+
         'd3'          						: 'kbase/js/ui-common/ext/d3/d3.v3.min',
         'colorbrewer' 						: 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
         'handlebars'  						: 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
@@ -213,11 +223,23 @@ require.config({
 		'kbaseWSSelector'                   : 'kbase/js/ui-common/src/widgets/workspaces/kbaseWSSelector',
     },
     shim : {
-        bootstrap : { 
-        	deps : ["jquery"] 
+        'bootstrap' : { 
+        	deps : ['jquery'] 
         },
-        underscore : {
+        'underscore' : {
         	exports : '_'
         },
+        'kbaseNarrativeOutputCell' : {
+        	deps : ['kbaseNarrativeDataCell', 'kbaseNarrativeCellMenu']
+        },
+        'kbaseNarrativeAppCell' : {
+        	deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 'kbaseNarrativeCellMenu']
+        },
+        'kbaseNarrativeMethodCell' : {
+        	deps : ['kbaseNarrativeMethodInput', 'kbaseNarrativeCellMenu']
+        },
+        'kbaseNarrativeWorkspace' : {
+        	deps : []
+        }
     }
 });

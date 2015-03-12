@@ -14,9 +14,9 @@
 // as injecting require.js make marked not to put itself in the globals,
 // which make both this file fail at setting marked configuration, and textcell.js
 // which search marked into global.
-require(['components/marked/lib/marked'], // 'kbaseMethodGallery'],
+require(['components/marked/lib/marked', 'kbaseNarrative'], // 'kbaseMethodGallery'],
 
-function (marked) {
+function (marked, Narrative) {
 
     window.marked = marked
 

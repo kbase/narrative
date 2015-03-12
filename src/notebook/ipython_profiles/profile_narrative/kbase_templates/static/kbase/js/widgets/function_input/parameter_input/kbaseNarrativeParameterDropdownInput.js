@@ -3,7 +3,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeParameterDropdownInput",
         parent: "kbaseNarrativeParameterInput",
@@ -303,5 +303,4 @@
         }
         
     });
-
-})( jQuery );
+});

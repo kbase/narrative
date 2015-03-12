@@ -2,8 +2,10 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbaseNarrativeParameterTextInput',
+    'kbaseNarrativeParameterDropdownInput', 'kbaseNarrativeParameterCheckboxInput',
+    'kbaseNarrativeParameterTextareaInput', 'kbaseNarrativeParameterFileInput'],
+    function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeMethodInput",
         parent: "kbaseNarrativeInput",
@@ -357,5 +359,4 @@
             });
         }
     });
-
-})( jQuery );
+});

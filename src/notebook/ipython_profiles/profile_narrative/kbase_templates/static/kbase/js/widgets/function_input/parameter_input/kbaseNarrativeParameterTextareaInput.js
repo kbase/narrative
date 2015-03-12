@@ -3,7 +3,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeParameterTextareaInput",
         parent: "kbaseNarrativeParameterInput",
@@ -235,5 +235,4 @@
         }
         
     });
-
-})( jQuery );
+});

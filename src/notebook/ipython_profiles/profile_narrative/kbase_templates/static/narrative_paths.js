@@ -7,6 +7,7 @@ require.config({
 		'jqueryui'							: 'components/jquery-ui/ui/minified/jquery-ui.min',
 		'bootstrap'							: 'components/bootstrap-3/bootstrap.min',
 		'underscore'						: 'components/underscore/1.8.2/underscore-min',
+		'kbaseNarrativePrestart'			: 'kbase/js/kbaseNarrativePrestart',
 		'kbaseNarrative'					: 'kbase/js/kbaseNarrative',
 		'kbaseNarrativeCellMenu'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeCellMenu',
 		'kbaseNarrativeControlPanel'		: 'kbase/js/widgets/narrative_core/kbaseNarrativeControlPanel',
@@ -38,6 +39,8 @@ require.config({
 		'kbaseNarrativeWorkspace'			: 'kbase/js/widgets/narrative_core/kbaseNarrativeWorkspace',
 
 		'kbaseNarrativeError'				: 'kbase/js/widgets/function_output/kbaseNarrativeError',
+
+		'kbaseTabTable'						: 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
 
         'd3'          						: 'kbase/js/ui-common/ext/d3/d3.v3.min',
         'colorbrewer' 						: 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
@@ -232,9 +235,9 @@ require.config({
         'underscore' : {
         	exports : '_'
         },
-        'kbaseNarrativeOutputCell' : {
-        	deps : ['kbaseNarrativeDataCell', 'kbaseNarrativeCellMenu']
-        },
+        // 'kbaseNarrativeOutputCell' : {
+        // 	deps : ['kbaseNarrativeDataCell', 'kbaseNarrativeCellMenu']
+        // },
         'kbaseNarrativeAppCell' : {
         	deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 
         			'kbaseNarrativeCellMenu']
@@ -249,3 +252,5 @@ require.config({
         }
     }
 });
+
+require(['kbaseNarrativePrestart'], function() {});

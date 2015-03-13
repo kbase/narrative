@@ -1,4 +1,4 @@
-(function($, undefined) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeDataCell', 'kbaseNarrativeCellMenu'], function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeOutputCell',
         parent: 'kbaseWidget',
@@ -65,10 +65,12 @@
         },
 
         renderErrorOutputCell: function() {
-            if (!this.options.title)
-                this.options.title = 'Narrative Error';
-            var $label = $('<span>').addClass('label label-danger').append('Error');
-            this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $label);
+            require(['kbaseNarrativeError'], $.proxy(function() { 
+                if (!this.options.title)
+                    this.options.title = 'Narrative Error';
+                var $label = $('<span>').addClass('label label-danger').append('Error');
+                this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $label);
+            }, this));
         },
 
         renderCell: function(baseClass, panelClass, headerClass, $label) {
@@ -114,8 +116,27 @@
                                         .addClass('panel-body')
                                         .append($('<div>'))));
             try {
-                this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
-                this.$elem.append($body);
+                require([widget], 
+                    $.proxy(function() {
+                        this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
+                        this.$elem.append($body);
+                    }, this),
+                    $.proxy(function(err) {
+                        KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
+                        this.options.title = 'App Error';
+                        this.options.data = {'error': {
+                            'msg': 'An error occurred while showing your output:',
+                            'method_name': 'kbaseNarrativeOutputCell.renderCell',
+                            'type': 'Output',
+                            'severity': '',
+                            'traceback': 'Failed while trying to show a "' + widget + '"\n' +
+                                         'With inputs ' + JSON.stringify(widgetData) + '\n\n' + 
+                                         err.message                    
+                        }};
+                        this.options.widget = this.OUTPUT_ERROR_WIDGET;
+                        this.renderErrorOutputCell();
+                    }, this)
+                );
             }
             catch (err) {
                 KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
@@ -200,4 +221,4 @@
         }
 
     });
-})( jQuery );
+});

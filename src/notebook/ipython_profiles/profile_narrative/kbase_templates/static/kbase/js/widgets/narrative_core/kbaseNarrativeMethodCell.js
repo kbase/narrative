@@ -190,7 +190,13 @@
             if (!inputWidgetName || inputWidgetName === 'null')
                 inputWidgetName = this.defaultInputWidget;
 
-            this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
+            require([inputWidgetName], 
+              $.proxy(function() {
+                this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
+              }, this),
+              $.proxy(function() {
+                console.error('Error while trying to load widget "' + inputWidgetName + '"');
+              }));
         },
 
         /**

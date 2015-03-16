@@ -5,7 +5,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeInput'], function( $ ) {
     $.KBWidget({
         name: "kbaseBuildMediaInput", 
         parent: "kbaseNarrativeInput",
@@ -430,4 +430,4 @@
         }
 
     });
-})( jQuery );
+});

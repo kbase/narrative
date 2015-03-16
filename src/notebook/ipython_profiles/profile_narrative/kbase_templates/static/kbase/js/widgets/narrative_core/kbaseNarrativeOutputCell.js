@@ -117,10 +117,12 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeDataCell', 'kbaseNarrativeCellMenu'
                                         .append($('<div>'))));
             try {
                 require([widget], 
+                    // If we successfully Require the widget code, render it:
                     $.proxy(function() {
                         this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
                         this.$elem.append($body);
                     }, this),
+                    // If we fail, render the error widget and log the error.
                     $.proxy(function(err) {
                         KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
                         this.options.title = 'App Error';

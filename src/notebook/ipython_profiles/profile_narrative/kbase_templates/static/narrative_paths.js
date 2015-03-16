@@ -67,6 +67,14 @@ require.config({
          ***/
         'kbaseDefaultNarrativeOutput'           : 'kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput',
         'kbaseTabTable'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
+        'KBObjects'                             : 'kbase/js/revised-widgets/src/widgets/modeling/KBObjects',
+        'KBaseFBA.FBAModel'                     : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModel',
+        'KBaseFBA.FBAModelSet'                  : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModelSet',
+        'KBaseFBA.FBA'                          : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBA',
+        'KBaseBiochem.Media'                    : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseBiochem.Media',
+        'KBasePhenotypes.PhenotypeSet'          : 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSet',
+        'KBasePhenotypes.PhenotypeSimulationSet': 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSimulationSet',
+        'kbaseTabTableTabs'                     : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabs',
         'knhx'                                  : 'knhxtree/js/knhx',
         'knhx_menu'                             : 'knhxtree/js/menu',
         'knhx_excanvas'                         : 'knhxtree/js/excanvas',
@@ -288,6 +296,11 @@ require.config({
         'knhx' : {
             deps : ['knhx_menu', 'knhx_excanvas', 'knhx_canvastext', 'knhx_easytree']
         },
+        'kbaseTabTable' : {
+            deps : ['KBObjects', 'KBaseFBA.FBAModel','KBaseFBA.FBAModelSet', 'KBaseFBA.FBA',
+                    'KBaseBiochem.Media', 'KBasePhenotypes.PhenotypeSet',
+                    'KBasePhenotypes.PhenotypeSimulationSet', 'kbaseTabTableTabs']
+        }
     }
 });
 

@@ -66,6 +66,12 @@ require.config({
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
         'kbaseTabTable'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
+        'knhx'                                  : 'knhxtree/js/knhx',
+        'knhx_menu'                             : 'knhxtree/js/menu',
+        'knhx_excanvas'                         : 'knhxtree/js/excanvas',
+        'knhx_canvastext'                       : 'knhxtree/js/canvastext',
+        'knhx_easytree'                         : 'knhxtree/js/easytree',
+        'kbaseTree'                             : 'kbase/js/widgets/function_output/kbaseTree',
         /***
          * END CUSTOM OUTPUT WIDGETS
          ***/
@@ -263,9 +269,6 @@ require.config({
         'underscore' : {
             exports : '_'
         },
-        // 'kbaseNarrativeOutputCell' : {
-        //  deps : ['kbaseNarrativeDataCell', 'kbaseNarrativeCellMenu']
-        // },
         'kbaseNarrativeAppCell' : {
             deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 
                     'kbaseNarrativeCellMenu']
@@ -280,6 +283,9 @@ require.config({
         },
         'create_metagenome_set' : {
             deps : ['jquery', 'kbwidget', 'kbaseNarrativeInput']
+        },
+        'knhx' : {
+            deps : ['knhx_menu', 'knhx_excanvas', 'knhx_canvastext', 'knhx_easytree']
         },
     }
 });

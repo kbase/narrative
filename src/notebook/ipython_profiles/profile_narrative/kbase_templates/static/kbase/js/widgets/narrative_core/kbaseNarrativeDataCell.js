@@ -148,12 +148,18 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
     output.widget_title = this.type_names[o.bare_type];  //spec.info.name;
     output.landing_page_url_prefix = this.landing_page_urls[o.bare_type];
     var output_widget = spec.widgets.output;
+    var w = null;
     try {
-      var w = elt[output_widget](output);
+      w = elt[output_widget](output);
       return w;
     }
     catch(err){
-      console.error("error making widget: " + output_widget);
+      require([output_widget], function() {
+        w = elt[output_widget](output);
+      }, function() {
+        console.error("error making widget: " + output_widget);
+      })
+      return w;
     }
     // return elt[output_widget](output);
 };

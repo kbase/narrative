@@ -26,7 +26,7 @@
  * @see kbaseAuthenticatedWidget.js
  * @public
  */
-(function($, undefined) {
+define(['jquery', 'kbwidget'], function( $ ) {
     $.KBWidget({
         /* 
          * (required) Your widget should be named in CamelCase.
@@ -115,4 +115,4 @@
 
 
     });
-})(jQuery);
+});

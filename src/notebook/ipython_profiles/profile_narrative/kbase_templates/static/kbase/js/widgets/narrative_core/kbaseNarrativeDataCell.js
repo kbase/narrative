@@ -149,10 +149,14 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
     output.landing_page_url_prefix = this.landing_page_urls[o.bare_type];
     var output_widget = spec.widgets.output;
     var w = null;
+    // XXX: Temporary until all widgets are loaded with Require.
+    // First, try to load it from global space.
     try {
       w = elt[output_widget](output);
       return w;
     }
+    // If that fails, try to load with require. 
+    // If THAT fails, fail with an error (though the error should be improved)
     catch(err){
       require([output_widget], function() {
         w = elt[output_widget](output);

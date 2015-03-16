@@ -65,6 +65,7 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+        'kbaseDefaultNarrativeOutput'           : 'kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput',
         'kbaseTabTable'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
         'knhx'                                  : 'knhxtree/js/knhx',
         'knhx_menu'                             : 'knhxtree/js/menu',

@@ -37,6 +37,8 @@ require.config({
         'kbaseNarrativeParameterTextareaInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextareaInput',
         'kbaseNarrativeParameterFileInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterFileInput',
         'kbaseNarrativeError'                   : 'kbase/js/widgets/function_output/kbaseNarrativeError',
+        'NarrativeManager'                      : 'kbase/js/api/NarrativeManager',
+
         // not yet ADMs, but still load with Require
         'kbaseNarrativeAppCell'                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeAppCell',
         'kbaseNarrativeMethodCell'              : 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell',
@@ -55,7 +57,7 @@ require.config({
         'kbaseTabbedInput'                      : 'kbase/js/widgets/function_input/kbaseTabbedInput',
         'create_metagenome_set'                 : 'kbase/js/widgets/function_input/create_metagenome_set',
         'devVizSelector'                        : 'kbase/js/widgets/function_input/devDataViz',
-        
+
         /***
          * END CUSTOM INPUT WIDGETS
          ***/

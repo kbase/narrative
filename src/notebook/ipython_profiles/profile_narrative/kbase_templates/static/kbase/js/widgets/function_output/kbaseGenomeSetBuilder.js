@@ -52,8 +52,25 @@
                             refhash[obj_refs[i].ref] = item[7]+"/"+item[1];
                         }
                 		var count = 0;
+                        for (var key in data.elements) {
+                            if (data.elements.hasOwnProperty(key))
+                                count++;
+                        }
+                        var regenerate = false;
+                        for (var i = 0; i < count; i++)
+                            if (!data.elements.hasOwnProperty("param" + i)) {
+                                regenerate = true;
+                                break;
+                            }
+                        var i = 0;
                 		for (var key in data.elements) {
-                			state[key] = refhash[data.elements[key]['ref']].split('/')[1];
+                            if (!data.elements.hasOwnProperty(key))
+                                continue;
+                            var newKey = key;
+                            if (regenerate)
+                                newKey = "param" + i;
+                			state[newKey] = refhash[data.elements[key]['ref']].split('/')[1];
+                			i++;
                 		}
                 		self.renderState(state);
                 	}).fail(function(e){

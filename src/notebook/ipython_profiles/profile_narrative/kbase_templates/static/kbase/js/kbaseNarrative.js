@@ -337,9 +337,13 @@ Narrative.prototype.checkVersion = function($newVersion) {
                 $('#kb-update-btn').fadeIn('fast'); 
             }
         },
-        fail: function(err) {
-            console.log('err');
-        }
+        error: function(err) {
+            console.error('Error while checking for a version update: ' + err);
+            KBError('Narrative.checkVersion', 'Unable to check for a version update!');
+            var ver = {"git_hash":"b3908de","version":"1.0.3b"};
+            $newVersion.empty().append('<b>' + ver.version + '</b>');
+            $('#kb-update-btn').fadeIn('fast'); 
+        },
     });
 };
 

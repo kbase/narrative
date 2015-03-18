@@ -355,8 +355,26 @@
     				}
     			}, this));
     		}
-            this.inputWidget[methodId] = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
-
+    		var wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
+            this.inputWidget[methodId] = wig;
+            
+            var onChange = function() {
+                var w = self.getInputWidget();
+                if (self.timer)
+                    return;
+                var v = w.isValid();
+                if (v.isValid) {
+                    self.showInfo('All parameters are valid and you can start "Import" now');
+                } else {
+                    self.showInfo('You can start "Import" when all parameters are ready (marked by green check)');
+                }
+            };
+            var paramValues = wig.getAllParameterValues();
+            for (var paramPos in paramValues) {
+                var paramId = paramValues[paramPos].id;
+                wig.addInputListener(paramId, onChange);
+            }
+            
         	this.tabs[methodId] = tab;
         },
         

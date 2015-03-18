@@ -130,7 +130,7 @@
 				name: this.options.genomeSetName, data: gset}]}, function(data) {
         			self.trigger('updateData.Narrative');
 					self.showInfo('Genome set object <b>' + self.options.genomeSetName + '</b> '+
-							'was stored into workspace <b>' + self.options.wsName + '</b>');
+							'was stored into Narrative');
 				}, function(data) {
 					alert('Error: ' + data.error.message);
 				});

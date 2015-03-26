@@ -4,7 +4,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'ContigBrowserPanel'], function($, undefined, undefined, ContigBrowserPanel) {
     $.KBWidget({
         name: "kbaseGenomeView",
         parent: "kbaseAuthenticatedWidget",
@@ -517,4 +517,4 @@
                 });
         }
     });
-})( jQuery );
+});

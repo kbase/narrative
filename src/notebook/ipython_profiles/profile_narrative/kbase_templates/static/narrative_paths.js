@@ -57,7 +57,6 @@ require.config({
         'kbaseTabbedInput'                      : 'kbase/js/widgets/function_input/kbaseTabbedInput',
         'create_metagenome_set'                 : 'kbase/js/widgets/function_input/create_metagenome_set',
         'devVizSelector'                        : 'kbase/js/widgets/function_input/devDataViz',
-
         /***
          * END CUSTOM INPUT WIDGETS
          ***/
@@ -74,6 +73,7 @@ require.config({
         'KBaseBiochem.Media'                    : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseBiochem.Media',
         'KBasePhenotypes.PhenotypeSet'          : 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSet',
         'KBasePhenotypes.PhenotypeSimulationSet': 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSimulationSet',
+        // another implementation of kbaseTabs needed for kbaseTabTable
         'kbaseTabTableTabs'                     : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabs',
         'knhx'                                  : 'knhxtree/js/knhx',
         'knhx_menu'                             : 'knhxtree/js/menu',
@@ -81,6 +81,11 @@ require.config({
         'knhx_canvastext'                       : 'knhxtree/js/canvastext',
         'knhx_easytree'                         : 'knhxtree/js/easytree',
         'kbaseTree'                             : 'kbase/js/widgets/function_output/kbaseTree',
+        'kbaseContigBrowserButtons'             : 'kbase/js/widgets/genomes/kbaseContigBrowserButtons',
+        'ContigBrowserPanel'                    : 'kbase/js/widgets/function_output/contigBrowserPanel',
+        'kbaseGenomeView'                       : 'kbase/js/widgets/function_output/kbaseGenomeAnnotation',
+
+        // unfinished ones
         /***
          * END CUSTOM OUTPUT WIDGETS
          ***/
@@ -300,7 +305,7 @@ require.config({
             deps : ['KBObjects', 'KBaseFBA.FBAModel','KBaseFBA.FBAModelSet', 'KBaseFBA.FBA',
                     'KBaseBiochem.Media', 'KBasePhenotypes.PhenotypeSet',
                     'KBasePhenotypes.PhenotypeSimulationSet', 'kbaseTabTableTabs']
-        }
+        },
     }
 });
 

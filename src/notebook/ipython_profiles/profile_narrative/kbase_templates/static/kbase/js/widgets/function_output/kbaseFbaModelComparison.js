@@ -1,5 +1,4 @@
-(function( $, undefined ) {
-
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
 $.KBWidget({
     name: "FbaModelComparisonWidget",     
     parent: "kbaseAuthenticatedWidget",
@@ -502,4 +501,4 @@ $.KBWidget({
             });
     }
 })
-}( jQuery ) );
+});

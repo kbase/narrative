@@ -4,7 +4,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
     $.KBWidget({
         name: "kbaseAssemblyView",
         parent: "kbaseAuthenticatedWidget",
@@ -29,63 +29,63 @@
             this.ws_name = options.ws_name;
             this.ws_id = options.ws_id;
             if (options.job_id)
-            	this.job_id = options.job_id;
+                this.job_id = options.job_id;
             if (options.ws && options.id) {
-                  this.ws_id = options.id;
-                  this.ws_name = options.ws;
+                this.ws_id = options.id;
+                this.ws_name = options.ws;
             }
             return this;
         },
-        
+
         render: function() {
             var self = this;
-        	var pref = this.uuid();
+            var pref = this.uuid();
 
             var container = this.$elem;
             if (self.token == null) {
-            	container.empty();
-            	container.append("<div>[Error] You're not logged in</div>");
-            	return;
+                container.empty();
+                container.append("<div>[Error] You're not logged in</div>");
+                return;
             }
 
             var kbws = new Workspace(self.wsUrl, {'token': self.token});
-            
+
             var ready = function() {
-            	container.empty();
-            	container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
-		var objname;
-		objname = self.ws_id
-		console.log("wsid")
-		console.log(self.ws_id)
-		if (typeof self.ws_id == "string"){
-		    if (self.ws_id.indexOf(".report") == -1) { //Check if contigset or report
-			objname = self.ws_id + ".report"
-		    } 
-		}
+                container.empty();
+                container.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genome data...</div>");
+                var objname;
+                objname = self.ws_id
+                console.log("wsid")
+                console.log(self.ws_id)
+                if (typeof self.ws_id == "string") {
+                    if (self.ws_id.indexOf(".report") == -1) { //Check if contigset or report
+                        objname = self.ws_id + ".report"
+                    } 
+                }
 
-            	kbws.get_objects([{ref: self.ws_name +"/"+ objname}], function(data) {
-            	    container.empty();
-		    var report_div = '<div class="" style="margin-top:15px">'
-		    var report = data[0].data.report
-		    report_div += '<code style="">' + report +'</code><br>'
-		    container.append(report_div);
+                kbws.get_objects([{ref: self.ws_name +"/"+ objname}], function(data) {
+                    container.empty();
+                    var report_div = '<div class="" style="margin-top:15px">'
+                    var report = data[0].data.report
+                    report_div += '<code style="">' + report +'</code><br>'
+                    container.append(report_div);
 
-            	}, function(data) {
-            		container.empty();
-            		container.append('<p>[Error] ' + data.error.message + '</p>');
-            	});            	
+                }, function(data) {
+                    container.empty();
+                    container.append('<p>[Error] ' + data.error.message + '</p>');
+                });             
             };
             ready();
             return this;
         },
-        
+
         getData: function() {
-        	return {
-        		type: "NarrativeTempCard",
-        		id: this.ws_name + "." + this.ws_id,
-        		workspace: this.ws_name,
-        		title: "Temp Widget"
-        	};
+            return {
+                type: "NarrativeTempCard",
+                id: this.ws_name + "." + this.ws_id,
+                workspace: this.ws_name,
+                title: "Temp Widget"
+            };
         },
 
         loggedInCallback: function(event, auth) {
@@ -99,7 +99,7 @@
             this.render();
             return this;
         },
-        
+
         uuid: function() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
                 function(c) {
@@ -108,4 +108,4 @@
                 });
         }
     });
-})( jQuery );
+})();

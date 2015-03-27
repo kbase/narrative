@@ -4,7 +4,8 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'ContigBrowserPanel'], function($, undefined, undefined, ContigBrowserPanel) {
+define(['jquery', 'ContigBrowserPanel', 'kbwidget', 'kbaseAuthenticatedWidget'], 
+    function($, ContigBrowserPanel) {
     $.KBWidget({
         name: "kbaseGenomeView",
         parent: "kbaseAuthenticatedWidget",

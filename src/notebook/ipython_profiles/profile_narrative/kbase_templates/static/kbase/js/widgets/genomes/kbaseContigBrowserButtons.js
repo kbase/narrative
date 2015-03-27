@@ -1,9 +1,9 @@
 /**
  * Requires bootstrap 3 for buttons
  */
-define(['jquery', 'kbwidget', 'kbaseContigBrowserButtons'], function($) {
+define(['jquery', 'kbwidget'], function($) {
     $.KBWidget({
-        name: "KBaseContigBrowserButtons", 
+        name: "KBaseContigBrowserButtons",
         parent: "kbaseWidget", 
         version: "1.0.0",
         options: {

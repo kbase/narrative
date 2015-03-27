@@ -4,7 +4,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
     $.KBWidget({
         name: "kbaseContigSetView",
         parent: "kbaseAuthenticatedWidget",
@@ -139,4 +139,4 @@
                 });
         }
     });
-})( jQuery );
+});

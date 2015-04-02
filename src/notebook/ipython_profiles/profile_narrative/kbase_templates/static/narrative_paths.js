@@ -87,7 +87,10 @@ require.config({
         'kbaseContigSetView'                    : 'kbase/js/widgets/function_output/kbaseContigSetView',
         'kbaseAssemblyView'                     : 'kbase/js/widgets/function_output/kbaseAssemblyView',
         'FbaModelComparisonWidget'              : 'kbase/js/widgets/function_output/kbaseFbaModelComparison',
+        // for the GenomeComparison object
         'kbaseGenomeComparisonViewer'           : 'kbase/js/widgets/function_output/kbaseGenomeComparisonViewer',
+        // for comparing proteomes
+        'GenomeComparisonWidget'                : 'kbase/js/widgets/function_output/kbaseGenomeComparison',
         'kbasePanGenome'                        : 'kbase/js/widgets/function_output/kbasePanGenome',
 
         // unfinished ones

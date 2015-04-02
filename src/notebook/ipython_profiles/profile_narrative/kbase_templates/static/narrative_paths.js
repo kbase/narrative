@@ -93,6 +93,8 @@ require.config({
         'GenomeComparisonWidget'                : 'kbase/js/widgets/function_output/kbaseGenomeComparison',
         'kbasePanGenome'                        : 'kbase/js/widgets/function_output/kbasePanGenome',
         'kbaseDomainAnnotation'                 : 'kbase/js/widgets/function_output/kbaseDomainAnnotation',
+        'kbaseGenomeSetBuilder'                 : 'kbase/js/widgets/function_output/kbaseGenomeSetBuilder',
+        'kbaseMSA'                              : 'kbase/js/widgets/function_output/kbaseMSA',
 
         // unfinished ones
         /***

@@ -5,7 +5,7 @@
  */
 
 define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 
-        'kbaseTabs', 'kbasePrompt', 
+        'kbaseTabs', 'kbasePrompt'], 
         function($) {
     $.KBWidget({
         name: "kbasePanGenome",

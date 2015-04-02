@@ -92,6 +92,7 @@ require.config({
         // for comparing proteomes
         'GenomeComparisonWidget'                : 'kbase/js/widgets/function_output/kbaseGenomeComparison',
         'kbasePanGenome'                        : 'kbase/js/widgets/function_output/kbasePanGenome',
+        'kbaseDomainAnnotation'                 : 'kbase/js/widgets/function_output/kbaseDomainAnnotation',
 
         // unfinished ones
         /***

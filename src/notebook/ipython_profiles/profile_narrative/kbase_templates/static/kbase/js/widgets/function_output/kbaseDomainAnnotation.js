@@ -4,7 +4,7 @@
  * @public
  */
 
-(function($, undefined) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs'], function($) {
     $.KBWidget({
         name: 'kbaseDomainAnnotation',
         parent: 'kbaseAuthenticatedWidget',
@@ -469,4 +469,4 @@
         }        
 
     });
-})( jQuery );
+});

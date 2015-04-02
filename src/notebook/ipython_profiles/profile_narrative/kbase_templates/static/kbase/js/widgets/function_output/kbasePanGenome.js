@@ -4,7 +4,9 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 
+        'kbaseTabs', 'kbasePrompt', 
+        function($) {
     $.KBWidget({
         name: "kbasePanGenome",
         parent: "kbaseAuthenticatedWidget",
@@ -465,4 +467,4 @@
         }
     });
 
-})( jQuery );
+});

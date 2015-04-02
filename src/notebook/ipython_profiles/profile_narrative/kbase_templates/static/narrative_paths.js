@@ -88,6 +88,7 @@ require.config({
         'kbaseAssemblyView'                     : 'kbase/js/widgets/function_output/kbaseAssemblyView',
         'FbaModelComparisonWidget'              : 'kbase/js/widgets/function_output/kbaseFbaModelComparison',
         'kbaseGenomeComparisonViewer'           : 'kbase/js/widgets/function_output/kbaseGenomeComparisonViewer',
+        'kbasePanGenome'                        : 'kbase/js/widgets/function_output/kbasePanGenome',
 
         // unfinished ones
         /***

@@ -232,6 +232,7 @@ var KBFatal = function(where, what) {
  * specific piece of functionality. See Narrative.prototype.saveNarrative below.
  */
 var Narrative = function() {
+    this.maxNarrativeSize = "4 MB";
     this.narrController = null;
     this.readonly = false; /* whether whole narrative is read-only */
     this.authToken = null;
@@ -454,9 +455,11 @@ Narrative.prototype.init = function() {
         // currently - 4/6/2015 - there's a hard limit of 4MB per KBase Narrative.
         // Any larger object will throw a 413 error, and we need to show some text.
         if (data.xhr.status === 413) {
-            errorText = 'Due to current system constraints, a Narrative may not exceed 4 MB of text.<br><br>' +
-                        'Errors of this sort are usually due to excessive size of outputs from Code Cells, ' +
-                        'or from large objects embedded in Markdown Cells.<br><br>' +
+            errorText = 'Due to current system constraints, a Narrative may not exceed ' + 
+                        this.maxNarrativeSize + ' of text.<br><br>' +
+                        'Errors of this sort are usually due to excessive size ' + 
+                        'of outputs from Code Cells, or from large objects ' + 
+                        'embedded in Markdown Cells.<br><br>' +
                         'Please decrease the document size and try to save again.';
         }
         else if (data.xhr.responseText) {

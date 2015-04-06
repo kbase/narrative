@@ -445,7 +445,7 @@ Narrative.prototype.init = function() {
     this.initUpgradeDialog();
 
     // Override the base IPython event that happens when a notebook fails to save.
-    $([IPython.events]).on('notebook_save_failed.Notebook', function(event, data) {
+    $([IPython.events]).on('notebook_save_failed.Notebook', $.proxy(function(event, data) {
         IPython.save_widget.set_save_status('Narrative save failed!');
         console.log(event);
         console.log(data);
@@ -505,7 +505,7 @@ Narrative.prototype.init = function() {
                 that.find('input[type="text"]').focus();
             }
         });
-    });
+    }, this));
 
     $('[data-toggle="tooltip"]').tooltip();
     /*

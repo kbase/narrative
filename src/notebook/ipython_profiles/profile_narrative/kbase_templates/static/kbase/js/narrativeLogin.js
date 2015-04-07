@@ -5,7 +5,8 @@
  * @author Bill Riehl wjriehl@lbl.gov
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbaseLogin'], function($) {
+// (function( $, undefined ) {
 
     $(function() {
         var escapeParamString = function(str) {
@@ -165,4 +166,4 @@
         }
     });
 
-})( jQuery );
+});

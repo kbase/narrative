@@ -7,6 +7,11 @@ require.config({
         'jqueryui'                              : 'components/jquery-ui/ui/minified/jquery-ui.min',
         'bootstrap'                             : 'components/bootstrap-3/bootstrap.min',
         'underscore'                            : 'components/underscore/1.8.2/underscore-min',
+
+        'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
+        'narrativeLogin'                        : 'kbase/js/narrativeLogin',
+        'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',
+
         /***
          * CORE NARRATIVE WIDGETS
          ***/
@@ -216,8 +221,8 @@ require.config({
         'kbaseErrorPrompt'                  : 'kbase/js/ui-common/src/widgets/kbaseErrorPrompt',
         'kbaseFormBuilder'                  : 'kbase/js/ui-common/src/widgets/kbaseFormBuilder',
         'kbaseGeneTable'                    : 'kbase/js/ui-common/src/widgets/kbaseGeneTable',
-        'kbaseLogin'                        : 'kbase/js/ui-common/src/widgets/kbaseLogin',
-        'kbaseLoginFuncSite'                : 'kbase/js/ui-common/src/widgets/kbaseLoginFuncSite',
+        // 'kbaseLogin'                        : 'kbase/js/ui-common/src/widgets/kbaseLogin',
+        // 'kbaseLoginFuncSite'                : 'kbase/js/ui-common/src/widgets/kbaseLoginFuncSite',
         'kbaseMethodGallery'                : 'kbase/js/ui-common/src/widgets/kbaseMethodGallery',
         'kbasePopularMethods'                : 'kbase/js/ui-common/src/widgets/kbasePopularMethods',
         'kbaseWalkablePath'                : 'kbase/js/ui-common/src/widgets/kbaseWalkablePath',
@@ -228,7 +233,7 @@ require.config({
         'kbasePrompt'                       : 'kbase/js/ui-common/src/widgets/kbasePrompt',
         'kbaseSearchControls'               : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
         'kbaseTable'                        : 'kbase/js/ui-common/src/widgets/kbaseTable',
-        'kbaseTabs'                         : 'kbase/js/ui-common/src/widgets/kbaseTabs',
+        // 'kbaseTabs'                         : 'kbase/js/ui-common/src/widgets/kbaseTabs',
         'kbaseVisWidget'                    : 'kbase/js/ui-common/src/widgets/kbaseVisWidget',
         'Heatmap_widget'                    : 'kbase/js/ui-common/src/widgets/mak/Heatmap_widget',
         'LineChart_widget'                  : 'kbase/js/ui-common/src/widgets/mak/LineChart_widget',
@@ -333,4 +338,4 @@ require.config({
     }
 });
 
-require(['kbaseNarrativePrestart', 'kbaseLogging'], function() {});
+require(['kbaseNarrativePrestart', 'kbaseLogging', 'narrativeLogin'], function() {});

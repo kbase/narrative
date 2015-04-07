@@ -44,6 +44,11 @@ require.config({
         'kbaseNarrativeMethodCell'              : 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell',
         'kbaseNarrativeWorkspace'               : 'kbase/js/widgets/narrative_core/kbaseNarrativeWorkspace',
         'kbaseLogging'                          : 'kbase/js/kbaseLogging',
+        'RGBColor'                              : 'kbase/js/rgbcolor',
+        'kbStandaloneTable'                     : 'kbase/js/widgets/kbStandaloneTable',
+        'kbStandalonePlot'                      : 'kbase/js/widgets/kbStandalonePlot',
+        'kbStandaloneGraph'                     : 'kbase/js/widgets/kbStandaloneGraph',
+        'kbStandaloneHeatmap'                   : 'kbase/js/widgets/kbStandaloneHeatmap',
         /***
          * END CORE WIDGETS
          ***/
@@ -96,6 +101,9 @@ require.config({
         'kbaseDomainAnnotation'                 : 'kbase/js/widgets/function_output/kbaseDomainAnnotation',
         'kbaseGenomeSetBuilder'                 : 'kbase/js/widgets/function_output/kbaseGenomeSetBuilder',
         'kbaseMSA'                              : 'kbase/js/widgets/function_output/kbaseMSA',
+        'MetagenomeView'                        : 'kbase/js/widgets/function_output/kbaseMetagenomeView',
+        'CollectionView'                        : 'kbase/js/widgets/function_output/kbaseCollectionView',
+        'AbundanceDataHeatmap'                  : 'kbase/js/widgets/function_otuput/kbaseAbundanceDataHeatmap',
 
         // unfinished ones
         /***
@@ -111,7 +119,7 @@ require.config({
         'KbaseNetworkServiceClient'             : 'kbase/js/ui-common/src/widgets/../js/KbaseNetworkServiceClient',
         'MetaTool'                              : 'kbase/js/ui-common/src/widgets/../js/MetaTool',
         'OntologyServiceClient'                 : 'kbase/js/ui-common/src/widgets/../js/OntologyServiceClient',
-        'RGBColor'                              : 'kbase/js/ui-common/src/widgets/../js/RGBColor',
+        // 'RGBColor'                              : 'kbase/js/ui-common/src/widgets/../js/RGBColor',
         'geometry_point'                        : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_point',
         'geometry_rectangle'                : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_rectangle',
         'geometry_size'                     : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_size',

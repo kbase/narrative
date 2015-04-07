@@ -43,6 +43,7 @@ require.config({
         'kbaseNarrativeAppCell'                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeAppCell',
         'kbaseNarrativeMethodCell'              : 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodCell',
         'kbaseNarrativeWorkspace'               : 'kbase/js/widgets/narrative_core/kbaseNarrativeWorkspace',
+        'kbaseLogging'                          : 'kbase/js/kbaseLogging',
         /***
          * END CORE WIDGETS
          ***/
@@ -320,4 +321,4 @@ require.config({
     }
 });
 
-require(['kbaseNarrativePrestart'], function() {});
+require(['kbaseNarrativePrestart', 'kbaseLogging'], function() {});

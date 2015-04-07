@@ -1,7 +1,9 @@
 /**
  * KBase widget to display table and boxplot of BIOM data
  */
-(function($, undefined) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'RGBColor', 
+        'kbStandaloneTable', 'kbStandaloneGraph'], 
+        function($) {
     $.KBWidget({
         name: 'AbundanceDataView',
         parent: "kbaseAuthenticatedWidget",
@@ -170,4 +172,4 @@
 	        return b;
 	    }
     });
-})(jQuery);
+});

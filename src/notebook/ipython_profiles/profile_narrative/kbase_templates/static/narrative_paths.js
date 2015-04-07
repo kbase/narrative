@@ -62,6 +62,7 @@ require.config({
         'kbaseNcbiGenomeImportInput'            : 'kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput', 
         'kbaseTabbedInput'                      : 'kbase/js/widgets/function_input/kbaseTabbedInput',
         'create_metagenome_set'                 : 'kbase/js/widgets/function_input/create_metagenome_set',
+        'kbStandaloneListSelect'                : 'kbase/js/widgets/function_input/kbStandaloneListSelect',
         'devVizSelector'                        : 'kbase/js/widgets/function_input/devDataViz',
         /***
          * END CUSTOM INPUT WIDGETS
@@ -103,7 +104,13 @@ require.config({
         'kbaseMSA'                              : 'kbase/js/widgets/function_output/kbaseMSA',
         'MetagenomeView'                        : 'kbase/js/widgets/function_output/kbaseMetagenomeView',
         'CollectionView'                        : 'kbase/js/widgets/function_output/kbaseCollectionView',
-        'AbundanceDataHeatmap'                  : 'kbase/js/widgets/function_otuput/kbaseAbundanceDataHeatmap',
+        'AbundanceDataHeatmap'                  : 'kbase/js/widgets/function_output/kbaseAbundanceDataHeatmap',
+        'AbundanceDataPcoa'                     : 'kbase/js/widgets/function_output/kbaseAbundanceDataPcoa',
+        'AbundanceDataBoxplot'                  : 'kbase/js/widgets/function_output/kbaseAbundanceDataBoxplot',
+        'AbundanceDataTable'                    : 'kbase/js/widgets/function_output/kbaseAbundanceDataTable',
+        'AnnotationSetTable'                    : 'kbase/js/widgets/function_output/kbaseAnnotationSetTable',
+        'AbundanceDataView'                     : 'kbase/js/widgets/function_output/kbaseAbundanceDataView',
+        'RankAbundancePlot'                     : 'kbase/js/widgets/function_output/kbaseRankAbundancePlot',
 
         // unfinished ones
         /***
@@ -314,9 +321,6 @@ require.config({
             deps : ['kbaseNarrativeAppCell', 'kbaseNarrativeMethodCell', 
                     'kbaseNarrativeOutputCell', 'kbaseNarrativeSidePanel', 
                     'kbaseNarrativeDataPanel', 'underscore']
-        },
-        'create_metagenome_set' : {
-            deps : ['jquery', 'kbwidget', 'kbaseNarrativeInput']
         },
         'knhx' : {
             deps : ['knhx_menu', 'knhx_excanvas', 'knhx_canvastext', 'knhx_easytree']

@@ -4,7 +4,9 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'knhx'], function( $ ) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 
+        'knhx', 'widgetMaxWidthCorrection'], 
+        function($) {
     $.KBWidget({
         name: 'kbaseTree',
         parent: 'kbaseAuthenticatedWidget',

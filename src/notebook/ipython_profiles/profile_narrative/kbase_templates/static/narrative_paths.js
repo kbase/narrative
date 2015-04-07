@@ -11,6 +11,8 @@ require.config({
         'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
         'narrativeLogin'                        : 'kbase/js/narrativeLogin',
         'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',
+        // Non-AMD, still load with Require
+        'widgetMaxWidthCorrection'              : 'kbase/js/widgetMaxWidthCorrection',
 
         /***
          * CORE NARRATIVE WIDGETS

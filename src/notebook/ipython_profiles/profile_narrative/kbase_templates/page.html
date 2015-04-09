@@ -50,6 +50,8 @@
         }
         checkBrowser();
     </script>
+
+
     <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("narrative_paths") }}"></script>
     <script>
         var kb_use_require = true;
@@ -78,6 +80,18 @@
         ga('send', 'pageview');
     </script>
 
+    <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ static_url("kbase/js/widgets/kbapi.js") }}" type="text/javascript" charset="utf-8"></script>
+    <!-- // <script src="{{ static_url("components/jquery-extensions/js/jquery.cookie.min.js") }}" type="text/javascript" charset="utf-8"></script> -->
+    <script src="{{ static_url("kbase/js/api/kbase-client-api.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ static_url("components/jquery-extensions/js/jquery.dataTables.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ static_url("select2-v3.5.2/select2.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ static_url("components/bootstrap-extensions/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ static_url("components/bootstrap-extensions/js/dataTables.bootstrap.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ static_url("components/d3/d3.v3.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script src="{{ static_url("components/jquery-extensions/js/jquery.svg.js") }}" type="text/javascript" charset="utf-8"></script>
     {% block meta %}
     {% endblock %}
 </head>
@@ -214,10 +228,6 @@
 
     <div id="app" class="wrapper" ui-view></div>
 
-    <script src="{{ static_url("components/jquery/jquery.min.js") }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ static_url("kbase/js/widgets/kbapi.js") }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ static_url("components/bootstrap-3/js/bootstrap.min.js") }}" type="text/javascript" charset="utf-8"></script>
 
     <script>
         // Dumb thing to get the workspace ID just like the back end does - from the URL at startup.
@@ -240,15 +250,7 @@
         /*
         we no longer use the crazy landing page map, but keep the variable here
         so things we don't know about don't break
-
-        $.parseJSON(
-            $.ajax({
-                url: "{{ static_url('kbase/landing_page_map.json') }}",
-                async: false,
-                dataType: 'json',
-                cache: false
-            }).responseText
-        );*/
+        */
         var icons = $.parseJSON(
           $.ajax({
             url: "{{ static_url('kbase/icons.json') }}",
@@ -269,16 +271,14 @@
                             workspaceId: workspaceId
                           };
     </script>
-    <script src="{{ static_url("kbase/js/api/kbase-client-api.min.js") }}" type="text/javascript" charset="utf-8"></script>
 
     <script src="{{ static_url("base/js/namespace.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("base/js/page.js") }}" type="text/javascript" charset="utf-8"></script>
 
     <!-- KBase Narrative Extensions -->
-    <script src="{{ static_url("components/jquery-extensions/js/jquery.cookie.min.js") }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ static_url("kbase/js/widgets/kbwidget.js") }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script>
-    <script src="{{ static_url("kbase/js/widgets/kbasePromptNew.js") }}" type="text/javascript" charset="utf-8"></script>
+    <!-- // <script src="{{ static_url("kbase/js/widgets/kbwidget.js") }}" type="text/javascript" charset="utf-8"></script> -->
+    <!-- // <script src="{{ static_url("kbase/js/widgets/kbaseAuthenticatedWidget.js") }}" type="text/javascript" charset="utf-8"></script> -->
+    <!-- // <script src="{{ static_url("kbase/js/widgets/kbasePromptNew.js") }}" type="text/javascript" charset="utf-8"></script> -->
     <!-- // <script src="{{ static_url("kbase/js/widgets/kbaseLoginFuncSite.js") }}" type="text/javascript" charset="utf-8"></script> -->
     <!-- // <script src="{{ static_url("kbase/js/narrativeLogin.js") }}" type="text/javascript" charset="utf-8"></script> -->
     <!-- End KBase Extensions -->

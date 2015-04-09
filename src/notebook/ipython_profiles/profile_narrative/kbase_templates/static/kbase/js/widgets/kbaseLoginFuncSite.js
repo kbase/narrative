@@ -48,7 +48,7 @@
 
 */
 
-define(['jquery', 'kbwidget', 'kbasePrompt'], function($) {
+define('kbaseLogin', ['jquery', 'jquery_cookie', 'kbwidget', 'kbasePrompt'], function($) {
     $.KBWidget({
 
 	    name: "kbaseLogin",

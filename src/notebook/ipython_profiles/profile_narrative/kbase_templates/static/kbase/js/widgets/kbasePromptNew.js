@@ -52,11 +52,10 @@
 
 */
 
-(function( $, undefined ) {
-
+define(['jquery', 'kbwidget', 'bootstrap'], function($) {
     $.KBWidget({
 
-		  name: "kbasePrompt",
+        name: "kbasePrompt",
 
         version: "1.0.0",
         options: {
@@ -357,4 +356,4 @@
 
     });
 
-}( jQuery ) );
+});

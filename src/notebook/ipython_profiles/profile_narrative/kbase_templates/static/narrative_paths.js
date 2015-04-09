@@ -3,15 +3,18 @@ require.config({
     baseUrl: 'static',
     waitSeconds : 30,
     paths : {
+        'domReady'                              : 'components/requirejs/domReady',
         'jquery'                                : 'components/jquery/jquery.min',
         'jqueryui'                              : 'components/jquery-ui/ui/minified/jquery-ui.min',
-        'bootstrap'                             : 'components/bootstrap-3/bootstrap.min',
+        'bootstrap'                             : 'components/bootstrap-3/js/bootstrap.min',
         'underscore'                            : 'components/underscore/1.8.2/underscore-min',
+        'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
 
         'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
         'narrativeLogin'                        : 'kbase/js/narrativeLogin',
         'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',
         'kbaseUploadWidget'                     : 'kbase/js/widgets/kbaseUpload',
+        'kbasePrompt'                           : 'kbase/js/widgets/kbasePromptNew',
         // Non-AMD, still load with Require
         'widgetMaxWidthCorrection'              : 'kbase/js/widgetMaxWidthCorrection',
 
@@ -101,6 +104,7 @@ require.config({
         'kbaseGenomeView'                       : 'kbase/js/widgets/function_output/kbaseGenomeAnnotation',
         'kbaseContigSetView'                    : 'kbase/js/widgets/function_output/kbaseContigSetView',
         'kbaseAssemblyView'                     : 'kbase/js/widgets/function_output/kbaseAssemblyView',
+        'AssemblyWidget'                        : 'kbase/js/widgets/function_output/kbaseAssembly',
         'FbaModelComparisonWidget'              : 'kbase/js/widgets/function_output/kbaseFbaModelComparison',
         // for the GenomeComparison object
         'kbaseGenomeComparisonViewer'           : 'kbase/js/widgets/function_output/kbaseGenomeComparisonViewer',
@@ -233,7 +237,7 @@ require.config({
         'kbaseMethodDescription'                : 'kbase/js/ui-common/src/widgets/kbaseMethodDescription',
         'kbaseModal'                        : 'kbase/js/ui-common/src/widgets/kbaseModal',
         'kbasePanel'                        : 'kbase/js/ui-common/src/widgets/kbasePanel',
-        'kbasePrompt'                       : 'kbase/js/ui-common/src/widgets/kbasePrompt',
+        // 'kbasePrompt'                       : 'kbase/js/ui-common/src/widgets/kbasePrompt',
         'kbaseSearchControls'               : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
         'kbaseTable'                        : 'kbase/js/ui-common/src/widgets/kbaseTable',
         // 'kbaseTabs'                         : 'kbase/js/ui-common/src/widgets/kbaseTabs',
@@ -341,4 +345,7 @@ require.config({
     }
 });
 
-require(['kbaseNarrativePrestart', 'kbaseLogging', 'narrativeLogin'], function() {});
+define(['domReady!', 'kbwidget'], function() {
+    require(['kbaseNarrativePrestart', 'kbaseLogging', 'narrativeLogin'], function() { console.log('loaded paths file?'); });
+});
+// require(['kbwidget', 'kbaseNarrativePrestart', 'kbaseLogging', 'narrativeLogin'], function() { console.log('loaded paths file!'); });

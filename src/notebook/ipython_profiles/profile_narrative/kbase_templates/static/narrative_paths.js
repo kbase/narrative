@@ -355,7 +355,6 @@ require.config({
     }
 });
 
-define(['domReady!', 'kbwidget'], function() {
-    require(['kbapi', 'kbase-client-api', 'kbaseNarrativePrestart', 'kbaseLogging', 'narrativeLogin'], function() { console.log('loaded paths file?'); });
+define(['domReady!', 'kbwidget', 'kbapi', 'kbase-client-api'], function() {
+    require(['kbaseNarrativePrestart', 'kbaseLogging', 'narrativeLogin'], function() { console.log('loaded paths file.'); });
 });
-// require(['kbwidget', 'kbaseNarrativePrestart', 'kbaseLogging', 'narrativeLogin'], function() { console.log('loaded paths file!'); });

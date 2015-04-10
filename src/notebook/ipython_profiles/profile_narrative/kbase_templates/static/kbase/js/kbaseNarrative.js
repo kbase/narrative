@@ -252,7 +252,9 @@ Narrative.prototype.init = function() {
         window.scrollTo(0,0);
         
         IPython.notebook.set_autosave_interval(0);
-        IPython.CellToolbar.activate_preset("KBase");
+        require(['ipythonCellMenu'], function() {
+            IPython.CellToolbar.activate_preset("KBase");
+        });
 
         this.ws_name = null;
         if (IPython && IPython.notebook && IPython.notebook.metadata) {

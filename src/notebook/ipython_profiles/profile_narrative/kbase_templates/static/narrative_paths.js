@@ -9,7 +9,8 @@ require.config({
         'bootstrap'                             : 'components/bootstrap-3/js/bootstrap.min',
         'underscore'                            : 'components/underscore/1.8.2/underscore-min',
         'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
-
+        'select2'                               : 'select2-v3.5.2/select2.min',
+        
         'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
         'narrativeLogin'                        : 'kbase/js/narrativeLogin',
         'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',
@@ -49,6 +50,7 @@ require.config({
         'kbaseNarrativeParameterFileInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterFileInput',
         'kbaseNarrativeError'                   : 'kbase/js/widgets/function_output/kbaseNarrativeError',
         'NarrativeManager'                      : 'kbase/js/api/NarrativeManager',
+        'ipythonCellMenu'                       : 'kbase/js/widgets/narrative_core/ipythonCellMenu',
 
         // not yet ADMs, but still load with Require
         'kbaseNarrativeAppCell'                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeAppCell',

@@ -3,7 +3,7 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput'], function( $ ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], function($) {
     $.KBWidget({
         name: "kbaseNarrativeParameterDropdownInput",
         parent: "kbaseNarrativeParameterInput",

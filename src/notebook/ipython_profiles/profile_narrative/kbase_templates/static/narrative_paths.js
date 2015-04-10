@@ -10,7 +10,7 @@ require.config({
         'underscore'                            : 'components/underscore/1.8.2/underscore-min',
         'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
         'select2'                               : 'select2-v3.5.2/select2.min',
-        
+
         'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
         'narrativeLogin'                        : 'kbase/js/narrativeLogin',
         'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',
@@ -18,6 +18,8 @@ require.config({
         'kbasePrompt'                           : 'kbase/js/widgets/kbasePromptNew',
         // Non-AMD, still load with Require
         'widgetMaxWidthCorrection'              : 'kbase/js/widgetMaxWidthCorrection',
+        'kbapi'                                 : 'kbase/js/widgets/kbapi',
+        'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
 
         /***
          * CORE NARRATIVE WIDGETS
@@ -344,10 +346,16 @@ require.config({
                     'KBaseBiochem.Media', 'KBasePhenotypes.PhenotypeSet',
                     'KBasePhenotypes.PhenotypeSimulationSet', 'kbaseTabTableTabs']
         },
+        'kbapi' : {
+            deps : ['jquery', 'bootstrap']
+        },
+        'kbase-client-api' : {
+            deps : ['jquery']
+        }
     }
 });
 
 define(['domReady!', 'kbwidget'], function() {
-    require(['kbaseNarrativePrestart', 'kbaseLogging', 'narrativeLogin'], function() { console.log('loaded paths file?'); });
+    require(['kbapi', 'kbase-client-api', 'kbaseNarrativePrestart', 'kbaseLogging', 'narrativeLogin'], function() { console.log('loaded paths file?'); });
 });
 // require(['kbwidget', 'kbaseNarrativePrestart', 'kbaseLogging', 'narrativeLogin'], function() { console.log('loaded paths file!'); });

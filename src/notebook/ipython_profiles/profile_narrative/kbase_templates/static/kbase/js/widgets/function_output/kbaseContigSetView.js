@@ -4,7 +4,7 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs'], function($) {
     $.KBWidget({
         name: "kbaseContigSetView",
         parent: "kbaseAuthenticatedWidget",

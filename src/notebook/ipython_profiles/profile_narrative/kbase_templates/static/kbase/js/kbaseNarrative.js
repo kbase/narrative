@@ -10,7 +10,7 @@
 
 define(['jquery', 'kbaseNarrativeSidePanel', 
         'kbaseNarrativeOutputCell', 'kbaseNarrativeWorkspace'], 
-        function( $ ) {
+        function($) {
 
 /**
  * @constructor
@@ -33,6 +33,7 @@ var Narrative = function() {
     this.versionHtml = 'KBase Narrative<br>Alpha version';
     this.selectedCell = null;
     this.currentVersion = window.kbconfig.version;
+    this.dataViewers = null;
 
     return this;
 };

@@ -9,7 +9,8 @@
 define(['jquery', 'underscore', 'kbwidget', 'kbaseNarrativeCell'], function( $, _ ) {
 
 // Global singleton for viewers
-kb_g_viewers = null;
+// Bill: no longer needed, global viewers are now under IPython.narrative.dataViewers
+//kb_g_viewers = null;
 
 
 /**
@@ -120,8 +121,8 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
         return null;
     }
     var spec = this.specs[method_id];
-	  var inputParamId = spec['parameters'][0]['id'];
-	  var output = {};
+    var inputParamId = spec['parameters'][0]['id'];
+    var output = {};
     var mappings = spec.behavior.output_mapping;
     _.each(mappings, function(mapping) {
         // Get parameter value
@@ -153,18 +154,19 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
     // First, try to load it from global space.
     try {
       w = elt[output_widget](output);
-      return w;
     }
     // If that fails, try to load with require. 
     // If THAT fails, fail with an error (though the error should be improved)
     catch(err){
       require([output_widget], function() {
         w = elt[output_widget](output);
+        return w;
       }, function() {
         console.error("error making widget: " + output_widget);
-      })
-      return w;
+        w = KBaseNarrativeDefaultViewer(elt, data_cell);
+      });
     }
+    return output.widget_title;
     // return elt[output_widget](output);
 };
 
@@ -201,146 +203,147 @@ var KBaseNarrativeDefaultViewer = function(elt, data_cell) {
  * the viewer.
 */
 
-// (function($, undefined) {
-    $.KBWidget({
-        name: 'kbaseNarrativeDataCell',
-        parent: 'kbaseNarrativeCell',
-        version: '0.0.1',
-        options: {
-            info: null, // object info
-            cell: null,  // IPython cell
-	    lp_url: "/functional-site/#/dataview/",
-        },
-        obj_info: null,
-        // for 'method_store' service
-        method_client: null,
-        // IPython cell
-        ip_cell: null,
+$.KBWidget({
+    name: 'kbaseNarrativeDataCell',
+    parent: 'kbaseNarrativeCell',
+    version: '0.0.1',
+    options: {
+        info: null, // object info
+        cell: null,  // IPython cell
+        lp_url: "/functional-site/#/dataview/",
+    },
+    obj_info: null,
+    // for 'method_store' service
+    method_client: null,
+    // IPython cell
+    ip_cell: null,
 
-        /**
-         * Initialize
-         */
-        init: function(options) {
-            //console.debug("kbaseNarrativeDataCell.init.start");
-            this._super(options);
-            this.obj_info = options.info;
-            this.obj_info.bare_type = /[^-]*/.exec(this.obj_info.type);
-            this.obj_info.simple_date = /[^+]*/.exec(this.obj_info.save_date);
-            this.ip_cell = options.cell;
-            this._initMethodStoreClient();
-	    
-	    if (window.kbconfig.urls.landing_pages) {
-                this.options.lp_url = window.kbconfig.urls.landing_pages;
-            }
-	    
-            if (kb_g_viewers == null) {
-		// we have to wait until the type/method specs are loaded the first time
-		var self = this;
-		
-		var done = function() {
-		    //console.debug("kbaseNarrativeDataCell.init.done with load");
-		    kb_g_viewers = this.all_viewers;
-		    self.render(options.info);
-		}
-		this.all_viewers = new KBaseNarrativeViewers(this.method_client,done);
-            } else {
-		// if they are already loaded, we can just grab it and render
-		this.all_viewers = kb_g_viewers;
-		//console.debug("kbaseNarrativeDataCell.init.done");
-		this.render(options.info);
-	    }
-	    
-            return this; 
-        },
-
-        _initMethodStoreClient: function() {
-            if (this.method_client === null) {
-              this.method_client = new NarrativeMethodStore(this._getMethodStoreURL());
-            }
-        },
-
-        _getMethodStoreURL: function() {
-            var methodStoreURL = window.kbconfig.urls.narrative_method_store;
-            return methodStoreURL;
-        },
-
-        /**
-         * Instantiate viewer widget for a data object.
-         *
-         * @param object_info (object) Object with info about data item
-         * @return Whatever the 'viewer' function returns.
-         */
-        render: function() {
-            var $label = $('<span>').addClass('label label-info').append('Data');
-            var baseClass = 'kb-cell-output';
-            var panelClass = 'panel-default';
-            var headerClass = 'kb-out-desc'; 
-
-            var is_default = false; // default-viewer
+    /**
+     * Initialize
+     */
+    init: function(options) {
+        //console.debug("kbaseNarrativeDataCell.init.start");
+        this._super(options);
+        this.obj_info = options.info;
+        this.obj_info.bare_type = /[^-]*/.exec(this.obj_info.type);
+        this.obj_info.simple_date = /[^+]*/.exec(this.obj_info.save_date);
+        this.ip_cell = options.cell;
+        this._initMethodStoreClient();
+    
+        if (window.kbconfig.urls.landing_pages) {
+            this.options.lp_url = window.kbconfig.urls.landing_pages;
+        }
+    
+        if (IPython.narrative.dataViewers == null) {
+            // we have to wait until the type/method specs are loaded the first time
             var self = this;
-            var widgetTitleElem = self.$elem.closest('.kb-cell-output').find('.panel').find('.panel-heading').find('.kb-out-desc').find('b');
-            var mainPanel = $('<div>');
-            self.$elem.append(mainPanel);
-            var $view = this.all_viewers.create_viewer(mainPanel, self);
 
-            var type_tokens = self.obj_info.type.split('.')
-            var type_module = type_tokens[0];
-            var type = type_tokens[1].split('-')[0];
-            var widget_title = '';
-            if (_.isNull($view)) {
-                KBaseNarrativeDefaultViewer(mainPanel, self);
-                widget_title = type;
-                is_default = true;
+            var done = function() {
+                //console.debug("kbaseNarrativeDataCell.init.done with load");
+                IPython.narrative.dataViewers = self.all_viewers;
+//                kb_g_viewers = this.all_viewers;
+                self.render(options.info);
             }
-            else {
-                widget_title = $view.options.widget_title;
-            }
-            widgetTitleElem.empty();
-            widgetTitleElem.append(widget_title);
-            widgetTitleElem.append('&nbsp;<a href="'+self.shortMarkdownDesc(self.obj_info, 
-            		this.options.lp_url)+'" target="_blank">'+self.obj_info.name+'</a>');
-            // Return the rendered widget
-            return this;
-        },
-
-        shortMarkdownDesc: function(o, landing_page_url_prefix) {
-          var link = "https://"; // force https
-          if (window.location.hostname == '0.0.0.0' ||
-              window.location.hostname == '127.0.0.1') {
-            link += "narrative-dev.kbase.us"; // for testing
-          }
-          else {
-            link += window.location.host;
-          } 
-          link += landing_page_url_prefix + o.ws_name + "/" + o.name;
-          return link;
-        },
-
-        /**
-         * Converts a timestamp to a simple string.
-         * Do this American style - HH:MM:SS MM/DD/YYYY
-         *
-         * @param {string} timestamp - a timestamp in number of milliseconds since the epoch.
-         * @return {string} a human readable timestamp
-         */
-        readableTimestamp: function(timestamp) {
-            var format = function(x) {
-                if (x < 10)
-                    x = '0' + x;
-                return x;
-            };
-
-            var d = new Date(timestamp);
-            var hours = format(d.getHours());
-            var minutes = format(d.getMinutes());
-            var seconds = format(d.getSeconds());
-            var month = d.getMonth()+1;
-            var day = format(d.getDate());
-            var year = d.getFullYear();
-
-            return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
+            this.all_viewers = new KBaseNarrativeViewers(this.method_client,done);
+        } else {
+            // if they are already loaded, we can just grab it and render
+            this.all_viewers = IPython.narrative.dataViewers;
+            //console.debug("kbaseNarrativeDataCell.init.done");
+            this.render(options.info);
         }
 
-    });
-// })(jQuery);
+        return this; 
+    },
+
+    _initMethodStoreClient: function() {
+        if (this.method_client === null) {
+            this.method_client = new NarrativeMethodStore(this._getMethodStoreURL());
+        }
+    },
+
+    _getMethodStoreURL: function() {
+        var methodStoreURL = window.kbconfig.urls.narrative_method_store;
+        return methodStoreURL;
+    },
+
+    /**
+     * Instantiate viewer widget for a data object.
+     *
+     * @param object_info (object) Object with info about data item
+     * @return Whatever the 'viewer' function returns.
+     */
+    render: function() {
+        var $label = $('<span>').addClass('label label-info').append('Data');
+        var baseClass = 'kb-cell-output';
+        var panelClass = 'panel-default';
+        var headerClass = 'kb-out-desc';
+
+        var is_default = false; // default-viewer
+        var self = this;
+        var widgetTitleElem = self.$elem.closest('.kb-cell-output').find('.panel').find('.panel-heading').find('.kb-out-desc').find('b');
+        var mainPanel = $('<div>');
+        self.$elem.append(mainPanel);
+
+
+        var type_tokens = self.obj_info.type.split('.');
+        var type_module = type_tokens[0];
+        var type = type_tokens[1].split('-')[0];
+
+        var widget_title = this.all_viewers.create_viewer(mainPanel, self);
+
+        // if (_.isNull($view)) {
+        //     KBaseNarrativeDefaultViewer(mainPanel, self);
+        //     widget_title = type;
+        //     is_default = true;
+        // }
+        // else {
+        //     widget_title = $view.options.widget_title;
+        // }
+        widgetTitleElem.empty();
+        widgetTitleElem.append(widget_title);
+        widgetTitleElem.append('&nbsp;<a href="'+self.shortMarkdownDesc(self.obj_info, 
+        		this.options.lp_url)+'" target="_blank">'+self.obj_info.name+'</a>');
+        // Return the rendered widget
+        return this;
+    },
+
+    shortMarkdownDesc: function(o, landing_page_url_prefix) {
+        var link = "https://"; // force https
+        if (window.location.hostname == '0.0.0.0' ||
+            window.location.hostname == '127.0.0.1') {
+            link += "narrative-dev.kbase.us"; // for testing
+        }
+        else {
+            link += window.location.host;
+        } 
+        link += landing_page_url_prefix + o.ws_name + "/" + o.name;
+        return link;
+    },
+
+    /**
+     * Converts a timestamp to a simple string.
+     * Do this American style - HH:MM:SS MM/DD/YYYY
+     *
+     * @param {string} timestamp - a timestamp in number of milliseconds since the epoch.
+     * @return {string} a human readable timestamp
+     */
+    readableTimestamp: function(timestamp) {
+        var format = function(x) {
+            if (x < 10)
+                x = '0' + x;
+            return x;
+        };
+
+        var d = new Date(timestamp);
+        var hours = format(d.getHours());
+        var minutes = format(d.getMinutes());
+        var seconds = format(d.getSeconds());
+        var month = d.getMonth()+1;
+        var day = format(d.getDate());
+        var year = d.getFullYear();
+
+        return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
+    }
+});
+
 });

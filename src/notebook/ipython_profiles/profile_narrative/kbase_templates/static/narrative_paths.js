@@ -345,6 +345,24 @@ require.config({
         'knhx' : {
             deps : ['knhx_menu', 'knhx_excanvas', 'knhx_canvastext', 'knhx_easytree']
         },
+        'KBaseFBA.FBAModel' : {
+            deps : ['KBObjects']
+        },
+        'KBaseFBA.FBAModelSet' : {
+            deps : ['KBObjects']
+        },
+        'KBaseFBA.FBA' : {
+            deps : ['KBObjects']
+        },
+        'KBaseBiochem.Media' : {
+            deps : ['KBObjects']
+        },
+        'KBasePhenotypes.PhenotypeSet' : {
+            deps : ['KBObjects']
+        },
+        'KBasePhenotypes.PhenotypeSimulationSet' : {
+            deps : ['KBObjects']
+        },
         'kbaseTabTable' : {
             deps : ['KBObjects', 'KBaseFBA.FBAModel','KBaseFBA.FBAModelSet', 'KBaseFBA.FBA',
                     'KBaseBiochem.Media', 'KBasePhenotypes.PhenotypeSet',

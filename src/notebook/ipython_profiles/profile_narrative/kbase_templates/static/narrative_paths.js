@@ -77,7 +77,7 @@ require.config({
         'kbaseNcbiGenomeImportInput'            : 'kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput', 
         'kbaseTabbedInput'                      : 'kbase/js/widgets/function_input/kbaseTabbedInput',
         'create_metagenome_set'                 : 'kbase/js/widgets/function_input/create_metagenome_set',
-        'kbStandaloneListSelect'                : 'kbase/js/widgets/function_input/kbStandaloneListSelect',
+        'kbStandaloneListSelect'                : 'kbase/js/widgets/function_input/kbStandaloneListselect',
         'devVizSelector'                        : 'kbase/js/widgets/function_input/devDataViz',
         /***
          * END CUSTOM INPUT WIDGETS

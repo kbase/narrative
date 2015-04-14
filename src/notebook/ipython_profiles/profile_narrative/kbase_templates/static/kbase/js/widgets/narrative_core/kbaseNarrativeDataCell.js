@@ -6,7 +6,7 @@
  * @public
  */
 
-define(['jquery', 'underscore', 'kbwidget', 'kbaseNarrativeCell'], function( $, _ ) {
+define(['jquery', 'underscore', 'kbwidget', 'kbaseNarrativeCell'], function($, _) {
 
 // Global singleton for viewers
 // Bill: no longer needed, global viewers are now under IPython.narrative.dataViewers
@@ -118,6 +118,7 @@ KBaseNarrativeViewers.prototype.create_viewer = function(elt, data_cell) {
     var method_id = this.viewers[o.bare_type];
     if (!method_id) {
         //console.debug("No viewer found for type=" + o.bare_type);
+        KBaseNarrativeDefaultViewer(elt, data_cell);
         return null;
     }
     var spec = this.specs[method_id];
@@ -241,7 +242,6 @@ $.KBWidget({
             var done = function() {
                 //console.debug("kbaseNarrativeDataCell.init.done with load");
                 IPython.narrative.dataViewers = self.all_viewers;
-//                kb_g_viewers = this.all_viewers;
                 self.render(options.info);
             }
             this.all_viewers = new KBaseNarrativeViewers(this.method_client,done);

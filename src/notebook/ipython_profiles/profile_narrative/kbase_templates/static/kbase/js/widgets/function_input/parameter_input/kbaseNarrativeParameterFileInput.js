@@ -29,6 +29,7 @@
         fakeButton: null,
         inSelectFileMode: true,
         cancelUpload: false,
+        changeFuncs: [],
 
         render: function() {
         	if (!this.token) {
@@ -176,6 +177,7 @@
         	var file = realButton.files[0];
         	self.fileName.val(file.name);
     		prcText.val("?..%");
+    		self.onChange();
             var curTime = new Date().getTime();
     		var ujsKey = "File:"+file.size+":"+file.lastModifiedDate.getTime()+":"+file.name+":"+self.getUser();
             var ujsClient = new UserAndJobState(self.options.ujsUrl, {'token': self.token});
@@ -242,6 +244,7 @@
             				self.isValid();
             				self.selectFileMode(true);
                             self.uploadWasStarted = false;
+                            self.onChange();
             				shockClient.change_node_file_name(self.shockNodeId, file.name, function(info) {
             					//showShockInfo(self.shockNodeId);
             				}, function(error) {
@@ -254,6 +257,7 @@
             				percent += ".0";
             			prcText.val(percent + "%");
             			self.isValid();
+            	        self.onChange();
             		}
             	}, function(error) {
             		self.selectFileMode(true);
@@ -385,6 +389,20 @@
             	this.locked = false;
             }
             this.isValid();
+        },
+
+        addInputListener: function(onChangeFunc) {
+            this.changeFuncs.push(onChangeFunc);
+        },
+        
+        onChange: function() {
+            var value = "" + this.shockNodeId + ", " + this.fileName.val() + ", " + this.uploadIsReady + ", " + this.percentText.val();
+            for (var i in this.changeFuncs) {
+                var changeFunc = this.changeFuncs[i];
+                try {
+                    changeFunc(value);
+                } catch (ignore) {}
+            }
         },
 
         uuid: function() {

@@ -1,0 +1,28 @@
+{
+   "user" : "jbischof",
+   "passwd" : "<pwd>",
+   "wsid" : "5551",
+   "method_name": "Generate Taxonomic Abundance Data",
+   "params" : [
+      {
+         "name" : "metagenomes",
+         "type" : "text",
+         "value" : "wgs.collection"
+      },
+      {
+         "name" : "input",
+         "type" : "text",
+         "value" : "tax.1"
+      },
+      {
+         "name" : "level",
+         "type" : "dropdown",
+         "value" : "genus"
+      },
+      {
+         "name" : "source",
+         "type" : "dropdown",
+         "value" : "SEED"
+      }
+   ]
+}

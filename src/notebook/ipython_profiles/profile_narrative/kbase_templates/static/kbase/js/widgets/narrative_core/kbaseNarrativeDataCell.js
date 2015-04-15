@@ -235,7 +235,7 @@ $.KBWidget({
             this.options.lp_url = window.kbconfig.urls.landing_pages;
         }
     
-        if (IPython.narrative.dataViewers == null) {
+        if (IPython == null || IPython.narrative == null || IPython.narrative.dataViewers == null) {
             // we have to wait until the type/method specs are loaded the first time
             var self = this;
 

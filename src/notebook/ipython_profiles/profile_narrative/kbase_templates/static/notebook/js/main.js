@@ -14,10 +14,10 @@
 // as injecting require.js make marked not to put itself in the globals,
 // which make both this file fail at setting marked configuration, and textcell.js
 // which search marked into global.
-require(['narrative_paths'], function() {
-require(['components/marked/lib/marked', 'kbaseNarrative'], // 'kbaseMethodGallery'],
+// require(['narrative_paths'], function() {
+require(['components/marked/lib/marked'],
 
-function (marked, Narrative) {
+function (marked) {
     window.marked = marked
 
     // monkey patch CM to be able to syntax highlight cell magics
@@ -60,12 +60,6 @@ function (marked, Narrative) {
     IPython.tooltip = new IPython.Tooltip()
     IPython.notification_area = new IPython.NotificationArea('#notification_area')
     IPython.notification_area.init_notification_widgets();
-
-    // Monkey patch to get the narrative 'start me up' event registered at the right time.
-    IPython.narrative = new Narrative();
-    IPython.narrative.init();
-    // End Monkey patch.
-
     IPython.layout_manager.do_resize();
 
     $('body').append('<div id="fonttest"><pre><span id="test1">x</span>'+
@@ -118,4 +112,3 @@ function (marked, Narrative) {
 }
 
 );
-});

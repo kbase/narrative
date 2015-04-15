@@ -1,8 +1,10 @@
 require.config({
-    // urlArgs: "v=" + (new Date()).getTime(),
+    urlArgs: "v=" + (new Date()).getTime(),
     baseUrl: 'static',
     waitSeconds : 30,
     paths : {
+        'IPythonMain'                           : 'notebook/js/main',
+        'narrativeRequire'                      : 'narrative_paths',
         'domReady'                              : 'components/requirejs/domReady',
         'jquery'                                : 'components/jquery/jquery.min',
         'jqueryui'                              : 'components/jquery-ui/ui/minified/jquery-ui.min',
@@ -379,5 +381,14 @@ require.config({
 
 // Make sure all the proper things get loaded. IPython does the rest.
 define(['domReady!', 'kbwidget', 'kbapi', 'kbase-client-api'], function() {
-    require(['kbaseNarrativePrestart', 'kbaseLogging', 'narrativeLogin'], function() { });
+    require(['kbaseNarrativePrestart', 
+             'kbaseLogging', 
+             'narrativeLogin', 
+             'kbaseNarrativeOutputCell', 
+             'kbaseNarrativeAppCell',
+             'kbaseNarrativeMethodCell',
+             'kbaseNarrativeDataCell'], function() {
+        console.log('loaded stuff. main is firing...');
+        require(['IPythonMain']);
+    });
 });

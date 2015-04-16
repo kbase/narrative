@@ -4,10 +4,14 @@ require.config({
     waitSeconds : 30,
     paths : {
         'IPythonMain'                           : 'notebook/js/main',
+        'IPythonCustom'                         : 'custom/custom',
         'narrativeRequire'                      : 'narrative_paths',
         'domReady'                              : 'components/requirejs/domReady',
         'jquery'                                : 'components/jquery/jquery.min',
         'jqueryui'                              : 'components/jquery-ui/ui/minified/jquery-ui.min',
+        'jquery-svg'                            : 'components/jquery-extensions/js/jquery.svg',
+        'jquery-dataTables'                     : 'components/jquery-extensions/js/jquery.dataTables',
+        'jquery-dataTables-bootstrap'           : 'components/bootstrap-extensions/js/dataTables.bootstrap',
         'bootstrap'                             : 'components/bootstrap-3/js/bootstrap.min',
         'underscore'                            : 'components/underscore/1.8.2/underscore-min',
         'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
@@ -332,12 +336,21 @@ require.config({
         'underscore' : {
             exports : '_'
         },
+        'jquery-dataTables' : {
+            deps : ['jquery']
+        },
+        'jquery-dataTables-bootstrap' : {
+            deps : ['jquery']
+        },
         'kbaseNarrativeAppCell' : {
             deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 
                     'kbaseNarrativeCellMenu']
         },
         'kbaseNarrativeMethodCell' : {
             deps : ['kbaseNarrativeMethodInput', 'kbaseNarrativeCellMenu']
+        },
+        'kbaseNarrativeOutputCell' : {
+            deps : ['jquery', 'kbwidget', 'kbaseNarrativeDataCell', 'kbaseNarrativeCellMenu']
         },
         'knhx' : {
             deps : ['knhx_menu', 'knhx_excanvas', 'knhx_canvastext', 'knhx_easytree']
@@ -361,15 +374,20 @@ require.config({
             deps : ['KBObjects']
         },
         'kbaseTabTable' : {
-            deps : ['KBObjects', 'KBaseFBA.FBAModel','KBaseFBA.FBAModelSet', 'KBaseFBA.FBA',
-                    'KBaseBiochem.Media', 'KBasePhenotypes.PhenotypeSet',
-                    'KBasePhenotypes.PhenotypeSimulationSet', 'kbaseTabTableTabs']
+            deps : ['jquery', 'jquery-dataTables', 'jquery-dataTables-bootstrap',
+                    'KBObjects', 'KBaseFBA.FBAModel',
+                    'KBaseFBA.FBAModelSet', 'KBaseFBA.FBA', 'KBaseBiochem.Media', 
+                    'KBasePhenotypes.PhenotypeSet', 'KBasePhenotypes.PhenotypeSimulationSet', 
+                    'kbaseTabTableTabs']
         },
         'kbapi' : {
             deps : ['jquery', 'bootstrap']
         },
         'kbase-client-api' : {
             deps : ['jquery']
+        },
+        'kbStandaloneGraph' : {
+            deps : ['jquery', 'jquery-svg']
         }
     }
 });
@@ -381,8 +399,9 @@ require(['domReady!', 'kbwidget', 'kbapi', 'kbase-client-api'], function() {
              'narrativeLogin', 
              'kbaseNarrativeOutputCell', 
              'kbaseNarrativeAppCell',
-             'kbaseNarrativeMethodCell'], function() {
-        console.log('loaded stuff. main is firing...');
+             'kbaseNarrativeMethodCell',
+             'IPythonCustom'], function() {
+        console.log('Done with code loading, Starting IPython...');
         require(['IPythonMain']);
     });
 });

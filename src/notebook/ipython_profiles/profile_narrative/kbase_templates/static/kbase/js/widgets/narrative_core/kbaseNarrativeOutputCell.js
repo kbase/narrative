@@ -1,4 +1,5 @@
-define(['jquery', 'kbwidget', 'kbaseNarrativeDataCell', 'kbaseNarrativeCellMenu'], function( $ ) {
+(function($, undefined) {
+  require(['jquery', 'kbwidget'], function($) {
     $.KBWidget({
         name: 'kbaseNarrativeOutputCell',
         parent: 'kbaseWidget',
@@ -223,4 +224,5 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeDataCell', 'kbaseNarrativeCellMenu'
         }
 
     });
-});
+  });
+})(jQuery);

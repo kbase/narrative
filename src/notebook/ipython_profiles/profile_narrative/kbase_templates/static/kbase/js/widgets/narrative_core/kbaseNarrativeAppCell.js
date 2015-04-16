@@ -12,6 +12,7 @@
  */
 
 (function( $, undefined ) {
+  require(['jquery', 'kbwidget'], function($) {
     $.KBWidget({
         name: "kbaseNarrativeAppCell",
         parent: "kbaseWidget",
@@ -931,5 +932,5 @@
             return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         }
     });
-
+  });
 })( jQuery );

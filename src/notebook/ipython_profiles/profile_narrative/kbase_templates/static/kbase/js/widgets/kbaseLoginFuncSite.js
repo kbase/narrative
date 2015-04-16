@@ -1097,4 +1097,4 @@ define('kbaseLogin', ['jquery', 'jquery_cookie', 'kbwidget', 'kbasePrompt'], fun
 
     });
 
-}( jQuery ) );
+});

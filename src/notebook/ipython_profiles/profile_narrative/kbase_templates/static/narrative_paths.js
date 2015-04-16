@@ -339,11 +339,6 @@ require.config({
         'kbaseNarrativeMethodCell' : {
             deps : ['kbaseNarrativeMethodInput', 'kbaseNarrativeCellMenu']
         },
-        'kbaseNarrativeWorkspace' : {
-            deps : ['kbaseNarrativeAppCell', 'kbaseNarrativeMethodCell', 
-                    'kbaseNarrativeOutputCell', 'kbaseNarrativeSidePanel', 
-                    'kbaseNarrativeDataPanel', 'underscore']
-        },
         'knhx' : {
             deps : ['knhx_menu', 'knhx_excanvas', 'knhx_canvastext', 'knhx_easytree']
         },
@@ -380,14 +375,13 @@ require.config({
 });
 
 // Make sure all the proper things get loaded. IPython does the rest.
-define(['domReady!', 'kbwidget', 'kbapi', 'kbase-client-api'], function() {
+require(['domReady!', 'kbwidget', 'kbapi', 'kbase-client-api'], function() {
     require(['kbaseNarrativePrestart', 
              'kbaseLogging', 
              'narrativeLogin', 
              'kbaseNarrativeOutputCell', 
              'kbaseNarrativeAppCell',
-             'kbaseNarrativeMethodCell',
-             'kbaseNarrativeDataCell'], function() {
+             'kbaseNarrativeMethodCell'], function() {
         console.log('loaded stuff. main is firing...');
         require(['IPythonMain']);
     });

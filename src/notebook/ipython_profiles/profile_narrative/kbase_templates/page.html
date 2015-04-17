@@ -56,7 +56,11 @@
     <script src="{{ static_url("components/bootstrap-extensions/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("components/d3/d3.v3.min.js") }}" type="text/javascript" charset="utf-8"></script>
 
-    <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("narrative_paths") }}"></script>
+    <!-- build:js dist/kbase-narrative.min.js -->
+    <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("dist/kbase-narrative-min.14d0c652.js") }}"></script>
+    <!-- endbuild -->
+
+    <!-- // <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("narrative_paths") }}"></script> -->
     <!-- // <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("dist/kbase-narrative-built") }}"></script> -->
     <script>
         var kb_use_require = true;

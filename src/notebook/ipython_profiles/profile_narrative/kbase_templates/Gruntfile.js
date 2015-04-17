@@ -63,7 +63,7 @@ module.exports = function(grunt) {
                             // and return that (minus the .js on the end)
                             var revvedFile = grunt.filerev.summary['static/dist/kbase-narrative-min.js'];
                             // starts with 'static/' and ends with '.js' so return all but the first 7 and last 3 characters
-                            return revvedFile.substr(7, revvedFile.length - 3);
+                            return revvedFile.substr(7, revvedFile.length - 10);
                         },
                         flags: ''
                     }

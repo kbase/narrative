@@ -1,4 +1,8 @@
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
+define(['jquery', 
+        'kbwidget', 
+        'kbaseAuthenticatedWidget',
+        'jquery-dataTables',
+        'jquery-dataTables-bootstrap'], function($) {
 $.KBWidget({
     name: "FbaModelComparisonWidget",     
     parent: "kbaseAuthenticatedWidget",

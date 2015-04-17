@@ -4,7 +4,13 @@
  * @public
  */
 
-define(['jquery', 'ContigBrowserPanel', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs'], 
+define(['jquery', 
+        'ContigBrowserPanel', 
+        'kbwidget', 
+        'kbaseAuthenticatedWidget', 
+        'kbaseTabs',
+        'jquery-dataTables',
+        'jquery-dataTables-bootstrap'], 
     function($, ContigBrowserPanel) {
     $.KBWidget({
         name: "kbaseGenomeView",

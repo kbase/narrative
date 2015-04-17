@@ -4,8 +4,13 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 
-        'kbaseTabs', 'kbasePrompt'], 
+define(['jquery', 
+        'kbwidget', 
+        'kbaseAuthenticatedWidget', 
+        'kbaseTabs', 
+        'kbasePrompt',
+        'jquery-dataTables',
+        'jquery-dataTables-bootstrap'], 
         function($) {
     $.KBWidget({
         name: "kbasePanGenome",

@@ -340,7 +340,7 @@ require.config({
             deps : ['jquery']
         },
         'jquery-dataTables-bootstrap' : {
-            deps : ['jquery']
+            deps : ['jquery', 'jquery-dataTables', 'bootstrap']
         },
         'kbaseNarrativeAppCell' : {
             deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 

@@ -55,11 +55,9 @@
     <script src="{{ static_url("components/jquery-ui/ui/minified/jquery-ui.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("components/bootstrap-extensions/js/bootstrap-fileupload.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script src="{{ static_url("components/d3/d3.v3.min.js") }}" type="text/javascript" charset="utf-8"></script>
-    <!-- // <script src="{{ static_url("components/jquery-extensions/js/jquery.dataTables.js") }}" type="text/javascript" charset="utf-8"></script> -->
-    <!-- // <script src="{{ static_url("components/bootstrap-extensions/js/dataTables.bootstrap.js") }}" type="text/javascript" charset="utf-8"></script> -->
 
-    <!-- // <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("narrative_paths") }}"></script> -->
-    <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("dist/kbase-narrative-built") }}"></script>
+    <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("narrative_paths") }}"></script>
+    <!-- // <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("dist/kbase-narrative-built") }}"></script> -->
     <script>
         var kb_use_require = true;
         var kb_norequire = function(deps, callback) {
@@ -278,6 +276,7 @@
         {% endif %}
     {% endblock %}
 
+    <!-- loads up via require to ensure proper load order -->
     <!-- // <script src="{{static_url("custom/custom.js") }}" type="text/javascript" charset="utf-8"></script> -->
 </body>
 

@@ -156,6 +156,14 @@ class="notebook_app"
 <script src="{{ static_url("notebook/js/notificationarea.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("notebook/js/tooltip.js") }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ static_url("notebook/js/config.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<!-- 
+notebook/js/main.js loads via require to ensure proper load order of Narrative code
+Without doing this, the Narrative JS widgets embedded in modified Markdown cells gets invoked before
+Require has a chance to load it up. 
+
+This'll be remedied when transitioning to IPython 3.x
+-->
 <!-- <script src="{{ static_url("notebook/js/main.js") }}" type="text/javascript" charset="utf-8"></script> -->
 
 <script src="{{ static_url("notebook/js/contexthint.js") }}" charset="utf-8"></script>

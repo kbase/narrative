@@ -235,19 +235,19 @@ $.KBWidget({
             this.options.lp_url = window.kbconfig.urls.landing_pages;
         }
     
-        if (IPython == null || IPython.narrative == null || IPython.narrative.dataViewers == null) {
+        if (!window.KBaseViewers) {
             // we have to wait until the type/method specs are loaded the first time
             var self = this;
 
             var done = function() {
                 //console.debug("kbaseNarrativeDataCell.init.done with load");
-                IPython.narrative.dataViewers = self.all_viewers;
+                window.KBaseViewers = self.all_viewers;
                 self.render(options.info);
             }
             this.all_viewers = new KBaseNarrativeViewers(this.method_client,done);
         } else {
             // if they are already loaded, we can just grab it and render
-            this.all_viewers = IPython.narrative.dataViewers;
+            this.all_viewers = window.KBaseViewers;
             //console.debug("kbaseNarrativeDataCell.init.done");
             this.render(options.info);
         }

@@ -1,6 +1,11 @@
 "use strict";
 
-define(['jquery', 'kbwidget', 'kbasePrompt', 'kbaseNarrativeControlPanel'], function( $ ) {
+define(['jquery', 
+        'kbwidget', 
+        'kbasePrompt', 
+        'kbaseNarrativeControlPanel',
+        'bootstrap'], 
+        function($) {
     $.KBWidget({
         name: 'kbaseNarrativeJobsPanel',
         parent: 'kbaseNarrativeControlPanel',

@@ -26,6 +26,7 @@ define(['jquery', 'kbaseNarrativeSidePanel',
  * specific piece of functionality. See Narrative.prototype.saveNarrative below.
  */
 var Narrative = function() {
+    this.maxNarrativeSize = "4 MB";
     this.narrController = null;
     this.readonly = false; /* whether whole narrative is read-only */
     this.authToken = null;
@@ -132,9 +133,10 @@ Narrative.prototype.checkVersion = function($newVersion) {
                 $('#kb-update-btn').fadeIn('fast'); 
             }
         },
-        fail: function(err) {
-            console.log('err');
-        }
+        error: function(err) {
+            console.error('Error while checking for a version update: ' + err);
+            KBError('Narrative.checkVersion', 'Unable to check for a version update!');
+        },
     });
 };
 
@@ -236,6 +238,69 @@ Narrative.prototype.init = function() {
     this.registerEvents();
     this.initAboutDialog();
     this.initUpgradeDialog();
+
+    // Override the base IPython event that happens when a notebook fails to save.
+    $([IPython.events]).on('notebook_save_failed.Notebook', $.proxy(function(event, data) {
+        IPython.save_widget.set_save_status('Narrative save failed!');
+        console.log(event);
+        console.log(data);
+
+        var errorText;
+        // 413 means that the Narrative is too large to be saved.
+        // currently - 4/6/2015 - there's a hard limit of 4MB per KBase Narrative.
+        // Any larger object will throw a 413 error, and we need to show some text.
+        if (data.xhr.status === 413) {
+            errorText = 'Due to current system constraints, a Narrative may not exceed ' + 
+                        this.maxNarrativeSize + ' of text.<br><br>' +
+                        'Errors of this sort are usually due to excessive size ' + 
+                        'of outputs from Code Cells, or from large objects ' + 
+                        'embedded in Markdown Cells.<br><br>' +
+                        'Please decrease the document size and try to save again.';
+        }
+        else if (data.xhr.responseText) {
+            var $error = $($.parseHTML(data.xhr.responseText));
+            errorText = $error.find('#error-message > h3').text();
+
+            if (errorText) {
+                /* gonna throw in a special case for workspace permissions issues for now.
+                 * if it has this pattern:
+                 * 
+                 * User \w+ may not write to workspace \d+
+                 * change the text to something more sensible.
+                 */
+
+                var res = /User\s+(\w+)\s+may\s+not\s+write\s+to\s+workspace\s+(\d+)/.exec(errorText);
+                if (res) {
+                    errorText = "User " + res[1] + " does not have permission to save to workspace " + res[2] + ".";
+                }
+            }
+        }
+        else {
+            errorText = 'An unknown error occurred!';
+        }
+
+        IPython.dialog.modal({
+            title: "Narrative save failed!",
+            body: $('<div>').append(errorText),
+            buttons : {
+                "OK": {
+                    class: "btn-primary",
+                    click: function () {
+                    }
+                }
+            },
+            open : function (event, ui) {
+                var that = $(this);
+                // Upon ENTER, click the OK button.
+                that.find('input[type="text"]').keydown(function (event, ui) {
+                    if (event.which === utils.keycodes.ENTER) {
+                        that.find('.btn-primary').first().click();
+                    }
+                });
+                that.find('input[type="text"]').focus();
+            }
+        });
+    }, this));
 
     $('[data-toggle="tooltip"]').tooltip();
 

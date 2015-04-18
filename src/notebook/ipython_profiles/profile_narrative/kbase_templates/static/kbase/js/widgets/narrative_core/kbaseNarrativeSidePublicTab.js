@@ -47,6 +47,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
         currentPage: null,
         totalResults: null,
         itemsPerPage: 20,
+        maxAutoCopyCount: 1,
 
         init: function(options) {
             this._super(options);
@@ -368,28 +369,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
                             if (!isNaN(targetName))
                             	targetName = self.categoryDescr[self.currentCategory].type.split('.')[1] + ' ' + targetName;
                             targetName = targetName.replace(/[^a-zA-Z0-9|\.\-_]/g,'_');
-                            console.log("Copying " + object.ws + "/" + object.id + " -> " + self.wsName + "/" + targetName);
-                            self.wsClient.copy_object({
-                                to:   {ref: self.wsName + "/" + targetName},
-                                from: {ref: object.ws +   "/" + object.id} },
-                                function (info) {
-                                    $(thisBtn).html('Added');
-                                    self.trigger('updateDataList.Narrative');
-                                },
-                                function(error) {
-                                    $(thisBtn).html('Error');
-                                    if (error.error && error.error.message) {
-                                        if (error.error.message.indexOf('may not write to workspace')>=0) {
-                                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: you do not have permission to add data to this Narrative.'));
-                                        } else {
-                                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: '+error.error.message));
-                                        }
-                                    } else {
-                                        self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
-                                    }
-                                    console.error(error);
-                                });
-
+                            self.copy(object, targetName, thisBtn);
                         }));
 
             var shortName = object.name;
@@ -477,6 +457,98 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
                                                 .css({'margin-left':'155px'}))
                                     .append($row);
             return $rowWithHr;
+        },
+
+        copy: function(object, targetName, thisBtn, suffix) {
+            var self = this;
+            if (suffix && suffix > self.maxAutoCopyCount) {
+                self.copyPrompt(object, targetName, thisBtn);
+                return;
+            }
+            var correctedTargetName = targetName;
+            if (suffix) {
+                correctedTargetName += "_" + suffix;
+            } else {
+                suffix = 1;
+            }
+            self.wsClient.get_object_info_new({objects: [{ref: self.wsName + "/" + correctedTargetName}]}, function (info) {
+                //console.log(correctedTargetName + ' exists:', info);
+                // Object exists, increment suffix
+                self.copy(object, targetName, thisBtn, suffix + 1);
+            }, function (error) {
+                //console.log(error);
+                if (error.error && error.error.message && error.error.message.indexOf(
+                        'No object with name '+correctedTargetName+' exists in workspace') == 0) {
+                    // Object doesn't exist, so we can copy over it
+                    self.copyFinal(object, correctedTargetName, thisBtn);
+                } else {
+                    self.copyPrompt(object, targetName, thisBtn, true);
+                }
+            });
+        },
+        
+        copyPrompt: function(object, targetName, thisBtn, withError) {
+            var self = this;
+            $(thisBtn).prop("disabled", false);
+            $(thisBtn).html('<span class="fa fa-chevron-circle-left"/> Add');
+            var $input = $('<input/>').attr('type','text').addClass('form-control').val(targetName);
+            var dialog = $('<div/>').append($("<p/>").addClass("rename-message")
+                    .html('Enter target object name' + 
+                            (withError ? ':' : ' (or leave current one for overwriting):')))
+                            .append($("<br/>")).append($input);
+            IPython.dialog.modal({
+                title: withError ? 'There are some problems checking object existence' : 
+                    'Object with this name already exists',
+                body: dialog,
+                buttons : {
+                    "Cancel": {},
+                    "OK": {
+                        class: "btn btn-primary",
+                        click: function () {
+                            var newName = $(this).find('input').val();
+                            self.copyFinal(object, newName, thisBtn);
+                            return true;
+                        }
+                    }
+                },
+                open : function () {
+                    var dlg = $(this);
+                    // Upon ENTER, click the OK button.
+                    dlg.find('input[type="text"]').keydown(function (event, ui) {
+                        if (event.which === IPython.utils.keycodes.ENTER)
+                            dlg.find('.btn-primary').first().click();
+                    });
+                    dlg.find('input[type="text"]').focus();
+                }
+            });
+        },
+        
+        copyFinal: function(object, targetName, thisBtn) {
+            var self = this;
+            console.log("Copying " + object.ws + "/" + object.id + " -> " + self.wsName + "/" + targetName);
+            self.wsClient.copy_object({
+                to:   {ref: self.wsName + "/" + targetName},
+                from: {ref: object.ws +   "/" + object.id} },
+                function (info) {
+                    //$(thisBtn).html('Added');
+                    $(thisBtn).prop("disabled", false);
+                    $(thisBtn).html('<span class="fa fa-chevron-circle-left"/> Add');
+                    self.trigger('updateDataList.Narrative');
+                },
+                function(error) {
+                    $(thisBtn).html('Error');
+                    if (error.error && error.error.message) {
+                        if (error.error.message.indexOf('may not write to workspace')>=0) {
+                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: you do not have permission to add data to this Narrative.'));
+                        } else {
+                            self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Error: '+error.error.message));
+                        }
+                    } else {
+                        self.options.$importStatus.html($('<div>').css({'color':'#F44336','width':'500px'}).append('Unknown error!'));
+                    }
+                    console.error(error);
+                }
+            );
         },
 
 			isCustomIcon: function (icon_list) {

@@ -54,6 +54,10 @@ define(['jquery', 'underscore', 'kbwidget',
         token: null,
         dataImporterStarted: false,
         dataListWidget: null,
+        $myDataHeader: null,
+        myDataTempNarrativeMsg: 'Warning! This Narrative is temporary (untitled). '+
+            'Data of temporary Narratives is not visible on this tab. Please change '+
+            'the name of the Narrative to make it permanent.',
 
         init: function(options) {
             this._super(options);
@@ -426,6 +430,8 @@ define(['jquery', 'underscore', 'kbwidget',
 
             // hack to keep search on top
 
+            this.$myDataHeader = $('<div/>');
+            minePanel.append(this.$myDataHeader);
             var $mineFilterRow = $('<div class="row">');
             minePanel.append($mineFilterRow);
             var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
@@ -660,7 +666,12 @@ define(['jquery', 'underscore', 'kbwidget',
                             var legacyItems = []; // {id:..., name:..., count:...}
                             for (var i in d) {
                                 if (d[i][8].is_temporary) {
-                                    if (d[i][8].is_temporary === 'true') { continue; }
+                                    if (d[i][8].is_temporary === 'true') { 
+                                        if (d[i][1] === self.ws_name) {
+                                            self.currentWsIsTemp();
+                                        }
+                                        continue; 
+                                    }
                                 }
                                 var displayName = d[i][1];
                                 if (d[i][8].narrative) {
@@ -1379,8 +1390,13 @@ define(['jquery', 'underscore', 'kbwidget',
             var code = 0;
             for (var i=0; i < type.length; code += type.charCodeAt(i++));
             return this.icon_colors[ code % this.icon_colors.length ];
-        }
+        },
 
+        currentWsIsTemp: function() {
+            this.$myDataHeader.empty();
+            this.$myDataHeader.css({'color': '#777', 'margin': '10px 10px 0px 10px'});
+            this.$myDataHeader.append(this.myDataTempNarrativeMsg);
+        }
 
     });
 

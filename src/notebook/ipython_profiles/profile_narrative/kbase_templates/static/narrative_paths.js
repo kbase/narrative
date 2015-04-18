@@ -400,8 +400,9 @@ require(['domReady!', 'kbwidget', 'kbapi', 'kbase-client-api'], function() {
              'kbaseNarrativeOutputCell', 
              'kbaseNarrativeAppCell',
              'kbaseNarrativeMethodCell',
+             'IPythonCustom', 
              ], function() {
         console.log('Done with code loading, Starting IPython...');
-        require(['IPythonCustom', 'IPythonMain']);
+        require(['IPythonMain']);
     });
 });

@@ -5,7 +5,7 @@ define(['jquery',
         'kbasePrompt', 
         'kbaseNarrativeControlPanel',
         'bootstrap'], 
-        function($) {
+        function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeJobsPanel',
         parent: 'kbaseNarrativeControlPanel',

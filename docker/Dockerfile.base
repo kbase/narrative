@@ -42,10 +42,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y perl-base perl-modules mak
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-qt4 python-pip python-setuptools ipython-notebook python-matplotlib python-dev python-scipy python-numpy python-lxml python-sklearn python-sympy python-pandas python-rpy2 python-virtualenv python-thrift python-yaml python-paramiko
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libfreetype6-dev libcairo2-dev texlive-latex-base texlive-fonts-recommended curl libcurl4-gnutls-dev git-core libzmq-dev libreadline6-dev libreadline-dev libssl-dev libxml2-dev libxslt1-dev
 
-# There's a bug in the current repository deployment of python requests - do an easy_install of v2.3.0, or pip will fail
-# <testing if this is still necessary>
-# RUN easy_install requests==2.3.0
-
 # Pip is currently broken when installed through Ubuntu. Upgrade it with easy_install 
 RUN easy_install -U pip
 

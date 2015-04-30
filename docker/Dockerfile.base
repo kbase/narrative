@@ -24,23 +24,49 @@ RUN mkdir -p /kb/deployment/services/narrative /tmp/narrative
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
 RUN echo 'deb http://cran.cnr.berkeley.edu/bin/linux/ubuntu trusty/' | tee /etc/apt/sources.list.d/cran.list
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update
-
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y mesa-common-dev libglu1-mesa-dev
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y r-recommended
-
 # There are a bunch of packages that are related to kernel operation
 # which we can't upgrade within a container. Mark them for "hold" before
 # running the upgrade
-RUN DEBIAN_FRONTEND=noninteractive apt-mark hold udev initscripts plymouth initramfs-tools procps busybox-initramfs
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+apt-mark hold udev initscripts plymouth initramfs-tools procps busybox-initramfs
 RUN DEBIAN_FRONTEND=noninteractive apt-get -f upgrade -y
 
 # Install the stuff we actually need
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y perl-base perl-modules make
-
-# Maybe this will get all the necessary dependencies!
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y python-qt4 python-pip python-setuptools ipython-notebook python-matplotlib python-dev python-scipy python-numpy python-lxml python-sklearn python-sympy python-pandas python-rpy2 python-virtualenv python-thrift python-yaml python-paramiko
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libfreetype6-dev libcairo2-dev texlive-latex-base texlive-fonts-recommended curl libcurl4-gnutls-dev git-core libzmq-dev libreadline6-dev libreadline-dev libssl-dev libxml2-dev libxslt1-dev
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
+perl-base \
+perl-modules \
+make \
+python-qt4 \
+python-pip \
+python-setuptools \
+ipython-notebook \
+python-matplotlib \
+python-dev \
+python-scipy \
+python-numpy \
+python-lxml \
+python-sklearn \
+python-sympy \
+python-pandas \
+python-rpy2 \
+python-virtualenv \
+python-thrift \
+python-yaml \
+python-paramiko \
+libfreetype6-dev \
+libcairo2-dev \
+texlive-latex-base \
+texlive-fonts-recommended \
+curl \
+libcurl4-gnutls-dev \
+git-core \
+libzmq-dev \
+libreadline6-dev \
+libreadline-dev \
+libssl-dev \
+libxml2-dev \
+libxslt1-dev
 
 # Pip is currently broken when installed through Ubuntu. Upgrade it with easy_install 
 RUN easy_install -U pip

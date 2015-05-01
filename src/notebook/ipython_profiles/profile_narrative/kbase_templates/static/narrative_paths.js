@@ -337,6 +337,9 @@ require.config({
         'underscore' : {
             exports : '_'
         },
+        'jquery-nearest' : {
+            deps : ['jquery']
+        },
         'jquery-dataTables' : {
             deps : ['jquery']
         },

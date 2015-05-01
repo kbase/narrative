@@ -20,6 +20,7 @@
 
 define(['jquery', 
         'underscore',
+        'jquery-nearest',
         'kbwidget', 
         'bootstrap', 
         'kbaseDefaultNarrativeOutput',

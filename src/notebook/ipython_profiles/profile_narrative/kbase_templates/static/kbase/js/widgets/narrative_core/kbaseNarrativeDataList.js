@@ -2,10 +2,12 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget', 
-        'kbaseAuthenticatedWidget', 'kbaseNarrativeDownloadPanel'], 
-        function( $ ) {
-// (function( $, undefined ) {
+define(['jquery', 
+        'jquery-nearest',
+        'kbwidget', 
+        'kbaseAuthenticatedWidget', 
+        'kbaseNarrativeDownloadPanel'], 
+        function($) {
     $.KBWidget({
         name: 'kbaseNarrativeDataList',
         parent: 'kbaseAuthenticatedWidget',
@@ -1400,4 +1402,3 @@ define(['jquery', 'kbwidget',
         }
     })
 });
-// })(jQuery);

@@ -12,6 +12,7 @@ require.config({
         'jquery-svg'                            : 'components/jquery-extensions/js/jquery.svg',
         'jquery-dataTables'                     : 'components/jquery-extensions/js/jquery.dataTables',
         'jquery-dataTables-bootstrap'           : 'components/bootstrap-extensions/js/dataTables.bootstrap',
+        'jquery-nearest'                        : 'components/jquery-nearest/jquery.nearest.min',
         'bootstrap'                             : 'components/bootstrap-3/js/bootstrap.min',
         'underscore'                            : 'components/underscore/1.8.2/underscore-min',
         'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',

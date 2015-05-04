@@ -32,12 +32,10 @@
 
 */
 
-(function( $, undefined ) {
-
-
+define(['jquery', 'kbwidget', 'kbaseDeletePrompt'], function($) { 
     $.KBWidget({
 
-		  name: "kbaseTabs",
+        name: "kbaseTabs",
 
         version: "1.0.0",
 
@@ -290,4 +288,4 @@
 
     });
 
-}( jQuery ) );
+});

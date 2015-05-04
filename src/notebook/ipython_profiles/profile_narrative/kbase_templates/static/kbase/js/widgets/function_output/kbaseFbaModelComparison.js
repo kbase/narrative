@@ -1,5 +1,8 @@
-(function( $, undefined ) {
-
+define(['jquery', 
+        'kbwidget', 
+        'kbaseAuthenticatedWidget',
+        'jquery-dataTables',
+        'jquery-dataTables-bootstrap'], function($) {
 $.KBWidget({
     name: "FbaModelComparisonWidget",     
     parent: "kbaseAuthenticatedWidget",
@@ -502,4 +505,4 @@ $.KBWidget({
             });
     }
 })
-}( jQuery ) );
+});

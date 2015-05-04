@@ -1,3 +1,21 @@
+(function(root, factory) {
+  // Set up DT_bootstrap appropriately for an AMD environment.
+  // See this StackOverflow:
+  // http://stackoverflow.com/questions/15371233/unable-to-load-jquery-plugins-when-using-requirejs-r-js-optimizer
+  if (typeof define === 'function' && define.amd) {
+    // AMD
+    define(['jquery', 'jquery-dataTables', 'bootstrap'], function($) {
+      factory($);
+    });
+  } else {
+    // Browser globals
+    factory(root.jQuery);
+  }
+}(this, function($) {
+
+
+
+
 /* Set the defaults for DataTables initialisation */
 $.extend( true, $.fn.dataTable.defaults, {
 	"sDom": "R<'row'<'col-md-12 table-options'lf>r>t<'row'<'col-md-12'ip>>",
@@ -153,4 +171,6 @@ if ( $.fn.DataTable.TableTools ) {
 		}
 	} );
 }
+
+}));
 

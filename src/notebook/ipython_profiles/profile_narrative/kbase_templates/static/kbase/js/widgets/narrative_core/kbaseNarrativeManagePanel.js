@@ -3,8 +3,7 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-(function( $, undefined ) {
-
+define(['jquery', 'NarrativeManager', 'kbwidget', 'kbaseNarrativeControlPanel'], function( $, NarrativeManager ) {
     $.KBWidget({
         name: "kbaseNarrativeManagePanel", 
         parent: "kbaseNarrativeControlPanel",
@@ -1114,4 +1113,4 @@
         
     });
 
-})( jQuery );
+});

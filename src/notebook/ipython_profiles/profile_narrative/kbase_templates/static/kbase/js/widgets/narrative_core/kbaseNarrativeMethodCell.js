@@ -10,6 +10,7 @@
  */
 
 (function( $, undefined ) {
+  require(['jquery', 'kbwidget'], function($) {
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",
         parent: "kbaseWidget",
@@ -190,7 +191,13 @@
             if (!inputWidgetName || inputWidgetName === 'null')
                 inputWidgetName = this.defaultInputWidget;
 
-            this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
+            require([inputWidgetName], 
+              $.proxy(function() {
+                this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
+              }, this),
+              $.proxy(function() {
+                console.error('Error while trying to load widget "' + inputWidgetName + '"');
+              }));
         },
 
         /**
@@ -495,4 +502,5 @@
             return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         }
     });
+  });
 })( jQuery );

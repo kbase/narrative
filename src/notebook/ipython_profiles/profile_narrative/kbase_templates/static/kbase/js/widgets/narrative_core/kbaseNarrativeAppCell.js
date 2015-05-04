@@ -12,6 +12,7 @@
  */
 
 (function( $, undefined ) {
+  require(['jquery', 'kbwidget'], function($) {
     $.KBWidget({
         name: "kbaseNarrativeAppCell",
         parent: "kbaseWidget",
@@ -294,8 +295,10 @@
                                      .addClass('panel-footer')
                                      .css({'overflow' : 'hidden'})
                                      .append($buttons));
+            require(['kbaseNarrativeCellMenu'], $.proxy(function() {
+                this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
+            }, this));
 
-            this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
 
 
             //now we link the step parameters together that are linked
@@ -929,5 +932,5 @@
             return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
         }
     });
-
+  });
 })( jQuery );

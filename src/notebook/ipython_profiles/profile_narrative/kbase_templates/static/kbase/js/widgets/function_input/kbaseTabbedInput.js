@@ -5,7 +5,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], function( $ ) {
     $.KBWidget({
         name: "kbaseTabbedInput",
         parent: "kbaseNarrativeMethodInput",

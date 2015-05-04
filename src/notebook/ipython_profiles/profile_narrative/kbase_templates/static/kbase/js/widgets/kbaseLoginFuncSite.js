@@ -48,12 +48,14 @@
 
 */
 
-(function( $, undefined ) {
-
+define('kbaseLogin', ['jquery', 
+                      'jquery_cookie', 
+                      'kbwidget', 
+                      'kbasePrompt',
+                      'bootstrap'], function($) {
     $.KBWidget({
 
 	    name: "kbaseLogin",
-
         version: "1.0.0",
         options: {
             style : 'text',
@@ -1099,4 +1101,4 @@
 
     });
 
-}( jQuery ) );
+});

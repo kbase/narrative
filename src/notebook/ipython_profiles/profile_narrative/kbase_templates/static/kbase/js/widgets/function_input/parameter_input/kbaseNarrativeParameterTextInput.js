@@ -3,7 +3,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeParameterTextInput",
         parent: "kbaseNarrativeParameterInput",
@@ -826,6 +826,4 @@
             });
         },
     });
-    
-
-})( jQuery );
+});

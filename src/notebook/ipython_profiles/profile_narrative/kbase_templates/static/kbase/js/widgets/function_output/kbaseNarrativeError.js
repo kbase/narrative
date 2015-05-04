@@ -8,7 +8,7 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-(function($, undefined) {
+define(['jquery', 'kbwidget', 'kbaseAccordion'], function( $ ) {
     $.KBWidget({
         /* 
          * (required) Your widget should be named in CamelCase.
@@ -141,4 +141,4 @@
             return this;
         },
     });
-})(jQuery);
+});

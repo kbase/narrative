@@ -1,4 +1,4 @@
-(function($, undefined) {
+define(['jquery', 'kbwidget'], function($) {
     $.KBWidget({
         name: 'kbaseNarrativeCellMenu',
         parent: 'kbaseWidget',
@@ -151,4 +151,4 @@
             this.$menu.append($itemElem);
         },
     });
-})( jQuery );
+});

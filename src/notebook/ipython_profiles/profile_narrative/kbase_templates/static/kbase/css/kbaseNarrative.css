@@ -2669,3 +2669,19 @@ div[class="tooltip-inner"] {
 .container {
     max-width: 2000px !important;
 }
+
+/* Styles for KNHX trees to remove its document.write nonsense that breaks asynchronous loading */
+#popdiv {
+    position: absolute;
+    background-color: #fcfcfc;
+    border: 1px solid #CCC;
+    z-index: 10000;
+    visibility: hidden;
+    font-size: 12px;
+}
+#popdiv a.alt {
+    padding-left: 9px;
+    font: 12px monospace;
+    border: none;
+    display: inline;
+}

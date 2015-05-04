@@ -4,7 +4,9 @@
  * @public
  */
 
-(function($, undefined) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 
+        'knhx', 'widgetMaxWidthCorrection'], 
+        function($) {
     $.KBWidget({
         name: 'kbaseTree',
         parent: 'kbaseAuthenticatedWidget',
@@ -215,4 +217,4 @@
         }
 
     });
-})( jQuery );
+});

@@ -5,89 +5,35 @@ var path = require('path');
 // should be updated as necessary, if this moves
 var staticDir = 'static';
 
-/** 
- * We need a config for the first step - concat - that plays nice with the Jinja directive-wrapped
- * script src tag.
- * All src strings are wrapped with the static_url function like this:
- *     <script src="{{ static_url("path/to/script.js") }}"></script>"
- * 
- * This needs to be stripped so we actually have
- *     static/path/to/script.js
- * instead, and returned as the config object. This is ripped out of the block
- * variable where all the raw stuff lives and parsed via regex, then we use
- * a vaguely simple version of the rest of the createConfig code from 
- * grunt-usemin's default config function, here:
- * https://github.com/yeoman/grunt-usemin/blob/master/lib/config/concat.js
- *
- * This only needs to be done for the first step, since the minifier just uses the concatted 
- * version.
- */
-var createIPythonCompatibleConfig = function(context, block) {
-    var parsedFiles = [];
-    // regex for ripping out the static_url bit
-    // strings that match this regex will have the actual path and script in
-    // the second element of the match array
-    var pattern = /^\s*\<script\s*src=\"\{\{\s*static_url\(\"(\S+\.js)\"\)\s*\}\}\"/;
-    for (var i=0; i<block.raw.length; i++) {
-        var m = block.raw[i].match(pattern);
-        if (m && m.length === 2) {
-            parsedFiles.push(m[1]);
-        }
-    }
-    block.src = parsedFiles;
-    context.inFiles = parsedFiles;
-
-    // file paths are now parsed and fixed, set up the config
-    var cfg = {
-        files: []
-    };
-
-    var outfile = path.join(context.outDir, block.dest);
-    var files = {
-        dest: outfile,
-        src: []
-    };
-
-    context.inFiles.forEach(function (f) {
-        files.src.push(path.join(staticDir, f));
-    });
-    cfg.files.push(files);
-    context.outFiles = [block.dest];
-    return cfg;
-};
-
 module.exports = function(grunt) {
     // Project configuration
-    grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-contrib-cssmin');
-    grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-contrib-requirejs');
     grunt.loadNpmTasks('grunt-filerev');
-    grunt.loadNpmTasks('grunt-usemin');
+    grunt.loadNpmTasks('grunt-regex-replace');
 
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        useminPrepare: {
-            html: 'notebook.html',
-            options: {
-                staging: 'static/kbase/js/staging',
-                dest: 'static',
-                flow: {
-                    steps: {
-                        js: [{
-                            name: 'concat',
-                            createConfig: createIPythonCompatibleConfig
-                        }, 'uglifyjs' ]
-                    },
-                    post: {}
+
+        // Compile the requirejs stuff into a single, uglified file.
+        // the options below are taken verbatim from a standard build.js file
+        // used for r.js (if we were doing this outside of a grunt build)
+        requirejs: {
+            compile: {
+                options: {
+                    baseUrl: "./static",
+                    mainConfigFile: "static/narrative_paths.js",
+                    findNestedDependencies: true,
+                    optimize: "uglify2",
+                    generateSourceMaps: true,
+                    preserveLicenseComments: false,
+                    name: "narrative_paths",
+                    out: "static/dist/kbase-narrative-min.js"
                 }
             }
         },
-        uglify: {
-            options: {
-                dest: 'static/kbase-narrative.min.js',
-                sourceMap: false,
-            }
-        },
+
+        // Put a 'revision' stamp on the output file. This attaches an 8-character 
+        // md5 hash to the end of the requirejs built file.
         filerev: {
             options: {
                 algorithm: 'md5',
@@ -96,31 +42,40 @@ module.exports = function(grunt) {
             source: {
                 files: [{
                     src: [
-                        'static/kbase/js/kbase-narrative.min.js',
+                        'static/dist/kbase-narrative-min.js', //kbase/js/kbase-narrative.min.js',
                     ],
-                    dest: 'static/kbase/js'
+                    dest: 'static/dist/' // 'static/kbase/js'
                 }]
             }
         },
-        usemin: {
-            html: 'notebook.html',
-            options: {
-                assetsDirs: ['static'],
-                blockReplacements: {
-                    js: function (block) {
-                        return '<script src="{{ static_url("' + block.dest + '") }}" type="text/javascript" charset="utf-8"></script>';
+
+        // Once we have a revved file, this inserts that reference into page.html at
+        // the right spot (near the top, the narrative_paths reference)
+        'regex-replace': {
+            dist: {
+                src: ['page.html'],
+                actions: [
+                    {
+                        name: 'requirejs-onefile',
+                        search: 'narrative_paths',
+                        replace: function(match) {
+                            // do a little sneakiness here. we just did the filerev thing, so get that mapping
+                            // and return that (minus the .js on the end)
+                            var revvedFile = grunt.filerev.summary['static/dist/kbase-narrative-min.js'];
+                            // starts with 'static/' and ends with '.js' so return all but the first 7 and last 3 characters
+                            return revvedFile.substr(7, revvedFile.length - 10);
+                        },
+                        flags: ''
                     }
-                }
+                ]
             }
         }
     });
 
 
     grunt.registerTask('build', [
-        'useminPrepare',
-        'concat:generated',
-        'uglify:generated',
+        'requirejs',
         'filerev',
-        'usemin'
+        'regex-replace'
     ]);
 };

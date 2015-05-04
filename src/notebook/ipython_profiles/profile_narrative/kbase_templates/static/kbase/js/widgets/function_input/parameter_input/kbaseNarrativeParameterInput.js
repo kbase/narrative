@@ -3,7 +3,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeParameterInput",
         parent: "kbaseAuthenticatedWidget",
@@ -103,5 +103,4 @@
         }
         
     });
-
-})( jQuery );
+});

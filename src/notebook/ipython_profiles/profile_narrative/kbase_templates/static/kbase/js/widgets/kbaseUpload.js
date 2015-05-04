@@ -11,8 +11,7 @@
  */
 
 // Jquery UI widget style
-(function($, undefined) {
-
+define(['jquery', 'kbwidget'], function($) {
     var MissingOptionError = function(argname) {
         var e = new Error("missing option: '" + argname + "'");
         e.name = "MissingOptionError";
@@ -368,4 +367,4 @@
             return this;
         }
 	});
-})( jQuery );
+});

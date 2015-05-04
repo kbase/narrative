@@ -16,7 +16,11 @@
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
  */
-(function( $, undefined ) {
+define(['jquery', 'underscore', 'kbwidget', 
+        'kbaseNarrativeControlPanel', 'kbaseNarrativeDataList',
+        'kbaseNarrativeSidePublicTab', 'kbaseNarrativeSideImportTab',
+        'kbaseNarrativeExampleDataTab'], 
+        function( $, _ ) {
 
     $.KBWidget({
         name: "kbaseNarrativeDataPanel",
@@ -1396,4 +1400,4 @@
 
     });
 
-})( jQuery );
+});

@@ -4,8 +4,7 @@
  * @public
  */
 
-(function( $, undefined ) {
-
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
 $.KBWidget({
     name: "GenomeComparisonWidget",
     parent: "kbaseAuthenticatedWidget",
@@ -548,4 +547,4 @@ $.KBWidget({
             });
     }
 })
-}( jQuery ) );
+});

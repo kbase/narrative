@@ -3,7 +3,7 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-(function( $, undefined ) {
+define(['jquery', 'kbwidget'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeDownloadPanel",
         parent: "kbaseWidget",
@@ -281,4 +281,4 @@
 			}
 		}
     });
-})( jQuery );
+});

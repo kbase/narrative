@@ -8,7 +8,9 @@
 
     var $kbMenu = $('<span>');
     var makeKBaseMenu = function(div, cell) {
-        $(div).kbaseNarrativeCellMenu({cell: cell});
+        require(['kbaseNarrativeCellMenu'], function() {
+            $(div).kbaseNarrativeCellMenu({cell: cell});
+        });
     };
 
     CellToolbar.register_callback('kbase.menu', makeKBaseMenu);

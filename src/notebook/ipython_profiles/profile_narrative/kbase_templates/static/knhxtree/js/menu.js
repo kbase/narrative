@@ -4,19 +4,19 @@
  * source code.
  */
 
-document.write('<style type="text/css"><!-- \
-	#popdiv { \
-	  position: absolute; \
-	  background-color: #fcfcfc; \
-	  border: 1px solid #CCC; \
-	  z-index: 10000; \
-	  visibility: hidden; \
-	  font-size: 12px;\
-	} \
-	table {\
-	  font-size: 12px;\
-	} \
---></style>');
+// document.write('<style type="text/css"><!-- \
+// 	#popdiv { \
+// 	  position: absolute; \
+// 	  background-color: #fcfcfc; \
+// 	  border: 1px solid #CCC; \
+// 	  z-index: 10000; \
+// 	  visibility: hidden; \
+// 	  font-size: 12px;\
+// 	} \
+// 	table {\
+// 	  font-size: 12px;\
+// 	} \
+// --></style>');
 
 
 var listenEvent = function(o, e, f) {

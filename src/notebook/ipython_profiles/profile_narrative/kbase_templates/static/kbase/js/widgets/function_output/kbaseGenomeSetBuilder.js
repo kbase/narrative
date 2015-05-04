@@ -4,7 +4,8 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbasePrompt'], 
+    function($) {
     $.KBWidget({
         name: "kbaseGenomeSetBuilder",
         parent: "kbaseAuthenticatedWidget",
@@ -311,5 +312,4 @@
         	$('<div/>').kbasePrompt({title : 'Information', body : message}).openPrompt();
         }
     });
-
-})( jQuery );
+});

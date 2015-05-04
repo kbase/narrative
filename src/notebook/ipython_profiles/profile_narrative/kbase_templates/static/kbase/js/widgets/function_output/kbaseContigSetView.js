@@ -4,7 +4,12 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 
+        'kbwidget', 
+        'kbaseAuthenticatedWidget', 
+        'kbaseTabs', 
+        'jquery-dataTables',
+        'jquery-dataTables-bootstrap'], function($) {
     $.KBWidget({
         name: "kbaseContigSetView",
         parent: "kbaseAuthenticatedWidget",
@@ -139,4 +144,4 @@
                 });
         }
     });
-})( jQuery );
+});

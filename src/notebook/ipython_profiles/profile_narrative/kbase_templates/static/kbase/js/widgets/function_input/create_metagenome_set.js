@@ -3,7 +3,8 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbStandaloneListSelect'],
+    function($) {
     $.KBWidget({
         name: "create_metagenome_set",
         parent: "kbaseNarrativeInput",
@@ -169,4 +170,4 @@
 	        d.innerHTML += "<h5>collection "+listName+" saved.</h5>";
 	    }
     });
-})( jQuery );
+});

@@ -45,3 +45,12 @@
  * @class customjs
  * @static
  */
+
+console.log('Loading KBase Narrative setup routine.');
+$([IPython.events]).on('app_initialized.NotebookApp', function() {
+    console.log('Performing narrative startup');
+    require(['kbaseNarrative'], function(Narrative) {
+        IPython.narrative = new Narrative();
+        IPython.narrative.init();
+    });
+});

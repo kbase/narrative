@@ -3,7 +3,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeInput'], function( $ ) {
     $.KBWidget({
         name: "kbaseDefaultNarrativeInput",
         parent: "kbaseNarrativeInput",
@@ -220,4 +220,4 @@
 
     });
 
-})( jQuery );
+});

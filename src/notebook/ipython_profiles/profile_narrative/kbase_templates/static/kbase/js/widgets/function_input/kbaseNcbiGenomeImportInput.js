@@ -4,8 +4,7 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeInput'], function( $ ) {
     $.KBWidget({
         name: "NcbiGenomeImportInput",
         parent: "kbaseNarrativeInput",
@@ -244,5 +243,4 @@
         }
 
     });
-
-})( jQuery );
+});

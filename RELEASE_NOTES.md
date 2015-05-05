@@ -11,6 +11,7 @@ __Changes__
 - JIRA KBASE-1245 - block the Data Uploader's "Import" button while a file is being uploaded.
 - JIRA KBASE-1350 - change reference to "Workspace" to a reference to "Narrative".
 - JIRA KBASE-1671 - fix typo in genome annotation widget
+- JIRA KBASE-1843/KBASE-1849 - fixed issue where a large narrative object (e.g. a large IPython notebook object) fails to save without a decent error message. The maximum size was bumped to 4MB, and a sensible error message was introduced.
 - Refactored all widget code to be loaded asynchronously through Require.js
 - Added initial Selenium test scripts
 - Updated root README

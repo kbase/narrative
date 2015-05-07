@@ -6,6 +6,13 @@ This is built on the IPython Notebook (more notes will follow).
 ### Version 1.0.3
 __Changes__
 - JIRA KBASE-1672 - updated text in upload dialogs
+- JIRA KBASE-1288 - show prompt when copying a public genome to a Narrative if that genome already exists in the Narrative
+- JIRA NAR-702 - show warning on My Data panel for untitled Narratives
+- JIRA KBASE-1245 - block the Data Uploader's "Import" button while a file is being uploaded.
+- JIRA KBASE-1350 - change reference to "Workspace" to a reference to "Narrative".
+- JIRA KBASE-1671 - fix typo in genome annotation widget
+- JIRA KBASE-1843/KBASE-1849 - fixed issue where a large narrative object (e.g. a large IPython notebook object) fails to save without a decent error message. The maximum size was bumped to 4MB, and a sensible error message was introduced.
+- Refactored all widget code to be loaded asynchronously through Require.js
 - Added initial Selenium test scripts
 - Updated root README
 

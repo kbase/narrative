@@ -22,7 +22,7 @@ RUN mkdir -p /kb/deployment/services/narrative /tmp/narrative
 
 # Add the R CRAN repo - add this back in when the 3.1-beta issue is resolved
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
-RUN echo 'deb http://cran.cnr.berkeley.org/bin/linux/ubuntu trusty/' | tee /etc/apt/sources.list.d/cran.list
+RUN echo 'deb http://cran.cnr.berkeley.edu/bin/linux/ubuntu trusty/' | tee /etc/apt/sources.list.d/cran.list
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update
 

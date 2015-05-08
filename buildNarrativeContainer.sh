@@ -5,7 +5,7 @@ DS=$( date +%Y%m%d%H%M )
 
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
 NAR_NAME="kbase/narrative"
-NAR_BASE="base2.0"
+NAR_BASE="base3.0"
 
 # Update the git submodule(s)
 git submodule init

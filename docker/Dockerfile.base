@@ -33,7 +33,7 @@ apt-mark hold udev initscripts plymouth initramfs-tools procps busybox-initramfs
 RUN DEBIAN_FRONTEND=noninteractive apt-get -f upgrade -y
 
 # Install the stuff we actually need
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y  \
 perl-base \
 perl-modules \
 make \

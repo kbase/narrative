@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+  - "0.12"
+  - "iojs"
+branches:
+  only:
+    - develop
+    - staging
+    - master
+before_install:
+  - npm install -g grunt-cli
+script: make && make test

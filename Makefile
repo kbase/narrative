@@ -65,6 +65,7 @@ test-backend:
 test-frontend-unit:
 	@echo "running frontend unit tests"
 	cd $(FRONTEND_TEST_DIR) && \
+	npm install && \
 	grunt test
 	@echo "done"
 

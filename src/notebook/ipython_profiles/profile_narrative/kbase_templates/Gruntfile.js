@@ -78,4 +78,7 @@ module.exports = function(grunt) {
         'filerev',
         'regex-replace'
     ]);
+
+    grunt.registerTask('test', [
+    ]);
 };

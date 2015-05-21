@@ -10,13 +10,15 @@ __Changes__
 - JIRA NAR-702 - show warning on My Data panel for untitled Narratives
 - JIRA KBASE-1245 - block the Data Uploader's "Import" button while a file is being uploaded.
 - JIRA KBASE-1350 - change reference to "Workspace" to a reference to "Narrative".
-- JIRA KBASE-1671 - fix typo in genome annotation widget
-- JIRA KBASE-1843/KBASE-1849 - fixed issue where a large narrative object (e.g. a large IPython notebook object) fails to save without a decent error message. The maximum size was bumped to 4MB, and a sensible error message was introduced.
 - Refactored all widget code to be loaded asynchronously through Require.js
 - Added initial Selenium test scripts
-- Updated root README
+- Updated root README, added Travis-CI and Coveralls badges
+- Linked the Narrative Github repo to Travis-CI and Coveralls
 
 __Bugfixes__
+- JIRA KBASE-1671 - fix typo in genome annotation widget
+- JIRA KBASE-2042 - fix errors in the error page that shows up when a Narrative is unavailable.
+- JIRA KBASE-1843/KBASE-1849 - fixed issue where a large narrative object (e.g. a large IPython notebook object) fails to save without a decent error message. The maximum size was bumped to 4MB, and a sensible error message was introduced.
 - Fixed issue where duplicated results can appear in the Public Data tab
 
 ### Version 1.0.2 - 2/19/2015

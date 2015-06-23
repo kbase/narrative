@@ -2,7 +2,7 @@
 
 installPath=`pwd`
 venv="narrative-venv"
-branch="1.x"
+branch="3.x"
 commit="" 
 profile_name="narrative"
 # set to your python
@@ -86,6 +86,8 @@ git clone https://github.com/ipython/ipython.git -b $branch
 
 # Move into the ipython git directory to run the install
 cd ipython
+git submodule init
+git submodule update
 
 if [ -n "$commit" ]; then
     printf "Pulling commit $commit...\n"

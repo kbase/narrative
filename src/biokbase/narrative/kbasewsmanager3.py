@@ -25,12 +25,18 @@ import importlib
 from unicodedata import normalize
 from tornado import web
 # IPython
-from IPython.html.services.notebooks.nbmanager import NotebookManager
-from IPython.config.configurable import LoggingConfigurable
-from IPython.nbformat import current
+from IPython import nbformat
+from IPython.html.services.contents.manager import ContentsManager
 from IPython.utils.traitlets import Unicode, Dict, Bool, List, TraitError
 from IPython.utils import tz
+# old!
+#from IPython.html.services.notebooks.nbmanager import NotebookManager
+#from IPython.config.configurable import LoggingConfigurable
+#from IPython.nbformat import current
+
 # Local
+from .manager_util import base_model
+from .narrativeio import KBaseWSManagerMixin
 import biokbase.narrative.ws_util as ws_util
 from biokbase.workspace.client import Workspace
 import biokbase.narrative.common.service as service
@@ -41,7 +47,7 @@ import biokbase.auth
 # Classes
 #-----------------------------------------------------------------------------
 
-class KBaseWSNotebookManager(NotebookManager):
+class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     """
     A notebook manager that uses the KBase workspace for storage.
 
@@ -103,9 +109,9 @@ class KBaseWSNotebookManager(NotebookManager):
     # a safety net
     wsid_regex = re.compile('[\W]+', re.UNICODE)
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Verify that we can connect to the configured WS instance"""
-        super(NotebookManager, self).__init__(**kwargs)
+        super(ContentsManager, self).__init__(*args, **kwargs)
         if not self.kbasews_uri:
             raise web.HTTPError(412, u"Missing KBase workspace service endpoint URI.")
 
@@ -143,6 +149,315 @@ class KBaseWSNotebookManager(NotebookManager):
     def _clean_id(self, id):
         """Clean any whitespace out of the given id"""
         return self.wsid_regex.sub('', id.replace(' ', '_'))
+
+    # API part 1: methods that must be implemented in subclasses.        
+    def dir_exists(self, path):
+        print "dir_exists: {}".format(path)
+        # if it's blank, just return True - 
+        # we'll be looking up the list of all Narratives soon.
+        if not path:
+            return True
+        else:
+            return False
+
+    def is_hidden(self, path):
+        print "is_hidden: {}".format(path)
+        return False
+
+    def file_exists(self, path):
+        print "file_exists: {}".format(path)
+        return False
+
+    def exists(self, path):
+        print "exists: {}".format(path)
+        return False
+
+    def get(self, path, content=True, type=None, format=None):
+        """Get the model of a file or directory with or without content."""
+        path = path.strip('/')
+
+        if not self.exists(path):
+            raise web.HTTPError(404, 'Unknown Narrative "{}"'.format(path))
+
+        # if it's the empty string, look up all narratives, treat them as a dir
+        if not path or type == 'directory':
+            model = base_model()
+
+
+    def save(self, model, path):
+        """Save the file or directory and return the model with no content.
+
+        Save implementations should call self.run_pre_save_hook(model=model, path=path)
+        prior to writing any data.
+        """
+        raise NotImplementedError('must be implemented in a subclass')
+
+    def delete_file(self, path):
+        """Delete file or directory by path."""
+        raise NotImplementedError('must be implemented in a subclass')
+
+    def rename_file(self, old_path, new_path):
+        """Rename a file."""
+        raise NotImplementedError('must be implemented in a subclass')
+
+    # API part 2: methods that have useable default
+    # implementations, but can be overridden in subclasses.
+    def delete(self, path):
+        """Delete a file/directory and any associated checkpoints."""
+        path = path.strip('/')
+        if not path:
+            raise HTTPError(400, "Can't delete root")
+        self.delete_file(path)
+        self.checkpoints.delete_all_checkpoints(path)
+
+    def rename(self, old_path, new_path):
+        """Rename a file and any checkpoints associated with that file."""
+        self.rename_file(old_path, new_path)
+        self.checkpoints.rename_all_checkpoints(old_path, new_path)
+
+    def update(self, model, path):
+        """Update the file's path
+
+        For use in PATCH requests, to enable renaming a file without
+        re-uploading its contents. Only used for renaming at the moment.
+        """
+        path = path.strip('/')
+        new_path = model.get('path', path).strip('/')
+        if path != new_path:
+            self.rename(path, new_path)
+        model = self.get(new_path, content=False)
+        return model
+
+    def info_string(self):
+        return "Serving contents"
+
+    def get_kernel_path(self, path, model=None):
+        """Return the API path for the kernel
+        
+        KernelManagers can turn this value into a filesystem path,
+        or ignore it altogether.
+
+        The default value here will start kernels in the directory of the
+        notebook server. FileContentsManager overrides this to use the
+        directory containing the notebook.
+        """
+        return ''
+
+    def increment_filename(self, filename, path='', insert=''):
+        """Increment a filename until it is unique.
+
+        Parameters
+        ----------
+        filename : unicode
+            The name of a file, including extension
+        path : unicode
+            The API path of the target's directory
+
+        Returns
+        -------
+        name : unicode
+            A filename that is unique, based on the input filename.
+        """
+        path = path.strip('/')
+        basename, ext = os.path.splitext(filename)
+        for i in itertools.count():
+            if i:
+                insert_i = '{}{}'.format(insert, i)
+            else:
+                insert_i = ''
+            name = u'{basename}{insert}{ext}'.format(basename=basename,
+                insert=insert_i, ext=ext)
+            if not self.exists(u'{}/{}'.format(path, name)):
+                break
+        return name
+
+    def validate_notebook_model(self, model):
+        """Add failed-validation message to model"""
+        try:
+            validate(model['content'])
+        except ValidationError as e:
+            model['message'] = u'Notebook Validation failed: {}:\n{}'.format(
+                e.message, json.dumps(e.instance, indent=1, default=lambda obj: '<UNKNOWN>'),
+            )
+        return model
+    
+    def new_untitled(self, path='', type='', ext=''):
+        """Create a new untitled file or directory in path
+        
+        path must be a directory
+        
+        File extension can be specified.
+        
+        Use `new` to create files with a fully specified path (including filename).
+        """
+        path = path.strip('/')
+        if not self.dir_exists(path):
+            raise HTTPError(404, 'No such directory: %s' % path)
+        
+        model = {}
+        if type:
+            model['type'] = type
+        
+        if ext == '.ipynb':
+            model.setdefault('type', 'notebook')
+        else:
+            model.setdefault('type', 'file')
+        
+        insert = ''
+        if model['type'] == 'directory':
+            untitled = self.untitled_directory
+            insert = ' '
+        elif model['type'] == 'notebook':
+            untitled = self.untitled_notebook
+            ext = '.ipynb'
+        elif model['type'] == 'file':
+            untitled = self.untitled_file
+        else:
+            raise HTTPError(400, "Unexpected model type: %r" % model['type'])
+        
+        name = self.increment_filename(untitled + ext, path, insert=insert)
+        path = u'{0}/{1}'.format(path, name)
+        return self.new(model, path)
+    
+    def new(self, model=None, path=''):
+        """Create a new file or directory and return its model with no content.
+        
+        To create a new untitled entity in a directory, use `new_untitled`.
+        """
+        path = path.strip('/')
+        if model is None:
+            model = {}
+        
+        if path.endswith('.ipynb'):
+            model.setdefault('type', 'notebook')
+        else:
+            model.setdefault('type', 'file')
+        
+        # no content, not a directory, so fill out new-file model
+        if 'content' not in model and model['type'] != 'directory':
+            if model['type'] == 'notebook':
+                model['content'] = new_notebook()
+                model['format'] = 'json'
+            else:
+                model['content'] = ''
+                model['type'] = 'file'
+                model['format'] = 'text'
+        
+        model = self.save(model, path)
+        return model
+
+    def copy(self, from_path, to_path=None):
+        """Copy an existing file and return its new model.
+
+        If to_path not specified, it will be the parent directory of from_path.
+        If to_path is a directory, filename will increment `from_path-Copy#.ext`.
+
+        from_path must be a full path to a file.
+        """
+        path = from_path.strip('/')
+        if to_path is not None:
+            to_path = to_path.strip('/')
+
+        if '/' in path:
+            from_dir, from_name = path.rsplit('/', 1)
+        else:
+            from_dir = ''
+            from_name = path
+        
+        model = self.get(path)
+        model.pop('path', None)
+        model.pop('name', None)
+        if model['type'] == 'directory':
+            raise HTTPError(400, "Can't copy directories")
+        
+        if to_path is None:
+            to_path = from_dir
+        if self.dir_exists(to_path):
+            name = copy_pat.sub(u'.', from_name)
+            to_name = self.increment_filename(name, to_path, insert='-Copy')
+            to_path = u'{0}/{1}'.format(to_path, to_name)
+        
+        model = self.save(model, to_path)
+        return model
+
+    def log_info(self):
+        self.log.info(self.info_string())
+
+    def trust_notebook(self, path):
+        """Explicitly trust a notebook
+
+        Parameters
+        ----------
+        path : string
+            The path of a notebook
+        """
+        model = self.get(path)
+        nb = model['content']
+        self.log.warn("Trusting notebook %s", path)
+        self.notary.mark_cells(nb, True)
+        self.save(model, path)
+
+    def check_and_sign(self, nb, path=''):
+        """Check for trusted cells, and sign the notebook.
+
+        Called as a part of saving notebooks.
+
+        Parameters
+        ----------
+        nb : dict
+            The notebook dict
+        path : string
+            The notebook's path (for logging)
+        """
+        if self.notary.check_cells(nb):
+            self.notary.sign(nb)
+        else:
+            self.log.warn("Saving untrusted notebook %s", path)
+
+    def mark_trusted_cells(self, nb, path=''):
+        """Mark cells as trusted if the notebook signature matches.
+
+        Called as a part of loading notebooks.
+
+        Parameters
+        ----------
+        nb : dict
+            The notebook object (in current nbformat)
+        path : string
+            The notebook's path (for logging)
+        """
+        trusted = self.notary.check_signature(nb)
+        if not trusted:
+            self.log.warn("Notebook %s is not trusted", path)
+        self.notary.mark_cells(nb, trusted)
+
+    def should_list(self, name):
+        """Should this file/directory name be displayed in a listing?"""
+        return not any(fnmatch(name, glob) for glob in self.hide_globs)
+
+    # Part 3: Checkpoints API
+    def create_checkpoint(self, path):
+        """Create a checkpoint."""
+        # not supported yet
+        pass
+
+    def restore_checkpoint(self, checkpoint_id, path):
+        """
+        Restore a checkpoint.
+        """
+        # not supported yet
+        pass
+
+    def list_checkpoints(self, path):
+        # not supported yet
+        pass
+
+    def delete_checkpoint(self, checkpoint_id, path):
+        # not supported yet
+        pass
+
+    
+    # everything below is from the older IPython 1.x implementation
 
     def list_notebooks(self):
         """List all notebooks in WSS
@@ -189,7 +504,7 @@ class KBaseWSNotebookManager(NotebookManager):
             raise web.HTTPError(401, u'User must be logged in to access their workspaces')
 
         # Have IPython create a new, empty notebook
-        nb = current.new_notebook()
+        nb = nbformat.v4.new_notebook()
         new_name = normalize('NFC', u"Untitled %s" % (datetime.datetime.now().strftime("%y%m%d_%H%M%S")))
         new_name = self._clean_id(new_name)
 
@@ -310,7 +625,7 @@ class KBaseWSNotebookManager(NotebookManager):
         else:
             jsonnb = json.dumps(wsobj['data'])
 
-        nb = current.reads(jsonnb, u'json')
+        nb = format.reads(jsonnb, u'json')
 
         # Set the notebook metadata workspace to the workspace this came from
         nb.metadata.ws_name = wsobj['metadata']['workspace']
@@ -660,26 +975,26 @@ class KBaseWSNotebookManager(NotebookManager):
 # handlers in the main IPython code without having to change the IPython code
 # directly
 #
-def handler_route_replace(handlers,oldre,newre):
-    """ Look for a regex in a tornado routing table and replace it with a new one"""
-    if len(handlers) > 0:
-        findre = re.escape(oldre)
-        for i in range(0,len(handlers)):
-            (route,handler) = handlers[i]
-            route2 = re.sub(findre,newre,route)
-            if route2 != route:
-                handlers[i] = (route2,handler)
+# def handler_route_replace(handlers,oldre,newre):
+#     """ Look for a regex in a tornado routing table and replace it with a new one"""
+#     if len(handlers) > 0:
+#         findre = re.escape(oldre)
+#         for i in range(0,len(handlers)):
+#             (route,handler) = handlers[i]
+#             route2 = re.sub(findre,newre,route)
+#             if route2 != route:
+#                 handlers[i] = (route2,handler)
 
-# Patch the url regex to match our workspace identifiers
-import IPython.html.base.handlers
+# # Patch the url regex to match our workspace identifiers
+# import IPython.html.base.handlers
 
-tgt_handlers = ('IPython.html.notebook.handlers',
-                'IPython.html.services.notebooks.handlers')
-for handlerstr in tgt_handlers:
-    IPython.html.base.handlers.app_log.debug("Patching routes in %s.default_handler" % handlerstr)
-    handler = importlib.import_module(handlerstr)
-    handler_route_replace(handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>ws\.\d+\.obj\.\d+)')
+# tgt_handlers = ('IPython.html.notebook.handlers',
+#                 'IPython.html.services.notebooks.handlers')
+# for handlerstr in tgt_handlers:
+#     IPython.html.base.handlers.app_log.debug("Patching routes in %s.default_handler" % handlerstr)
+#     handler = importlib.import_module(handlerstr)
+#     handler_route_replace(handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>ws\.\d+\.obj\.\d+)')
 
-# Load the plupload handler
-import upload_handler
-upload_handler.insert_plupload_handler()
+# # Load the plupload handler
+# import upload_handler
+# upload_handler.insert_plupload_handler()

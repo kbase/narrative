@@ -111,18 +111,18 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     def __init__(self, *args, **kwargs):
         """Verify that we can connect to the configured WS instance"""
-        super(ContentsManager, self).__init__(*args, **kwargs)
+        super(KBaseWSManager, self).__init__(*args, **kwargs)
         if not self.kbasews_uri:
             raise web.HTTPError(412, u"Missing KBase workspace service endpoint URI.")
 
         # Verify we can poke the Workspace service at that URI by just checking its
         # version
-        try:
-            wsclient = self.wsclient()
-            wsclient.ver()
-        except Exception as e:
-            raise web.HTTPError(500, u"Unable to connect to workspace service"
-                                     u" at %s: %s " % (self.kbasews_uri, e))
+        # try:
+        #     wsclient = self.wsclient()
+        #     wsclient.ver()
+        # except Exception as e:
+        #     raise web.HTTPError(500, u"Unable to connect to workspace service"
+        #                              u" at %s: %s " % (self.kbasews_uri, e))
 
         # Map Narrative ids to notebook names
         mapping = Dict()
@@ -150,9 +150,12 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """Clean any whitespace out of the given id"""
         return self.wsid_regex.sub('', id.replace(' ', '_'))
 
+    #####
     # API part 1: methods that must be implemented in subclasses.        
+    #####
     def dir_exists(self, path):
         print "dir_exists: {}".format(path)
+        print self.info_string()
         # if it's blank, just return True - 
         # we'll be looking up the list of all Narratives soon.
         if not path:
@@ -161,7 +164,8 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             return False
 
     def is_hidden(self, path):
-        print "is_hidden: {}".format(path)
+        """We can only see what gets returned from Workspace lookup,
+           so nothing should be hidden"""
         return False
 
     def file_exists(self, path):
@@ -170,7 +174,22 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     def exists(self, path):
         print "exists: {}".format(path)
-        return False
+        path = path.strip('/')
+
+        if not path: # it's a directory, for all narratives
+            return True
+
+        return self.file_exists(path)
+
+    def _wsobj_to_model(self, nar, content=True):
+        nar_id = 'ws.{}.obj.{}'.format(nar['wsid'], nar['objid'])
+        model = base_model('{} - {} - {}'.format(nar['saved_by'], nar_id, nar['name']))
+        model['format'] = 'v3'
+        model['last_modified'] = nar['save_date']
+
+        # model = base_model('%s/%s' % (nar['notebook_id'], nar['name']))
+        # model['format'] = 'v3'
+        return model
 
     def get(self, path, content=True, type=None, format=None):
         """Get the model of a file or directory with or without content."""
@@ -181,8 +200,17 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
         # if it's the empty string, look up all narratives, treat them as a dir
         if not path or type == 'directory':
-            model = base_model()
+            model = base_model(path)
+            model['type'] = type
+            model['format'] = 'json'
+            if content:
+                contents = []
+                nar_list = self._list_narratives()
+                for nar in nar_list:
+                    contents.append(self._wsobj_to_model(nar, content=False))
+                model['content'] = contents
 
+        return model
 
     def save(self, model, path):
         """Save the file or directory and return the model with no content.
@@ -228,8 +256,8 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         model = self.get(new_path, content=False)
         return model
 
-    def info_string(self):
-        return "Serving contents"
+    # def info_string(self):
+    #     return "Serving contents"
 
     def get_kernel_path(self, path, model=None):
         """Return the API path for the kernel

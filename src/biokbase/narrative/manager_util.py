@@ -2,14 +2,14 @@
 Utils for implementing the KBase Narrative manager
 """
 
-def base_model(self, path):
+def base_model(path):
     """Build the common base of a contents model"""
 
     model = {}
     model['name'] = path.rsplit('/', 1)[-1]
     model['path'] = path
-    model['last_modified'] = None
-    model['created'] = None
+    model['last_modified'] = "00-00-0000"
+    model['created'] = "00-00-0000"
     model['content'] = None
     model['format'] = None
     model['mimetype'] = None
@@ -17,5 +17,6 @@ def base_model(self, path):
     # look up the narrative and see if it's really writable.
     # For now, assume its not, and set it otherwise.
     model['writable'] = False
+    model['type'] = None
 
     return model

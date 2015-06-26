@@ -99,6 +99,8 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     ws_regex2 = re.compile('^(?P<wsname>[\w:]+)/(?P<objname>[\w]+)')
     # regex for par
     kbid_regex = re.compile('^(kb\|[a-zA-Z]+\..+)')
+    # regex from pretty name path
+    objid_regex = re.compile('^.*\s-\s(?P<obj_long_id>ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+))\s-\s')
 
     # This is a regular expression to make sure that the workspace ID
     # doesn't contain non-legit characters in the object ID field
@@ -170,7 +172,8 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     def file_exists(self, path):
         print "file_exists: {}".format(path)
-        return False
+        obj_ref = self._obj_ref_from_path(path)
+        return self._read_narrative(obj_ref, content=False, includeMetadata=False)
 
     def exists(self, path):
         print "exists: {}".format(path)
@@ -186,21 +189,49 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         model = base_model('{} - {} - {}'.format(nar['saved_by'], nar_id, nar['name']))
         model['format'] = 'v3'
         model['last_modified'] = nar['save_date']
+        model['type'] = 'notebook'
 
         # model = base_model('%s/%s' % (nar['notebook_id'], nar['name']))
         # model['format'] = 'v3'
         return model
 
+    def _obj_id_from_path(self, path):
+        m = self.objid_regex.match(path)
+        return m.group('obj_long_id')
+
+    def _obj_ref_from_path(self, path):
+        m = self.objid_regex.match(path)
+        if m is None:
+            return None
+        return '{}/{}'.format(m.group('wsid'), m.group('objid'))
+
     def get(self, path, content=True, type=None, format=None):
         """Get the model of a file or directory with or without content."""
         path = path.strip('/')
 
-        if not self.exists(path):
-            raise web.HTTPError(404, 'Unknown Narrative "{}"'.format(path))
+        model = base_model(path)
+        if self.exists(path) and type != 'directory':
+            obj_ref = self._obj_ref_from_path(path)
+            if obj_ref:
+                try:
+                    nar_obj = self._read_narrative(obj_ref, content)
+                    # print nar_obj
+                    print 'GOT THE OBJECT WOO'
+                    model['type'] = 'notebook'
+                    model['format'] = 'json'
+
+                    if content:
+                        jsonnb = json.dumps(nar_obj['data'])
+                        model['content'] = nbformat.reads(jsonnb, 4) #json.dumps(nar_obj['data'])
+                except web.HTTPError:
+                    raise
+                except Exception as e:
+                    raise web.HTTPError(500, 'An error occurred while fetching your narrative: {}'.format(e.stacktrace))
+            else:
+                raise web.HTTPError(404, 'Unknown Narrative "{}"'.format(path))
 
         # if it's the empty string, look up all narratives, treat them as a dir
         if not path or type == 'directory':
-            model = base_model(path)
             model['type'] = type
             model['format'] = 'json'
             if content:
@@ -218,15 +249,15 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         Save implementations should call self.run_pre_save_hook(model=model, path=path)
         prior to writing any data.
         """
-        raise NotImplementedError('must be implemented in a subclass')
+        raise NotImplementedError('saving not implemented yet')
 
     def delete_file(self, path):
         """Delete file or directory by path."""
-        raise NotImplementedError('must be implemented in a subclass')
+        raise NotImplementedError('deletion not implemented yet')
 
     def rename_file(self, old_path, new_path):
         """Rename a file."""
-        raise NotImplementedError('must be implemented in a subclass')
+        raise NotImplementedError('renaming not implemented yet')
 
     # API part 2: methods that have useable default
     # implementations, but can be overridden in subclasses.
@@ -259,17 +290,17 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     # def info_string(self):
     #     return "Serving contents"
 
-    def get_kernel_path(self, path, model=None):
-        """Return the API path for the kernel
+    # def get_kernel_path(self, path, model=None):
+    #     """Return the API path for the kernel
         
-        KernelManagers can turn this value into a filesystem path,
-        or ignore it altogether.
+    #     KernelManagers can turn this value into a filesystem path,
+    #     or ignore it altogether.
 
-        The default value here will start kernels in the directory of the
-        notebook server. FileContentsManager overrides this to use the
-        directory containing the notebook.
-        """
-        return ''
+    #     The default value here will start kernels in the directory of the
+    #     notebook server. FileContentsManager overrides this to use the
+    #     directory containing the notebook.
+    #     """
+    #     return ''
 
     def increment_filename(self, filename, path='', insert=''):
         """Increment a filename until it is unique.

@@ -19,6 +19,7 @@ from IPython.utils.traitlets import (
     List,
     TraitError
 )
+import re
 
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching
@@ -26,6 +27,8 @@ from IPython.utils.traitlets import (
 list_objects_fields = ['objid', 'name', 'type', 'save_date', 'ver', 'saved_by',
                        'wsid', 'workspace', 'chsum', 'size', 'meta']
 obj_field = dict(zip(list_objects_fields,range(len(list_objects_fields))))
+
+obj_ref_regex = re.compile('^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$')
 
 class PermissionsError(WorkspaceClient.ServerError):
     """Raised if user does not have permission to
@@ -62,37 +65,77 @@ class KBaseWSManagerMixin(object):
         except Exception as e:
             raise HTTPError(500, 'Unable to connect to workspace service at {}: {}'.format(self.ws_uri, e))
 
-    def _read_narrative(self, obj_ref):
+    def _read_narrative(self, obj_ref, content=True, includeMetadata=True):
+        """
+        Fetches a Narrative and its object info from the Workspace
+        If content is False, this only returns the Narrative's info 
+        and metadata, otherwise, it returns the whole workspace object.
+
+        This is mainly a wrapper around Workspace.get_objects()
+
+        obj_ref: expected to be in the format "wsid/objid", e.g. "4337/1"
+        or even "4337/1/1" to include version.
+        """
+
+        m = obj_ref_regex.match(obj_ref)
+        if m is None:
+            raise ValueError('Narrative object references must be of the format wsid/objid/ver')
+        nar_data = {}
+        if content:
+            try:
+                nar_data = self.ws_client.get_objects([{'ref':obj_ref}])
+                if len(nar_data) > 0:
+                    nar_data = nar_data[0]
+            except WorkspaceClient.ServerError, err:
+                if PermissionsError.is_permissions_error(err.message):
+                    raise PermissionsError(name=err.name, code=err.code,
+                                           message=err.message, data=err.data)
+        else:
+            try:
+                nar_data = self.ws_client.get_object_info_new({
+                    'objects':[{'ref':obj_ref}],
+                    'includeMetadata': 1 if includeMetadata else 0})
+                if len(nar_data) > 0:
+                    nar_data = nar_data[0]
+            except WorkspaceClient.ServerError, err:
+                if PermissionsError.is_permissions_error(err.message):
+                    raise PermissionsError(name=err.name, code=err.code,
+                                           message=err.message, data=err.data)
+        return nar_data
+
+    def _write_narrative(self, obj_ref, content=True):
         pass
 
-    def _write_narrative(self, obj_ref):
+    def _rename_narrative(self, obj_ref, content=True):
         pass
 
-    def _rename_narrative(self, obj_ref):
+    def _copy_narrative(self, obj_ref, content=True):
         pass
 
-    def _copy_narrative(self, obj_ref):
-        pass
-
-    def _list_narratives(self):
+    def _list_narratives(self, ws_id=None):
         # self.log.debug("Listing Narratives")
         # self.log.debug("kbase_session = %s" % str(self.kbase_session))
         """
-        Takes an initialized workspace client. Defaults to searching for
-        Narrative types in any workspace that the token has at least read access to.
+        By default, this searches for Narrative types in any workspace that the
+        current token has read access to. Works anonymously as well.
 
-        If the ws field is specified then it will return the workspace metadata
-        for only the workspace specified
+        If the ws_id field is not None, it will only look up Narratives in that
+        particular workspace (by its numerical id).
 
-        Returns a dictionary of object descriptions - the key is a workspace id of
-        the form "ws.{workspace_id}.obj.{object_id}" and the values are dictionaries
-        keyed on the list_ws_obj_field list above.
+        Returns a list of dictionaries of object descriptions, one for each Narrative.
+        The keys in each dictionary are those from the list_objects_fields list above.
+
+        This is just a wrapper around the Workspace list_objects command.
 
         Raises: PermissionsError, if access is denied
         """
+        list_obj_params = {'type': self.nar_type,
+                           'includeMetadata': 1}
+        if ws_id:
+            list_obj_params['ids'] = [ws_id]
+
         try:
-            res = self.ws_client.list_objects({'type': self.nar_type,
-                                               'includeMetadata': 1})
+            res = self.ws_client.list_objects(list_obj_params)
         except WorkspaceClient.ServerError, err:
             if PermissionsError.is_permissions_error(err.message):
                 raise PermissionsError(name=err.name, code=err.code,

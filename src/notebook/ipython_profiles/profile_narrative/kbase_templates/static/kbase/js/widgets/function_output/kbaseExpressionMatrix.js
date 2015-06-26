@@ -11,7 +11,7 @@ define(['jquery',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap'], function($) {
     $.KBWidget({
-        name: 'kbaseContigSetView',
+        name: 'kbaseExpressionMatrix',
         parent: 'kbaseAuthenticatedWidget',
         version: '1.0.2',
         options: {
@@ -46,9 +46,9 @@ define(['jquery',
 
         loggedInCallback: function(event, auth) {
 
-            this.options.workspaceID = 645;
-            this.options.expressionMatrixID = 8;
-            this.options.expressionMatrixVer = 1;
+//            this.options.workspaceID = 645;
+//            this.options.expressionMatrixID = 8;
+//            this.options.expressionMatrixVer = 1;
 
 	        // error if not properly initialized
 
@@ -101,7 +101,6 @@ define(['jquery',
                         self.genomeID = data[0].data.id;
                         self.genomeName = data[1].data.scientific_name;
                         self.features = data[2].data.features;
-                        console.log(self.features);
                     }, 
                     function(error){
                         self.clientError(error);
@@ -170,7 +169,8 @@ define(['jquery',
                             { sTitle: "Min", mData: "min"},
                             { sTitle: "Max", mData: "max"},
                             { sTitle: "Avg", mData: "avg"},
-                            { sTitle: "Std", mData: "std"}
+                            { sTitle: "Std", mData: "std"},
+                            { sTitle: "Missed", mData: "missed"}
                         ],
                         "oLanguage": {
                                     "sEmptyTable": "No conditions found!",
@@ -197,7 +197,8 @@ define(['jquery',
                             { sTitle: "Min", mData: "min"},
                             { sTitle: "Max", mData: "max"},
                             { sTitle: "Avg", mData: "avg"},
-                            { sTitle: "Std", mData: "std"}
+                            { sTitle: "Std", mData: "std"},
+                            { sTitle: "Missed", mData: "missed"}
                         ],
                         "oLanguage": {
                                     "sEmptyTable": "No genes found!",
@@ -220,31 +221,54 @@ define(['jquery',
 
             for(var cIndex = 0; cIndex < col_ids.length; cIndex++){
 
-                var rLen = row_ids.length;
+                var rLen = 0;
                 var min = values[0][cIndex];
                 var max = values[0][cIndex];
                 var avg = 0;
                 var std = 0;
-                for(var rIndex = 0 ; rIndex < rLen; rIndex++ ){
-                    if(values[rIndex][cIndex] < min) min = values[rIndex][cIndex];
-                    if(values[rIndex][cIndex] > max) max = values[rIndex][cIndex];
-                    avg += values[rIndex][cIndex];
-                }
-                avg /= rLen;
-                for(var rIndex = 0 ; rIndex < rLen; rIndex++ ){
-                    std += (values[rIndex][cIndex] - avg)*(values[rIndex][cIndex] - avg);
-                }
-                std = Math.sqrt(std/(rLen-1));
+                var missed = 0;
 
+                // Calculate min, max, missed, sum         
+                for(var rIndex = 0 ; rIndex < row_ids.length; rIndex++ ){
+
+                    if(values[rIndex][cIndex] === null){
+                        missed++;
+                    } else{
+                        rLen++;
+                        if(values[rIndex][cIndex] < min || min === null) min = values[rIndex][cIndex];
+                        if(values[rIndex][cIndex] > max || max === null) max = values[rIndex][cIndex];
+                        avg += values[rIndex][cIndex];
+                    }
+                }
+
+                // Calculate avg 
+                if(rLen > 0 ){
+                    avg /= rLen;
+                } else{
+                    avg = null;
+                }
+
+                // Calculate std
+                if( rLen > 1){
+                    for(var rIndex = 0 ; rIndex < row_ids.length; rIndex++ ){
+                        if( values[rIndex][cIndex] !== null ){
+                            std += (values[rIndex][cIndex] - avg)*(values[rIndex][cIndex] - avg);
+                        }
+                    }
+                    std = Math.sqrt(std/(rLen-1));
+                } else{
+                    std = null;
+                }
 
 
                 tableData.push(
                     {
                         'id': col_ids[cIndex],
-                        'min': min.toFixed(2),
-                        'max': max.toFixed(2),
-                        'avg': avg.toFixed(2),
-                        'std': std.toFixed(2)
+                        'min': min === null? ' ' : min.toFixed(2),
+                        'max': max === null? ' ' : max.toFixed(2),
+                        'avg': avg === null? ' ' : avg.toFixed(2),
+                        'std': std === null? ' ' : std.toFixed(2),
+                        'missed':missed
                     }
                 );
             }
@@ -263,21 +287,44 @@ define(['jquery',
 
             for(var rIndex = 0; rIndex < row_ids.length; rIndex++){
 
-                var cLen = col_ids.length;
+                var cLen = 0;
                 var min = values[rIndex][0];
                 var max = values[rIndex][0];
                 var avg = 0;
                 var std = 0;
-                for(var cIndex = 0 ; cIndex < cLen; cIndex++ ){
-                    if(values[rIndex][cIndex] < min) min = values[rIndex][cIndex];
-                    if(values[rIndex][cIndex] > max) max = values[rIndex][cIndex];
-                    avg += values[rIndex][cIndex];
+                var missed = 0;
+
+                // Calculate min, max, missed, sum
+                for(var cIndex = 0 ; cIndex < col_ids.length; cIndex++ ){
+
+                    if(values[rIndex][cIndex] === null){
+                        missed++;
+                    } else{
+                        cLen++;
+                        if(values[rIndex][cIndex] < min || min === null) min = values[rIndex][cIndex];
+                        if(values[rIndex][cIndex] > max || max === null) max = values[rIndex][cIndex];
+                        avg += values[rIndex][cIndex];
+                    }
                 }
-                avg /= cLen;
-                for(var cIndex = 0 ; cIndex < cLen; cIndex++ ){
-                    std += (values[rIndex][cIndex] - avg)*(values[rIndex][cIndex] - avg);
+
+                // Calculate avg 
+                if(cLen > 0 ){
+                    avg /= cLen;
+                } else{
+                    avg = null;
                 }
-                std = Math.sqrt(std/(cLen-1));
+
+                // Calculate std
+                if( cLen > 1){
+                    for(var cIndex = 0 ; cIndex < col_ids.length; cIndex++ ){
+                        if( values[rIndex][cIndex] !== null ){
+                            std += (values[rIndex][cIndex] - avg)*(values[rIndex][cIndex] - avg);
+                        }
+                    }
+                    std = Math.sqrt(std/(cLen-1));
+                } else{
+                    std = null;
+                }
 
 
                 featureId = row_ids[rIndex];
@@ -285,10 +332,11 @@ define(['jquery',
                     {
                         'id': row_ids[rIndex],
                         'function' : featureId2Features[featureId]['function'],
-                        'min': min.toFixed(2),
-                        'max': max.toFixed(2),
-                        'avg': avg.toFixed(2),
-                        'std': std.toFixed(2)
+                        'min': min === null? ' ' : min.toFixed(2),
+                        'max': max === null? ' ' : max.toFixed(2),
+                        'avg': avg === null? ' ' : avg.toFixed(2),
+                        'std': std === null? ' ' : std.toFixed(2),
+                        'missed':missed
                     }
                 );
             }

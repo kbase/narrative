@@ -94,7 +94,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     # regex for parsing out workspace_id and object_id from
     # a "ws.{workspace}.{object}" string
-    ws_regex = re.compile('^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
+    ws_regex = re.compile('^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)(\.(?P<ver>\d+))?')
     # regex for parsing out fully qualified workspace name and object name
     ws_regex2 = re.compile('^(?P<wsname>[\w:]+)/(?P<objname>[\w]+)')
     # regex for par
@@ -171,9 +171,10 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         return False
 
     def file_exists(self, path):
+        print "PATH: {}".format(path)
         print "file_exists: {}".format(path)
         obj_ref = self._obj_ref_from_path(path)
-        return self._read_narrative(obj_ref, content=False, includeMetadata=False)
+        return self.narrative_exists(obj_ref)
 
     def exists(self, path):
         print "exists: {}".format(path)
@@ -186,7 +187,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     def _wsobj_to_model(self, nar, content=True):
         nar_id = 'ws.{}.obj.{}'.format(nar['wsid'], nar['objid'])
-        model = base_model('{} - {} - {}'.format(nar['saved_by'], nar_id, nar['name']))
+        model = base_model('{} - {} - {}'.format(nar['saved_by'], nar_id, nar['name']), nar_id)
         model['format'] = 'v3'
         model['last_modified'] = nar['save_date']
         model['type'] = 'notebook'
@@ -196,27 +197,32 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         return model
 
     def _obj_id_from_path(self, path):
-        m = self.objid_regex.match(path)
-        return m.group('obj_long_id')
+        m = self.ws_regex.match(path)
+        if m:
+            return path
+        else:
+            return None
 
     def _obj_ref_from_path(self, path):
-        m = self.objid_regex.match(path)
+        m = self.ws_regex.match(path)
         if m is None:
             return None
-        return '{}/{}'.format(m.group('wsid'), m.group('objid'))
+        ref = '{}/{}'.format(m.group('wsid'), m.group('objid'))
+        if ref is not None and m.group('ver') is not None:
+            ref = ref + '/{}'.format(m.group('ver'))
+        return ref
 
     def get(self, path, content=True, type=None, format=None):
         """Get the model of a file or directory with or without content."""
         path = path.strip('/')
 
-        model = base_model(path)
+        model = base_model(path, path)
         if self.exists(path) and type != 'directory':
+            #It's a narrative object, so try to fetch it.
             obj_ref = self._obj_ref_from_path(path)
             if obj_ref:
                 try:
-                    nar_obj = self._read_narrative(obj_ref, content)
-                    # print nar_obj
-                    print 'GOT THE OBJECT WOO'
+                    nar_obj = self.read_narrative(obj_ref, content)
                     model['type'] = 'notebook'
                     model['format'] = 'json'
 
@@ -230,13 +236,13 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             else:
                 raise web.HTTPError(404, 'Unknown Narrative "{}"'.format(path))
 
-        # if it's the empty string, look up all narratives, treat them as a dir
         if not path or type == 'directory':
+            #if it's the empty string, look up all narratives, treat them as a dir
             model['type'] = type
             model['format'] = 'json'
             if content:
                 contents = []
-                nar_list = self._list_narratives()
+                nar_list = self.list_narratives()
                 for nar in nar_list:
                     contents.append(self._wsobj_to_model(nar, content=False))
                 model['content'] = contents
@@ -516,7 +522,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         pass
 
     
-    # everything below is from the older IPython 1.x implementation
+    # ------- everything below is from the older IPython 1.x implementation ---------
 
     def list_notebooks(self):
         """List all notebooks in WSS

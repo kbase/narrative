@@ -2,11 +2,11 @@
 Utils for implementing the KBase Narrative manager
 """
 
-def base_model(path):
+def base_model(name, path):
     """Build the common base of a contents model"""
 
     model = {}
-    model['name'] = path.rsplit('/', 1)[-1]
+    model['name'] = name #path.rsplit('/', 1)[-1]
     model['path'] = path
     model['last_modified'] = "00-00-0000"
     model['created'] = "00-00-0000"

@@ -65,7 +65,20 @@ class KBaseWSManagerMixin(object):
         except Exception as e:
             raise HTTPError(500, 'Unable to connect to workspace service at {}: {}'.format(self.ws_uri, e))
 
-    def _read_narrative(self, obj_ref, content=True, includeMetadata=True):
+    def _test_obj_ref(self, obj_ref):
+        m = obj_ref_regex.match(obj_ref)
+        if m is None:
+            raise ValueError('Narrative object references must be of the format wsid/objid/ver')        
+
+    def narrative_exists(self, obj_ref):
+        """
+        Test if a narrative exists.
+        If we can fetch the narrative info (e.g. the get_object_info from the 
+            workspace), then it exists.
+        """
+        return read_narrative(obj_ref, content=False, includeMetadata=False)
+
+    def read_narrative(self, obj_ref, content=True, includeMetadata=True):
         """
         Fetches a Narrative and its object info from the Workspace
         If content is False, this only returns the Narrative's info 
@@ -77,9 +90,7 @@ class KBaseWSManagerMixin(object):
         or even "4337/1/1" to include version.
         """
 
-        m = obj_ref_regex.match(obj_ref)
-        if m is None:
-            raise ValueError('Narrative object references must be of the format wsid/objid/ver')
+        self._test_obj_ref(obj_ref)
         nar_data = {}
         if content:
             try:
@@ -103,16 +114,16 @@ class KBaseWSManagerMixin(object):
                                            message=err.message, data=err.data)
         return nar_data
 
-    def _write_narrative(self, obj_ref, content=True):
+    def write_narrative(self, obj_ref, content=True):
         pass
 
-    def _rename_narrative(self, obj_ref, content=True):
+    def rename_narrative(self, obj_ref, content=True):
         pass
 
-    def _copy_narrative(self, obj_ref, content=True):
+    def copy_narrative(self, obj_ref, content=True):
         pass
 
-    def _list_narratives(self, ws_id=None):
+    def list_narratives(self, ws_id=None):
         # self.log.debug("Listing Narratives")
         # self.log.debug("kbase_session = %s" % str(self.kbase_session))
         """
@@ -154,3 +165,17 @@ class KBaseWSManagerMixin(object):
 #         print my_narratives
 #         return my_narratives
 # 'ws.2632.obj.10': {'wsid': 2632, 'ver': 2, 'name': u'ModelComparison', 'chsum': u'8205782b1e23ceae7cba506de76620f5', 'saved_by': u'chenry', 'save_date': u'2014-10-19T06:04:40+0000', 'meta': {u'description': u'', u'format': u'ipynb', u'creator': u'chenry', u'data_dependencies': u'["GenomeComparison.ProteomeComparison ", "KBaseFBA.FBAModel "]', u'ws_name': u'MicrobeApps', u'type': u'Narrative', u'name': u'ModelComparison'}, 'objid': 10, 'workspace': u'MicrobeApps', 'type': u'KBaseNarrative.Narrative-3.0', 'size': 4736}
+
+    def narrative_permissions(self, obj_ref, user=None):
+        m = self.obj_ref_regex.match(obj_ref)
+        if m is None:
+            raise ValueError('Narrative object references must be of the format wsid/objid/ver')
+        ws_id = m.group('wsid')
+        try:
+            perms = self.ws_client.get_permissions({'id': ws_id})
+        except WorkspaceClient.ServerError, err:
+            if PermissionsError.is_permissions_error(err.message):
+                raise PermissionsError(name=err.name, code=err.code,
+                                       message=err.message, data=err.data)
+        if user is not None:
+            return perms['user']

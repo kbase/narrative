@@ -1440,6 +1440,10 @@ div#notebook_panel {
     border-radius: 0px;
 }
 
+.kb-cell-output-content {
+    overflow-x: auto;
+}
+
 .kb-cell-output .panel .panel-heading {
     padding: 5px 10px;
 }

@@ -76,7 +76,7 @@ class KBaseWSManagerMixin(object):
         If we can fetch the narrative info (e.g. the get_object_info from the 
             workspace), then it exists.
         """
-        return read_narrative(obj_ref, content=False, includeMetadata=False)
+        return self.read_narrative(obj_ref, content=False, includeMetadata=False) is not None
 
     def read_narrative(self, obj_ref, content=True, includeMetadata=True):
         """
@@ -91,7 +91,7 @@ class KBaseWSManagerMixin(object):
         """
 
         self._test_obj_ref(obj_ref)
-        nar_data = {}
+        nar_data = None
         if content:
             try:
                 nar_data = self.ws_client.get_objects([{'ref':obj_ref}])
@@ -167,10 +167,21 @@ class KBaseWSManagerMixin(object):
 # 'ws.2632.obj.10': {'wsid': 2632, 'ver': 2, 'name': u'ModelComparison', 'chsum': u'8205782b1e23ceae7cba506de76620f5', 'saved_by': u'chenry', 'save_date': u'2014-10-19T06:04:40+0000', 'meta': {u'description': u'', u'format': u'ipynb', u'creator': u'chenry', u'data_dependencies': u'["GenomeComparison.ProteomeComparison ", "KBaseFBA.FBAModel "]', u'ws_name': u'MicrobeApps', u'type': u'Narrative', u'name': u'ModelComparison'}, 'objid': 10, 'workspace': u'MicrobeApps', 'type': u'KBaseNarrative.Narrative-3.0', 'size': 4736}
 
     def narrative_permissions(self, obj_ref, user=None):
-        m = self.obj_ref_regex.match(obj_ref)
+        """
+        Returns permissions to a Narrative.
+        This is returned as a dict, where each key is a user.
+        '*' is a special key, meaning public.
+        This is a wrapper around Workspace.get_permissions.
+
+        If user is not None, then only the user's key is returned.
+        If that key isn't present, then the user doesn't have access, and
+        'n' is returned for that key's value.
+        """
+        m = obj_ref_regex.match(obj_ref)
         if m is None:
             raise ValueError('Narrative object references must be of the format wsid/objid/ver')
         ws_id = m.group('wsid')
+        perms = {}
         try:
             perms = self.ws_client.get_permissions({'id': ws_id})
         except WorkspaceClient.ServerError, err:
@@ -178,4 +189,18 @@ class KBaseWSManagerMixin(object):
                 raise PermissionsError(name=err.name, code=err.code,
                                        message=err.message, data=err.data)
         if user is not None:
-            return perms['user']
+            if perms.has_key(user):
+                perms = {user: perms[user]}
+            else:
+                perms = {user: 'n'}
+        return perms
+
+    def narrative_writable(self, obj_ref, user):
+        """
+        Returns True if the user can write to the narrative, False otherwise.
+        """
+        perms = self.narrative_permissions(obj_ref, user)
+        if perms.has_key(user):
+            return perms[user] == 'w' or perms[user] == 'a'
+        else:
+            return False

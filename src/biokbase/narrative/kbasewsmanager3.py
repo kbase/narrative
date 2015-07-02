@@ -136,7 +136,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     def get_userid(self):
         """Return the current user id (if logged in), or None
         """
+
         t = biokbase.auth.Token()
+        print t
         if (t is not None):
             return self.kbase_session.get('user_id', t.user_id)
         else:
@@ -223,16 +225,20 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             if obj_ref:
                 try:
                     nar_obj = self.read_narrative(obj_ref, content)
+                    user = self.get_userid()
                     model['type'] = 'notebook'
                     model['format'] = 'json'
+                    if user is not None:
+                        model['writable'] = self.narrative_writable(obj_ref, user)
 
                     if content:
                         jsonnb = json.dumps(nar_obj['data'])
                         model['content'] = nbformat.reads(jsonnb, 4) #json.dumps(nar_obj['data'])
+                        os.environ['KB_WORKSPACE_ID'] = model['content'].metadata.ws_name
                 except web.HTTPError:
                     raise
                 except Exception as e:
-                    raise web.HTTPError(500, 'An error occurred while fetching your narrative: {}'.format(e.stacktrace))
+                    raise web.HTTPError(500, 'An error occurred while fetching your narrative: {}'.format(e))
             else:
                 raise web.HTTPError(404, 'Unknown Narrative "{}"'.format(path))
 
@@ -522,6 +528,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         pass
 
     
+
     # ------- everything below is from the older IPython 1.x implementation ---------
 
     def list_notebooks(self):

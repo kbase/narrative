@@ -87,11 +87,7 @@ define(['jquery',
         'notebook/js/cell',
         'services/config',
         'notebook/js/mathjaxutils',
-//        'notebook/js/celltoolbar',
         'components/marked/lib/marked',
-//        'codemirror/lib/codemirror',
-//        'codemirror/mode/gfm/gfm',
-//        'notebook/js/codemirror-ipythongfm'
         ], 
     function($, 
              IPython, 
@@ -101,6 +97,7 @@ define(['jquery',
              config,
              mathjaxutils,
              marked) {
+        "use strict";
         security.sanitize_html = function(html, allow_css) { return html; };
         security.sanitize_css = function(css, tagPolicy) { return css };
         security.sanitize_stylesheets = function(html, tagPolicy) { return html };

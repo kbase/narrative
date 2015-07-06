@@ -58,12 +58,13 @@ class KBaseWSManagerMixin(object):
         if not self.ws_uri:
             raise HTTPError(412, 'Missing KBase workspace service endpoint URI')
 
-        self.ws_client = WorkspaceClient.Workspace(self.ws_uri)
         try:
-            v = self.ws_client.ver()
-            print 'Workspace version: {}'.format(v)
+            v = self.ws_client().ver()
         except Exception as e:
             raise HTTPError(500, 'Unable to connect to workspace service at {}: {}'.format(self.ws_uri, e))
+
+    def ws_client(self):
+        return WorkspaceClient.Workspace(self.ws_uri)
 
     def _test_obj_ref(self, obj_ref):
         m = obj_ref_regex.match(obj_ref)
@@ -94,7 +95,7 @@ class KBaseWSManagerMixin(object):
         nar_data = None
         if content:
             try:
-                nar_data = self.ws_client.get_objects([{'ref':obj_ref}])
+                nar_data = self.ws_client().get_objects([{'ref':obj_ref}])
                 if len(nar_data) > 0:
                     nar_data = nar_data[0]
             except WorkspaceClient.ServerError, err:
@@ -103,7 +104,7 @@ class KBaseWSManagerMixin(object):
                                            message=err.message, data=err.data)
         else:
             try:
-                nar_data = self.ws_client.get_object_info_new({
+                nar_data = self.ws_client().get_object_info_new({
                     'objects':[{'ref':obj_ref}],
                     'includeMetadata': 1 if includeMetadata else 0})
                 if len(nar_data) > 0:
@@ -146,7 +147,7 @@ class KBaseWSManagerMixin(object):
             list_obj_params['ids'] = [ws_id]
 
         try:
-            res = self.ws_client.list_objects(list_obj_params)
+            res = self.ws_client().list_objects(list_obj_params)
         except WorkspaceClient.ServerError, err:
             if PermissionsError.is_permissions_error(err.message):
                 raise PermissionsError(name=err.name, code=err.code,
@@ -183,7 +184,7 @@ class KBaseWSManagerMixin(object):
         ws_id = m.group('wsid')
         perms = {}
         try:
-            perms = self.ws_client.get_permissions({'id': ws_id})
+            perms = self.ws_client().get_permissions({'id': ws_id})
         except WorkspaceClient.ServerError, err:
             if PermissionsError.is_permissions_error(err.message):
                 raise PermissionsError(name=err.name, code=err.code,

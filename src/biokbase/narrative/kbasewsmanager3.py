@@ -117,27 +117,29 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         if not self.kbasews_uri:
             raise web.HTTPError(412, u"Missing KBase workspace service endpoint URI.")
 
-        # Verify we can poke the Workspace service at that URI by just checking its
-        # version
-        # try:
-        #     wsclient = self.wsclient()
-        #     wsclient.ver()
-        # except Exception as e:
-        #     raise web.HTTPError(500, u"Unable to connect to workspace service"
-        #                              u" at %s: %s " % (self.kbasews_uri, e))
-
         # Map Narrative ids to notebook names
         mapping = Dict()
         # Map notebook names to Narrative ids
         rev_mapping = Dict()
         # Setup empty hash for session object
         self.kbase_session = {}
+        # Init the session info we need.
+        print self.get_userid()
+
+        # Verify we can poke the Workspace service at that URI by just checking its version
+        try:
+            wsclient = self.wsclient()
+            wsclient.ver()
+        except Exception as e:
+            raise web.HTTPError(500, u"Unable to connect to workspace service"
+                                     u" at %s: %s " % (self.kbasews_uri, e))
 
     def get_userid(self):
         """Return the current user id (if logged in), or None
         """
 
-        t = biokbase.auth.Token()
+        t = biokbase.auth.Token(user_id='kbasetest', password='@Suite525')
+        os.environ['KB_AUTH_TOKEN'] = t.token
         print t
         if (t is not None):
             return self.kbase_session.get('user_id', t.user_id)

@@ -138,9 +138,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """Return the current user id (if logged in), or None
         """
 
-        t = biokbase.auth.Token(user_id='kbasetest', password='@Suite525')
-        os.environ['KB_AUTH_TOKEN'] = t.token
-        print t
+        t = biokbase.auth.Token()
         if (t is not None):
             return self.kbase_session.get('user_id', t.user_id)
         else:

@@ -3,6 +3,7 @@ Utilities for doing IO operations on Narrative objects.
 Implements the KBaseWSManagerMixin class.
 """
 
+import biokbase.auth
 import biokbase.narrative.common.service as service
 import biokbase.workspace
 from biokbase.workspace import client as WorkspaceClient
@@ -39,8 +40,8 @@ class PermissionsError(WorkspaceClient.ServerError):
         """Try to guess if the error string is a permission-denied error
         for the narrative (i.e. the workspace the narrative is in).
         """
-        pat = re.compile("\s*[Uu]ser \w+ may not \w+ workspace.*")
-        return pat.match(err) is not None
+        pat = re.compile("\s*[Uu]sers?\s*(\w+)?\s*may not \w+ workspace.*")
+        return pat.search(err) is not None
 
     def __init__(self, name=None, code=None, message=None, **kw):
         WorkspaceClient.ServerError.__init__(self, name, code, message, **kw)
@@ -102,6 +103,8 @@ class KBaseWSManagerMixin(object):
                 if PermissionsError.is_permissions_error(err.message):
                     raise PermissionsError(name=err.name, code=err.code,
                                            message=err.message, data=err.data)
+                else:
+                    raise
         else:
             try:
                 nar_data = self.ws_client().get_object_info_new({
@@ -139,12 +142,17 @@ class KBaseWSManagerMixin(object):
 
         This is just a wrapper around the Workspace list_objects command.
 
-        Raises: PermissionsError, if access is denied
+        Raises: PermissionsError, if access is denied; ValueError is ws_id is not 
+        numeric.
         """
         list_obj_params = {'type': self.nar_type,
                            'includeMetadata': 1}
         if ws_id:
-            list_obj_params['ids'] = [ws_id]
+            try:
+                int(ws_id)
+                list_obj_params['ids'] = [ws_id]
+            except ValueError:
+                raise
 
         try:
             res = self.ws_client().list_objects(list_obj_params)
@@ -152,6 +160,8 @@ class KBaseWSManagerMixin(object):
             if PermissionsError.is_permissions_error(err.message):
                 raise PermissionsError(name=err.name, code=err.code,
                                        message=err.message, data=err.data)
+            else:
+                raise
         my_narratives = [dict(zip(list_objects_fields, obj)) for obj in res]
         return my_narratives
 #         for obj in res:
@@ -177,6 +187,8 @@ class KBaseWSManagerMixin(object):
         If user is not None, then only the user's key is returned.
         If that key isn't present, then the user doesn't have access, and
         'n' is returned for that key's value.
+
+        If nobody is logged in, this throws a WorkspaceClient.ServerError.
         """
         m = obj_ref_regex.match(obj_ref)
         if m is None:
@@ -189,6 +201,8 @@ class KBaseWSManagerMixin(object):
             if PermissionsError.is_permissions_error(err.message):
                 raise PermissionsError(name=err.name, code=err.code,
                                        message=err.message, data=err.data)
+            else:
+                raise
         if user is not None:
             if perms.has_key(user):
                 perms = {user: perms[user]}
@@ -199,7 +213,11 @@ class KBaseWSManagerMixin(object):
     def narrative_writable(self, obj_ref, user):
         """
         Returns True if the user can write to the narrative, False otherwise.
+        Throws a WorkspaceClient.ServerError if not logged in, or 
+        if the narrative doesn't exist.
         """
+        if user is None:
+            raise ValueError('A user must be given for testing whether a Narrative can be written')
         perms = self.narrative_permissions(obj_ref, user)
         if perms.has_key(user):
             return perms[user] == 'w' or perms[user] == 'a'

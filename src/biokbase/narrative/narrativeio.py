@@ -72,21 +72,37 @@ class KBaseWSManagerMixin(object):
         if m is None:
             raise ValueError('Narrative object references must be of the format wsid/objid/ver')        
 
+    def _ws_err_to_perm_err(self, err):
+        if PermissionsError.is_permissions_error(err.message):
+            return PermissionsError(name=err.name, code=err.code,
+                                   message=err.message, data=err.data)
+        else:
+            return err
+
+
     def narrative_exists(self, obj_ref):
         """
         Test if a narrative exists.
         If we can fetch the narrative info (e.g. the get_object_info from the 
             workspace), then it exists.
         """
-        return self.read_narrative(obj_ref, content=False, includeMetadata=False) is not None
+        try:
+            return self.read_narrative(obj_ref, content=False, include_metadata=False) is not None
+        except PermissionsError:
+            raise
+        except WorkspaceClient.ServerError, err:
+            return False
 
-    def read_narrative(self, obj_ref, content=True, includeMetadata=True):
+    def read_narrative(self, obj_ref, content=True, include_metadata=True):
         """
         Fetches a Narrative and its object info from the Workspace
         If content is False, this only returns the Narrative's info 
         and metadata, otherwise, it returns the whole workspace object.
 
-        This is mainly a wrapper around Workspace.get_objects()
+        This is mainly a wrapper around Workspace.get_objects(), except that
+        it always returns a dict. If content is False, it returns a dict
+        containing a single key: 'info', with the object info and, optionally,
+        metadata.
 
         obj_ref: expected to be in the format "wsid/objid", e.g. "4337/1"
         or even "4337/1/1" to include version.
@@ -100,29 +116,30 @@ class KBaseWSManagerMixin(object):
                 if len(nar_data) > 0:
                     nar_data = nar_data[0]
             except WorkspaceClient.ServerError, err:
-                if PermissionsError.is_permissions_error(err.message):
-                    raise PermissionsError(name=err.name, code=err.code,
-                                           message=err.message, data=err.data)
-                else:
-                    raise
+                raise self._ws_err_to_perm_err(err)
         else:
             try:
                 nar_data = self.ws_client().get_object_info_new({
                     'objects':[{'ref':obj_ref}],
-                    'includeMetadata': 1 if includeMetadata else 0})
+                    'includeMetadata': 1 if include_metadata else 0
+                })
                 if len(nar_data) > 0:
-                    nar_data = nar_data[0]
+                    nar_data = {'info': nar_data[0]}
             except WorkspaceClient.ServerError, err:
-                if PermissionsError.is_permissions_error(err.message):
-                    raise PermissionsError(name=err.name, code=err.code,
-                                           message=err.message, data=err.data)
+                raise self._ws_err_to_perm_err(err)
         return nar_data
 
     def write_narrative(self, obj_ref, content=True):
         pass
 
-    def rename_narrative(self, obj_ref, content=True):
-        pass
+    def rename_narrative(self, obj_ref, new_name, content=True):
+        try:
+            nar = self.read_narrative(obj_ref)
+            # do stuff to set the new name
+            renamed_nar = {}
+            self.write_narrative(renamed_nar)
+        except WorkspaceClient.ServerError, err:
+            raise self._ws_err_to_perm_err(err)
 
     def copy_narrative(self, obj_ref, content=True):
         pass
@@ -157,25 +174,9 @@ class KBaseWSManagerMixin(object):
         try:
             res = self.ws_client().list_objects(list_obj_params)
         except WorkspaceClient.ServerError, err:
-            if PermissionsError.is_permissions_error(err.message):
-                raise PermissionsError(name=err.name, code=err.code,
-                                       message=err.message, data=err.data)
-            else:
-                raise
+            raise self._ws_err_to_perm_err(err)
         my_narratives = [dict(zip(list_objects_fields, obj)) for obj in res]
         return my_narratives
-#         for obj in res:
-#             my_narratives['ws.{}.obj.{}'.format(obj[obj_field['wsid']], obj[obj_field['objid']])] = dict(zip(list_objects_fields, obj))
-
-#         mapping = {
-#             ws_id: "%s/%s" % (my_narratives[ws_id]['workspace'],my_narratives[ws_id]['meta'].get('name','undefined'))
-#             for ws_id in my_narratives.keys()
-#         }
-#         data = [dict(narrative_id = it[0], name = it[1]) for it in mapping.items()]
-#         data = []
-#         print my_narratives
-#         return my_narratives
-# 'ws.2632.obj.10': {'wsid': 2632, 'ver': 2, 'name': u'ModelComparison', 'chsum': u'8205782b1e23ceae7cba506de76620f5', 'saved_by': u'chenry', 'save_date': u'2014-10-19T06:04:40+0000', 'meta': {u'description': u'', u'format': u'ipynb', u'creator': u'chenry', u'data_dependencies': u'["GenomeComparison.ProteomeComparison ", "KBaseFBA.FBAModel "]', u'ws_name': u'MicrobeApps', u'type': u'Narrative', u'name': u'ModelComparison'}, 'objid': 10, 'workspace': u'MicrobeApps', 'type': u'KBaseNarrative.Narrative-3.0', 'size': 4736}
 
     def narrative_permissions(self, obj_ref, user=None):
         """
@@ -198,11 +199,7 @@ class KBaseWSManagerMixin(object):
         try:
             perms = self.ws_client().get_permissions({'id': ws_id})
         except WorkspaceClient.ServerError, err:
-            if PermissionsError.is_permissions_error(err.message):
-                raise PermissionsError(name=err.name, code=err.code,
-                                       message=err.message, data=err.data)
-            else:
-                raise
+            raise self._ws_err_to_perm_err(err)
         if user is not None:
             if perms.has_key(user):
                 perms = {user: perms[user]}

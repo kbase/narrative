@@ -14,7 +14,7 @@ import re
 from tornado import web
 import biokbase.narrative.common.service as service
 import ConfigParser
-from narrative_test_helper import upload_narrative, delete_narrative
+import narrative_test_helper as test_util
 
 metadata_fields = set(['objid', 'name', 'type', 'save_date', 'ver', 
                        'saved_by', 'wsid', 'workspace', 'chsum', 
@@ -49,15 +49,15 @@ class NarrIOTestCase(unittest.TestCase):
         # To avoid cross-contamination (we're testing the new_narrative() code here,
         # so we shouldn't use it, right?) this will be done manually using the Workspace
         # client.
-        self.public_nar = upload_narrative(config.get('narratives', 'public_file'), self.test_token, set_public=True, url=self.ws_uri)
-        self.private_nar = upload_narrative(config.get('narratives', 'private_file'), self.test_token, url=self.ws_uri)
-        self.unauth_nar = upload_narrative(config.get('narratives', 'unauth_file'), self.private_token, url=self.ws_uri)
+        self.public_nar = test_util.upload_narrative(config.get('narratives', 'public_file'), self.test_token, set_public=True, url=self.ws_uri)
+        self.private_nar = test_util.upload_narrative(config.get('narratives', 'private_file'), self.test_token, url=self.ws_uri)
+        self.unauth_nar = test_util.upload_narrative(config.get('narratives', 'unauth_file'), self.private_token, url=self.ws_uri)
 
     @classmethod
     def tearDownClass(self):
-        delete_narrative(self.public_nar['ws'], self.test_token, url=self.ws_uri)
-        delete_narrative(self.private_nar['ws'], self.test_token, url=self.ws_uri)
-        delete_narrative(self.unauth_nar['ws'], self.private_token, url=self.ws_uri)
+        test_util.delete_narrative(self.public_nar['ws'], self.test_token, url=self.ws_uri)
+        test_util.delete_narrative(self.private_nar['ws'], self.test_token, url=self.ws_uri)
+        test_util.delete_narrative(self.unauth_nar['ws'], self.private_token, url=self.ws_uri)
 
     @classmethod
     def setUp(self):
@@ -121,19 +121,79 @@ class NarrIOTestCase(unittest.TestCase):
             self.mixin.narrative_exists(self.bad_nar_ref)
         self.assertIsNotNone(err)
 
+    def test_narrative_exists_noauth(self):
+        with self.assertRaises(PermissionsError) as err:
+            self.mixin.narrative_exists(self.private_nar['ref'])
+        self.assertIsNotNone(err)
+
     ##### test KBaseWSManagerMixin.read_narrative #####
  
+    def validate_narrative(self, nar, with_content, with_meta):
+        """
+        Validates a narrative object's overall structure.
+        We're just making sure that the right elements are expected 
+        to be here - we leave the IPython Notebook validation part to
+        the IPython test suite.
+        """
+        if nar is None:
+            return "Unable to validate null Narrative!"
+        if not isinstance(nar, dict):
+            return "Narrative needs to be a dict to be valid."
+
+        # expected keys:
+        exp_keys = ['info']
+        if with_content:
+            exp_keys = exp_keys + ['created', 'refs', 'provenance', 'creator', 
+                                   'copy_source_inaccessible', 'data', 'extracted_ids']
+        missing_keys = []
+        for key in exp_keys:
+            if not nar.has_key(key):
+                missing_keys.append(key)
+        if len(missing_keys) > 0:
+            return "Narrative object is missing the following keys: {}".format(', '.join(missing_keys))
+
+        if len(nar['info']) != 11:
+            return "Narrative info is incorrect: expected 11 elements, saw {}".format(len(nar['info']))
+
+        if with_meta:
+            if not nar['info'][10]:
+                return "Narrative metadata not returned when expected"
+            meta_keys = ['creator', 'data_dependencies', 'description', 'format', 'job_info', 'methods', 'name', 'type', 'ws_name']
+            missing_keys = []
+            for key in meta_keys:
+                if not nar['info'][10].has_key(key):
+                    missing_keys.append(key)
+            if len(missing_keys) > 0:
+                return "Narrative metadata is missing the following keys: {}".format(', '.join(missing_keys))
+        return None
+
     def test_read_narrative_valid_content_metadata(self):
-        pass
+        nar = self.mixin.read_narrative(self.public_nar['ref'], content=True, include_metadata=False)
+        self.assertIsNone(self.validate_narrative(nar, True, True))
 
     def test_read_narrative_valid_content_no_metadata(self):
-        pass
+        nar = self.mixin.read_narrative(self.public_nar['ref'], content=True, include_metadata=True)
+        self.assertIsNone(self.validate_narrative(nar, True, False))
 
     def test_read_narrative_valid_no_content_metadata(self):
-        pass
+        nar = self.mixin.read_narrative(self.public_nar['ref'], content=False, include_metadata=True)
+        self.assertIsNone(self.validate_narrative(nar, False, True))
 
     def test_read_narrative_valid_no_content_no_metadata(self):
-        pass
+        nar = self.mixin.read_narrative(self.public_nar['ref'], content=False, include_metadata=False)
+        self.assertIsNone(self.validate_narrative(nar, False, False))
+
+    def test_read_narrative_private_anon(self):
+        with self.assertRaises(PermissionsError) as err:
+            self.mixin.read_narrative(self.private_nar['ref'])
+        self.assertIsNotNone(err)
+
+    def test_read_narrative_unauth_login(self):
+        self.login()
+        with self.assertRaises(PermissionsError) as err:
+            self.mixin.read_narrative(self.unauth_nar['ref'])
+        self.assertIsNotNone(err)
+        self.logout()
 
     def test_read_narrative_invalid(self):
         with self.assertRaises(ServerError) as err:
@@ -162,12 +222,37 @@ class NarrIOTestCase(unittest.TestCase):
 
     ##### test KBaseWSManagerMixin.rename_narrative #####
 
-    def test_rename_narrative_valid(self):
-        pass
+    def test_rename_narrative_valid_auth(self):
+        new_name = "new_narrative_name"
+        self.login()
+        nar = self.mixin.read_narrative(self.private_nar['ref'], content=False, include_metadata=True)
+        cur_name = nar['info'][10]['name']
+        self.mixin.rename_narrative(self.private_nar['ref'], new_name)
+        nar = self.mixin.read_narrative(self.private_nar['ref'], content=False, include_metadata=True)
+        self.assertEquals(new_name, nar['info'][10]['name'])
+        self.logout()
+
+    def test_rename_narrative_valid_anon(self):
+        with self.assertRaises(PermissionsError) as err:
+            self.mixin.rename_narrative(self.public_nar['ref'], 'new_name')
+        self.assertIsNotNone(err)
+
+    def test_rename_narrative_unauth(self):
+        self.login()
+        with self.assertRaises(PermissionsError) as err:
+            self.mixin.rename_narrative(self.unauth_nar['ref'], 'new_name')
+        self.assertIsNotNone(err)
+        self.logout() 
 
     def test_rename_narrative_invalid(self):
-        pass
+        with self.assertRaises(ServerError) as err:
+            self.mixin.rename_narrative(self.invalid_nar_ref, 'new_name')
+        self.assertIsNotNone(err)
 
+    def test_rename_narrative_bad(self):
+        with self.assertRaises(ValueError) as err:
+            self.mixin.rename_narrative(self.bad_nar_ref, 'new_name')
+        self.assertIsNotNone(err)
 
     ##### test KBaseWSManagerMixin.copy_narrative #####
 

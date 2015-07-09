@@ -115,7 +115,7 @@
                                         .append($headerInfo))
                                 .append($('<div>')
                                         .addClass('panel-body')
-                                        .append($('<div>'))));
+                                        .append($('<div class="kb-cell-output-content" style="overflow-x:auto">'))));
             try {
                 require([widget], 
                     // If we successfully Require the widget code, render it:

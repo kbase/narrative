@@ -81,14 +81,14 @@ class NarrIOTestCase(unittest.TestCase):
         ws_client = self.mixin.ws_client()
         # it's anon if the header doesn't have an AUTHORIZATION field, or
         # that has a None value
-        self.assertTrue(not ws_client._headers.has_key('AUTHORIZATION') or 
+        self.assertTrue('AUTHORIZATION' not in ws_client._headers or 
                         ws_client._headers['AUTHORIZATION'] is None)
 
     # test we get a ws client when logged in, and it's authorized
     def test_get_wsclient_auth(self):
         self.login()
         ws_client = self.mixin.ws_client()
-        self.assertTrue(ws_client._headers.has_key('AUTHORIZATION') and 
+        self.assertTrue('AUTHORIZATION' in ws_client._headers and 
                         ws_client._headers['AUTHORIZATION'] is not None)
         self.logout()
 
@@ -141,15 +141,12 @@ class NarrIOTestCase(unittest.TestCase):
             return "Narrative needs to be a dict to be valid."
 
         # expected keys:
-        exp_keys = ['info']
+        exp_keys = set(['info'])
         if with_content:
-            exp_keys = exp_keys + ['created', 'refs', 'provenance', 'creator', 
-                                   'copy_source_inaccessible', 'data', 'extracted_ids']
-        missing_keys = []
-        for key in exp_keys:
-            if not nar.has_key(key):
-                missing_keys.append(key)
-        if len(missing_keys) > 0:
+            exp_keys.update(['created', 'refs', 'provenance', 'creator', 
+                             'copy_source_inaccessible', 'data', 'extracted_ids'])
+        missing_keys = exp_keys - set(nar.keys())
+        if missing_keys:
             return "Narrative object is missing the following keys: {}".format(', '.join(missing_keys))
 
         if len(nar['info']) != 11:
@@ -158,12 +155,9 @@ class NarrIOTestCase(unittest.TestCase):
         if with_meta:
             if not nar['info'][10]:
                 return "Narrative metadata not returned when expected"
-            meta_keys = ['creator', 'data_dependencies', 'description', 'format', 'job_info', 'methods', 'name', 'type', 'ws_name']
-            missing_keys = []
-            for key in meta_keys:
-                if not nar['info'][10].has_key(key):
-                    missing_keys.append(key)
-            if len(missing_keys) > 0:
+            meta_keys = set(['creator', 'data_dependencies', 'description', 'format', 'job_info', 'methods', 'name', 'type', 'ws_name'])
+            missing_keys = meta_keys - set(nar['info'][10])
+            if missing_keys:
                 return "Narrative metadata is missing the following keys: {}".format(', '.join(missing_keys))
         return None
 

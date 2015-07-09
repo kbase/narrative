@@ -21,6 +21,7 @@ from IPython.utils.traitlets import (
     TraitError
 )
 import re
+import json
 
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching
@@ -79,6 +80,12 @@ class KBaseWSManagerMixin(object):
         else:
             return err
 
+    def _ws_id_to_name(self, wsid):
+        try:
+            ws_info = self.ws_client().get_workspace_info({'id': wsid})
+            return ws_info[1]
+        except WorkspaceClient.ServerError, err:
+            raise self._ws_err_to_perm_err(err)
 
     def narrative_exists(self, obj_ref):
         """
@@ -109,28 +116,188 @@ class KBaseWSManagerMixin(object):
         """
 
         self._test_obj_ref(obj_ref)
-        nar_data = None
-        if content:
-            try:
+        try:
+            if content:
                 nar_data = self.ws_client().get_objects([{'ref':obj_ref}])
-                if len(nar_data) > 0:
-                    nar_data = nar_data[0]
-            except WorkspaceClient.ServerError, err:
-                raise self._ws_err_to_perm_err(err)
-        else:
-            try:
+                print "READ_NARRATIVE: {}".format(nar_data[0])
+                if nar_data:
+                    return nar_data[0]
+            else:
                 nar_data = self.ws_client().get_object_info_new({
                     'objects':[{'ref':obj_ref}],
                     'includeMetadata': 1 if include_metadata else 0
                 })
-                if len(nar_data) > 0:
-                    nar_data = {'info': nar_data[0]}
-            except WorkspaceClient.ServerError, err:
-                raise self._ws_err_to_perm_err(err)
-        return nar_data
+                if nar_data:
+                    return {'info': nar_data[0]}
+        except WorkspaceClient.ServerError, err:
+            raise self._ws_err_to_perm_err(err)
 
-    def write_narrative(self, obj_ref, content=True):
-        pass
+    def write_narrative(self, ws_id, obj_id, nb, cur_user):
+        """
+        Given a notebook, break this down into a couple parts:
+        1. Figure out what ws and obj to save to
+        2. Build metadata object
+        3. Save the narrative object (write_narrative)
+        4. Return any notebook changes.
+        """
+        # make sure the metadata's up to date.
+        try:
+            meta = nb['metadata']
+            if 'name' not in meta:
+                meta['name'] = 'Untitled'
+            if 'ws_name' not in meta:
+                meta['ws_name'] = os.environ.get('KB_WORKSPACE_ID', self._ws_id_to_name(ws_id))
+            if 'creator' not in meta:
+                meta['creator'] = cur_user
+            if 'type' not in meta:
+                meta['type'] = self.nar_type
+            if 'description' not in meta:
+                meta['description'] = ''
+            if 'data_dependencies' not in meta:
+                meta['data_dependencies'] = list()
+            if 'job_ids' not in meta:
+                meta['job_ids'] = {'methods' : [], 'apps' : [], 'job_usage': {'queue_time': 0, 'run_time': 0}}
+            if 'methods' not in meta['job_ids']:
+                meta['job_ids']['methods'] = list()
+            if 'apps' not in meta['job_ids']:
+                meta['job_ids']['apps'] = list()
+            if 'job_usage' not in meta['job_ids']:
+                meta['job_ids']['job_usage'] = {'queue_time': 0, 'run_time': 0}
+            meta['format'] = u'ipynb'
+
+            nb['metadata'] = meta
+        except PermissionsError as e:
+            raise
+        except Exception as e:
+            raise HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
+
+        # With that set, update the workspace metadata with the new info.
+        try:
+            updated_metadata = {
+                'is_temporary': 'false',
+                'narrative_nice_name': nb['metadata']['name']
+            }
+            self.ws_client().alter_workspace_metadata({'wsi': {'id': ws_id}, 'new':updated_metadata})
+        except Exception as e:
+            raise HTTPError(500, u'Error adjusting Narrative metadata: %s, %s' % (e.__str__(), ws_id))
+
+        # Now we can save the Narrative object.
+        try:
+            ws_save_obj = {
+                'type': self.nar_type,
+                'data': nb,
+                'objid': obj_id,
+                'meta': nb['metadata'].copy(),
+                'provenance': [{
+                    'service': u'narrative',
+                    'description': u'Saved by KBase Narrative Interface',
+                    'service_ver': unicode(biokbase.narrative.version())
+                }]
+            }
+            # no non-strings allowed in metadata!
+            ws_save_obj['meta']['data_dependencies'] = json.dumps(ws_save_obj['meta']['data_dependencies'])
+            ws_save_obj['meta']['methods'] = json.dumps(self._extract_cell_info(nb))
+
+            # Sort out job info we want to keep
+            # Gonna look like this, so init it that way
+            nb_job_usage = nb['metadata']['job_ids'].get('job_usage', {'queue_time':0, 'run_time':0})
+            job_info = {
+                'queue_time': nb_job_usage.get('queue_time', 0),
+                'run_time': nb_job_usage.get('run_time', 0),
+                'running': 0,
+                'completed': 0,
+                'error': 0
+            }
+            for job in nb['metadata']['job_ids']['methods'] + nb['metadata']['job_ids']['apps']:
+                status = job.get('status', 'running')
+                if status.startswith('complete'):
+                    job_info['completed'] += 1
+                elif 'error' in status:
+                    job_info['error'] += 1
+                else:
+                    job_info['running'] += 1
+            ws_save_obj['meta']['job_info'] = json.dumps(job_info)
+            if 'job_ids' in ws_save_obj['meta']:
+                ws_save_obj['meta'].pop('job_ids')
+
+            # clear out anything from metadata that doesn't have a string value
+            # This flushes things from IPython that we don't need as KBase object metadata
+            ws_save_obj['meta'] = {key: value for key, value in ws_save_obj['meta'].items() if isinstance(value, str) or isinstance(value, unicode)}
+            # for key in ws_save_obj['meta']:
+            #     if not isinstance(ws_save_obj['meta'][key], str) and not isinstance(ws_save_obj['meta'][key], unicode):
+            #         ws_save_obj['meta'].pop(key)
+
+            print ws_save_obj
+            # Actually do the save now!
+            self.log.debug("calling Workspace.save_objects")
+            obj_info = self.ws_client().save_objects({'id': ws_id,
+                                                      'objects': [ws_save_obj]})
+            self.log.debug("save_object returned object ref: {}/{}".format(obj_info[6], obj_info[0]))
+
+            # tweak the workspace's metadata to properly present its narrative
+            self.ws_client().alter_workspace_metadata({'wsi': {'id': ws_id}, 'new':{'narrative':obj_info[0][0]}})
+            return (nb, obj_info[6], obj_info[0])
+
+        except WorkspaceClient.ServerError, err:
+            raise self._ws_err_to_perm_err(err)
+
+        except Exception as e:
+            raise HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
+
+    def _extract_cell_info(self, nb):
+        """
+        This is an internal method that returns, as a dict, how many kb-method,
+        kb-app, and IPython cells exist in the notebook object.
+
+        For app and method cells, it counts them based on their method/app ids
+
+        In the end, it returns a dict like this:
+        {
+            'method': {
+                'my_method' : 2,
+                'your_method' : 1
+            },
+            'app': {
+                'my app' : 3
+            },
+            'ipython': {
+                'code' : 5,
+                'markdown' : 6
+            }
+        }
+        """
+        cell_types = {'method' : {},
+                      'app' : {},
+                      'output': 0,
+                      'ipython' : {'markdown': 0, 'code': 0}}
+        for cell in nb.get('cells'):
+            meta = cell['metadata']
+            if 'kb-cell' in meta:
+                t = None
+                # It's a KBase cell! So, either an app or method.
+                if 'type' in meta['kb-cell'] and meta['kb-cell']['type'] == 'function_output':
+                    cell_types['output'] = cell_types['output'] + 1
+                else:
+                    if 'app' in meta['kb-cell']:
+                        t = 'app'
+                    elif 'method' in meta['kb-cell']:
+                        t = 'method'
+                    else:
+                        # that should cover our cases
+                        continue
+                    if t is not None:
+                        try:
+                            count = 1
+                            app_id = meta['kb-cell'][t]['info']['id']
+                            if app_id in cell_types[t]:
+                                count = cell_types[t][app_id] + 1
+                            cell_types[t][app_id] = count
+                        except KeyError:
+                            continue
+            else:
+                t = cell['cell_type']
+                cell_types['ipython'][t] = cell_types['ipython'][t] + 1
+        return cell_types
 
     def rename_narrative(self, obj_ref, new_name, content=True):
         try:

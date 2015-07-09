@@ -23,7 +23,7 @@ import re
 import importlib
 # Third-party
 from unicodedata import normalize
-from tornado import web
+from tornado.web import HTTPError
 # IPython
 from IPython import nbformat
 from IPython.html.services.contents.manager import ContentsManager
@@ -36,7 +36,7 @@ from IPython.utils import tz
 
 # Local
 from .manager_util import base_model
-from .narrativeio import KBaseWSManagerMixin
+from .narrativeio import KBaseWSManagerMixin, PermissionsError
 import biokbase.narrative.ws_util as ws_util
 from biokbase.workspace.client import Workspace
 import biokbase.narrative.common.service as service
@@ -115,7 +115,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """Verify that we can connect to the configured WS instance"""
         super(KBaseWSManager, self).__init__(*args, **kwargs)
         if not self.kbasews_uri:
-            raise web.HTTPError(412, u"Missing KBase workspace service endpoint URI.")
+            raise HTTPError(412, u"Missing KBase workspace service endpoint URI.")
 
         # Map Narrative ids to notebook names
         mapping = Dict()
@@ -131,14 +131,15 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             wsclient = self.wsclient()
             wsclient.ver()
         except Exception as e:
-            raise web.HTTPError(500, u"Unable to connect to workspace service"
-                                     u" at %s: %s " % (self.kbasews_uri, e))
+            raise HTTPError(500, u"Unable to connect to workspace service"
+                                 u" at %s: %s " % (self.kbasews_uri, e))
 
     def get_userid(self):
         """Return the current user id (if logged in), or None
         """
 
-        t = biokbase.auth.Token()
+        t = biokbase.auth.Token(user_id='kbasetest', password='')
+        os.environ['KB_AUTH_TOKEN'] = t.token
         if (t is not None):
             return self.kbase_session.get('user_id', t.user_id)
         else:
@@ -158,8 +159,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     # API part 1: methods that must be implemented in subclasses.        
     #####
     def dir_exists(self, path):
-        print "dir_exists: {}".format(path)
-        print self.info_string()
         # if it's blank, just return True - 
         # we'll be looking up the list of all Narratives soon.
         if not path:
@@ -173,18 +172,15 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         return False
 
     def file_exists(self, path):
-        print "PATH: {}".format(path)
-        print "file_exists: {}".format(path)
+        print "FILE EXISTS: {}".format(path)
+        path = path.strip('/')
         obj_ref = self._obj_ref_from_path(path)
         return self.narrative_exists(obj_ref)
 
     def exists(self, path):
-        print "exists: {}".format(path)
         path = path.strip('/')
-
         if not path: # it's a directory, for all narratives
             return True
-
         return self.file_exists(path)
 
     def _wsobj_to_model(self, nar, content=True):
@@ -198,13 +194,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         # model['format'] = 'v3'
         return model
 
-    def _obj_id_from_path(self, path):
-        m = self.ws_regex.match(path)
-        if m:
-            return path
-        else:
-            return None
-
     def _obj_ref_from_path(self, path):
         m = self.ws_regex.match(path)
         if m is None:
@@ -214,6 +203,16 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             ref = ref + '/{}'.format(m.group('ver'))
         return ref
 
+    def _parse_path(self, path):
+        m = self.ws_regex.match(path)
+        if m is None:
+            return None
+        return {
+            'wsid': m.group('wsid'),
+            'objid': m.group('objid'),
+            'ver': m.group('ver')
+        }
+
     def get(self, path, content=True, type=None, format=None):
         """Get the model of a file or directory with or without content."""
         path = path.strip('/')
@@ -221,26 +220,27 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         model = base_model(path, path)
         if self.exists(path) and type != 'directory':
             #It's a narrative object, so try to fetch it.
-            obj_ref = self._obj_ref_from_path(path)
-            if obj_ref:
-                try:
-                    nar_obj = self.read_narrative(obj_ref, content)
-                    user = self.get_userid()
-                    model['type'] = 'notebook'
+            obj_ref = self._parse_path(path)
+            if not obj_ref:
+                raise HTTPError(404, u'Unknown Narrative "{}"'.format(path))
+            try:
+                nar_obj = self.read_narrative('{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), content)
+                model['type'] = 'notebook'
+                user = self.get_userid()
+                if content:
                     model['format'] = 'json'
-                    if user is not None:
-                        model['writable'] = self.narrative_writable(obj_ref, user)
-
-                    if content:
-                        jsonnb = json.dumps(nar_obj['data'])
-                        model['content'] = nbformat.reads(jsonnb, 4) #json.dumps(nar_obj['data'])
-                        os.environ['KB_WORKSPACE_ID'] = model['content'].metadata.ws_name
-                except web.HTTPError:
-                    raise
-                except Exception as e:
-                    raise web.HTTPError(500, 'An error occurred while fetching your narrative: {}'.format(e))
-            else:
-                raise web.HTTPError(404, 'Unknown Narrative "{}"'.format(path))
+                    jsonnb = json.dumps(nar_obj['data'])
+                    model['content'] = nbformat.reads(jsonnb, 4)
+                    os.environ['KB_WORKSPACE_ID'] = model['content'].metadata.ws_name
+                    self._set_narrative_env('ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid']))
+                if user is not None:
+                    model['writable'] = self.narrative_writable('{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), user)
+            except HTTPError:
+                raise
+            except PermissionsError as e:
+                raise HTTPError(403, e)
+            except Exception as e:
+                raise HTTPError(500, u'An error occurred while fetching your narrative: {}'.format(e))
 
         if not path or type == 'directory':
             #if it's the empty string, look up all narratives, treat them as a dir
@@ -261,7 +261,46 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         Save implementations should call self.run_pre_save_hook(model=model, path=path)
         prior to writing any data.
         """
-        raise NotImplementedError('saving not implemented yet')
+        path = path.strip('/')
+        match = self.ws_regex.match(path)
+
+        print model
+        print path
+
+        if 'type' not in model:
+            raise HTTPError(400, u'No IPython model type provided')
+        if model['type'] != 'notebook':
+            raise HTTPError(400, u'We currently only support saving Narratives!')
+        if 'content' not in model and model['type'] != 'directory':
+            raise HTTPError(400, u'No Narrative content found while trying to save')
+
+        self.log.debug("writing Narrative %s." % path)
+        nb = nbformat.from_dict(model['content'])
+        self.check_and_sign(nb, path)
+
+        try:
+            result = self.write_narrative(match.group('wsid'), match.group('objid'), nb, self.get_userid())
+
+            new_id = "ws.%s.obj.%s" % (res[1], res[2])
+            self._set_narrative_env(new_id)
+
+            nb = result[0]
+            self.validate_notebook_model(model)
+            return model.get('message')
+
+        except PermissionsError as err:
+            raise HTTPError(403, err.message)
+        except Exception as err:
+            raise HTTPError(500, u'An error occurred while saving your Narrative: {}'.format(err))
+            """
+            once I get the function written, I'll fill this in with what kind of 
+            HTTP Errors to use - Permission's a given, also ...
+            - WS not found
+            - malformatted
+            - missing info
+            - too large
+            - ...?
+            """
 
     def delete_file(self, path):
         """Delete file or directory by path."""
@@ -301,18 +340,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     # def info_string(self):
     #     return "Serving contents"
-
-    # def get_kernel_path(self, path, model=None):
-    #     """Return the API path for the kernel
-        
-    #     KernelManagers can turn this value into a filesystem path,
-    #     or ignore it altogether.
-
-    #     The default value here will start kernels in the directory of the
-    #     notebook server. FileContentsManager overrides this to use the
-    #     directory containing the notebook.
-    #     """
-    #     return ''
 
     def increment_filename(self, filename, path='', insert=''):
         """Increment a filename until it is unique.
@@ -573,7 +600,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         try:
             (homews, homews_id) = ws_util.check_homews(wsclient, user_id)
         except Exception as e:
-            raise web.HTTPError(401, u'User must be logged in to access their workspaces')
+            raise HTTPError(401, u'User must be logged in to access their workspaces')
 
         # Have IPython create a new, empty notebook
         nb = nbformat.v4.new_notebook()
@@ -591,7 +618,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             nb.metadata.job_ids = { 'methods' : [], 'apps' : [], 'job_usage' : { 'run_time': 0, 'queue_time': 0 } }
             nb.metadata.format = self.node_format
         except Exception as e:
-            raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
+            raise HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
         try:
             wsobj = {
                       'type' : self.ws_type,
@@ -609,7 +636,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             res = ws_util.put_wsobj(wsclient, wsid, wsobj)
             self.log.debug("save_object returned %s" % res)
         except Exception as e:
-            raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
+            raise HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
         # use "ws.ws_id.obj.object_id" as the identifier
         id = "ws.%s.obj.%s" % (res['wsid'], res['objid'])
         self._set_narrative_env(id)
@@ -622,7 +649,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         self.log.debug("delete_notebook_id(%s)"%(notebook_id))
         user_id = self.get_userid()
         if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine valid user identity!')
+            raise HTTPError(400, u'Cannot determine valid user identity!')
         if notebook_id in self.mapping:
             name = self.mapping[notebook_id]
             super(KBaseWSNotebookManager, self).delete_notebook_id(notebook_id)
@@ -635,7 +662,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """
         user_id = self.get_userid()
         if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine valid user identity!')
+            raise HTTPError(400, u'Cannot determine valid user identity!')
         # Look for it in the currently loaded map
         exists = super(KBaseWSNotebookManager, self).notebook_exists(notebook_id)
         self.log.debug("notebook_exists(%s) = %s"%(notebook_id,exists))
@@ -666,7 +693,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             name = self.mapping[notebook_id]
             self.log.debug("get_name(%s) = %s" % (notebook_id, name))
         except KeyError:
-            raise web.HTTPError(404, u'Narrative does not exist: %s' % notebook_id)
+            raise HTTPError(404, u'Narrative does not exist: %s' % notebook_id)
         return name
 
     def read_notebook_object(self, notebook_id):
@@ -685,11 +712,11 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         self.log.debug("Reading Narrative %s." % notebook_id)
         user_id = self.get_userid()
         if user_id is None:
-            raise web.HTTPError(400, u'Missing user identity from kbase_session object')
+            raise HTTPError(400, u'Missing user identity from kbase_session object')
         try:
             wsobj = ws_util.get_wsobj(self.wsclient(), notebook_id, self.ws_type)
         except ws_util.BadWorkspaceID, e:
-            raise web.HTTPError(500, u'Narrative %s not found: %s' % (notebook_id, e))
+            raise HTTPError(500, u'Narrative %s not found: %s' % (notebook_id, e))
 
         if 'notebook' in wsobj['data']:
             #
@@ -755,61 +782,61 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     #                     continue
     #     return list(deps)
 
-    def extract_cell_info(self, nb):
-        """
-        This is an internal method that returns, as a dict, how many kb-method,
-        kb-app, and IPython cells exist in the notebook object.
+    # def extract_cell_info(self, nb):
+    #     """
+    #     This is an internal method that returns, as a dict, how many kb-method,
+    #     kb-app, and IPython cells exist in the notebook object.
 
-        For app and method cells, it counts them based on their method/app ids
+    #     For app and method cells, it counts them based on their method/app ids
 
-        In the end, it returns a dict like this:
-        {
-            'method': {
-                'my_method' : 2,
-                'your_method' : 1
-            },
-            'app': {
-                'my app' : 3
-            },
-            'ipython': {
-                'code' : 5,
-                'markdown' : 6
-            }
-        }
-        """
-        cell_types = {'method' : {},
-                      'app' : {},
-                      'output': 0,
-                      'ipython' : {'markdown': 0, 'code': 0}}
-        for wksheet in nb.get('worksheets'):
-            for cell in wksheet.get('cells'):
-                meta = cell['metadata']
-                if 'kb-cell' in meta:
-                    t = None
-                    # It's a KBase cell! So, either an app or method.
-                    if 'type' in meta['kb-cell'] and meta['kb-cell']['type'] == 'function_output':
-                        cell_types['output'] = cell_types['output'] + 1
-                    else:
-                        if 'app' in meta['kb-cell']:
-                            t = 'app'
-                        elif 'method' in meta['kb-cell']:
-                            t = 'method'
-                        else:
-                            # that should cover our cases
-                            continue
-                        if t is not None:
-                            try:
-                                count = 1
-                                app_id = meta['kb-cell'][t]['info']['id']
-                                if app_id in cell_types[t]:
-                                    count = cell_types[t][app_id] + 1
-                                cell_types[t][app_id] = count
-                            except KeyError:
-                                continue
-                else:
-                    t = cell['cell_type']
-                    cell_types['ipython'][t] = cell_types['ipython'][t] + 1
-        return cell_types
+    #     In the end, it returns a dict like this:
+    #     {
+    #         'method': {
+    #             'my_method' : 2,
+    #             'your_method' : 1
+    #         },
+    #         'app': {
+    #             'my app' : 3
+    #         },
+    #         'ipython': {
+    #             'code' : 5,
+    #             'markdown' : 6
+    #         }
+    #     }
+    #     """
+    #     cell_types = {'method' : {},
+    #                   'app' : {},
+    #                   'output': 0,
+    #                   'ipython' : {'markdown': 0, 'code': 0}}
+    #     for wksheet in nb.get('worksheets'):
+    #         for cell in wksheet.get('cells'):
+    #             meta = cell['metadata']
+    #             if 'kb-cell' in meta:
+    #                 t = None
+    #                 # It's a KBase cell! So, either an app or method.
+    #                 if 'type' in meta['kb-cell'] and meta['kb-cell']['type'] == 'function_output':
+    #                     cell_types['output'] = cell_types['output'] + 1
+    #                 else:
+    #                     if 'app' in meta['kb-cell']:
+    #                         t = 'app'
+    #                     elif 'method' in meta['kb-cell']:
+    #                         t = 'method'
+    #                     else:
+    #                         # that should cover our cases
+    #                         continue
+    #                     if t is not None:
+    #                         try:
+    #                             count = 1
+    #                             app_id = meta['kb-cell'][t]['info']['id']
+    #                             if app_id in cell_types[t]:
+    #                                 count = cell_types[t][app_id] + 1
+    #                             cell_types[t][app_id] = count
+    #                         except KeyError:
+    #                             continue
+    #             else:
+    #                 t = cell['cell_type']
+    #                 cell_types['ipython'][t] = cell_types['ipython'][t] + 1
+    #     return cell_types
 
 
     def write_notebook_object(self, nb, notebook_id=None):
@@ -818,7 +845,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         wsclient = self.wsclient()
         user_id = self.get_userid()
         if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine user identity from '
+            raise HTTPError(400, u'Cannot determine user identity from '
                                      u'session information')
 
         # we don't rename anymore--- we only set the name in the metadata
@@ -860,7 +887,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             nb.metadata.format = self.node_format
 
         except Exception as e:
-            raise web.HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
+            raise HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
 
 
         # First, init wsid and wsobj, since they'll be used later
@@ -895,7 +922,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             };
             ws_util.alter_workspace_metadata(wsclient, None, updated_metadata, ws_id=wsid)
         except Exception as e:
-            raise web.HTTPError(500, u'Error saving Narrative: %s, %s' % (e.__str__(), wsid))
+            raise HTTPError(500, u'Error saving Narrative: %s, %s' % (e.__str__(), wsid))
 
         # Now we can save the Narrative object.
         try:
@@ -972,7 +999,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             #    res = ws_util.rename_wsobj(wsclient, identity, new_name)
 
         except Exception as e:
-            raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
+            raise HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
         # use "ws.ws_id.obj.object_id" as the identifier
         id = "ws.%s.obj.%s" % (res['wsid'], res['objid'])
         self.mapping[id] = "%s/%s" % (res['workspace'], res['name'])
@@ -985,9 +1012,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         wsclient = self.wsclient()
         user_id = self.get_userid()
         if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine user identity from session information')
+            raise HTTPError(400, u'Cannot determine user identity from session information')
         if notebook_id is None:
-            raise web.HTTPError(400, u'Missing Narrative id')
+            raise HTTPError(400, u'Missing Narrative id')
         self.log.debug("deleting Narrative %s", notebook_id)
         m = self.ws_regex.match(notebook_id)
         if m:
@@ -1037,36 +1064,3 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     def _set_narrative_env(self, id_):
         """Set the narrative id into the environment"""
         util.kbase_env.narrative = id_
-#
-# This is code that patches the regular expressions used in the default routes
-# of tornado handlers. IPython installs handlers that recognize a UUID as the
-# kbase notebook id, but we're using workspace_name.object_id so the routes
-# need to be updated otherwise you can't reach the handlers.
-#
-# We use these to modify the routes installed by the notebook
-# handlers in the main IPython code without having to change the IPython code
-# directly
-#
-# def handler_route_replace(handlers,oldre,newre):
-#     """ Look for a regex in a tornado routing table and replace it with a new one"""
-#     if len(handlers) > 0:
-#         findre = re.escape(oldre)
-#         for i in range(0,len(handlers)):
-#             (route,handler) = handlers[i]
-#             route2 = re.sub(findre,newre,route)
-#             if route2 != route:
-#                 handlers[i] = (route2,handler)
-
-# # Patch the url regex to match our workspace identifiers
-# import IPython.html.base.handlers
-
-# tgt_handlers = ('IPython.html.notebook.handlers',
-#                 'IPython.html.services.notebooks.handlers')
-# for handlerstr in tgt_handlers:
-#     IPython.html.base.handlers.app_log.debug("Patching routes in %s.default_handler" % handlerstr)
-#     handler = importlib.import_module(handlerstr)
-#     handler_route_replace(handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>ws\.\d+\.obj\.\d+)')
-
-# # Load the plupload handler
-# import upload_handler
-# upload_handler.insert_plupload_handler()

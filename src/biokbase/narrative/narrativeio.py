@@ -5,6 +5,7 @@ Implements the KBaseWSManagerMixin class.
 
 import biokbase.auth
 import biokbase.narrative.common.service as service
+from biokbase.narrative.common import util
 import biokbase.workspace
 from biokbase.workspace import client as WorkspaceClient
 from tornado.web import HTTPError
@@ -119,7 +120,6 @@ class KBaseWSManagerMixin(object):
         try:
             if content:
                 nar_data = self.ws_client().get_objects([{'ref':obj_ref}])
-                print "READ_NARRATIVE: {}".format(nar_data[0])
                 if nar_data:
                     return nar_data[0]
             else:
@@ -146,7 +146,7 @@ class KBaseWSManagerMixin(object):
             if 'name' not in meta:
                 meta['name'] = 'Untitled'
             if 'ws_name' not in meta:
-                meta['ws_name'] = os.environ.get('KB_WORKSPACE_ID', self._ws_id_to_name(ws_id))
+                meta['ws_name'] = util.kbase_env.workspace or self._ws_id_to_name(ws_id)
             if 'creator' not in meta:
                 meta['creator'] = cur_user
             if 'type' not in meta:
@@ -184,7 +184,7 @@ class KBaseWSManagerMixin(object):
         # Now we can save the Narrative object.
         try:
             ws_save_obj = {
-                'type': self.nar_type,
+                'type': self.nar_type + '-4.0',
                 'data': nb,
                 'objid': obj_id,
                 'meta': nb['metadata'].copy(),
@@ -223,19 +223,15 @@ class KBaseWSManagerMixin(object):
             # clear out anything from metadata that doesn't have a string value
             # This flushes things from IPython that we don't need as KBase object metadata
             ws_save_obj['meta'] = {key: value for key, value in ws_save_obj['meta'].items() if isinstance(value, str) or isinstance(value, unicode)}
-            # for key in ws_save_obj['meta']:
-            #     if not isinstance(ws_save_obj['meta'][key], str) and not isinstance(ws_save_obj['meta'][key], unicode):
-            #         ws_save_obj['meta'].pop(key)
 
-            print ws_save_obj
             # Actually do the save now!
             self.log.debug("calling Workspace.save_objects")
             obj_info = self.ws_client().save_objects({'id': ws_id,
-                                                      'objects': [ws_save_obj]})
+                                                      'objects': [ws_save_obj]})[0]
             self.log.debug("save_object returned object ref: {}/{}".format(obj_info[6], obj_info[0]))
 
             # tweak the workspace's metadata to properly present its narrative
-            self.ws_client().alter_workspace_metadata({'wsi': {'id': ws_id}, 'new':{'narrative':obj_info[0][0]}})
+            self.ws_client().alter_workspace_metadata({'wsi': {'id': ws_id}, 'new':{'narrative':obj_info[0]}})
             return (nb, obj_info[6], obj_info[0])
 
         except WorkspaceClient.ServerError, err:

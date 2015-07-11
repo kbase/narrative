@@ -2,7 +2,7 @@
 
 installPath=`pwd`
 venv="narrative-venv"
-branch="3.x"
+branch="master"
 commit="" 
 profile_name="narrative"
 # set to your python
@@ -80,14 +80,10 @@ printf "Creating virtual environment $venv...\n"
 virtualenv --python=$PYTHON --system-site-packages $installPath/$venv
 
 printf "Pulling ipython branch $branch from github...\n"
-git clone https://github.com/ipython/ipython.git -b $branch
-# pull this fork until an issue is resolved
-#git clone https://github.com/mlhenderson/ipython.git
+git clone --recursive https://github.com/ipython/ipython.git -b $branch
 
 # Move into the ipython git directory to run the install
 cd ipython
-git submodule init
-git submodule update
 
 if [ -n "$commit" ]; then
     printf "Pulling commit $commit...\n"

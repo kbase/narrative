@@ -62,7 +62,7 @@ c = get_config()
 # c.IPKernelApp.log_level = 30
 
 # lines of code to run at IPython startup.
-# c.IPKernelApp.exec_lines = []
+c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.narrative.services import *' ]
 
 # Path to an extra config file to load.
 # 
@@ -361,7 +361,7 @@ c = get_config()
 #     to the contents of the file.
 
 # Username for the Session. Default is your system username.
-# c.Session.username = u'wjriehl'
+# c.Session.username = u''
 
 # The name of the unpacker for unserializing messages. Only used with custom
 # functions for `packer`.

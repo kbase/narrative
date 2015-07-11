@@ -1,7 +1,6 @@
 # Configuration file for ipython-notebook.
 
 c = get_config()
-
 #------------------------------------------------------------------------------
 # NotebookApp configuration
 #------------------------------------------------------------------------------
@@ -18,7 +17,7 @@ c = get_config()
 # c.NotebookApp.jinja_environment_options = {}
 
 # The IP address the notebook server will listen on.
-# c.NotebookApp.ip = 'localhost'
+c.NotebookApp.ip = 'localhost'
 
 # DEPRECATED use base_url
 # c.NotebookApp.base_project_url = '/'
@@ -42,6 +41,8 @@ c = get_config()
 # The default URL to redirect to from `/`
 # c.NotebookApp.default_url = '/tree'
 
+c.NotebookApp.kbase_auth = True
+
 # Whether to open in a browser after starting. The specific browser used is
 # platform dependent and determined by the python standard library `webbrowser`
 # module, unless it is overridden using the --browser (NotebookApp.browser)
@@ -52,7 +53,7 @@ c = get_config()
 # c.NotebookApp.log_datefmt = '%Y-%m-%d %H:%M:%S'
 
 # The port the notebook server will listen on.
-# c.NotebookApp.port = 8888
+c.NotebookApp.port = 8888
 
 # Whether to overwrite existing config files when copying
 # c.NotebookApp.overwrite = False
@@ -72,7 +73,8 @@ c = get_config()
 # c.NotebookApp.allow_origin = ''
 
 # The notebook manager class to use.
-c.NotebookApp.contents_manager_class = 'biokbase.narrative.kbasewsmanager3.KBaseWSManager' #'IPython.html.services.contents.filemanager.FileContentsManager'
+c.NotebookApp.contents_manager_class = 'biokbase.narrative.kbasewsmanager3.KBaseWSManager' 
+#'IPython.html.services.contents.filemanager.FileContentsManager'
 
 # Use a regular expression for the Access-Control-Allow-Origin header
 # 
@@ -89,7 +91,7 @@ c.NotebookApp.contents_manager_class = 'biokbase.narrative.kbasewsmanager3.KBase
 # c.NotebookApp.certfile = u''
 
 # The logout handler class to use.
-# c.NotebookApp.logout_handler_class = <class 'IPython.html.auth.logout.LogoutHandler'>
+c.NotebookApp.logout_handler_class = 'biokbase.narrative.authhandlers.KBaseLogoutHandler'
 
 # The base URL for the notebook server.
 # 
@@ -101,7 +103,7 @@ c.NotebookApp.contents_manager_class = 'biokbase.narrative.kbasewsmanager3.KBase
 
 # Supply overrides for the tornado.web.Application that the IPython notebook
 # uses.
-# c.NotebookApp.tornado_settings = {}
+c.NotebookApp.tornado_settings = { 'compress_response': True }
 
 # The directory to use for notebooks and kernels.
 # c.NotebookApp.notebook_dir = u''
@@ -208,6 +210,7 @@ c.NotebookApp.contents_manager_class = 'biokbase.narrative.kbasewsmanager3.KBase
 
 # The login handler class to use.
 # c.NotebookApp.login_handler_class = <class 'IPython.html.auth.login.LoginHandler'>
+c.NotebookApp.login_handler_class = 'biokbase.narrative.authhandlers.KBaseLoginHandler'
 
 # DEPRECATED, use tornado_settings
 # c.NotebookApp.webapp_settings = {}

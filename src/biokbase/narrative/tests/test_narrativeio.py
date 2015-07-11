@@ -31,11 +31,11 @@ class NarrIOTestCase(unittest.TestCase):
         config.read('test.cfg')
 
         self.test_user = config.get('users', 'test_user')
-        self.test_pwd = getpass('Password for {}: '.format(self.test_user))
+        self.test_pwd = '@Suite525' #getpass('Password for {}: '.format(self.test_user))
         self.test_token = biokbase.auth.Token(user_id=self.test_user, password=self.test_pwd)
 
         self.private_user = config.get('users', 'private_user')
-        self.private_pwd = getpass('Password for {}: '.format(self.private_user))
+        self.private_pwd = '@Suite525' #getpass('Password for {}: '.format(self.private_user))
         self.private_token = biokbase.auth.Token(user_id=self.private_user, password=self.private_pwd)
 
         self.ws_uri = config.get('urls', 'workspace')

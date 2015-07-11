@@ -142,7 +142,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     def get_userid(self):
         """Return the current user id (if logged in), or None
         """
-        t = biokbase.auth.token()
+        t = biokbase.auth.Token()
         if (t is not None):
             return self.kbase_session.get('user_id', t.user_id)
         else:

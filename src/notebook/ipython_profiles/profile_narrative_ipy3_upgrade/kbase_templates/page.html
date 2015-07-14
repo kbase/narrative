@@ -14,6 +14,43 @@
     <link rel="stylesheet" href="{{ static_url("style/style.min.css") }}" type="text/css"/>
     {% endblock %}
     <link rel="stylesheet" href="{{ static_url("custom/custom.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrative.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseIcons.css") }}"  type="text/css"/>
+    <link rel="stylesheet" href="{{ static_url("kbase/js/ui-common/ext/font-awesome/4.2.0/css/font-awesome.min.css") }}" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
+
+    <script src="{{ static_url("components/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script>
+        /**
+         * A snippet of code to check the browser's version and alert the user if they're using IE <= 9.0.
+         * This puts a flag in sessionStorage - as long as that flag's there, the check won't be done again
+         * (to avoid having the same thing happen on page refreshes and such).
+         *
+         * This uses Bowser to detect the browser and version:
+         * https://github.com/ded/bowser
+         */
+        function checkBrowser() {
+            var redirectUrl = 'kbase.us/user-support/messages/unsupported-browser';
+
+            if (bowser.msie && bowser.version <= 9) {
+                var protocol = window.location.protocol;
+                window.location = protocol + redirectUrl;
+            }
+        }
+        checkBrowser();
+    </script>
+    <script>
+        /* Google Analaytics */
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-48256002-1', 'kbase.us');
+        ga('send', 'pageview');
+    </script>
+
+
     <script src="{{static_url("components/es6-promise/promise.min.js")}}" type="text/javascript" charset="utf-8"></script>
     <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -74,14 +111,93 @@
 
 <body class="{% block bodyclasses %}{% endblock %}" {% block params %}{% endblock %}>
 
-<noscript>
-    <div id='noscript'>
-      IPython Notebook requires JavaScript.<br>
-      Please enable it to proceed.
-  </div>
-</noscript>
+    <noscript>
+        <div id='noscript'>
+          IPython Notebook requires JavaScript.<br>
+          Please enable it to proceed.
+      </div>
+    </noscript>
 
-<div id="header">
+    {% block loading_message %}
+    <div id="kb-wait-for-ws">
+        <img src="{{ static_url("kbase/images/kbase_logo_rect.png") }}"
+                class="kb-logo"></img>
+        <div id="kb-wait-for-ws-loader">
+            <i class="fa fa-4x fa-spinner fa-spin"></i>
+        </div>
+        <p>Connecting to KBase services...</p>
+    </div>
+    {% endblock %}
+
+    <nav class="navbar-kbase navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <div style="display:inline-block">
+                    <button id="kb-nav-menu" class="btn btn-default navbar-btn kb-nav-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="fa fa-navicon"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="kb-nav-menu">
+                        <!-- li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li -->
+                        <li><a href="/functional-site/#/search/?q=*" target="_blank">Search Data</a></li>
+                        <li><a href="/functional-site/#/dashboard" target="_blank">Dashboard</a></li>
+                        <li><a id="kb-status-btn" href="" target="_blank">KBase Service Status</a></li>
+                        <li role="presentation" class="divider"></li>
+                        <li><a id="kb-about-btn">About the Narrative</a></li>
+                        <li><a target="_blank" href="https://kbase.us/narrative-guide/">Narrative User Guide</a></li>
+                        <li><a target="_blank" href="https://kbase.us/contact-us/">Contact Us</a></li>
+                    </ul>
+                </div>
+                <a href="http://www.kbase.us">
+                    <img id="logo" src="static/kbase/images/kbase_logo.png" width="46">
+                </a>
+            </div>
+            <div class="navbar-text kb-narr-namestamp">
+                <div id="kb-narr-name">
+                    <span id="name">Narrative Name</span>
+                    &nbsp;&nbsp;
+                    <span id="save_widget">
+                        <span id="checkpoint_status"></span>
+                        <span id="autosave_status"></span>
+                    </span>
+                </div>
+                <div>Created by: <span id="kb-narr-creator">KBase User</span>
+                    <span id="kb-view-mode">
+                        <span class="fa fa-pencil"></span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="navbar-right">
+                <span class="kb-navbar-buttons">
+                    <button id="kb-update-btn" class="btn btn-default navbar-btn kb-nav-btn kb-nav-btn-upgrade">
+                        <div class="fa fa-refresh fa-spin"></div>
+                        <div class="kb-nav-btn-txt">Get new version!</div>
+                    </button>
+                    <div class="btn-group">
+                        <button id="kb-ipy-menu" class="btn btn-default navbar-btn kb-nav-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <div id="kb-kernel-icon" class="fa fa-circle-o"><span class="caret"></div>
+                            <div class="kb-nav-btn-txt">kernel</div>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="kb-ipy-menu">
+                            <li><a id="kb-kernel-int-btn"><span class="fa fa-times"></span> Interrupt</a></li>
+                            <li><a id="kb-kernel-ref-btn"><span class="fa fa-refresh"></span> Restart</a></li>
+                            <li><a id="kb-kernel-rec-btn"><span class="fa fa-power-off"></span> Reconnect</a></li>
+                        </ul>
+                    </div>
+                    <button id="kb-share-btn" class="btn btn-default navbar-btn kb-nav-btn">
+                      <div class="fa fa-share-alt"></div>
+                      <div class="kb-nav-btn-txt">share</div>
+                    </button>
+                    <button id="kb-save-btn" class="btn btn-default navbar-btn kb-nav-btn">
+                        <div class="fa fa-save"></div>
+                        <div class="kb-nav-btn-txt">save</div>
+                    </button>
+                </span>
+                <span id="signin-button"></span>
+            </div>
+        </div>
+    </nav>
+<!-- <div id="header">
   <div id="header-container" class="container">
   <div id="ipython_notebook" class="nav navbar-brand pull-left"><a href="{{default_url}}" title='dashboard'>{% block logo %}<img src='{{static_url("base/images/logo.png") }}' alt='Jupyter Notebook'/>{% endblock %}</a></div>
 
@@ -108,7 +224,7 @@
 
   {% block header %}
   {% endblock %}
-</div>
+</div> -->
 
 <div id="site">
 {% block site %}

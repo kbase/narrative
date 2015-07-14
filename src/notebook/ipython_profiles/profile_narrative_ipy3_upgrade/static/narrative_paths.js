@@ -191,7 +191,7 @@ require.config({
                     'kbaseTabTableTabs']
         },
         'kbapi' : {
-            deps : ['jquery', 'bootstrap']
+            deps : ['jquery', 'bootstrap', 'kbase-client-api']
         },
         'kbase-client-api' : {
             deps : ['jquery']

@@ -157,21 +157,7 @@ define(['jquery',
 
         console.log('Loading KBase Narrative setup routine.');
 
-// require(['domReady!', 'kbwidget', 'kbapi', 'kbase-client-api'], function() {
-//     require(['kbaseNarrativePrestart', 
-//              'kbaseLogging', 
-//              'narrativeLogin', 
-//              'kbaseNarrativeOutputCell', 
-//              'kbaseNarrativeAppCell',
-//              'kbaseNarrativeMethodCell',
-//              'IPythonCustom', 
-//              ], function() {
-//         console.log('Done with code loading, Starting IPython...');
-//         require(['IPythonMain']);
-//     });
-
-
-        $([IPython.events]).on('app_initialized.NotebookApp', function() {
+        // $([IPython.events]).on('app_initialized.NotebookApp', function() {
             $.getScript('/static/narrative_paths.js', function() {
                 console.log('Performing narrative startup');
 
@@ -239,11 +225,8 @@ define(['jquery',
                     IPython.narrative = new Narrative();
                     IPython.narrative.init();
                 });
-                // require(['kbasePrompt'], function() {
-                //     $('body').kbasePrompt().openPrompt();
-                // });
             });
-        });
+        // });
 
     }
 );

@@ -83,7 +83,6 @@ class KBaseLoginHandler(LoginHandler):
 
 
     def post(self):
-        print("KBaseLoginHandler.post")
         pass
 
     @classmethod

@@ -180,11 +180,22 @@ c.NotebookApp.tornado_settings = { 'compress_response': True }
 # If specified, load this config file in addition to any other IPython config.
 # c.NotebookApp.extra_config_file = u''
 
+
+import os
+try:
+    myfile = __file__
+except NameError:
+    myfile = os.path.abspath(inspect.getsourcefile(lambda _: None))
+
+myfile = os.path.dirname(myfile)
+
+
 # Extra paths to search for serving static files.
 # 
 # This allows adding javascript/css to be available from the notebook server
 # machine, or overriding individual files in the IPython
-# c.NotebookApp.extra_static_paths = []
+
+# c.NotebookApp.extra_static_paths = [os.path.join(myfile, 'kbase_templates', 'static')]
 
 # The full path to a private key file for usage with SSL/TLS.
 # c.NotebookApp.keyfile = u''
@@ -197,7 +208,8 @@ c.NotebookApp.tornado_settings = { 'compress_response': True }
 # Extra paths to search for serving jinja templates.
 # 
 # Can be used to override templates from IPython.html.templates.
-# c.NotebookApp.extra_template_paths = []
+
+#c.NotebookApp.extra_template_paths = [os.path.join(myfile, 'kbase_templates')]
 
 # The config manager class to use
 # c.NotebookApp.config_manager_class = <class 'IPython.html.services.config.manager.ConfigManager'>

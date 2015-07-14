@@ -88,6 +88,7 @@ define(['jquery',
         'services/config',
         'notebook/js/mathjaxutils',
         'components/marked/lib/marked',
+        'components/requirejs/require'
         ], 
     function($, 
              IPython, 
@@ -102,6 +103,7 @@ define(['jquery',
         security.sanitize_css = function(css, tagPolicy) { return css };
         security.sanitize_stylesheets = function(html, tagPolicy) { return html };
 
+        // Patch the MarkdownCell renderer to run the Javascript we need.
         textCell.MarkdownCell.prototype.render = function() {
             var cont = textCell.TextCell.prototype.render.apply(this);
             if (cont) {
@@ -143,6 +145,7 @@ define(['jquery',
             return cont;
         };
 
+        // Patch the MarkdownCell renderer to throw an error when failing to render Javascript we need.
         textCell.TextCell.prototype.set_rendered = function(text) {
             try {
                 this.element.find('div.text_cell_render').html(text);
@@ -150,6 +153,97 @@ define(['jquery',
             catch (error) {
                 this.element.find('div.text_cell_render').html("Error while parsing markdown cell: " + error);
             }
-        }
+        };
+
+        console.log('Loading KBase Narrative setup routine.');
+
+// require(['domReady!', 'kbwidget', 'kbapi', 'kbase-client-api'], function() {
+//     require(['kbaseNarrativePrestart', 
+//              'kbaseLogging', 
+//              'narrativeLogin', 
+//              'kbaseNarrativeOutputCell', 
+//              'kbaseNarrativeAppCell',
+//              'kbaseNarrativeMethodCell',
+//              'IPythonCustom', 
+//              ], function() {
+//         console.log('Done with code loading, Starting IPython...');
+//         require(['IPythonMain']);
+//     });
+
+
+        $([IPython.events]).on('app_initialized.NotebookApp', function() {
+            $.getScript('/static/narrative_paths.js', function() {
+                console.log('Performing narrative startup');
+
+                // Dumb thing to get the workspace ID just like the back end does - from the URL at startup.
+                // This snippet keeps the workspace ID local, so it shouldn't be changed if someone pokes at the URL
+                // before trying to fetch it again.
+                var workspaceId = null;
+                var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
+                if (m && m.length > 1)
+                    workspaceId = parseInt(m[1]);
+
+                var configJSON = $.parseJSON(
+                    $.ajax({
+                        url: '/static/kbase/config.json',
+                        async: false,
+                        dataType: 'json',
+                        cache: false
+                    }).responseText
+                );
+                var landingPageMap = {};
+                /*
+                we no longer use the crazy landing page map, but keep the variable here
+                so things we don't know about don't break
+                */
+                var icons = $.parseJSON(
+                  $.ajax({
+                    url: '/static/kbase/icons.json',
+                    async: false,
+                    dataType: 'json',
+                    cache: false
+                  }).responseText
+                );
+                window.kbconfig = { urls: configJSON[configJSON['config']],
+                                    version: configJSON['version'],
+                                    name: configJSON['name'],
+                                    git_commit_hash: configJSON['git_commit_hash'],
+                                    git_commit_time: configJSON['git_commit_time'],
+                                    landing_page_map: landingPageMap,
+                                    release_notes: configJSON['release_notes'],
+                                    mode: configJSON['mode'],
+                                    icons: icons,
+                                    workspaceId: workspaceId
+                                  };
+
+                require(['kbwidget',
+                         'kbapi',
+                         'kbase-client-api',
+                         'kbaseNarrativePrestart', 
+                         'kbaseLogging', 
+                         'narrativeLogin', 
+                         'kbaseNarrativeOutputCell', 
+                         'kbaseNarrativeAppCell', 
+                         'kbaseNarrativeMethodCell', 
+                         'kbaseNarrative'], 
+                         function(kbwidget,
+                                  kbapi,
+                                  kbClientApi,
+                                  kbaseNarrativePrestart,
+                                  kbaseLogging,
+                                  narrativeLogin,
+                                  kbaseNarrativeOutputCell,
+                                  kbaseNarrativeAppCell,
+                                  kbaseNarrativeMethodCell,
+                                  Narrative) {
+                    IPython.narrative = new Narrative();
+                    IPython.narrative.init();
+                });
+                // require(['kbasePrompt'], function() {
+                //     $('body').kbasePrompt().openPrompt();
+                // });
+            });
+        });
+
     }
 );

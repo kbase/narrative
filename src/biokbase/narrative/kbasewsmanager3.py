@@ -173,7 +173,10 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """We only support narratives right now, so look up
            a narrative from that path."""
         path = path.strip('/')
-        return self.narrative_exists(self._obj_ref_from_path(path))
+        obj_ref = self._obj_ref_from_path(path)
+        if obj_ref is None:
+            raise ValueError('Path "{}" is not a valid Narrative path'.format(path))
+        return self.narrative_exists(obj_ref)
 
     def exists(self, path):
         """Looks up whether a directory or file path (i.e. narrative)

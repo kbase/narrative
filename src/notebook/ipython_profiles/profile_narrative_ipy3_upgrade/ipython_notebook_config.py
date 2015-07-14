@@ -209,7 +209,7 @@ myfile = os.path.dirname(myfile)
 # 
 # Can be used to override templates from IPython.html.templates.
 
-#c.NotebookApp.extra_template_paths = [os.path.join(myfile, 'kbase_templates')]
+c.NotebookApp.extra_template_paths = [os.path.join(myfile, 'kbase_templates')]
 
 # The config manager class to use
 # c.NotebookApp.config_manager_class = <class 'IPython.html.services.config.manager.ConfigManager'>

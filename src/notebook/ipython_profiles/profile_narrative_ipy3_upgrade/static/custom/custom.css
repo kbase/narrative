@@ -5,8 +5,19 @@ mainly to be overridden in profile/static/custom/custom.css
 
 This will always be an empty file in IPython
 */
-body.notebook_app {
+
+#site {
+    overflow: visible;
+}
+
+#notebook-container {
+    box-shadow: none;
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+}
+.notebook_app {
     overflow-y: auto;
+    background-color: #FFFFFF;
 }
 
 #ipython-main-app {

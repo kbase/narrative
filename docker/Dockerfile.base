@@ -54,6 +54,7 @@ python-virtualenv \
 python-thrift \
 python-yaml \
 python-paramiko \
+mesa-common-dev \
 libfreetype6-dev \
 libcairo2-dev \
 texlive-latex-base \
@@ -71,9 +72,9 @@ libxslt1-dev
 # Pip is currently broken when installed through Ubuntu. Upgrade it with easy_install 
 RUN easy_install -U pip
 
-# install R packages that seem to be handy
-RUN R --vanilla < /root/r-packages.R
-
 # Clone in the python bootstrap and run it
 ADD ./bootstrap/kb_python_runtime /mini-bootstrap/kb_python_runtime
 RUN cd /mini-bootstrap/kb_python_runtime/; TARGET=/kb/deployment /bin/bash install-narrative-packages.sh
+
+# install R packages that seem to be handy
+RUN R --vanilla < /root/r-packages.R

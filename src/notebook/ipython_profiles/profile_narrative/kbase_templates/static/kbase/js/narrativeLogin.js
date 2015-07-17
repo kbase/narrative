@@ -5,7 +5,9 @@
  * @author Bill Riehl wjriehl@lbl.gov
  */
 
-define(['jquery', 'kbaseLogin'], function($) {
+define(['jquery', 
+        'kbaseLogin', 
+        'kbapi'], function($) {
 // (function( $, undefined ) {
 
     $(function() {

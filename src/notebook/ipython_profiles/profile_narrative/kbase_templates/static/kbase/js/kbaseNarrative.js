@@ -308,7 +308,7 @@ Narrative.prototype.init = function() {
      * Once everything else is loaded and the Kernel is idle,
      * Go ahead and fill in the rest of the Javascript stuff.
      */
-    $([IPython.events]).one('status_idle.Kernel', $.proxy(function() {
+    // $([IPython.events]).one('status_idle.Kernel', $.proxy(function() {
         /*
          * Before we get everything loading, just grey out the whole %^! page
          */
@@ -364,7 +364,7 @@ Narrative.prototype.init = function() {
         else {
             KBFatal("Narrative.init", "Unable to locate workspace name from the Narrative object!");
         }
-    }, this));
+    // }, this));
 };
 
 Narrative.prototype.updateVersion = function() {

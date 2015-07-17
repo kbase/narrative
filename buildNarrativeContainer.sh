@@ -3,6 +3,8 @@
 VER_OUTFILE="/kb/deployment/ui-common/narrative_version"
 DS=$( date +%Y%m%d%H%M )
 
+NAR_BASE_DIR=${PWD##*/}
+
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
 NAR_NAME="kbase/narrative"
 NAR_BASE="base3.0"
@@ -27,14 +29,16 @@ docker images |grep "^$NAR_NAME "|grep " $NAR_BASE " > /dev/null
 
 if [ $? -eq 1 ] ; then
   echo "Build base image"
-  cp narrative/docker/Dockerfile.base ./Dockerfile
-  cp narrative/docker/r-packages.R narrative/docker/sources.list ./
+  cp $NAR_BASE_DIR/docker/Dockerfile.base ./Dockerfile
+  cp $NAR_BASE_DIR/docker/r-packages.R $NAR_BASE_DIR/docker/sources.list ./
+  cp -r $NAR_BASE_DIR/docker/narrative_python_packages ./
   docker build -q -t $NAR_NAME:$NAR_BASE .
   rm Dockerfile r-packages.R sources.list
+  rm -r narrative_python_packages
 fi
 
 echo "Building latest version"
-cp narrative/docker/Dockerfile.update ./Dockerfile
+cp $NAR_BASE_DIR/docker/Dockerfile.update ./Dockerfile
 
 # Build the Narrative container and tag it (as a backup)
 docker build -q -t $NAR_NAME .

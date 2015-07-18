@@ -88,7 +88,8 @@ define(['jquery',
         'services/config',
         'notebook/js/mathjaxutils',
         'components/marked/lib/marked',
-        'components/requirejs/require'
+        'components/requirejs/require',
+        'narrative_paths'
         ], 
     function($, 
              IPython, 
@@ -99,6 +100,10 @@ define(['jquery',
              mathjaxutils,
              marked) {
         "use strict";
+
+
+        console.log('kbwidget');
+        console.log($.KBWidget);
         security.sanitize_html = function(html, allow_css) { return html; };
         security.sanitize_css = function(css, tagPolicy) { return css };
         security.sanitize_stylesheets = function(html, tagPolicy) { return html };
@@ -158,75 +163,40 @@ define(['jquery',
         console.log('Loading KBase Narrative setup routine.');
 
         // $([IPython.events]).on('app_initialized.NotebookApp', function() {
-            $.getScript('/static/narrative_paths.js', function() {
+            // $.getScript('/static/narrative_paths.js', function() {
                 console.log('Performing narrative startup');
 
-                // Dumb thing to get the workspace ID just like the back end does - from the URL at startup.
-                // This snippet keeps the workspace ID local, so it shouldn't be changed if someone pokes at the URL
-                // before trying to fetch it again.
-                var workspaceId = null;
-                var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
-                if (m && m.length > 1)
-                    workspaceId = parseInt(m[1]);
-
-                var configJSON = $.parseJSON(
-                    $.ajax({
-                        url: '/static/kbase/config.json',
-                        async: false,
-                        dataType: 'json',
-                        cache: false
-                    }).responseText
-                );
-                var landingPageMap = {};
-                /*
-                we no longer use the crazy landing page map, but keep the variable here
-                so things we don't know about don't break
-                */
-                var icons = $.parseJSON(
-                  $.ajax({
-                    url: '/static/kbase/icons.json',
-                    async: false,
-                    dataType: 'json',
-                    cache: false
-                  }).responseText
-                );
-                window.kbconfig = { urls: configJSON[configJSON['config']],
-                                    version: configJSON['version'],
-                                    name: configJSON['name'],
-                                    git_commit_hash: configJSON['git_commit_hash'],
-                                    git_commit_time: configJSON['git_commit_time'],
-                                    landing_page_map: landingPageMap,
-                                    release_notes: configJSON['release_notes'],
-                                    mode: configJSON['mode'],
-                                    icons: icons,
-                                    workspaceId: workspaceId
-                                  };
-
-                require(['kbwidget',
-                         'kbapi',
-                         'kbase-client-api',
-                         'kbaseNarrativePrestart', 
-                         'kbaseLogging', 
-                         'narrativeLogin', 
-                         'kbaseNarrativeOutputCell', 
-                         'kbaseNarrativeAppCell', 
-                         'kbaseNarrativeMethodCell', 
-                         'kbaseNarrative'], 
-                         function(kbwidget,
-                                  kbapi,
-                                  kbClientApi,
-                                  kbaseNarrativePrestart,
-                                  kbaseLogging,
-                                  narrativeLogin,
-                                  kbaseNarrativeOutputCell,
-                                  kbaseNarrativeAppCell,
-                                  kbaseNarrativeMethodCell,
-                                  Narrative) {
+        require(['kbapi', 'kbase-client-api', 'kbaseNarrativeMethodCell', 'kbaseNarrativeAppCell', 'kbaseNarrativeOutputCell'], function() {
+                require(['kbaseNarrative'], function(Narrative) {
                     IPython.narrative = new Narrative();
                     IPython.narrative.init();
                 });
-            });
-        // });
 
+                // require(['kbwidget',
+                //          'kbapi',
+                //          'kbase-client-api',
+                //          'kbaseNarrativePrestart', 
+                //          'kbaseLogging', 
+                //          'narrativeLogin', 
+                //          'kbaseNarrativeOutputCell', 
+                //          'kbaseNarrativeAppCell', 
+                //          'kbaseNarrativeMethodCell', 
+                //          'kbaseNarrative'], 
+                //          function(kbwidget,
+                //                   kbapi,
+                //                   kbClientApi,
+                //                   kbaseNarrativePrestart,
+                //                   kbaseLogging,
+                //                   narrativeLogin,
+                //                   kbaseNarrativeOutputCell,
+                //                   kbaseNarrativeAppCell,
+                //                   kbaseNarrativeMethodCell,
+                //                   Narrative) {
+                //     IPython.narrative = new Narrative();
+                //     IPython.narrative.init();
+                // });
+            // });
+        // });
+        });
     }
 );

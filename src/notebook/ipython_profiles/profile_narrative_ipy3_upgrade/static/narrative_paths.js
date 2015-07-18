@@ -134,7 +134,7 @@ require.config({
         'd3'                                    : 'kbase/js/ui-common/ext/d3/d3.v3.min',
         'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
         'handlebars'                            : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
-        'kbwidget'                              : 'kbase/js/ui-common/src/widgets/../kbwidget',
+        'kbwidget'                              : 'kbase/js/ui-common/src/kbwidget',
         'kbaseAccordion'                        : 'kbase/js/ui-common/src/widgets/kbaseAccordion',
         'kbaseAuthenticatedWidget'              : 'kbase/js/ui-common/src/widgets/kbaseAuthenticatedWidget',
         'kbaseModal'                            : 'kbase/js/ui-common/src/widgets/kbaseModal',
@@ -201,18 +201,19 @@ require.config({
         }
     }
 });
+console.log('narrative paths!');
+// Make sure all the proper things get loaded. IPython does the rest.
 
-// // Make sure all the proper things get loaded. IPython does the rest.
-// require(['domReady!', 'kbwidget', 'kbapi', 'kbase-client-api'], function() {
+// require([/*'domReady!',*/ 'kbwidget', 'kbapi', 'kbase-client-api', 'kbaseNarrativeMethodCell'], function() {
 //     require(['kbaseNarrativePrestart', 
 //              'kbaseLogging', 
 //              'narrativeLogin', 
 //              'kbaseNarrativeOutputCell', 
 //              'kbaseNarrativeAppCell',
 //              'kbaseNarrativeMethodCell',
-//              'IPythonCustom', 
+//              // 'IPythonCustom', 
 //              ], function() {
-//         console.log('Done with code loading, Starting IPython...');
-//         require(['IPythonMain']);
+//         // console.log('Done with code loading, Starting IPython...');
+//         // require(['IPythonMain']);
 //     });
 // });

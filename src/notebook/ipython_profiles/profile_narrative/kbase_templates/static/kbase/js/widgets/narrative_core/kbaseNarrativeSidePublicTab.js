@@ -26,7 +26,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
                      /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations',
                      'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'*/ ],
         categoryDescr: {  // search API category -> {}
-        	'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV4',search:true},
+        	'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV5',search:true},
         	'metagenomes': {name: 'Metagenomes',type:'Communities.Metagenome',ws:'wilke:Data',search:true},
         	'media': {name:'Media',type:'KBaseBiochem.Media',ws:'KBaseMedia',search:false},
         	'plant_gnms': {name:'Plant Genomes',type:'KBaseGenomes.Genome',ws:'PlantCSGenomes',search:false}

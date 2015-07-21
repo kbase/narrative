@@ -77,7 +77,7 @@ class KBaseWSManagerMixin(object):
     def _ws_err_to_perm_err(self, err):
         if PermissionsError.is_permissions_error(err.message):
             return PermissionsError(name=err.name, code=err.code,
-                                   message=err.message, data=err.data)
+                                    message=err.message, data=err.data)
         else:
             return err
 

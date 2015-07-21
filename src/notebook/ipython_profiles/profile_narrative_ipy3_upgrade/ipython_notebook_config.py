@@ -74,7 +74,7 @@ c.NotebookApp.port = 8888
 
 # The notebook manager class to use.
 c.NotebookApp.contents_manager_class = 'biokbase.narrative.kbasewsmanager3.KBaseWSManager' 
-#'IPython.html.services.contents.filemanager.FileContentsManager'
+# default: 'IPython.html.services.contents.filemanager.FileContentsManager'
 
 # Use a regular expression for the Access-Control-Allow-Origin header
 # 

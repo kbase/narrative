@@ -175,8 +175,18 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         path = path.strip('/')
         obj_ref = self._obj_ref_from_path(path)
         if obj_ref is None:
-            raise ValueError('Path "{}" is not a valid Narrative path'.format(path))
-        return self.narrative_exists(obj_ref)
+            raise HTTPError(404, 'Path "{}" is not a valid Narrative path'.format(path))
+        self.log.warn('looking up whether a narrative exists')
+        print('got here.')
+        try:
+            self.log.warn('trying to get narrative {}'.format(obj_ref))
+            return self.narrative_exists(obj_ref)
+        except PermissionsError as e:
+            self.log.warn('found a 403 error')
+            raise HTTPError(403, "You do not have permission to view the narrative with id {}".format(path))
+        # except Exception as e:
+        #     self.log.debug('got a 500 error')
+        #     raise HTTPError(500, e)
 
     def exists(self, path):
         """Looks up whether a directory or file path (i.e. narrative)

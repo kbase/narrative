@@ -9,6 +9,7 @@ require.config({
         'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
         'select2'                               : 'select2-v3.5.2/select2.min',
 
+        'narrativeConfig'                       : 'kbase/js/narrativeConfig',
         'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
         'narrativeLogin'                        : 'kbase/js/narrativeLogin',
         'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',

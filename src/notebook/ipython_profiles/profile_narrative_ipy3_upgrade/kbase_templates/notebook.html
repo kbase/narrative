@@ -355,6 +355,11 @@ data-notebook-path="{{notebook_path}}"
 
 <script src="{{ static_url("components/text-encoding/lib/encoding.js") }}" charset="utf-8"></script>
 
-<script src="{{ static_url("notebook/js/main.js") }}" charset="utf-8"></script>
+<!-- Because the narrative (in this version) requires that some Javascript is loaded before
+    running the main IPython stack, a little wrapper script had to be written. More details there. -->
+<script src="{{ static_url("kbase/js/narrativeMain.js") }}" charset="utf-8"></script>
+<!-- not used in this version, but left behind for posterity.
+    <script src="{{ static_url("notebook/js/main.js") }}" charset="utf-8"></script> 
+-->
 
 {% endblock %}

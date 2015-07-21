@@ -89,8 +89,8 @@ define(['jquery',
         'notebook/js/mathjaxutils',
         'components/marked/lib/marked',
         'components/requirejs/require',
-        'narrative_paths'
-        ], 
+        'narrative_paths',
+        ],
     function($, 
              IPython, 
              security, 
@@ -101,9 +101,8 @@ define(['jquery',
              marked) {
         "use strict";
 
-
-        console.log('kbwidget');
-        console.log($.KBWidget);
+        // Patch the security mechanisms to allow any JavaScript to run for now.
+        // TODO: update this so only the few KBase commands run.
         security.sanitize_html = function(html, allow_css) { return html; };
         security.sanitize_css = function(css, tagPolicy) { return css };
         security.sanitize_stylesheets = function(html, tagPolicy) { return html };
@@ -160,43 +159,14 @@ define(['jquery',
             }
         };
 
-        console.log('Loading KBase Narrative setup routine.');
-
-        // $([IPython.events]).on('app_initialized.NotebookApp', function() {
-            // $.getScript('/static/narrative_paths.js', function() {
-                console.log('Performing narrative startup');
-
-        require(['kbapi', 'kbase-client-api', 'kbaseNarrativeMethodCell', 'kbaseNarrativeAppCell', 'kbaseNarrativeOutputCell'], function() {
+        // Kickstart the Narrative loading routine once the notebook is loaded.
+        $([IPython.events]).on('notebook_loaded.Notebook',
+            function narrativeStart() {
                 require(['kbaseNarrative'], function(Narrative) {
                     IPython.narrative = new Narrative();
                     IPython.narrative.init();
                 });
-
-                // require(['kbwidget',
-                //          'kbapi',
-                //          'kbase-client-api',
-                //          'kbaseNarrativePrestart', 
-                //          'kbaseLogging', 
-                //          'narrativeLogin', 
-                //          'kbaseNarrativeOutputCell', 
-                //          'kbaseNarrativeAppCell', 
-                //          'kbaseNarrativeMethodCell', 
-                //          'kbaseNarrative'], 
-                //          function(kbwidget,
-                //                   kbapi,
-                //                   kbClientApi,
-                //                   kbaseNarrativePrestart,
-                //                   kbaseLogging,
-                //                   narrativeLogin,
-                //                   kbaseNarrativeOutputCell,
-                //                   kbaseNarrativeAppCell,
-                //                   kbaseNarrativeMethodCell,
-                //                   Narrative) {
-                //     IPython.narrative = new Narrative();
-                //     IPython.narrative.init();
-                // });
-            // });
-        // });
-        });
+            }
+        );
     }
 );

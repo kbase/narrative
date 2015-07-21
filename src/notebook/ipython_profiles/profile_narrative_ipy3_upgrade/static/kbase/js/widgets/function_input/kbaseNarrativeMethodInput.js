@@ -11,7 +11,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbaseNarrativeParameterTex
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
+            loadingImage: window.kbconfig.loading_gif,
             isInSidePanel: false
         },
 

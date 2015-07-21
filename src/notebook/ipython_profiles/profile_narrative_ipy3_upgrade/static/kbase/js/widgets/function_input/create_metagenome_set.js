@@ -13,7 +13,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbStandaloneListSelect'],
         options: {},
         ws_id: window.kbconfig.workspaceId,
         ws_url: window.kbconfig.urls.workspace,
-        loading_image: "static/kbase/images/ajax-loader.gif",
+        loading_image: window.kbconfig.loading_gif,
 
         /**
          * Builds the input div for a function cell, based on the given method object.
@@ -43,7 +43,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbStandaloneListSelect'],
         	if (window.hasOwnProperty('rendererListselect') && rendererListselect.length) {
         		lslen = rendererListselect.length;
        		}
-		    container.append("<div id='inputListselect"+lslen+"'><img src='../../static/kbase/images/ajax-loader.gif'></div>");
+		    container.append("<div id='inputListselect"+lslen+"'><img src='" + this.loading_image + "'></div>");
 		    var listSelect = standaloneListselect.create({index: lslen});
 		    listSelect.settings.target = document.getElementById('inputListselect'+lslen);
 		    listSelect.settings.callback = this.metagenomesSelected;

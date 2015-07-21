@@ -11,7 +11,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeInput'], function( $ ) {
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
-            loadingImage: "static/kbase/images/ajax-loader.gif",
+            loadingImage: window.kbconfig.loading_gif,
             //fbaURL: "https://kbase.us/services/fba_model_services",
             //fbaURL: "http://140.221.84.183:7036",
             fbaURL: "https://kbase.us/services/KBaseFBAModeling",

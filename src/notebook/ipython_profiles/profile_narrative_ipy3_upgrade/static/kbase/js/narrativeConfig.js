@@ -49,7 +49,8 @@ define(['jquery'], function($) {
                 release_notes:   configSet['release_notes'],
                 mode:            configSet['mode'],
                 icons:           iconsSet,
-                workspaceId:     workspaceId
+                workspaceId:     workspaceId,
+                loading_gif:     configSet['loading_gif']
             }
             deferred.resolve(config);
         }

@@ -20,7 +20,7 @@
         options: {
             app: null,
             cellId: null,
-            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            loadingImage: window.kbconfig.loading_gif, //'static/kbase/images/ajax-loader.gif',
             methodStoreURL: 'https://kbase.us/services/narrative_method_store',
 
             appHelpLink: '/functional-site/#/narrativestore/app/',

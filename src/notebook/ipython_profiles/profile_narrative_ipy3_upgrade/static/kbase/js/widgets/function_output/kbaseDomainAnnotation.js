@@ -20,7 +20,7 @@ define(['jquery',
             domainAnnotationVer: null,
             kbCache: null,
             workspaceURL: window.kbconfig.urls.workspace,
-            loadingImage: "static/kbase/images/ajax-loader.gif",
+            loadingImage: window.kbconfig.loading_gif,
             height: null,
 	    maxDescriptionLength: 200
         },

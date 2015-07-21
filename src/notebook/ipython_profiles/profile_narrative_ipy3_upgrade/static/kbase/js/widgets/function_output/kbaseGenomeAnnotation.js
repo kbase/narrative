@@ -24,7 +24,7 @@ define(['jquery',
             ws_id: null,
             ws_name: null
         },
-        loadingImage: "static/kbase/images/ajax-loader.gif",
+        loadingImage: window.kbconfig.loading_gif,
         wsUrl: window.kbconfig.urls.workspace,
         timer: null,
         lastElemTabNum: 0,

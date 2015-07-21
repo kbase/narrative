@@ -26,7 +26,7 @@ $.KBWidget({
         self.$elem.append(container);
 
         container.append('<p class="muted loader-rxn"> \
-                <img src="../../images/ajax-loader.gif"> loading...</p>')
+                <img src="' + window.kbconfig.loading_gif + '"> loading...</p>')
 
         /** Cases:
          * 1. viewOnly

@@ -11,7 +11,7 @@
         parent: "kbaseWidget",
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
+            loadingImage: window.kbconfig.loading_gif,
             // fbaURL: "https://kbase.us/services/fba_model_services",
             fbaURL: window.kbconfig.urls.fba,
             metadata: null,

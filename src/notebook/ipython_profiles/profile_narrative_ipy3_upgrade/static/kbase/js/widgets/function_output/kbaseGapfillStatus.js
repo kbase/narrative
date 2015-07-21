@@ -31,7 +31,7 @@
         },
 
         wsUrl: window.kbconfig.urls.workspace,
-        loadingImage: "static/kbase/images/ajax-loader.gif",
+        loadingImage: window.kbconfig.loading_gif,
         
         /**
          * (required) This is the only required function for a KBase Widget.

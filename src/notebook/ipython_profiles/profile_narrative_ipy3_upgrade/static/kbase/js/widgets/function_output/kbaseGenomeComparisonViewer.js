@@ -17,7 +17,7 @@ define(['jquery',
             ws: null
         },
         wsUrl: window.kbconfig.urls.workspace,
-        loadingImage: "static/kbase/images/ajax-loader.gif",
+        loadingImage: window.kbconfig.loading_gif,
 
         init: function(options) {
             this._super(options);

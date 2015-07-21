@@ -14,7 +14,7 @@
         },
         wsUrl: window.kbconfig.urls.workspace,
         //fmUrl: "https://kbase.us/services/fba_model_services/",
-        loadingImage: "static/kbase/images/ajax-loader.gif",
+        loadingImage: window.kbconfig.loading_gif,
 
         init: function(options) {
             this._super(options);

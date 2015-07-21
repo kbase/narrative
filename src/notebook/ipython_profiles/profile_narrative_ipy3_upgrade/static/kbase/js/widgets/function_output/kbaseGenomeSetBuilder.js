@@ -14,7 +14,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbasePrompt'],
         	loadExisting: null,
         	wsName: null,
         	genomeSetName: null,
-            loadingImage: "../images/ajax-loader.gif",
+            loadingImage: window.kbconfig.loading_gif,
         },
 
         useSelect2: true,

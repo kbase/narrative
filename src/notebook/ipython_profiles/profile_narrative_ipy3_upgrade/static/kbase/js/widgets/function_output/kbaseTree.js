@@ -17,13 +17,13 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget',
             treeObjVer: null,
             kbCache: null,
             workspaceURL: window.kbconfig.urls.workspace,
-            loadingImage: "static/kbase/images/ajax-loader.gif",
+            loadingImage: window.kbconfig.loading_gif,
             height: null,
         },
 
         pref: null,
         timer: null,
-        loadingImage: "static/kbase/images/ajax-loader.gif",
+        loadingImage: window.kbconfig.loading_gif,
         token: null,
 
         init: function(options) {

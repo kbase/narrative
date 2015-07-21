@@ -19,7 +19,7 @@ $.KBWidget({
     wsUrl: window.kbconfig.urls.workspace,
     jobSrvUrl: window.kbconfig.urls.user_and_job_state,
     cmpImgUrl: window.kbconfig.urls.genomeCmp.replace('jsonrpc', 'image'),
-    loadingImage: "static/kbase/images/ajax-loader.gif",
+    loadingImage: window.kbconfig.loading_gif,
     timer: null,
     geneRows: 21,
     geneRowH: 21,

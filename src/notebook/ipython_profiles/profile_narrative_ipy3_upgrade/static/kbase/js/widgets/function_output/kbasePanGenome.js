@@ -19,7 +19,7 @@ define(['jquery',
         options: {
         	ws: null,
         	name: null,
-            loadingImage: "static/kbase/images/ajax-loader.gif",
+            loadingImage: window.kbconfig.loading_gif,
             withExport: false
         },
 

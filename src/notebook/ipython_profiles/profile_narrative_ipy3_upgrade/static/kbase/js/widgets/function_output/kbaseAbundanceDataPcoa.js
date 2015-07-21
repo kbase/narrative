@@ -16,7 +16,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget',
 	            y_axis: "2"
         },
 	    ws_url: window.kbconfig.urls.workspace,
-	    loading_image: "static/kbase/images/ajax-loader.gif",
+	    loading_image: window.kbconfig.loading_gif,
         
 	    init: function(options) {
             this._super(options);

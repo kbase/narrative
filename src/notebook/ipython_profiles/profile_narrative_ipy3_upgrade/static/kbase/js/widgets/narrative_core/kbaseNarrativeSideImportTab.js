@@ -13,7 +13,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
         },
         token: null,
         wsName: null,
-        loadingImage: "static/kbase/images/ajax-loader.gif",
+        loadingImage: window.kbconfig.loading_gif,
         wsUrl: window.kbconfig.urls.workspace,
         methodStoreURL: window.kbconfig.urls.narrative_method_store,
         methClient: null,

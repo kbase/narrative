@@ -19,7 +19,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
         token: null,
         wsName: null,
         searchUrlPrefix: window.kbconfig.urls.search,
-        loadingImage: "static/kbase/images/ajax-loader.gif",
+        loadingImage: window.kbconfig.loading_gif,
         wsUrl: window.kbconfig.urls.workspace,
         wsClient: null,
         categories: ['genomes', 'metagenomes', 'media', 'plant_gnms'

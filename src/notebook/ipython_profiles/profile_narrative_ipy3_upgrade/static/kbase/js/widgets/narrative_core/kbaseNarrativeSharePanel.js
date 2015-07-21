@@ -13,7 +13,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             ws_url: "https://kbase.us/services/ws",
             user_profile_url: "https://kbase.us/services/user_profile/rpc",
             user_page_link:"/functional-site/#/people/",
-            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            loadingImage: window.kbconfig.loading_gif,
             ws_name_or_id: null,
             max_name_length: 35,
             max_list_height: '250px',

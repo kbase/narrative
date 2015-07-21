@@ -761,22 +761,23 @@ function UIUtils() {
     // code than using CSS classes.
     $.fn.loading = function(text, big) {
         $(this).rmLoading()
+        var gifImg = window.kbconfig.loading_gif;
 
         if (big) {
             if (typeof text != 'undefined') {
                 $(this).append('<p class="text-center text-muted loader"><br>'+
-                     '<img src="../../static/kbase/images/ajax-loader.gif"> '+text+'</p>');
+                     '<img src="'+ gifImg + '"> '+text+'</p>');
             } else {
                 $(this).append('<p class="text-center text-muted loader"><br>'+
-                     '<img src="../../static/kbase/images/ajax-loader.gif"> loading...</p>')
+                     '<img src="'+ gifImg + '"> loading...</p>')
             }
         } else {
             if (typeof text != 'undefined') {
                 $(this).append('<p class="text-muted loader">'+
-                     '<img src="../../static/kbase/images/ajax-loader.gif"> '+text+'</p>');
+                     '<img src="'+ gifImg + '"> '+text+'</p>');
             } else {
                 $(this).append('<p class="text-muted loader">'+
-                     '<img src="../../static/kbase/images/ajax-loader.gif"> loading...</p>')
+                     '<img src="'+ gifImg + '"> loading...</p>')
             }
 
         }

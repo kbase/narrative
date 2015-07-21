@@ -21,7 +21,7 @@ define(['jquery',
 
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
 
-            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            loadingImage: window.kbconfig.loading_gif,
             methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
 
             ws_chunk_size:10000,  // this is the limit of the number of objects to retrieve from the ws on each pass

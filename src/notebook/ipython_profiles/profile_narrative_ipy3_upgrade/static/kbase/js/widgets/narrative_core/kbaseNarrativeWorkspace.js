@@ -37,7 +37,7 @@ define(['jquery',
         parent: 'kbaseWidget',
         version: '1.0.0',
         options: {
-            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            loadingImage: window.kbconfig.loading_gif,
             tableElem: null,
             controlsElem: null,
             ws_id: null,

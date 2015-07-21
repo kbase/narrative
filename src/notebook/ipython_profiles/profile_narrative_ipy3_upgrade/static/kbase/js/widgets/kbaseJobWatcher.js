@@ -6,7 +6,7 @@
         parent: 'kbaseWidget',
         version: '1.0.0',
         options: {
-            loadingImage: '../images/ajax-loader.gif',
+            loadingImage: window.kbconfig.loading_gif,
             jobId: null,
             jobInfo: null
         },

@@ -18,7 +18,7 @@ define(['jquery', 'kbwidget'], function( $ ) {
         type: null,
         wsId: null,
         objId: null,
-        loadingImage: "static/kbase/images/ajax-loader.gif",
+        loadingImage: window.kbconfig.loading_gif,
         wsUrl: window.kbconfig.urls.workspace,
         transformURL: window.kbconfig.urls.transform,
         ujsURL: window.kbconfig.urls.user_and_job_state,

@@ -11,7 +11,7 @@ define(['jquery',
         parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
-            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            loadingImage: window.kbconfig.loading_gif,
             autopopulate: true,
             title: 'Jobs',
         },

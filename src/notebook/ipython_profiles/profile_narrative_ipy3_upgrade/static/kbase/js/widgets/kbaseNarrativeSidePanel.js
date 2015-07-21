@@ -3,7 +3,7 @@
         name: 'kbaseNarrativeSidePanel',
         parent: 'kbaseWidget',
         options: {
-            loadingImage: "static/kbase/images/ajax-loader.gif",
+            loadingImage: window.kbconfig.loading_gif,
         },
 
         init: function(options) {

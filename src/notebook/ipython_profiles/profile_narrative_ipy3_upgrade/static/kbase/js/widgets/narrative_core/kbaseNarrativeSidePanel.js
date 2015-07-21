@@ -5,7 +5,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeDataPanel',
         name: 'kbaseNarrativeSidePanel',
         parent: 'kbaseWidget',
         options: {
-            loadingImage: "static/kbase/images/ajax-loader.gif",
+            loadingImage: window.kbconfig.loading_gif,
             autorender: true,
             workspaceURL: "https://kbase.us/services/ws", //used for data importer
             landingPageURL: "/functional-site/#/", // used for data importer

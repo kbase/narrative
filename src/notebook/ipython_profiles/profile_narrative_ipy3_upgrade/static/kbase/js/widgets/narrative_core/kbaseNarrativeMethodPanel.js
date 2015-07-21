@@ -16,7 +16,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
         parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
-            loadingImage: '/static/kbase/images/ajax-loader.gif',
+            loadingImage: window.kbconfig.loading_gif,
             autopopulate: true,
             title: 'Apps & Methods',
             methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',

@@ -20,7 +20,7 @@ define(['jquery', 'NarrativeManager', 'kbwidget', 'kbaseNarrativeControlPanel'],
         loadedData: {},
         options: {
             title: 'Narratives',
-            loadingImage: "static/kbase/images/ajax-loader.gif",
+            loadingImage: window.kbconfig.loading_gif,
             ws_url: "https://kbase.us/services/ws",
             nms_url: "https://kbase.us/services/narrative_method_store/rpc",
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",

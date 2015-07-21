@@ -38,7 +38,7 @@ define(['jquery', 'underscore', 'kbwidget',
         loadedData: {},
         options: {
             title: 'Data',
-            loadingImage: "static/kbase/images/ajax-loader.gif",
+            loadingImage: window.kbconfig.loading_gif,
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: "https://kbase.us/services/ws",
             wsBrowserURL: "/functional-site/#/ws/",

@@ -1,11 +1,12 @@
-"use strict";
+define([
+    'jquery', 
+    'kbwidget', 
+    'kbasePrompt', 
+    'kbaseNarrativeControlPanel',
+    'bootstrap'
+], function( $ ) {
+    "use strict";
 
-define(['jquery', 
-        'kbwidget', 
-        'kbasePrompt', 
-        'kbaseNarrativeControlPanel',
-        'bootstrap'], 
-        function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeJobsPanel',
         parent: 'kbaseNarrativeControlPanel',
@@ -517,22 +518,53 @@ define(['jquery',
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
                                   'print job_manager.poll_jobs([' + jobParamList + '], as_json=True)\n';
+            // var callbacks = {
+            //     'output' : $.proxy(function(msgType, content) { 
+            //         this.parseKernelResponse(msgType, content, jobInfo); 
+            //     }, this),
+            //     'execute_reply' : $.proxy(function(content) { 
+            //         this.handleCallback('execute_reply', content); 
+            //     }, this),
+            //     'clear_output' : $.proxy(function(content) { 
+            //         this.handleCallback('clear_output', content); 
+            //     }, this),
+            //     'set_next_input' : $.proxy(function(content) { 
+            //         this.handleCallback('set_next_input', content); 
+            //     }, this),
+            //     'input_request' : $.proxy(function(content) { 
+            //         this.handleCallback('input_request', content); 
+            //     }, this),
+            // };
+
             var callbacks = {
-                'output' : $.proxy(function(msgType, content) { 
-                    this.parseKernelResponse(msgType, content, jobInfo); 
-                }, this),
-                'execute_reply' : $.proxy(function(content) { 
-                    this.handleCallback('execute_reply', content); 
-                }, this),
-                'clear_output' : $.proxy(function(content) { 
-                    this.handleCallback('clear_output', content); 
-                }, this),
-                'set_next_input' : $.proxy(function(content) { 
-                    this.handleCallback('set_next_input', content); 
-                }, this),
-                'input_request' : $.proxy(function(content) { 
-                    this.handleCallback('input_request', content); 
-                }, this),
+                shell: {
+                    reply: $.proxy(function(content) {
+                        this.handleCallback('shell.reply', content);
+                    }, this),
+                    payload: {
+                        set_next_input: $.proxy(function(content) {
+                            this.handleCallback('shell.payload.set_next_input', content);
+                        }, this)
+                    },
+                },
+                iopub: {
+                    output: $.proxy(function(content) {
+                        this.parseKernelResponse(content, jobInfo);
+                        // this.handleCallback('iopub.output', content);
+                    }, this),
+                    clear_output: $.proxy(function(content) {
+                        this.handleCallback('iopub.clear_output', content);
+                    }, this)
+                },
+                input: $.proxy(function(content) {
+                        this.handleCallback('input', content);
+                    }, this)
+            };
+
+            var executeOptions = {
+                silent: true,
+                user_expressions: {},
+                allow_stdin: false
             };
 
             var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: true, store_history: false});
@@ -557,13 +589,13 @@ define(['jquery',
          * @method
          * Get the kernel response and render it if it's valid.
          */
-        parseKernelResponse: function(msgType, content, jobInfo) {
+        parseKernelResponse: function(content, jobInfo) {
             // if it's not a datastream, display some kind of error, and return.
-            if (msgType != 'stream') {
+            if (content.msg_type != 'stream') {
                 this.showError('Sorry, an error occurred while loading the job list.');
                 return;
             }
-            var buffer = content.data;
+            var buffer = content.content.text;
             if (buffer.length > 0) {
                 var jobStatus = JSON.parse(buffer);
                 this.populateJobsPanel(jobStatus, jobInfo);

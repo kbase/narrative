@@ -266,7 +266,7 @@ define([
                 },
                 iopub: {
                     output: $.proxy(function(content) {
-                        this.deleteResponse(content. content, jobId);
+                        this.deleteResponse(content, jobId);
                     }, this),
                     clear_output: $.proxy(function(content) {
                         this.handleCallback('iopub.clear_output', content);

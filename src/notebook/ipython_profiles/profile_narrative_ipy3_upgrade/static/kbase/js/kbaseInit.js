@@ -6,20 +6,19 @@
  * Mainly, we need to load up a configuration, then make
  * sure that the other Narrative JS widgets are loaded *first*, 
  * because they're referenced from within Markdown cells at Notebook
- * load time.
+ * load time.  
  * 
  * I'm not thrilled about this, but if this isn't done, then our GUI
- * method/app/output widget cells are replaced by ReferenceErrors.
+ * method/app/output widget cells are replaced by ReferenceErrors.  
  *
  * Once this step is complete, the notebook main is run, and the
  * actual KBase Narrative startup code is instantiated in custom.js,
  * where is all ought to be. This is a ***temporary*** solution, 
  * until we migrate our Frankenstein'd markdown cells to proper
- * output cells.
+ * output cells.  
  *
  * @author Bill Riehl <wjriehl@lbl.gov>
- * @module narrative
- * @class narrativeMain
+ * @module narrativeInit
  * @static
  */
 
@@ -43,16 +42,6 @@ require([
             }
             window.kbconfig = config;
             require(['narrativeLogin']);
-            // Gotta have the Narrative code in place first, specifically
-            // the following:
-            // kbaseNarrativeAppCell,
-            // kbaseNarrativeMethodCell,
-            // kbaseNarrativeOutputCell,
-            // loading up the kbaseNarrative module pulls those in, and 
-            // is generally cleaner.
-            // require(['kbaseNarrative'], function(Narrative) {
-            //     require(['notebook/js/main']);
-            // });
         });
     });
 });

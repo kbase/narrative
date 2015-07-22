@@ -254,26 +254,37 @@ define([
                                'print jm.delete_jobs(["' + jobId + '"], as_json=True)\n';
 
             var callbacks = {
-                'output' : $.proxy(function(msgType, content) {
-                    var response = this.deleteResponse(msgType, content, jobId);
-                    if (callback)
-                        callback(response);
-                }, this),
-                'execute_reply' : $.proxy(function(content) { 
-                    this.handleCallback('execute_reply', content); 
-                }, this),
-                'clear_output' : $.proxy(function(content) { 
-                    this.handleCallback('clear_output', content); 
-                }, this),
-                'set_next_input' : $.proxy(function(content) { 
-                    this.handleCallback('set_next_input', content); 
-                }, this),
-                'input_request' : $.proxy(function(content) { 
-                    this.handleCallback('input_request', content); 
-                }, this)
+                shell: {
+                    reply: $.proxy(function(content) {
+                        this.handleCallback('shell.reply', content);
+                    }, this),
+                    payload: {
+                        set_next_input: $.proxy(function(content) {
+                            this.handleCallback('shell.payload.set_next_input', content);
+                        }, this)
+                    },
+                },
+                iopub: {
+                    output: $.proxy(function(content) {
+                        this.deleteResponse(content. content, jobId);
+                    }, this),
+                    clear_output: $.proxy(function(content) {
+                        this.handleCallback('iopub.clear_output', content);
+                    }, this)
+                },
+                input: $.proxy(function(content) {
+                        this.handleCallback('input', content);
+                    }, this)
             };
 
-            IPython.notebook.kernel.execute(deleteJobCmd, callbacks, {store_history: false, silent: true});
+            var executeOptions = {
+                silent: true,
+                user_expressions: {},
+                allow_stdin: false,
+                store_history: false
+            };
+
+            var msgid = IPython.notebook.kernel.execute(deleteJobCmd, callbacks, executeOptions);
         },
 
         /**
@@ -281,8 +292,8 @@ define([
          * When we get the deletion response from the kernel, we should delete the job.
          * We should *probably* just delete the job anyway, whether there's an error or not.
          */
-        deleteResponse: function(msgType, content, jobId) {
-            if (msgType != 'stream') {
+        deleteResponse: function(content, jobId) {
+            if (content.msg_type != 'stream') {
                 console.error('An error occurred while trying to delete a job');
                 this.refresh(false);
                 return;
@@ -518,23 +529,6 @@ define([
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
                                   'print job_manager.poll_jobs([' + jobParamList + '], as_json=True)\n';
-            // var callbacks = {
-            //     'output' : $.proxy(function(msgType, content) { 
-            //         this.parseKernelResponse(msgType, content, jobInfo); 
-            //     }, this),
-            //     'execute_reply' : $.proxy(function(content) { 
-            //         this.handleCallback('execute_reply', content); 
-            //     }, this),
-            //     'clear_output' : $.proxy(function(content) { 
-            //         this.handleCallback('clear_output', content); 
-            //     }, this),
-            //     'set_next_input' : $.proxy(function(content) { 
-            //         this.handleCallback('set_next_input', content); 
-            //     }, this),
-            //     'input_request' : $.proxy(function(content) { 
-            //         this.handleCallback('input_request', content); 
-            //     }, this),
-            // };
 
             var callbacks = {
                 shell: {
@@ -564,10 +558,11 @@ define([
             var executeOptions = {
                 silent: true,
                 user_expressions: {},
-                allow_stdin: false
+                allow_stdin: false,
+                store_history: false
             };
 
-            var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: true, store_history: false});
+            var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, executeOptions);
         },
 
         /**

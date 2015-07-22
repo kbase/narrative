@@ -8,8 +8,12 @@
  */
 "use strict";
 
-define(['jquery', 'kbaseNarrativeSidePanel', 
-        'kbaseNarrativeOutputCell', 'kbaseNarrativeWorkspace'], 
+define(['jquery', 
+        'kbaseNarrativeSidePanel', 
+        'kbaseNarrativeOutputCell', 
+        'kbaseNarrativeWorkspace',
+        'kbaseNarrativePrestart',
+        'bootstrap'], 
         function($) {
 
 /**
@@ -308,63 +312,61 @@ Narrative.prototype.init = function() {
      * Once everything else is loaded and the Kernel is idle,
      * Go ahead and fill in the rest of the Javascript stuff.
      */
-    $([IPython.events]).one('status_idle.Kernel', $.proxy(function() {
+
+    // NAR-271 - Firefox needs to be told where the top of the page is. :P
+    window.scrollTo(0,0);
+    
+    IPython.notebook.set_autosave_interval(0);
+    require(['ipythonCellMenu'], function() {
+        IPython.CellToolbar.activate_preset("KBase");
+    });
+
+    this.ws_name = null;
+    if (IPython && IPython.notebook && IPython.notebook.metadata) {
+        this.ws_name = IPython.notebook.metadata.ws_name;
+        var narrname = IPython.notebook.notebook_name;
+        var username = IPython.notebook.metadata.creator;
+        $('#kb-narr-name #name').text(narrname);
+        $('#kb-narr-creator').text(username);
+        $('.kb-narr-namestamp').css({'display':'block'});
+
+        var token = null;
+        if (window.kb && window.kb.token)
+            token = window.kb.token;
+
+        $.ajax({
+            type: 'GET',
+            url: 'https://kbase.us/services/genome_comparison/users?usernames=' + username + '&token=' + token,
+            dataType: 'json',
+            crossDomain: true,
+            success: function(data, res, jqXHR) {
+                if (username in data.data && data.data[username].fullName) {
+                    var fullName = data.data[username].fullName;
+                    $('#kb-narr-creator').text(fullName + ' (' + username + ')');
+                }
+            }
+        });
+
+        // This puts the cell menu in the right place.
+        $([IPython.events]).trigger('select.Cell', {cell: IPython.notebook.get_selected_cell()});
+    }
+    if (this.ws_name) {
+        /* It's ON like DONKEY KONG! */
+        $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + this.ws_name);
+        this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
+            loadingImage: "/static/kbase/images/ajax-loader.gif",
+            ws_id: IPython.notebook.metadata.ws_name
+        });
         /*
          * Before we get everything loading, just grey out the whole %^! page
          */
         var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
-
-        // NAR-271 - Firefox needs to be told where the top of the page is. :P
-        window.scrollTo(0,0);
-        
-        IPython.notebook.set_autosave_interval(0);
-        require(['ipythonCellMenu'], function() {
-            IPython.CellToolbar.activate_preset("KBase");
-        });
-
-        this.ws_name = null;
-        if (IPython && IPython.notebook && IPython.notebook.metadata) {
-            this.ws_name = IPython.notebook.metadata.ws_name;
-            var narrname = IPython.notebook.notebook_name;
-            var username = IPython.notebook.metadata.creator;
-            $('#kb-narr-name #name').text(narrname);
-            $('#kb-narr-creator').text(username);
-            $('.kb-narr-namestamp').css({'display':'block'});
-
-            var token = null;
-            if (window.kb && window.kb.token)
-                token = window.kb.token;
-
-            $.ajax({
-                type: 'GET',
-                url: 'https://kbase.us/services/genome_comparison/users?usernames=' + username + '&token=' + token,
-                dataType: 'json',
-                crossDomain: true,
-                success: function(data, res, jqXHR) {
-                    if (username in data.data && data.data[username].fullName) {
-                        var fullName = data.data[username].fullName;
-                        $('#kb-narr-creator').text(fullName + ' (' + username + ')');
-                    }
-                }
-            });
-
-            // This puts the cell menu in the right place.
-            $([IPython.events]).trigger('select.Cell', {cell: IPython.notebook.get_selected_cell()});
-        }
-        if (this.ws_name) {
-            /* It's ON like DONKEY KONG! */
-            $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + this.ws_name);
-            this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
-                loadingImage: "/static/kbase/images/ajax-loader.gif",
-                ws_id: IPython.notebook.metadata.ws_name
-            });
-            $sidePanel.render();
-            $(document).trigger('setWorkspaceName.Narrative', {'wsId' : this.ws_name, 'narrController': this.narrController});
-        }
-        else {
-            KBFatal("Narrative.init", "Unable to locate workspace name from the Narrative object!");
-        }
-    }, this));
+        $sidePanel.render();
+        $(document).trigger('setWorkspaceName.Narrative', {'wsId' : this.ws_name, 'narrController': this.narrController});
+    }
+    else {
+        KBFatal("Narrative.init", "Unable to locate workspace name from the Narrative object!");
+    }
 };
 
 Narrative.prototype.updateVersion = function() {

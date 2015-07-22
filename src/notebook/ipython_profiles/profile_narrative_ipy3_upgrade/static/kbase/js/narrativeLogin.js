@@ -7,17 +7,23 @@
 
 define(['jquery', 
         'kbaseLogin', 
-        'kbapi'
-], function($) {
+        'kbapi',
+        'base/js/utils'
+], function($, 
+            kbaseLogin, 
+            kbapi, 
+            ipythonUtils) {
     "use strict";
+
+    var baseUrl = ipythonUtils.get_body_data('baseUrl');
 
     /* set the auth token by calling the kernel execute method on a function in
      * the magics module
      */
-    var ipythonLogin = function(baseUrl, token) {
+    var ipythonLogin = function(token) {
         window.kb = new KBCacheClient(token);
         $.ajax({
-            url: baseUrl + '/login',
+            url: ipythonUtils.url_join_encode(baseUrl, 'login'),
         }).then(
             function(ret) { 
                 console.log(ret); 
@@ -29,9 +35,9 @@ define(['jquery',
         );
     };
 
-    var ipythonLogout = function(baseUrl) {
+    var ipythonLogout = function() {
         $.ajax({
-            url: baseUrl + '/logout',
+            url: ipythonUtils.url_join_encode(baseUrl, 'logout'),
         }).then(
             function(ret) { 
                 console.log(ret); 
@@ -56,14 +62,14 @@ define(['jquery',
          */
         login_callback: function(args) {
             // window.kb = new KBCacheClient(args.token);
-            ipythonLogin('http://localhost:8888', args.token);
+            ipythonLogin(args.token);
         },
 
         /* If the notebook is present, tell it to clear the token and environment vars,
          * Then redirect to the root page.
          */
         logout_callback: function(args) {
-            ipythonLogout('http://localhost:8888');
+            ipythonLogout();
         },
 
         /* This is the main path to starting up. Since the user should be coming in already logged
@@ -73,7 +79,7 @@ define(['jquery',
          * of IPython).
          */
         prior_login_callback: function(args) {
-            ipythonLogin('http://localhost:8888', args.token);
+            ipythonLogin(args.token);
         },
     });
 

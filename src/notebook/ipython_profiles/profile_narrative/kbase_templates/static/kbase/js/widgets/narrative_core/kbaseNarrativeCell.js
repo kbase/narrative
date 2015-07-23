@@ -3,7 +3,8 @@
  *
  * @public
  */
-(function($, undefined) {
+
+define(['jquery', 'kbwidget'], function( $ ) {
     $.KBWidget({
         /* 
          * (required) Your widget should be named in CamelCase.
@@ -22,4 +23,4 @@
             this._super(options);
         },
     });
-})(jQuery);
+});

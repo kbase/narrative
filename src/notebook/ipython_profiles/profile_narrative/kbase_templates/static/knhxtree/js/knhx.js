@@ -741,14 +741,14 @@ var kn_g_conf = kn_init_conf();
 
 //document.write('<script language="JavaScript" src="./menu.js"></script>');
 //document.write('<script language="JavaScript" src="./canvastext.js"></script>');
-document.write('<style type="text/css"><!-- \
-    #popdiv a.alt { \
-      padding-left: 9px; \
-      font: 12px monospace; \
-      border: none; \
-      display: inline; \
-    } \
---></style>');
+// document.write('<style type="text/css"><!-- \
+//     #popdiv a.alt { \
+//       padding-left: 9px; \
+//       font: 12px monospace; \
+//       border: none; \
+//       display: inline; \
+//     } \
+// --></style>');
 
 /*****************
  * Event handler *

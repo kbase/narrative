@@ -1,7 +1,7 @@
 /**
  * KBase widget to display table of BIOM data
  */
-(function($, undefined) {
+define(['jquery', 'kbwidget', 'RGBColor', 'kbStandaloneGraph'], function($) {
     $.KBWidget({
         name: 'AbundanceDataBoxplot',
         version: '1.0.0',
@@ -112,4 +112,4 @@
 	        return b;
 	    }
     });
-})(jQuery);
+});

@@ -3,7 +3,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeInput'], function( $ ) {
     $.KBWidget({
         name: "rastGenomeImportInput",
         parent: "kbaseNarrativeInput",
@@ -201,4 +201,4 @@
 
     });
 
-})( jQuery );
+});

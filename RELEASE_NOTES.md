@@ -3,6 +3,25 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 1.0.3
+__Changes__
+- JIRA KBASE-1672 - updated text in upload dialogs
+- JIRA KBASE-1288 - show prompt when copying a public genome to a Narrative if that genome already exists in the Narrative
+- JIRA NAR-702 - show warning on My Data panel for untitled Narratives
+- JIRA KBASE-1245 - block the Data Uploader's "Import" button while a file is being uploaded.
+- JIRA KBASE-1350 - change reference to "Workspace" to a reference to "Narrative".
+- Refactored all widget code to be loaded asynchronously through Require.js
+- Added initial Selenium test scripts
+- Updated root README, added Travis-CI and Coveralls badges
+- Linked the Narrative Github repo to Travis-CI and Coveralls
+
+__Bugfixes__
+- JIRA KBASE-1671 - fix typo in genome annotation widget
+- JIRA KBASE-2042 - fix errors in the error page that shows up when a Narrative is unavailable.
+- JIRA KBASE-1843/KBASE-1849 - fixed issue where a large narrative object (e.g. a large IPython notebook object) fails to save without a decent error message. The maximum size was bumped to 4MB, and a sensible error message was introduced.
+- Fixed issue where duplicated results can appear in the Public Data tab
+- JIRA NAR-758 - added a horizontal scrollbar to widgets who get too wide (this currenly only affects the OTU Abundance data table widget, but others might get affected in the future).
+
 ### Version 1.0.2 - 2/19/2015
 __Bugfixes__
 - JIRA NAR-491 - modified public data panel to get metagenomes of the correct type from the updated search interface

@@ -3,7 +3,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbStandaloneListSelect'], function($) {
     $.KBWidget({
         name: "devVizSelector",
         parent: "kbaseNarrativeInput",
@@ -154,4 +154,4 @@
 	}
     });
 
-})( jQuery );
+});

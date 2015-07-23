@@ -18,7 +18,20 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 
+        'underscore',
+        'jquery-nearest',
+        'kbwidget', 
+        'bootstrap', 
+        'kbaseDefaultNarrativeOutput',
+        'kbaseDefaultNarrativeInput',
+        'kbasePrompt',
+        'kbaseNarrativeAppCell',
+        'kbaseNarrativeMethodCell',
+        'kbaseNarrativeSidePanel',
+        'kbaseNarrativeDataPanel'],
+        function($, _) {
+
     $.KBWidget({
         name: 'kbaseNarrativeWorkspace',
         parent: 'kbaseWidget',
@@ -2421,5 +2434,4 @@
         }
 
     });
-
-})( jQuery );
+});

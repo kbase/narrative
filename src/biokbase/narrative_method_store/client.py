@@ -264,3 +264,18 @@ class NarrativeMethodStore(object):
         resp = self._call('NarrativeMethodStore.get_type_info',
                           [params])
         return resp[0]
+
+    def validate_method(self, params):
+        resp = self._call('NarrativeMethodStore.validate_method',
+                          [params])
+        return resp[0]
+
+    def validate_app(self, params):
+        resp = self._call('NarrativeMethodStore.validate_app',
+                          [params])
+        return resp[0]
+
+    def validate_type(self, params):
+        resp = self._call('NarrativeMethodStore.validate_type',
+                          [params])
+        return resp[0]

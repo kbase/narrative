@@ -2,8 +2,7 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeParameterCheckboxInput",
         parent: "kbaseNarrativeParameterInput",
@@ -235,5 +234,4 @@
         }
         
     });
-
-})( jQuery );
+});

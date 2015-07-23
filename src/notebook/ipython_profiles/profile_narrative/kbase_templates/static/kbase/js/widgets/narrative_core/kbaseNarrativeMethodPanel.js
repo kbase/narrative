@@ -10,7 +10,7 @@
  * @public
  */
 // kb_require(['kbaseMethodGallery'], 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
         parent: 'kbaseNarrativeControlPanel',
@@ -816,5 +816,4 @@
             this.trigger('toggleSidePanelOverlay.Narrative');
         },
     });
-})( jQuery );
-//);
+});

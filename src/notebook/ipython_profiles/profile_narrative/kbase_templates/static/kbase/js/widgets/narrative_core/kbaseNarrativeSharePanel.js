@@ -3,8 +3,7 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-(function( $, undefined ) {
-
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeSharePanel", 
         parent: "kbaseAuthenticatedWidget",
@@ -512,4 +511,4 @@ WORKSPACE INFO
         
     });
 
-})( jQuery );
+});

@@ -3,7 +3,7 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeSideImportTab",
         parent: "kbaseAuthenticatedWidget",
@@ -92,7 +92,9 @@
             this.widgetPanel = $('<div>');
             this.widgetPanelCard1 = $('<div style="margin: 30px 30px 0px 30px;">');
             this.widgetPanel.append(this.widgetPanelCard1);
-            this.widgetPanelCard1.append("<div class='kb-cell-run'><h2 class='collapse in'>Use your own data or data from another data source in your narrative. First, select the type of data you wish to import.</h2></div><hr>");
+            this.widgetPanelCard1.append("<div class='kb-cell-run'><h2 class='collapse in'>" +
+            		"Import data from your local computer or another data source. First, select the type of data you wish to import." +
+            		"</h2></div><hr>");
             
             var $nameDiv = $('<div>').addClass("kb-method-parameter-name").css("text-align", "left")
             	.append("DATA TYPE");
@@ -106,7 +108,7 @@
                               .css({'border' : '4px'})
                               .append('Next');
             var $hintDiv  = $('<div>').addClass("kb-method-parameter-hint")
-            	.append("Select the type of data you wish to import.");
+            	.append("Use the pulldown menu of data types above to select the type of data you wish to import.");
 
             $nextButton.click(
             		$.proxy(function(event) {
@@ -353,8 +355,26 @@
     				}
     			}, this));
     		}
-            this.inputWidget[methodId] = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
-
+    		var wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
+            this.inputWidget[methodId] = wig;
+            
+            var onChange = function() {
+                var w = self.getInputWidget();
+                if (self.timer)
+                    return;
+                var v = w.isValid();
+                if (v.isValid) {
+                    self.showInfo('All parameters are valid and you can start "Import" now');
+                } else {
+                    self.showInfo('You can start "Import" when all parameters are ready (marked by green check)');
+                }
+            };
+            var paramValues = wig.getAllParameterValues();
+            for (var paramPos in paramValues) {
+                var paramId = paramValues[paramPos].id;
+                wig.addInputListener(paramId, onChange);
+            }
+            
         	this.tabs[methodId] = tab;
         },
         
@@ -723,4 +743,4 @@
                 });
         }
     });
-})( jQuery );
+});

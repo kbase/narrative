@@ -376,16 +376,37 @@ define(['jquery',
                 // do the standard for now.
                 code = this.buildGenericRunCommand(data);
             }
+            // var callbacks = {
+            //     'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
+            //     'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput); },
+            //     'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
+            //     'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
+            //     'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
+            // };
+
             var callbacks = {
-                'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput); },
-                'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
-                'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-                'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
+                shell: {
+                    reply: function(content) { self.handleExecuteReply(data.cell, content); },
+                    payload: {
+                        set_next_input: function(content) { self.handleSetNextInput(data.cell, content); },
+                    },
+                },
+                iopub: {
+                    output: function(content) { self.handleOutput(data.cell, content.msgType, content, showOutput); },
+                    clear_output: function(content) { self.handleClearOutput(data.cell, content); },
+                },
+                input: function(content) { self.handleInputRequest(data.cell, content); }
+            };
+
+            var executeOptions = {
+                silent: true,
+                user_expressions: {},
+                allow_stdin: false,
+                store_history: false
             };
 
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
-            IPython.notebook.kernel.execute(code, callbacks, {silent: true});
+            IPython.notebook.kernel.execute(code, callbacks, executeOptions);
         },
 
         buildAppCell: function(appSpec) {
@@ -423,15 +444,36 @@ define(['jquery',
             this.updateNarrativeDependencies();
             var self = this;
             var callbacks = {
-                'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, "app"); },
-                'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
-                'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
-                'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
+                shell: {
+                    reply: function(content) { self.handleExecuteReply(data.cell, content); },
+                    payload: {
+                        set_next_input: function(content) { self.handleSetNextInput(data.cell, content); },
+                    },
+                },
+                iopub: {
+                    output: function(content) { self.handleOutput(data.cell, content.msgType, content, "app"); },
+                    clear_output: function(content) { self.handleClearOutput(data.cell, content); },
+                },
+                input: function(content) { self.handleInputRequest(data.cell, content); }
             };
 
+            var executeOptions = {
+                silent: true,
+                user_expressions: {},
+                allow_stdin: false,
+                store_history: false
+            };
+
+            // var callbacks = {
+            //     'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
+            //     'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, "app"); },
+            //     'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
+            //     'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
+            //     'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
+            // };
+
             var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
-            IPython.notebook.kernel.execute(code, callbacks, {silent: true});
+            IPython.notebook.kernel.execute(code, callbacks, executeOptions);
         },
 
         buildAppCommand: function(appSpec, methodSpecs, parameters) {
@@ -1590,12 +1632,33 @@ define(['jquery',
                 var nb = IPython.notebook;
                 var currentIndex = nb.get_selected_index();
 
+                // var callbacks = {
+                //     'execute_reply' : function(content) { self.handleExecuteReply(cell, content); },
+                //     'output' : function(msgType, content) { self.handleOutput(cell, msgType, content); },
+                //     'clear_output' : function(content) { self.handleClearOutput(cell, content); },
+                //     'set_next_input' : function(text) { self.handleSetNextInput(cell, content); },
+                //     'input_request' : function(content) { self.handleInputRequest(cell, content); }
+                // };
+
                 var callbacks = {
-                    'execute_reply' : function(content) { self.handleExecuteReply(cell, content); },
-                    'output' : function(msgType, content) { self.handleOutput(cell, msgType, content); },
-                    'clear_output' : function(content) { self.handleClearOutput(cell, content); },
-                    'set_next_input' : function(text) { self.handleSetNextInput(cell, content); },
-                    'input_request' : function(content) { self.handleInputRequest(cell, content); }
+                    shell: {
+                        reply: function(content) { self.handleExecuteReply(cell, content); },
+                        payload: {
+                            set_next_input: function(content) { self.handleSetNextInput(cell, content); },
+                        },
+                    },
+                    iopub: {
+                        output: function(content) { self.handleOutput(cell, content.msgType, content); },
+                        clear_output: function(content) { self.handleClearOutput(cell, content); },
+                    },
+                    input: function(content) { self.handleInputRequest(cell, content); }
+                };
+
+                var executeOptions = {
+                    silent: true,
+                    user_expressions: {},
+                    allow_stdin: false,
+                    store_history: false
                 };
 
                 // ignore making code cells for now.
@@ -1609,7 +1672,7 @@ define(['jquery',
                 // codeCell.set_input_prompt('*');
 
                 $(cell.element).find('#kb-func-progress').css({'display': 'block'});
-                nb.kernel.execute(code, callbacks, {silent: true});
+                nb.kernel.execute(code, callbacks, executeOptions);
             };
         },
 

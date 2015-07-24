@@ -27,7 +27,10 @@ module.exports = function(grunt) {
                     generateSourceMaps: true,
                     preserveLicenseComments: false,
                     name: "narrative_paths",
-                    out: "static/dist/kbase-narrative-min.js"
+                    out: "static/dist/kbase-narrative-min.js",
+                    paths : {
+                        "IPythonMain": "empty:",
+                    },
                 }
             }
         },

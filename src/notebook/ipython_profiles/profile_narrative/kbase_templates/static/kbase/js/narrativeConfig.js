@@ -23,12 +23,12 @@ define(['jquery'], function($) {
         workspaceId = parseInt(m[1]);
 
     var configProm = $.ajax({
-        url: '/static/kbase/config.json',
+        url: 'static/kbase/config.json',
         dataType: 'json',
         cache: false
     });
     var iconsProm = $.ajax({
-        url: '/static/kbase/icons.json',
+        url: 'static/kbase/icons.json',
         dataType: 'json',
         cache: false
     });

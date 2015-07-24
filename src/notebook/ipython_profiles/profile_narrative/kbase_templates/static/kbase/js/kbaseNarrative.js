@@ -16,7 +16,6 @@ define([
     'narrativeLogin',
     'kbase-client-api',
     'kbaseNarrativePrestart',
-    'ipythonCellMenu'
 ], function($, 
             kbaseNarrativeSidePanel,
             kbaseNarrativeOutputCell,
@@ -24,8 +23,7 @@ define([
             kbaseNarrativeMethodCell,
             narrativeLogin,
             kbaseClient,
-            kbaseNarrativePrestart,
-            kbaseCellToolbar) {
+            kbaseNarrativePrestart) {
     "use strict";
 
 /**

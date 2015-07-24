@@ -25,7 +25,6 @@
 
 require([
     'jquery',
-    'narrative_paths',
 ], function($) {
     "use strict";
     console.log('Loading KBase Narrative setup routine.');
@@ -37,11 +36,11 @@ require([
         // TODO: bail out if the config isn't available.
         configDefer.then(function(config) {
             if (config === null) {
-                console.err('fatal error! gotta bail out here.');
+                console.error('fatal error! gotta bail out here.');
                 // TODO: change the view to an error/error popup/etc.
                 return;
             }
-            console.log('Got KBase config');
+            console.log('Successfully got KBase config');
             window.kbconfig = config;
             // Gotta have the Narrative code in place first, specifically
             // the following:
@@ -50,9 +49,12 @@ require([
             // kbaseNarrativeOutputCell,
             // loading up the kbaseNarrative module pulls those in, and 
             // is generally cleaner.
-            require(['kbaseNarrative', 'IPythonCustom'], function(Narrative) {
-                console.log('Starting IPython main');
-                require(['IPythonMain']);
+
+            require(['kbapi'], function() {
+                require(['kbaseNarrative', 'IPythonCustom'], function(Narrative) {
+                    console.log('Starting IPython main');
+                    require(['IPythonMain']);
+                });
             });
         });
     });

@@ -46,9 +46,9 @@
  * @static
  */
 
-console.log('Loading KBase Narrative setup routine.');
+console.log('Loading KBase Narrative setup routine from IPython.custom.js.');
 $([IPython.events]).one('notebook_loaded.Notebook', function() {
-    console.log('Performing narrative startup');
+    console.log('Performing narrative startup after Notebook loading.');
     require(['kbaseNarrative'], function(Narrative) {
         IPython.narrative = new Narrative();
         IPython.narrative.init();

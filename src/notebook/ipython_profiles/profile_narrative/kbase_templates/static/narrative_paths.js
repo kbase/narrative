@@ -398,7 +398,7 @@ require.config({
     }
 });
 
-require(['domReady!', 'kbapi', 'kbase-client-api'], function() {
+require(['domReady!'], function() {
     require(['narrativeMain']);
 });
 

@@ -18,6 +18,8 @@ require.config({
         'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
         'select2'                               : 'select2-v3.5.2/select2.min',
 
+        'narrativeConfig'                       : 'kbase/js/narrativeConfig',
+        'narrativeMain'                         : 'kbase/js/narrativeMain',
         'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
         'narrativeLogin'                        : 'kbase/js/narrativeLogin',
         'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',
@@ -396,17 +398,21 @@ require.config({
     }
 });
 
-// Make sure all the proper things get loaded. IPython does the rest.
-require(['domReady!', 'kbwidget', 'kbapi', 'kbase-client-api'], function() {
-    require(['kbaseNarrativePrestart', 
-             'kbaseLogging', 
-             'narrativeLogin', 
-             'kbaseNarrativeOutputCell', 
-             'kbaseNarrativeAppCell',
-             'kbaseNarrativeMethodCell',
-             'IPythonCustom', 
-             ], function() {
-        console.log('Done with code loading, Starting IPython...');
-        require(['IPythonMain']);
-    });
+require(['domReady!', 'kbapi', 'kbase-client-api'], function() {
+    require(['narrativeMain']);
 });
+
+// // Make sure all the proper things get loaded. IPython does the rest.
+// require(['domReady!', 'kbwidget', 'kbapi', 'kbase-client-api'], function() {
+//     require(['kbaseNarrativePrestart', 
+//              'kbaseLogging', 
+//              'narrativeLogin', 
+//              'kbaseNarrativeOutputCell', 
+//              'kbaseNarrativeAppCell',
+//              'kbaseNarrativeMethodCell',
+//              'IPythonCustom', 
+//              ], function() {
+//         console.log('Done with code loading, Starting IPython...');
+//         require(['IPythonMain']);
+//     });
+// });

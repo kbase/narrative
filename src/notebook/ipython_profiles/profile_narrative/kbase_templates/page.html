@@ -60,8 +60,6 @@
     <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("narrative_paths") }}"></script>
     <!-- endbuild -->
 
-    <!-- // <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("narrative_paths") }}"></script> -->
-    <!-- // <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("dist/kbase-narrative-built") }}"></script> -->
     <script>
         var kb_use_require = true;
         var kb_norequire = function(deps, callback) {
@@ -228,46 +226,46 @@
 
 
     <script>
-        // Dumb thing to get the workspace ID just like the back end does - from the URL at startup.
-        // This snippet keeps the workspace ID local, so it shouldn't be changed if someone pokes at the URL
-        // before trying to fetch it again.
-        var workspaceId = null;
-        var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
-        if (m && m.length > 1)
-            workspaceId = parseInt(m[1]);
+        // // Dumb thing to get the workspace ID just like the back end does - from the URL at startup.
+        // // This snippet keeps the workspace ID local, so it shouldn't be changed if someone pokes at the URL
+        // // before trying to fetch it again.
+        // var workspaceId = null;
+        // var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
+        // if (m && m.length > 1)
+        //     workspaceId = parseInt(m[1]);
 
-        var configJSON = $.parseJSON(
-            $.ajax({
-                url: "{{ static_url('kbase/config.json') }}",
-                async: false,
-                dataType: 'json',
-                cache: false
-            }).responseText
-        );
-        var landingPageMap = {}; 
-        /*
-        we no longer use the crazy landing page map, but keep the variable here
-        so things we don't know about don't break
-        */
-        var icons = $.parseJSON(
-          $.ajax({
-            url: "{{ static_url('kbase/icons.json') }}",
-            async: false,
-            dataType: 'json',
-            cache: false
-          }).responseText
-        );
-        window.kbconfig = { urls: configJSON[configJSON['config']],
-                            version: configJSON['version'],
-                            name: configJSON['name'],
-                            git_commit_hash: configJSON['git_commit_hash'],
-                            git_commit_time: configJSON['git_commit_time'],
-                            landing_page_map: landingPageMap,
-                            release_notes: configJSON['release_notes'],
-                            mode: configJSON['mode'],
-                            icons: icons,
-                            workspaceId: workspaceId
-                          };
+        // var configJSON = $.parseJSON(
+        //     $.ajax({
+        //         url: "{{ static_url('kbase/config.json') }}",
+        //         async: false,
+        //         dataType: 'json',
+        //         cache: false
+        //     }).responseText
+        // );
+        // var landingPageMap = {}; 
+        // /*
+        // we no longer use the crazy landing page map, but keep the variable here
+        // so things we don't know about don't break
+        // */
+        // var icons = $.parseJSON(
+        //   $.ajax({
+        //     url: "{{ static_url('kbase/icons.json') }}",
+        //     async: false,
+        //     dataType: 'json',
+        //     cache: false
+        //   }).responseText
+        // );
+        // window.kbconfig = { urls: configJSON[configJSON['config']],
+        //                     version: configJSON['version'],
+        //                     name: configJSON['name'],
+        //                     git_commit_hash: configJSON['git_commit_hash'],
+        //                     git_commit_time: configJSON['git_commit_time'],
+        //                     landing_page_map: landingPageMap,
+        //                     release_notes: configJSON['release_notes'],
+        //                     mode: configJSON['mode'],
+        //                     icons: icons,
+        //                     workspaceId: workspaceId
+        //                   };
     </script>
 
     <script src="{{ static_url("base/js/namespace.js") }}" type="text/javascript" charset="utf-8"></script>

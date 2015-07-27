@@ -6,15 +6,25 @@
  *
  * To set global variables, use: IPython.narrative.<name> = value
  */
-"use strict";
 
-define(['jquery', 
-        'kbaseNarrativeSidePanel', 
-        'kbaseNarrativeOutputCell', 
-        'kbaseNarrativeWorkspace',
-        'kbaseNarrativePrestart',
-        'bootstrap'], 
-        function($) {
+define([
+    'jquery', 
+    'kbaseNarrativeSidePanel', 
+    'kbaseNarrativeOutputCell', 
+    'kbaseNarrativeWorkspace',
+    'kbaseNarrativeMethodCell',
+    'narrativeLogin',
+    'kbase-client-api',
+    'kbaseNarrativePrestart',
+], function($, 
+            kbaseNarrativeSidePanel,
+            kbaseNarrativeOutputCell,
+            kbaseNarrativeWorkspace,
+            kbaseNarrativeMethodCell,
+            narrativeLogin,
+            kbaseClient,
+            kbaseNarrativePrestart) {
+    "use strict";
 
 /**
  * @constructor

@@ -1,3 +1,10 @@
+"""
+Contains a couple utilities for fetching narratives and uploading them to the
+Workspace.
+
+Uses a hard-coded workspace server for now.
+"""
+
 from biokbase.workspace.client import Workspace
 import biokbase.auth
 import os
@@ -17,6 +24,8 @@ def fetch_narrative(nar_id, auth_token, url=ci_ws, file_name=None):
     Fetches a Narrative object with the given reference id (of the form ##/##).
     If a file_name is given, then it is printed to that file.
     If the narrative is found, the jsonized string of it is returned.
+
+    If nothing is found, an empty Dict is returned.
     """
     ws_client = Workspace(url=url, token=auth_token)
     nar_data = ws_client.get_objects([{'ref':nar_id}])

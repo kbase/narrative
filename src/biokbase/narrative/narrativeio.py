@@ -42,7 +42,7 @@ class PermissionsError(WorkspaceClient.ServerError):
         """Try to guess if the error string is a permission-denied error
         for the narrative (i.e. the workspace the narrative is in).
         """
-        pat = re.compile("\s*[Uu]sers?\s*(\w+)?\s*may not \w+ workspace.*")
+        pat = re.compile("(\s*[Uu]sers?\s*(\w+)?\s*may not \w+ workspace.*)|(\s*[Tt]oken validation failed)")
         return pat.search(err) is not None
 
     def __init__(self, name=None, code=None, message=None, **kw):
@@ -56,6 +56,8 @@ class KBaseWSManagerMixin(object):
 
     ws_uri = service.URLS.workspace
     nar_type = 'KBaseNarrative.Narrative'
+    nar_version = '4.0'
+    old_version = '3.0'
 
     def __init__(self, *args, **kwargs):
         if not self.ws_uri:
@@ -87,6 +89,16 @@ class KBaseWSManagerMixin(object):
             return ws_info[1]
         except WorkspaceClient.ServerError, err:
             raise self._ws_err_to_perm_err(err)
+
+    def _parse_obj_ref(self, obj_ref):
+        m = obj_ref_regex.match(obj_ref)
+        if m is None:
+            return None
+        return dict(
+            wsid=m.group('wsid'),
+            objid=m.group('objid'),
+            ver=m.group('ver')
+        )
 
     def narrative_exists(self, obj_ref):
         """
@@ -132,7 +144,7 @@ class KBaseWSManagerMixin(object):
         except WorkspaceClient.ServerError, err:
             raise self._ws_err_to_perm_err(err)
 
-    def write_narrative(self, ws_id, obj_id, nb, cur_user):
+    def write_narrative(self, obj_ref, nb, cur_user):
         """
         Given a notebook, break this down into a couple parts:
         1. Figure out what ws and obj to save to
@@ -140,6 +152,12 @@ class KBaseWSManagerMixin(object):
         3. Save the narrative object (write_narrative)
         4. Return any notebook changes.
         """
+        parsed_ref = self._parse_obj_ref(obj_ref)
+        if parsed_ref is None:
+            raise HTTPError(500, 'Unable to parse incorrect obj_ref "{}"'.format(obj_ref))
+        ws_id = parsed_ref['wsid']
+        obj_id = parsed_ref['objid']
+
         # make sure the metadata's up to date.
         try:
             meta = nb['metadata']
@@ -166,8 +184,6 @@ class KBaseWSManagerMixin(object):
             meta['format'] = u'ipynb'
 
             nb['metadata'] = meta
-        except PermissionsError as e:
-            raise
         except Exception as e:
             raise HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
 
@@ -178,13 +194,19 @@ class KBaseWSManagerMixin(object):
                 'narrative_nice_name': nb['metadata']['name']
             }
             self.ws_client().alter_workspace_metadata({'wsi': {'id': ws_id}, 'new':updated_metadata})
+        except WorkspaceClient.ServerError, err:
+            raise self._ws_err_to_perm_err(err)
         except Exception as e:
             raise HTTPError(500, u'Error adjusting Narrative metadata: %s, %s' % (e.__str__(), ws_id))
 
         # Now we can save the Narrative object.
         try:
+            # Simple version check - if the 'worksheets' key exist, then it's the older version.
+            nar_version = self.nar_version
+            if 'worksheets' in nb:
+                nar_version = self.old_version
             ws_save_obj = {
-                'type': self.nar_type + '-4.0',
+                'type': self.nar_type + '-' + nar_version,
                 'data': nb,
                 'objid': obj_id,
                 'meta': nb['metadata'].copy(),
@@ -219,16 +241,13 @@ class KBaseWSManagerMixin(object):
             ws_save_obj['meta']['job_info'] = json.dumps(job_info)
             if 'job_ids' in ws_save_obj['meta']:
                 ws_save_obj['meta'].pop('job_ids')
-
             # clear out anything from metadata that doesn't have a string value
             # This flushes things from IPython that we don't need as KBase object metadata
             ws_save_obj['meta'] = {key: value for key, value in ws_save_obj['meta'].items() if isinstance(value, str) or isinstance(value, unicode)}
 
             # Actually do the save now!
-            self.log.debug("calling Workspace.save_objects")
             obj_info = self.ws_client().save_objects({'id': ws_id,
                                                       'objects': [ws_save_obj]})[0]
-            self.log.debug("save_object returned object ref: {}/{}".format(obj_info[6], obj_info[0]))
 
             # tweak the workspace's metadata to properly present its narrative
             self.ws_client().alter_workspace_metadata({'wsi': {'id': ws_id}, 'new':{'narrative':obj_info[0]}})
@@ -236,7 +255,6 @@ class KBaseWSManagerMixin(object):
 
         except WorkspaceClient.ServerError, err:
             raise self._ws_err_to_perm_err(err)
-
         except Exception as e:
             raise HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
 
@@ -262,11 +280,18 @@ class KBaseWSManagerMixin(object):
             }
         }
         """
+        # Support for old versions!
+        cells = []
+        if 'cells' in nb:        # ipynb v4+
+            cells = nb['cells']
+        elif 'worksheets' in nb: # ipynb v3
+            cells = nb['worksheets'][0]['cells']
+
         cell_types = {'method' : {},
                       'app' : {},
                       'output': 0,
                       'ipython' : {'markdown': 0, 'code': 0}}
-        for cell in nb.get('cells'):
+        for cell in cells:
             meta = cell['metadata']
             if 'kb-cell' in meta:
                 t = None
@@ -295,14 +320,23 @@ class KBaseWSManagerMixin(object):
                 cell_types['ipython'][t] = cell_types['ipython'][t] + 1
         return cell_types
 
-    def rename_narrative(self, obj_ref, new_name, content=True):
-        try:
-            nar = self.read_narrative(obj_ref)
-            # do stuff to set the new name
-            renamed_nar = {}
-            self.write_narrative(renamed_nar)
-        except WorkspaceClient.ServerError, err:
-            raise self._ws_err_to_perm_err(err)
+    def rename_narrative(self, obj_ref, cur_user, new_name):
+        """
+        Renames a Narrative. Requires an obj_ref
+        and the name to set for the Narrative. If the current name
+        doesn't match the new name, nothing changes.
+
+        There are no restrictions on this name, since it just 
+        goes into the object's metadata.
+
+        Any Exceptions that get thrown should just be auto-raised.
+        """
+        nar = self.read_narrative(obj_ref)['data']
+        # do stuff to set the new name
+        if nar['metadata']['name'] == new_name:
+            return
+        nar['metadata']['name'] = new_name
+        self.write_narrative(obj_ref, nar, cur_user)
 
     def copy_narrative(self, obj_ref, content=True):
         pass

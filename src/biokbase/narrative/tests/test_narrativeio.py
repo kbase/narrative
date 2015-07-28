@@ -227,31 +227,34 @@ class NarrIOTestCase(unittest.TestCase):
         self.login()
         nar = self.mixin.read_narrative(self.private_nar['ref'], content=False, include_metadata=True)
         cur_name = nar['info'][10]['name']
-        self.mixin.rename_narrative(self.private_nar['ref'], new_name)
+        self.mixin.rename_narrative(self.private_nar['ref'], self.test_user, new_name)
         nar = self.mixin.read_narrative(self.private_nar['ref'], content=False, include_metadata=True)
         self.assertEquals(new_name, nar['info'][10]['name'])
+
+        ### now, put it back to the old name, so it doesn't break other tests...
+        self.mixin.rename_narrative(self.private_nar['ref'], self.test_user, cur_name)
         self.logout()
 
     def test_rename_narrative_valid_anon(self):
         with self.assertRaises(PermissionsError) as err:
-            self.mixin.rename_narrative(self.public_nar['ref'], 'new_name')
+            self.mixin.rename_narrative(self.public_nar['ref'], self.test_user, 'new_name')
         self.assertIsNotNone(err)
 
     def test_rename_narrative_unauth(self):
         self.login()
         with self.assertRaises(PermissionsError) as err:
-            self.mixin.rename_narrative(self.unauth_nar['ref'], 'new_name')
+            self.mixin.rename_narrative(self.unauth_nar['ref'], self.test_user, 'new_name')
         self.assertIsNotNone(err)
         self.logout() 
 
     def test_rename_narrative_invalid(self):
         with self.assertRaises(ServerError) as err:
-            self.mixin.rename_narrative(self.invalid_nar_ref, 'new_name')
+            self.mixin.rename_narrative(self.invalid_nar_ref, self.test_user, 'new_name')
         self.assertIsNotNone(err)
 
     def test_rename_narrative_bad(self):
         with self.assertRaises(ValueError) as err:
-            self.mixin.rename_narrative(self.bad_nar_ref, 'new_name')
+            self.mixin.rename_narrative(self.bad_nar_ref, self.test_user, 'new_name')
         self.assertIsNotNone(err)
 
     ##### test KBaseWSManagerMixin.copy_narrative #####

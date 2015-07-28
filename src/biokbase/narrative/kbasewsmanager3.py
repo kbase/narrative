@@ -290,7 +290,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         self.check_and_sign(nb, path)
 
         try:
-            result = self.write_narrative(match.group('wsid'), match.group('objid'), nb, self.get_userid())
+            result = self.write_narrative(self._obj_ref_from_path(path), nb, self.get_userid())
 
             new_id = "ws.%s.obj.%s" % (result[1], result[2])
             util.kbase_env.narrative = new_id
@@ -308,23 +308,24 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             raise HTTPError(403, err.message)
         except Exception as err:
             raise HTTPError(500, u'An error occurred while saving your Narrative: {}'.format(err))
-            """
-            once I get the function written, I'll fill this in with what kind of 
-            HTTP Errors to use - Permission's a given, also ...
-            - WS not found
-            - malformatted
-            - missing info
-            - too large
-            - ...?
-            """
 
     def delete_file(self, path):
         """Delete file or directory by path."""
         raise NotImplementedError('deletion not implemented yet')
 
-    def rename_file(self, old_path, new_path):
-        """Rename a file."""
-        raise NotImplementedError('renaming not implemented yet')
+    def rename_file(self, path, new_name):
+        """Rename a file from old_path to new_path.
+        This gets tricky in KBase since we don't deal with paths, but with
+        actual file names. For now, assume that 'old_path' won't actually
+        change, but the 'new_path' is actually the new Narrative name."""
+        path = path.strip('/')
+
+        try:
+            self.rename_narrative(self._obj_ref_from_path(path), self.get_userid(), new_name)
+        except PermissionsErr as err:
+            raise HTTPError(403, err.message)
+        except Exception as err:
+            raise HTTPError(500, u'An error occurred while renaming your Narrative: {}'.format(err))
 
     # API part 2: methods that have useable default
     # implementations, but can be overridden in subclasses.

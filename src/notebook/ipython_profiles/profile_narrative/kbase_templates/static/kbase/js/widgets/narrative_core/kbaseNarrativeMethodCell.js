@@ -66,6 +66,8 @@
                     if (!this.checkMethodRun())
                         return;
 
+                    // todo: lookup current user here
+
                     this.submittedText = 'submitted on ' + this.readableTimestamp();
                     this.trigger('runCell.Narrative', {
                         cell: IPython.notebook.get_selected_cell(),
@@ -158,7 +160,7 @@
                                       .css({'overflow' : 'hidden'})
                                       .append($buttons));
 
-            this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
+            this.cellMenu = $menuSpan.kbaseNarrativeCellMenu({'kbWidget':this, 'kbWidgetType':'method'});
             this.$elem.append(this.$cellPanel);
 
             // Add minimize/restore actions.

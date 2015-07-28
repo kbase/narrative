@@ -2,7 +2,7 @@ define(['jquery', 'kbwidget'], function($) {
     $.KBWidget({
         name: 'kbaseNarrativeCellMenu',
         parent: 'kbaseWidget',
-        options: {cell: null},
+        options: {cell: null, kbWidget:null, kbWidgetType:null},
 
         init: function(options) {
             this._super(options);
@@ -81,6 +81,41 @@ define(['jquery', 'kbwidget'], function($) {
                     var cell = IPython.notebook.insert_cell_below('markdown');
                 }
             });
+
+            // only add this if it was controlled by a KBase Widget
+            if(this.options.kbWidget && this.options.kbWidgetType) {
+                this.addMenuItem({
+                    icon: 'fa fa-copy',
+                    text: 'Duplicate Cell',
+                    action: $.proxy(function() {
+                        // get the current state, and clear it of its running state
+                        var kbWidget = options.kbWidget
+                        var currentState = kbWidget.getState();
+                        if(this.options.kbWidgetType === 'method') {
+                            // put the method in the narrative
+                            this.trigger('methodClicked.Narrative', kbWidget.method);
+
+                            // the method initializes an internal method input widget, but in an async way
+                            // so we have to wait and check when that is done.  When it is, we can update state
+                            var newCell = IPython.notebook.get_selected_cell();
+                            var newWidget = $('#'+$(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
+                            currentState.runningState.submittedText = "";
+                            currentState.runningState.runState = "";
+                            var updateState = function(state) {
+                                if(newWidget.$inputWidget) {
+                                    // if the $inputWidget is not null, we are good to go, so set the state (ignoring the run state)
+                                    newWidget.loadState(state);
+                                } else {
+                                    // not ready yet, keep waiting
+                                    window.setTimeout(function() { updateState(currentState); },500);
+                                }
+                            };
+                            window.setTimeout(function() { updateState(currentState); },50);
+
+                        }
+                    }, this)
+                });
+            }
 
             // if (this.options.cell && this.options.cell.metadata['kb-cell'] === undefined) {
             //     this.addMenuItem({

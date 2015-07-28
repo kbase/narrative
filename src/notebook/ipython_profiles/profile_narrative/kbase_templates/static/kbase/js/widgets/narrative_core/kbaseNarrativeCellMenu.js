@@ -99,18 +99,16 @@ define(['jquery', 'kbwidget'], function($) {
                             // so we have to wait and check when that is done.  When it is, we can update state
                             var newCell = IPython.notebook.get_selected_cell();
                             var newWidget = $('#'+$(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
-                            currentState.runningState.submittedText = "";
-                            currentState.runningState.runState = "";
                             var updateState = function(state) {
                                 if(newWidget.$inputWidget) {
-                                    // if the $inputWidget is not null, we are good to go, so set the state (ignoring the run state)
-                                    newWidget.loadState(state);
+                                    // if the $inputWidget is not null, we are good to go, so set the state
+                                    newWidget.loadState(currentState.params);
                                 } else {
                                     // not ready yet, keep waiting
-                                    window.setTimeout(function() { updateState(currentState); },500);
+                                    window.setTimeout(updateState,500);
                                 }
                             };
-                            window.setTimeout(function() { updateState(currentState); },50);
+                            window.setTimeout(updateState,50);
 
                         }
                     }, this)

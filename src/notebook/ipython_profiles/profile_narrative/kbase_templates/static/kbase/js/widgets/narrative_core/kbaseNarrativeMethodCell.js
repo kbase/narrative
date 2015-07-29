@@ -202,6 +202,19 @@
 
         /**
          * @method
+         * Invoke this method- basically the API way to click on the run button.
+         * @public
+         */
+        runMethod: function() {
+            if(this.$runButton) {
+                this.$runButton.click();
+            } else {
+                console.error('Attempting to run a method, but the method is not yet initialized/rendered.')
+            }
+        },
+
+        /**
+         * @method
          * Returns parameters from the contained input widget
          * @public
          */

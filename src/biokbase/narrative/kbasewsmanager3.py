@@ -355,9 +355,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         model = self.get(new_path, content=False)
         return model
 
-    # def info_string(self):
-    #     return "Serving contents"
-
     def increment_filename(self, filename, path='', insert=''):
         """Increment a filename until it is unique.
 
@@ -552,9 +549,5 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """Should this file/directory name be displayed in a listing?"""
         return not any(fnmatch(name, glob) for glob in self.hide_globs)
 
-    def log_info(self):
-        self.log.info("Service Narratives from the KBase Workspace service")
-        pass
-
-    # def info_string(self):
-    #     return "Workspace Narrative Service with workspace endpoint at %s" % self.kbasews_uri
+    def info_string(self):
+        return "Workspace Narrative Service with workspace endpoint at %s" % self.kbasews_uri

@@ -1,5 +1,5 @@
 {
-    "config": "prod", 
+    "config": "ci", 
     "dev": {
         "awe": "http://140.221.67.185:7080", 
         "cdmi": "https://kbase.us/services/cdmi_api/", 
@@ -125,6 +125,7 @@
         "workspace": "https://ci.kbase.us/services/ws", 
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
-   "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md", 
-    "version": "1.0.3"
+    "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md", 
+    "version": "1.0.3",
+    "loading_gif": "/static/kbase/images/ajax_loader.gif"
 }

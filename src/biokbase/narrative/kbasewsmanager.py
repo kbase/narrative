@@ -1,7 +1,5 @@
 """A notebook manager that uses the KBase workspace for storage.
 
-Based on Travis Harrison's shocknbmanager and the azurenbmanager
-
 Authors:
 
 * Steve Chan <sychan@lbl.gov>

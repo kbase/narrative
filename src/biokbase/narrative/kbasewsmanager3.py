@@ -311,7 +311,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     def delete_file(self, path):
         """Delete file or directory by path."""
-        raise NotImplementedError('deletion not implemented yet')
+        raise HTTPError(500, u'Narrative deletion not implemented here')
 
     def rename_file(self, path, new_name):
         """Rename a file from old_path to new_path.

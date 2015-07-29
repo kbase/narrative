@@ -136,6 +136,7 @@ require.config({
         'AnnotationSetTable'                    : 'kbase/js/widgets/function_output/kbaseAnnotationSetTable',
         'AbundanceDataView'                     : 'kbase/js/widgets/function_output/kbaseAbundanceDataView',
         'RankAbundancePlot'                     : 'kbase/js/widgets/function_output/kbaseRankAbundancePlot',
+        'kbaseFeatureSet'                       : 'kbase/js/widgets/function_output/kbaseFeatureSet',
 
         // unfinished ones
         /***

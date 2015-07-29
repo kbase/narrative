@@ -17,7 +17,7 @@ from biokbase.workspace.client import (
 import biokbase.auth
 import os
 import re
-from tornado import web
+from tornado.web import HTTPError
 import biokbase.narrative.common.service as service
 import ConfigParser
 import narrative_test_helper as test_util
@@ -207,18 +207,47 @@ class NarrIOTestCase(unittest.TestCase):
 
     ##### test KBaseWSManagerMixin.write_narrative #####
 
-    def test_write_narrative_valid_content(self):
+    def test_write_narrative_valid_auth(self):
+        # fetch a narrative and just write it back again.
+        # should return (nar, wsid, objid)
+        self.login()
+        nar = self.mixin.read_narrative(self.private_nar['ref'])['data']
+        result = self.mixin.write_narrative(self.private_nar['ref'], nar, self.test_user)
+        self.assertTrue(result[1] == self.private_nar['ws'] and result[2] == self.private_nar['obj'])
+        self.logout()
+
+    def test_write_narrative_valid_anon(self):
+        nar = self.mixin.read_narrative(self.public_nar['ref'])['data']
+        with self.assertRaises(PermissionsError) as err:
+            self.mixin.write_narrative(self.public_nar['ref'], nar, 'Anonymous')
+        self.assertIsNotNone(err)
+
+    def test_write_narrative_valid_unauth(self):
         pass
 
-    def test_write_narrative_valid_no_content(self):
-        pass
+    def test_write_narrative_invalid_ref(self):
+        self.login()
+        nar = self.mixin.read_narrative(self.public_nar['ref'])['data']
+        with self.assertRaises(ServerError) as err:
+            self.mixin.write_narrative(self.invalid_nar_ref, nar, self.test_user)
+        self.assertIsNotNone(err)
+        self.logout()
 
-    def test_write_narrative_invalid(self):
-        pass
+    def test_write_narrative_bad_ref(self):
+        self.login()
+        nar = self.mixin.read_narrative(self.public_nar['ref'])['data']
+        with self.assertRaises(HTTPError) as err:
+            self.mixin.write_narrative(self.bad_nar_ref, nar, self.test_user)
+        self.assertEquals(err.exception.status_code, 500)
+        self.logout()
 
-    def test_write_narrative_bad(self):
-        pass
-
+    def test_write_narrative_bad_file(self):
+        self.login()
+        with self.assertRaises(HTTPError) as err:
+            self.mixin.write_narrative(self.private_nar['ref'], {'not':'a narrative'}, self.test_user)
+        self.assertEquals(err.exception.status_code, 400)
+        self.logout()
+        
 
     ##### test KBaseWSManagerMixin.rename_narrative #####
 
@@ -260,9 +289,11 @@ class NarrIOTestCase(unittest.TestCase):
     ##### test KBaseWSManagerMixin.copy_narrative #####
 
     def test_copy_narrative_valid(self):
+        # no op for now
         pass
 
     def test_copy_narrative_invalid(self):
+        # no op for now
         pass
 
 

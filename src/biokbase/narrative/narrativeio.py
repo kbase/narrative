@@ -150,7 +150,8 @@ class KBaseWSManagerMixin(object):
         1. Figure out what ws and obj to save to
         2. Build metadata object
         3. Save the narrative object (write_narrative)
-        4. Return any notebook changes.
+        4. Return any notebook changes as a list-
+           (narrative, ws_id, obj_id)
         """
         parsed_ref = self._parse_obj_ref(obj_ref)
         if parsed_ref is None:

@@ -169,11 +169,9 @@
             // These mess with the CSS on the cells!
             var self = this;
             $controlsSpan.click(function() {
-                var $mintarget = self.$cellPanel;
                 if (self.panel_minimized) {
                     self.maximizeView();
-                }
-                else {
+                } else {
                     self.minimizeView();
                 }
             });
@@ -280,8 +278,6 @@
             // That's new!
             // old one just has the state that should be passed to the input widget.
             // that'll be deprecated soonish.
-            console.debug('loading state!');
-            console.debug(state);
             if (state.hasOwnProperty('params') 
               && state.hasOwnProperty('runningState')) {
                 this.allowOutput = state.runningState.outputState;

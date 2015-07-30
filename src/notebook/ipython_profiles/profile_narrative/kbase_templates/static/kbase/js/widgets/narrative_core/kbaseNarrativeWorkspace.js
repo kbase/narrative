@@ -376,9 +376,16 @@ define(['jquery',
                 // do the standard for now.
                 code = this.buildGenericRunCommand(data);
             }
+            var handleError = function() {
+                if(data.widget) {
+                    if(data.widget.changeState)
+                        data.widget.changeState('error');
+                }
+            };
+
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput); },
+                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput, handleError); },
                 'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
                 'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
                 'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
@@ -1769,7 +1776,7 @@ define(['jquery',
         /**
          * @method _handle_output
          */
-        handleOutput: function (cell, msgType, content, showOutput) {
+        handleOutput: function (cell, msgType, content, showOutput, submissionErrorCallback) {
             // copied from outputarea.js
             var buffer = "";
             if (msgType === "stream") {
@@ -1814,6 +1821,7 @@ define(['jquery',
                                     case 'E': // Error while running
                                         var errorJson = matches[2];
                                         errorJson = errorJson.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\$/g, "&#36;");
+                                        if(submissionErrorCallback) { submissionErrorCallback(); }
                                         self.createOutputCell(cell, '{"error" :' + errorJson + '}', true);
                                         break;
 

@@ -72,13 +72,14 @@
                             this.submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
                                 +'" target="_blank">' + this.auth().user_id + "</a>";
                     }
+                    this.changeState('submitted');
+                    this.minimizeView();
                     this.trigger('runCell.Narrative', {
                         cell: IPython.notebook.get_selected_cell(),
                         method: this.method,
-                        parameters: this.getParameters()
+                        parameters: this.getParameters(),
+                        widget: this
                     });
-                    this.changeState('submitted');
-                    this.minimizeView();
                 }, this)
             );
 
@@ -350,7 +351,6 @@
                         this.displayRunning(true);
                         break;
                     case 'complete':
-                        console.debug("Method is complete");
                         this.$cellPanel.removeClass('kb-app-step-running');
                         this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
                         this.$submitted.html(this.submittedText).show();
@@ -376,7 +376,7 @@
                         this.$stopButton.show();
                         this.$inputWidget.lockInputs();
                         this.$elem.find('.kb-app-panel').addClass('kb-app-error');
-                        this.displayRunning(true, false);
+                        this.displayRunning(false, true);
                         break;
                     default:
                         this.$cellPanel.removeClass('kb-app-step-running');
@@ -390,6 +390,15 @@
                 }
             }
         },
+
+        isAwaitingInput: function() {
+            if(this.runState) {
+                if(this.runState==='input') { return true; }
+                return false;
+            }
+            return true;
+        },
+
 
         getRunningState: function() {
             return this.runState;
@@ -471,7 +480,6 @@
         setOutput: function(data) {
             if (data.cellId && this.allowOutput) {
                 this.allowOutput = false;
-                console.debug("Creating output cell...");
                 // Show the 'next-steps' to take, if there are any
                 var self = this;
                 this.getNextSteps( function(next_steps) {
@@ -487,20 +495,24 @@
             var self = this;
             self.$dynamicMethodSummary.empty();
 
+
             // First set the main text
-            if(self.method.replacement_text && self.submittedText) {
+            if(self.method.replacement_text && 
+              self.submittedText && !self.isAwaitingInput()) {
                 // If replacement text exists, and the method was submitted, use it
                 var template = Handlebars.compile(self.method.replacement_text);
                 self.$dynamicMethodSummary.append($('<h1>').html(template(self.getParameterMapForReplacementText())));
-            } else {
-                self.$dynamicMethodSummary.append($('<h1>').append(self.method.info.name));
-            }
-
-            if(self.submittedText) {
                 self.$dynamicMethodSummary.append($('<h2>').append(self.submittedText));
             } else {
-                self.$dynamicMethodSummary.append($('<h2>').append('Not yet submitted.'));
+                self.$dynamicMethodSummary.append($('<h1>').append(self.method.info.name));
+                if(self.submittedText && !self.isAwaitingInput()) {
+                    self.$dynamicMethodSummary.append($('<h2>').append(self.submittedText));
+                } else {
+                    self.$dynamicMethodSummary.append($('<h2>').append('Not yet submitted.'));
+                }
             }
+
+            
 
         },
 

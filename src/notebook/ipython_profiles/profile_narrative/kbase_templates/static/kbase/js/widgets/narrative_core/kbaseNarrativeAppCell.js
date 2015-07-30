@@ -320,15 +320,15 @@
             var self = this;
             $controlsSpan.click(function() {
                 if (self.panel_minimized) {
-                    $mintarget.find(".panel-body").slideDown();
-                    $mintarget.find(".panel-footer").slideDown();
+                    $mintarget.children(".panel-body").slideDown();
+                    $mintarget.children(".panel-footer").slideDown();
                     $minimizeControl.removeClass("glyphicon-chevron-right")
                                     .addClass("glyphicon-chevron-down");
                     self.panel_minimized = false;
                 }
                 else {
-                    $mintarget.find(".panel-footer").slideUp();
-                    $mintarget.find(".panel-body").slideUp();
+                    $mintarget.children(".panel-footer").slideUp();
+                    $mintarget.children(".panel-body").slideUp();
                     $minimizeControl.removeClass("glyphicon-chevron-down")
                                     .addClass("glyphicon-chevron-right");
                     self.panel_minimized = true;

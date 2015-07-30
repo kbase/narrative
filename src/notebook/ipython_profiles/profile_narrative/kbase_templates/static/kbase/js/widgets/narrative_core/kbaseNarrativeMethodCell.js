@@ -143,7 +143,7 @@
             // Controls (minimize)
             var $controlsSpan = $('<div>').addClass("pull-left");
             this.$minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
-                                    .css({color: "#888", fontSize: "14pt",
+                                    .css({color: "#888", fontSize: "14pt",  cursor:'pointer',
                                           paddingTop: "7px", margin: "5px"});
             $controlsSpan.append(this.$minimizeControl);
             this.panel_minimized = false;
@@ -502,7 +502,6 @@
             var self = this;
             self.$dynamicMethodSummary.empty();
 
-
             // First set the main text
             if(self.method.replacement_text && 
               self.submittedText && !self.isAwaitingInput()) {
@@ -518,9 +517,6 @@
                     self.$dynamicMethodSummary.append($('<h2>').append('Not yet submitted.'));
                 }
             }
-
-            
-
         },
 
 

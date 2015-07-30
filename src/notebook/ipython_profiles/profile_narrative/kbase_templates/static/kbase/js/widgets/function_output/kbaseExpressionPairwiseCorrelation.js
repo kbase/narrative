@@ -85,6 +85,9 @@
                     y: 25,
                     symbolHeight: 280
                 },
+                credits: {
+                    enabled: false
+                },                
                 tooltip: {
                     formatter: function () {
                         return 'Pearson correlation: ' + this.point.value.toFixed(2) 

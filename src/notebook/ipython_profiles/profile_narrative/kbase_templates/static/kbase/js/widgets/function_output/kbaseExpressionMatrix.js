@@ -22,8 +22,8 @@ define(['jquery',
 			workspaceID: null,
 
             // Service URL: should be in window.kbconfig.urls.
-            // featureValueURL: 'http://localhost:8889',
-            featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
+            featureValueURL: 'http://localhost:8889',
+            // featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
 
 			loadingImage: "static/kbase/images/ajax-loader.gif"
 		},
@@ -135,15 +135,23 @@ define(['jquery',
 
 			/////////////////////////////////// Conditions tab ////////////////////////////////////////////          
 
-			var tabConditions = $("<div/>");
-			tabPane.kbaseTabs('addTab', {tab: 'Conditions', content: tabConditions, canDelete : false, show: false});
+			var $tabConditions = $("<div/>");
+			tabPane.kbaseTabs('addTab', {tab: 'Conditions', content: $tabConditions, canDelete : false, show: false});
 
-			///////////////////////////////////// Conditions table ////////////////////////////////////////////          
+			///////////////////////////////////// Conditions table ////////////////////////////////////////////  
+
+			$tabConditions.append(
+                $('<div style="font-size: 1.5em; width:100%; text-align: center;"> Browse conditions </div>')
+            );
+            $tabConditions.append(
+                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated across all genes</div>')
+            );
+
 
 			var tableConditions = $('<table id="'+pref+'conditions-table" \
 				class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
 				</table>')
-				.appendTo(tabConditions)
+				.appendTo($tabConditions)
 				.dataTable( {
 				   "sDom": 'lftip',
 					"aaData": self.buildConditionsTableData(),
@@ -158,15 +166,22 @@ define(['jquery',
 				} );
 
 			///////////////////////////////////// Genes tab ////////////////////////////////////////////          
-			var tabGenes = $("<div/>");
-			tabPane.kbaseTabs('addTab', {tab: 'Genes', content: tabGenes, canDelete : false, show: false});
+			var $tabGenes = $("<div/>");
+			tabPane.kbaseTabs('addTab', {tab: 'Genes', content: $tabGenes, canDelete : false, show: false});
 
 			///////////////////////////////////// Genes table ////////////////////////////////////////////          
+
+			$tabGenes.append(
+                $('<div style="font-size: 1.5em; width:100%; text-align: center;"> Browse genes </div>')
+            );
+            $tabGenes.append(
+                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated across all conditions</div>')
+            );
 
 			var tableGenes = $('<table id="'+pref+'genes-table" \
 				class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
 				</table>')
-				.appendTo(tabGenes)
+				.appendTo($tabGenes)
 				.dataTable( {
 				   "sDom": 'lftip',
 					"aaData": self.buildGenesTableData(),

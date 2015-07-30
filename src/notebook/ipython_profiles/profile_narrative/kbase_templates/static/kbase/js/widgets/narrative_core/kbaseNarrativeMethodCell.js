@@ -13,7 +13,7 @@
   require(['jquery', 'kbwidget'], function($) {
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",
-        parent: "kbaseWidget",
+        parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
             method: null,
@@ -66,9 +66,12 @@
                     if (!this.checkMethodRun())
                         return;
 
-                    // todo: lookup current user here
-
                     this.submittedText = 'submitted on ' + this.readableTimestamp();
+                    if(this.auth()) {
+                        if(this.auth().user_id)
+                            this.submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
+                                +'" target="_blank">' + this.auth().user_id + "</a>";
+                    }
                     this.trigger('runCell.Narrative', {
                         cell: IPython.notebook.get_selected_cell(),
                         method: this.method,

@@ -63,7 +63,6 @@ define(['jquery',
 
             // Let's go...
             this.loadAndRender();           
-           
             return this;
         },
 

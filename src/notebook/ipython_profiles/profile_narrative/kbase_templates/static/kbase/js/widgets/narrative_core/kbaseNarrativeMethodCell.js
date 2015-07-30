@@ -219,7 +219,6 @@
          * @public
          */
         getParameterMapForReplacementText: function() {
-
             if (this.$inputWidget) {
                 var paramMap = {};
                 var paramList = this.$inputWidget.getParameters();
@@ -232,12 +231,10 @@
                             this.method.parameters[k].text_options) {
                           if(this.method.parameters[k].text_options.valid_ws_types) {
                             if(this.method.parameters[k].text_options.valid_ws_types.length>0) {
-                              paramMap[this.method.parameters[k].id] = '<b><a>' + paramList[k] + '</a></b>';
-
+                              paramMap[this.method.parameters[k].id] = '<b><a style="cursor:default;">' + paramList[k] + '</a></b>';
                             }
                           }
                         }
-
                     }
                 }
                 return paramMap;

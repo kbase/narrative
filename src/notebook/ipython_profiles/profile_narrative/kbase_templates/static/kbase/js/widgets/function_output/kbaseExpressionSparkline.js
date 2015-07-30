@@ -70,6 +70,10 @@
                 legend: {
                 },
 
+                credits: {
+                    enabled: false
+                },
+                
                 series: [
                     {
                         name: 'Selected genes average',

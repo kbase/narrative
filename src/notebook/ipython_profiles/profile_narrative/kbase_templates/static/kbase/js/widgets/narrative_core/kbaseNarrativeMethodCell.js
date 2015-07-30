@@ -259,6 +259,7 @@
                     'submittedText' : this.submittedText,
                     'outputState' : this.allowOutput
                 },
+                'minimized' : this.panel_minimized,
                 'params' : this.$inputWidget.getState()
             };
         },
@@ -279,11 +280,17 @@
             // That's new!
             // old one just has the state that should be passed to the input widget.
             // that'll be deprecated soonish.
-            if (state.hasOwnProperty('params') && state.hasOwnProperty('runningState')) {
+            console.debug('loading state!');
+            console.debug(state);
+            if (state.hasOwnProperty('params') 
+              && state.hasOwnProperty('runningState')) {
                 this.allowOutput = state.runningState.outputState;
                 this.$inputWidget.loadState(state.params);
                 this.submittedText = state.runningState.submittedText;
                 this.changeState(state.runningState.runState);
+                if(state.minimized) {
+                    this.minimizeView(true); // true so that we don't show slide animation
+                }
             }
             else
                 this.$inputWidget.loadState(state);
@@ -517,20 +524,22 @@
         },
 
 
-        minimizeView: function() {
+        minimizeView: function(noAnimation) {
             var self = this;
             var $mintarget = self.$cellPanel;
-
-            console.debug(self.method)
 
             self.$staticMethodInfo.hide();
 
             // create the dynamic summary based on the run state
             self.updateDynamicMethodSummaryHeader()
             self.$dynamicMethodSummary.show();
-
-            $mintarget.find(".panel-footer").slideUp();
-            $mintarget.find(".panel-body").slideUp();
+            if(noAnimation) {
+                $mintarget.find(".panel-footer").hide();
+                $mintarget.find(".panel-body").hide();
+            } else {
+                $mintarget.find(".panel-footer").slideUp();
+                $mintarget.find(".panel-body").slideUp();
+            }
             self.$minimizeControl.removeClass("glyphicon-chevron-down")
                               .addClass("glyphicon-chevron-right");
             self.panel_minimized = true;

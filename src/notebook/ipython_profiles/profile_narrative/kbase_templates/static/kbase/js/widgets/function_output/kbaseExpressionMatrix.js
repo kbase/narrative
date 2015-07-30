@@ -22,8 +22,8 @@ define(['jquery',
 			workspaceID: null,
 
             // Service URL: should be in window.kbconfig.urls.
-            featureValueURL: 'http://localhost:8889',
-            // featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
+            // featureValueURL: 'http://localhost:8889',
+            featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
 
 			loadingImage: "static/kbase/images/ajax-loader.gif"
 		},

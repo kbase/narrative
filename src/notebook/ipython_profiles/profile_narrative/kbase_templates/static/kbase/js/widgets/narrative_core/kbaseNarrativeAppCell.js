@@ -15,7 +15,7 @@
   require(['jquery', 'kbwidget'], function($) {
     $.KBWidget({
         name: "kbaseNarrativeAppCell",
-        parent: "kbaseWidget",
+        parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
             app: null,
@@ -178,8 +178,13 @@
                               .append('Run')
                               .click(
                                   $.proxy(function(event) {
-                                      self.$submitted.html("submitted on "+this.readableTimestamp(new Date().getTime()));
-
+                                      var submittedText = "submitted on "+this.readableTimestamp(new Date().getTime());
+                                      if(this.auth()) {
+                                          if(this.auth().user_id)
+                                              submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
+                                                                      +'" target="_blank">' + this.auth().user_id + "</a>";
+                                      }
+                                      this.$submitted.html(submittedText);
                                       var isGood = self.startAppRun();
                                       if (!isGood) { return; }
 
@@ -314,7 +319,6 @@
             var self = this;
             $controlsSpan.click(function() {
                 if (self.panel_minimized) {
-                    console.debug("restore full panel");
                     $mintarget.find(".panel-body").slideDown();
                     $mintarget.find(".panel-footer").show();
                     $minimizeControl.removeClass("glyphicon-chevron-right")
@@ -324,7 +328,6 @@
                     self.panel_minimized = false;
                 }
                 else {
-                    console.debug("minimize panel");
                     $mintarget.find(".panel-footer").hide();
                     $mintarget.find(".panel-body").slideUp();
                     $minimizeControl.removeClass("glyphicon-chevron-down")

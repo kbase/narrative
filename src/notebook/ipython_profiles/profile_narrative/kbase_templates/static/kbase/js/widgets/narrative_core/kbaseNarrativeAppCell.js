@@ -650,10 +650,12 @@
             if (clear_inputs) {
                 this.setErrorState(false);
                 this.state.runningState.appRunState = "input";
+                this.setRunningStep(null);
                 this.$runButton.show();
             }
             else {
                 this.state.runningState.appRunState = "canceled"; // XXX?
+                this.setRunningStep(null);
                 this.$runButton.show();
                 this.$resetButton.hide();
             }
@@ -736,7 +738,6 @@
          * @public
          */
         loadState: function(state) {
-            console.log(state);
             if (!state) {
                 return;
             }
@@ -801,6 +802,7 @@
             if (this.inputSteps) {
                 for(var i=0; i<this.inputSteps.length; i++) {
                     this.inputSteps[i].$stepContainer.removeClass("kb-app-step-running");
+                    this.inputSteps[i].$stepContainer.removeClass("kb-app-step-error");
                     if (this.inputSteps[i].id === stepId) {
                         this.inputSteps[i].$stepContainer.addClass("kb-app-step-running");
                         this.state.runningState.runningStep = stepId;

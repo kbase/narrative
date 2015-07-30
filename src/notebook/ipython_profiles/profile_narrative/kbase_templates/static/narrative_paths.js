@@ -10,8 +10,20 @@ require.config({
         'jquery'                                : 'components/jquery/jquery.min',
         'jqueryui'                              : 'components/jquery-ui/ui/minified/jquery-ui.min',
         'jquery-svg'                            : 'components/jquery-extensions/js/jquery.svg',
+        
+//        'jquery-dataTables'                     : 'components/dataTables/1.10.7/jquery.dataTables.min',
+//        'jquery-dataTables-bootstrap'           : 'components/dataTables/1.10.7/bootstrap_3/dataTables.bootstrap',
+//        'jquery-dataScroller'                   : 'components/dataTables/1.10.7/dataTables.scroller.min',
+
+        'highcharts'                            : 'components/highcharts/4.1.7/js/highcharts',
+        'highcharts-more'                       : 'components/highcharts/4.1.7/js/highcharts-more',
+        'highcharts-heatmap'                    : 'components/highcharts/4.1.7/js/modules/heatmap',
+        
+
         'jquery-dataTables'                     : 'components/jquery-extensions/js/jquery.dataTables',
         'jquery-dataTables-bootstrap'           : 'components/bootstrap-extensions/js/dataTables.bootstrap',
+
+
         'jquery-nearest'                        : 'components/jquery-nearest/jquery.nearest.min',
         'bootstrap'                             : 'components/bootstrap-3/js/bootstrap.min',
         'underscore'                            : 'components/underscore/1.8.2/underscore-min',
@@ -27,6 +39,8 @@ require.config({
         'widgetMaxWidthCorrection'              : 'kbase/js/widgetMaxWidthCorrection',
         'kbapi'                                 : 'kbase/js/widgets/kbapi',
         'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
+        'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
+
 
         /***
          * CORE NARRATIVE WIDGETS
@@ -74,6 +88,18 @@ require.config({
         /***
          * END CORE WIDGETS
          ***/
+
+        /***
+         * CARTS
+         ***/
+        // 'kbaseNarrativeDataCart'                : 'kbase/js/widgets/carts/kbaseNarrativeDataCart',
+        // 'kbaseGeneCart'                         : 'kbase/js/widgets/carts/kbaseGeneCart',
+        // 'kbaseConditionsCart'                   : 'kbase/js/widgets/carts/kbaseConditionsCart',
+        /***
+         * END OF CARTS
+         ***/
+
+         'kbaseTestViewer'                      : 'kbase/js/widgets/function_output/kbaseTestViewer',
 
         /***
          * CUSTOM NARRATIVE INPUT WIDGETS
@@ -124,6 +150,11 @@ require.config({
         'kbasePanGenome'                        : 'kbase/js/widgets/function_output/kbasePanGenome',
         'kbaseDomainAnnotation'                 : 'kbase/js/widgets/function_output/kbaseDomainAnnotation',
         'kbaseExpressionMatrix'                 : 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
+        'kbaseExpressionGenesetBaseWidget'      : 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',
+        'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
+        'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
+        'kbaseExpressionHeatmap'                : 'kbase/js/widgets/function_output/kbaseExpressionHeatmap',
+        'kbaseExpressionClusterSet'             : 'kbase/js/widgets/function_output/kbaseExpressionClusterSet',
         'kbaseGenomeSetBuilder'                 : 'kbase/js/widgets/function_output/kbaseGenomeSetBuilder',
         'kbaseMSA'                              : 'kbase/js/widgets/function_output/kbaseMSA',
         'MetagenomeView'                        : 'kbase/js/widgets/function_output/kbaseMetagenomeView',
@@ -343,10 +374,20 @@ require.config({
         },
         'jquery-dataTables' : {
             deps : ['jquery']
+        },        
+//        'jquery-dataScroller' : {
+//            deps : ['jquery', 'jquery-dataTables']
+//        },  
+        'highcharts-more': {
+            deps: ['highcharts']
         },
+        'highcharts-heatmap':{
+            deps: ['highcharts']
+        },                
         'jquery-dataTables-bootstrap' : {
             deps : ['jquery', 'jquery-dataTables', 'bootstrap']
-        },
+        },        
+        
         'kbaseNarrativeAppCell' : {
             deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 
                     'kbaseNarrativeCellMenu']

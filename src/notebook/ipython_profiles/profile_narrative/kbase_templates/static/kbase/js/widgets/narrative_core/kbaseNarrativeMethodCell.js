@@ -75,6 +75,7 @@
                         parameters: this.getParameters()
                     });
                     this.changeState('submitted');
+                    this.minimizeView();
                 }, this)
             );
 
@@ -117,41 +118,38 @@
             var buttonLabel = 'details';
             var methodDesc = this.method.info.tooltip;
             var $menuSpan = $('<div class="pull-right">');
-            var $methodInfo = $('<div>')
+
+            this.$header = $('<div>').css({'margin-top':'4px'})
                               .addClass('kb-func-desc')
-                              .append('<h1><b>' + this.method.info.name + '</b></h1>')
                               .append($menuSpan)
-                              .append($('<span>')
-                                      .addClass('pull-right kb-func-timestamp')
-                                      .attr('id', 'last-run'))
-                              /*.append($('<button>')
-                                      .addClass('btn btn-default btn-xs')
-                                      .attr('type', 'button')
-                                      .attr('data-toggle', 'collapse')
-                                      .attr('data-target', '#' + methodId)
-                                      .append(buttonLabel))*/
+            this.$staticMethodInfo = $('<div>')
+                              .append('<h1><b>' + this.method.info.name + '</b></h1>')
                               .append($('<h2>')
                                       .attr('id', methodId)
-                                      //.addClass('collapse')
                                       .append(methodDesc +
                                             ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + this.method.info.id +
                                                 '" target="_blank">more...</a>'
-
                                       ));
+
+            this.$header.append(this.$staticMethodInfo);
+
+            this.$dynamicMethodSummary = $('<div>');
+            this.$header.append(this.$dynamicMethodSummary);
 
             // Controls (minimize)
             var $controlsSpan = $('<div>').addClass("pull-left");
-            var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
+            this.$minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
                                     .css({color: "#888", fontSize: "14pt",
-                                          paddingTop: "7px"});
-            $controlsSpan.append($minimizeControl);
+                                          paddingTop: "7px", margin: "5px"});
+            $controlsSpan.append(this.$minimizeControl);
+            this.panel_minimized = false;
 
             this.$cellPanel = $('<div>')
                               .addClass('panel kb-func-panel kb-cell-run')
                               .append($controlsSpan)
                               .append($('<div>')
                                       .addClass('panel-heading')
-                                      .append($methodInfo))
+                                      .append(this.$header))
                               .append($('<div>')
                                       .addClass('panel-body')
                                       .append(this.$inputDiv))
@@ -165,28 +163,15 @@
 
             // Add minimize/restore actions.
             // These mess with the CSS on the cells!
-            var $mintarget = this.$cellPanel;
-            this.panel_minimized = false;
             var self = this;
             $controlsSpan.click(function() {
-              if (self.panel_minimized) {
-                console.debug("restore full panel");
-                $mintarget.find(".panel-body").slideDown();
-                $mintarget.find(".panel-footer").show();
-                $minimizeControl.removeClass("glyphicon-chevron-right")
-                                .addClass("glyphicon-chevron-down")
-                                .css({paddingTop: "7px"});
-                self.panel_minimized = false;
-              }
-              else {
-                console.debug("minimize panel");
-                $mintarget.find(".panel-footer").hide();
-                $mintarget.find(".panel-body").slideUp();
-                $minimizeControl.removeClass("glyphicon-chevron-down")
-                                 .addClass("glyphicon-chevron-right")
-                                 .css({paddingTop: "7px"});
-               self.panel_minimized = true;
-              }
+                var $mintarget = self.$cellPanel;
+                if (self.panel_minimized) {
+                    self.maximizeView();
+                }
+                else {
+                    self.minimizeView();
+                }
             });
 
             var inputWidgetName = this.method.widgets.input;
@@ -228,6 +213,38 @@
 
         /**
          * @method
+         * Returns parameters from the contained input widget as a map designed for display
+         * @public
+         */
+        getParameterMapForReplacementText: function() {
+
+            if (this.$inputWidget) {
+                var paramMap = {};
+                var paramList = this.$inputWidget.getParameters();
+                for(var k=0; k<this.method.parameters.length; k++) {
+                    if(k<paramList.length) {
+                        paramMap[this.method.parameters[k].id] = paramList[k];
+
+                        // detect if it is a workspace object - if so we make things bold and linkable
+                        if(typeof paramList[k] === 'string' &&
+                            this.method.parameters[k].text_options) {
+                          if(this.method.parameters[k].text_options.valid_ws_types) {
+                            if(this.method.parameters[k].text_options.valid_ws_types.length>0) {
+                              paramMap[this.method.parameters[k].id] = '<b><a>' + paramList[k] + '</a></b>';
+
+                            }
+                          }
+                        }
+
+                    }
+                }
+                return paramMap;
+            }
+            return null;
+        },
+
+        /**
+         * @method
          * Returns the state as reported by the contained input widget.
          * @public
          */
@@ -262,7 +279,7 @@
                 this.allowOutput = state.runningState.outputState;
                 this.$inputWidget.loadState(state.params);
                 this.submittedText = state.runningState.submittedText;
-                this.changeState(state.runningState);
+                this.changeState(state.runningState.runState);
             }
             else
                 this.$inputWidget.loadState(state);
@@ -461,6 +478,62 @@
                 });
             }
         },
+
+
+        updateDynamicMethodSummaryHeader: function() {
+            var self = this;
+            self.$dynamicMethodSummary.empty();
+
+            // First set the main text
+            if(self.method.replacement_text && self.submittedText) {
+                // If replacement text exists, and the method was submitted, use it
+                var template = Handlebars.compile(self.method.replacement_text);
+                self.$dynamicMethodSummary.append($('<h1>').html(template(self.getParameterMapForReplacementText())));
+            } else {
+                self.$dynamicMethodSummary.append($('<h1>').append(self.method.info.name));
+            }
+
+            if(self.submittedText) {
+                self.$dynamicMethodSummary.append($('<h2>').append(self.submittedText));
+            } else {
+                self.$dynamicMethodSummary.append($('<h2>').append('Not yet submitted.'));
+            }
+
+        },
+
+
+        minimizeView: function() {
+            var self = this;
+            var $mintarget = self.$cellPanel;
+
+            console.debug(self.method)
+
+            self.$staticMethodInfo.hide();
+
+            // create the dynamic summary based on the run state
+            self.updateDynamicMethodSummaryHeader()
+            self.$dynamicMethodSummary.show();
+
+            $mintarget.find(".panel-footer").slideUp();
+            $mintarget.find(".panel-body").slideUp();
+            self.$minimizeControl.removeClass("glyphicon-chevron-down")
+                              .addClass("glyphicon-chevron-right");
+            self.panel_minimized = true;
+        },
+
+        maximizeView: function() {
+            var self = this;
+            var $mintarget = self.$cellPanel;
+            $mintarget.find(".panel-body").slideDown();
+            $mintarget.find(".panel-footer").slideDown();
+            self.$minimizeControl.removeClass("glyphicon-chevron-right")
+                                .addClass("glyphicon-chevron-down");
+
+            self.$dynamicMethodSummary.hide();
+            self.$staticMethodInfo.show();
+            self.panel_minimized = false;
+        },
+
 
         /**
          * Get next steps, and invoke render_cb() with

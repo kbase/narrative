@@ -153,7 +153,8 @@ define(['jquery',
                                             {
                                                 fid: '<a href="functional-site/#/dataview/'+
                                                             featureData[0].info[6]+'/'+featureData[0].info[1]+
-                                                            '?sub=Feature&subid='+g.features[f].id + '">'+g.features[f].id+'</a>',
+                                                            '?sub=Feature&subid='+g.features[f].id + '" target="_blank">'+
+                                                            g.features[f].id+'</a>',
                                                 gid: '<a href="functional-site/#/dataview/'+
                                                         featureData[0].info[6]+'/'+featureData[0].info[1]+
                                                         '" target="_blank">'+featureData[0].info[1]+"</a>",

@@ -66,7 +66,7 @@
                     if (!this.checkMethodRun())
                         return;
 
-                    this.submittedText = 'submitted on ' + this.readableTimestamp();
+                    this.submittedText = '&nbsp;&nbsp; submitted on ' + this.readableTimestamp();
                     if(this.auth()) {
                         if(this.auth().user_id)
                             this.submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id

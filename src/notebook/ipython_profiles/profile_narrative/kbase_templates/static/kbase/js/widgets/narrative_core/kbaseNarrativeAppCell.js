@@ -178,7 +178,7 @@
                               .append('Run')
                               .click(
                                   $.proxy(function(event) {
-                                      var submittedText = "submitted on "+this.readableTimestamp(new Date().getTime());
+                                      var submittedText = "&nbsp;&nbsp; submitted on "+this.readableTimestamp(new Date().getTime());
                                       if(this.auth()) {
                                           if(this.auth().user_id)
                                               submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
@@ -266,8 +266,10 @@
 
             var $appSubtitleDiv = $("<div>")
                                         .addClass('kb-app-panel-description')
-                                        .append(this.appSpec.info.subtitle)
+                                        .append('&nbsp;&nbsp;&nbsp;&nbsp;' + this.appSpec.info.subtitle)
                                         .append('&nbsp;&nbsp;<a href="'+this.options.appHelpLink+this.appSpec.info.id+'" target="_blank">more...</a>');
+            var $appSubmittedStamp = $("<div>");
+
 
             var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, '"')
             var $appHeaderDiv = $("<div>")
@@ -291,7 +293,8 @@
                                         .append($('<div>').addClass('app-panel-heading')
                                                    .append($('<div>')
                                                            .append($('<h1><b>' + appInfo + '</b></h1>')))
-                                                   .append($appSubtitleDiv)))
+                                                   .append($appSubtitleDiv)
+                                                   .append($appSubmittedStamp)))
                              .append($('<div>')
                                      .addClass('panel-body')
                                      .append($appHeaderDiv))
@@ -320,6 +323,9 @@
             var self = this;
             $controlsSpan.click(function() {
                 if (self.panel_minimized) {
+                    $appSubmittedStamp.hide();
+                    $appSubtitleDiv.show();
+
                     $mintarget.children(".panel-body").slideDown();
                     $mintarget.children(".panel-footer").slideDown();
                     $minimizeControl.removeClass("glyphicon-chevron-right")
@@ -327,6 +333,11 @@
                     self.panel_minimized = false;
                 }
                 else {
+                    if(self.state.runningState.submittedText && !self.isAwaitingInput()) {
+                        $appSubmittedStamp.html($('<h2>').append("&nbsp;&nbsp;&nbsp;" +self.state.runningState.submittedText));
+                        $appSubmittedStamp.show();
+                        $appSubtitleDiv.hide();
+                    }
                     $mintarget.children(".panel-footer").slideUp();
                     $mintarget.children(".panel-body").slideUp();
                     $minimizeControl.removeClass("glyphicon-chevron-down")
@@ -619,6 +630,18 @@
             }
         },
 
+        isAwaitingInput: function() {
+            if(this.state) {
+              if(this.state.runningState) {
+                if(this.state.runningState.appRunState === "input") {
+                  return true;
+                }
+                return false;
+              }
+            }
+            return true;
+        },
+
         /*
          * Reset parameters and allow to re-run
          */
@@ -762,6 +785,7 @@
                 if (state.runningState.appRunState) {
                     if (state.runningState.submittedText) {
                         this.$submitted.html(state.runningState.submittedText);
+                        this.state.runningState.submittedText = state.runningState.submittedText;
                     }
                     if (state.runningState.appRunState === "running") {
                         if (state.runningState.runningStep) {

@@ -195,11 +195,14 @@ define(['jquery',
                             .addClass("table table-bordered table-striped");
             self.$featureTableDiv.append($tbl);
 
+            var sDom = "ft<ip>";
+            if(self.featureTableData.length<=10) sDom = "ft<i>";
+
             var tblSettings = {
                 "sPaginationType": "full_numbers",
                 "iDisplayLength": 10,
-                "sDom": "ft<ip>",
-                "aaSorting": [[ 1, "asc" ], [2, "asc"]],
+                "sDom": sDom,
+                "aaSorting": [[ 2, "asc" ], [0, "asc"]],
                 "aoColumns": [
                                       {sTitle: "Feature ID", mData: "fid"},
                                       {sTitle: "Aliases", mData: "ali"},

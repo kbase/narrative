@@ -15,7 +15,7 @@
   require(['jquery', 'kbwidget'], function($) {
     $.KBWidget({
         name: "kbaseNarrativeAppCell",
-        parent: "kbaseWidget",
+        parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
             app: null,
@@ -178,8 +178,13 @@
                               .append('Run')
                               .click(
                                   $.proxy(function(event) {
-                                      self.$submitted.html("submitted on "+this.readableTimestamp(new Date().getTime()));
-
+                                      var submittedText = "&nbsp;&nbsp; submitted on "+this.readableTimestamp(new Date().getTime());
+                                      if(this.auth()) {
+                                          if(this.auth().user_id)
+                                              submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
+                                                                      +'" target="_blank">' + this.auth().user_id + "</a>";
+                                      }
+                                      this.$submitted.html(submittedText);
                                       var isGood = self.startAppRun();
                                       if (!isGood) { return; }
 
@@ -226,7 +231,7 @@
                 .attr('value', 'Reset')
                 .addClass('kb-app-run kb-app-reset')
                 .append('Reset')
-                .css({'margin-right':'5px'})
+                .css({'margin-right':'5px', 'margin-left':'10px'})
                 .click(
                     $.proxy(function(event) {
                     self.resetAppRun(true);
@@ -245,6 +250,8 @@
             var inputStep = {};
             for (var i=0; i<stepSpecs.length; i++) {
                 var $stepPanel = this.renderStepDiv(this.appSpec.steps[i].step_id, stepSpecs[i], stepHeaderText + (i+1));
+
+
                 this.$methodPanel.append($stepPanel);
                 this.methodSpecs[stepSpecs[i].info.id] = stepSpecs[i];
             }
@@ -259,8 +266,10 @@
 
             var $appSubtitleDiv = $("<div>")
                                         .addClass('kb-app-panel-description')
-                                        .append(this.appSpec.info.subtitle)
+                                        .append('&nbsp;&nbsp;&nbsp;&nbsp;' + this.appSpec.info.subtitle)
                                         .append('&nbsp;&nbsp;<a href="'+this.options.appHelpLink+this.appSpec.info.id+'" target="_blank">more...</a>');
+            var $appSubmittedStamp = $("<div>");
+
 
             var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, '"')
             var $appHeaderDiv = $("<div>")
@@ -272,19 +281,20 @@
             // Controls (minimize)
             var $controlsSpan = $('<div>').addClass("pull-left");
             var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
-                        .css({color: "#888", fontSize: "14pt"});
+                        .css({color: "#888", fontSize: "14pt", cursor:'pointer', paddingTop: "7px", margin: "5px"});
             $controlsSpan.append($minimizeControl);
 
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
-                             .append($menuSpan)
                              .append($controlsSpan)
+                             .append($menuSpan)
                              .append($('<div>')
-                                     .addClass('panel-heading app-panel-heading')
-                                     .append($('<div>')
-                                             .append($('<h1><b>' + appInfo + '</b></h1>'))
-                                             )
-                                     .append($appSubtitleDiv))
+                                        .addClass('panel-heading')
+                                        .append($('<div>').addClass('app-panel-heading')
+                                                   .append($('<div>')
+                                                           .append($('<h1><b>' + appInfo + '</b></h1>')))
+                                                   .append($appSubtitleDiv)
+                                                   .append($appSubmittedStamp)))
                              .append($('<div>')
                                      .addClass('panel-body')
                                      .append($appHeaderDiv))
@@ -300,7 +310,6 @@
             }, this));
 
 
-
             //now we link the step parameters together that are linked
             this.linkStepsTogether();
 
@@ -314,23 +323,25 @@
             var self = this;
             $controlsSpan.click(function() {
                 if (self.panel_minimized) {
-                    console.debug("restore full panel");
-                    $mintarget.find(".panel-body").slideDown();
-                    $mintarget.find(".panel-footer").show();
+                    $appSubmittedStamp.hide();
+                    $appSubtitleDiv.show();
+
+                    $mintarget.children(".panel-body").slideDown();
+                    $mintarget.children(".panel-footer").slideDown();
                     $minimizeControl.removeClass("glyphicon-chevron-right")
                                     .addClass("glyphicon-chevron-down");
-                    // restore original padding (20px)
-                    $mintarget.find(".app-panel-heading").css({padding: "20px"});
                     self.panel_minimized = false;
                 }
                 else {
-                    console.debug("minimize panel");
-                    $mintarget.find(".panel-footer").hide();
-                    $mintarget.find(".panel-body").slideUp();
+                    if(self.state.runningState.submittedText && !self.isAwaitingInput()) {
+                        $appSubmittedStamp.html($('<h2>').append("&nbsp;&nbsp;&nbsp;" +self.state.runningState.submittedText));
+                        $appSubmittedStamp.show();
+                        $appSubtitleDiv.hide();
+                    }
+                    $mintarget.children(".panel-footer").slideUp();
+                    $mintarget.children(".panel-body").slideUp();
                     $minimizeControl.removeClass("glyphicon-chevron-down")
                                     .addClass("glyphicon-chevron-right");
-                    // reduce padding so it lines up
-                    $mintarget.find(".app-panel-heading").css({padding: "5px"});
                     self.panel_minimized = true;
                 }
             });
@@ -357,30 +368,42 @@
             var $outputPanel = $('<div>');
 
 
+            // First setup the Input widget header
             var $inputWidgetDiv = $("<div>");
             var methodId = stepSpec.info.id + '-step-details-' + this.genUUID();
             var buttonLabel = 'details';
             var methodDesc = stepSpec.info.subtitle;
-            var $methodInfo = $('<div>')
-                              .addClass('kb-func-desc')
+            var $header = $('<div>').css({'margin-top':'4px'})
+                              .addClass('kb-func-desc');
+            var $staticMethodInfo = $('<div>')
                               .append('<h1><b>' + stepHeading +'&nbsp&nbsp-&nbsp '+ stepSpec.info.name + '</b></h1>')
-                              .append($('<div>')
+                              .append($('<h2>')
                                       .attr('id', methodId)
-                                      //.addClass('collapse')
-                                      .append($('<h2>')
-                                         .append(methodDesc +
-                                                 ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + stepSpec.info.id +
-                                                        '" target="_blank">more...</a>')));
+                                      .append(methodDesc +
+                                            ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + stepSpec.info.id +
+                                                '" target="_blank">more...</a>'
+                                      ));
+            $header.append($staticMethodInfo);
+            var $dynamicMethodSummary = $('<div>');
+            $header.append($dynamicMethodSummary);
+
+            // Next the min/max controls
+            var $controlsSpan = $('<div>').addClass("pull-left");
+            var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
+                                    .css({color: "#888", fontSize: "14pt", cursor:'pointer',
+                                          paddingTop: "7px", margin: "5px"});
+            $controlsSpan.append($minimizeControl);
 
             var $cellPanel = $('<div>')
                              .addClass('panel kb-func-panel kb-app-func-panel kb-cell-run')
+                             .append($controlsSpan)
                              //.attr('id', this.options.cellId)
                              .append($('<div>')
                                      .addClass('panel-heading')
-                                     .append($methodInfo))
+                                     .append($header))
                              .append($('<div>')
                                      .addClass('panel-body')
-                                     .append($inputWidgetDiv))
+                                     .append($inputWidgetDiv));
 
             $stepPanel.append($cellPanel);
             $stepPanel.append($statusPanel);
@@ -395,15 +418,85 @@
                 outputWidgetName = this.defaultOutputWidget;
             }
 
+            var stepIdx = this.inputSteps.length;
+            var self = this;
+            $controlsSpan.click(function() {
+                self.toggleStepMinimization(stepIdx);
+            });
+
+
             // todo, update input widget so that we don't have to stringify
             var inputWidget = $inputWidgetDiv[inputWidgetName]({ method: JSON.stringify(stepSpec) });
-            var inputStepData = {id:stepId ,methodId: stepSpec.info.id, widget:inputWidget, $stepContainer:$stepPanel, $statusPanel:$statusPanel, $outputPanel:$outputPanel, outputWidgetName:outputWidgetName }
+            var inputStepData = {
+              id:stepId ,methodId: stepSpec.info.id, 
+              widget:inputWidget,
+              $stepContainer:$stepPanel, 
+              $statusPanel:$statusPanel, 
+              $outputPanel:$outputPanel,
+              utputWidgetName:outputWidgetName,
+              minimized: false,
+              $minimizeControl:$minimizeControl
+            }
             this.inputSteps.push(inputStepData);
             this.inputStepLookup[stepId] = inputStepData;
 
             this.state.step[stepId] = { };
 
             return $stepPanel;
+        },
+
+        toggleStepMinimization: function(stepIdx) {
+            var self = this;
+            if(self.inputSteps[stepIdx].minimized) {
+                self.maximizeStepView(stepIdx);
+            } else {
+                self.minimizeStepView(stepIdx);
+            }
+        },
+
+        minimizeStepView: function(stepIdx, noAnimation) {
+            var self = this;
+            var $mintarget = self.inputSteps[stepIdx].$stepContainer;
+
+            //self.$staticMethodInfo.hide();
+
+            // create the dynamic summary based on the run state
+            //self.updateDynamicMethodSummaryHeader()
+            //self.$dynamicMethodSummary.show();
+            if(noAnimation) {
+                $mintarget.find(".panel-footer").hide();
+                $mintarget.find(".panel-body").hide();
+            } else {
+                $mintarget.find(".panel-footer").slideUp();
+                $mintarget.find(".panel-body").slideUp();
+            }
+            self.inputSteps[stepIdx].$minimizeControl.removeClass("glyphicon-chevron-down")
+                              .addClass("glyphicon-chevron-right");
+            self.inputSteps[stepIdx].minimized = true;
+        },
+
+        maximizeStepView: function(stepIdx) {
+            var self = this;
+            var $mintarget = self.inputSteps[stepIdx].$stepContainer;
+            $mintarget.find(".panel-body").slideDown();
+            $mintarget.find(".panel-footer").slideDown();
+            self.inputSteps[stepIdx].$minimizeControl.removeClass("glyphicon-chevron-right")
+                                .addClass("glyphicon-chevron-down");
+            //self.$dynamicMethodSummary.hide();
+            //self.$staticMethodInfo.show();
+            self.inputSteps[stepIdx].minimized = false;
+        },
+
+        minimizeAllSteps: function() {
+            for(var k=0; k<this.inputSteps.length; k++) {
+                this.minimizeStepView(k);
+            }
+        },
+
+        maximizeAllSteps: function() {
+            for(var k=0; k<this.inputSteps.length; k++) {
+                this.maximizeStepView(k);
+            }
         },
 
         linkStepsTogether: function() {
@@ -516,6 +609,7 @@
                     this.inputSteps[i].widget.lockInputs();
                 }
             }
+            this.minimizeAllSteps();
             this.state.runningState.appRunState = "running";
             this.displayRunning(true);
             return true;
@@ -536,6 +630,19 @@
             }
         },
 
+        isAwaitingInput: function() {
+            if(this.state) {
+              if(this.state.runningState) {
+                if(this.state.runningState.appRunState === "input" ||
+                    this.state.runningState.appRunState === "canceled") {
+                  return true;
+                }
+                return false;
+              }
+            }
+            return true;
+        },
+
         /*
          * Reset parameters and allow to re-run
          */
@@ -545,6 +652,7 @@
             this.$stopButton.hide();
             this.$resetButton.hide();
             this.$submitted.hide();
+            this.maximizeAllSteps();
             // clear inputs
             if (this.inputSteps) {
                 for(var i=0; i<this.inputSteps.length; i++) {
@@ -566,12 +674,14 @@
             if (clear_inputs) {
                 this.setErrorState(false);
                 this.state.runningState.appRunState = "input";
+                this.setRunningStep(null);
                 this.$runButton.show();
             }
             else {
                 this.state.runningState.appRunState = "canceled"; // XXX?
-                this.$runButton.hide();
-                this.$resetButton.show();
+                this.setRunningStep(null);
+                this.$runButton.show();
+                this.$resetButton.hide();
             }
         },
 
@@ -585,7 +695,6 @@
             this.trigger('cancelJobCell.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
                 if (isCanceled) {
                   self.resetAppRun(false);
-
                 }
             }, this)]);
         },
@@ -673,17 +782,23 @@
 
             // if we were in the running state before, set the values
             if (state.runningState) {
-                if (state.runningState.runningStep) {
-                    this.setRunningStep(state.runningState.runningStep);
-                }
+                
                 if (state.runningState.appRunState) {
                     if (state.runningState.submittedText) {
                         this.$submitted.html(state.runningState.submittedText);
+                        this.state.runningState.submittedText = state.runningState.submittedText;
                     }
                     if (state.runningState.appRunState === "running") {
+                        if (state.runningState.runningStep) {
+                            this.setRunningStep(state.runningState.runningStep);
+                        }
                         this.startAppRun();
                     }
                     else if (state.runningState.appRunState === "done") {
+                        this.$submitted.show();
+                        this.$runButton.hide();
+                    }
+                    else if (state.runningState.appRunState === "complete") {
                         this.$submitted.show();
                         this.$runButton.hide();
                     }
@@ -712,6 +827,7 @@
             if (this.inputSteps) {
                 for(var i=0; i<this.inputSteps.length; i++) {
                     this.inputSteps[i].$stepContainer.removeClass("kb-app-step-running");
+                    this.inputSteps[i].$stepContainer.removeClass("kb-app-step-error");
                     if (this.inputSteps[i].id === stepId) {
                         this.inputSteps[i].$stepContainer.addClass("kb-app-step-running");
                         this.state.runningState.runningStep = stepId;
@@ -734,6 +850,7 @@
         },
 
         setRunningState: function(state) {
+            //console.debug('app state!'); console.debug(state);
             state = state.toLowerCase();
             if (state === 'error') {
                 this.setErrorState(true);

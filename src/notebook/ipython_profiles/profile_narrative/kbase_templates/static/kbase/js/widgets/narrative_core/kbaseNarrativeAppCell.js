@@ -633,7 +633,8 @@
         isAwaitingInput: function() {
             if(this.state) {
               if(this.state.runningState) {
-                if(this.state.runningState.appRunState === "input") {
+                if(this.state.runningState.appRunState === "input" ||
+                    this.state.runningState.appRunState === "canceled") {
                   return true;
                 }
                 return false;

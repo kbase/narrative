@@ -73,8 +73,8 @@ libxslt1-dev
 RUN easy_install -U pip
 
 # Clone in the python bootstrap and run it
-ADD ./bootstrap/kb_python_runtime /mini-bootstrap/kb_python_runtime
-RUN cd /mini-bootstrap/kb_python_runtime/; TARGET=/kb/deployment /bin/bash install-narrative-packages.sh
+ADD ./narrative_python_packages /narrative_python_packages
+RUN cd /narrative_python_packages/; TARGET=/kb/deployment /bin/bash install-narrative-packages.sh
 
 # install R packages that seem to be handy
 RUN R --vanilla < /root/r-packages.R

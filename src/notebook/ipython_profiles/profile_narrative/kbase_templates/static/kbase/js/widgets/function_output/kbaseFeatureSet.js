@@ -3,6 +3,7 @@
  * Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
+'use strict';
 
 define(['jquery',
         'kbwidget',
@@ -32,11 +33,10 @@ define(['jquery',
             this.$elem.append(this.$messagePane);
 
             if (options.workspaceids && options.workspaceids.length > 0) {
-                id = options.workspaceids[0].split('/');
+                var id = options.workspaceids[0].split('/');
                 this.options.treeID = id[1];
                 this.options.workspaceID = id[0];
             }
-
 
             this.$mainPanel = $("<div>").addClass("").hide();
             this.$elem.append(this.$mainPanel);
@@ -64,21 +64,23 @@ define(['jquery',
         },
         
 
-        features: {}, // genomeId : [{fid: x, data: x}]
+        features: null, // genomeId : [{fid: x, data: x}]
 
         loadFeatureSet: function() {
             var self = this;
-
-
+            self.features = {};
             self.ws.get_objects([{ref:self.options.workspaceName+"/"+self.options.featureset_name}],
                 function(data) {
                     var fs = data[0].data;
                     if(fs.description) {
                         self.$mainPanel.append($('<div>')
+                            .append("<i>Description</i> - ")
                             .append(fs.description));
                     }
+
                     for (var fid in fs.elements) {
                         if (fs.elements.hasOwnProperty(fid)) {
+
                             for (var k=0; k<fs.elements[fid].length; k++) {
                                 var gid = fs.elements[fid][k];
                                 if(self.features.hasOwnProperty(gid)) {
@@ -89,9 +91,7 @@ define(['jquery',
                             }
                         }
                     }
-                    // We have enough to display something temporarily
                     self.getGenomeData();
-
                     self.$mainPanel.show();
                 },
                 function(error) {
@@ -101,19 +101,20 @@ define(['jquery',
                 });
         },
 
-        // genomeId: { featureId: indexInFeatureList }
-        genomeLookupTable:{},
-        genomeObjectInfo:{},
-        featureTableData:[],
+        
+        genomeLookupTable: null, // genomeId: { featureId: indexInFeatureList }
+        genomeObjectInfo: null, //{},
+        featureTableData: null, // list for datatables
 
         getGenomeData: function() {
             var self = this;
-
+            self.genomeLookupTable = {};
+            self.genomeObjectInfo = {};
+            self.featureTableData = [];
             // first get subdata for each of the genomes to build up the Feature ID to index lookup table
             var subdata_query = [];
             for(var gid in self.features) {
                 subdata_query.push({ref:gid, included:['features/[*]/id']});
-                //self.ws.get_objects([{ref:gid}],function(data) {console.log(data[0])});
             }
             self.ws.get_object_subset(subdata_query,
                 function(data) {
@@ -124,10 +125,8 @@ define(['jquery',
                             self.genomeLookupTable[subdata_query[k].ref][data[k].data.features[f].id] = f; 
                         }
                     }
-                    //self.$mainPanel.append(JSON.stringify(self.genomeLookupTable));
-                    //self.$mainPanel.append(JSON.stringify(self.features));
-                    for(var gid in self.features) {
 
+                    for(var gid in self.features) {
                         var included = [];
                         for(var f=0; f<self.features[gid].length; f++) {
                             var idx = self.genomeLookupTable[gid][self.features[gid][f].fid];
@@ -152,7 +151,9 @@ define(['jquery',
 
                                     self.featureTableData.push(
                                             {
-                                                fid: g.features[f].id,
+                                                fid: '<a href="functional-site/#/dataview/'+
+                                                            featureData[0].info[6]+'/'+featureData[0].info[1]+
+                                                            '?sub=Feature&subid='+g.features[f].id + '">'+g.features[f].id+'</a>',
                                                 gid: '<a href="functional-site/#/dataview/'+
                                                         featureData[0].info[6]+'/'+featureData[0].info[1]+
                                                         '" target="_blank">'+featureData[0].info[1]+"</a>",
@@ -162,7 +163,6 @@ define(['jquery',
                                             }
                                         );
                                 }
-
                                 self.renderFeatureTable(); // just rerender each time
                                 self.loading(true);
                             },
@@ -176,15 +176,14 @@ define(['jquery',
                 function(error) {
                     self.loading(true);
                     self.renderError(error);
-
                 });
 
         },
 
         $featureTableDiv : null,
-
         renderFeatureTable: function() {
             var self = this;
+
             if(!self.$featureTableDiv) {
                 self.$featureTableDiv = $('<div>').css({'margin':'5px'});
                 self.$mainPanel.append(self.$featureTableDiv);
@@ -214,13 +213,9 @@ define(['jquery',
                                           "sEmptyTable": "This FeatureSet is empty"
                                       }
                 };
-
             var featuresTable = $tbl.dataTable(tblSettings);
             featuresTable.fnAddData(self.featureTableData);
         },
-
-
-
 
         renderError: function(error) {
             errString = "Sorry, an unknown error occurred";

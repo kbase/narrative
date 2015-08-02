@@ -10,7 +10,11 @@
  */
 
 (function( $, undefined ) {
-  require(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
+  require(['jquery', 
+           'handlebars', 
+           'kbwidget', 
+           'kbaseAuthenticatedWidget',
+           'kbaseNarrativeCellMenu'], function($, Handlebars) {
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",
         parent: "kbaseAuthenticatedWidget",

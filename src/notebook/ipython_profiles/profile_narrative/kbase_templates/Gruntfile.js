@@ -30,6 +30,7 @@ module.exports = function(grunt) {
                     out: "static/dist/kbase-narrative-min.js",
                     paths : {
                         "IPythonMain": "empty:",
+                        "ipythonCellMenu": "empty:",
                     },
                 }
             }

@@ -25,37 +25,19 @@
 
 require([
     'jquery',
-], function($) {
+    'narrativeConfig',
+    'kbase-client-api'
+], function($,
+            config) {
     "use strict";
     console.log('Loading KBase Narrative setup routine.');
 
-    require(['narrativeConfig'], function(configDefer) {
-        // The config returns a Deferrered. When that's
-        // finished, inject the config into the global namespace.
-        //
-        // TODO: bail out if the config isn't available.
-        configDefer.then(function(config) {
-            if (config === null) {
-                console.error('fatal error! gotta bail out here.');
-                // TODO: change the view to an error/error popup/etc.
-                return;
-            }
-            console.log('Successfully got KBase config');
-            window.kbconfig = config;
-            // Gotta have the Narrative code in place first, specifically
-            // the following:
-            // kbaseNarrativeAppCell,
-            // kbaseNarrativeMethodCell,
-            // kbaseNarrativeOutputCell,
-            // loading up the kbaseNarrative module pulls those in, and 
-            // is generally cleaner.
+    window.kbconfig = config;
 
-            require(['kbapi'], function() {
-                require(['kbaseNarrative', 'IPythonCustom'], function(Narrative) {
-                    console.log('Starting IPython main');
-                    require(['IPythonMain']);
-                });
-            });
+    require(['kbapi'], function() {
+        require(['kbaseNarrative', 'IPythonCustom'], function(Narrative) {
+            console.log('Starting IPython main');
+            require(['IPythonMain']);
         });
     });
 });

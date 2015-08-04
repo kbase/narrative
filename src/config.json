@@ -1,5 +1,5 @@
 {
-    "config": "prod", 
+    "config": "ci", 
     "dev": {
         "awe": "http://140.221.67.185:7080", 
         "cdmi": "https://kbase.us/services/cdmi_api/", 

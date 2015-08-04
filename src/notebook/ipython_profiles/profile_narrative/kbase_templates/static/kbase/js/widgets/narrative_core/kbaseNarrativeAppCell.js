@@ -14,7 +14,10 @@
 (function( $, undefined ) {
   require(['jquery', 
            'kbwidget',
-           'kbaseAuthenticatedWidget'], function($) {
+           'kbaseAuthenticatedWidget',
+           'kbaseAccordion',
+           'kbaseNarrativeOutputCell'
+           ], function($) {
     $.KBWidget({
         name: "kbaseNarrativeAppCell",
         parent: "kbaseAuthenticatedWidget",

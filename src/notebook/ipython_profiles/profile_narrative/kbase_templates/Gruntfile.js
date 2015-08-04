@@ -31,6 +31,7 @@ module.exports = function(grunt) {
                     paths : {
                         "IPythonMain": "empty:",
                         "ipythonCellMenu": "empty:",
+                        "narrativeConfig": "empty:",
                     },
                 }
             }

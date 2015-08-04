@@ -10,8 +10,8 @@
  * @static
  */
 define(['jquery', 
-        'json!/static/kbase/config.json',
-        'json!/static/kbase/icons.json'
+        'json!static/kbase/config.json',
+        'json!static/kbase/icons.json'
 ], function($,
             configSet,
             iconsSet) {

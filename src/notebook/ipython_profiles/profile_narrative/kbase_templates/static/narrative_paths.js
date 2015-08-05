@@ -29,6 +29,7 @@ require.config({
         'widgetMaxWidthCorrection'              : 'kbase/js/widgetMaxWidthCorrection',
         'kbapi'                                 : 'kbase/js/widgets/kbapi',
         'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
+        'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
 
         /***
          * CORE NARRATIVE WIDGETS

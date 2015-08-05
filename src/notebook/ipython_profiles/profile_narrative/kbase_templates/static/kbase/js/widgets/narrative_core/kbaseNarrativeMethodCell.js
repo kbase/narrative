@@ -14,7 +14,7 @@
            'handlebars', 
            'kbwidget', 
            'kbaseAuthenticatedWidget',
-           'kbaseNarrativeCellMenu'], function($, Handlebars) {
+           'kbaseNarrativeCellMenu'], function($) {
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",
         parent: "kbaseAuthenticatedWidget",

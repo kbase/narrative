@@ -57,26 +57,9 @@
     <script src="{{ static_url("components/d3/d3.v3.min.js") }}" type="text/javascript" charset="utf-8"></script>
 
     <!-- build:js dist/kbase-narrative.min.js -->
-    <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("narrative_paths") }}"></script>
+<!--    <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("dist/kbase-narrative-min.68ec4fdf") }}"></script> -->
     <!-- endbuild -->
 
-    <script>
-        var kb_use_require = true;
-        var kb_norequire = function(deps, callback) {
-          callback(jQuery);
-        };
-        var kb_nodefine = function(module, deps, callback) {
-          callback(jQuery);
-        };
-        if (kb_use_require) {
-          kb_define = define;
-          kb_require = require;
-        }
-        else {
-          kb_define = kb_nodefine;
-          kb_require = kb_norequire;
-        }
-    </script>
     <script>
         /* Google Analaytics */
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -234,14 +217,38 @@
         {% endif %}
     {% endblock %}
 
+    <!-- build:js dist/kbase-narrative.min.js -->
+    <script src="{{ static_url("kbase/js/ui-common/ext/requirejs/2.1.9/require.js") }}" data-main="{{ static_url("narrativeMain") }}"></script>
+    <!-- endbuild -->
+
+    <script>
+        var kb_use_require = true;
+        var kb_norequire = function(deps, callback) {
+          callback(jQuery);
+        };
+        var kb_nodefine = function(module, deps, callback) {
+          callback(jQuery);
+        };
+        if (kb_use_require) {
+          kb_define = define;
+          kb_require = require;
+        }
+        else {
+          kb_define = kb_nodefine;
+          kb_require = kb_norequire;
+        }
+    </script>
+
+
     <!-- loads up via require to ensure proper load order -->
     <!-- // <script src="{{static_url("custom/custom.js") }}" type="text/javascript" charset="utf-8"></script> -->
 
-    <script>
-        require(['narrative_paths'], function() {
+<!--    <script>
+        require(['dist/kbase-narrative-min.0fe0f68e'], function() {
             require(['narrativeMain']);
         });
     </script>
+-->
 </body>
 
 </html>

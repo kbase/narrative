@@ -22,22 +22,23 @@
  * @class narrativeMain
  * @static
  */
+require(['narrative_paths'], function(paths) {
+    require([
+        'jquery',
+        'narrativeConfig',
+        'kbase-client-api'
+    ], function($,
+                config) {
+        "use strict";
+        console.log('Loading KBase Narrative setup routine.');
 
-require([
-    'jquery',
-    'narrativeConfig',
-    'kbase-client-api'
-], function($,
-            config) {
-    "use strict";
-    console.log('Loading KBase Narrative setup routine.');
+        window.kbconfig = config;
 
-    window.kbconfig = config;
-
-    require(['kbapi'], function() {
-        require(['kbaseNarrative', 'IPythonCustom'], function(Narrative) {
-            console.log('Starting IPython main');
-            require(['IPythonMain']);
+        require(['kbapi'], function() {
+            require(['kbaseNarrative', 'IPythonCustom'], function(Narrative) {
+                console.log('Starting IPython main');
+                require(['IPythonMain']);
+            });
         });
     });
 });

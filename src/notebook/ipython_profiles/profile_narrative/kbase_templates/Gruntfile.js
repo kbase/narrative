@@ -28,16 +28,16 @@ module.exports = function(grunt) {
                     preserveLicenseComments: false,
                     name: "narrativeMain",
                     out: "static/dist/kbase-narrative-min.js",
-                    excludeShallow: [
-                        "IPythonMain",
-                        "ipythonCellMenu",
-                        "narrativeConfig"
-                    ]
-                    // paths : {
-                    //     "IPythonMain": "empty:",
-                    //     "ipythonCellMenu": "empty:",
-                    //     // "narrativeConfig": "empty:",
-                    // },
+                    // excludeShallow: [
+                    //     "IPythonMain",
+                    //     "ipythonCellMenu",
+                    //     "narrativeConfig"
+                    // ]
+                    paths : {
+                        "IPythonMain": "empty:",
+                        "ipythonCellMenu": "empty:",
+                        "narrativeConfig": "empty:",
+                    },
                 }
             }
         },

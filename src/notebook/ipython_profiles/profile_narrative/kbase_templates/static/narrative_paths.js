@@ -399,7 +399,3 @@ require.config({
         }
     }
 });
-
-require(['domReady!'], function(doc) {
-    require(['narrativeMain']);
-});

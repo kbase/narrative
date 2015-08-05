@@ -236,6 +236,12 @@
 
     <!-- loads up via require to ensure proper load order -->
     <!-- // <script src="{{static_url("custom/custom.js") }}" type="text/javascript" charset="utf-8"></script> -->
+
+    <script>
+        require(['narrative_paths'], function() {
+            require(['narrativeMain']);
+        });
+    </script>
 </body>
 
 </html>

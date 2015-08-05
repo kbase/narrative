@@ -138,6 +138,10 @@ require.config({
         'AbundanceDataView'                     : 'kbase/js/widgets/function_output/kbaseAbundanceDataView',
         'RankAbundancePlot'                     : 'kbase/js/widgets/function_output/kbaseRankAbundancePlot',
 
+        'kbaseExpressionMatrix'                 : 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
+
+
+
         // unfinished ones
         /***
          * END CUSTOM OUTPUT WIDGETS

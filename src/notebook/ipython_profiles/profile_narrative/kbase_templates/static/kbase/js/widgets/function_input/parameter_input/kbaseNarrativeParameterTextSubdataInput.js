@@ -14,7 +14,8 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
             parsedParameterSpec: null,
             wsObjSelectPageSize : 20,
             isInSidePanel: false,
-            wsURL: window.kbconfig.urls.workspace
+            wsURL: window.kbconfig.urls.workspace,
+            kbaseMethodInputWidget: null
         },
         IGNORE_VERSION: true,
 
@@ -51,7 +52,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
             var self = this;
 
             self.spec = {
-                allow_multiple: false,
+                allow_multiple: true,
                 required: true,
                 ui_name: 'Feature IDs',
                 short_hint: 'Enter something',
@@ -59,21 +60,25 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
 
                 subdata_options: {
                     placeholder: 'something',
-                    data: { absolute: ['928/2/1','928/4/1'] },
+                   // data: { absolute: ['928/2/1','928/4/1'] },
+                    data: { param: 'input_genome' },
                     subdata_included: ['features/[*]/id', 'features/[*]/aliases', 'features/[*]/function'],
                     path_to_subdata: ['features'],
 
                     selection_id: 'id', // if subdata is a list of objects, 
                     selection_description: ['aliases','function'],
 
-                    multiselection: false,
+                    multiselection: true,
                     show_source_obj: true,
-                    allow_custom: true
+                    allow_custom: false
                 }
             };
             var spec = self.spec;
 
             self.initWsClient();
+
+            // initialize autofill data and fetch
+            self.autofillData = [];
             self.fetchSubData();
 
             if (self.options.isInSidePanel) {
@@ -144,12 +149,14 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
         
 
         autofillData: null,
+        isFetching: null,
+        lastLookup: null,
 
-        fetchSubData: function() {
+        fetchSubData: function(doneCallback) {
+            console.log('fetching subdata');
             var self = this;
             var spec = self.spec;
 
-            self.autofillData = [];
 
             if(!self.ws) return;
             if(!spec.subdata_options) return;
@@ -162,63 +169,147 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
             var selection_id = spec.subdata_options.selection_id;
             var selection_description = spec.subdata_options.selection_description;
 
-            // if we have an absolute ws obj
-            var query = [];
-            for(var i=0; i<spec.subdata_options.data.absolute.length; i++) {
-                query.push({ref:spec.subdata_options.data.absolute[i], included:spec.subdata_options.subdata_included})
+            // if we have an absolute ws obj, then go right there
+            if(spec.subdata_options.data.absolute) {
+
+                // if autofillData is already set, then we don't have to do anything!!
+                if(self.autofillData) { 
+                    if(self.autofillData.length>0) { 
+                        if(doneCallback) { doneCallback(); }
+                        return; 
+                    } 
+                }
+                // if we are already fetching data and waiting for things to return, then don't do it again!
+                if(self.isFetching) {
+                    if(doneCallback) { doneCallback(); }
+                    return;
+                }
+                self.isFetching = true;
+
+                var query = [];
+                for(var i=0; i<spec.subdata_options.data.absolute.length; i++) {
+                    query.push({ref:spec.subdata_options.data.absolute[i], included:spec.subdata_options.subdata_included});
+                }
+                self.ws.get_object_subset(query,
+                    function(result) {
+                        self.processSubdataQueryResult(result, path_to_subdata, selection_id, selection_description);
+                        self.isFetching = false;
+                        if(doneCallback) { doneCallback(); }
+                    },
+                    function(error) {
+                        console.error(error);
+                        self.isFetching = false;
+                        if(doneCallback) { doneCallback(); }
+                    });
             }
-            self.ws.get_object_subset(query,
-                function(result) {
-                    // loop over subdata from every object
-                    for(var r=0; r<result.length; r++) {
-                        var subdata = result[r].data;
-                        var datainfo = result[r].info;
+            // otherwise we have to look at a parameter value to populate the list
+            else if(spec.subdata_options.data.param) {
+                // if we are fetching, then stop
+                if(self.isFetching) {
+                    if(doneCallback) { doneCallback(); }
+                    return;
+                }
 
-                        for(var p=0; p<path_to_subdata.length; p++) {
-                            subdata = subdata[path_to_subdata[p]];
+                // get the parameter value, and quit if we've already seen it
+                var param = self.options.kbaseMethodInputWidget
+                                .getParameterValue(spec.subdata_options.data.param);
+                if(self.lastLookup) {
+                    if(self.lastLookup === param) {
+                        if(doneCallback) { doneCallback(); }
+                        return;
+                    }
+                }
+                self.lastLookup = param;
+
+                // if the parameter is actually defined, then continue
+                if(param){
+                    self.isFetching = true;
+                    self.trigger('workspaceQuery.Narrative', 
+                        function(ws_name) {
+                            var query = []
+                            if(typeof param === 'string') {
+                                query.push({ref:ws_name+'/'+param, included:spec.subdata_options.subdata_included});
+                            } else if(param instanceof Array) {
+                                for(var i=0; i<param.length; i++) {
+                                    query.push({ref:ws_name+'/'+param[i], included:spec.subdata_options.subdata_included});
+                                }
+                            } else {
+                                console.error('parameter is not the correct type for populating a subdata parameter');
+                                self.isFetching = false;
+                                if(doneCallback) { doneCallback(); }
+                                return;
+                            }
+                            // reset the autofill data and fetch again
+                            self.autofillData = [];
+                            self.ws.get_object_subset(query,
+                                function(result) {
+                                    self.processSubdataQueryResult(result, path_to_subdata, selection_id, selection_description);
+                                    self.isFetching = false;
+                                    if(doneCallback) { doneCallback(); }
+                                },
+                                function(error) {
+                                    console.error(error);
+                                    self.isFetching = false;
+                                    if(doneCallback) { doneCallback(); }
+                                });
+                        });
+
+                    
+                } else {
+                    // parameter was not defined yet, so finish up (could show a message in dropdown box)
+                    console.error('parameter is not defined yet');
+                    if(doneCallback) { doneCallback(); }
+                    return;
+                }
+            }
+
+        },
+
+        processSubdataQueryResult : function(result, path_to_subdata, selection_id, selection_description) {
+            var self = this;
+            // loop over subdata from every object
+            for(var r=0; r<result.length; r++) {
+                var subdata = result[r].data;
+                var datainfo = result[r].info;
+
+                for(var p=0; p<path_to_subdata.length; p++) {
+                    subdata = subdata[path_to_subdata[p]];
+                }
+
+                if(subdata instanceof Array) {
+                    for(var k=0; k<subdata.length; k++) {
+                        var autofill = {
+                            id: subdata[k][selection_id],
+                            desc: '',
+                            dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
+                            dname: datainfo[6] + '/' + datainfo[1]
+                        };
+                        for(var d=0; d<selection_description.length; d++) {
+                            if(d>=1) autofill.desc += " - ";
+                            autofill.desc += String(subdata[k][selection_description[d]]);
                         }
-
-                        console.debug(subdata);
-
-                        if(subdata instanceof Array) {
-                            for(var k=0; k<subdata.length; k++) {
-                                var autofill = {
-                                    id: subdata[k][selection_id],
-                                    desc: '',
-                                    dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
-                                    dname: datainfo[6] + '/' + datainfo[1]
-                                };
-                                for(var d=0; d<selection_description.length; d++) {
-                                    if(d>=1) autofill.desc += " - ";
-                                    autofill.desc += String(subdata[k][selection_description[d]]);
-                                }
-                                self.autofillData.push(autofill);
+                        self.autofillData.push(autofill);
+                    }
+                } else {
+                    for(var key in subdata) {
+                        if(subdata.hasOwnProperty(key)) {
+                            var autofill = {
+                                id: key,
+                                desc: '',
+                                dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
+                                dname: datainfo[6] + '/' + datainfo[1]
+                            };
+                            for(var d=0; d<selection_description.length; d++) {
+                                if(d>=1) autofill.desc += " - ";
+                                autofill.desc += String(subdata[key][selection_description[d]]);
                             }
-                        } else {
-                            for(var key in subdata) {
-                                if(subdata.hasOwnProperty(key)) {
-                                    var autofill = {
-                                            id: key,
-                                            desc: '',
-                                            dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
-                                            dname: datainfo[6] + '/' + datainfo[1]
-                                        };
-                                    for(var d=0; d<selection_description.length; d++) {
-                                        if(d>=1) autofill.desc += " - ";
-                                        autofill.desc += String(subdata[key][selection_description[d]]);
-                                    }
-                                    self.autofillData.push(autofill);
-                                }
-                            }
+                            self.autofillData.push(autofill);
                         }
                     }
+                }
+            }
 
-                    console.debug(self.autofillData);
-                },
-                function(error) {
-                    console.error(error);
-                });
-
+            //console.debug(self.autofillData);
         },
 
 
@@ -352,49 +443,52 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                 query: function (query) {
                     var data = {results:[]};
                     
-                    // if there is a current selection (this is a bit of a hack) we
-                    // prefill the input box so we don't have to do additional typing
-                    if (!multiple && query.term.trim()==="" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
-                        var searchbox = $input.data('select2').search;
-                        if (searchbox) {
-                            $(searchbox).val($input.select2('data').id);
-                            query.term = $input.select2('data').id;
-                            $input.data('select2').kbaseHackLastSelection = null;
-                        }
-                    }
-                    $input.data('select2').kbaseHackLastTerm = query.term;
-                    
-                    // populate the names from our valid data object list
-                    var exactMatch = false;
-                    if (self.autofillData) {
-                        for(var i=0; i<self.autofillData.length; i++){
-                            var d = self.autofillData[i];
-                            var text = '';
-                            if(d.desc) { text += ' - ' + d.desc; }
-                            if (query.term.trim()!=="") {
-                                if(self.select2Matcher(query.term, d.id) ||
-                                    self.select2Matcher(query.term, text) ||
-                                    self.select2Matcher(query.term, d.dname)) {
-                                        data.results.push({id:d.id, text:text, 
-                                            dref:d.dref, dname:d.dname});
+                    self.fetchSubData(
+                        function() {
+                            // if there is a current selection (this is a bit of a hack) we
+                            // prefill the input box so we don't have to do additional typing
+                            if (!multiple && query.term.trim()==="" && $input.select2('data') && $input.data('select2').kbaseHackLastSelection) {
+                                var searchbox = $input.data('select2').search;
+                                if (searchbox) {
+                                    $(searchbox).val($input.select2('data').id);
+                                    query.term = $input.select2('data').id;
+                                    $input.data('select2').kbaseHackLastSelection = null;
                                 }
-                            } else {
-                                data.results.push({id:d.id, text:text, 
-                                            dref:d.dref, dname:d.dname});
                             }
-                        }
-                    }
-                    
-                    //allow custom names if specified and multiselect is off (for some reason
-                    //custome fields don't work in multiselect mode) then unshift it to the front...
-                    if (allow_custom && !multiple && query.term.trim()!=="") {
-                        data.results.unshift({id:query.term, text:''});
-                    }
+                            $input.data('select2').kbaseHackLastTerm = query.term;
+                            
+                            // populate the names from our valid data object list
+                            var exactMatch = false;
+                            if (self.autofillData) {
+                                for(var i=0; i<self.autofillData.length; i++){
+                                    var d = self.autofillData[i];
+                                    var text = '';
+                                    if(d.desc) { text += ' - ' + d.desc; }
+                                    if (query.term.trim()!=="") {
+                                        if(self.select2Matcher(query.term, d.id) ||
+                                            self.select2Matcher(query.term, text) ||
+                                            self.select2Matcher(query.term, d.dname)) {
+                                                data.results.push({id:d.id, text:text, 
+                                                    dref:d.dref, dname:d.dname});
+                                        }
+                                    } else {
+                                        data.results.push({id:d.id, text:text, 
+                                                    dref:d.dref, dname:d.dname});
+                                    }
+                                }
+                            }
+                            
+                            //allow custom names if specified and multiselect is off (for some reason
+                            //custome fields don't work in multiselect mode) then unshift it to the front...
+                            if (allow_custom && !multiple && query.term.trim()!=="") {
+                                data.results.unshift({id:query.term, text:''});
+                            }
 
-                    // paginate results
-                    var pageSize = self.options.wsObjSelectPageSize;
-                    query.callback({results:data.results.slice((query.page-1)*pageSize, query.page*pageSize),
-                                more:data.results.length >= query.page*pageSize });
+                            // paginate results
+                            var pageSize = self.options.wsObjSelectPageSize;
+                            query.callback({results:data.results.slice((query.page-1)*pageSize, query.page*pageSize),
+                                        more:data.results.length >= query.page*pageSize });
+                        });
                 },
                 
                 formatSelection: function(object, container) {
@@ -432,7 +526,6 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function() {
-            console.debug('isValid called')
             var self = this;
             if (!self.enabled) {
                 return { isValid: true, errormssgs:[]}; // do not validate if disabled
@@ -442,7 +535,6 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
             var errorDetected = false;
             var errorMessages = [];
 
-            console.debug(p)
             if(p instanceof Array) {
             } else { p = [p]; }
             for(var i=0; i<p.length; i++) {

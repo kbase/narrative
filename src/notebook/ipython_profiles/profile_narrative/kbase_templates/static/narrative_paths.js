@@ -141,7 +141,16 @@ require.config({
         'kbaseExpressionMatrix'                 : 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
         'kbaseExpressionGenesetBaseWidget'      : 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',
         'kbaseExpressionHeatmap'                : 'kbase/js/widgets/function_output/kbaseExpressionHeatmap',
+        'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
+        'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
 
+
+        'geometry_point'                        : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_point',
+        'geometry_rectangle'                    : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_rectangle',
+        'geometry_size'                         : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_size',
+        'kbaseVisWidget'                        : 'kbase/js/ui-common/src/widgets/kbaseVisWidget',
+        'kbaseHeatmap'                          : 'kbase/js/ui-common/src/widgets/vis/kbaseHeatmap',
+        'kbaseLinechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseLinechart',
 
 
         // unfinished ones

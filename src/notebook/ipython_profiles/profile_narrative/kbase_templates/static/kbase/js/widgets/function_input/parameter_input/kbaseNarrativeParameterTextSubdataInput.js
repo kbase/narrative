@@ -270,8 +270,10 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                             dname: dname
                         };
                         for(var d=0; d<selection_description.length; d++) {
-                            if(d>=1) autofill.desc += " - ";
-                            autofill.desc += String(subdata[k][selection_description[d]]);
+                            var description = String(subdata[k][selection_description[d]]);
+                            if(description) {
+                                autofill.desc += " - " + description;
+                            }
                         }
                         self.autofillData.push(autofill);
                     }
@@ -287,8 +289,10 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                                 dname: dname
                             };
                             for(var d=0; d<selection_description.length; d++) {
-                                if(d>=1) autofill.desc += " - ";
-                                autofill.desc += String(subdata[key][selection_description[d]]);
+                                var description = String(subdata[key][selection_description[d]]);
+                                if(description) {
+                                    autofill.desc += " - " + description;
+                                }
                             }
                             self.autofillData.push(autofill);
                         }
@@ -458,7 +462,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                                 for(var i=0; i<self.autofillData.length; i++){
                                     var d = self.autofillData[i];
                                     var text = '';
-                                    if(d.desc) { text += ' - ' + d.desc; }
+                                    if(d.desc) { text = d.desc; }
                                     if (query.term.trim()!=="") {
                                         if(self.select2Matcher(query.term, d.id) ||
                                             self.select2Matcher(query.term, text) ||
@@ -492,7 +496,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                 },
                 formatResult: function(object, container, query) {
                     var display = '<span style="word-wrap:break-word;"><b>'+object.id+'</b>';
-                    if(object.text) display+= ' - ' + object.text;
+                    if(object.text) display+= object.text;
                     if(show_src_obj && object.dname)
                         display += '<br>&nbsp&nbsp&nbsp&nbsp&nbsp<i>in ' + object.dname + '</i>';
                     display += '</span>';

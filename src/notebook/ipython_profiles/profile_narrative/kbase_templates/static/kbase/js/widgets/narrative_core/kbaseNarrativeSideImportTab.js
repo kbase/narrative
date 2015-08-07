@@ -108,7 +108,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
                               .css({'border' : '4px'})
                               .append('Next');
             var $hintDiv  = $('<div>').addClass("kb-method-parameter-hint")
-            	.append("Use the pulldown menu of data types above to select the type of data you wish to import.");
+            	.append("Use the pulldown menu of data types above to select the type of data you wish to import; then click the Next button.");
 
             $nextButton.click(
             		$.proxy(function(event) {

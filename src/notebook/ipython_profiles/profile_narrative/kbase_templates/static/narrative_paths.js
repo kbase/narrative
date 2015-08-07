@@ -29,6 +29,7 @@ require.config({
         'widgetMaxWidthCorrection'              : 'kbase/js/widgetMaxWidthCorrection',
         'kbapi'                                 : 'kbase/js/widgets/kbapi',
         'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
+        'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
 
         /***
          * CORE NARRATIVE WIDGETS
@@ -138,6 +139,21 @@ require.config({
         'AbundanceDataView'                     : 'kbase/js/widgets/function_output/kbaseAbundanceDataView',
         'RankAbundancePlot'                     : 'kbase/js/widgets/function_output/kbaseRankAbundancePlot',
         'kbaseFeatureSet'                       : 'kbase/js/widgets/function_output/kbaseFeatureSet',
+
+        'kbaseExpressionMatrix'                 : 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
+        'kbaseExpressionGenesetBaseWidget'      : 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',
+        'kbaseExpressionHeatmap'                : 'kbase/js/widgets/function_output/kbaseExpressionHeatmap',
+        'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
+        'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
+
+
+        'geometry_point'                        : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_point',
+        'geometry_rectangle'                    : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_rectangle',
+        'geometry_size'                         : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_size',
+        'kbaseVisWidget'                        : 'kbase/js/ui-common/src/widgets/kbaseVisWidget',
+        'kbaseHeatmap'                          : 'kbase/js/ui-common/src/widgets/vis/kbaseHeatmap',
+        'kbaseLinechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseLinechart',
+
 
         // unfinished ones
         /***

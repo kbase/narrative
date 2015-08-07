@@ -2,7 +2,7 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], function( $ ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2', 'handlebars'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeParameterTextSubdataInput",
         parent: "kbaseNarrativeParameterInput",
@@ -49,7 +49,6 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
         render: function() {
             var self = this;
             var spec = self.spec;
-            console.log(self.spec);
 
             self.initWsClient();
 
@@ -134,7 +133,6 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
             var self = this;
             var spec = self.spec;
 
-
             if(!self.ws) return;
             if(!spec.textsubdata_options) return;
             if(!spec.textsubdata_options.subdata_selection) return;
@@ -145,7 +143,15 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
             var selection_id = spec.textsubdata_options.subdata_selection.selection_id;
             var selection_description = spec.textsubdata_options.subdata_selection.selection_description;
             var subdata_included = spec.textsubdata_options.subdata_selection.subdata_included;
-
+            var text_template = spec.textsubdata_options.subdata_selection.description_template;
+            if(!text_template) {
+                text_template = "";
+                if(selection_description) {
+                    for(var sd=0; sd<selection_description.length; sd++) {
+                        text_template += " - {{"+selection_description[sd]+"}}";
+                    }
+                }
+            }
 
             // if we have an absolute ws obj, then go right there
             if(spec.textsubdata_options.subdata_selection.constant_ref) {
@@ -170,7 +176,8 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                 }
                 self.ws.get_object_subset(query,
                     function(result) {
-                        self.processSubdataQueryResult(result, path_to_subdata, selection_id, selection_description, true);
+                        self.processSubdataQueryResult(result, path_to_subdata, selection_id, 
+                                                        selection_description, true, text_template);
                         self.isFetching = false;
                         if(doneCallback) { doneCallback(); }
                     },
@@ -225,7 +232,8 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                             self.autofillData = [];
                             self.ws.get_object_subset(query,
                                 function(result) {
-                                    self.processSubdataQueryResult(result, path_to_subdata, selection_id, selection_description, false);
+                                    self.processSubdataQueryResult(result, path_to_subdata, selection_id, 
+                                                                    selection_description, false, text_template);
                                     self.isFetching = false;
                                     if(doneCallback) { doneCallback(); }
                                 },
@@ -248,8 +256,11 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
 
         },
 
-        processSubdataQueryResult : function(result, path_to_subdata, selection_id, selection_description, includeWsId) {
+        processSubdataQueryResult : function(result, path_to_subdata, selection_id, selection_description, includeWsId, text_template) {
             var self = this;
+
+            var hb_template = Handlebars.compile(text_template);
+
             // loop over subdata from every object
             for(var r=0; r<result.length; r++) {
                 var subdata = result[r].data;
@@ -265,16 +276,10 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                         if(includeWsId) { dname = datainfo[6] + '/' + datainfo[1]; }
                         var autofill = {
                             id: subdata[k][selection_id],
-                            desc: '',
+                            desc: hb_template(subdata[k]),
                             dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
                             dname: dname
                         };
-                        for(var d=0; d<selection_description.length; d++) {
-                            var description = String(subdata[k][selection_description[d]]);
-                            if(description) {
-                                autofill.desc += " - " + description;
-                            }
-                        }
                         self.autofillData.push(autofill);
                     }
                 } else {
@@ -284,16 +289,10 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                             if(includeWsId) { dname = datainfo[6] + '/' + datainfo[1]; }
                             var autofill = {
                                 id: key,
-                                desc: '',
+                                desc: hb_template(subdata[k]),
                                 dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
                                 dname: dname
                             };
-                            for(var d=0; d<selection_description.length; d++) {
-                                var description = String(subdata[key][selection_description[d]]);
-                                if(description) {
-                                    autofill.desc += " - " + description;
-                                }
-                            }
                             self.autofillData.push(autofill);
                         }
                     }

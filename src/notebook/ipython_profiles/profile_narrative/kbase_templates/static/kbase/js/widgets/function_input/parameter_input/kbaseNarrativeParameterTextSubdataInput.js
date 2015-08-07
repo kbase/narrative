@@ -1,6 +1,4 @@
 /**
-/**
- * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
 
@@ -50,35 +48,14 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
 
         render: function() {
             var self = this;
-
-            self.spec = {
-                allow_multiple: true,
-                required: true,
-                ui_name: 'Feature IDs',
-                short_hint: 'Enter something',
-
-
-                subdata_options: {
-                    placeholder: 'something',
-                   // data: { absolute: ['928/2/1','928/4/1'] },
-                    data: { param: 'input_genome' },
-                    subdata_included: ['features/[*]/id', 'features/[*]/aliases', 'features/[*]/function'],
-                    path_to_subdata: ['features'],
-
-                    selection_id: 'id', // if subdata is a list of objects, 
-                    selection_description: ['aliases','function'],
-
-                    multiselection: true,
-                    show_source_obj: true,
-                    allow_custom: false
-                }
-            };
             var spec = self.spec;
+            console.log(self.spec);
 
             self.initWsClient();
 
             // initialize autofill data and fetch
             self.autofillData = [];
+            self.firstLookup = true;
             self.fetchSubData();
 
             if (self.options.isInSidePanel) {
@@ -102,9 +79,9 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
             
             // check if this is a multiselection
             var multiselection = false;
-            if (spec.subdata_options) {
-                if (spec.subdata_options.multiselection) {
-                    multiselection = spec.subdata_options.multiselection;
+            if (spec.textsubdata_options) {
+                if (spec.textsubdata_options.multiselection) {
+                    multiselection = spec.textsubdata_options.multiselection;
                 }
             }
             
@@ -151,26 +128,27 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
         autofillData: null,
         isFetching: null,
         lastLookup: null,
+        firstLookup: null,
 
         fetchSubData: function(doneCallback) {
-            console.log('fetching subdata');
             var self = this;
             var spec = self.spec;
 
 
             if(!self.ws) return;
-            if(!spec.subdata_options) return;
-            if(!spec.subdata_options.data) return;
-            if(!spec.subdata_options.subdata_included) return;
-            if(!spec.subdata_options.path_to_subdata) return;
+            if(!spec.textsubdata_options) return;
+            if(!spec.textsubdata_options.subdata_selection) return;
+            if(!spec.textsubdata_options.subdata_selection.subdata_included) return;
+            if(!spec.textsubdata_options.subdata_selection.path_to_subdata) return;
 
+            var path_to_subdata = spec.textsubdata_options.subdata_selection.path_to_subdata;
+            var selection_id = spec.textsubdata_options.subdata_selection.selection_id;
+            var selection_description = spec.textsubdata_options.subdata_selection.selection_description;
+            var subdata_included = spec.textsubdata_options.subdata_selection.subdata_included;
 
-            var path_to_subdata = spec.subdata_options.path_to_subdata;
-            var selection_id = spec.subdata_options.selection_id;
-            var selection_description = spec.subdata_options.selection_description;
 
             // if we have an absolute ws obj, then go right there
-            if(spec.subdata_options.data.absolute) {
+            if(spec.textsubdata_options.subdata_selection.constant_ref) {
 
                 // if autofillData is already set, then we don't have to do anything!!
                 if(self.autofillData) { 
@@ -187,12 +165,12 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                 self.isFetching = true;
 
                 var query = [];
-                for(var i=0; i<spec.subdata_options.data.absolute.length; i++) {
-                    query.push({ref:spec.subdata_options.data.absolute[i], included:spec.subdata_options.subdata_included});
+                for(var i=0; i<spec.textsubdata_options.subdata_selection.constant_ref.length; i++) {
+                    query.push({ref:spec.textsubdata_options.subdata_selection.constant_ref[i], included:subdata_included});
                 }
                 self.ws.get_object_subset(query,
                     function(result) {
-                        self.processSubdataQueryResult(result, path_to_subdata, selection_id, selection_description);
+                        self.processSubdataQueryResult(result, path_to_subdata, selection_id, selection_description, true);
                         self.isFetching = false;
                         if(doneCallback) { doneCallback(); }
                     },
@@ -203,7 +181,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                     });
             }
             // otherwise we have to look at a parameter value to populate the list
-            else if(spec.subdata_options.data.param) {
+            else if(spec.textsubdata_options.subdata_selection.parameter_id) {
                 // if we are fetching, then stop
                 if(self.isFetching) {
                     if(doneCallback) { doneCallback(); }
@@ -212,7 +190,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
 
                 // get the parameter value, and quit if we've already seen it
                 var param = self.options.kbaseMethodInputWidget
-                                .getParameterValue(spec.subdata_options.data.param);
+                                .getParameterValue(spec.textsubdata_options.subdata_selection.parameter_id);
                 if(self.lastLookup) {
                     if(self.lastLookup === param) {
                         if(doneCallback) { doneCallback(); }
@@ -221,17 +199,21 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                 }
                 self.lastLookup = param;
 
+
                 // if the parameter is actually defined, then continue
                 if(param){
+                    if(!self.firstLookup) { self.clearInput(); }
+                    autofillData=[];
+                    self.firstLookup = false;
                     self.isFetching = true;
                     self.trigger('workspaceQuery.Narrative', 
                         function(ws_name) {
                             var query = []
                             if(typeof param === 'string') {
-                                query.push({ref:ws_name+'/'+param, included:spec.subdata_options.subdata_included});
+                                query.push({ref:ws_name+'/'+param, included:subdata_included});
                             } else if(param instanceof Array) {
                                 for(var i=0; i<param.length; i++) {
-                                    query.push({ref:ws_name+'/'+param[i], included:spec.subdata_options.subdata_included});
+                                    query.push({ref:ws_name+'/'+param[i], included:subdata_included});
                                 }
                             } else {
                                 console.error('parameter is not the correct type for populating a subdata parameter');
@@ -243,7 +225,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                             self.autofillData = [];
                             self.ws.get_object_subset(query,
                                 function(result) {
-                                    self.processSubdataQueryResult(result, path_to_subdata, selection_id, selection_description);
+                                    self.processSubdataQueryResult(result, path_to_subdata, selection_id, selection_description, false);
                                     self.isFetching = false;
                                     if(doneCallback) { doneCallback(); }
                                 },
@@ -257,7 +239,8 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                     
                 } else {
                     // parameter was not defined yet, so finish up (could show a message in dropdown box)
-                    console.error('parameter is not defined yet');
+                    if(!self.firstLookup) { self.clearInput(); }
+                    self.autofillData=[];
                     if(doneCallback) { doneCallback(); }
                     return;
                 }
@@ -265,7 +248,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
 
         },
 
-        processSubdataQueryResult : function(result, path_to_subdata, selection_id, selection_description) {
+        processSubdataQueryResult : function(result, path_to_subdata, selection_id, selection_description, includeWsId) {
             var self = this;
             // loop over subdata from every object
             for(var r=0; r<result.length; r++) {
@@ -278,11 +261,13 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
 
                 if(subdata instanceof Array) {
                     for(var k=0; k<subdata.length; k++) {
+                        var dname = datainfo[1];
+                        if(includeWsId) { dname = datainfo[6] + '/' + datainfo[1]; }
                         var autofill = {
                             id: subdata[k][selection_id],
                             desc: '',
                             dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
-                            dname: datainfo[6] + '/' + datainfo[1]
+                            dname: dname
                         };
                         for(var d=0; d<selection_description.length; d++) {
                             if(d>=1) autofill.desc += " - ";
@@ -293,11 +278,13 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                 } else {
                     for(var key in subdata) {
                         if(subdata.hasOwnProperty(key)) {
+                            var dname = datainfo[1];
+                            if(includeWsId) { dname = datainfo[6] + '/' + datainfo[1]; }
                             var autofill = {
                                 id: key,
                                 desc: '',
                                 dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
-                                dname: datainfo[6] + '/' + datainfo[1]
+                                dname: dname
                             };
                             for(var d=0; d<selection_description.length; d++) {
                                 if(d>=1) autofill.desc += " - ";
@@ -313,6 +300,13 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
         },
 
 
+        clearInput: function () {
+            var self = this;
+            for(var i=0; i<self.rowInfo.length; i++) {
+                self.setSpecificRowValue(i,'');
+            }
+            this.isValid();
+        },
 
 
 
@@ -348,9 +342,9 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
             var spec = self.spec;
             
             var placeholder = '';
-            if(spec.subdata_options) {
-                if(spec.subdata_options.placeholder) {
-                    placeholder = spec.subdata_options.placeholder;
+            if(spec.textsubdata_options) {
+                if(spec.textsubdata_options.placeholder) {
+                    placeholder = spec.textsubdata_options.placeholder;
                     placeholder = placeholder.replace(/(\r\n|\n|\r)/gm,"");
                 }
             }
@@ -407,9 +401,9 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
             /* for some reason, we need to actually have the input added to the main panel before this will work */
             if (placeholder === '') { placeholder = ' '; } // this allows us to cancel selections in select2
             this.setupSelect2($input, placeholder, defaultValue, 
-                spec.subdata_options.multiselection,
-                spec.subdata_options.show_source_obj,
-                spec.subdata_options.allow_custom);
+                spec.textsubdata_options.multiselection,
+                spec.textsubdata_options.show_src_obj,
+                spec.textsubdata_options.allow_custom);
 
             // if a default value is set, validate it.
             if (defaultValue) {
@@ -425,13 +419,13 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
         
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input, placeholder, defaultValue, multiselection,
-                                    show_source_obj, allow_custom) {
+                                    show_src_obj, allow_custom) {
             var self = this;
             var noMatchesFoundStr = "No matching data found or loaded yet.";
 
             var multiple = false;
             if(multiselection) multiple=true;
-            if(show_source_obj===null) show_source_obj = true;
+            if(show_src_obj===null) show_src_obj = true;
             if(allow_custom===null) allow_custom = false;
             $input.select2({
                 matcher: self.select2Matcher,
@@ -440,6 +434,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                 allowClear: true,
                 selectOnBlur: true,
                 multiple:multiple,
+                tokenSeparators: [',', ' '],
                 query: function (query) {
                     var data = {results:[]};
                     
@@ -498,7 +493,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
                 formatResult: function(object, container, query) {
                     var display = '<span style="word-wrap:break-word;"><b>'+object.id+'</b>';
                     if(object.text) display+= ' - ' + object.text;
-                    if(show_source_obj && object.dname)
+                    if(show_src_obj && object.dname)
                         display += '<br>&nbsp&nbsp&nbsp&nbsp&nbsp<i>in ' + object.dname + '</i>';
                     display += '</span>';
                     return display;
@@ -655,11 +650,19 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
         },
         
         setSpecificRowValue: function(i,value) {
+            var setValue = {id:value, text:value};
+            if(this.spec.textsubdata_options.multiselection) {
+                var valueList = value.split(',');
+                setValue = [];
+                for(var k=0; k<valueList.length; k++) {
+                    setValue.push({id:valueList[k],text:valueList[k]});
+                }
+            }
             if (this.enabled) {
-                this.rowInfo[i].$input.select2("data",{id:value, text:value});
+                this.rowInfo[i].$input.select2("data",setValue);
             } else {
                 this.rowInfo[i].$input.select2('disable',false);
-                this.rowInfo[i].$input.select2("data",{id:value, text:value});
+                this.rowInfo[i].$input.select2("data",setValue);
                 this.rowInfo[i].$input.select2('disable',true);
             }
         },
@@ -670,16 +673,6 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
          * in the method spec.
          */
         getParameterValue: function() {
-            // if this is an output, and there's only one row, and it's optional,
-            // but it's not filled out, then we need a random name.
-            if (this.spec.text_options && 
-                this.spec.text_options.is_output_name === 1 && 
-                this.rowInfo.length === 1 &&
-                this.rowInfo[0].$input.val().length === 0 &&
-                this.spec.optional === 1) {
-//                this.setParameterValue(this.generateRandomOutputString());
-            }
-            
             // if this is optional, and not filled out, then we return null
             if (this.spec.optional === 1) {
                 if (this.rowInfo.length===1) {
@@ -714,102 +707,8 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2'], functi
             return value;
         },
         
-        // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
-        getTimeStampStr: function (objInfoTimeStamp) {
-            var date = new Date(objInfoTimeStamp);
-            var seconds = Math.floor((new Date() - date) / 1000);
-            
-            // f-ing safari, need to add extra ':' delimiter to parse the timestamp
-            if (isNaN(seconds)) {
-                var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
-                var newTimestamp = tokens[0] + '+'+tokens[0].substr(0,2) + ":" + tokens[1].substr(2,2);
-                date = new Date(newTimestamp);
-                seconds = Math.floor((new Date() - date) / 1000);
-                if (isNaN(seconds)) {
-                    // just in case that didn't work either, then parse without the timezone offset, but
-                    // then just show the day and forget the fancy stuff...
-                    date = new Date(tokens[0]);
-                    return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
-                }
-            }
-            var interval = Math.floor(seconds / 31536000);
-            if (interval > 1) {
-                return self.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
-            }
-            interval = Math.floor(seconds / 2592000);
-            if (interval > 1) {
-                if (interval<4) {
-                    return interval + " months";
-                } else {
-                    return this.monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
-                }
-            }
-            interval = Math.floor(seconds / 86400);
-            if (interval > 1) {
-                return interval + " days ago";
-            }
-            interval = Math.floor(seconds / 3600);
-            if (interval > 1) {
-                return interval + " hours ago";
-            }
-            interval = Math.floor(seconds / 60);
-            if (interval > 1) {
-                return interval + " minutes ago";
-            }
-            return Math.floor(seconds) + " seconds ago";
-        },
-        
-        monthLookup : ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"],
-        
-        // make a randomized string, assuming it's for an output.
-        generateRandomOutputString: function(generProps) {
-            var strArr = [];
-            var symbols = 8
-            if (generProps['symbols'])
-                symbols = generProps['symbols'];
-            for (var i=0; i<symbols; i++)
-                strArr.push(String.fromCharCode(65 + Math.floor(Math.random() * 26)));
-            var ret = strArr.join('');
-            if (generProps['prefix'])
-                ret = generProps['prefix'] + ret;
-            if (generProps['suffix'])
-                ret = ret + str(generProps['suffix']);
-            return ret;
-        },
-
         prepareValueBeforeRun: function(methodSpec) {
-            if (this.spec.text_options && 
-                    this.spec.text_options.is_output_name === 1 && 
-                    this.rowInfo.length === 1 &&
-                    this.rowInfo[0].$input.val().length === 0 &&
-                    this.spec.optional === 1) {
-            	//var e = new Error('dummy');
-            	//var stack = e.stack.replace(/^[^\(]+?[\n$]/gm, '')
-            	//	.replace(/^\s+at\s+/gm, '')
-            	//	.replace(/^Object.<anonymous>\s*\(/gm, '{anonymous}()@')
-            	//	.split('\n');
-            	//console.log(stack);
-            	var paramId = this.spec.id;
-                var inputMapping = null;
-                var isScript = false;
-                var inputMapping = methodSpec['behavior']['kb_service_input_mapping'];
-                if (!inputMapping) {
-                    inputMapping = methodSpec['behavior']['script_input_mapping'];
-                    isScript = true;
-                }
-                var generatedValueMapping = null;
-                for (var i in inputMapping) {
-                	mapping = inputMapping[i];
-                    var aParamId = mapping['input_parameter'];
-                    if (aParamId && aParamId === paramId && mapping['generated_value']) {
-                    	generatedValueMapping = mapping['generated_value'];
-                    	break;
-                    }
-                }
-                if (generatedValueMapping) {
-                	this.setParameterValue(this.generateRandomOutputString(generatedValueMapping));
-                }
-            }
+
         },
 
         genUUID: function() {

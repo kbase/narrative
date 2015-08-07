@@ -145,6 +145,8 @@ require.config({
         'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
         'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
         'kbaseExpressionEstimateK'              : 'kbase/js/widgets/function_output/kbaseExpressionEstimateK',
+        'kbaseExpressionClusterSet'             : 'kbase/js/widgets/function_output/kbaseExpressionClusterSet',
+
 
 
         'geometry_point'                        : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_point',

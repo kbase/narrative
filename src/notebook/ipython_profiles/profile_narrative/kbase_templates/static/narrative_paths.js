@@ -60,6 +60,7 @@ require.config({
         'kbaseNarrativeParameterCheckboxInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCheckboxInput',
         'kbaseNarrativeParameterTextareaInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextareaInput',
         'kbaseNarrativeParameterFileInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterFileInput',
+        'kbaseNarrativeParameterTextSubdataInput' : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextSubdataInput',
         'kbaseNarrativeError'                   : 'kbase/js/widgets/function_output/kbaseNarrativeError',
         'NarrativeManager'                      : 'kbase/js/api/NarrativeManager',
         'ipythonCellMenu'                       : 'kbase/js/widgets/narrative_core/ipythonCellMenu',

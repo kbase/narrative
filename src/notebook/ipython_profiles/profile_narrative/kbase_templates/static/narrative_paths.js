@@ -23,7 +23,7 @@ define([], function() {
             'select2'                               : 'select2-v3.5.2/select2.min',
 
         'narrativeConfig'                       : 'kbase/js/narrativeConfig',
-        'narrativeMain'                         : 'kbase/js/narrativeMain',
+        'narrativeMain'                         : 'narrativeMain',
         'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
         'narrativeLogin'                        : 'kbase/js/narrativeLogin',
         'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',

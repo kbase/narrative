@@ -2040,9 +2040,11 @@ define(['jquery',
             outputCell.rendered = false; // force a render
             outputCell.render();
             // If present, add list of "next steps"
-            if (result.next_steps.apps || result.next_steps.methods) {
-                var $body = $('#' + outCellId).find('.panel-body');
-                this.showNextSteps({elt: $body, next_steps: result.next_steps});
+            if(result.next_steps) {
+                if (result.next_steps.apps || result.next_steps.methods) {
+                    var $body = $('#' + outCellId).find('.panel-body');
+                    this.showNextSteps({elt: $body, next_steps: result.next_steps});
+                }
             }
             this.resetProgress(cell);
             if (IPython && IPython.narrative)

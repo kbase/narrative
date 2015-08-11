@@ -298,6 +298,7 @@ define(['jquery',
         },
 
         showDeleteCellModal: function(index, cell, message) {
+            this.initDeleteCellModal();
             if (cell && cell.metadata[this.KB_CELL]) {
                 this.cellToDelete = index;
                 if (message)

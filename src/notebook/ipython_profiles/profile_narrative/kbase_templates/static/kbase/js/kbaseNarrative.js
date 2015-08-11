@@ -406,5 +406,55 @@ Narrative.prototype.saveNarrative = function() {
     IPython.notebook.save_checkpoint();
 };
 
+/**
+ * @method
+ * @public
+ * Insert a new method into the narrative, set it as active, populate the
+ * parameters, and run it.  This is useful for widgets that need to trigger
+ * some additional narrative action, such as creating a FeatureSet from 
+ * a selected set of Features in a widget, or computing a statistic on a 
+ * subselection made from within a widget.
+ */
+Narrative.prototype.createAndRunMethod = function(method_id, parameters) {
+    //first make a request to get the method spec of a particular method
+    //getFunctionSpecs.Narrative is implemented in kbaseNarrativeMethodPanel
+    var request = { methods:[method_id] };
+    var self = this;
+    self.narrController.trigger('getFunctionSpecs.Narrative', [request,
+        function(specs) {
+            // do nothing if the method could not be found
+            var errorMsg = 'Method '+method_id+' not found and cannot run.';
+            if(!specs) { console.error(errorMsg); return; }
+            if(!specs.methods) { console.error(errorMsg); return; }
+            if(!specs.methods[method_id]) { console.error(errorMsg); return; }
+            // put the method in the narrative by simulating a method clicked in kbaseNarrativeMethodPanel
+            self.narrController.trigger('methodClicked.Narrative', specs.methods[method_id]);
+
+                // the method initializes an internal method input widget, but rendering and initializing is
+                // async, so we have to wait and check back before we can load the parameter state.
+                // TODO: update kbaseNarrativeMethodCell to return a promise to mark when rendering is complete
+                var newCell = IPython.notebook.get_selected_cell();
+                var newCellIdx = IPython.notebook.get_selected_index();
+                console.debug(newCell);
+                var newWidget = $('#'+$(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
+                    var updateStateAndRun = function(state) {
+                        if(newWidget.$inputWidget) {
+                            // if the $inputWidget is not null, we are good to go, so set the parameters
+                            newWidget.loadState(parameters);
+                            // make sure the new cell is still selected, then run the method
+                            IPython.notebook.select(newCellIdx);
+                            newWidget.runMethod();
+                        } else {
+                            // not ready yet, keep waiting
+                            window.setTimeout(updateStateAndRun,500);
+                        }
+                    };
+                    // call the update and run after a short deplay
+                    window.setTimeout(updateStateAndRun,50);
+                    }
+                ]);
+};
+
+
 return Narrative;
 });

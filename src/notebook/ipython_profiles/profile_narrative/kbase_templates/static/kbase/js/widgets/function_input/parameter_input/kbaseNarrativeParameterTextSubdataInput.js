@@ -55,7 +55,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2', 'handle
             // initialize autofill data and fetch
             self.autofillData = [];
             self.firstLookup = true;
-            self.fetchSubData();
+            //self.fetchSubData();  // do a lazy fetch...
 
             if (self.options.isInSidePanel) {
             	self.nameColClass  = "col-md-12";
@@ -138,6 +138,8 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2', 'handle
             if(!spec.textsubdata_options.subdata_selection) return;
             if(!spec.textsubdata_options.subdata_selection.subdata_included) return;
             if(!spec.textsubdata_options.subdata_selection.path_to_subdata) return;
+            if(!self.enabled) return; // do not search if disabled
+            if(self.locked_inputs) return; // do not search if disabled
 
             var path_to_subdata = spec.textsubdata_options.subdata_selection.path_to_subdata;
             var selection_id = spec.textsubdata_options.subdata_selection.selection_id;
@@ -274,8 +276,13 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2', 'handle
                     for(var k=0; k<subdata.length; k++) {
                         var dname = datainfo[1];
                         if(includeWsId) { dname = datainfo[6] + '/' + datainfo[1]; }
+                        var id = subdata[k]; // default id is just the value
+                        // if the selection_id is set, and the object is an object of somekind, then use that value
+                        if(selection_id && typeof id === 'object') {
+                            id = subdata[k][selection_id];
+                        }
                         var autofill = {
-                            id: subdata[k][selection_id],
+                            id: id,
                             desc: hb_template(subdata[k]),
                             dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
                             dname: dname
@@ -287,8 +294,21 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2', 'handle
                         if(subdata.hasOwnProperty(key)) {
                             var dname = datainfo[1];
                             if(includeWsId) { dname = datainfo[6] + '/' + datainfo[1]; }
+                            // the default id is the mapping key
+                            var id = key;
+                            // if the selection id is set, and it is an object, then use that field instead
+                            if(selection_id && typeof subdata[key] === 'object') {
+                                id = subdata[key][selection_id];
+                            // else if the selection id is set, and the value is string or number
+                            } else if(selection_id && 
+                                (typeof subdata[key] === 'string' || typeof subdata[key] === 'number')) {
+                                // and selection id==='value', then use the value instead of the key as the id
+                                if(selection_id==='value') {
+                                    id = subdata[key];
+                                }
+                            }
                             var autofill = {
-                                id: key,
+                                id: id,
                                 desc: hb_template(subdata[k]),
                                 dref: datainfo[6] + '/' + datainfo[0] + '/' + datainfo[4],
                                 dname: dname
@@ -298,7 +318,12 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2', 'handle
                     }
                 }
             }
-
+            // sort the list
+            self.autofillData.sort(function (a,b) {
+                if (a.id > b.id) { return 1; }
+                if (a.id < b.id) { return -1; }
+                return 0;
+            });
             //console.debug(self.autofillData);
         },
 
@@ -415,8 +440,8 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2', 'handle
         },
         
         refresh: function() {
-            var self = this;
-            self.fetchSubData();
+            //var self = this;
+            //self.fetchSubData(); //lazy load, so don't do this here
         },
 
         
@@ -460,7 +485,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2', 'handle
                             if (self.autofillData) {
                                 for(var i=0; i<self.autofillData.length; i++){
                                     var d = self.autofillData[i];
-                                    var text = '';
+                                    var text = ' '; // for some reason, this has to be nonempty in some cases
                                     if(d.desc) { text = d.desc; }
                                     if (query.term.trim()!=="") {
                                         if(self.select2Matcher(query.term, d.id) ||
@@ -603,6 +628,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2', 'handle
         
         
         lockInputs: function() {
+            this.locked_inputs = true;
             if (this.enabled) {
                 for(var i=0; i<this.rowInfo.length; i++) {
                     this.rowInfo[i].$input.select2('disable',true);
@@ -615,6 +641,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2', 'handle
             this.$addRowController.hide();
         },
         unlockInputs: function() {
+            this.locked_inputs = false;
             if (this.enabled) {
                 for(var i=0; i<this.rowInfo.length; i++) {
                     this.rowInfo[i].$input.select2('enable',true);

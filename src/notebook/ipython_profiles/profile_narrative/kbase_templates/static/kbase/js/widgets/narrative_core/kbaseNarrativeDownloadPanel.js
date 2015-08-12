@@ -67,7 +67,17 @@ define(['jquery', 'kbwidget'], function( $ ) {
         	    name: 'TSV', external_type: 'TSV.Pangenome', transform_options: {}
         	}, {
         	    name: "EXCEL", external_type: 'Excel.Pangenome', transform_options: {}
-        	}]
+        	}],
+            
+            'KBaseFeatureValues.ExpressionMatrix':[{
+                name: "TSV", external_type: 'TSV.Matrix', transform_options: {}
+            }],
+
+            'KBaseFeatureValues.ClusterSet':[{
+                name: "TSV", external_type: 'TSV.ClusterSet', transform_options: {}
+            }, {
+                name: "SIF", external_type: 'SIF.ClusterSet', transform_options: {}
+            }]
         },
 
         init: function(options) {

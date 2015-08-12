@@ -298,6 +298,7 @@ define(['jquery',
         },
 
         showDeleteCellModal: function(index, cell, message) {
+            this.initDeleteCellModal();
             if (cell && cell.metadata[this.KB_CELL]) {
                 this.cellToDelete = index;
                 if (message)
@@ -376,6 +377,7 @@ define(['jquery',
                 // do the standard for now.
                 code = this.buildGenericRunCommand(data);
             }
+
             var handleError = function() {
                 if(data.widget) {
                     if(data.widget.changeState)
@@ -385,7 +387,7 @@ define(['jquery',
 
             var callbacks = {
                 'execute_reply' : function(content) { self.handleExecuteReply(data.cell, content); },
-                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput, handleError); },
+                'output' : function(msgType, content) { self.handleOutput(data.cell, msgType, content, showOutput, handleError, data.widget); },
                 'clear_output' : function(content) { self.handleClearOutput(data.cell, content); },
                 'set_next_input' : function(text) { self.handleSetNextInput(data.cell, content); },
                 'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
@@ -393,6 +395,9 @@ define(['jquery',
 
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
+
+
+                
         },
 
         buildAppCell: function(appSpec) {
@@ -1776,7 +1781,7 @@ define(['jquery',
         /**
          * @method _handle_output
          */
-        handleOutput: function (cell, msgType, content, showOutput, submissionErrorCallback) {
+        handleOutput: function (cell, msgType, content, showOutput, submissionErrorCallback, callingWidget) {
             // copied from outputarea.js
             var buffer = "";
             if (msgType === "stream") {
@@ -1880,8 +1885,15 @@ define(['jquery',
                             cell.metadata[this.KB_CELL].stackTrace.push(result);
                         }
                     }
-                    else if (showOutput)
+                    else if (showOutput) {
                         this.createOutputCell(cell, result);
+                        // if we create an output cell, and the callingWidget is defined, then make sure we say it
+                        // is complete (this is not updated for widgets with 'none' behavior otherwise)
+                        if(callingWidget) {
+                            if(callingWidget.changeState)
+                                callingWidget.changeState('complete');
+                        }
+                    }
                 }
             }
         },
@@ -2040,9 +2052,11 @@ define(['jquery',
             outputCell.rendered = false; // force a render
             outputCell.render();
             // If present, add list of "next steps"
-            if (result.next_steps.apps || result.next_steps.methods) {
-                var $body = $('#' + outCellId).find('.panel-body');
-                this.showNextSteps({elt: $body, next_steps: result.next_steps});
+            if(result.next_steps) {
+                if (result.next_steps.apps || result.next_steps.methods) {
+                    var $body = $('#' + outCellId).find('.panel-body');
+                    this.showNextSteps({elt: $body, next_steps: result.next_steps});
+                }
             }
             this.resetProgress(cell);
             if (IPython && IPython.narrative)

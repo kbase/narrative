@@ -117,13 +117,6 @@ define([], function() {
             'msPathway'                             : 'kbase/js/revised-widgets/src/widgets/modeling/msPathway',
             'kbasePathways'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbasePathways',
             'kbaseTabTableTabs'                     : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabs',
-        'kbaseExpressionMatrix'                 : 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
-        'kbaseExpressionGenesetBaseWidget'      : 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',
-        'kbaseExpressionHeatmap'                : 'kbase/js/widgets/function_output/kbaseExpressionHeatmap',
-        'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
-        'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
-        'kbaseExpressionEstimateK'              : 'kbase/js/widgets/function_output/kbaseExpressionEstimateK',
-        'kbaseExpressionFeatureClusters'             : 'kbase/js/widgets/function_output/kbaseExpressionFeatureClusters',
 
             'knhx'                                  : 'knhxtree/js/knhx',
             'knhx_menu'                             : 'knhxtree/js/menu',
@@ -164,6 +157,7 @@ define([], function() {
             'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
             'kbaseExpressionEstimateK'              : 'kbase/js/widgets/function_output/kbaseExpressionEstimateK',
             'kbaseExpressionClusterSet'             : 'kbase/js/widgets/function_output/kbaseExpressionClusterSet',
+            'kbaseExpressionFeatureClusters'        : 'kbase/js/widgets/function_output/kbaseExpressionFeatureClusters',
 
 
 

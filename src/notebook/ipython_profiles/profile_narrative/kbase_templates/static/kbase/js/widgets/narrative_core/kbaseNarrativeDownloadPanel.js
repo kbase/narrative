@@ -73,10 +73,10 @@ define(['jquery', 'kbwidget'], function( $ ) {
                 name: "TSV", external_type: 'TSV.Matrix', transform_options: {}
             }],
 
-            'KBaseFeatureValues.ClusterSet':[{
-                name: "TSV", external_type: 'TSV.ClusterSet', transform_options: {}
+            'KBaseFeatureValues.FeatureClusters':[{
+                name: "TSV", external_type: 'TSV.FeatureClusters', transform_options: {}
             }, {
-                name: "SIF", external_type: 'SIF.ClusterSet', transform_options: {}
+                name: "SIF", external_type: 'SIF.FeatureClusters', transform_options: {}
             }]
         },
 

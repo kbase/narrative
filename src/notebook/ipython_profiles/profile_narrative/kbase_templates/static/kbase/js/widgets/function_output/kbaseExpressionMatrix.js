@@ -115,10 +115,10 @@ define(['jquery',
 					'Description', 
 					matrixStat.mtx_descriptor.description ) )
 				.append( self.makeRow( 
-					'# conditions', 
+					'# Conditions', 
 					matrixStat.mtx_descriptor.columns_count ) )
 				.append( self.makeRow( 
-					'# genes', 
+					'# Features', 
 					matrixStat.mtx_descriptor.rows_count ) )
 				.append( self.makeRow( 
 					'Scale', 
@@ -141,10 +141,10 @@ define(['jquery',
 			///////////////////////////////////// Conditions table ////////////////////////////////////////////  
 
 			$tabConditions.append(
-                $('<div style="font-size: 1.5em; width:100%; text-align: center;"> Browse conditions </div>')
+                $('<div style="font-size: 1.2em; width:100%; text-align: center;">Browse Conditions</div>')
             );
             $tabConditions.append(
-                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated across all genes</div>')
+                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated across all features in a condition</div>')
             );
 
 
@@ -156,12 +156,12 @@ define(['jquery',
 				   "sDom": 'lftip',
 					"aaData": self.buildConditionsTableData(),
 					"aoColumns": [
-						{ sTitle: "Condition", mData:"name" },
+						{ sTitle: "Condition ID", mData:"name" },
 						{ sTitle: "Min", mData:"min" },
 						{ sTitle: "Max", mData:"max" },
-						{ sTitle: "Avg", mData:"avg" },
-						{ sTitle: "Std", mData:"std"},
-						{ sTitle: "Missing",  mData:"missing_values" }
+						{ sTitle: "Average", mData:"avg" },
+						{ sTitle: "Std. Dev.", mData:"std"},
+						{ sTitle: "Missing Values?",  mData:"missing_values" }
 					]
 				} );
 
@@ -172,10 +172,10 @@ define(['jquery',
 			///////////////////////////////////// Genes table ////////////////////////////////////////////          
 
 			$tabGenes.append(
-                $('<div style="font-size: 1.5em; width:100%; text-align: center;"> Browse genes </div>')
+                $('<div style="font-size: 1.2em; width:100%; text-align: center;">Browse Features</div>')
             );
             $tabGenes.append(
-                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated across all conditions</div>')
+                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated across all conditions for the feature</div>')
             );
 
 			var tableGenes = $('<table id="'+pref+'genes-table" \
@@ -186,13 +186,13 @@ define(['jquery',
 				   "sDom": 'lftip',
 					"aaData": self.buildGenesTableData(),
 					"aoColumns": [
-						{ sTitle: "Name", mData: "id"},
+						{ sTitle: "Feature ID", mData: "id"},
 						{ sTitle: "Function", mData: "function"},
 						{ sTitle: "Min", mData:"min" },
 						{ sTitle: "Max", mData:"max" },  
-						{ sTitle: "Avg", mData:"avg" },                                                      
-						{ sTitle: "Std", mData:"std"},
-						{ sTitle: "Missing", mData:"missing_values" }
+						{ sTitle: "Avgerage", mData:"avg" },                                                      
+						{ sTitle: "Std. Dev.", mData:"std"},
+						{ sTitle: "Missing Values?", mData:"missing_values" }
 					]
 				} );
 		},
@@ -212,7 +212,7 @@ define(['jquery',
 						'max': stat.max === null? ' ' : stat.max.toFixed(2),
 						'avg': stat.avg === null? ' ' : stat.avg.toFixed(2),
 						'std': stat.std === null? ' ' : stat.std.toFixed(2),
-						'missing_values': stat.missing_values
+						'missing_values': stat.missing_values ? 'Yes' : 'No'
 					}
 				);
 			}
@@ -233,12 +233,12 @@ define(['jquery',
 						'index': desc.index,
 						'id': desc.id,
 						'name': desc.name,
-						'function' : gene_function,
+						'function' : gene_function ? gene_function : ' ',
 						'min': stat.min === null? ' ' : stat.min.toFixed(2),
 						'max': stat.max === null? ' ' : stat.max.toFixed(2),
 						'avg': stat.avg === null? ' ' : stat.avg.toFixed(2),
 						'std': stat.std === null? ' ' : stat.std.toFixed(2),
-						'missing_values': stat.missing_values
+						'missing_values': stat.missing_values ? 'Yes' : 'No'
 					}
 				);
 			}

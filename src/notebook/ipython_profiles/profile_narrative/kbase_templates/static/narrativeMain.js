@@ -32,7 +32,8 @@ require(['narrative_paths'], function(paths) {
         "use strict";
         console.log('Loading KBase Narrative setup routine.');
 
-        window.kbconfig = config;
+        config.updateConfig(function(config) { window.kbconfig = config; });
+        // window.kbconfig = config.config;
 
         require(['kbapi'], function() {
             require(['kbaseNarrative', 'IPythonCustom'], function(Narrative) {

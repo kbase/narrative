@@ -22,52 +22,52 @@ define([], function() {
             'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
             'select2'                               : 'select2-v3.5.2/select2.min',
 
-        'narrativeConfig'                       : 'kbase/js/narrativeConfig',
-        'narrativeMain'                         : 'narrativeMain',
-        'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
-        'narrativeLogin'                        : 'kbase/js/narrativeLogin',
-        'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',
-        'kbaseUploadWidget'                     : 'kbase/js/widgets/kbaseUpload',
-        'kbasePrompt'                           : 'kbase/js/widgets/kbasePromptNew',
-        // Non-AMD, still load with Require
-        'widgetMaxWidthCorrection'              : 'kbase/js/widgetMaxWidthCorrection',
-        'kbapi'                                 : 'kbase/js/widgets/kbapi',
-        'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
-        'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
+            'narrativeConfig'                       : 'kbase/js/narrativeConfig',
+            'narrativeMain'                         : 'narrativeMain',
+            'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
+            'narrativeLogin'                        : 'kbase/js/narrativeLogin',
+            'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',
+            'kbaseUploadWidget'                     : 'kbase/js/widgets/kbaseUpload',
+            'kbasePrompt'                           : 'kbase/js/widgets/kbasePromptNew',
+            // Non-AMD, still load with Require
+            'widgetMaxWidthCorrection'              : 'kbase/js/widgetMaxWidthCorrection',
+            'kbapi'                                 : 'kbase/js/widgets/kbapi',
+            'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
+            'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
 
-        /***
-         * CORE NARRATIVE WIDGETS
-         ***/
-        'kbaseNarrativePrestart'                : 'kbase/js/kbaseNarrativePrestart',
-        'kbaseNarrative'                        : 'kbase/js/kbaseNarrative',
-        'kbaseNarrativeCellMenu'                : 'kbase/js/widgets/narrative_core/kbaseNarrativeCellMenu',
-        'kbaseNarrativeControlPanel'            : 'kbase/js/widgets/narrative_core/kbaseNarrativeControlPanel',
-        'kbaseNarrativeDataPanel'               : 'kbase/js/widgets/narrative_core/kbaseNarrativeDataPanel',
-        'kbaseNarrativeDataList'                : 'kbase/js/widgets/narrative_core/kbaseNarrativeDataList',
-        'kbaseNarrativeSidePanel'               : 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
-        'kbaseNarrativeJobsPanel'               : 'kbase/js/widgets/narrative_core/kbaseNarrativeJobsPanel',
-        'kbaseNarrativeMethodPanel'             : 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodPanel',
-        'kbaseNarrativeManagePanel'             : 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
-        'kbaseNarrativeDownloadPanel'           : 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
-        'kbaseNarrativeSharePanel'              : 'kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel',
-        'kbaseNarrativeExampleDataTab'          : 'kbase/js/widgets/narrative_core/kbaseNarrativeExampleDataTab',
-        'kbaseNarrativeSideImportTab'           : 'kbase/js/widgets/narrative_core/kbaseNarrativeSideImportTab',
-        'kbaseNarrativeSidePublicTab'           : 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePublicTab',
-        'kbaseNarrativeCell'                    : 'kbase/js/widgets/narrative_core/kbaseNarrativeCell',
-        'kbaseNarrativeDataCell'                : 'kbase/js/widgets/narrative_core/kbaseNarrativeDataCell',
-        'kbaseNarrativeOutputCell'              : 'kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell',
-        'kbaseNarrativeInput'                   : 'kbase/js/widgets/function_input/kbaseNarrativeInput',
-        'kbaseNarrativeMethodInput'             : 'kbase/js/widgets/function_input/kbaseNarrativeMethodInput',
-        'kbaseNarrativeParameterInput'          : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterInput',
-        'kbaseNarrativeParameterTextInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextInput',
-        'kbaseNarrativeParameterDropdownInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterDropdownInput',
-        'kbaseNarrativeParameterCheckboxInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCheckboxInput',
-        'kbaseNarrativeParameterTextareaInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextareaInput',
-        'kbaseNarrativeParameterFileInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterFileInput',
-        'kbaseNarrativeParameterTextSubdataInput' : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextSubdataInput',
-        'kbaseNarrativeError'                   : 'kbase/js/widgets/function_output/kbaseNarrativeError',
-        'NarrativeManager'                      : 'kbase/js/api/NarrativeManager',
-        'ipythonCellMenu'                       : 'kbase/js/widgets/narrative_core/ipythonCellMenu',
+            /***
+             * CORE NARRATIVE WIDGETS
+             ***/
+            'kbaseNarrativePrestart'                : 'kbase/js/kbaseNarrativePrestart',
+            'kbaseNarrative'                        : 'kbase/js/kbaseNarrative',
+            'kbaseNarrativeCellMenu'                : 'kbase/js/widgets/narrative_core/kbaseNarrativeCellMenu',
+            'kbaseNarrativeControlPanel'            : 'kbase/js/widgets/narrative_core/kbaseNarrativeControlPanel',
+            'kbaseNarrativeDataPanel'               : 'kbase/js/widgets/narrative_core/kbaseNarrativeDataPanel',
+            'kbaseNarrativeDataList'                : 'kbase/js/widgets/narrative_core/kbaseNarrativeDataList',
+            'kbaseNarrativeSidePanel'               : 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePanel',
+            'kbaseNarrativeJobsPanel'               : 'kbase/js/widgets/narrative_core/kbaseNarrativeJobsPanel',
+            'kbaseNarrativeMethodPanel'             : 'kbase/js/widgets/narrative_core/kbaseNarrativeMethodPanel',
+            'kbaseNarrativeManagePanel'             : 'kbase/js/widgets/narrative_core/kbaseNarrativeManagePanel',
+            'kbaseNarrativeDownloadPanel'           : 'kbase/js/widgets/narrative_core/kbaseNarrativeDownloadPanel',
+            'kbaseNarrativeSharePanel'              : 'kbase/js/widgets/narrative_core/kbaseNarrativeSharePanel',
+            'kbaseNarrativeExampleDataTab'          : 'kbase/js/widgets/narrative_core/kbaseNarrativeExampleDataTab',
+            'kbaseNarrativeSideImportTab'           : 'kbase/js/widgets/narrative_core/kbaseNarrativeSideImportTab',
+            'kbaseNarrativeSidePublicTab'           : 'kbase/js/widgets/narrative_core/kbaseNarrativeSidePublicTab',
+            'kbaseNarrativeCell'                    : 'kbase/js/widgets/narrative_core/kbaseNarrativeCell',
+            'kbaseNarrativeDataCell'                : 'kbase/js/widgets/narrative_core/kbaseNarrativeDataCell',
+            'kbaseNarrativeOutputCell'              : 'kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell',
+            'kbaseNarrativeInput'                   : 'kbase/js/widgets/function_input/kbaseNarrativeInput',
+            'kbaseNarrativeMethodInput'             : 'kbase/js/widgets/function_input/kbaseNarrativeMethodInput',
+            'kbaseNarrativeParameterInput'          : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterInput',
+            'kbaseNarrativeParameterTextInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextInput',
+            'kbaseNarrativeParameterDropdownInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterDropdownInput',
+            'kbaseNarrativeParameterCheckboxInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCheckboxInput',
+            'kbaseNarrativeParameterTextareaInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextareaInput',
+            'kbaseNarrativeParameterFileInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterFileInput',
+            'kbaseNarrativeParameterTextSubdataInput' : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextSubdataInput',
+            'kbaseNarrativeError'                   : 'kbase/js/widgets/function_output/kbaseNarrativeError',
+            'NarrativeManager'                      : 'kbase/js/api/NarrativeManager',
+            'ipythonCellMenu'                       : 'kbase/js/widgets/narrative_core/ipythonCellMenu',
 
             // not yet ADMs, but still load with Require
             'kbaseNarrativeAppCell'                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeAppCell',
@@ -98,74 +98,80 @@ define([], function() {
              * END CUSTOM INPUT WIDGETS
              ***/
 
-        /***
-         * CUSTOM OUTPUT AND VIEWER WIDGETS
-         ***/
-        'kbaseDefaultNarrativeOutput'           : 'kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput',
-        'kbaseTabTable'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
-        'KBObjects'                             : 'kbase/js/revised-widgets/src/widgets/modeling/KBObjects',
-        'KBaseFBA.FBAModel'                     : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModel',
-        'KBaseFBA.FBAModelSet'                  : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModelSet',
-        'KBaseFBA.FBA'                          : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBA',
-        'KBaseBiochem.Media'                    : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseBiochem.Media',
-        'KBasePhenotypes.PhenotypeSet'          : 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSet',
-        'KBasePhenotypes.PhenotypeSimulationSet': 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSimulationSet',
-        // another implementation of kbaseTabs needed for kbaseTabTable
-        'kbaseTabTableTabs'                     : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabs',
-        'knhx'                                  : 'knhxtree/js/knhx',
-        'knhx_menu'                             : 'knhxtree/js/menu',
-        'knhx_excanvas'                         : 'knhxtree/js/excanvas',
-        'knhx_canvastext'                       : 'knhxtree/js/canvastext',
-        'knhx_easytree'                         : 'knhxtree/js/easytree',
-        'kbaseTree'                             : 'kbase/js/widgets/function_output/kbaseTree',
-        'kbaseContigBrowserButtons'             : 'kbase/js/widgets/genomes/kbaseContigBrowserButtons',
-        'ContigBrowserPanel'                    : 'kbase/js/widgets/function_output/contigBrowserPanel',
-        'kbaseGenomeView'                       : 'kbase/js/widgets/function_output/kbaseGenomeAnnotation',
-        'kbaseContigSetView'                    : 'kbase/js/widgets/function_output/kbaseContigSetView',
-        'kbaseAssemblyView'                     : 'kbase/js/widgets/function_output/kbaseAssemblyView',
-        'AssemblyWidget'                        : 'kbase/js/widgets/function_output/kbaseAssembly',
-        'FbaModelComparisonWidget'              : 'kbase/js/widgets/function_output/kbaseFbaModelComparison',
-        // for the GenomeComparison object
-        'kbaseGenomeComparisonViewer'           : 'kbase/js/widgets/function_output/kbaseGenomeComparisonViewer',
-        // for comparing proteomes
-        'GenomeComparisonWidget'                : 'kbase/js/widgets/function_output/kbaseGenomeComparison',
-        'kbasePanGenome'                        : 'kbase/js/widgets/function_output/kbasePanGenome',
-        'kbaseDomainAnnotation'                 : 'kbase/js/widgets/function_output/kbaseDomainAnnotation',
-        'kbaseGenomeSetBuilder'                 : 'kbase/js/widgets/function_output/kbaseGenomeSetBuilder',
-        'kbaseMSA'                              : 'kbase/js/widgets/function_output/kbaseMSA',
-        'MetagenomeView'                        : 'kbase/js/widgets/function_output/kbaseMetagenomeView',
-        'CollectionView'                        : 'kbase/js/widgets/function_output/kbaseCollectionView',
-        'AbundanceDataHeatmap'                  : 'kbase/js/widgets/function_output/kbaseAbundanceDataHeatmap',
-        'AbundanceDataPcoa'                     : 'kbase/js/widgets/function_output/kbaseAbundanceDataPcoa',
-        'AbundanceDataBoxplot'                  : 'kbase/js/widgets/function_output/kbaseAbundanceDataBoxplot',
-        'AbundanceDataTable'                    : 'kbase/js/widgets/function_output/kbaseAbundanceDataTable',
-        'AnnotationSetTable'                    : 'kbase/js/widgets/function_output/kbaseAnnotationSetTable',
-        'AbundanceDataView'                     : 'kbase/js/widgets/function_output/kbaseAbundanceDataView',
-        'RankAbundancePlot'                     : 'kbase/js/widgets/function_output/kbaseRankAbundancePlot',
-        'kbaseFeatureSet'                       : 'kbase/js/widgets/function_output/kbaseFeatureSet',
+            /***
+             * CUSTOM OUTPUT AND VIEWER WIDGETS
+             ***/
+            'kbaseDefaultNarrativeOutput'           : 'kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput',
 
-        'kbaseExpressionMatrix'                 : 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
-        'kbaseExpressionGenesetBaseWidget'      : 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',
-        'kbaseExpressionHeatmap'                : 'kbase/js/widgets/function_output/kbaseExpressionHeatmap',
-        'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
-        'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
-        'kbaseExpressionEstimateK'              : 'kbase/js/widgets/function_output/kbaseExpressionEstimateK',
-        'kbaseExpressionClusterSet'             : 'kbase/js/widgets/function_output/kbaseExpressionClusterSet',
+            'kbaseTabTable'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
+            'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling',
+            'KBaseFBA.FBAModel'                     : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModel',
+            'KBaseFBA.FBAModelSet'                  : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModelSet',
+            'KBaseFBA.FBA'                          : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBA',
+            'KBaseFBA.FBAComparison'                : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAComparison',
+            'KBaseBiochem.Media'                    : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseBiochem.Media',
+            'KBasePhenotypes.PhenotypeSet'          : 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSet',
+            'KBasePhenotypes.PhenotypeSimulationSet': 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSimulationSet',
+            'KBaseSearch.GenomeSet'                 : 'src/widgets/modeling/KBaseSearch.GenomeSet',
+            'modelSeedVizConfig'                    : 'kbase/js/revised-widgets/src/widgets/modeling/modelSeedVizConfig',
+            'msPathway'                             : 'kbase/js/revised-widgets/src/widgets/modeling/msPathway',
+            'kbasePathways'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbasePathways',
+            'kbaseTabTableTabs'                     : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabs',
 
+            'knhx'                                  : 'knhxtree/js/knhx',
+            'knhx_menu'                             : 'knhxtree/js/menu',
+            'knhx_excanvas'                         : 'knhxtree/js/excanvas',
+            'knhx_canvastext'                       : 'knhxtree/js/canvastext',
+            'knhx_easytree'                         : 'knhxtree/js/easytree',
+            'kbaseTree'                             : 'kbase/js/widgets/function_output/kbaseTree',
+            'kbaseContigBrowserButtons'             : 'kbase/js/widgets/genomes/kbaseContigBrowserButtons',
+            'ContigBrowserPanel'                    : 'kbase/js/widgets/function_output/contigBrowserPanel',
+            'kbaseGenomeView'                       : 'kbase/js/widgets/function_output/kbaseGenomeAnnotation',
+            'kbaseContigSetView'                    : 'kbase/js/widgets/function_output/kbaseContigSetView',
+            'kbaseAssemblyView'                     : 'kbase/js/widgets/function_output/kbaseAssemblyView',
+            'AssemblyWidget'                        : 'kbase/js/widgets/function_output/kbaseAssembly',
+            'FbaModelComparisonWidget'              : 'kbase/js/widgets/function_output/kbaseFbaModelComparison',
+            // for the GenomeComparison object
+            'kbaseGenomeComparisonViewer'           : 'kbase/js/widgets/function_output/kbaseGenomeComparisonViewer',
+            // for comparing proteomes
+            'GenomeComparisonWidget'                : 'kbase/js/widgets/function_output/kbaseGenomeComparison',
+            'kbasePanGenome'                        : 'kbase/js/widgets/function_output/kbasePanGenome',
+            'kbaseDomainAnnotation'                 : 'kbase/js/widgets/function_output/kbaseDomainAnnotation',
+            'kbaseGenomeSetBuilder'                 : 'kbase/js/widgets/function_output/kbaseGenomeSetBuilder',
+            'kbaseMSA'                              : 'kbase/js/widgets/function_output/kbaseMSA',
+            'MetagenomeView'                        : 'kbase/js/widgets/function_output/kbaseMetagenomeView',
+            'CollectionView'                        : 'kbase/js/widgets/function_output/kbaseCollectionView',
+            'AbundanceDataHeatmap'                  : 'kbase/js/widgets/function_output/kbaseAbundanceDataHeatmap',
+            'AbundanceDataPcoa'                     : 'kbase/js/widgets/function_output/kbaseAbundanceDataPcoa',
+            'AbundanceDataBoxplot'                  : 'kbase/js/widgets/function_output/kbaseAbundanceDataBoxplot',
+            'AbundanceDataTable'                    : 'kbase/js/widgets/function_output/kbaseAbundanceDataTable',
+            'AnnotationSetTable'                    : 'kbase/js/widgets/function_output/kbaseAnnotationSetTable',
+            'AbundanceDataView'                     : 'kbase/js/widgets/function_output/kbaseAbundanceDataView',
+            'RankAbundancePlot'                     : 'kbase/js/widgets/function_output/kbaseRankAbundancePlot',
+            'kbaseFeatureSet'                       : 'kbase/js/widgets/function_output/kbaseFeatureSet',
 
-
-        'geometry_point'                        : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_point',
-        'geometry_rectangle'                    : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_rectangle',
-        'geometry_size'                         : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_size',
-        'kbaseVisWidget'                        : 'kbase/js/ui-common/src/widgets/kbaseVisWidget',
-        'kbaseHeatmap'                          : 'kbase/js/ui-common/src/widgets/vis/kbaseHeatmap',
-        'kbaseLinechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseLinechart',
+            'kbaseExpressionMatrix'                 : 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
+            'kbaseExpressionGenesetBaseWidget'      : 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',
+            'kbaseExpressionHeatmap'                : 'kbase/js/widgets/function_output/kbaseExpressionHeatmap',
+            'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
+            'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
+            'kbaseExpressionEstimateK'              : 'kbase/js/widgets/function_output/kbaseExpressionEstimateK',
+            'kbaseExpressionClusterSet'             : 'kbase/js/widgets/function_output/kbaseExpressionClusterSet',
 
 
-        // unfinished ones
-        /***
-         * END CUSTOM OUTPUT WIDGETS
-         ***/
+
+            'geometry_point'                        : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_point',
+            'geometry_rectangle'                    : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_rectangle',
+            'geometry_size'                         : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_size',
+            'kbaseVisWidget'                        : 'kbase/js/ui-common/src/widgets/kbaseVisWidget',
+            'kbaseHeatmap'                          : 'kbase/js/ui-common/src/widgets/vis/kbaseHeatmap',
+            'kbaseLinechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseLinechart',
+
+
+            // unfinished ones
+            /***
+             * END CUSTOM OUTPUT WIDGETS
+             ***/
 
             'd3'                                    : 'kbase/js/ui-common/ext/d3/d3.v3.min',
             'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
@@ -387,29 +393,64 @@ define([], function() {
                 deps : ['knhx_menu', 'knhx_excanvas', 'knhx_canvastext', 'knhx_easytree']
             },
             'KBaseFBA.FBAModel' : {
-                deps : ['KBObjects']
+                'deps' : ['KBModeling']
             },
             'KBaseFBA.FBAModelSet' : {
-                deps : ['KBObjects']
+                'deps' : ['KBModeling']
             },
             'KBaseFBA.FBA' : {
-                deps : ['KBObjects']
+                'deps' : ['KBModeling']
+            },
+            'KBaseFBA.FBAComparison' : {
+                'deps' : ['KBModeling']
             },
             'KBaseBiochem.Media' : {
-                deps : ['KBObjects']
+                'deps' : ['KBModeling']
             },
             'KBasePhenotypes.PhenotypeSet' : {
-                deps : ['KBObjects']
+                'deps' : ['KBModeling']
             },
             'KBasePhenotypes.PhenotypeSimulationSet' : {
-                deps : ['KBObjects']
+                'deps' : ['KBModeling']
+            },
+            'KBaseSearch.GenomeSet' : {
+                'deps' : ['KBModeling']
             },
             'kbaseTabTable' : {
-                deps : ['jquery', 'jquery-dataTables', 'jquery-dataTables-bootstrap',
-                        'KBObjects', 'KBaseFBA.FBAModel',
-                        'KBaseFBA.FBAModelSet', 'KBaseFBA.FBA', 'KBaseBiochem.Media', 
-                        'KBasePhenotypes.PhenotypeSet', 'KBasePhenotypes.PhenotypeSimulationSet', 
-                        'kbaseTabTableTabs']
+                'deps' : ['jquery', 
+                          'jquery-dataTables',
+                          'jquery-dataTables-bootstrap',
+                          'bootstrap',
+                          'KBModeling',
+                          'KBaseFBA.FBAModel',
+                          'KBaseFBA.FBAModelSet',
+                          'KBaseFBA.FBA',
+                          'KBaseFBA.FBAComparison',
+                          'KBaseBiochem.Media',
+                          'KBasePhenotypes.PhenotypeSet',
+                          'KBasePhenotypes.PhenotypeSimulationSet',
+                          'KBaseFBA.FBAComparison',
+                          'kbaseTabTableTabs']
+            },
+            'kbasePathways' : {
+                'deps' : ['jquery', 
+                          'kbwidget', 
+                          'KBModeling', 
+                          'jquery-dataTables',
+                          'jquery-dataTables-bootstrap',
+                          'bootstrap',
+                          'msPathway']
+            },
+            'msPathway' : {
+                'deps' : ['jquery',
+                          'modelSeedVizConfig',
+                          'd3']
+            },
+            'kbaseTabTableTabs' : {
+                'deps' : ['jquery',
+                          'jquery-dataTables',
+                          'jquery-dataTables-bootstrap',
+                          'bootstrap']
             },
             'kbapi' : {
                 deps : ['jquery', 'bootstrap']

@@ -32,14 +32,15 @@ require(['narrative_paths'], function(paths) {
         "use strict";
         console.log('Loading KBase Narrative setup routine.');
 
-        config.updateConfig(function(config) { window.kbconfig = config; });
-        // window.kbconfig = config.config;
-
-        require(['kbapi'], function() {
-            require(['kbaseNarrative', 'IPythonCustom'], function(Narrative) {
-                console.log('Starting IPython main');
-                require(['IPythonMain']);
+        config.updateConfig(function(config) { 
+            window.kbconfig = config;
+            require(['kbapi'], function() {
+                require(['kbaseNarrative', 'IPythonCustom'], function(Narrative) {
+                    console.log('Starting IPython main');
+                    require(['IPythonMain']);
+                });
             });
-        });
+        });        // window.kbconfig = config.config;
+
     });
 });

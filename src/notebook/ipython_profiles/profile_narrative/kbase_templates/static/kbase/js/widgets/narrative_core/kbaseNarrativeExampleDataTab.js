@@ -12,7 +12,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
             loadingImage: 'static/kbase/images/ajax-loader.gif',
-            exampleWsId: 2901, // designed to be a workspace with just a handful of objects
+            exampleWsName: 'KBaseExampleData', // designed to be a workspace with just a handful of objects
 	    $importStatus:$('<div>'),
             exampleTypeOrder: [
                 {name:['AssemblyInput','SingleEndLibrary','PairedEndLibrary','ReferenceAssembly'], displayName: "Example Sequence Assembly Inputs", header:'Various types of read data configured for sequence assembly.'},
@@ -20,10 +20,10 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
                 {name:['Genome'], displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
                 {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
                 {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'},
-                {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data Sets", header:'Sets of WGS and amplicon metagenomes'},
+                {name:['ExpressionMatrix'], displayName: "Example ExpressionMatrix", header:'Gene expression data in a gene vs. condition matrix'},
+                {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data", header:'Sets of WGS and amplicon metagenomes'},
                 {name:['TranscriptomeHack'], displayName: "Example Sorghum Transcriptomes", header:'Sorghum bicolor transcriptome data in response to ABA and osmotic stress'}
                 ]
-
         },
 
         ws: null,
@@ -81,7 +81,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
             var self = this;
             if (self.narWs && self.ws) {
                 self.ws.list_objects({
-                        ids : [self.options.exampleWsId],
+                        workspaces : [self.options.exampleWsName],
                         includeMetadata: 1
                     },
                     function(infoList) {

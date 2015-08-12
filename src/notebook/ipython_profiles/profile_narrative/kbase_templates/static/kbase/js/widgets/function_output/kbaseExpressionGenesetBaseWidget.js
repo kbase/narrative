@@ -49,6 +49,10 @@ define(['jquery',
             this._super(options);
             this.pref = this.uuid();
 
+            if (window.kbconfig && window.kbconfig.urls) {
+                this.options.featureValueURL = window.kbconfig.urls.feature_values;
+            }
+
             // Create a message pane
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);       

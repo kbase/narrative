@@ -129,7 +129,7 @@
                         { sTitle: "Condition ID", mData:"id"},
                         { sTitle: "Min", mData:"min"},
                         { sTitle: "Max", mData:"max"},
-                        { sTitle: "Avgerage", mData:"avg"},                            
+                        { sTitle: "Average", mData:"avg"},                            
                         { sTitle: "Std. Dev.", mData:"std"},
                         { sTitle: "Expression Values", mData: "values",
                             mRender: function ( values ) {

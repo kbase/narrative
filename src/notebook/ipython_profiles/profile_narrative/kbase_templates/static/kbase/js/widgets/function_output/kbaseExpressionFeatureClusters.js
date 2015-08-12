@@ -13,7 +13,7 @@ define(['jquery',
 //        ,'jquery-dataScroller'
 		], function($) {
 	$.KBWidget({
-		name: 'kbaseExpressionClusterSet',
+		name: 'kbaseExpressionFeatureClusters',
 		parent: 'kbaseAuthenticatedWidget',
 		version: '1.0.0',
 		options: {

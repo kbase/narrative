@@ -150,7 +150,7 @@ define([], function() {
         'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
         'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
         'kbaseExpressionEstimateK'              : 'kbase/js/widgets/function_output/kbaseExpressionEstimateK',
-        'kbaseExpressionClusterSet'             : 'kbase/js/widgets/function_output/kbaseExpressionClusterSet',
+        'kbaseExpressionFeatureClusters'             : 'kbase/js/widgets/function_output/kbaseExpressionFeatureClusters',
 
 
 

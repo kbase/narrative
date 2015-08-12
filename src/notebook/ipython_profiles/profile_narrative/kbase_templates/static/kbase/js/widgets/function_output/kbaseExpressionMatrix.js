@@ -21,9 +21,9 @@ define(['jquery',
 			expressionMatrixID: null,
 			workspaceID: null,
 
-            // Service URL: should be in window.kbconfig.urls.
-            // featureValueURL: 'http://localhost:8889',
-            featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
+			// Service URL: should be in window.kbconfig.urls.
+			// featureValueURL: 'http://localhost:8889',
+			featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
 
 			loadingImage: "static/kbase/images/ajax-loader.gif"
 		},
@@ -42,8 +42,8 @@ define(['jquery',
 			this.pref = this.uuid();
 
 			if (window.kbconfig && window.kbconfig.urls) {
-                this.options.featureValueURL = window.kbconfig.urls.feature_values;
-            }
+				this.options.featureValueURL = window.kbconfig.urls.feature_values;
+			}
 
 			// Create a message pane
 			this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");

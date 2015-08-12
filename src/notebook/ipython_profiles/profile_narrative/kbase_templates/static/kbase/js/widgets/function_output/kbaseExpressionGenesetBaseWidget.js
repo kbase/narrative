@@ -98,7 +98,6 @@ define(['jquery',
             self.featureValueClient.get_submatrix_stat(
                 self.getSubmtrixParams(),
                 function(data){
-                    console.log("submatrixStat",data);
                     self.submatrixStat = data;
                     self.render();
                     self.loading(false);

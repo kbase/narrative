@@ -96,14 +96,15 @@
                         .on('click', function() {
                             var min = parseFloat($minInput.val());
                             if(min && !isNaN(min)) { 
-                                if(min>0) min=0;
+                                if(min>0) { min=0; }
                                 self.minColorValue = min;
                             }
                             $minInput.val(self.minColorValue);
                             var max = parseFloat($maxInput.val());
                             if(max && !isNaN(max)) {
-                                if(max<0) max=0;
-                                self.maxColorValue = max; }
+                                if(max<0) { max=0; }
+                                self.maxColorValue = max; 
+                            }
                             $maxInput.val(self.maxColorValue);
                             self.redrawTable();
                         })

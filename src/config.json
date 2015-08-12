@@ -124,7 +124,7 @@
         "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version", 
         "transform": "https://ci.kbase.us/services/transform", 
         "trees": "https://ci.kbase.us/services/trees", 
-        "ui_common_root": "https://narrative-dev.kbase.us/",
+        "ui_common_root": "https://narrative-ci.kbase.us/",
         "update_profile": "https://gologin.kbase.us/account/UpdateProfile", 
         "uploader": "", 
         "user_and_job_state": "https://ci.kbase.us/services/userandjobstate", 

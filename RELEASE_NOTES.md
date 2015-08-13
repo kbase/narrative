@@ -21,7 +21,7 @@ __Bugfixes__
 - JIRA KBASE-1843/KBASE-1849 - fixed issue where a large narrative object (e.g. a large IPython notebook object) fails to save without a decent error message. The maximum size was bumped to 4MB, and a sensible error message was introduced.
 - Fixed issue where duplicated results can appear in the Public Data tab
 - JIRA NAR-758 - added a horizontal scrollbar to widgets who get too wide (this currenly only affects the OTU Abundance data table widget, but others might get affected in the future).
-- JRIA NAR-814 - added a trailing slash to the service status url.
+- JIRA NAR-814 - added a trailing slash to the service status url.
 
 ### Version 1.0.2 - 2/19/2015
 __Bugfixes__

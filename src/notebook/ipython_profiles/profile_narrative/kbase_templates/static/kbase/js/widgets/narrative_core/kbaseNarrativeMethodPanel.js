@@ -193,9 +193,9 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
              */
             $(document).on('getFunctionSpecs.Narrative',
                 $.proxy(function(e, specSet, callback) {
-                  console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
+                    //console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
                     if (callback) {
-                      console.debug("Trigger: specSet=",specSet);
+                        //console.debug("Trigger: specSet=",specSet);
                         callback(this.getFunctionSpecs(specSet));
                     }
                 }, this)
@@ -497,7 +497,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
          * If a spec isn't found, then it won't appear in the return values.
          */
         getFunctionSpecs: function(specSet) {
-            console.debug("getFunctionSpecs(specSet=",specSet,")");
+            //console.debug("getFunctionSpecs(specSet=",specSet,")");
             var results = {};
             if (specSet.apps && specSet.apps instanceof Array) {
                 results.apps = {};
@@ -516,7 +516,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                 }
               */
             }
-            console.debug("getFunctionSpecs returning:",results);
+            //console.debug("getFunctionSpecs returning:",results);
             return results;
         },
 

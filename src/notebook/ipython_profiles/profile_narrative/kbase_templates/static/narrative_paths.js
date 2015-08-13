@@ -112,7 +112,7 @@ define([], function() {
             'KBaseBiochem.Media'                    : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseBiochem.Media',
             'KBasePhenotypes.PhenotypeSet'          : 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSet',
             'KBasePhenotypes.PhenotypeSimulationSet': 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSimulationSet',
-            'KBaseSearch.GenomeSet'                 : 'src/widgets/modeling/KBaseSearch.GenomeSet',
+            'KBaseSearch.GenomeSet'                 : 'kbase/us/revised-widgets/src/widgets/modeling/KBaseSearch.GenomeSet',
             'modelSeedVizConfig'                    : 'kbase/js/revised-widgets/src/widgets/modeling/modelSeedVizConfig',
             'msPathway'                             : 'kbase/js/revised-widgets/src/widgets/modeling/msPathway',
             'kbasePathways'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbasePathways',
@@ -167,6 +167,16 @@ define([], function() {
             'kbaseVisWidget'                        : 'kbase/js/ui-common/src/widgets/kbaseVisWidget',
             'kbaseHeatmap'                          : 'kbase/js/ui-common/src/widgets/vis/kbaseHeatmap',
             'kbaseLinechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseLinechart',
+            'kbaseBarchart'                         : 'kbase/js/ui-common/src/widgets/vis/kbaseBarchart',
+            'kbaseScatterplot'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseScatterplot',
+            'kbaseChordchart'                       : 'kbase/js/ui-common/src/widgets/vis/kbaseChordchart',
+            'kbaseCircularHeatmap'                  : 'kbase/js/ui-common/src/widgets/vis/kbaseCircularHeatmap',
+            'kbaseForcedNetwork'                    : 'kbase/js/ui-common/src/widgets/vis/kbaseForcedNetwork',
+            'kbaseHistogram'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseHistogram',
+            'kbaseLineSerieschart'                  : 'kbase/js/ui-common/src/widgets/vis/kbaseLineSerieschart',
+            'kbasePiechart'                         : 'kbase/js/ui-common/src/widgets/vis/kbasePiechart',
+            'kbaseTreechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
+            'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
 
 
             // unfinished ones
@@ -174,16 +184,16 @@ define([], function() {
              * END CUSTOM OUTPUT WIDGETS
              ***/
 
-            'd3'                                    : 'kbase/js/ui-common/ext/d3/d3.v3.min',
+            'd3'                                    : 'kbase/js/ui-common/ext/d3/d3.min',
             'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
             'handlebars'                            : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
-            'kbwidget'                          : 'kbase/js/ui-common/src/widgets/../kbwidget',
-            'kbaseAccordion'                    : 'kbase/js/ui-common/src/widgets/kbaseAccordion',
-            'kbaseAuthenticatedWidget'          : 'kbase/js/ui-common/src/widgets/kbaseAuthenticatedWidget',
-            'kbaseModal'                        : 'kbase/js/ui-common/src/widgets/kbaseModal',
-            'kbaseTable'                        : 'kbase/js/ui-common/src/widgets/kbaseTable',
-            'kbasePanel'                        : 'kbase/js/ui-common/src/widgets/kbasePanel',
-            'kbaseDeletePrompt'                 : 'kbase/js/ui-common/src/widgets/kbaseDeletePrompt',
+            'kbwidget'                              : 'kbase/js/ui-common/src/widgets/../kbwidget',
+            'kbaseAccordion'                        : 'kbase/js/ui-common/src/widgets/kbaseAccordion',
+            'kbaseAuthenticatedWidget'              : 'kbase/js/ui-common/src/widgets/kbaseAuthenticatedWidget',
+            'kbaseModal'                            : 'kbase/js/ui-common/src/widgets/kbaseModal',
+            'kbaseTable'                            : 'kbase/js/ui-common/src/widgets/kbaseTable',
+            'kbasePanel'                            : 'kbase/js/ui-common/src/widgets/kbasePanel',
+            'kbaseDeletePrompt'                     : 'kbase/js/ui-common/src/widgets/kbaseDeletePrompt',
 
             // Not currently needed for the Narrative, but left in, commented, for posterity.
             // We can uncomment as we go.

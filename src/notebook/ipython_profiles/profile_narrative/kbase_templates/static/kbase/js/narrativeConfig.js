@@ -28,12 +28,35 @@ define(['jquery',
         name:            configSet['name'],
         git_commit_hash: configSet['git_commit_hash'],
         git_commit_time: configSet['git_commit_time'],
-        // landing_page_map:landingPageMap,
         release_notes:   configSet['release_notes'],
         mode:            configSet['mode'],
         icons:           iconsSet,
         workspaceId:     workspaceId,
-        loading_gif:     configSet['loading_gif']                    
+        loading_gif:     configSet['loading_gif'],
     };
-    return config;
+    require.config({
+        paths: {
+            'uiCommonPaths': config.urls.ui_common_root + "widget-paths"
+        }
+    });
+
+    var updateConfig = function(callback) {
+        // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";
+        require(['uiCommonPaths'], function(pathConfig) {
+            for (var name in pathConfig.paths) {
+                pathConfig.paths[name] = config.urls.ui_common_root + pathConfig.paths[name];
+            }
+            require.config(pathConfig);
+            config.new_paths = pathConfig;
+            callback(config);
+        }, function(error) { 
+            console.log("Unable to get updated widget paths. Sticking with what we've got.");
+            callback(config);
+        });
+    };
+
+    return {
+        updateConfig: updateConfig,
+        config: config
+    };
 });

@@ -35,7 +35,7 @@
             var mtxColumnSetStats = submatrixStat.mtx_column_set_stat;
             var matrixAvg = [];
             var clusterAvg = [];
-            // var clusterDisp = []
+            var clusterDisp = []
             
             for( var i = 0 ; i < columnSetStats.size; i++){
                 condition = columnDescriptors[i].id;
@@ -50,31 +50,53 @@
                     y: columnSetStats.avgs[i],
                     name: condition
                 });
-                // clusterDisp.push([condition,  columnSetStats.mins[i], columnSetStats.maxs[i]]);
+                clusterDisp.push({
+                    x: i,
+                    y: columnSetStats.mins[i],
+                    y2: columnSetStats.maxs[i],
+                    name: condition
+                });
             }
             console.log(clusterAvg);
 
-            $lineChartDiv = $("<div style = 'width : 500px; height : 300px'></div>");
+            $lineChartDiv = $("<div style = 'width : 700px; height : 300px'></div>");
             $containerDiv.append($lineChartDiv);
+            $containerDiv.append("<div style = 'width : 5px; height : 5px'></div>");
 
 
             $lineChartDiv.kbaseLinechart(
                 {
                     scaleAxes       : true,
-
-                    // xLabel      : 'Some useful experiment',
-                    // yLabel      : 'Meaningful data',
-
+                    hGrid           : true,
+                    xLabel          : 'Condition index',
+                    yLabel          : 'Expression values',
+                    //xLabels         : false,
+                    overColor : null,
                     dataset : [
                         {
-                            color : 'green',
-                            label : 'Selected genes average',
-                            values : clusterAvg,
+                            strokeColor: 'red',
+                            label : 'Min. and max. in selection',
+                            values : clusterDisp,
+                            fillColor: 'red',
+                            strokeOpacity: 0.3,
+                            fillOpacity: 0.3,
+                            width: 1
                         },
                         {
-                            color : 'blue',
+                            strokeColor : 'green',
+                            label : 'Selected genes average',
+                            values : clusterAvg,
+                            width: 1,
+                            shape: 'square',
+                            shapeArea: 8
+                        },
+                        {
+                            strokeColor : 'blue',
                             label : 'Matrix average',
                             values : matrixAvg,
+                            width: 1,
+                            shape: 'square',
+                            shapeArea: 8
                         }
                     ],
                 }

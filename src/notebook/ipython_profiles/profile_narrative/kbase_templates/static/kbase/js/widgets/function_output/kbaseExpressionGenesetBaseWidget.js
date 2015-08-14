@@ -126,7 +126,7 @@ define(['jquery',
             var self = this;
             var pref = this.pref;
 
-            var $overviewSwitch = $("<a/>").html('[Selected genes]');
+            var $overviewSwitch = $("<a/>").html('[Selected features]');
             $containerDiv.append($overviewSwitch);
 
             var $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');

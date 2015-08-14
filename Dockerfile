@@ -24,6 +24,8 @@ WORKDIR /kb/dev_container/narrative
 # Generate a version file that we can scrape later
 RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-git-version -f src/config.json -o /kb/deployment/ui-common/narrative_version
 
+RUN git submodule update --init --recursive && rm -rf .git/modules/modules
+
 # Compile Javascript down into an itty-bitty ball.
 RUN cd src/notebook/ipython_profiles/profile_narrative/kbase_templates && npm install && grunt build
 
@@ -40,3 +42,8 @@ RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_pr
 USER nobody
 CMD ["kbasetest"]
 ENTRYPOINT ["/bin/bash", "/kb/deployment/services/narrative-venv/bin/run_magellan_narrative.sh"]
+
+ONBUILD USER root
+ONBUILD ADD url.cfg /kb/dev_container/narrative/url.cfg
+ONBUILD RUN cd /kb/dev_container/narrative && ./fixupURL.sh
+ONBUILD USER nobody

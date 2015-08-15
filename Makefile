@@ -164,12 +164,6 @@ compile-docs: build-libs
 # control repository (e.g., cvs, git). It also ensures that you always
 # have the most up-to-date libs and documentation if your compile-docs
 # target depends on the compiled libs.
-
-docker-base:
-	docker build -t kbase/narrbase:3.0 base/
-
-docker-narrative:
-	docker build -t kbase/narrative:1.0.3 .
 build-libs:
 
 docker-base:

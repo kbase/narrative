@@ -172,5 +172,11 @@ docker-narrative:
 	docker build -t kbase/narrative:1.0.3 .
 build-libs:
 
+docker-base:
+	docker build -t kbase/narrbase:3.0 base/
+
+docker-narrative:
+	docker build -t kbase/narrative:1.0.3 .
+
 clean:
 	git clean -f

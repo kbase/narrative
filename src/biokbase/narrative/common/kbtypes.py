@@ -9,8 +9,8 @@ __date__ = '11/15/13'
 import json
 import re
 # Third-party
-from IPython.utils.traitlets import HasTraits, TraitType, TraitError
-from IPython.utils import traitlets as tls
+from traitlets import HasTraits, TraitType, TraitError
+import traitlets as tls
 
 
 class TypeMeta(object):

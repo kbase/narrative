@@ -9,7 +9,7 @@ import argparse
 import StringIO
 import os
 from biokbase.narrative.common import kbtypes
-from IPython.utils.traitlets import HasTraits
+from traitlets import HasTraits
 
 class HasVersion(HasTraits):
     ver = kbtypes.VersionNumber('0.0.0')

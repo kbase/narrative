@@ -23,14 +23,32 @@ import re
 import importlib
 # Third-party
 from unicodedata import normalize
-from tornado import web
+from tornado.web import HTTPError
 # IPython
-from IPython.html.services.notebooks.nbmanager import NotebookManager
-from IPython.config.configurable import LoggingConfigurable
-from IPython.nbformat import current
-from IPython.utils.traitlets import Unicode, Dict, Bool, List, TraitError
+# from IPython import nbformat
+import nbformat
+from nbformat import (
+    sign,
+    validate,
+    ValidationError
+)
+from notebook.services.contents.manager import ContentsManager
+from traitlets.traitlets import (
+    Unicode, 
+    Dict, 
+    Bool, 
+    List, 
+    TraitError
+)
 from IPython.utils import tz
+
 # Local
+from .manager_util import base_model
+from .narrativeio import (
+    KBaseWSManagerMixin, 
+    PermissionsError
+)
+from .kbasecheckpoints import KBaseCheckpoints
 import biokbase.narrative.ws_util as ws_util
 from biokbase.workspace.client import Workspace
 import biokbase.narrative.common.service as service
@@ -41,7 +59,7 @@ import biokbase.auth
 # Classes
 #-----------------------------------------------------------------------------
 
-class KBaseWSNotebookManager(NotebookManager):
+class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     """
     A notebook manager that uses the KBase workspace for storage.
 
@@ -88,11 +106,13 @@ class KBaseWSNotebookManager(NotebookManager):
 
     # regex for parsing out workspace_id and object_id from
     # a "ws.{workspace}.{object}" string
-    ws_regex = re.compile('^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)')
+    ws_regex = re.compile('^ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+)(\.(?P<ver>\d+))?')
     # regex for parsing out fully qualified workspace name and object name
     ws_regex2 = re.compile('^(?P<wsname>[\w:]+)/(?P<objname>[\w]+)')
     # regex for par
     kbid_regex = re.compile('^(kb\|[a-zA-Z]+\..+)')
+    # regex from pretty name path
+    objid_regex = re.compile('^.*\s-\s(?P<obj_long_id>ws\.(?P<wsid>\d+)\.obj\.(?P<objid>\d+))\s-\s')
 
     # This is a regular expression to make sure that the workspace ID
     # doesn't contain non-legit characters in the object ID field
@@ -103,20 +123,11 @@ class KBaseWSNotebookManager(NotebookManager):
     # a safety net
     wsid_regex = re.compile('[\W]+', re.UNICODE)
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Verify that we can connect to the configured WS instance"""
-        super(NotebookManager, self).__init__(**kwargs)
+        super(KBaseWSManager, self).__init__(*args, **kwargs)
         if not self.kbasews_uri:
-            raise web.HTTPError(412, u"Missing KBase workspace service endpoint URI.")
-
-        # Verify we can poke the Workspace service at that URI by just checking its
-        # version
-        try:
-            wsclient = self.wsclient()
-            wsclient.ver()
-        except Exception as e:
-            raise web.HTTPError(500, u"Unable to connect to workspace service"
-                                     u" at %s: %s " % (self.kbasews_uri, e))
+            raise HTTPError(412, u"Missing KBase workspace service endpoint URI.")
 
         # Map Narrative ids to notebook names
         mapping = Dict()
@@ -124,6 +135,10 @@ class KBaseWSNotebookManager(NotebookManager):
         rev_mapping = Dict()
         # Setup empty hash for session object
         self.kbase_session = {}
+        # Init the session info we need.
+
+    def _checkpoints_class_default(self):
+        return KBaseCheckpoints
 
     def get_userid(self):
         """Return the current user id (if logged in), or None
@@ -134,552 +149,412 @@ class KBaseWSNotebookManager(NotebookManager):
         else:
             return self.kbase_session.get('user_id', None)
 
-    def wsclient(self):
-        """Return a workspace client object for the workspace
-        endpoint in kbasews_uri
-        """
-        return Workspace(self.kbasews_uri)
-
     def _clean_id(self, id):
         """Clean any whitespace out of the given id"""
         return self.wsid_regex.sub('', id.replace(' ', '_'))
 
-    def list_notebooks(self):
-        """List all notebooks in WSS
-        For the ID field, we use "{ws_id}.{obj_id}"
-        The obj_id field is sanitized version of document.ipynb.metadata.name
+    #####
+    # API part 1: methods that must be implemented in subclasses.        
+    #####
+    def dir_exists(self, path):
+        """If it's blank, just return True - 
+           we'll be looking up the list of all Narratives from 
+           that dir, so it's real."""
+        if not path:
+            return True
+        else:
+            return False
 
-        Returns a list of dicts with two keys: 'name' and 'notebook_id'. 'name'
-        should be of the format 'workspace name/Narrative name' and id should have
-        the format 'ws.###.obj.###'
-        """
-        self.log.debug("Listing Narratives")
-        self.log.debug("kbase_session = %s" % str(self.kbase_session))
-        wsclient = self.wsclient()
-        all = ws_util.get_wsobj_meta(wsclient)
+    def is_hidden(self, path):
+        """We can only see what gets returned from Workspace lookup,
+           so nothing should be hidden"""
+        return False
 
-        self.mapping = {
-            ws_id: "%s/%s" % (all[ws_id]['workspace'],all[ws_id]['meta'].get('name',"undefined"))
-            for ws_id in all.keys()
-        }
-        self.rev_mapping = {self.mapping[ws_id] : ws_id for ws_id in self.mapping.keys()}
-        data = [dict(notebook_id = it[0], name = it[1]) for it in self.mapping.items()]
-        data = sorted(data, key=lambda item: item['name'])
-        return data
-
-    def new_notebook(self):
-        """
-        Create an empty notebook and push it into the workspace without an object_id
-        or name, so that the WSS generates a new object ID for us. Then return
-        that.
-
-        This will likely only be called as a developer tool from http://<base url>/narrative
-        or from starting up locally.
-        """
-        wsclient = self.wsclient()
-        user_id = self.get_userid()
-
-        # Verify that our own home workspace exists, note that we aren't doing this
-        # as a general thing for other workspaces
-        #
-        # This is needed for running locally - a workspace is required.
+    def file_exists(self, path):
+        """We only support narratives right now, so look up
+           a narrative from that path."""
+        path = path.strip('/')
+        obj_ref = self._obj_ref_from_path(path)
+        if obj_ref is None:
+            raise HTTPError(404, 'Path "{}" is not a valid Narrative path'.format(path))
+        self.log.warn('looking up whether a narrative exists')
+        print('got here.')
         try:
-            (homews, homews_id) = ws_util.check_homews(wsclient, user_id)
-        except Exception as e:
-            raise web.HTTPError(401, u'User must be logged in to access their workspaces')
+            self.log.warn('trying to get narrative {}'.format(obj_ref))
+            return self.narrative_exists(obj_ref)
+        except PermissionsError as e:
+            self.log.warn('found a 403 error')
+            raise HTTPError(403, "You do not have permission to view the narrative with id {}".format(path))
+        # except Exception as e:
+        #     self.log.debug('got a 500 error')
+        #     raise HTTPError(500, e)
 
-        # Have IPython create a new, empty notebook
-        nb = current.new_notebook()
-        new_name = normalize('NFC', u"Untitled %s" % (datetime.datetime.now().strftime("%y%m%d_%H%M%S")))
-        new_name = self._clean_id(new_name)
+    def exists(self, path):
+        """Looks up whether a directory or file path (i.e. narrative)
+           exists"""
+        path = path.strip('/')
+        if not path: # it's a directory, for all narratives
+            return True
+        return self.file_exists(path)
 
-        # Add in basic metadata to the ipynb object
-        try:
-            nb.metadata.ws_name = os.environ.get('KB_WORKSPACE_ID', homews)
-            nb.metadata.creator = user_id
-            nb.metadata.type = self.ws_type
-            nb.metadata.description = ''
-            nb.metadata.name = new_name
-            nb.metadata.data_dependencies = []
-            nb.metadata.job_ids = { 'methods' : [], 'apps' : [], 'job_usage' : { 'run_time': 0, 'queue_time': 0 } }
-            nb.metadata.format = self.node_format
-        except Exception as e:
-            raise web.HTTPError(400, u'Unexpected error setting notebook attributes: %s' %e)
-        try:
-            wsobj = {
-                      'type' : self.ws_type,
-                      'data' : nb,
-                      'provenance' : [],
-                      'meta' : nb.metadata.copy(),
-                    }
-            # We flatten the data_dependencies array into a json string so that the
-            # workspace service will accept it
-            wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
-            # Same for jobs list
-            wsobj['meta']['job_ids'] = json.dumps(wsobj['meta']['job_ids'])
-            wsid = homews_id
-            self.log.debug("calling ws_util.put_wsobj")
-            res = ws_util.put_wsobj(wsclient, wsid, wsobj)
-            self.log.debug("save_object returned %s" % res)
-        except Exception as e:
-            raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
-        # use "ws.ws_id.obj.object_id" as the identifier
-        id = "ws.%s.obj.%s" % (res['wsid'], res['objid'])
-        self._set_narrative_env(id)
-        # update the mapping
-        self.list_notebooks()
-        return id
+    def _wsobj_to_model(self, nar, content=True):
+        nar_id = 'ws.{}.obj.{}'.format(nar['wsid'], nar['objid'])
+        model = base_model('{} - {} - {}'.format(nar['saved_by'], nar_id, nar['name']), nar_id)
+        model['format'] = 'v3'
+        model['last_modified'] = nar['save_date']
+        model['type'] = 'notebook'
 
-    def delete_notebook_id(self, notebook_id):
-        """Delete a notebook's id in the mapping."""
-        self.log.debug("delete_notebook_id(%s)"%(notebook_id))
-        user_id = self.get_userid()
-        if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine valid user identity!')
-        if notebook_id in self.mapping:
-            name = self.mapping[notebook_id]
-            super(KBaseWSNotebookManager, self).delete_notebook_id(notebook_id)
+        # model = base_model('%s/%s' % (nar['notebook_id'], nar['name']))
+        # model['format'] = 'v3'
+        return model
 
-    def notebook_exists(self, notebook_id):
-        """Does a Narrative with notebook_id exist?
+    def _obj_ref_from_path(self, path):
+        parsed = self._parse_path(path)
+        if parsed is None:
+            return None
+        if 'wsid' not in parsed or 'objid' not in parsed:
+            return None
+        ref = '{}/{}'.format(parsed['wsid'], parsed['objid'])
+        if parsed['ver'] is not None:
+            ref = ref + '/{}'.format(parsed['ver'])
+        return ref
 
-        Returns True if a Narrative with id notebook_id (format = ws.XXX.obj.YYY) exists,
-        and returns False otherwise.
-        """
-        user_id = self.get_userid()
-        if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine valid user identity!')
-        # Look for it in the currently loaded map
-        exists = super(KBaseWSNotebookManager, self).notebook_exists(notebook_id)
-        self.log.debug("notebook_exists(%s) = %s"%(notebook_id,exists))
-        if not exists:
-            # The notebook doesn't exist among the notebooks we've loaded, lets see
-            # if it exists at all in the workspace service
-            self.log.debug("Checking other workspace")
-            m = self.ws_regex.match(notebook_id)
-            if not m:
-                return False
-            self.log.debug("Checking other workspace %s for %s"%(m.group('wsid'),m.group('objid')))
+    def _parse_path(self, path):
+        m = self.ws_regex.match(path)
+        if m is None:
+            return None
+        return dict(
+            wsid=m.group('wsid'),
+            objid=m.group('objid'),
+            ver=m.group('ver')
+        )
+
+    def get(self, path, content=True, type=None, format=None):
+        """Get the model of a file or directory with or without content."""
+        path = path.strip('/')
+
+        model = base_model(path, path)
+        if self.exists(path) and type != 'directory':
+            #It's a narrative object, so try to fetch it.
+            obj_ref = self._parse_path(path)
+            if not obj_ref:
+                raise HTTPError(404, u'Unknown Narrative "{}"'.format(path))
             try:
-                objmeta = ws_util.get_wsobj_meta(self.wsclient(), ws_id=m.group('wsid'))
-            except ws_util.PermissionsError, err:
-                return False # XXX: kind of a lie!
-            if notebook_id in objmeta:
-                self.mapping[notebook_id] = notebook_id
-                return True
-            else:
-                return False
-        return exists
+                nar_obj = self.read_narrative('{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), content)
+                model['type'] = 'notebook'
+                user = self.get_userid()
+                if content:
+                    model['format'] = 'json'
+                    model['content'] = nbformat.reads(json.dumps(nar_obj['data']), 4)
+                    util.kbase_env.narrative = 'ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid'])
+                    util.kbase_env.workspace = model['content'].metadata.ws_name
+                if user is not None:
+                    model['writable'] = self.narrative_writable('{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), user)
+            except HTTPError:
+                raise
+            except PermissionsError as e:
+                raise HTTPError(403, e)
+            except Exception as e:
+                raise HTTPError(500, u'An error occurred while fetching your narrative: {}'.format(e))
 
-    def get_name(self, notebook_id):
-        """Get a notebook name, raising 404 if not found"""
-        self.log.debug("Checking for name of Narrative %s")
-        self.list_notebooks()
+        if not path or type == 'directory':
+            #if it's the empty string, look up all narratives, treat them as a dir
+            model['type'] = type
+            model['format'] = 'json'
+            if content:
+                contents = []
+                nar_list = self.list_narratives()
+                for nar in nar_list:
+                    contents.append(self._wsobj_to_model(nar, content=False))
+                model['content'] = contents
+
+        return model
+
+    def save(self, model, path):
+        """Save the file or directory and return the model with no content.
+
+        Save implementations should call self.run_pre_save_hook(model=model, path=path)
+        prior to writing any data.
+        """
+        path = path.strip('/')
+        match = self.ws_regex.match(path)
+
+        if 'type' not in model:
+            raise HTTPError(400, u'No IPython model type provided')
+        if model['type'] != 'notebook':
+            raise HTTPError(400, u'We currently only support saving Narratives!')
+        if 'content' not in model and model['type'] != 'directory':
+            raise HTTPError(400, u'No Narrative content found while trying to save')
+
+        self.log.debug("writing Narrative %s." % path)
+        nb = nbformat.from_dict(model['content'])
+        self.check_and_sign(nb, path)
+
         try:
-            name = self.mapping[notebook_id]
-            self.log.debug("get_name(%s) = %s" % (notebook_id, name))
-        except KeyError:
-            raise web.HTTPError(404, u'Narrative does not exist: %s' % notebook_id)
+            result = self.write_narrative(self._obj_ref_from_path(path), nb, self.get_userid())
+
+            new_id = "ws.%s.obj.%s" % (result[1], result[2])
+            util.kbase_env.narrative = new_id
+
+            nb = result[0]
+            self.validate_notebook_model(model)
+            validation_message = model.get('message', None)
+
+            model = self.get(path, content=False)
+            if validation_message:
+                model['message'] = validation_message
+            return model
+
+        except PermissionsError as err:
+            raise HTTPError(403, err.message)
+        except Exception as err:
+            raise HTTPError(500, u'An error occurred while saving your Narrative: {}'.format(err))
+
+    def delete_file(self, path):
+        """Delete file or directory by path."""
+        raise HTTPError(501, u'Narrative deletion not implemented here. Deletion should be handled elsewhere.')
+
+    def rename_file(self, path, new_name):
+        """Rename a file from old_path to new_path.
+        This gets tricky in KBase since we don't deal with paths, but with
+        actual file names. For now, assume that 'old_path' won't actually
+        change, but the 'new_path' is actually the new Narrative name."""
+        path = path.strip('/')
+
+        try:
+            self.rename_narrative(self._obj_ref_from_path(path), self.get_userid(), new_name)
+        except PermissionsErr as err:
+            raise HTTPError(403, err.message)
+        except Exception as err:
+            raise HTTPError(500, u'An error occurred while renaming your Narrative: {}'.format(err))
+
+    # API part 2: methods that have useable default
+    # implementations, but can be overridden in subclasses.
+    def delete(self, path):
+        """Delete a file/directory and any associated checkpoints."""
+        path = path.strip('/')
+        if not path:
+            raise HTTPError(400, "Can't delete root")
+        self.delete_file(path)
+        self.checkpoints.delete_all_checkpoints(path)
+
+    def rename(self, old_path, new_path):
+        """Rename a file and any checkpoints associated with that file."""
+        self.rename_file(old_path, new_path)
+        self.checkpoints.rename_all_checkpoints(old_path, new_path)
+
+    def update(self, model, path):
+        """Update the file's path
+
+        For use in PATCH requests, to enable renaming a file without
+        re-uploading its contents. Only used for renaming at the moment.
+        """
+        self.log.warn('update')
+        self.log.warn(model)
+        self.log.warn(path)
+
+        path = path.strip('/')
+        new_path = model.get('path', path).strip('/')
+        if new_path.endswith('.ipynb'):
+            new_path = new_path[:-len('.ipynb')]
+        self.rename(path, new_path)
+        model = self.get(path, content=False)
+        self.log.warn(model)
+        return model
+
+    def increment_filename(self, filename, path='', insert=''):
+        """Increment a filename until it is unique.
+
+        Parameters
+        ----------
+        filename : unicode
+            The name of a file, including extension
+        path : unicode
+            The API path of the target's directory
+
+        Returns
+        -------
+        name : unicode
+            A filename that is unique, based on the input filename.
+        """
+        path = path.strip('/')
+        basename, ext = os.path.splitext(filename)
+        for i in itertools.count():
+            if i:
+                insert_i = '{}{}'.format(insert, i)
+            else:
+                insert_i = ''
+            name = u'{basename}{insert}{ext}'.format(basename=basename,
+                insert=insert_i, ext=ext)
+            if not self.exists(u'{}/{}'.format(path, name)):
+                break
         return name
 
-    def read_notebook_object(self, notebook_id):
-        """Get the Notebook representation of a notebook by notebook_id.
-
-        There are now new and legacy versions of Narratives that need to be handled.
-        The old version just included the Notebook object as the Narrative object,
-        with an optional Metadata field.
-
-        The new version has a slightly more structured Metadata field, with a
-        required data_dependencies array.
-
-        This really shouldn't affect reading the object much, but should be kept
-        in mind.
-        """
-        self.log.debug("Reading Narrative %s." % notebook_id)
-        user_id = self.get_userid()
-        if user_id is None:
-            raise web.HTTPError(400, u'Missing user identity from kbase_session object')
+    def validate_notebook_model(self, model):
+        """Add failed-validation message to model"""
         try:
-            wsobj = ws_util.get_wsobj(self.wsclient(), notebook_id, self.ws_type)
-        except ws_util.BadWorkspaceID, e:
-            raise web.HTTPError(500, u'Narrative %s not found: %s' % (notebook_id, e))
-
-        if 'notebook' in wsobj['data']:
-            #
-            jsonnb = json.dumps['data']['notebook']
-        else:
-            jsonnb = json.dumps(wsobj['data'])
-
-        nb = current.reads(jsonnb, u'json')
-
-        # Set the notebook metadata workspace to the workspace this came from
-        nb.metadata.ws_name = wsobj['metadata']['workspace']
-
-        last_modified = dateutil.parser.parse(wsobj['metadata']['save_date'])
-        self.log.debug("Narrative successfully read" )
-        # Stash last read NB in env
-        self._set_narrative_env(notebook_id)
-        os.environ['KB_WORKSPACE_ID'] = nb.metadata.ws_name
-        return last_modified, nb
-
-    # def extract_data_dependencies(self, nb):
-    #     """
-    #     This is an internal method that parses out the cells in the notebook nb
-    #     and returns an array of type:value parameters based on the form input
-    #     specification and the values entered by the user.
-
-    #     I the cell metadata, we look under:
-    #     kb-cell.method.properties.parameters.paramN.type
-
-    #     for anything that isn't a string or numeric, and we combine that type with
-    #     the corresponding value found under
-    #     kb-cell.widget_state[0].state.paramN
-
-    #     We create an array of type:value pairs from the params and return that
-    #     """
-    #     # set of types that we ignore
-    #     ignore = set(['string','Unicode','Numeric','Integer','List','a number'])
-    #     deps = set()
-    #     # What default workspace are we going to use?
-    #     ws = os.environ.get('KB_WORKSPACE_ID',nb.metadata.ws_name)
-    #     for wksheet in nb.get('worksheets'):
-    #         for cell in wksheet.get('cells'):
-    #             try:
-    #                 allparams = cell['metadata']['kb-cell']['method']['properties']['parameters']
-    #             except KeyError:
-    #                 continue
-    #             params = [param for param in allparams.keys() if allparams[param]['type'] not in ignore]
-    #             try:
-    #                 paramvals = cell['metadata']['kb-cell']['widget_state'][0]['state']
-    #             except KeyError:
-    #                 continue
-    #             for param in params:
-    #                 try:
-    #                     paramval = paramvals[param]
-    #                     # Is this a fully qualified workspace name?
-    #                     if (self.ws_regex.match(paramval) or
-    #                         self.ws_regex2.match(paramval) or
-    #                         self.kbid_regex.match(paramval)):
-    #                         dep = "%s %s" % (allparams[param]['type'], paramval)
-    #                     else:
-    #                         dep = "%s %s" % (allparams[param]['type'], paramval)
-    #                     deps.add(dep)
-    #                 except KeyError:
-    #                     continue
-    #     return list(deps)
-
-    def extract_cell_info(self, nb):
+            validate(model['content'])
+        except ValidationError as e:
+            model['message'] = u'Notebook Validation failed: {}:\n{}'.format(
+                e.message, json.dumps(e.instance, indent=1, default=lambda obj: '<UNKNOWN>'),
+            )
+        return model
+    
+    def new_untitled(self, path='', type='', ext=''):
+        """Create a new untitled file or directory in path
+        
+        path must be a directory
+        
+        File extension can be specified.
+        
+        Use `new` to create files with a fully specified path (including filename).
         """
-        This is an internal method that returns, as a dict, how many kb-method,
-        kb-app, and IPython cells exist in the notebook object.
-
-        For app and method cells, it counts them based on their method/app ids
-
-        In the end, it returns a dict like this:
-        {
-            'method': {
-                'my_method' : 2,
-                'your_method' : 1
-            },
-            'app': {
-                'my app' : 3
-            },
-            'ipython': {
-                'code' : 5,
-                'markdown' : 6
-            }
-        }
-        """
-        cell_types = {'method' : {},
-                      'app' : {},
-                      'output': 0,
-                      'ipython' : {'markdown': 0, 'code': 0}}
-        for wksheet in nb.get('worksheets'):
-            for cell in wksheet.get('cells'):
-                meta = cell['metadata']
-                if 'kb-cell' in meta:
-                    t = None
-                    # It's a KBase cell! So, either an app or method.
-                    if 'type' in meta['kb-cell'] and meta['kb-cell']['type'] == 'function_output':
-                        cell_types['output'] = cell_types['output'] + 1
-                    else:
-                        if 'app' in meta['kb-cell']:
-                            t = 'app'
-                        elif 'method' in meta['kb-cell']:
-                            t = 'method'
-                        else:
-                            # that should cover our cases
-                            continue
-                        if t is not None:
-                            try:
-                                count = 1
-                                app_id = meta['kb-cell'][t]['info']['id']
-                                if app_id in cell_types[t]:
-                                    count = cell_types[t][app_id] + 1
-                                cell_types[t][app_id] = count
-                            except KeyError:
-                                continue
-                else:
-                    t = cell['cell_type']
-                    cell_types['ipython'][t] = cell_types['ipython'][t] + 1
-        return cell_types
-
-
-    def write_notebook_object(self, nb, notebook_id=None):
-        """Save an existing notebook object by notebook_id."""
-        self.log.debug("writing Narrative %s." % notebook_id)
-        wsclient = self.wsclient()
-        user_id = self.get_userid()
-        if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine user identity from '
-                                     u'session information')
-
-        # we don't rename anymore--- we only set the name in the metadata
-        #try:
-        #    new_name = normalize('NFC', nb.metadata.name)
-        #except AttributeError:
-        #    raise web.HTTPError(400, u'Missing Narrative name')
-        #new_name = self._clean_id(new_name)
-
-
-        # Verify that our own home workspace exists, note that we aren't doing this
-        # as a general thing for other workspaces
-        wsclient = self.wsclient()
-        (homews, homews_id) = ws_util.check_homews(wsclient, user_id)
-        # Carry over some of the metadata stuff from ShockNBManager
-        try:
-            if not hasattr(nb.metadata, 'name'):
-                nb.metadata.name = 'Untitled'
-            if not hasattr(nb.metadata, 'ws_name'):
-                nb.metadata.ws_name = os.environ.get('KB_WORKSPACE_ID',homews)
-            if not hasattr(nb.metadata, 'creator'):
-                nb.metadata.creator = user_id
-            if not hasattr(nb.metadata, 'type'):
-                nb.metadata.type = self.ws_type
-            if not hasattr(nb.metadata, 'description'):
-                nb.metadata.description = ''
-            # These are now stored on the front end explicitly as a list of object references
-            # This gets auto-updated on the front end, and is easier to manage.
-            if not hasattr(nb.metadata, 'data_dependencies'):
-                nb.metadata.data_dependencies = list()
-            if not hasattr(nb.metadata, 'job_ids'):
-                nb.metadata.job_ids = { 'methods' : [], 'apps' : [], 'job_usage': { 'queue_time': 0, 'run_time': 0 } }
-            if 'methods' not in nb.metadata['job_ids']:
-                nb.metadata.job_ids['methods'] = list()
-            if 'apps' not in nb.metadata['job_ids']:
-                nb.metadata.job_ids['apps'] = list()
-            if 'job_usage' not in nb.metadata['job_ids']:
-                nb.metadata.job_ids['job_usage'] = { 'queue_time': 0, 'run_time': 0 }
-            nb.metadata.format = self.node_format
-
-        except Exception as e:
-            raise web.HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
-
-
-        # First, init wsid and wsobj, since they'll be used later
-        wsid = ''         # the workspace id
-        wsobj = dict()    # the workspace object
-
-        # Figure out the workspace and object ids. If we have a notebook_id, get it from there
-        # otherwise, figure out the workspace id from the metadata.
-        if notebook_id:
-            m = self.ws_regex.match(notebook_id)
+        path = path.strip('/')
+        if not self.dir_exists(path):
+            raise HTTPError(404, 'No such directory: %s' % path)
+        
+        model = {}
+        if type:
+            model['type'] = type
+        
+        if ext == '.ipynb':
+            model.setdefault('type', 'notebook')
         else:
-            m = None
-
-        # After this logic wsid is guaranteed to get set.
-        # The objid of wsobj might not, but that's fine! The workspace will just assign a new id if so.
-        if m:
-            # wsid, objid = ws.XXX.obj.YYY
-            wsid = m.group('wsid')
-            wsobj['objid'] = m.group('objid')
-        elif nb.metadata.ws_name == homews:
-            wsid = homews_id
-            #wsobj['name'] = new_name
+            model.setdefault('type', 'file')
+        
+        insert = ''
+        if model['type'] == 'directory':
+            untitled = self.untitled_directory
+            insert = ' '
+        elif model['type'] == 'notebook':
+            untitled = self.untitled_notebook
+            ext = '.ipynb'
+        elif model['type'] == 'file':
+            untitled = self.untitled_file
         else:
-            wsid = ws_util.get_wsid(nb.metadata.ws_name)
-            #wsobj['name'] = new_name
-
-        # With that set, update the workspace metadata with the new info.
-        try:
-            updated_metadata = {
-                "is_temporary":"false",
-                "narrative_nice_name":nb.metadata.name
-            };
-            ws_util.alter_workspace_metadata(wsclient, None, updated_metadata, ws_id=wsid)
-        except Exception as e:
-            raise web.HTTPError(500, u'Error saving Narrative: %s, %s' % (e.__str__(), wsid))
-
-        # Now we can save the Narrative object.
-        try:
-            # 'wsobj' = the ObjectSaveData type from the workspace client
-            # requires type, data (the Narrative typed object), provenance,
-            # optionally, user metadata
-            #
-            # requires ONE AND ONLY ONE of objid (existing object id, number) or name (string)
-            wsobj.update({ 'type' : self.ws_type,
-                           'data' : nb,
-                           'provenance' : [
-                               {
-                                   'service' : 'narrative',
-                                   'description': 'saved through the narrative interface'
-                               }
-                           ],
-                           'meta' : nb.metadata.copy(),
-                        })
-            # We flatten the data_dependencies array into a json string so that the
-            # workspace service will accept it
-            wsobj['meta']['data_dependencies'] = json.dumps(wsobj['meta']['data_dependencies'])
-            wsobj['meta']['methods'] = json.dumps(self.extract_cell_info(nb))
-
-            # Sort out job info we want to keep
-            # Gonna look like this, so init it that way
-            nb_job_usage = nb.metadata.job_ids.get('job_usage', {'queue_time':0, 'run_time':0})
-            job_info = {
-                'queue_time': nb_job_usage.get('queue_time', 0),
-                'run_time': nb_job_usage.get('run_time', 0),
-                'running': 0,
-                'completed': 0,
-                'error': 0
-            }
-            for job in nb.metadata.job_ids['methods'] + nb.metadata.job_ids['apps']:
-                status = job.get('status', 'running')
-                if status.startswith('complete'):
-                    job_info['completed'] += 1
-                elif 'error' in status:
-                    job_info['error'] += 1
-                else:
-                    job_info['running'] += 1
-
-            wsobj['meta']['job_info'] = json.dumps(job_info)
-            if 'job_ids' in wsobj['meta']:
-                wsobj['meta'].pop('job_ids')
-            # # ------
-            # # If we're given a notebook id, try to parse it for the save parameters
-            # if notebook_id:
-            #     m = self.ws_regex.match(notebook_id)
-            # else:
-            #     m = None
-
-            # if m:
-            #     # wsid, objid = ws.XXX.obj.YYY
-            #     wsid = m.group('wsid')
-            #     wsobj['objid'] = m.group('objid')
-            # elif nb.metadata.ws_name == homews:
-            #     wsid = homews_id
-            #     #wsobj['name'] = new_name
-            # else:
-            #     wsid = ws_util.get_wsid(nb.metadata.ws_name)
-            #     #wsobj['name'] = new_name
-            # # --------
-
-            self.log.debug("calling ws_util.put_wsobj")
-            res = ws_util.put_wsobj(wsclient, wsid, wsobj)
-            self.log.debug("save_object returned %s" % res)
-
-            # we no longer update names
-            # Now that we've saved the object, if its Narrative name (new_name) has changed,
-            # update that in the Workspace
-            #if (res['name'] != new_name):
-            #    identity = { 'wsid' : res['wsid'], 'objid' : res['objid'] }
-            #    res = ws_util.rename_wsobj(wsclient, identity, new_name)
-
-        except Exception as e:
-            raise web.HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
-        # use "ws.ws_id.obj.object_id" as the identifier
-        id = "ws.%s.obj.%s" % (res['wsid'], res['objid'])
-        self.mapping[id] = "%s/%s" % (res['workspace'], res['name'])
-        self._set_narrative_env(id)
-        return id
-
-    def delete_notebook(self, notebook_id):
-        """Delete notebook by notebook_id."""
-        self.log.debug("deleting Narrative %s" % notebook_id)
-        wsclient = self.wsclient()
-        user_id = self.get_userid()
-        if user_id is None:
-            raise web.HTTPError(400, u'Cannot determine user identity from session information')
-        if notebook_id is None:
-            raise web.HTTPError(400, u'Missing Narrative id')
-        self.log.debug("deleting Narrative %s", notebook_id)
-        m = self.ws_regex.match(notebook_id)
-        if m:
-            res = ws_util.delete_wsobj(wsclient, m.group('wsid'),m.group('objid'))
-            self.log.debug("delete object result: %s" % res)
+            raise HTTPError(400, "Unexpected model type: %r" % model['type'])
+        
+        name = self.increment_filename(untitled + ext, path, insert=insert)
+        path = u'{0}/{1}'.format(path, name)
+        return self.new(model, path)
+    
+    def new(self, model=None, path=''):
+        """Create a new file or directory and return its model with no content.
+        
+        To create a new untitled entity in a directory, use `new_untitled`.
+        """
+        # TODO
+        path = path.strip('/')
+        if model is None:
+            model = {}
+        
+        if path.endswith('.ipynb'):
+            model.setdefault('type', 'notebook')
         else:
-            raise ws_util.BadWorkspaceID(notebook_id)
-        self.delete_notebook_id(notebook_id)
+            model.setdefault('type', 'file')
+        
+        # no content, not a directory, so fill out new-file model
+        if 'content' not in model and model['type'] != 'directory':
+            if model['type'] == 'notebook':
+                model['content'] = new_notebook()
+                model['format'] = 'json'
+            else:
+                model['content'] = ''
+                model['type'] = 'file'
+                model['format'] = 'text'
+        
+        model = self.save(model, path)
+        return model
 
-    # public checkpoint API
-    # The workspace service handles versioning and has every ancient version stored
-    # in it - support for that will be handled by a workspace browser tool, and
-    # not the narrative
-    def create_checkpoint(self, notebook_id):
-        """Create a checkpoint from the current state of a notebook"""
-        # only the one checkpoint ID:
-        checkpoint_id = u"checkpoint"
-        chkpt_created = datetime.datetime.utcnow()
-        self._set_narrative_env(notebook_id)
-        # This is a no-op for now
-        # return the checkpoint info
-        return { 'checkpoint_id' : checkpoint_id , 'last_modified' : chkpt_created }
+    def copy(self, from_path, to_path=None):
+        """Copy an existing file and return its new model.
 
+        If to_path not specified, it will be the parent directory of from_path.
+        If to_path is a directory, filename will increment `from_path-Copy#.ext`.
 
-    def list_checkpoints(self, notebook_id):
+        from_path must be a full path to a file.
         """
-        list the checkpoints for a given notebook
-        this is a no-op for now.
-        """
-        return []
+        # TODO
+        path = from_path.strip('/')
+        if to_path is not None:
+            to_path = to_path.strip('/')
 
-    def restore_checkpoint(self, notebook_id, checkpoint_id):
-        """restore a notebook to a checkpointed state"""
-        pass
-
-    def delete_checkpoint(self, notebook_id, checkpoint_id):
-        """delete a notebook's checkpoint"""
-        pass
+        if '/' in path:
+            from_dir, from_name = path.rsplit('/', 1)
+        else:
+            from_dir = ''
+            from_name = path
+        
+        model = self.get(path)
+        model.pop('path', None)
+        model.pop('name', None)
+        if model['type'] == 'directory':
+            raise HTTPError(400, "Can't copy directories")
+        
+        if to_path is None:
+            to_path = from_dir
+        if self.dir_exists(to_path):
+            name = copy_pat.sub(u'.', from_name)
+            to_name = self.increment_filename(name, to_path, insert='-Copy')
+            to_path = u'{0}/{1}'.format(to_path, to_name)
+        
+        model = self.save(model, to_path)
+        return model
 
     def log_info(self):
-        self.log.info("Service Narratives from the KBase Workspace service")
-        pass
+        self.log.info(self.info_string())
+
+    def trust_notebook(self, path):
+        """Explicitly trust a notebook
+
+        Parameters
+        ----------
+        path : string
+            The path of a notebook
+        """
+        model = self.get(path)
+        nb = model['content']
+        self.log.warn("Trusting notebook %s", path)
+        self.notary.mark_cells(nb, True)
+        self.save(model, path)
+
+    def check_and_sign(self, nb, path=''):
+        """Check for trusted cells, and sign the notebook.
+
+        Called as a part of saving notebooks.
+
+        Parameters
+        ----------
+        nb : dict
+            The notebook dict
+        path : string
+            The notebook's path (for logging)
+        """
+        if self.notary.check_cells(nb):
+            self.notary.sign(nb)
+        else:
+            self.log.warn("Saving untrusted notebook %s", path)
+
+    def mark_trusted_cells(self, nb, path=''):
+        """Mark cells as trusted if the notebook signature matches.
+
+        Called as a part of loading notebooks.
+
+        Parameters
+        ----------
+        nb : dict
+            The notebook object (in current nbformat)
+        path : string
+            The notebook's path (for logging)
+        """
+        trusted = self.notary.check_signature(nb)
+        if not trusted:
+            self.log.warn("Notebook %s is not trusted", path)
+        self.notary.mark_cells(nb, trusted)
+
+    def should_list(self, name):
+        """Should this file/directory name be displayed in a listing?"""
+        return not any(fnmatch(name, glob) for glob in self.hide_globs)
 
     def info_string(self):
         return "Workspace Narrative Service with workspace endpoint at %s" % self.kbasews_uri
-
-    def _set_narrative_env(self, id_):
-        """Set the narrative id into the environment"""
-        util.kbase_env.narrative = id_
-#
-# This is code that patches the regular expressions used in the default routes
-# of tornado handlers. IPython installs handlers that recognize a UUID as the
-# kbase notebook id, but we're using workspace_name.object_id so the routes
-# need to be updated otherwise you can't reach the handlers.
-#
-# We use these to modify the routes installed by the notebook
-# handlers in the main IPython code without having to change the IPython code
-# directly
-#
-def handler_route_replace(handlers,oldre,newre):
-    """ Look for a regex in a tornado routing table and replace it with a new one"""
-    if len(handlers) > 0:
-        findre = re.escape(oldre)
-        for i in range(0,len(handlers)):
-            (route,handler) = handlers[i]
-            route2 = re.sub(findre,newre,route)
-            if route2 != route:
-                handlers[i] = (route2,handler)
-
-# Patch the url regex to match our workspace identifiers
-import IPython.html.base.handlers
-
-tgt_handlers = ('IPython.html.notebook.handlers',
-                'IPython.html.services.notebooks.handlers')
-for handlerstr in tgt_handlers:
-    IPython.html.base.handlers.app_log.debug("Patching routes in %s.default_handler" % handlerstr)
-    handler = importlib.import_module(handlerstr)
-    handler_route_replace(handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>ws\.\d+\.obj\.\d+)')
-
-# Load the plupload handler
-import upload_handler
-upload_handler.insert_plupload_handler()

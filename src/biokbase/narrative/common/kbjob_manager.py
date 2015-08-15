@@ -21,6 +21,7 @@ __version__ = "0.1.0"
 import os
 import json
 import traceback
+import urllib2
 from biokbase.userandjobstate.client import UserAndJobState
 from biokbase.narrativejobproxy.client import NarrativeJobProxy
 from biokbase.NarrativeJobService.Client import NarrativeJobService

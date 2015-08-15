@@ -9,12 +9,11 @@ from biokbase.narrative.common import util
 import biokbase.workspace
 from biokbase.workspace import client as WorkspaceClient
 from tornado.web import HTTPError
-from IPython.html.utils import (
+from notebook.utils import (
     to_api_path,
     to_os_path
 )
-from IPython import nbformat
-from IPython.utils.traitlets import (
+from traitlets import (
     Unicode,
     Dict,
     Bool,

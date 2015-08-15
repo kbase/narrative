@@ -10,7 +10,7 @@ __date__ = '10/28/14'
 
 import json
 # Third-party
-import IPython.utils.traitlets as trt
+import traitlets as trt
 # Local
 import biokbase.narrative.common.service as service
 from biokbase.narrative.common.service import *

@@ -222,7 +222,7 @@ define(['jquery',
         },
 
         renderError: function(error) {
-            errString = "Sorry, an unknown error occurred";
+            var errString = "Sorry, an unknown error occurred";
             if (typeof error === "string")
                 errString = error;
             else if (error.error && error.error.message)

@@ -19,9 +19,13 @@
         // To be overriden to specify additional parameters
         getSubmtrixParams: function(){
             var self = this;
+
+            var features = [];
+            if(self.options.geneIds) { features = $.map(self.options.geneIds.split(","), $.trim); }
+
             return{
                 input_data: self.options.workspaceID + "/" + self.options.expressionMatrixID,
-                row_ids: $.map(self.options.geneIds.split(","), $.trim),
+                row_ids: features,
                 fl_row_pairwise_correlation: 1,
                 fl_row_set_stats: 1
             };

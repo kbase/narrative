@@ -2,7 +2,7 @@ nose>=1.1.2
 pyzmq>=2.2
 python-qt
 pygments>=1.6
-tornado>=2.4.1
+tornado>=4.0
 pycrypto>=2.6
 rsa>=3.1.2
 pyasn1>=0.1.7
@@ -18,3 +18,4 @@ pymongo>=2.7
 sympy
 setuptools>=0.8
 semantic_version>=2.3
+terminado

@@ -1,0 +1,33 @@
+/*This file contains any manual css for this page that needs to override the global styles.
+This is only required when different pages style the same element differently. This is just
+a hack to deal with our current css styles and no new styling should be added in this file.*/
+
+body.notebook_app {
+	overflow-y: auto;
+}
+
+#ipython-main-app {
+    position: relative;
+    font-size: 110%;
+}
+/* Shiran: undoing style introduced by datavis.css */
+pre { outline: none; }
+
+.btn * { color: black; }
+
+.celltoolbar {
+    height: auto;
+    background: none;
+    border: none;
+    border-bottom: none;
+}
+
+div.input_area {
+    border: 1px solid #CECECE;
+    border-radius: 0px;
+}
+
+div.text_cell_input {
+    border: 1px solid #CECECE;
+    border-radius: 0px;
+}

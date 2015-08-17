@@ -1,0 +1,175 @@
+{% extends "page.html" %}
+
+{% block stylesheet %}
+
+    {% if mathjax_url %}
+    <script type="text/javascript" src="{{mathjax_url}}&delayStartupUntil=configured" charset="utf-8"></script>
+    {% endif %}
+    <script type="text/javascript">
+        // MathJax disabled, set as null to distingish from *missing* MathJax,
+        // where it will be undefined, and should prompt a dialog later.
+        window.mathjax_url = "{{mathjax_url}}";
+    </script>
+
+
+    <link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}">
+
+    {{super()}}
+    <link rel="stylesheet" href="{{ static_url("kbnetwork/css/datavis.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("components/bootstrap-extensions/css/dataTables.bootstrap.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("components/bootstrap-extensions/css/bootstrap-fileupload.min.css") }}" type="text/css" />
+
+    <link rel="stylesheet" href="{{ static_url("select2-v3.5.2/select2.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("select2-v3.5.2/select2-bootstrap.css") }}" type="text/css" />
+
+    <link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
+{% endblock %}
+
+{% block params %}
+
+data-project={{project}}
+data-base-project-url={{base_project_url}}
+data-base-kernel-url={{base_kernel_url}}
+data-notebook-id={{notebook_id}}
+class="notebook_app"
+
+{% endblock %}
+
+
+{% block header %}
+{% endblock %}
+
+
+{% block site %}
+<div id="main-container">
+
+    <div id="left-column">
+        <div id="kb-side-panel"></div>
+    </div>
+
+    <div id="content-column">
+        <span id="kb-add-code-cell"
+              class="kb-data-list-add-data-button fa fa-terminal fa-2x"
+              style="position:fixed; bottom:15px; right:75px; z-index:5"
+              data-toggle="tooltip" data-placement="top" Title="Add Code Cell"></span>
+        <span id="kb-add-md-cell"
+              class="kb-data-list-add-data-button fa fa-paragraph fa-2x"
+              style="position:fixed; bottom:15px; right:10px; z-index:5"
+              data-toggle="tooltip" data-placement="top" Title="Add Markdown Cell"></span>
+
+        <div id="ipython-main-app">
+            <div id="notebook_panel">
+                <div id="notebook"></div>
+                <div id="pager_splitter"></div>
+                <div id="pager">
+                    <div id='pager_button_area'>
+                    </div>
+                    <div id="pager-container" class="container"></div>
+                </div>
+                <div id="kb-ws-progress"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id='tooltip' class='ipython_tooltip' style='display:none'></div>
+<div id='widget-tooltip' class='ipython_tooltip' style='display:none; min-height: 25px;'>Test message</div>
+<div id='kb-error-dialog'></div>
+{% endblock %}
+
+{% block script %}
+
+{{super()}}
+
+<!-- potentially deprecated widgets -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeView.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbasePhenotypeUploader.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbasePhenotypeSimulation.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseImageView.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseKeggMap.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDisplayText.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDownloadFile.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseUploadFile.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseCategoryView.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseContigSetUploadNarrative.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGenomeUploadNarrative.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseGapfillStatus.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseIntegrateGapfillOutput.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseMetagenomeListUploader.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseValueList.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbasePromConstraint.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseCompareFBAs.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseSEEDFunctions.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseDataDump.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseCheckObject.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- <script src="{{ static_url("kbase/js/widgets/function_output/kbaseModelMetaNarrative.js") }}" type="text/javascript" charset="utf-8"></script> -->
+<!-- end deprecated widgets -->
+<!-- <script src="{{ static_url("kbnetwork/js/force-directed.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("kbmanhattan/js/manhattan.js") }}" type="text/javascript" charset="utf-8"></script>
+ -->
+
+<!-- Standard IPython Notebook Javascript -->
+<script src="{{ static_url("components/codemirror/lib/codemirror.js") }}" charset="utf-8"></script>
+<script type="text/javascript">
+    CodeMirror.modeURL = "{{ static_url("components/codemirror/mode/%N/%N.js") }}";
+</script>
+<script src="{{ static_url("components/codemirror/addon/mode/loadmode.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/codemirror/addon/mode/multiplex.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/codemirror/addon/mode/overlay.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/codemirror/addon/edit/matchbrackets.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/codemirror/addon/comment/comment.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/codemirror-ipython.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/codemirror/mode/htmlmixed/htmlmixed.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/codemirror/mode/xml/xml.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/codemirror/mode/javascript/javascript.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/codemirror/mode/css/css.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/codemirror/mode/rst/rst.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/codemirror/mode/markdown/markdown.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/codemirror/mode/gfm/gfm.js") }}" charset="utf-8"></script>
+
+<script src="{{ static_url("components/highlight.js/build/highlight.pack.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("components/jquery-nearest/jquery.nearest.min.js") }}" charset="utf-8"></script>
+
+<script src="{{ static_url("dateformat/date.format.js") }}" charset="utf-8"></script>
+
+<script src="{{ static_url("base/js/events.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("base/js/utils.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("base/js/dialog.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/layoutmanager.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/mathjaxutils.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/outputarea.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/cell.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/celltoolbar.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/codecell.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/completer.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/textcell.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("services/kernels/js/kernel.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/savewidget.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/quickhelp.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/pager.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/menubar.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/toolbar.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/maintoolbar.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/notebook.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/notificationwidget.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/notificationarea.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/tooltip.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/config.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<!-- 
+notebook/js/main.js loads via require to ensure proper load order of Narrative code
+Without doing this, the Narrative JS widgets embedded in modified Markdown cells gets invoked before
+Require has a chance to load it up. 
+
+This'll be remedied when transitioning to IPython 3.x
+-->
+<!-- <script src="{{ static_url("notebook/js/main.js") }}" type="text/javascript" charset="utf-8"></script> -->
+
+<script src="{{ static_url("notebook/js/contexthint.js") }}" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/celltoolbarpresets/default.js") }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ static_url("notebook/js/celltoolbarpresets/slideshow.js") }}" type="text/javascript" charset="utf-8"></script>
+
+<script src="{{ static_url("auth/js/loginwidget.js") }}" type="text/javascript" charset="utf-8"></script>
+
+{% endblock %}

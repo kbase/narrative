@@ -1,0 +1,31 @@
+{% extends "page.html" %}
+
+{% block stylesheet %}
+    {{ super() }}
+{% endblock %}
+
+{% block loading_message %}
+<!-- This page intentionally left blank -->
+{% endblock %}
+
+{% block site %}
+    <style>
+        body {
+            overflow: auto;
+        }
+        #site {
+            display: block;
+            padding: 0 50px;
+        }
+    </style>
+
+    <h1>An error occurred while accessing this Narrative.</h1>
+    <p>
+        <b>If this error happens repeatedly, please notify <a href="mailto:help@kbase.us" target="_blank">help@kbase.us</a> with the below information:</b>
+    </p>
+
+    <h2>Error</h2>
+    <div id='error-message'>{{ error_status }}</div>
+    <h2>Traceback</h2>
+    <div>{{ traceback }}</div>
+{% endblock %}

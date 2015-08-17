@@ -29,10 +29,12 @@ define(['jquery',
 
             expressionMatrixID: null,
             geneIds: null,
+            input_featureset: null,
 
             // Service URL: should be in window.kbconfig.urls.
             // featureValueURL: 'http://localhost:8889',
             featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
+            wsURL: window.kbconfig.urls.workspace,
             loadingImage: "static/kbase/images/ajax-loader.gif"
         },
 
@@ -51,6 +53,7 @@ define(['jquery',
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.featureValueURL = window.kbconfig.urls.feature_values;
+                this.options.wsURL = window.kbconfig.urls.workspace;
             }
 
             // Create a message pane
@@ -63,7 +66,8 @@ define(['jquery',
         loggedInCallback: function(event, auth) {
 
            // Build a client
-            this.featureValueClient = new KBaseFeatureValues(this.options.featureValueURL, auth);           
+            this.featureValueClient = new KBaseFeatureValues(this.options.featureValueURL, auth);   
+            this.ws = new Workspace(this.options.wsURL, auth);         
 
             // Let's go...
             this.loadAndRender();           
@@ -85,9 +89,11 @@ define(['jquery',
         getSubmtrixParams: function(){
             var self = this;
             self.setTestParameters();
+            var features = [];
+            if(self.options.geneIds) { features = $.map(self.options.geneIds.split(","), $.trim); }
             return{
                 input_data: self.options.workspaceID + "/" + self.options.expressionMatrixID,
-                row_ids: $.map(self.options.geneIds.split(","), $.trim),
+                row_ids: features,
                 // specify your additional parameters
             };
         },
@@ -95,21 +101,50 @@ define(['jquery',
         loadAndRender: function(){
             var self = this;
             self.loading(true);
-            self.featureValueClient.get_submatrix_stat(
-                self.getSubmtrixParams(),
-                function(data){
-                    self.submatrixStat = data;
-                    self.render();
-                    self.loading(false);
-                },
-                function(error){
-                    self.clientError(error);
-                }
-            );
+
+            var getSubmatrixStatsAndRender = function() {
+                self.featureValueClient.get_submatrix_stat(
+                    self.getSubmtrixParams(),
+                    function(data){
+                        self.submatrixStat = data;
+                        self.render();
+                        self.loading(false);
+                    },
+                    function(error){
+                        self.clientError(error);
+                    });
+            };
+
+            // if a feature set is defined, use it.
+            if(self.options.featureset) {
+                self.ws.get_objects([{ref:self.options.workspaceID+"/"+self.options.featureset}],
+                    function(fdata) {
+                        var fs = fdata[0].data;
+                        if(!self.options.geneIds) { self.options.geneIds=''; }
+
+                        for (var fid in fs.elements) {
+                            if (fs.elements.hasOwnProperty(fid)) {
+                                if(self.options.geneIds) {
+                                    self.options.geneIds += ",";
+                                }
+                                self.options.geneIds += fid;
+                        //        for now we ignore which genome it came from, just use the ids
+                        //        for (var k=0; k<fs.elements[fid].length; k++) {
+                        //            var gid = fs.elements[fid][k];
+                        //        }
+                            }
+                        }
+                        getSubmatrixStatsAndRender();
+                    },
+                    function(error) {
+                        self.clientError(error);
+                    });
+            } else {
+                getSubmatrixStatsAndRender();
+            }
         },
 
         render: function(){
-
             var $overviewContainer = $("<div/>");
             this.$elem.append( $overviewContainer );
             this.buildOverviewDiv( $overviewContainer );
@@ -126,7 +161,7 @@ define(['jquery',
             var self = this;
             var pref = this.pref;
 
-            var $overviewSwitch = $("<a/>").html('[Selected features]');
+            var $overviewSwitch = $("<a/>").html('[Show/Hide Selected Features]');
             $containerDiv.append($overviewSwitch);
 
             var $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
@@ -216,7 +251,31 @@ define(['jquery',
 
         clientError: function(error){
             this.loading(false);
-            this.showMessage(error.error.error);
+            var errString = "Unknown error.";
+            console.error(error);
+            if (typeof error === "string")
+                errString = error;
+            else if (error.error && error.error.message)
+                errString = error.error.message;
+            else if (error.error && error.error.error && typeof error.error.error==='string') {
+                errString = error.error.error;
+                if(errString.indexOf("java.lang.NullPointerException") > -1 &&
+                    errString.indexOf("buildIndeces(KBaseFeatureValuesImpl.java:708)") > -1) {
+                    // this is a null pointer due to an unknown feature ID.  TODO: handle this gracefully
+                    errString = "Feature IDs not found.<br><br>";
+                    errString += "Currently all Features included in a FeatureSet must be present" +
+                                 " in the Expression Data Matrix.  Please rebuild the FeatureSet " +
+                                 "so that it only includes these features.  This is a known issue "+
+                                 "and will be fixed shortly."
+                }
+            }
+            
+            var $errorDiv = $("<div>")
+                            .addClass("alert alert-danger")
+                            .append("<b>Error:</b>")
+                            .append("<br>" + errString);
+            this.$elem.empty();
+            this.$elem.append($errorDiv);
         },            
 
         uuid: function() {

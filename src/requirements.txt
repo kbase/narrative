@@ -19,3 +19,9 @@ sympy
 setuptools>=0.8
 semantic_version>=2.3
 terminado
+decorator
+jsonschema
+pexpect
+pickleshare
+simplegeneric
+qgrid

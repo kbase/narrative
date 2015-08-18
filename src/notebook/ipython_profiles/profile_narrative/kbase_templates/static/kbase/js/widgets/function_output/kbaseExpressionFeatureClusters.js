@@ -87,7 +87,6 @@ define(['jquery',
 						], 
 						function(data) {
 							self.expMatrixName = data[0].info[1];
-							console.log("expMatrixName", self.expMatrixName);
 							self.genomeRef = data[0].data.genome_ref;
                             self.featureMapping = data[0].data.feature_mapping;
 							self.matrixRowIds = data[0].data.data.row_ids;

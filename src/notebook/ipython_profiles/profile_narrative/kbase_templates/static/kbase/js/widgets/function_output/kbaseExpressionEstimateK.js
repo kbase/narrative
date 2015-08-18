@@ -58,7 +58,6 @@ define(['jquery',
                 [ref],
                 function(data){
                     self.data = data[0].data;
-                    console.log("data", self.data);
                     self.render();
                     self.loading(false);
                 },

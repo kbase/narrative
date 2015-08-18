@@ -71,11 +71,21 @@ define(['jquery',
 		render: function(){
             var data = this.data;
 
-            $("<div/>").html('Estimated K = ' + data.best_k).appendTo(this.$elem);
+            $("<div>").html('Estimated K (based on highest quality score) = ' + data.best_k).appendTo(this.$elem);
 
-            var $kDistributionDiv = $("<div/>");
+            var $kDistributionDiv = $("<div>");
             this.$elem.append($kDistributionDiv);
             this.buildKDistributionPlot($kDistributionDiv);
+
+            var $help = $('<div>').append(
+                "The quality of the cluster results for a value of <i>k</i> can be approximated by the Average Silhouette Score." +
+                "  Silhouette scores/coeffecients are calculated for each point over a range of [-1,1].  Values near 1 indicate the" +
+                " point is far away from neighboring clusters.  Values near 0 indicate that the point is near the boundry of " +
+                "a neighboring cluster. Values less than 0 indicate that the point is probably misclassified."
+            );
+
+            this.$elem.append($help);
+            this.$elem.append($('<div style="width : 5px; height : 5px">'));
 		},
         
         buildKDistributionPlot: function($containerDiv){
@@ -89,20 +99,29 @@ define(['jquery',
                 });
             }
             
-            $lineChartDiv = $("<div style = 'width : 500px; height : 300px'></div>");
+            $lineChartDiv = $("<div style = 'width : 500px; height : 300px'>");
             $containerDiv.append($lineChartDiv);
             $lineChartDiv.kbaseLinechart(
                 {
                     scaleAxes       : true,
 
-                    // xLabel      : 'Some useful experiment',
-                    // yLabel      : 'Meaningful data',
+                    xLabel      : 'Values of K',
+                    yLabel      : 'Estimated Quality (Avg. Silhoette score)',
+
+                    xLabelRegion : 'yPadding',
+                    yLabelRegion : 'xPadding',
+                    xAxisColor : '#444',
+                    yAxisColor : '#444',
+                    xPadding : 80,
+                    yPadding : 60,
+
+                    overColor : null,
 
                     dataset : [
                         {
-                            color : 'green',
-                            label : 'Silhouette',
+                            strokeColor : 'blue',
                             values : values,
+                            width: 1
                         }
                     ],
                 }

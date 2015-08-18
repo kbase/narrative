@@ -223,7 +223,7 @@ text {
     pointer-events: none;
 }
 .axis text {
-    stroke: #CCC;
+    /*stroke: #CCC;*/
     font: 10px sans-serif;
     font-weight: 100;
 }

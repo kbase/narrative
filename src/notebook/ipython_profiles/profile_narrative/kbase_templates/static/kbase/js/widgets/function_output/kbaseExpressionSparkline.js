@@ -43,18 +43,18 @@
             for( var i = 0 ; i < columnSetStats.size; i++){
                 condition = columnDescriptors[i].id;
                 matrixAvg.push({
-                    x: i,
+                    x: i+5,
                     y: mtxColumnSetStats.avgs[i],
                     name: condition
                 });
                 clusterAvg.push(
                 {
-                    x: i,
+                    x: i+5,
                     y: columnSetStats.avgs[i],
                     name: condition
                 });
                 clusterDisp.push({
-                    x: i,
+                    x: i+5,
                     y: columnSetStats.mins[i],
                     y2: columnSetStats.maxs[i],
                     name: condition
@@ -66,40 +66,61 @@
             $containerDiv.append($lineChartDiv);
             $containerDiv.append("<div style = 'width : 5px; height : 5px'></div>");
 
-
             $lineChartDiv.kbaseLinechart(
                 {
                     scaleAxes       : true,
                     hGrid           : true,
-                    xLabel          : 'Condition index',
-                    yLabel          : 'Expression values',
-                    //xLabels         : false,
+                    xLabel          : 'Conditions',
+                    yLabel          : 'Expression Values',
+                    xLabelRegion : 'yPadding',
+                    yLabelRegion : 'xPadding',
+                    xAxisColor : '#444',
+                    yAxisColor : '#444',
+                    xPadding : 80,
+                    yPadding : 30,
+                    xLabels  : false,
                     overColor : null,
                     dataset : [
                         {
                             strokeColor: 'red',
-                            label : 'Min. and max. in selection',
+                            //label : 'Min. and max. in selection',
                             values : clusterDisp,
                             fillColor: 'red',
-                            strokeOpacity: 0.3,
-                            fillOpacity: 0.3,
-                            width: 1
+                            strokeOpacity: 0.2,
+                            fillOpacity: 0.2,
+                            width: 0
                         },
                         {
                             strokeColor : 'green',
-                            label : 'Selected genes average',
+                            //label : 'Selected features average',
                             values : clusterAvg,
                             width: 1,
-                            shape: 'square',
-                            shapeArea: 8
+                            shape: 'circle',
+                            shapeArea: 36,
+                            pointOver   :
+                                function(d) {
+                                  this.showToolTip({label : 'Selected Features Avgerage<br>'+d.y+"<br>"+d.name});
+                                },
+                            pointOut    :
+                                function(d) {
+                                  this.hideToolTip();
+                                }
                         },
                         {
                             strokeColor : 'blue',
-                            label : 'Matrix average',
+                            //label : 'Dataset average',
                             values : matrixAvg,
                             width: 1,
-                            shape: 'square',
-                            shapeArea: 8
+                            shape: 'circle',
+                            shapeArea: 36,
+                            pointOver   :
+                                function(d) {
+                                  this.showToolTip({label : 'All Data Average<br>'+d.y+"<br>"+d.name});
+                                },
+                            pointOut    :
+                                function(d) {
+                                  this.hideToolTip();
+                                }
                         }
                     ],
                 }

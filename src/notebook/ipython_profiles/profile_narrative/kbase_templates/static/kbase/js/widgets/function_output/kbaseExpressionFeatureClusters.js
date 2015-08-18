@@ -1,5 +1,5 @@
 /**
- * Output widget to vizualize ClusterSet object.
+ * Output widget to vizualize FeatureClusters object.
  * Pavel Novichkov <psnovichkov@lbl.gov>
  * @public
  */
@@ -28,6 +28,7 @@ define(['jquery',
 		expMatrixRef: null,
 		expMatrixName: null,
 		genomeRef: null,
+		featureMapping: null,
 		matrixRowIds: null,
 		matrixColIds: null,
 		genomeID: null,
@@ -47,7 +48,7 @@ define(['jquery',
 			
 			// error if not properly initialized
 			if (this.options.clusterSetID == null) {
-				this.showMessage("[Error] Couldn't retrieve cluster set");
+				this.showMessage("[Error] Couldn't retrieve clusters");
 				return this;
 			}
 
@@ -80,53 +81,39 @@ define(['jquery',
 					self.clusterSet = data[0].data;
 					self.expMatrixRef = self.clusterSet.original_data;
 
-					console.log("expMatrixRef", self.expMatrixRef);
-
 					kbws.get_object_subset([					
-							{ 'ref':self.expMatrixRef, 'included':['/genome_ref'] },
-							{ 'ref':self.expMatrixRef, 'included':['/data/row_ids'] },
-							{ 'ref':self.expMatrixRef, 'included':['/data/col_ids'] }
+							{ 'ref':self.expMatrixRef, 'included':
+							    ['/genome_ref', '/feature_mapping', '/data/row_ids', '/data/col_ids'] }
 						], 
 						function(data) {
+							self.expMatrixName = data[0].info[1];
+							console.log("expMatrixName", self.expMatrixName);
 							self.genomeRef = data[0].data.genome_ref;
-							self.matrixRowIds = data[1].data.data.row_ids;
-							self.matrixColIds = data[2].data.data.col_ids;	
+                            self.featureMapping = data[0].data.feature_mapping;
+							self.matrixRowIds = data[0].data.data.row_ids;
+							self.matrixColIds = data[0].data.data.col_ids;	
 
-							console.log("genomeRef", self.genomeRef);
-							var jobGetGenomeData = kbws.get_object_subset([
-									{ 'ref':self.genomeRef, 'included':['/id'] },
-									{ 'ref':self.genomeRef, 'included':['/scientific_name'] },
-									{ 'ref':self.genomeRef, 'included':['/features'] }								
-								], 
-								function(data){									
-									self.genomeID = data[0].data.id;
-									self.genomeName = data[1].data.scientific_name;
-									self.features = data[2].data.features;
-									console.log("genomeName", self.genomeName);
-								}, 
-								function(error){
-									self.clientError(error);
-								}
-							);
-
-							var jobGetMatrixName = kbws.get_object_info_new({
-									'objects' : [{'ref' : self.expMatrixRef}],
-									'includeMetadata' :0
-								},
-								function(data){
-									self.expMatrixName = data[0][1];
-									console.log("expMatrixName", self.expMatrixName);
-								}
-							);
-
-							// Wait until all  jobs are done
-							$.when.apply($, [jobGetMatrixName, jobGetGenomeData]).done( 
-								function(){
-									// Now we are ready to visualize it
-									self.render();
-								}
-							);							
-
+							if (self.genomeRef) {
+							    kbws.get_object_subset(
+							            [{ 'ref':self.genomeRef, 'included':
+							                ['/id', '/scientific_name', '/features/[*]/id', 'features/[*]/type', 
+							                 'features/[*]/function', 'features/[*]/aliases'] }								
+							            ], 
+							            function(data){									
+							                self.genomeID = data[0].info[1];
+							                self.genomeName = data[0].data.scientific_name;
+							                self.features = data[0].data.features;
+							                // Now we are ready to visualize it
+							                self.render();
+							            }, 
+							            function(error){
+							                console.error(error);
+			                                self.render();
+							            }
+							    );
+							} else {
+							    self.render();
+							}
 						}, 
 						function(error){
 							self.clientError(error);
@@ -203,6 +190,7 @@ define(['jquery',
 			   "sDom": 'lftip',
 				"aaData": self.buildClustersTableData(),
 				 "aoColumns": [
+				    { sTitle: "Pos.", mData:"pos" },
 					{ sTitle: "Cluster", mData:"clusterId" },
 					{ sTitle: "Number of genes", mData:"size" },
 					{ sTitle: "Mean correlation", mData:"meancor" },
@@ -212,11 +200,28 @@ define(['jquery',
                         }
                     }
 				],
-				"fnDrawCallback" :function(){
-					// It should be done here because otherwise initially hidden buttons will not work
-					self.registerActionButtonClick();
-				}
+				'fnDrawCallback': events
 			} );
+			
+            function events() {
+				self.registerActionButtonClick();
+                // event for clicking on ortholog count
+                $('.show-clusters_'+self.pref).unbind('click');
+                $('.show-clusters_'+self.pref).click(function() {
+                    var pos = $(this).data('pos');
+                    var tabName = "Cluster " + pos;
+                    if (tabPane.kbaseTabs('hasTab', tabName)) {
+                        tabPane.kbaseTabs('showTab', tabName);
+                        return;
+                    }
+                    var tabDiv = self.buildClusterFeaturesTable(pos);
+                    tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
+                        tabPane.kbaseTabs('removeTab', name);
+                    }});
+                    tabPane.kbaseTabs('showTab', tabName);
+                })
+            }
+
 		},
 
 		registerActionButtonClick : function(){
@@ -263,18 +268,19 @@ define(['jquery',
 			return geneIds;
 		},
 
+
 		buildClustersTableData: function(){
 			var self = this;
 			// var row_ids = self.expressionMatrix.data.row_ids;
 			// var col_ids = self.expressionMatrix.data.col_ids;
-			console.log('clusterSet',self.clusterSet);
 			var feature_clusters  = self.clusterSet.feature_clusters;
 
 			var tableData = [];
 
 			for(var i = 0; i < feature_clusters.length; i++){
 				tableData.push({
-					clusterId: "cluster_" + i,
+				    pos: i,
+					clusterId: "<a class='show-clusters_" + self.pref + "' data-pos='"+i+"'>cluster_" + i + "</a>",
 					size: Object.keys(feature_clusters[i].id_to_pos).length,
 					meancor : feature_clusters[i].meancor.toFixed(2),
 					rowIndex : i
@@ -301,13 +307,74 @@ define(['jquery',
 			this.$menu = $menu;
 		},
 
+		buildClusterFeaturesTable: function(pos) {
+            var self = this;
+		    var tableData = [];
+		    var tabDiv = $("<div/>");
+		    var table = $('<table class="table table-bordered table-striped" '+
+		            'style="width: 100%; margin-left: 0px; margin-right: 0px;"></table>');
+		    tabDiv.append(table);
+
+		    var id2features = self.buildFeatureId2FeatureHash();
+		    for (var rowId in self.clusterSet.feature_clusters[pos].id_to_pos) {
+		        var fid = rowId;
+		        if (self.featureMapping) {
+		            fid = self.featureMapping[rowId];
+		            if (!fid)
+		                fid = rowId;
+		        }
+		        var gid = "-";
+		        var genomeRef = null;
+		        if (self.genomeRef) {
+		            genomeRef = self.genomeRef.split('/')[0] + "/" + self.genomeID;
+		            gid = '<a href="/functional-site/#/dataview/'+genomeRef+'" target="_blank">'+
+		            self.genomeName+"</a>";
+		        }
+                var aliases = "-";
+                var type = "-";
+                var func = "-";
+		        var feature = id2features[fid];
+		        if (feature) {
+		            if(feature.aliases && feature.aliases.length > 0)
+		                aliases= feature.aliases.join(', '); 
+		            type = feature.type;
+                    func = feature['function'];
+		        }
+                if (genomeRef) {
+                    fid = '<a href="/functional-site/#/dataview/'+genomeRef+'?sub=Feature&subid='+fid + 
+                    '" target="_blank">'+fid+'</a>';
+                }
+		        tableData.push(
+		                {
+		                    fid: fid,
+		                    gid: gid,
+		                    ali: aliases,
+		                    type: type,
+		                    func: func
+		                }
+		        );
+            }
+		    table.dataTable( {
+		        "sDom": 'lftip',
+		        "aaData": tableData,
+		        "aoColumns": 
+		            [{sTitle: "Feature ID", mData: "fid"},
+                     {sTitle: "Aliases", mData: "ali"},
+                     {sTitle: "Genome", mData: "gid"},
+                     {sTitle: "Type", mData: "type"},
+                     {sTitle: "Function", mData: "func"}]
+		    });
+
+		    return tabDiv;
+		},
+	
 		buildFeatureId2FeatureHash: function(){
 			var self = this;
 			var features = self.features;
 			var id2features = {};
-			for(var i in features){
-				id2features[features[i].id] = features[i];
-			}
+			if (features)
+			    for(var i in features)
+			        id2features[features[i].id] = features[i];
 			return id2features;
 		},
 
@@ -316,6 +383,15 @@ define(['jquery',
 					   .append($("<th />").css('width','20%').append(name))
 					   .append($("<td />").append(value));
 			return $row;
+		},
+
+		getData: function() {
+			return {
+				type: 'ExpressionMatrix',
+				id: this.options.expressionMatrixID,
+				workspace: this.options.workspaceID,
+				title: 'Expression Matrix'
+			};
 		},
 
 		loading: function(isLoading) {

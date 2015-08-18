@@ -7,6 +7,7 @@
 
  define([
         'jquery',
+        'd3',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',      
         'kbaseExpressionGenesetBaseWidget'
@@ -108,13 +109,11 @@
                         .on('click', function() {
                             var min = parseFloat($minInput.val());
                             if(min && !isNaN(min)) { 
-                                if(min>0) { min=0; }
                                 self.minColorValue = min;
                             }
                             $minInput.val(self.minColorValue);
                             var max = parseFloat($maxInput.val());
                             if(max && !isNaN(max)) {
-                                if(max<0) { max=0; }
                                 self.maxColorValue = max; 
                             }
                             $maxInput.val(self.maxColorValue);
@@ -197,34 +196,18 @@
         minColorValue:null,
         maxColorValue:null,
 
+
+
+
         getColor: function(value){
             var min = this.minColorValue;
             var max = this.maxColorValue;
 
-            //TODO needs to be imporved
-            var r = 0;
-            var g = 255;
-            var b = 0;
-
-            if(value >= 0){
-                b = 255;
-                r = ((max - value)/max*255).toFixed(0);
-            }
-            if(value > this.maxColorValue){
-                b = 255;
-                r = 0;
-            }
-
-            if(value < 0){
-                b = ((Math.abs(min) + value)/Math.abs(min)*255).toFixed(0);
-                r = 255;
-            }
-            if(value < this.minColorValue){
-                b = 0;
-                r = 255;
-            }
-
-            return 'rgb('+r+','+g+','+b+')';
+            // use d3 to generate the range
+            var colorGenerator = d3.scale.linear()
+                                    .domain(d3.range(min,max,(max-min)/3))
+                                    .range(['#FFA500', '#FFFFFF', '#0066AA'])
+            return colorGenerator(value);
         }
     });
 });

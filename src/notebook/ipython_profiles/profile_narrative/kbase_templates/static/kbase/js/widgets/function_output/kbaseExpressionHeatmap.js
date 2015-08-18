@@ -22,9 +22,16 @@
             // self.setTestParameters();
 
             // check options
-
             this.minColorValue=-2;
             this.maxColorValue=2;
+
+            if(self.options.min_colorvalue) {
+                self.minColorValue=self.options.min_colorvalue;
+            }
+            if(self.options.max_colorvalue) {
+                self.maxColorValue=self.options.max_colorvalue;
+            }
+
 
             var features = [];
             if(self.options.geneIds) { features = $.map(self.options.geneIds.split(","), $.trim); }

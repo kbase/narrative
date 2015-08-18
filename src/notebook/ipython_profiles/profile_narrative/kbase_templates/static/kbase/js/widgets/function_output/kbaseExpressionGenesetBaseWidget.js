@@ -104,9 +104,10 @@ define(['jquery',
 
             var getSubmatrixStatsAndRender = function() {
                 var smParams = self.getSubmtrixParams();
-                
-                // some parameter checking
-                if(!smParams.features || smParams.features.length===0) {
+
+                // some parameter checking 
+                console.debug(smParams);
+                if(!smParams.row_ids || smParams.row_ids.length===0) {
                     self.clientError("No Features or FeatureSet selected.  Please include at least one Feature from the data.");
                     return;
                 }

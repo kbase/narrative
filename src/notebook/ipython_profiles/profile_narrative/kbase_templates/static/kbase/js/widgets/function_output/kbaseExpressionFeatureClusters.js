@@ -170,10 +170,13 @@ define(['jquery',
 					'Genome', 
 					$('<span />').append(self.genomeName).css('font-style', 'italic') ) )
 				.append( self.makeRow( 
-					'Source matrix: #conditions', 
+					'Expression matrix', 
+					self.expMatrixName ) )
+				.append( self.makeRow( 
+					'Expression matrix: #conditions', 
 					self.matrixColIds.length ) )
 				.append( self.makeRow( 
-					'Source matrix: #genes', 
+					'Expression matrix: #genes', 
 					self.matrixRowIds.length ) )
 				;
 
@@ -259,21 +262,6 @@ define(['jquery',
 			}
 			return geneIds;
 		},
-
-        getMenuPosition: function(mouse, direction, scrollDir) {
-        	var self = this;
-
-            var win = $(window)[direction](),
-                scroll = $(window)[scrollDir](),
-                menu = $(settings.menuSelector)[direction](),
-                position = mouse + scroll;
-                        
-            // opening menu would pass the side of the page
-            if (mouse + menu > win && menu < mouse) 
-                position -= menu;
-            
-            return position;
-        },
 
 		buildClustersTableData: function(){
 			var self = this;

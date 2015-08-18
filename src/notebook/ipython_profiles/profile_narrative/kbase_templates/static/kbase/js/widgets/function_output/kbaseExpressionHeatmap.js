@@ -21,12 +21,24 @@
             var self = this;
             // self.setTestParameters();
 
+            // check options
             this.minColorValue=-2;
             this.maxColorValue=2;
 
+            if(self.options.min_colorvalue) {
+                self.minColorValue=self.options.min_colorvalue;
+            }
+            if(self.options.max_colorvalue) {
+                self.maxColorValue=self.options.max_colorvalue;
+            }
+
+
+            var features = [];
+            if(self.options.geneIds) { features = $.map(self.options.geneIds.split(","), $.trim); }
+
             return{
                 input_data: self.options.workspaceID + "/" + self.options.expressionMatrixID,
-                row_ids: $.map(self.options.geneIds.split(","), $.trim),
+                row_ids: features,
                 fl_column_set_stat: 1,
                 fl_row_set_stats: 1,
                 fl_values: 1

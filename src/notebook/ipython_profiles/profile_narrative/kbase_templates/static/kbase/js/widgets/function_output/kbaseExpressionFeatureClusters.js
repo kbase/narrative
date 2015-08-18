@@ -196,7 +196,7 @@ define(['jquery',
 					{ sTitle: "Mean correlation", mData:"meancor" },
                     { sTitle: "", mData: "rowIndex",
                         mRender: function ( rowIndex ) {
-                        	return '<button class="btn btn-default ' + pref + 'action_button" rowIndex="' + rowIndex +'" >Action  <span class="caret"></span></button>';
+                        	return '<button class="btn btn-default ' + pref + 'action_button" rowIndex="' + rowIndex +'" >Explore Cluster  <span class="caret"></span></button>';
                         }
                     }
 				],
@@ -250,12 +250,24 @@ define(['jquery',
 
                         var geneIds = self.getClusterGeneIds(rowIndex);
 
-						IPython.narrative.createAndRunMethod(methodInput, 
-							{
-								'input_expression_matrix':self.expMatrixName, 
-								'input_gene_ids': geneIds.join(",")
-							}
-						);
+                        if(methodInput==='build_feature_set') {
+							IPython.narrative.createAndRunMethod(methodInput, 
+								{
+									'input_genome':self.genomeID, 
+									'input_feature_ids': geneIds.join(","),
+									'output_feature_set': self.options.clusterSetID + "_Cluster"+rowIndex+"_Features",
+									'description': 'Features were selected from Cluster ' + rowIndex + ' of a FeatureClusters data object '+
+													'named ' + self.options.clusterSetID + '.'
+								}
+							);
+						} else {
+							IPython.narrative.createAndRunMethod(methodInput, 
+								{
+									'input_expression_matrix':self.expMatrixName, 
+									'input_gene_ids': geneIds.join(",")
+								}
+							);
+						}
                     });                
 			});
 		},
@@ -295,8 +307,9 @@ define(['jquery',
 			var $menu = $(' \
 				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none" > \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
-				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">Show pairwise correltaion</a></li> \
-				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">Browse conditions</a></li> \
+				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">Show pairwise correlation</a></li> \
+				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
+				    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Save as a FeatureSet</a></li> \
 				</ul> \
 			');
 

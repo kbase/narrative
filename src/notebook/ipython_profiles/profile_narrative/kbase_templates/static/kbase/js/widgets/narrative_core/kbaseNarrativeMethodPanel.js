@@ -706,20 +706,38 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
         },
 
         /**
-         * A *REALLY* simple filter based on whether the given pattern string is present in the
+         * A simple filter based on whether the given pattern string is present in the
          * method's name.
          * Returns true if so, false if not.
          * Doesn't care if its a method or an app, since they both have name fields at their root.
          */
         textFilter: function(pattern, method) {
             var lcName = method.info.name.toLowerCase();
-            return lcName.indexOf(pattern.toLowerCase()) > -1;
+            // match any token in the query, not the full string
+            var tokens = pattern.toLowerCase().split(" ");
+            for(var k=0; k<tokens.length; k++) {
+                if(lcName.indexOf(tokens[k])<0) {
+                    // token not found, so we return false
+                    return false;
+                }
+            }
+            // returns true only if all tokens were found
+            return true;
         },
 
         /**
-         * Returns true if the type is available as in input to the method, false otherwise
+         * Returns true if the type is available as in input to the method, false otherwise, assumes
+         * only the first token in 'type' is the type name
          */
         inputTypeFilter: function(type, spec) {
+            var tokens = type.split(' ');
+            var type = tokens[0];
+            tokens.shift();
+            // first check that other tokens match the method/app name
+            if(!this.textFilter(tokens.join(' '),spec)) {
+                return false;
+            }
+
             var methodFilter = function(type, spec) {
                 for (var i=0; i<spec.parameters.length; i++) {
                     var p = spec.parameters[i];

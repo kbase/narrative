@@ -1440,6 +1440,10 @@ div#notebook_panel {
     border-radius: 0px;
 }
 
+.kb-cell-output-content {
+    overflow-x: auto;
+}
+
 .kb-cell-output .panel .panel-heading {
     padding: 5px 10px;
 }
@@ -1619,7 +1623,7 @@ div#notebook_panel {
 }
 
 .app-panel-heading {
-    padding-top: 20px;
+    padding-top: 10px;
 }
 
 .app-panel-heading h1 {
@@ -2668,4 +2672,20 @@ div[class="tooltip-inner"] {
 /* Override the default max-width of the narrative box */
 .container {
     max-width: 2000px !important;
+}
+
+/* Styles for KNHX trees to remove its document.write nonsense that breaks asynchronous loading */
+#popdiv {
+    position: absolute;
+    background-color: #fcfcfc;
+    border: 1px solid #CCC;
+    z-index: 10000;
+    visibility: hidden;
+    font-size: 12px;
+}
+#popdiv a.alt {
+    padding-left: 9px;
+    font: 12px monospace;
+    border: none;
+    display: inline;
 }

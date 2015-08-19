@@ -1,6 +1,11 @@
 "use strict";
 
-(function( $, undefined ) {
+define(['jquery', 
+        'kbwidget', 
+        'kbasePrompt', 
+        'kbaseNarrativeControlPanel',
+        'bootstrap'], 
+        function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeJobsPanel',
         parent: 'kbaseNarrativeControlPanel',
@@ -879,7 +884,7 @@
                 }
             }
             // if it's an error, then we need to signal the cell
-            if (status === "error") { // || (jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0)) {
+            if (status === "error" || status === "suspend") { // || (jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0)) {
                 if (jobType === 'njs') {
                     $cell.kbaseNarrativeAppCell('setRunningState', 'error');
                 }
@@ -1361,4 +1366,4 @@
             }
         },
     });
-})( jQuery );
+});

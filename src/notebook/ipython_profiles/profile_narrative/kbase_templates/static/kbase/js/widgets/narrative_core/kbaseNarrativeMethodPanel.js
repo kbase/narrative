@@ -10,7 +10,7 @@
  * @public
  */
 // kb_require(['kbaseMethodGallery'], 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
         parent: 'kbaseNarrativeControlPanel',
@@ -193,9 +193,9 @@
              */
             $(document).on('getFunctionSpecs.Narrative',
                 $.proxy(function(e, specSet, callback) {
-                  console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
+                    //console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
                     if (callback) {
-                      console.debug("Trigger: specSet=",specSet);
+                        //console.debug("Trigger: specSet=",specSet);
                         callback(this.getFunctionSpecs(specSet));
                     }
                 }, this)
@@ -497,7 +497,7 @@
          * If a spec isn't found, then it won't appear in the return values.
          */
         getFunctionSpecs: function(specSet) {
-            console.debug("getFunctionSpecs(specSet=",specSet,")");
+            //console.debug("getFunctionSpecs(specSet=",specSet,")");
             var results = {};
             if (specSet.apps && specSet.apps instanceof Array) {
                 results.apps = {};
@@ -516,7 +516,7 @@
                 }
               */
             }
-            console.debug("getFunctionSpecs returning:",results);
+            //console.debug("getFunctionSpecs returning:",results);
             return results;
         },
 
@@ -816,5 +816,4 @@
             this.trigger('toggleSidePanelOverlay.Narrative');
         },
     });
-})( jQuery );
-//);
+});

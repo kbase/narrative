@@ -16,7 +16,7 @@ Dan Gunter <dkgunter@lbl.gov>
 2.  A server running Docker to host the containers
 3.  A Docker container for the actual image.
 
-This document will walk through the server building process. For this developer’s tutorial, we built a local VM using Vagrant through Virtualbox. The base Vagrant image we used was hashicorp/precise64, which provides a clean Ubuntu 12.04 LTS image.  
+This document will walk through the server building process. For this developer’s tutorial, we built a local VM using Vagrant through Virtualbox. The base Vagrant image we used was hashicorp/precise64, which provides a clean Ubuntu 14.04 LTS image.  
 <http://www.vagrantup.com>
 
 After installing Vagrant and Virtualbox, run  
@@ -130,16 +130,17 @@ kernel (e.g., Ubuntu 12.04), you’ll need to install the new kernel and restart
 
 ## Install Docker
 
-First setup APT to use the proper repository, then refresh the package cache and install the `lxc-docker` package from the newly-added location.
+The [Docker installation tutorials](https://docs.docker.com/installation/#installation) include detailed instructions for how to install Docker on various operating systems. For the OS used in this tutorial - Ubuntu 14.04 - use `wget` to fetch and run the installation script:
 
-    sudo su - root # need to do all this as root
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8950F966E92D8576A8BA88D21E9
-    sh -c "echo deb https://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list"
-    apt-get update
-    apt-get install -y lxc-docker
-    # stay root for next steps..
+    wget -qO- https://get.docker.com/ | sh
 
-Set up groups so docker and www-data can play nice with each other (so we can get proxied external access to the deployed containers that’ll be running the Narrative).  
+You can test the installation with the command:
+
+    sudo docker run hello-world
+
+See more details on the [Docker installer guide for Ubuntu 14.04](https://docs.docker.com/installation/ubuntulinux/).
+
+Next, you'll need to set up groups so docker and www-data can play nice with each other (so we can get proxied external access to the deployed containers that’ll be running the Narrative).  
 
     usermod -G docker www-data
 
@@ -150,8 +151,7 @@ Then stop and restart docker and Nginx.
     service docker start
     service nginx start
 
-
-Next, run buildNarrativeContainer.sh to build the base Docker container for narrative instances.
+Next, run buildNarrativeContainer.sh to build the base Docker container for narrative instances and the first Narrative container on top of it.
 
     cd ~/kb_narr/narrative
     ./buildNarrativeContainer.sh

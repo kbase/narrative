@@ -31,7 +31,7 @@ local function config()
 		    Dns = json.util.null,
 		    Image = "base",
 		    Volumes = {},
-		    VolumesFrom = "",
+		    VolumesFrom = json.util.null,
 		    WorkingDir = ""
 		 }
    config.Volumes['/dev/log'] = {}

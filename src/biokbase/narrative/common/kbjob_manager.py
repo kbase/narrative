@@ -151,8 +151,8 @@ class KBjobManager():
 
     def prepare_job_error_state(self, job_id, e):
         e_type = type(e).__name__
-        e_message = e.__str__()
-        e_trace = traceback.format_exc()
+        e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
+        e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
         job_state = 'error'
         if e_type == 'ConnectionError' or e_type == 'HTTPError':
             job_state = 'network_error'            # Network problem routing to NJS wrapper
@@ -167,6 +167,8 @@ class KBjobManager():
                 job_state = 'network_error'        # Network problem routing NJS
             elif '[awe error]' in e_message:
                 job_state = 'awe_error'
+        elif e_type == 'URLError':
+            job_state = 'network_error'
         return {
             'job_id' : job_id,
             'job_state' : job_state,

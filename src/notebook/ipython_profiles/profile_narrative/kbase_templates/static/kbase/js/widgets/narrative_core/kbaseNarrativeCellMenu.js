@@ -1,8 +1,8 @@
-(function($, undefined) {
+define(['jquery', 'kbwidget'], function($) {
     $.KBWidget({
         name: 'kbaseNarrativeCellMenu',
         parent: 'kbaseWidget',
-        options: {cell: null},
+        options: {cell: null, kbWidget:null, kbWidgetType:null},
 
         init: function(options) {
             this._super(options);
@@ -82,6 +82,39 @@
                 }
             });
 
+            // only add this if it was controlled by a KBase Widget
+            if(this.options.kbWidget && this.options.kbWidgetType) {
+                this.addMenuItem({
+                    icon: 'fa fa-copy',
+                    text: 'Duplicate Cell',
+                    action: $.proxy(function() {
+                        // get the current state, and clear it of its running state
+                        var kbWidget = options.kbWidget
+                        var currentState = kbWidget.getState();
+                        if(this.options.kbWidgetType === 'method') {
+                            // put the method in the narrative
+                            this.trigger('methodClicked.Narrative', kbWidget.method);
+
+                            // the method initializes an internal method input widget, but in an async way
+                            // so we have to wait and check when that is done.  When it is, we can update state
+                            var newCell = IPython.notebook.get_selected_cell();
+                            var newWidget = $('#'+$(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
+                            var updateState = function(state) {
+                                if(newWidget.$inputWidget) {
+                                    // if the $inputWidget is not null, we are good to go, so set the state
+                                    newWidget.loadState(currentState.params);
+                                } else {
+                                    // not ready yet, keep waiting
+                                    window.setTimeout(updateState,500);
+                                }
+                            };
+                            window.setTimeout(updateState,50);
+
+                        }
+                    }, this)
+                });
+            }
+
             // if (this.options.cell && this.options.cell.metadata['kb-cell'] === undefined) {
             //     this.addMenuItem({
             //         icon: 'fa fa-terminal',
@@ -151,4 +184,4 @@
             this.$menu.append($itemElem);
         },
     });
-})( jQuery );
+});

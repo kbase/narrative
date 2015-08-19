@@ -2,8 +2,11 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbaseNarrativeParameterTextInput',
+    'kbaseNarrativeParameterDropdownInput', 'kbaseNarrativeParameterCheckboxInput',
+    'kbaseNarrativeParameterTextareaInput', 'kbaseNarrativeParameterFileInput',
+    'kbaseNarrativeParameterTextSubdataInput'],
+    function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeMethodInput",
         parent: "kbaseNarrativeInput",
@@ -50,6 +53,7 @@
             for (var i=0; i<params.length; i++) {
                 var paramSpec = params[i];
                 var $stepDiv = $('<div>');
+
                 // check what kind of parameter here.
                 if (paramSpec.field_type === "text") {
                     var textInputWidget = $stepDiv["kbaseNarrativeParameterTextInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
@@ -63,15 +67,22 @@
                     var checkboxInputWidget = $stepDiv["kbaseNarrativeParameterCheckboxInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:checkboxInputWidget});
                     this.parameterIdLookup[paramSpec.id] = checkboxInputWidget;
-                }else if (paramSpec.field_type === "textarea") {
+                } else if (paramSpec.field_type === "textarea") {
                     var textareaInputWidget = $stepDiv["kbaseNarrativeParameterTextareaInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:textareaInputWidget});
                     this.parameterIdLookup[paramSpec.id] = textareaInputWidget;
-                }else if (paramSpec.field_type === "file") {
+                } else if (paramSpec.field_type === "textsubdata") {
+                    var textInputWidget = $stepDiv["kbaseNarrativeParameterTextSubdataInput"]({
+                        loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], 
+                        isInSidePanel: this.options.isInSidePanel, kbaseMethodInputWidget: self
+                    });
+                    this.parameters.push({id:paramSpec.id, widget:textInputWidget});
+                    this.parameterIdLookup[paramSpec.id] = textInputWidget;
+                } else if (paramSpec.field_type === "file") {
                     var fileInputWidget = $stepDiv["kbaseNarrativeParameterFileInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:fileInputWidget});
                     this.parameterIdLookup[paramSpec.id] = fileInputWidget;
-                }else if (paramSpec.field_type === "tab") {
+                } else if (paramSpec.field_type === "tab") {
                 	continue;
                 } else {
                     // this is what we should do:  this.getErrorDiv()
@@ -357,5 +368,4 @@
             });
         }
     });
-
-})( jQuery );
+});

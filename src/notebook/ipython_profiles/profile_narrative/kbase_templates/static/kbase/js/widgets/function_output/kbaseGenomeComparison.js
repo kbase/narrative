@@ -4,8 +4,7 @@
  * @public
  */
 
-(function( $, undefined ) {
-
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
 $.KBWidget({
     name: "GenomeComparisonWidget",
     parent: "kbaseAuthenticatedWidget",
@@ -251,7 +250,7 @@ $.KBWidget({
             		if (Number(hit.bestDist) >= 0) {
             			var msg = 'X-axis: ' + self.cmp.proteome1names[Number(hit.bestI)] + 
             				', Y-axis: ' + self.cmp.proteome2names[Number(hit.bestJ)] +
-            				'<br>click to see detailes...';
+            				'<br>click to see details...';
             			tip.html(msg);
             			tip.css({
             				'top': (Number(hit.scrY) + 10) + 'px',
@@ -548,4 +547,4 @@ $.KBWidget({
             });
     }
 })
-}( jQuery ) );
+});

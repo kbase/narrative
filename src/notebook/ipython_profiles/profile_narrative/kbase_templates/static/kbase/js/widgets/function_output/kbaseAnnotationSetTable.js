@@ -1,7 +1,8 @@
 /**
  * KBase widget to display table and boxplot of BIOM data
  */
-(function($, undefined) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbStandaloneTable'],
+    function($) {
     $.KBWidget({
         name: 'AnnotationSetTable',
         parent: "kbaseAuthenticatedWidget",
@@ -94,4 +95,4 @@
             return this;
         }
     });
-})(jQuery);
+});

@@ -16,7 +16,11 @@
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
  */
-(function( $, undefined ) {
+define(['jquery', 'underscore', 'kbwidget', 
+        'kbaseNarrativeControlPanel', 'kbaseNarrativeDataList',
+        'kbaseNarrativeSidePublicTab', 'kbaseNarrativeSideImportTab',
+        'kbaseNarrativeExampleDataTab'], 
+        function( $, _ ) {
 
     $.KBWidget({
         name: "kbaseNarrativeDataPanel",
@@ -50,6 +54,10 @@
         token: null,
         dataImporterStarted: false,
         dataListWidget: null,
+        $myDataHeader: null,
+        myDataTempNarrativeMsg: 'Warning! This Narrative is temporary (untitled). '+
+            'Data of temporary Narratives is not visible on this tab. Please change '+
+            'the name of the Narrative to make it permanent.',
 
         init: function(options) {
             this._super(options);
@@ -422,6 +430,8 @@
 
             // hack to keep search on top
 
+            this.$myDataHeader = $('<div/>');
+            minePanel.append(this.$myDataHeader);
             var $mineFilterRow = $('<div class="row">');
             minePanel.append($mineFilterRow);
             var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
@@ -656,7 +666,12 @@
                             var legacyItems = []; // {id:..., name:..., count:...}
                             for (var i in d) {
                                 if (d[i][8].is_temporary) {
-                                    if (d[i][8].is_temporary === 'true') { continue; }
+                                    if (d[i][8].is_temporary === 'true') { 
+                                        if (d[i][1] === self.ws_name) {
+                                            self.currentWsIsTemp();
+                                        }
+                                        continue; 
+                                    }
                                 }
                                 var displayName = d[i][1];
                                 if (d[i][8].narrative) {
@@ -958,7 +973,7 @@
 
                 // create workspace filter
                 var wsInput = $('<select class="form-control kb-import-filter">');
-                wsInput.append('<option>All narratives...</option>');
+                wsInput.append('<option>All Narratives...</option>');
                 for (var i=0; i < wsList.length; i++) {
                     wsInput.append('<option data-id="'+[i].id+'" data-name="'+wsList[i].name+'">'+
                                           wsList[i].displayName+
@@ -1038,7 +1053,7 @@
 
                 // create workspace filter
                 var wsInput = $('<select class="form-control kb-import-filter">');
-                wsInput.append('<option>All narratives...</option>');
+                wsInput.append('<option>All Narratives...</option>');
                 for (var i=0; i < wsList.length; i++) {
                     wsInput.append('<option data-id="'+wsList[i].id+'" data-name="'+wsList[i].name+'">'+
                                           wsList[i].displayName+
@@ -1375,9 +1390,14 @@
             var code = 0;
             for (var i=0; i < type.length; code += type.charCodeAt(i++));
             return this.icon_colors[ code % this.icon_colors.length ];
-        }
+        },
 
+        currentWsIsTemp: function() {
+            this.$myDataHeader.empty();
+            this.$myDataHeader.css({'color': '#777', 'margin': '10px 10px 0px 10px'});
+            this.$myDataHeader.append(this.myDataTempNarrativeMsg);
+        }
 
     });
 
-})( jQuery );
+});

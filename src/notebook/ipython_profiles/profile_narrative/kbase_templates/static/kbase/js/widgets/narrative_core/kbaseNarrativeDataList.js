@@ -2,7 +2,12 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-(function( $, undefined ) {
+define(['jquery', 
+        'jquery-nearest',
+        'kbwidget', 
+        'kbaseAuthenticatedWidget', 
+        'kbaseNarrativeDownloadPanel'], 
+        function($) {
     $.KBWidget({
         name: 'kbaseNarrativeDataList',
         parent: 'kbaseAuthenticatedWidget',
@@ -1396,5 +1401,4 @@
             });
         }
     })
-
-})(jQuery);
+});

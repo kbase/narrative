@@ -3,7 +3,7 @@
  * @public
  */
 
-(function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeParameterTextareaInput",
         parent: "kbaseNarrativeParameterInput",
@@ -49,14 +49,19 @@
                 var defaultValue = (d[0] !== "" && d[0] !== undefined) ? d[0] : "";
                 var form_id = spec.id;
                 
-                var rows = 3;
+                var rows = 3; var placeholder="";
                 if(spec.textarea_options) {
                     if (spec.textarea_options.n_rows) {
                         rows = spec.textarea_options.n_rows;
                     }
+                    if(spec.textarea_options.placeholder) {
+                        placeholder = spec.textarea_options.placeholder;
+                    }
                 }
-                var $textArea= $('<textarea id="'+form_id+'" rows="'+ rows +'">').addClass("form-control")
+                var $textArea= $('<textarea id="'+form_id+'">').addClass("form-control")
                                 .css({width:"100%",resize:"vertical"})
+                                .attr('rows',rows)
+                                .attr('placeholder',placeholder)
                                 .append(defaultValue)
                                 .on("input",function() { self.isValid() });
                 
@@ -235,5 +240,4 @@
         }
         
     });
-
-})( jQuery );
+});

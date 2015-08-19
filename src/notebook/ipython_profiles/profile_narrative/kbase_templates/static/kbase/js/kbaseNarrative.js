@@ -6,217 +6,25 @@
  *
  * To set global variables, use: IPython.narrative.<name> = value
  */
-"use strict";
 
-// Bind all page buttons right at startup.
-(function() {
-    $(document).on('workspaceIdQuery.Narrative', function(e, callback) {
-        if (callback) {
-            callback(workspaceId);
-        }
-    });
-
-    // bind menubar buttons
-    $('#kb-save-btn').click(function(e) {
-        if (IPython && IPython.notebook) {
-            var narrName = IPython.notebook.notebook_name;
-            // we do not allow users to leave their narratives untitled
-            if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
-                IPython.save_widget.rename_notebook("Please name your Narrative before saving.", false);
-            } else {
-                IPython.narrative.saveNarrative();
-//                IPython.notebook.save_checkpoint();
-            }
-        }
-    });
-    $('#kb-narr-name #name').click(function(e) {
-        if (IPython && IPython.save_widget) {
-            IPython.save_widget.rename_notebook("Rename your Narrative.", true);
-            var narrName = IPython.notebook.notebook_name;
-            // this code needs to move to the save widget since rename_notebook is async!!
-            //$('#kb-narr-name #name').text(narrName);
-        }
-    });
-
-    $('#kb-kernel-int-btn').click(function(e) {
-        if (IPython && IPython.notebook && IPython.notebook.kernel) {
-            IPython.notebook.kernel.interrupt();
-        }
-    });
-    $('#kb-kernel-ref-btn').click(function(e) {
-        if (IPython && IPython.notebook && IPython.notebook.kernel) {
-            IPython.notebook.kernel.restart();
-        }
-    });
-    $('#kb-del-btn').click(function(e) {
-        if (IPython && IPython.notebook)
-            IPython.notebook.delete_cell();
-    });
-    $('#kb-jira-btn').attr('href', window.kbconfig.urls.submit_jira_ticket + '%20' + window.kbconfig.version);
-    $('#kb-status-btn').attr('href', window.kbconfig.urls.status_page);
-
-    var $dataList = $('<div>');
-    var $shareWidget = $dataList["kbaseNarrativeSharePanel"]({});
-    $('#kb-share-btn').popover({
-        html : true,
-        placement : "bottom",
-        //title: function() {
-        //    return "Share this Narrative & Data";
-        //},
-        content: function() {
-            // we do not allow users to leave thier narratives untitled
-            if (IPython && IPython.notebook) {
-                var narrName = IPython.notebook.notebook_name;
-                if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
-                    IPython.save_widget.rename_notebook("Your Narrative must be named before you can share it with others.", false);
-                    return "<br><br>Please name your Narrative before sharing.<br><br>"
-                }
-            }
-
-            //!! arg!! I have to refresh to get reattach the events, which are lost when
-            //the popover is hidden!!!  makes it a little slower because we refetch permissions from ws each time
-            $shareWidget.refresh();
-            return $dataList;
-        }
-    });
-
-    $('#kb-add-code-cell').click(function() { IPython.notebook.insert_cell_below('code'); })
-    $('#kb-add-md-cell').click(function() { IPython.notebook.insert_cell_below('markdown'); })
-
-})();
-
-/**
- * Error logging for detectable failure conditions.
- * Logs go through the kernel and thus are sent to the
- * main KBase logging facility (Splunk, as of this writing).
- *
- * Usage:
- *    KBFail(<is_it_fatal>, "what you were doing", "what happened");
- * Returns: false if IPython not initialized yet, true otherwise
- */
-var _kb_failed_once = false;
-var KBFail = function(is_fatal, where, what) {
-    if (!IPython || !IPython.notebook || !IPython.notebook.kernel) {
-        return false;
-    }
-    var code = "";
-    if (_kb_failed_once == false) {
-        code += "from biokbase.narrative.common import kblogging\n";
-        _kb_failed_once = true;
-    }
-    code += "kblogging.NarrativeUIError(";
-    if (is_fatal) {
-        code += "True,";
-    }
-    else {
-        code += "False,";
-    }
-    if (where) {
-        code += 'where="' + where + '"';
-    }
-    if (what) {
-        if (where) { code += ", "; }
-        code += 'what="' + what + '"';
-    }
-    code += ")\n";
-    // Log the failure
-    try {
-        IPython.notebook.kernel.execute(code, null, {store_history: false});        
-    }
-    catch (err) {
-        // wait half a second and try one more time.
-        console.log(err);
-        setTimeout( function() { IPython.notebook.kernel.execute(code, null, {store_history: false}); }, 500 );
-    }    
-    return true;
-}
-/**
- * Syntactic sugar for logging error vs. fatal error.
- *
- * Same as KBFail() with boolean flag replaced by different names
- * for the function.
- */
-var KBError = function(where, what) {
-  return KBFail(false, where, what);
-}
-
-/**
- * KBFatal will, in addition to calling KBFail(),
- * put up a modal dialog showing the error
- * and providing some advice to users on what to do next.
- *
- * @param where (string) Where the error occurred
- * @param what  (string) What happened
- */
-var KBFatal = function(where, what) {
-
-  var res = KBFail(true, where, what);
-
-  var version = 'unknown';
-  if (window.kbconfig !== undefined &&
-      window.kbconfig.version !== undefined) {
-    version = window.kbconfig.version;
-  }
-  var hash = 'unkown';
-  if (window.kbconfig !== undefined &&
-    window.kbconfig.git_commit_hash !== undefined) {
-    hash = window.kbconfig.git_commit_hash;
-  }
-  var full_version = 'unknown';
-  if (version != 'unknown') {
-    if (hash == 'unknown') {
-      full_version = version;
-    }
-    else {
-      full_version = version + ' (hash=' + hash + ')';
-    }
-  }
-  var $fatal =
-    $('<div tabindex=-1 role="dialog" aria-labelledby="kb-fatal-error" aria-hidden="true">')
-      .addClass('modal fade')
-    .append($('<div>').addClass('modal-dialog')
-      .append($('<div>').addClass('modal-content').addClass('kb-error-dialog')
-        .append($('<div>').addClass('modal-header')
-          .append($('<h4>').addClass('modal-title')
-            .append('KBase Narrative Error')))
-        .append($('<div>').addClass('modal-body'))
-          .append($('<p>').css({'margin': '-1em 0 0 1em'})
-            .text('Hmmm, your narrative seemed to hit a fatal error.'))
-          .append($('<p>').css({'margin-left': '1em'})
-            .html('But, as a wise man once said, ' +
-                  '<strong>"Don\'t Panic!"</strong>'))
-          .append($('<p>').css({'margin': '1em 0 0 1em'})
-            .text('Some errors are caused by the ' +
-                    'way browsers cache information. Try manually clearing your ' +
-                    'browser cache and reloading the page.')
-            .append($('<span>')
-              .append($('<a>')
-                .attr({href:"http://www.refreshyourcache.com/en/home/",
-                       target: "_blank"})
-                .text('This page'))
-              .append($('<span>')
-                .text(' has instructions on how to clear the cache on all major browsers.'))))
-          .append($('<p>').css({'margin': '1em 0 0 1em'})
-            .html('If that doesn\'t work, please ' +
-              'contact us at ' +
-              '<a href="mailto:help@kbase.us">help@kbase.us</a> ' +
-              'and include the following information in your email:'))
-        .append($('<p>').css({margin: '1em 0 0 2em'}).addClass('kb-err-text')
-            .text('Version: ' + full_version))
-        .append($('<p>').css({margin: '0 0 0 2em'}).addClass('kb-err-text')
-            .text('Error location: ' + where))
-        .append($('<p>').css({margin: '0 0 0 2em'}).addClass('kb-err-text')
-            .text('Error message: ' + what))
-        .append($('<div>').addClass('modal-footer')
-          .append($('<div>')
-              .append($('<span>').css({float: 'left'}).addClass('kb-err-warn')
-                .text("Note: the Narrative may not work properly until this error is fixed"))
-            .append($('<button type="button" data-dismiss="modal">')
-              .addClass('btn btn-default')
-              .append('Close').click(function(e) { $fatal.modal('close'); })
-    )))));
-  $fatal.modal('show');
-}
+define([
+    'jquery', 
+    'kbaseNarrativeSidePanel', 
+    'kbaseNarrativeOutputCell', 
+    'kbaseNarrativeWorkspace',
+    'kbaseNarrativeMethodCell',
+    'narrativeLogin',
+    'kbase-client-api',
+    'kbaseNarrativePrestart',
+], function($, 
+            kbaseNarrativeSidePanel,
+            kbaseNarrativeOutputCell,
+            kbaseNarrativeWorkspace,
+            kbaseNarrativeMethodCell,
+            narrativeLogin,
+            kbaseClient,
+            kbaseNarrativePrestart) {
+    "use strict";
 
 /**
  * @constructor
@@ -232,6 +40,7 @@ var KBFatal = function(where, what) {
  * specific piece of functionality. See Narrative.prototype.saveNarrative below.
  */
 var Narrative = function() {
+    this.maxNarrativeSize = "4 MB";
     this.narrController = null;
     this.readonly = false; /* whether whole narrative is read-only */
     this.authToken = null;
@@ -239,6 +48,7 @@ var Narrative = function() {
     this.versionHtml = 'KBase Narrative<br>Alpha version';
     this.selectedCell = null;
     this.currentVersion = window.kbconfig.version;
+    this.dataViewers = null;
 
     return this;
 };
@@ -337,9 +147,10 @@ Narrative.prototype.checkVersion = function($newVersion) {
                 $('#kb-update-btn').fadeIn('fast'); 
             }
         },
-        fail: function(err) {
-            console.log('err');
-        }
+        error: function(err) {
+            console.error('Error while checking for a version update: ' + err);
+            KBError('Narrative.checkVersion', 'Unable to check for a version update!');
+        },
     });
 };
 
@@ -442,66 +253,130 @@ Narrative.prototype.init = function() {
     this.initAboutDialog();
     this.initUpgradeDialog();
 
+    // Override the base IPython event that happens when a notebook fails to save.
+    $([IPython.events]).on('notebook_save_failed.Notebook', $.proxy(function(event, data) {
+        IPython.save_widget.set_save_status('Narrative save failed!');
+        console.log(event);
+        console.log(data);
+
+        var errorText;
+        // 413 means that the Narrative is too large to be saved.
+        // currently - 4/6/2015 - there's a hard limit of 4MB per KBase Narrative.
+        // Any larger object will throw a 413 error, and we need to show some text.
+        if (data.xhr.status === 413) {
+            errorText = 'Due to current system constraints, a Narrative may not exceed ' + 
+                        this.maxNarrativeSize + ' of text.<br><br>' +
+                        'Errors of this sort are usually due to excessive size ' + 
+                        'of outputs from Code Cells, or from large objects ' + 
+                        'embedded in Markdown Cells.<br><br>' +
+                        'Please decrease the document size and try to save again.';
+        }
+        else if (data.xhr.responseText) {
+            var $error = $($.parseHTML(data.xhr.responseText));
+            errorText = $error.find('#error-message > h3').text();
+
+            if (errorText) {
+                /* gonna throw in a special case for workspace permissions issues for now.
+                 * if it has this pattern:
+                 * 
+                 * User \w+ may not write to workspace \d+
+                 * change the text to something more sensible.
+                 */
+
+                var res = /User\s+(\w+)\s+may\s+not\s+write\s+to\s+workspace\s+(\d+)/.exec(errorText);
+                if (res) {
+                    errorText = "User " + res[1] + " does not have permission to save to workspace " + res[2] + ".";
+                }
+            }
+        }
+        else {
+            errorText = 'An unknown error occurred!';
+        }
+
+        IPython.dialog.modal({
+            title: "Narrative save failed!",
+            body: $('<div>').append(errorText),
+            buttons : {
+                "OK": {
+                    class: "btn-primary",
+                    click: function () {
+                    }
+                }
+            },
+            open : function (event, ui) {
+                var that = $(this);
+                // Upon ENTER, click the OK button.
+                that.find('input[type="text"]').keydown(function (event, ui) {
+                    if (event.which === utils.keycodes.ENTER) {
+                        that.find('.btn-primary').first().click();
+                    }
+                });
+                that.find('input[type="text"]').focus();
+            }
+        });
+    }, this));
+
     $('[data-toggle="tooltip"]').tooltip();
-    /*
-     * Before we get everything loading, just grey out the whole %^! page
-     */
-    var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
 
     /*
      * Once everything else is loaded and the Kernel is idle,
      * Go ahead and fill in the rest of the Javascript stuff.
      */
-    $([IPython.events]).one('status_started.Kernel', $.proxy(function() {
-        // NAR-271 - Firefox needs to be told where the top of the page is. :P
-        window.scrollTo(0,0);
-        
-        IPython.notebook.set_autosave_interval(0);
+
+    // NAR-271 - Firefox needs to be told where the top of the page is. :P
+    window.scrollTo(0,0);
+    
+    IPython.notebook.set_autosave_interval(0);
+    require(['ipythonCellMenu'], function() {
         IPython.CellToolbar.activate_preset("KBase");
+    });
 
-        this.ws_name = null;
-        if (IPython && IPython.notebook && IPython.notebook.metadata) {
-            this.ws_name = IPython.notebook.metadata.ws_name;
-            var narrname = IPython.notebook.notebook_name;
-            var username = IPython.notebook.metadata.creator;
-            $('#kb-narr-name #name').text(narrname);
-            $('#kb-narr-creator').text(username);
-            $('.kb-narr-namestamp').css({'display':'block'});
+    this.ws_name = null;
+    if (IPython && IPython.notebook && IPython.notebook.metadata) {
+        this.ws_name = IPython.notebook.metadata.ws_name;
+        var narrname = IPython.notebook.notebook_name;
+        var username = IPython.notebook.metadata.creator;
+        $('#kb-narr-name #name').text(narrname);
+        $('#kb-narr-creator').text(username);
+        $('.kb-narr-namestamp').css({'display':'block'});
 
-            var token = null;
-            if (window.kb && window.kb.token)
-                token = window.kb.token;
+        var token = null;
+        if (window.kb && window.kb.token)
+            token = window.kb.token;
 
-            $.ajax({
-                type: 'GET',
-                url: 'https://kbase.us/services/genome_comparison/users?usernames=' + username + '&token=' + token,
-                dataType: 'json',
-                crossDomain: true,
-                success: function(data, res, jqXHR) {
-                    if (username in data.data && data.data[username].fullName) {
-                        var fullName = data.data[username].fullName;
-                        $('#kb-narr-creator').text(fullName + ' (' + username + ')');
-                    }
+        $.ajax({
+            type: 'GET',
+            url: 'https://kbase.us/services/genome_comparison/users?usernames=' + username + '&token=' + token,
+            dataType: 'json',
+            crossDomain: true,
+            success: function(data, res, jqXHR) {
+                if (username in data.data && data.data[username].fullName) {
+                    var fullName = data.data[username].fullName;
+                    $('#kb-narr-creator').text(fullName + ' (' + username + ')');
                 }
-            });
+            }
+        });
 
-            // This puts the cell menu in the right place.
-            $([IPython.events]).trigger('select.Cell', {cell: IPython.notebook.get_selected_cell()});
-        }
-        if (this.ws_name) {
-            /* It's ON like DONKEY KONG! */
-            $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + this.ws_name);
-            this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
-                loadingImage: "/static/kbase/images/ajax-loader.gif",
-                ws_id: IPython.notebook.metadata.ws_name
-            });
-            $sidePanel.render();
-            $(document).trigger('setWorkspaceName.Narrative', {'wsId' : this.ws_name, 'narrController': this.narrController});
-        }
-        else {
-            KBFatal("Narrative.init", "Unable to locate workspace name from the Narrative object!");
-        }
-    }, this));
+        // This puts the cell menu in the right place.
+        $([IPython.events]).trigger('select.Cell', {cell: IPython.notebook.get_selected_cell()});
+    }
+    if (this.ws_name) {
+        /* It's ON like DONKEY KONG! */
+        $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + this.ws_name);
+        this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
+            loadingImage: "/static/kbase/images/ajax-loader.gif",
+            ws_id: IPython.notebook.metadata.ws_name
+        });
+        /*
+         * Before we get everything loading, just grey out the whole %^! page
+         */
+        var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
+        $sidePanel.render();
+        $(document).trigger('setWorkspaceName.Narrative', {'wsId' : this.ws_name, 'narrController': this.narrController});
+    }
+    else {
+        KBFatal("Narrative.init", "Unable to locate workspace name from the Narrative object!");
+    }
 };
 
 Narrative.prototype.updateVersion = function() {
@@ -530,3 +405,56 @@ Narrative.prototype.updateVersion = function() {
 Narrative.prototype.saveNarrative = function() {
     IPython.notebook.save_checkpoint();
 };
+
+/**
+ * @method
+ * @public
+ * Insert a new method into the narrative, set it as active, populate the
+ * parameters, and run it.  This is useful for widgets that need to trigger
+ * some additional narrative action, such as creating a FeatureSet from 
+ * a selected set of Features in a widget, or computing a statistic on a 
+ * subselection made from within a widget.
+ */
+Narrative.prototype.createAndRunMethod = function(method_id, parameters) {
+    //first make a request to get the method spec of a particular method
+    //getFunctionSpecs.Narrative is implemented in kbaseNarrativeMethodPanel
+    var request = { methods:[method_id] };
+    var self = this;
+    self.narrController.trigger('getFunctionSpecs.Narrative', [request,
+        function(specs) {
+            // do nothing if the method could not be found
+            var errorMsg = 'Method '+method_id+' not found and cannot run.';
+            if(!specs) { console.error(errorMsg); return; }
+            if(!specs.methods) { console.error(errorMsg); return; }
+            if(!specs.methods[method_id]) { console.error(errorMsg); return; }
+            // put the method in the narrative by simulating a method clicked in kbaseNarrativeMethodPanel
+            self.narrController.trigger('methodClicked.Narrative', specs.methods[method_id]);
+
+                // the method initializes an internal method input widget, but rendering and initializing is
+                // async, so we have to wait and check back before we can load the parameter state.
+                // TODO: update kbaseNarrativeMethodCell to return a promise to mark when rendering is complete
+                var newCell = IPython.notebook.get_selected_cell();
+                var newCellIdx = IPython.notebook.get_selected_index();
+                console.debug(newCell);
+                var newWidget = $('#'+$(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
+                    var updateStateAndRun = function(state) {
+                        if(newWidget.$inputWidget) {
+                            // if the $inputWidget is not null, we are good to go, so set the parameters
+                            newWidget.loadState(parameters);
+                            // make sure the new cell is still selected, then run the method
+                            IPython.notebook.select(newCellIdx);
+                            newWidget.runMethod();
+                        } else {
+                            // not ready yet, keep waiting
+                            window.setTimeout(updateStateAndRun,500);
+                        }
+                    };
+                    // call the update and run after a short deplay
+                    window.setTimeout(updateStateAndRun,50);
+                    }
+                ]);
+};
+
+
+return Narrative;
+});

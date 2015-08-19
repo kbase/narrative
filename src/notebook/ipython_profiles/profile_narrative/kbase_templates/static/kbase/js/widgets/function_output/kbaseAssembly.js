@@ -2,7 +2,8 @@
  * Just a simple example widget - makes a div with "Hello world!"
  * in a user-defined color (must be a css color - 'red' or 'yellow' or '#FF0000')
  */
- (function( $, undefined ) {
+define(['jquery', 'kbwidget', 'kbasePrompt'], 
+    function($) {
     $.KBWidget({
         name: "AssemblyWidget",
         parent: "kbaseWidget",
@@ -639,4 +640,4 @@
             }
         },
     });
-})( jQuery );
+});

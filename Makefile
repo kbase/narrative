@@ -34,7 +34,6 @@ SERVER_TESTS = $(wildcard test/server-tests/*.t)
 INSTALLER = ./scripts/install-kbjupyter.sh
 INSTALL_VENV = narrative-venv
 TEST_INSTALL_LOC = .
-TEST_VENV = narrative-venv
 BACKEND_TEST_SCRIPT = narrative_backend_tests.sh
 FRONTEND_TEST_DIR = src/notebook/ipython_profiles/profile_narrative/kbase_templates
 
@@ -55,6 +54,7 @@ test: test-backend test-frontend-unit test-frontend-e2e
 # of our testing here, we just want to test our interface
 # with it.
 test-backend:
+	source $INSTALL_VENV/bin/activate
 	@echo "running backend tests"
 	sh $(BACKEND_TEST_SCRIPT)
 	@echo "done"
@@ -63,6 +63,7 @@ test-backend:
 # each of the Javascript components of the Narrative.
 # This is achieved through the grunt test invocation
 test-frontend-unit:
+	source $INSTALL_VENV/bin/activate
 	@echo "running frontend unit tests"
 	cd $(FRONTEND_TEST_DIR) && \
 	npm install && \
@@ -73,6 +74,7 @@ test-frontend-unit:
 # to-end test of the front end components, with a running
 # Narrative system.
 test-frontend-e2e:
+	source $INSTALL_VENV/bin/activate
 	@echo "running frontend end-to-end tests"
 	cd $(FRONTEND_TEST_DIR)
 	@echo "done"

@@ -39,6 +39,8 @@ IPYWIDGETS_TAG=4.0.2
 
 PYTHON=python2.7
 
+SCRIPT_TGT="kbase-narrative"
+
 CUR_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 SCRIPT_TEMPLATE=$CUR_DIR/jupyter_notebook.tmpl
 
@@ -161,7 +163,6 @@ cd ..
 # Setup jupyter_narrative script
 # ------------------------------
 console "Installing scripts"
-TGT="kbase-narrative"
 i=0
 while read s
     do
@@ -172,11 +173,11 @@ while read s
             echo e=$(dirname `which python`)
             i=1
         fi
-done < $SCRIPT_TEMPLATE > $TGT
+done < $SCRIPT_TEMPLATE > $SCRIPT_TGT
 d=$(dirname `which python`)
-chmod 0755 $TGT
-log "Putting new $TGT command under $d"
-/bin/mv $TGT $d
+chmod 0755 $SCRIPT_TGT
+log "Putting new $SCRIPT_TGT command under $d"
+/bin/mv $SCRIPT_TGT $d
 log "Done installing scripts"
 
-console "Done. Run the narrative with the command: $TGT"
+console "Done. Run the narrative from your virtual environment $VIRTUAL_ENV with the command: $SCRIPT_TGT"

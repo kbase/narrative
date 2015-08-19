@@ -31,7 +31,8 @@ SCRIPT_TESTS = $(wildcard test/script-tests/*.t)
 SERVER_TESTS = $(wildcard test/server-tests/*.t)
 
 # Installer script
-INSTALLER = ./old-install.sh
+INSTALLER = ./scripts/install-kbjupyter.sh
+INSTALL_VENV = narrative-venv
 TEST_INSTALL_LOC = .
 TEST_VENV = narrative-venv
 BACKEND_TEST_SCRIPT = narrative_backend_tests.sh
@@ -42,8 +43,7 @@ default: build-narrative
 # runs the installer to locally build the Narrative in a
 # local venv.
 build-narrative:
-	$(INSTALLER) -p . -v $(TEST_VENV)
-
+	$(INSTALLER) -v $(INSTALL_VENV)
 
 test: test-backend test-frontend-unit test-frontend-e2e
 	@echo "running backend and frontend test scripts"

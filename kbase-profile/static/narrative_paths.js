@@ -7,7 +7,8 @@ require.config({
         'jquery-dataTables-bootstrap'           : 'components/bootstrap-extensions/js/dataTables.bootstrap',
         'jquery-nearest'                        : 'components/jquery-nearest/jquery.nearest.min',
         'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
-        'select2'                               : 'select2-v3.5.2/select2.min',
+        'select2'                               : 'components/select2/select2.min',
+        'bootstrap'                             : 'components/bootstrap/js/bootstrap.min',
 
         'narrativeConfig'                       : 'kbase/js/narrativeConfig',
         'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',

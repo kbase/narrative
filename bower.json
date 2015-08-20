@@ -1,0 +1,9 @@
+{
+  "name": "kbase-narrative",
+  "version": "1.0.3",
+  "homepage": "https://kbase.us",
+  "dependencies": {
+    "bowser": "~1.0.0",
+    "select2": "~3.5.2"
+  }
+}

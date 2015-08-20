@@ -26,11 +26,11 @@ define(['jquery',
             url: ipythonUtils.url_join_encode(baseUrl, 'login'),
         }).then(
             function(ret) { 
-                console.log(ret); 
+                // console.log(ret); 
             }
         ).fail(
             function(err) { 
-                console.err(err); 
+                // console.err(err); 
             }
         );
     };
@@ -40,11 +40,11 @@ define(['jquery',
             url: ipythonUtils.url_join_encode(baseUrl, 'logout'),
         }).then(
             function(ret) { 
-                console.log(ret); 
+                // console.log(ret); 
             }
         ).fail(
             function(err) { 
-                console.err(err); 
+                // console.err(err); 
             }
         );
         window.location.href = "/";

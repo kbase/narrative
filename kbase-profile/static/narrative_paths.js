@@ -1,6 +1,8 @@
 require.config({
     paths : {
         'domReady'                              : 'components/requirejs/domReady',
+        'json'                                  : 'components/requirejs-json/json',
+        'text'                                  : 'components/requirejs-text/text',
         'jquery'                                : 'components/jquery/jquery.min',
         'jqueryui'                              : 'components/jquery-ui/ui/minified/jquery-ui.min',
         'jquery-svg'                            : 'components/jquery-extensions/js/jquery.svg',
@@ -12,6 +14,7 @@ require.config({
         'bootstrap'                             : 'components/bootstrap/js/bootstrap.min',
 
         'narrativeConfig'                       : 'kbase/js/narrativeConfig',
+        'narrativeMain'                         : 'narrativeMain',
         'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
         'narrativeLogin'                        : 'kbase/js/narrativeLogin',
         'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',

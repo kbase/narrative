@@ -4,6 +4,9 @@
   "homepage": "https://kbase.us",
   "dependencies": {
     "bowser": "~1.0.0",
-    "select2": "~3.5.2"
+    "select2": "~3.5.2",
+    "requirejs-domready": "2.0.1",
+    "requirejs-json": "0.0.3",
+    "requirejs-text": "2.0.14"
   }
 }

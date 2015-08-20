@@ -22,26 +22,20 @@
  * @static
  */
 
-require([
-    'jquery',
-    'narrative_paths',
-], function($) {
-    "use strict";
-    console.log('Initializing KBase config.');
+require(['narrative_paths'], function(paths) { 
+    require([
+        'jquery',
+        'narrativeConfig',
+    ], function($, config) {
+        "use strict";
+        console.log('Initializing KBase config.');
 
-    require(['narrativeConfig'], function(configDefer) {
-        // The config returns a Deferrered. When that's
-        // finished, inject the config into the global namespace.
-        //
-        // TODO: bail out if the config isn't available.
-        configDefer.then(function(config) {
-            if (config === null) {
-                console.err('fatal error! gotta bail out here.');
-                // TODO: change the view to an error/error popup/etc.
-                return;
-            }
+        config.updateConfig(function(config) { 
             window.kbconfig = config;
-            require(['narrativeLogin']);
+            require(['kbapi', 'narrativeLogin'], function() {
+                console.log('Starting Jupyter tree');
+                require(['tree/js/main']);
+            });
         });
     });
 });

@@ -34,13 +34,10 @@ require(['narrative_paths'], function(paths) {
 
         config.updateConfig(function(config) { 
             window.kbconfig = config;
-            require(['kbapi'], function() {
-                require(['kbaseNarrative', 'IPythonCustom'], function(Narrative) {
-                    console.log('Starting IPython main');
-                    require(['IPythonMain']);
-                });
+            require(['kbaseNarrative'], function(Narrative) {
+                console.log('Starting IPython main');
+                require(['notebook/js/main']);
             });
-        });        // window.kbconfig = config.config;
-
+        });
     });
 });

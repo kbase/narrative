@@ -6,5 +6,6 @@ kbase-profile/db/
 kbase-profile/security/
 kbase-profile/log/
 kbase-profile/kbase_templates/old/
+kbase-profile/static/components/
 node_modules/
 install.log

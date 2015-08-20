@@ -21,7 +21,6 @@ define(['jquery',
     var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
     if (m && m.length > 1)
         workspaceId = parseInt(m[1]);
-    console.log(configSet);
     var config = {
         urls:            configSet[configSet['config']],
         version:         configSet['version'],

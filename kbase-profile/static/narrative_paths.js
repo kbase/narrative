@@ -1,6 +1,7 @@
 require.config({
     paths : {
         'domReady'                              : 'components/requirejs/domReady',
+        'jquery'                                : 'components/jquery/jquery.min',
         'jqueryui'                              : 'components/jquery-ui/ui/minified/jquery-ui.min',
         'jquery-svg'                            : 'components/jquery-extensions/js/jquery.svg',
         'jquery-dataTables'                     : 'components/jquery-extensions/js/jquery.dataTables',
@@ -203,19 +204,3 @@ require.config({
         }
     }
 });
-console.log('narrative paths!');
-// Make sure all the proper things get loaded. IPython does the rest.
-
-// require([/*'domReady!',*/ 'kbwidget', 'kbapi', 'kbase-client-api', 'kbaseNarrativeMethodCell'], function() {
-//     require(['kbaseNarrativePrestart', 
-//              'kbaseLogging', 
-//              'narrativeLogin', 
-//              'kbaseNarrativeOutputCell', 
-//              'kbaseNarrativeAppCell',
-//              'kbaseNarrativeMethodCell',
-//              // 'IPythonCustom', 
-//              ], function() {
-//         // console.log('Done with code loading, Starting IPython...');
-//         // require(['IPythonMain']);
-//     });
-// });

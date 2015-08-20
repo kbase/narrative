@@ -16,6 +16,7 @@ define(['jquery',
 		options: {
 			estimateKResultID: null,
 			workspaceID: null,
+			avgWindow: null,
 			workspaceURL: window.kbconfig.urls.workspace,
 			loadingImage: "static/kbase/images/ajax-loader.gif",
 		},
@@ -88,13 +89,23 @@ define(['jquery',
 		},
         
         buildKDistributionPlot: function($containerDiv){
+            var avgWindow = this.options.avgWindow;
             var data = this.data;
             var values = [];
             for(var i = 0; i < data.estimate_cluster_sizes.length; i++){
                 var val = data.estimate_cluster_sizes[i];
+                var valY = val[1];
+                if (avgWindow) {
+                    valY = 0;
+                    var minPos = Math.max(0, i - Math.round(avgWindow / 2 - 0.5));
+                    var maxPos = Math.min(data.estimate_cluster_sizes.length, minPos + avgWindow);
+                    for (var pos = minPos; pos < maxPos; pos++)
+                        valY += data.estimate_cluster_sizes[pos][1];
+                    valY /= (maxPos - minPos);
+                }
                 values.push({
                     x : val[0],
-                    y : val[1]
+                    y : valY
                 });
             }
             

@@ -32,7 +32,8 @@ require(['narrative_paths'], function(paths) {
 
         config.updateConfig(function(config) { 
             window.kbconfig = config;
-            require(['kbapi', 'narrativeLogin'], function() {
+            require(['kbapi', 'narrativeLogin'], function(API, Login) {
+                Login.init($('#signin-button'));
                 console.log('Starting Jupyter tree');
                 require(['tree/js/main']);
             });

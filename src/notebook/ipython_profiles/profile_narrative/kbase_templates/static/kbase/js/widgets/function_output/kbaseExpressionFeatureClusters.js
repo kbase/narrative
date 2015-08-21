@@ -238,9 +238,9 @@ define(['jquery',
 			var self = this;
 			var pref = self.pref;
 			$('.' + pref + 'action_button').on('click', function(e){
-				var $actionButton = $(e.toElement);
-				var x = $actionButton.offset().left - $('#notebook-container').offset().left + e.toElement.offsetLeft;
-				var y = $actionButton.offset().top - $('#notebook-container').offset().top + e.toElement.offsetHeight + e.toElement.offsetTop;				
+				var $actionButton = $(e.target);
+				var x = $actionButton.offset().left - $('#notebook-container').offset().left + e.target.offsetLeft;
+				var y = $actionButton.offset().top - $('#notebook-container').offset().top + e.target.offsetHeight + e.target.offsetTop;
 				self.$menu
                     .data("invokedOn", $(e.target))
                     .css({

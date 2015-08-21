@@ -92,20 +92,9 @@
             $containerDiv.append('<br><br><br>');
             var padding = '2px';
             var $rangeController = $('<div class="row">');
-            var $minInput = $('<input id="min" type="text" class="form-control input-sm">').val(self.minColorValue)
-            var $maxInput = $('<input id="min" type="text" class="form-control input-sm">').val(self.maxColorValue)
-            $rangeController
-                .append($('<div class="form-group col-xs-4">'))
-                .append($('<div class="form-group col-xs-2 text-right">').css('padding',padding)
-                    .append("<small>Min Color Range</small>&nbsp").append(minCell))
-                .append($('<div class="form-group col-xs-1 text-left">').css('padding',padding)
-                    .append($minInput))
-                .append($('<div class="form-group col-xs-2 text-right">').css('padding',padding)
-                    .append("<small>Max Color Range</small>&nbsp").append(maxCell))
-                .append($('<div class="form-group col-xs-1 text-left">').css('padding',padding)
-                    .append($maxInput))
-                .append($('<div class="form-group col-xs-1 text-right">').css('padding',padding).append(
-                    $('<button>').addClass('btn btn-default btn-sm').append('Update')
+            var $minInput = $('<input id="min" type="text" size="6">').val(self.minColorValue)
+            var $maxInput = $('<input id="max" type="text" size="6">').val(self.maxColorValue)
+            var $btn = $('<button>').addClass('btn btn-default btn-sm').append('Update')
                         .on('click', function() {
                             var min = parseFloat($minInput.val());
                             if(min && !isNaN(min)) { 
@@ -118,8 +107,29 @@
                             }
                             $maxInput.val(self.maxColorValue);
                             self.redrawTable();
-                        })
-                    ));
+                        });
+            $rangeController
+                .append($('<div class="form-group col-xs-4">'))
+                .append($('<div class="form-group col-xs-2 text-right">').css('padding',padding)
+                    .append("<small>Min Color Range</small>&nbsp").append(minCell))
+                .append($('<div class="form-group col-xs-1 text-left">').css('padding',padding)
+                    .append($minInput))
+                .append($('<div class="form-group col-xs-2 text-right">').css('padding',padding)
+                    .append("<small>Max Color Range</small>&nbsp").append(maxCell))
+                .append($('<div class="form-group col-xs-1 text-left">').css('padding',padding)
+                    .append($maxInput))
+                .append($('<div class="form-group col-xs-1 text-right">').css('padding',padding)
+                    .append($btn));
+            $minInput.keyup(function(event) {
+                if(event.keyCode == 13) {
+                    $btn.click();
+                }
+            });
+            $maxInput.keyup(function(event) {
+                if(event.keyCode == 13) {
+                    $btn.click();
+                }
+            });
             $containerDiv.append($rangeController);
         },
 

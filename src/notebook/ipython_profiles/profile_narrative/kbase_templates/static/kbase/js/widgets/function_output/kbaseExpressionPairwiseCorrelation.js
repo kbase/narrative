@@ -44,21 +44,21 @@
 
             // Build data
             var data = [];
-            var minVal = null;
-            var maxVal = null;
+            //var minVal = null;
+            //var maxVal = null;
             for(var i = 0 ; i < rowDescriptors.length; i++){
                 var row = [];
                 for(var j = 0 ; j < rowDescriptors.length; j++){
-                    row.push(values[i][j]);
-                    if (minVal == null || minVal > values[i][j])
-                        minVal = values[i][j];
-                    if (maxVal == null || maxVal < values[i][j])
-                        maxVal = values[i][j];
+                    row.push(values[i][j].toFixed(4));
+                    //if (minVal == null || minVal > values[i][j])
+                    //    minVal = values[i][j];
+                    //if (maxVal == null || maxVal < values[i][j])
+                    //    maxVal = values[i][j];
                 }                
                 data.push(row);
             }            
-            if (minVal > maxVal - 0.1)
-                minVal = maxVal - 0.1;
+            //if (minVal > maxVal - 0.1)
+            //    minVal = maxVal - 0.1;
             var heatmap =
                 {
                     row_ids : rowIds,

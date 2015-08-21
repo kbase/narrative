@@ -46,14 +46,14 @@
                     x: i+5,
                     y: mtxColumnSetStats.avgs[i],
                     name: condition,
-                    label: 'All Data Average<br>'+mtxColumnSetStats.avgs[i]+"<br>"+condition
+                    label: 'All Data Average<br>'+mtxColumnSetStats.avgs[i].toFixed(3)+"<br>"+condition
                 });
                 clusterAvg.push(
                 {
                     x: i+5,
                     y: columnSetStats.avgs[i],
                     name: condition,
-                    label: 'Selected Features Average<br>'+columnSetStats.avgs[i]+"<br>"+condition
+                    label: 'Selected Features Average<br>'+columnSetStats.avgs[i].toFixed(3)+"<br>"+condition
                 });
                 clusterDisp.push({
                     x: i+5,

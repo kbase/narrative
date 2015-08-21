@@ -138,7 +138,8 @@ define(['jquery',
                 }
                 values.push({
                     x : val[0],
-                    y : valY
+                    y : valY,
+                    label : valY.toFixed(3)
                 });
             }
             
@@ -157,6 +158,8 @@ define(['jquery',
                     yAxisColor : '#444',
                     xPadding : 80,
                     yPadding : 60,
+
+                    useHighlightLine : false,
 
                     overColor : null,
 

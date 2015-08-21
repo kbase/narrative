@@ -1,4 +1,8 @@
 require.config({
+    // not in here, since it's configured elsewhere, but this
+    // is expected to be relative to /static/ on the server.
+    // Jupyter does some magic where it merges its /static/ directory
+    // with this one (kbase-profile/static)
     paths : {
         'domReady'                              : 'components/requirejs/domReady',
         'json'                                  : 'components/requirejs-json/json',
@@ -15,6 +19,7 @@ require.config({
 
         'narrativeConfig'                       : 'kbase/js/narrativeConfig',
         'narrativeMain'                         : 'narrativeMain',
+        'narrativeTreeMain'                     : 'narrativeTreeMain',
         'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
         'narrativeLogin'                        : 'kbase/js/narrativeLogin',
         'kbaseTabs'                             : 'kbase/js/widgets/kbaseTabs',

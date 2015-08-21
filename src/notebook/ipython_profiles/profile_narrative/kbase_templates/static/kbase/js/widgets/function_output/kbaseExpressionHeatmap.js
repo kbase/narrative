@@ -7,6 +7,7 @@
 
  define([
         'jquery',
+        'd3',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',      
         'kbaseExpressionGenesetBaseWidget'
@@ -91,8 +92,22 @@
             $containerDiv.append('<br><br><br>');
             var padding = '2px';
             var $rangeController = $('<div class="row">');
-            var $minInput = $('<input id="min" type="text" class="form-control input-sm">').val(self.minColorValue)
-            var $maxInput = $('<input id="min" type="text" class="form-control input-sm">').val(self.maxColorValue)
+            var $minInput = $('<input id="min" type="text" size="6">').val(self.minColorValue)
+            var $maxInput = $('<input id="max" type="text" size="6">').val(self.maxColorValue)
+            var $btn = $('<button>').addClass('btn btn-default btn-sm').append('Update')
+                        .on('click', function() {
+                            var min = parseFloat($minInput.val());
+                            if(min && !isNaN(min)) { 
+                                self.minColorValue = min;
+                            }
+                            $minInput.val(self.minColorValue);
+                            var max = parseFloat($maxInput.val());
+                            if(max && !isNaN(max)) {
+                                self.maxColorValue = max; 
+                            }
+                            $maxInput.val(self.maxColorValue);
+                            self.redrawTable();
+                        });
             $rangeController
                 .append($('<div class="form-group col-xs-4">'))
                 .append($('<div class="form-group col-xs-2 text-right">').css('padding',padding)
@@ -103,25 +118,40 @@
                     .append("<small>Max Color Range</small>&nbsp").append(maxCell))
                 .append($('<div class="form-group col-xs-1 text-left">').css('padding',padding)
                     .append($maxInput))
-                .append($('<div class="form-group col-xs-1 text-right">').css('padding',padding).append(
-                    $('<button>').addClass('btn btn-default btn-sm').append('Update')
-                        .on('click', function() {
-                            var min = parseFloat($minInput.val());
-                            if(min && !isNaN(min)) { 
-                                if(min>0) { min=0; }
-                                self.minColorValue = min;
-                            }
-                            $minInput.val(self.minColorValue);
-                            var max = parseFloat($maxInput.val());
-                            if(max && !isNaN(max)) {
-                                if(max<0) { max=0; }
-                                self.maxColorValue = max; 
-                            }
-                            $maxInput.val(self.maxColorValue);
-                            self.redrawTable();
-                        })
-                    ));
+                .append($('<div class="form-group col-xs-1 text-right">').css('padding',padding)
+                    .append($btn));
+            $minInput.keyup(function(event) {
+                if(event.keyCode == 13) {
+                    $btn.click();
+                }
+            });
+            $maxInput.keyup(function(event) {
+                if(event.keyCode == 13) {
+                    $btn.click();
+                }
+            });
             $containerDiv.append($rangeController);
+        },
+
+        getState: function() {
+            var self = this;
+            return {minColor:self.minColorValue, maxColor:self.maxColorValue};
+        },
+
+        loadState: function(state) {
+            var self = this;
+            var needsReload = false;
+            if(state.minColor !== self.minColorValue) {
+                self.minColorValue = state.minColor;
+                needsReload = true;
+            }
+            if(state.maxColor !== self.maxColorValue) {
+                self.maxColorValue = state.maxColor;
+                needsReload = true;
+            }
+            if(needsReload) {
+                self.redrawTable();
+            }
         },
 
         redrawTable: function() {
@@ -197,34 +227,21 @@
         minColorValue:null,
         maxColorValue:null,
 
+
+
+
         getColor: function(value){
             var min = this.minColorValue;
             var max = this.maxColorValue;
 
-            //TODO needs to be imporved
-            var r = 0;
-            var g = 255;
-            var b = 0;
+            if(value<min) { return '#FFA500'; }
+            if(value>max) { return '#0066AA'; }
 
-            if(value >= 0){
-                b = 255;
-                r = ((max - value)/max*255).toFixed(0);
-            }
-            if(value > this.maxColorValue){
-                b = 255;
-                r = 0;
-            }
-
-            if(value < 0){
-                b = ((Math.abs(min) + value)/Math.abs(min)*255).toFixed(0);
-                r = 255;
-            }
-            if(value < this.minColorValue){
-                b = 0;
-                r = 255;
-            }
-
-            return 'rgb('+r+','+g+','+b+')';
+            // use d3 to generate the range
+            var colorGenerator = d3.scale.linear()
+                                    .domain(d3.range(min,max,(max-min)/3))
+                                    .range(['#FFA500', '#FFFFFF', '#0066AA'])
+            return colorGenerator(value);
         }
     });
 });

@@ -171,7 +171,7 @@ define(['jquery',
 
 			///////////////////////////////////// Genes tab ////////////////////////////////////////////          
 			var $tabGenes = $("<div/>");
-			tabPane.kbaseTabs('addTab', {tab: 'Genes', content: $tabGenes, canDelete : false, show: false});
+			tabPane.kbaseTabs('addTab', {tab: 'Features', content: $tabGenes, canDelete : false, show: false});
 
 			///////////////////////////////////// Genes table ////////////////////////////////////////////          
 

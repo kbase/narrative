@@ -60,7 +60,6 @@
                     name: condition
                 });
             }
-            console.log(clusterAvg);
 
             $lineChartDiv = $("<div style = 'width : 700px; height : 300px'></div>");
             $containerDiv.append($lineChartDiv);
@@ -76,14 +75,28 @@
                     yLabelRegion : 'xPadding',
                     xAxisColor : '#444',
                     yAxisColor : '#444',
+                    xLabelSize : '11pt',
+                    yLabelSize : '11pt',
+                    xLabelOffset : 10,
                     xPadding : 80,
                     yPadding : 30,
                     xLabels  : false,
                     overColor : null,
+
+                    useLineLabelToolTip : false,
+
+                    autoLegend : true,
+                    legendRegion : 'xGutter',
+
+                    legendSize : '9pt',
+                    xGutter : 220,
+                    legendAlignment : 'TR',
+                    legendLineHeight : 18,
+
                     dataset : [
                         {
                             strokeColor: 'red',
-                            //label : 'Min. and max. in selection',
+                            label : '- Min/Max Range of Selected Features',
                             values : clusterDisp,
                             fillColor: 'red',
                             strokeOpacity: 0.2,
@@ -92,14 +105,14 @@
                         },
                         {
                             strokeColor : 'green',
-                            //label : 'Selected features average',
+                            label : '- Selected Features Average',
                             values : clusterAvg,
                             width: 1,
                             shape: 'circle',
                             shapeArea: 36,
                             pointOver   :
                                 function(d) {
-                                  this.showToolTip({label : 'Selected Features Avgerage<br>'+d.y+"<br>"+d.name});
+                                  this.showToolTip({label : 'Selected Features Average<br>'+d.y+"<br>"+d.name});
                                 },
                             pointOut    :
                                 function(d) {
@@ -108,7 +121,7 @@
                         },
                         {
                             strokeColor : 'blue',
-                            //label : 'Dataset average',
+                            label : '- All Data Average',
                             values : matrixAvg,
                             width: 1,
                             shape: 'circle',

@@ -15,6 +15,8 @@
         parent: 'kbaseExpressionGenesetBaseWidget',
         version: '1.0.0',
 
+        maxRange: null,
+        minRange: null,
 
         // To be overriden to specify additional parameters
         getSubmtrixParams: function(){
@@ -22,6 +24,17 @@
 
             var features = [];
             if(self.options.geneIds) { features = $.map(self.options.geneIds.split(","), $.trim); }
+
+            self.minRange = -1; self.maxRange = 1;
+            if(self.options.minRange) {
+                self.minRange = self.options.minRange;
+            }
+            if(self.options.maxRange) {
+                self.maxRange = self.options.maxRange;
+            }
+            if(self.minRange>self.maxRange) {
+                self.minRange = self.maxRange;
+            }
 
             return{
                 input_data: self.options.workspaceID + "/" + self.options.expressionMatrixID,
@@ -32,6 +45,7 @@
         },
 
         buildWidget : function($containerDiv){
+            var self = this;
             var submatrixStat = this.submatrixStat;
             var rowDescriptors = submatrixStat.row_descriptors;
             var values = submatrixStat.row_pairwise_correlation.comparison_values;
@@ -44,21 +58,13 @@
 
             // Build data
             var data = [];
-            var minVal = null;
-            var maxVal = null;
             for(var i = 0 ; i < rowDescriptors.length; i++){
                 var row = [];
                 for(var j = 0 ; j < rowDescriptors.length; j++){
-                    row.push(values[i][j]);
-                    if (minVal == null || minVal > values[i][j])
-                        minVal = values[i][j];
-                    if (maxVal == null || maxVal < values[i][j])
-                        maxVal = values[i][j];
+                    row.push(values[i][j].toFixed(3));
                 }                
                 data.push(row);
             }            
-            if (minVal > maxVal - 0.1)
-                minVal = maxVal - 0.1;
             var heatmap =
                 {
                     row_ids : rowIds,
@@ -85,15 +91,15 @@
             $containerDiv.append($heatmapDiv);
             $containerDiv.append("<div style = 'width : 5px; height : 5px'></div>");
 
-
+            // TODO: heatmap values out of range still scale color instead of just the max/min color
             var hm = $heatmapDiv.kbaseHeatmap(
                 {
                     dataset : heatmap,
                     // ulIcon : '../img/labs_icon.png',
                     colors : ['#FFA500', '#FFFFFF', '#0066AA'],
                     //ulIcon : '/functional-site/assets/navbar/images/kbase_logo.png',
-                    minValue : minVal,
-                    maxValue : maxVal
+                    minValue : self.minRange,
+                    maxValue : self.maxRange
                 }
             );
             

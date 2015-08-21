@@ -219,8 +219,8 @@ pre .key { color: red; }
 select.mini { width: auto; }
 
 text {
-    font: 10px sans-serif;
-    pointer-events: none;
+    /*font: 10px sans-serif;
+    pointer-events: none;*/
 }
 .axis text {
     /*stroke: #CCC;*/

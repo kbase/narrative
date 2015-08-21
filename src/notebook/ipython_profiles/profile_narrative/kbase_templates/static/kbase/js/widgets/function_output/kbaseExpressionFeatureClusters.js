@@ -87,7 +87,6 @@ define(['jquery',
 						], 
 						function(data) {
 							self.expMatrixName = data[0].info[1];
-							console.log("expMatrixName", self.expMatrixName);
 							self.genomeRef = data[0].data.genome_ref;
                             self.featureMapping = data[0].data.feature_mapping;
 							self.matrixRowIds = data[0].data.data.row_ids;
@@ -177,7 +176,7 @@ define(['jquery',
 			self.buildActionMenu($container);
 			$(document).mousedown( function(e){
 				// Hide menu on mousedown only if we are not inside the menu
-				if(e.toElement.getAttribute('methodInput') == null){
+				if(e.target.getAttribute('methodInput') == null){
 					self.$menu.hide();
 				}
 			});			
@@ -205,22 +204,33 @@ define(['jquery',
 			
             function events() {
 				self.registerActionButtonClick();
-                // event for clicking on ortholog count
-                $('.show-clusters_'+self.pref).unbind('click');
-                $('.show-clusters_'+self.pref).click(function() {
+				updateClusterLinks("clusters");
+            }
+            
+            function updateClusterLinks(showClass) {
+                $('.show-'+showClass+'_'+self.pref).unbind('click');
+                $('.show-'+showClass+'_'+self.pref).click(function() {
                     var pos = $(this).data('pos');
                     var tabName = "Cluster " + pos;
                     if (tabPane.kbaseTabs('hasTab', tabName)) {
                         tabPane.kbaseTabs('showTab', tabName);
                         return;
                     }
-                    var tabDiv = self.buildClusterFeaturesTable(pos);
+                    var tabDiv = $("<div/>");
                     tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
                         tabPane.kbaseTabs('removeTab', name);
                     }});
+                    self.buildClusterFeaturesTable(tabDiv, pos);
                     tabPane.kbaseTabs('showTab', tabName);
                 })
             }
+
+            ///////////////////////////////////// Features tab ////////////////////////////////////////////          
+            var featureTabDiv = $("<div/>");
+            tabPane.kbaseTabs('addTab', {tab: "Features", content: featureTabDiv, canDelete : false, show: false});
+            self.buildClusterFeaturesTable(featureTabDiv, null, function() {
+                updateClusterLinks("clusters2");
+            });
 
 		},
 
@@ -228,9 +238,9 @@ define(['jquery',
 			var self = this;
 			var pref = self.pref;
 			$('.' + pref + 'action_button').on('click', function(e){
-				var $actionButton = $(e.toElement);
-				var x = $actionButton.offset().left - $('#notebook-container').offset().left + e.toElement.offsetLeft;
-				var y = $actionButton.offset().top - $('#notebook-container').offset().top + e.toElement.offsetHeight + e.toElement.offsetTop;				
+				var $actionButton = $(e.target);
+				var x = $actionButton.offset().left - $('#notebook-container').offset().left + e.target.offsetLeft;
+				var y = $actionButton.offset().top - $('#notebook-container').offset().top + e.target.offsetHeight + e.target.offsetTop;
 				self.$menu
                     .data("invokedOn", $(e.target))
                     .css({
@@ -290,11 +300,12 @@ define(['jquery',
 			var tableData = [];
 
 			for(var i = 0; i < feature_clusters.length; i++){
+				cluster = feature_clusters[i];
 				tableData.push({
-				    pos: i,
+					pos: i,
 					clusterId: "<a class='show-clusters_" + self.pref + "' data-pos='"+i+"'>cluster_" + i + "</a>",
-					size: Object.keys(feature_clusters[i].id_to_pos).length,
-					meancor : feature_clusters[i].meancor.toFixed(2),
+					size: Object.keys(cluster.id_to_pos).length,
+					meancor : cluster.meancor != null? cluster.meancor.toFixed(3) : 'N/A',
 					rowIndex : i
 				})
 			}
@@ -302,7 +313,6 @@ define(['jquery',
 			return tableData;
 		},
 
-	
 		buildActionMenu: function($container){
 			var $menu = $(' \
 				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none" > \
@@ -320,16 +330,22 @@ define(['jquery',
 			this.$menu = $menu;
 		},
 
-		buildClusterFeaturesTable: function(pos) {
+		buildClusterFeaturesTable: function(tabDiv, pos, events) {
             var self = this;
 		    var tableData = [];
-		    var tabDiv = $("<div/>");
 		    var table = $('<table class="table table-bordered table-striped" '+
 		            'style="width: 100%; margin-left: 0px; margin-right: 0px;"></table>');
 		    tabDiv.append(table);
 
 		    var id2features = self.buildFeatureId2FeatureHash();
-		    for (var rowId in self.clusterSet.feature_clusters[pos].id_to_pos) {
+		    var min_cluster_pos = 0;
+		    var max_cluster_pos = self.clusterSet.feature_clusters.length - 1;
+		    if (pos != null) {
+		        min_cluster_pos = pos;
+		        max_cluster_pos = pos;
+		    }
+		    for (var cluster_pos = min_cluster_pos; cluster_pos <= max_cluster_pos; cluster_pos++)
+		    for (var rowId in self.clusterSet.feature_clusters[cluster_pos].id_to_pos) {
 		        var fid = rowId;
 		        if (self.featureMapping) {
 		            fid = self.featureMapping[rowId];
@@ -360,6 +376,7 @@ define(['jquery',
 		        tableData.push(
 		                {
 		                    fid: fid,
+		                    cid: "<a class='show-clusters2_" + self.pref + "' data-pos='"+cluster_pos+"'>cluster_" + cluster_pos + "</a>",
 		                    gid: gid,
 		                    ali: aliases,
 		                    type: type,
@@ -367,15 +384,19 @@ define(['jquery',
 		                }
 		        );
             }
+		    var columns = [];
+		    columns.push({sTitle: "Feature ID", mData: "fid"});
+		    if (pos == null)
+		        columns.push({ sTitle: "Cluster", mData:"cid" });
+            columns.push({sTitle: "Aliases", mData: "ali"});
+            columns.push({sTitle: "Genome", mData: "gid"});
+            columns.push({sTitle: "Type", mData: "type"});
+            columns.push({sTitle: "Function", mData: "func"});
 		    table.dataTable( {
 		        "sDom": 'lftip',
 		        "aaData": tableData,
-		        "aoColumns": 
-		            [{sTitle: "Feature ID", mData: "fid"},
-                     {sTitle: "Aliases", mData: "ali"},
-                     {sTitle: "Genome", mData: "gid"},
-                     {sTitle: "Type", mData: "type"},
-                     {sTitle: "Function", mData: "func"}]
+		        "aoColumns": columns,
+                "fnDrawCallback": events
 		    });
 
 		    return tabDiv;

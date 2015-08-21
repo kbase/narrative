@@ -92,8 +92,8 @@
                     // ulIcon : '../img/labs_icon.png',
                     colors : ['#FFA500', '#FFFFFF', '#0066AA'],
                     //ulIcon : '/functional-site/assets/navbar/images/kbase_logo.png',
-                    minValue : minVal,
-                    maxValue : maxVal
+                    minValue : -1,
+                    maxValue : 1
                 }
             );
             

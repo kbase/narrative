@@ -300,11 +300,12 @@ define(['jquery',
 			var tableData = [];
 
 			for(var i = 0; i < feature_clusters.length; i++){
+				cluster = feature_clusters[i];
 				tableData.push({
-				    pos: i,
+					pos: i,
 					clusterId: "<a class='show-clusters_" + self.pref + "' data-pos='"+i+"'>cluster_" + i + "</a>",
-					size: Object.keys(feature_clusters[i].id_to_pos).length,
-					meancor : feature_clusters[i].meancor.toFixed(2),
+					size: Object.keys(cluster.id_to_pos).length,
+					meancor : cluster.meancor != null? cluster.meancor.toFixed(3) : 'N/A',
 					rowIndex : i
 				})
 			}
@@ -312,7 +313,6 @@ define(['jquery',
 			return tableData;
 		},
 
-	
 		buildActionMenu: function($container){
 			var $menu = $(' \
 				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none" > \

@@ -176,7 +176,7 @@ define(['jquery',
 			self.buildActionMenu($container);
 			$(document).mousedown( function(e){
 				// Hide menu on mousedown only if we are not inside the menu
-				if(e.toElement.getAttribute('methodInput') == null){
+				if(e.target.getAttribute('methodInput') == null){
 					self.$menu.hide();
 				}
 			});			

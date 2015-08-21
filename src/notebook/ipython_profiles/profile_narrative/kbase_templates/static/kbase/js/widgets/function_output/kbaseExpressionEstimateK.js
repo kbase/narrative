@@ -69,11 +69,35 @@ define(['jquery',
         },
 
 		render: function(){
+		    var self = this;
             var data = this.data;
 
             $("<div>").html('Estimated K (based on highest quality score) = ' + data.best_k).appendTo(this.$elem);
-
             var $kDistributionDiv = $("<div>");
+            
+            var $textField = $("<input type='text' size='6'/>");
+            var $sliderButton = $('<button>Refresh</button>')
+            var $sliderDiv = $("<div/>");
+            $sliderDiv.append('<br>Average sliding window:&nbsp;&nbsp;');
+            $sliderDiv.append($textField);
+            $sliderDiv.append('&nbsp;&nbsp;');
+            $sliderDiv.append($sliderButton);
+            this.$elem.append($sliderDiv);
+            $sliderButton.click(function() {
+                var avgWindow = parseInt($textField.val());
+                if (!avgWindow)
+                    avgWindow = null;
+                self.options.avgWindow = avgWindow;
+                self.buildKDistributionPlot($kDistributionDiv);
+            }); 
+            $textField.keyup(function(event) {
+                if(event.keyCode == 13) {
+                    $sliderButton.click();
+                }
+            });
+            if (self.options.avgWindow)
+                $textField.val(self.options.avgWindow);
+            
             this.$elem.append($kDistributionDiv);
             this.buildKDistributionPlot($kDistributionDiv);
 
@@ -89,6 +113,7 @@ define(['jquery',
 		},
         
         buildKDistributionPlot: function($containerDiv){
+            $containerDiv.empty();
             var avgWindow = this.options.avgWindow;
             var data = this.data;
             var values = [];

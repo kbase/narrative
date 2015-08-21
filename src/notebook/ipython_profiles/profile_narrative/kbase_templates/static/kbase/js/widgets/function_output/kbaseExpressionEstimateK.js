@@ -68,6 +68,9 @@ define(['jquery',
             );
         },
 
+        $avgWindowTextField:null,
+        $avgWindowRefreshBtn:null,
+
 		render: function(){
 		    var self = this;
             var data = this.data;
@@ -75,32 +78,32 @@ define(['jquery',
             $("<div>").html('Estimated K (based on highest quality score) = ' + data.best_k).appendTo(this.$elem);
             var $kDistributionDiv = $("<div>");
             
-            var $textField = $("<input type='text' size='6'/>");
-            var $sliderButton = $('<button class="btn btn-default">Refresh</button>')
+            self.$avgWindowTextField = $("<input type='text' size='6'/>");
+            self.$avgWindowRefreshBtn = $('<button class="btn btn-default">Refresh</button>')
             var $sliderDiv = $("<div/>");
             $sliderDiv.append('<br>Moving Average Window Size:&nbsp;&nbsp;');
-            $sliderDiv.append($textField);
+            $sliderDiv.append(self.$avgWindowTextField);
             $sliderDiv.append('&nbsp;&nbsp;');
-            $sliderDiv.append($sliderButton);
+            $sliderDiv.append(self.$avgWindowRefreshBtn);
             this.$elem.append($sliderDiv);
-            $sliderButton.click(function() {
-                var avgWindow = parseInt($textField.val());
+            self.$avgWindowRefreshBtn.click(function() {
+                var avgWindow = parseInt(self.$avgWindowTextField.val());
                 if (!avgWindow)
                     avgWindow = null;
                 if(avgWindow<0)
                     avgWindow = null;
                 if(avgWindow === null)
-                    $textField.val('');
+                    self.$avgWindowTextField.val('');
                 self.options.avgWindow = avgWindow;
                 self.buildKDistributionPlot($kDistributionDiv);
             }); 
-            $textField.keyup(function(event) {
+            self.$avgWindowTextField.keyup(function(event) {
                 if(event.keyCode == 13) {
                     $sliderButton.click();
                 }
             });
             if (self.options.avgWindow)
-                $textField.val(self.options.avgWindow);
+                self.$avgWindowTextField.val(self.options.avgWindow);
             
             this.$elem.append($kDistributionDiv);
             this.buildKDistributionPlot($kDistributionDiv);
@@ -119,7 +122,26 @@ define(['jquery',
             this.$elem.append($help);
             this.$elem.append($('<div style="width : 5px; height : 5px">'));
 		},
-        
+
+        getState: function() {
+            var self = this;
+            return {avgWindow:self.options.avgWindow};
+        },
+
+        loadState: function(state) {
+            // TODO: only output widgets load/save state, not viewers!!
+            var self = this;
+            var needsReload = false;
+            if(state.avgWindow !== self.options.avgWindow) {
+                self.options.avgWindow = state.avgWindow;
+                needsReload = true;
+            }
+            if(needsReload) {
+                self.$avgWindowTextField.val(self.options.avgWindow);
+                self.$avgWindowRefreshBtn.click();
+            }
+        },
+
         buildKDistributionPlot: function($containerDiv){
             $containerDiv.empty();
             var avgWindow = this.options.avgWindow;

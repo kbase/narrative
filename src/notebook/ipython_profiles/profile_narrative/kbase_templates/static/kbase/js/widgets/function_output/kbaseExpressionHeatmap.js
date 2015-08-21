@@ -133,6 +133,27 @@
             $containerDiv.append($rangeController);
         },
 
+        getState: function() {
+            var self = this;
+            return {minColor:self.minColorValue, maxColor:self.maxColorValue};
+        },
+
+        loadState: function(state) {
+            var self = this;
+            var needsReload = false;
+            if(state.minColor !== self.minColorValue) {
+                self.minColorValue = state.minColor;
+                needsReload = true;
+            }
+            if(state.maxColor !== self.maxColorValue) {
+                self.maxColorValue = state.maxColor;
+                needsReload = true;
+            }
+            if(needsReload) {
+                self.redrawTable();
+            }
+        },
+
         redrawTable: function() {
             var self = this;
             var pref = self.pref;

@@ -3,7 +3,10 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
+define(['jquery', 
+        'kbwidget', 
+        'narrativeConfig',
+        'kbaseAuthenticatedWidget'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeSidePublicTab",
         parent: "kbaseAuthenticatedWidget",

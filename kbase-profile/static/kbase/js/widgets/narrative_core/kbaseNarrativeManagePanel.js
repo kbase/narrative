@@ -3,7 +3,11 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery', 'NarrativeManager', 'kbwidget', 'kbaseNarrativeControlPanel'], function( $, NarrativeManager ) {
+define(['jquery', 
+        'NarrativeManager', 
+        'narrativeConfig',
+        'kbwidget', 
+        'kbaseNarrativeControlPanel'], function( $, NarrativeManager ) {
     $.KBWidget({
         name: "kbaseNarrativeManagePanel", 
         parent: "kbaseNarrativeControlPanel",

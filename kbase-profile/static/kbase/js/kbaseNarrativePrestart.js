@@ -1,5 +1,6 @@
 // Bind all page buttons right at startup.
-define(['jquery', 
+define(['jquery',
+        'narrativeConfig', 
         'jqueryui', 
         'kbaseNarrativeSharePanel', 
         'bootstrap'], function($) {

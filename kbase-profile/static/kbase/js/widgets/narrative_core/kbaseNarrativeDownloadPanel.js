@@ -3,7 +3,10 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget'], function( $ ) {
+define(['jquery', 
+        'kbwidget',
+        'narrativeConfig'], 
+        function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeDownloadPanel",
         parent: "kbaseWidget",

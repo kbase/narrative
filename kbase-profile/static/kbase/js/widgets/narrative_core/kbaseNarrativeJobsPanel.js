@@ -1,6 +1,7 @@
 define([
     'jquery', 
     'kbwidget', 
+    'narrativeConfig',
     'kbasePrompt', 
     'kbaseNarrativeControlPanel',
     'bootstrap'

@@ -3,7 +3,10 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseNarrativeInput'], function( $ ) {
+define(['jquery', 
+        'kbwidget', 
+        'narrativeConfig',
+        'kbaseNarrativeInput'], function( $ ) {
     $.KBWidget({
         name: "kbaseDefaultNarrativeInput",
         parent: "kbaseNarrativeInput",

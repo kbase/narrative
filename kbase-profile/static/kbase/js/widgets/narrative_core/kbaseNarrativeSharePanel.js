@@ -3,7 +3,11 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( $ ) {
+define(['jquery', 
+        'kbwidget', 
+        'narrativeConfig',
+        'kbaseAuthenticatedWidget', 
+        'select2'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeSharePanel", 
         parent: "kbaseAuthenticatedWidget",
@@ -13,7 +17,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             ws_url: "https://kbase.us/services/ws",
             user_profile_url: "https://kbase.us/services/user_profile/rpc",
             user_page_link:"/functional-site/#/people/",
-            loadingImage: window.kbconfig.loading_gif,
+            loadingImage: null,
             ws_name_or_id: null,
             max_name_length: 35,
             max_list_height: '250px',
@@ -33,6 +37,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.ws_url = window.kbconfig.urls.workspace;
                 this.options.user_profile_url = window.kbconfig.urls.user_profile;
+                this.options.loadingImage = window.kbconfig.loading_gif;
             }
             
             this.$notificationPanel = $('<div>');

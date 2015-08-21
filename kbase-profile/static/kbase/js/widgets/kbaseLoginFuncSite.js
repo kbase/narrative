@@ -113,7 +113,6 @@ define('kbaseLogin', ['jquery',
         },
 
         init: function(options) {
-
             this._super(options);
 
             var kbaseCookie = this.get_kbase_cookie();

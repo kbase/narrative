@@ -6,10 +6,12 @@
  */
 
 define(['jquery', 
+        'narrativeConfig',
         'kbaseLogin', 
         'kbapi',
         'base/js/utils'
 ], function($, 
+            config,
             kbaseLogin, 
             kbapi, 
             ipythonUtils) {

@@ -8,6 +8,7 @@
  */
 define([
     'jquery', 
+    'narrativeConfig',
     'kbaseNarrativeSidePanel', 
     'kbaseNarrativeOutputCell', 
     'kbaseNarrativeWorkspace',
@@ -19,6 +20,7 @@ define([
     'base/js/events',
     'notebook/js/notebook'
 ], function($, 
+            config,
             kbaseNarrativeSidePanel,
             kbaseNarrativeOutputCell,
             kbaseNarrativeWorkspace,

@@ -13,8 +13,8 @@ define(['jquery', 'narrativeConfig'], function($, config) {
             expect(config.config.urls.workspace).toMatch(/https\:\/\/.*kbase\.us\/services\/ws/);
         });
 
-        it('tries to update based on ui-common', function() {
-            config.updateConfig();
+        it('tries to update paths from ui-common', function() {
+            config.updateConfig(function(cfg) { console.log('what'); console.log(cfg.new_paths); });
         });
     });
 });

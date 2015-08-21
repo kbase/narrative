@@ -38,6 +38,7 @@ define(['jquery',
             'uiCommonPaths': config.urls.ui_common_root + "widget-paths"
         }
     });
+    window.kbconfig = config;
 
     var updateConfig = function(callback) {
         // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";

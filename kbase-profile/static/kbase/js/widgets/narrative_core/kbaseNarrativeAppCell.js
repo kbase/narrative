@@ -12,7 +12,9 @@
  */
 
 (function( $, undefined ) {
-  require(['jquery', 'kbwidget'], function($) {
+  require(['jquery', 
+           'kbwidget',
+           'narrativeConfig'], function($) {
     $.KBWidget({
         name: "kbaseNarrativeAppCell",
         parent: "kbaseWidget",
@@ -20,7 +22,7 @@
         options: {
             app: null,
             cellId: null,
-            loadingImage: window.kbconfig.loading_gif, //'static/kbase/images/ajax-loader.gif',
+            loadingImage: null, //window.kbconfig.loading_gif, //'static/kbase/images/ajax-loader.gif',
             methodStoreURL: 'https://kbase.us/services/narrative_method_store',
 
             appHelpLink: '/functional-site/#/narrativestore/app/',
@@ -62,6 +64,7 @@
 
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
+                this.options.loadingImage = window.kbconfig.loading_gif;
             }
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
 

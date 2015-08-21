@@ -10,13 +10,17 @@
  * @public
  */
 // kb_require(['kbaseMethodGallery'], 
-define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], function( $ ) {
+define(['jquery', 
+        'kbwidget', 
+        'narrativeConfig',
+        'kbaseAccordion', 
+        'kbaseNarrativeControlPanel'], function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
         parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
-            loadingImage: window.kbconfig.loading_gif,
+            loadingImage: null,
             autopopulate: true,
             title: 'Apps & Methods',
             methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
@@ -49,6 +53,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
                 this.icon_colors = window.kbconfig.icons.colors;
+                this.options.loadingImage = window.kbconfig.loading_gif;
             }
 
             this.$searchDiv = $('<div>')

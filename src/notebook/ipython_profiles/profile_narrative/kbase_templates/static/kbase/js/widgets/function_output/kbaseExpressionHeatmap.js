@@ -17,6 +17,8 @@
         parent: 'kbaseExpressionGenesetBaseWidget',
         version: '1.0.0',
 
+        colorGenerator: null,
+
         // To be overriden to specify additional parameters
         getSubmtrixParams: function(){
             var self = this;
@@ -53,6 +55,7 @@
             var self = this;
             var pref = this.pref;
 
+            self.updateColorGenerator();
             $containerDiv.append(
                 $('<div style="font-size: 1.2em; width:100%; text-align: center;">Browse Conditions</div>')
             );
@@ -81,13 +84,13 @@
                             .addClass('heat_cell')
                             .css('float','right')
                             .css('padding','4px')
-                            .css('background',self.getColor(self.minColorValue));
+                            .css('background',self.colorGenerator(self.minColorValue));
 
             var maxCell = $('<div>')
                             .addClass('heat_cell')
                             .css('float','right')
                             .css('padding','4px')
-                            .css('background',self.getColor(self.maxColorValue));
+                            .css('background',self.colorGenerator(self.maxColorValue));
 
             $containerDiv.append('<br><br><br>');
             var padding = '2px';
@@ -157,6 +160,9 @@
         redrawTable: function() {
             var self = this;
             var pref = self.pref;
+
+            self.updateColorGenerator();
+
             self.$tableDiv.empty();
             var $tableConditions = $('<table id="' + pref + 'conditions-table" \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
@@ -180,7 +186,7 @@
                                 for(var i = 0 ; i < values.length; i++){
                                     var heatCell = $('<div/>')
                                         .addClass('heat_cell')
-                                        .css('background',self.getColor(values[i]))
+                                        .css('background',self.colorGenerator(values[i]))
                                         .attr('title', 
                                             'Feature: ' + self.submatrixStat.row_descriptors[i].id
                                              + '\n' + 'Value: ' + values[i].toFixed(2)
@@ -227,21 +233,15 @@
         minColorValue:null,
         maxColorValue:null,
 
-
-
-
-        getColor: function(value){
+        updateColorGenerator: function(){
+            var self = this;
             var min = this.minColorValue;
             var max = this.maxColorValue;
-
-            if(value<min) { return '#FFA500'; }
-            if(value>max) { return '#0066AA'; }
-
-            // use d3 to generate the range
-            var colorGenerator = d3.scale.linear()
-                                    .domain(d3.range(min,max,(max-min)/3))
-                                    .range(['#FFA500', '#FFFFFF', '#0066AA'])
-            return colorGenerator(value);
+            self.colorGenerator = d3.scale.linear()
+                .domain([min,(max+min)/2, max])
+                .range(['#FFA500', '#FFFFFF', '#0066AA']);
+            self.colorGenerator.clamp(true);       
         }
+
     });
 });

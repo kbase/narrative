@@ -159,6 +159,8 @@ define([], function() {
             'kbaseExpressionClusterSet'             : 'kbase/js/widgets/function_output/kbaseExpressionClusterSet',
             'kbaseExpressionFeatureClusters'        : 'kbase/js/widgets/function_output/kbaseExpressionFeatureClusters',
 
+            'kbaseExpressionFeatureTableHeatmap'    : 'kbase/js/widgets/function_output/kbaseExpressionFeatureTableHeatmap',
+            'kbaseExpressionConditionsetBaseWidget' : 'kbase/js/widgets/function_output/kbaseExpressionConditionsetBaseWidget',
 
 
             'geometry_point'                        : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_point',

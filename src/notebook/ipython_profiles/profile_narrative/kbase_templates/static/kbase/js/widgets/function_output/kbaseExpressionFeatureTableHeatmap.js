@@ -1,5 +1,5 @@
 /**
- * Browsing of heatmaps for a gene set for each condition. Basic statistics for each condition is also provided. 
+ * Browsing of genes with basic stat and heatmap calculated for a set of conditions
  *
  * Pavel Novichkov <psnovichkov@lbl.gov>
  * @public

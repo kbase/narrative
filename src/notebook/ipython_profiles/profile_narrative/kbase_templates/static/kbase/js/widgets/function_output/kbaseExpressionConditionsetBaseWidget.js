@@ -1,5 +1,5 @@
 /**
- * Base class for viewers visualizaing expression of a set of genes from various aspects
+ * Base class for viewers visualizaing expression of a set of conditions from various aspects
  * 
  * The descendant classes should override:
  * 1. getSubmtrixParams - to set params for get_submatrix_stat method from the KBaseFeatureValues service

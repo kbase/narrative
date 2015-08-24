@@ -175,14 +175,19 @@ define(['jquery',
             var $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
             $containerDiv.append($overvewContainer);
 
+            var geneData = self.buildGenesTableData();
+            var iDisplayLength = 10;
+            var style = 'lftip';
+            if(geneData.length<=iDisplayLength) { style = 'fti'; }
+
             var tableGenes = $('<table id="'+pref+'genes-table"  \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
                 </table>')
                 .appendTo($overvewContainer)
                 .dataTable( {
-                    "sDom": 'lftip',
-                    "iDisplayLength": 10,
-                    "aaData": self.buildGenesTableData(),
+                    "sDom": style,
+                    "iDisplayLength": iDisplayLength,
+                    "aaData": geneData,
                     "aoColumns": [
                         { sTitle: "Name", mData: "id"},
                         { sTitle: "Function", mData: "function"},

@@ -45,15 +45,13 @@
                 matrixAvg.push({
                     x: i+5,
                     y: mtxColumnSetStats.avgs[i],
-                    name: condition,
-                    label: 'All Data Average<br>'+mtxColumnSetStats.avgs[i].toFixed(3)+"<br>"+condition
+                    name: condition
                 });
                 clusterAvg.push(
                 {
                     x: i+5,
                     y: columnSetStats.avgs[i],
-                    name: condition,
-                    label: 'Selected Features Average<br>'+columnSetStats.avgs[i].toFixed(3)+"<br>"+condition
+                    name: condition
                 });
                 clusterDisp.push({
                     x: i+5,
@@ -77,18 +75,28 @@
                     yLabelRegion : 'xPadding',
                     xAxisColor : '#444',
                     yAxisColor : '#444',
+                    xLabelSize : '11pt',
+                    yLabelSize : '11pt',
+                    xLabelOffset : 10,
                     xPadding : 80,
                     yPadding : 30,
                     xLabels  : false,
                     overColor : null,
+
+                    useLineLabelToolTip : false,
+
                     autoLegend : true,
                     legendRegion : 'xGutter',
-                    xGutter : 175,
+
+                    legendSize : '9pt',
+                    xGutter : 220,
                     legendAlignment : 'TR',
+                    legendLineHeight : 18,
+
                     dataset : [
                         {
                             strokeColor: 'red',
-                            label : 'Min and Max of Selected Features',
+                            label : '- Min/Max Range of Selected Features',
                             values : clusterDisp,
                             fillColor: 'red',
                             strokeOpacity: 0.2,
@@ -97,12 +105,11 @@
                         },
                         {
                             strokeColor : 'green',
-                            label : 'Selected Features Average',
+                            label : '- Selected Features Average',
                             values : clusterAvg,
                             width: 1,
                             shape: 'circle',
                             shapeArea: 36,
-                            /* TODO: in functions, d is not preserving all data in the data list
                             pointOver   :
                                 function(d) {
                                   this.showToolTip({label : 'Selected Features Average<br>'+d.y+"<br>"+d.name});
@@ -110,23 +117,23 @@
                             pointOut    :
                                 function(d) {
                                   this.hideToolTip();
-                                }*/
+                                }
                         },
                         {
                             strokeColor : 'blue',
-                            label : 'All Data Average',
+                            label : '- All Data Average',
                             values : matrixAvg,
                             width: 1,
                             shape: 'circle',
                             shapeArea: 36,
-                            /*pointOver   :
+                            pointOver   :
                                 function(d) {
                                   this.showToolTip({label : 'All Data Average<br>'+d.y+"<br>"+d.name});
                                 },
                             pointOut    :
                                 function(d) {
                                   this.hideToolTip();
-                                }*/
+                                }
                         }
                     ],
                 }

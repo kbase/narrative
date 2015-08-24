@@ -177,7 +177,7 @@ define(['jquery',
 			self.buildActionMenu($container);
 			$(document).mousedown( function(e){
 				// Hide menu on mousedown only if we are not inside the menu
-				if(e.toElement.getAttribute('methodInput') == null){
+				if(e.target.getAttribute('methodInput') == null){
 					self.$menu.hide();
 				}
 			});			
@@ -247,9 +247,9 @@ define(['jquery',
 			var self = this;
 			var pref = self.pref;
 			$('.' + pref + 'action_button').on('click', function(e){
-				var $actionButton = $(e.toElement);
-				var x = $actionButton.offset().left - $('#notebook-container').offset().left + e.toElement.offsetLeft;
-				var y = $actionButton.offset().top - $('#notebook-container').offset().top + e.toElement.offsetHeight + e.toElement.offsetTop;				
+				var $actionButton = $(e.target);
+				var x = $actionButton.offset().left - $('#notebook-container').offset().left + e.target.offsetLeft;
+				var y = $actionButton.offset().top - $('#notebook-container').offset().top + e.target.offsetHeight + e.target.offsetTop;
 				self.$menu
                     .data("invokedOn", $(e.target))
                     .css({
@@ -309,11 +309,12 @@ define(['jquery',
 			var tableData = [];
 
 			for(var i = 0; i < feature_clusters.length; i++){
+				cluster = feature_clusters[i];
 				tableData.push({
-				    pos: i,
+					pos: i,
 					clusterId: "<a class='show-clusters_" + self.pref + "' data-pos='"+i+"'>cluster_" + i + "</a>",
-					size: Object.keys(feature_clusters[i].id_to_pos).length,
-					meancor : feature_clusters[i].meancor.toFixed(2),
+					size: Object.keys(cluster.id_to_pos).length,
+					meancor : cluster.meancor != null? cluster.meancor.toFixed(3) : 'N/A',
 					rowIndex : i
 				})
 			}
@@ -321,7 +322,6 @@ define(['jquery',
 			return tableData;
 		},
 
-	
 		buildActionMenu: function($container){
 			var $menu = $(' \
 				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none" > \

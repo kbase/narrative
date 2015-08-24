@@ -117,8 +117,10 @@ define(['jquery',
                 "clusters. Values less than 0 indicate that the point is probably in " +
                 "the wrong cluster.  The Moving Average window size can be set to smooth " +
                 "the curve by averaging each Silhoutte Width value with nearby values."
-            );
+            ).hide();
 
+            this.$elem.append($('<a>').append('[Show Help on Silhouette Width]')
+                                .on('click', function() { $(this).hide(); $help.show(); } ))
             this.$elem.append($help);
             this.$elem.append($('<div style="width : 5px; height : 5px">'));
 		},
@@ -172,10 +174,13 @@ define(['jquery',
                     scaleAxes       : true,
 
                     xLabel      : 'Values of K',
-                    yLabel      : 'Estimated Quality (Avg. Silhoette Width)',
+                    yLabel      : 'Quality (Avg. Silhoette Width)',
 
                     xLabelRegion : 'yPadding',
                     yLabelRegion : 'xPadding',
+                    xLabelSize : '11pt',
+                    yLabelSize : '11pt',
+                    xLabelOffset : 5,
                     xAxisColor : '#444',
                     yAxisColor : '#444',
                     xPadding : 80,

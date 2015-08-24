@@ -61,7 +61,7 @@
             for(var i = 0 ; i < rowDescriptors.length; i++){
                 var row = [];
                 for(var j = 0 ; j < rowDescriptors.length; j++){
-                    row.push(values[i][j].toFixed(4));
+                    row.push(values[i][j].toFixed(3));
                 }                
                 data.push(row);
             }            

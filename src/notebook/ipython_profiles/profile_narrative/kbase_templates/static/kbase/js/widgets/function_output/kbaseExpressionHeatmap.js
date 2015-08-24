@@ -234,6 +234,9 @@
             var min = this.minColorValue;
             var max = this.maxColorValue;
 
+            if(value<min) { return '#FFA500'; }
+            if(value>max) { return '#0066AA'; }
+
             // use d3 to generate the range
             var colorGenerator = d3.scale.linear()
                                     .domain(d3.range(min,max,(max-min)/3))

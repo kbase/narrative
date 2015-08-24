@@ -130,9 +130,11 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
 
             this.infoPanel = $('<div style="margin: 20px 30px 0px 30px;">');
 
-            this.$elem.append(upperPanel);
-            this.$elem.append(this.widgetPanel);
-            this.$elem.append(this.infoPanel);
+            this.$mainPanel = $('<div>').css({'overflow-y':'auto','height':'604px'});
+            this.$elem.append(this.$mainPanel);
+            this.$mainPanel.append(upperPanel);
+            this.$mainPanel.append(this.widgetPanel);
+            this.$mainPanel.append(this.infoPanel);
             this.methClient = new NarrativeMethodStore(this.methodStoreURL);
             this.methClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1}, 
                     $.proxy(function(data) {

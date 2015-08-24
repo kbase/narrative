@@ -9,7 +9,8 @@ define(['jquery',
 		'kbaseAuthenticatedWidget', 
 		'kbaseTabs',
 		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables-bootstrap',
+		'kbaseTreechart'
 //        ,'jquery-dataScroller'
 		], function($) {
 	$.KBWidget({
@@ -231,6 +232,14 @@ define(['jquery',
             self.buildClusterFeaturesTable(featureTabDiv, null, function() {
                 updateClusterLinks("clusters2");
             });
+
+            ///////////////////////////////////// Hierarchical dendrogram tab ////////////////////////////////////////////           
+            /*var tabDendro = $("<div/>");
+            tabPane.kbaseTabs('addTab', {tab: 'Dendrogram', content: tabDendro, canDelete : false, show: false});
+            tabDendro.kbaseTreechart({ 
+                lineStyle: 'square',
+                dataset: {children:[{distance: 1}, {distance: 2}]}
+            });*/
 
 		},
 

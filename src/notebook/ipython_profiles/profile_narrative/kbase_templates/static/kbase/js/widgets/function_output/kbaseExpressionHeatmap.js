@@ -60,7 +60,7 @@
                 $('<div style="font-size: 1.2em; width:100%; text-align: center;">Browse Conditions</div>')
             );
             $containerDiv.append(
-                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated for the selected features in a condition</div>')
+                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated for the selected features across all conditions</div>')
             );
 
             self.$tableDiv = $('<div>');

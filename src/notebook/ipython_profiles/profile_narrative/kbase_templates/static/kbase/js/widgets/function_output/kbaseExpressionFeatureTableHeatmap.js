@@ -59,7 +59,8 @@
                 $('<div style="font-size: 1.2em; width:100%; text-align: center;">Browse Features</div>')
             );
             $containerDiv.append(
-                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated for the selected conditions in a feature</div>')
+                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; '+
+                    'text-align: center;">Statistics calculated for the selected conditions for all features</div>')
             );
 
             self.$tableDiv = $('<div>');
@@ -79,60 +80,60 @@
             self.redrawTable();
 
 
-            // var minCell = $('<div>')
-            //                 .addClass('heat_cell')
-            //                 .css('float','right')
-            //                 .css('padding','4px')
-            //                 .css('background',self.colorGenerator(self.minColorValue));
+            var minCell = $('<div>')
+                             .addClass('heat_cell')
+                             .css('float','right')
+                             .css('padding','4px')
+                             .css('background',self.colorGenerator(self.minColorValue));
 
-            // var maxCell = $('<div>')
-            //                 .addClass('heat_cell')
-            //                 .css('float','right')
-            //                 .css('padding','4px')
-            //                 .css('background',self.colorGenerator(self.maxColorValue));
+            var maxCell = $('<div>')
+                             .addClass('heat_cell')
+                             .css('float','right')
+                             .css('padding','4px')
+                             .css('background',self.colorGenerator(self.maxColorValue));
 
-            // $containerDiv.append('<br><br><br>');
-            // var padding = '2px';
-            // var $rangeController = $('<div class="row">');
-            // var $minInput = $('<input id="min" type="text" size="6">').val(self.minColorValue)
-            // var $maxInput = $('<input id="max" type="text" size="6">').val(self.maxColorValue)
-            // var $btn = $('<button>').addClass('btn btn-default btn-sm').append('Update')
-            //             .on('click', function() {
-            //                 var min = parseFloat($minInput.val());
-            //                 if(min && !isNaN(min)) { 
-            //                     self.minColorValue = min;
-            //                 }
-            //                 $minInput.val(self.minColorValue);
-            //                 var max = parseFloat($maxInput.val());
-            //                 if(max && !isNaN(max)) {
-            //                     self.maxColorValue = max; 
-            //                 }
-            //                 $maxInput.val(self.maxColorValue);
-            //                 self.redrawTable();
-            //             });
-            // $rangeController
-            //     .append($('<div class="form-group col-xs-4">'))
-            //     .append($('<div class="form-group col-xs-2 text-right">').css('padding',padding)
-            //         .append("<small>Min Color Range</small>&nbsp").append(minCell))
-            //     .append($('<div class="form-group col-xs-1 text-left">').css('padding',padding)
-            //         .append($minInput))
-            //     .append($('<div class="form-group col-xs-2 text-right">').css('padding',padding)
-            //         .append("<small>Max Color Range</small>&nbsp").append(maxCell))
-            //     .append($('<div class="form-group col-xs-1 text-left">').css('padding',padding)
-            //         .append($maxInput))
-            //     .append($('<div class="form-group col-xs-1 text-right">').css('padding',padding)
-            //         .append($btn));
-            // $minInput.keyup(function(event) {
-            //     if(event.keyCode == 13) {
-            //         $btn.click();
-            //     }
-            // });
-            // $maxInput.keyup(function(event) {
-            //     if(event.keyCode == 13) {
-            //         $btn.click();
-            //     }
-            // });
-            // $containerDiv.append($rangeController);
+            $containerDiv.append('<br><br><br>');
+            var padding = '2px';
+            var $rangeController = $('<div class="row">');
+            var $minInput = $('<input id="min" type="text" size="6">').val(self.minColorValue)
+            var $maxInput = $('<input id="max" type="text" size="6">').val(self.maxColorValue)
+            var $btn = $('<button>').addClass('btn btn-default btn-sm').append('Update')
+                        .on('click', function() {
+                            var min = parseFloat($minInput.val());
+                            if(min && !isNaN(min)) { 
+                                self.minColorValue = min;
+                            }
+                            $minInput.val(self.minColorValue);
+                            var max = parseFloat($maxInput.val());
+                            if(max && !isNaN(max)) {
+                                self.maxColorValue = max; 
+                            }
+                            $maxInput.val(self.maxColorValue);
+                            self.redrawTable();
+                        });
+            $rangeController
+                .append($('<div class="form-group col-xs-4">'))
+                .append($('<div class="form-group col-xs-2 text-right">').css('padding',padding)
+                    .append("<small>Min Color Range</small>&nbsp").append(minCell))
+                .append($('<div class="form-group col-xs-1 text-left">').css('padding',padding)
+                    .append($minInput))
+                .append($('<div class="form-group col-xs-2 text-right">').css('padding',padding)
+                    .append("<small>Max Color Range</small>&nbsp").append(maxCell))
+                .append($('<div class="form-group col-xs-1 text-left">').css('padding',padding)
+                    .append($maxInput))
+                .append($('<div class="form-group col-xs-1 text-right">').css('padding',padding)
+                    .append($btn));
+            $minInput.keyup(function(event) {
+                if(event.keyCode == 13) {
+                    $btn.click();
+                }
+            });
+            $maxInput.keyup(function(event) {
+                if(event.keyCode == 13) {
+                    $btn.click();
+                }
+            });
+            $containerDiv.append($rangeController);
         },
 
         getState: function() {

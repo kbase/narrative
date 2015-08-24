@@ -161,8 +161,9 @@ class KBaseWSNotebookManager(NotebookManager):
         try:
             all = ws_util.get_wsobj_meta(wsclient)
         except Exception, e:
-            return []            
-            # raise web.HTTPError(500, u"error'd!")
+            # Raising the exception here will cause the server to
+            # shut down, so don't crash, just return nothing.
+            return []
 
         self.mapping = {
             ws_id: "%s/%s" % (all[ws_id]['workspace'],all[ws_id]['meta'].get('name',"undefined"))
@@ -270,6 +271,8 @@ class KBaseWSNotebookManager(NotebookManager):
                 objmeta = ws_util.get_wsobj_meta(self.wsclient(), ws_id=m.group('wsid'))
             except ws_util.PermissionsError, err:
                 return False # XXX: kind of a lie!
+            except:
+                return False # Also kind of a lie... will be fixed with Jupyter 4 backend
             if notebook_id in objmeta:
                 self.mapping[notebook_id] = notebook_id
                 return True

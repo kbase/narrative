@@ -117,7 +117,7 @@ class KBaseWSNotebookManager(NotebookManager):
             wsclient = self.wsclient()
             wsclient.ver()
         except Exception as e:
-            self.log.debug("Unable to connect to workspace service at {}: {}".format(self.kbasews_uri, e))
+            self.log.error("Unable to connect to workspace service at {}: {}".format(self.kbasews_uri, e))
 
         # Map Narrative ids to notebook names
         mapping = Dict()
@@ -687,7 +687,3 @@ for handlerstr in tgt_handlers:
     IPython.html.base.handlers.app_log.debug("Patching routes in %s.default_handler" % handlerstr)
     handler = importlib.import_module(handlerstr)
     handler_route_replace(handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>ws\.\d+\.obj\.\d+)')
-
-# Load the plupload handler
-import upload_handler
-upload_handler.insert_plupload_handler()

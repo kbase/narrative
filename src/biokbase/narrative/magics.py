@@ -177,23 +177,6 @@ class kbasemagics(Magics):
         return
         
     @line_magic
-    def uploader(self, line):
-        """
-        Bring up basic input form that allows you to upload files into /tmp/narrative
-        using PLUpload client libraries
-        Note that this is a demonstration prototype!
-        """
-        return HTML(biokbase.narrative.upload_handler.HTML_EXAMPLE)
-        
-    @line_magic
-    def jquploader(self, line):
-        """
-        Bring up an html cell with JQuery UI PLUpload widget that supports drag and drop
-        Note that this is a demonstration prototype!
-        """
-        return HTML(biokbase.narrative.upload_handler.JQUERY_UI_EXAMPLE)
-        
-    @line_magic
     def inv_session(self, line=None):
         """Return the current invocation session id, create one if necessary.
         Parameters are ignored

@@ -113,12 +113,11 @@ class KBaseWSNotebookManager(NotebookManager):
 
         # Verify we can poke the Workspace service at that URI by just checking its
         # version
-        # try:
-        #     wsclient = self.wsclient()
-        #     wsclient.ver()
-        # except Exception as e:
-        #     raise web.HTTPError(500, u"Unable to connect to workspace service"
-        #                              u" at %s: %s " % (self.kbasews_uri, e))
+        try:
+            wsclient = self.wsclient()
+            wsclient.ver()
+        except Exception as e:
+            self.log.debug("Unable to connect to workspace service at {}: {}".format(self.kbasews_uri, e))
 
         # Map Narrative ids to notebook names
         mapping = Dict()

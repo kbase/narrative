@@ -326,8 +326,9 @@ define(['jquery',
 			var $menu = $(' \
 				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none" > \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
-				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">Show pairwise correlation</a></li> \
+				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
+				    <li class="divider"></li> \
 				    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Save as a FeatureSet</a></li> \
 				</ul> \
 			');

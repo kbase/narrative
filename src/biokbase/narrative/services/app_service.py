@@ -51,7 +51,7 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
     token, workspace = meth.token, meth.workspace_id
     
     appSpec = json.loads(app_spec_json)
-    paramValues = json.loads(param_values_json)
+    paramValues = json.loads(correct_method_specs_json(param_values_json))
 
     methIdToSpec = json.loads(correct_method_specs_json(method_specs_json))
     

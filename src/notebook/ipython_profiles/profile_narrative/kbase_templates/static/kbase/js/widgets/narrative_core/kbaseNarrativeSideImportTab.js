@@ -21,6 +21,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
         ujsURL: window.kbconfig.urls.user_and_job_state,
         shockURL: window.kbconfig.urls.shock,
         methods: null,			// {method_id -> method_spec}
+        methodFullInfo: null,   // {method_id -> method_full_info}
         types: null,			// {type_name -> type_spec}
         selectedType: null,		// selected type name
         widgetPanel: null,		// div for selected type
@@ -138,58 +139,69 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             this.methClient = new NarrativeMethodStore(this.methodStoreURL);
             this.methClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1}, 
                     $.proxy(function(data) {
-                    	var aTypes = data[3];
-                    	var methodIds = [];
-                    	self.types = {};
-                    	for (var key in aTypes) {
-                    		if (aTypes[key]["loading_error"]) {
-                            	console.log("Error loading type [" + key + "]: " + aTypes[key]["loading_error"]);
-                    			continue;
-                    		}
-                    		if (aTypes[key]["import_method_ids"].length > 0) {
-                    			self.types[key] = aTypes[key];
-                    			for (var methodPos in aTypes[key]["import_method_ids"]) {
-                    				var methodId = aTypes[key]["import_method_ids"][methodPos];
-                    				methodIds.push(methodId);
-                    			}
-                    		}
-                    	}
-                        self.methClient.get_method_spec({ 'ids' : methodIds },
-                                $.proxy(function(specs) {
-                                	self.methods = {};
-                                	for (var i in specs) {
-                                		self.methods[specs[i].info.id] = specs[i];
-                                	}
-                                	var keys = [];
-                                	for (var key in self.types) {
-                                		keys.push(key);
-                                	}
-                                	keys.sort(function(a,b) {return self.types[a]["name"].localeCompare(self.types[b]["name"])});
-                                	for (var keyPos in keys) {
-                                		addItem(keys[keyPos]);                                		
-                                	}
-                                    $dropdown.select2({
-                                        minimumResultsForSearch: -1,
-                                        formatSelection: function(object, container) {
-                                            var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
-                                            return display;
-                                        }
-                                    });
+                        var aTypes = data[3];
+                        var methodIds = [];
+                        self.types = {};
+                        for (var key in aTypes) {
+                            if (aTypes[key]["loading_error"]) {
+                                console.log("Error loading type [" + key + "]: " + aTypes[key]["loading_error"]);
+                                continue;
+                            }
+                            if (aTypes[key]["import_method_ids"].length > 0) {
+                                self.types[key] = aTypes[key];
+                                for (var methodPos in aTypes[key]["import_method_ids"]) {
+                                    var methodId = aTypes[key]["import_method_ids"][methodPos];
+                                    methodIds.push(methodId);
+                                }
+                            }
+                        }
+                        self.methClient.get_method_full_info({ 'ids' : methodIds }, 
+                                $.proxy(function(fullInfoList) {
+                                    self.methodFullInfo = {};
+                                    for (var i in fullInfoList) {
+                                        self.methodFullInfo[fullInfoList[i].id] = fullInfoList[i];
+                                    }
+                                    self.methClient.get_method_spec({ 'ids' : methodIds },
+                                            $.proxy(function(specs) {
+                                                self.methods = {};
+                                                for (var i in specs) {
+                                                    self.methods[specs[i].info.id] = specs[i];
+                                                }
+                                                var keys = [];
+                                                for (var key in self.types) {
+                                                    keys.push(key);
+                                                }
+                                                keys.sort(function(a,b) {return self.types[a]["name"].localeCompare(self.types[b]["name"])});
+                                                for (var keyPos in keys) {
+                                                    addItem(keys[keyPos]);                                		
+                                                }
+                                                $dropdown.select2({
+                                                    minimumResultsForSearch: -1,
+                                                    formatSelection: function(object, container) {
+                                                        var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
+                                                        return display;
+                                                    }
+                                                });
 
-                                	function addItem(key) {
-                                		var name = self.types[key]["name"];
-                                        $dropdown.append($('<option value="'+key+'">').append(name));
-                                	}
+                                                function addItem(key) {
+                                                    var name = self.types[key]["name"];
+                                                    $dropdown.append($('<option value="'+key+'">').append(name));
+                                                }
+                                            }, this),
+                                            $.proxy(function(error) {
+                                                self.showError(error);
+                                            }, this)
+                                    );
                                 }, this),
                                 $.proxy(function(error) {
                                     self.showError(error);
                                 }, this)
-                            );
+                        );
                     }, this),
                     $.proxy(function(error) {
                         self.showError(error);
                     }, this)
-                );
+            );
             return this;
         },
 
@@ -305,19 +317,34 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
 
             var methodUuid = 'import-method-details-'+this.uuid();
             var buttonLabel = 'details';
-            var methodDesc = methodSpec.info.tooltip;
+            var methodTitle = methodSpec.info.tooltip.trim();
+            var methodDescr = this.methodFullInfo[methodId].description.trim();
+            var $overviewSwitch = $("<a/>").html('more...');
             var $methodInfo = $('<div>')
                     .addClass('kb-func-desc')
                     .css({'margin' : '25px 0px 0px 15px'})
             		.append($('<h2>')
                     .attr('id', methodUuid)
                     .addClass('collapse in')
-                    .append(methodDesc));
-            
+                    .append(methodTitle).append("&nbsp;&nbsp&nbsp").append($overviewSwitch));
+
+            var $methodDescrPanel = $('<div/>')
+                    .addClass('kb-func-desc')
+                    .css({'margin' : '20px 0px 0px 20px', 'display' : 'none'})
+                    .append(methodDescr);
+            if (methodDescr && methodDescr != '' && methodDescr != 'none' && 
+                    methodDescr != methodTitle && (methodDescr + ".") != methodTitle) {
+                $overviewSwitch.click(function(){
+                    $methodDescrPanel.toggle();
+                });
+            } else {
+                $overviewSwitch.css({'display' : 'none'});
+            }
+
             var tab = $('<div style="margin: 0px 30px 0px 15px;">')
                     .append($('<div>')
                     .addClass('kb-func-panel kb-cell-run')
-                    .append($methodInfo))
+                    .append($methodInfo).append($methodDescrPanel))
                     .append($('<div>').css({'margin' : '25px 0px 0px 15px'}).append("<hr>"))
                     .append($('<div>')
                     .append($inputDiv))

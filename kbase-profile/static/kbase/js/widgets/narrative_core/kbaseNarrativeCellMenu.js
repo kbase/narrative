@@ -1,4 +1,4 @@
-define(['jquery', 'kbwidget'], function($) {
+define(['jquery', 'kbwidget', 'bootstrap'], function($) {
     $.KBWidget({
         name: 'kbaseNarrativeCellMenu',
         parent: 'kbaseWidget',

@@ -240,6 +240,9 @@ require.config({
         },
         'kbStandaloneGraph' : {
             deps : ['jquery', 'jquery-svg']
-        }
+        },
+        'bootstrap' : {
+            deps : ['jquery']
+        },
     }
 });

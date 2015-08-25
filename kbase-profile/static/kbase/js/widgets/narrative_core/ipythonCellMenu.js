@@ -5,6 +5,7 @@
 define([
     'jquery',
     'notebook/js/celltoolbar',
+    'kbaseNarrativeCellMenu'
 ], function($, celltoolbar) {
     "use strict";
 
@@ -12,9 +13,7 @@ define([
 
     var $kbMenu = $('<span>');
     var makeKBaseMenu = function(div, cell) {
-        require(['kbaseNarrativeCellMenu'], function() {
-            $(div).kbaseNarrativeCellMenu({cell: cell});
-        });
+        $(div).kbaseNarrativeCellMenu({cell: cell});
     };
 
     var register = function(notebook) {

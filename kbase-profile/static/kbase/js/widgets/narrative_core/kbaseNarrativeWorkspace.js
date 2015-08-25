@@ -298,6 +298,7 @@ define(['jquery',
         },
 
         showDeleteCellModal: function(index, cell, message) {
+            this.initDeleteCellModal();
             if (cell && cell.metadata[this.KB_CELL]) {
                 this.cellToDelete = index;
                 if (message)
@@ -384,6 +385,13 @@ define(['jquery',
             //     'input_request' : function(content) { self.handleInputRequest(data.cell, content); }
             // };
 
+            var handleError = function() {
+                if(data.widget) {
+                    if(data.widget.changeState)
+                        data.widget.changeState('error');
+                }
+            };
+
             var callbacks = {
                 shell: {
                     reply: function(content) { self.handleExecuteReply(data.cell, content); },
@@ -392,7 +400,7 @@ define(['jquery',
                     },
                 },
                 iopub: {
-                    output: function(content) { self.handleOutput(data.cell, content.msgType, content, showOutput); },
+                    output: function(content) { self.handleOutput(data.cell, content.msgType, content, showOutput, handleError, data.widget); },
                     clear_output: function(content) { self.handleClearOutput(data.cell, content); },
                 },
                 input: function(content) { self.handleInputRequest(data.cell, content); }
@@ -936,31 +944,6 @@ define(['jquery',
             var self = this;
             if (this.first_show_controls) {
                 $panel = $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true, this.hideControlPanels);
-
-                // var $panel = $('#kb-side-panel');
-                // var hide_idx = [2], keep_idx = [1], narr = 1;
-                // // Hide and show panels
-                // _.map(['tab', 'header'], function (subdiv) {
-                //     var divs = $panel.find('div.kb-side-' + subdiv);
-                //     _.map(hide_idx, function (i) {
-                //         $(divs[i]).hide();
-                //         $(divs[i]).removeClass('active');
-                //     });
-                //     if (subdiv == 'tab') {
-                //         $(divs[narr]).find('.kb-title').hide();
-                //     }
-                //     else {
-                //         // Plop a 'hide' button before the tab bar
-                //         var $hide_btn = $('<div>').attr({id: 'kb-view-mode-narr-hide'})
-                //           .append($('<span>').addClass('fa fa-caret-up'))
-                //           .click(function () {
-                //               self.hideControlPanels();
-                //           });
-                //         //$(divs[0]).prepend($hide_btn);
-                //         $panel.prepend($hide_btn);
-                //     }
-                //     //$(divs[narr]).addClass('active').css({'width': '366px'});
-                // });
                 this.first_show_controls = false;
             }
             // Hide the button we used to activate this
@@ -1935,8 +1918,15 @@ define(['jquery',
                             cell.metadata[this.KB_CELL].stackTrace.push(result);
                         }
                     }
-                    else if (showOutput)
+                    else if (showOutput) {
                         this.createOutputCell(cell, result);
+                        // if we create an output cell, and the callingWidget is defined, then make sure we say it
+                        // is complete (this is not updated for widgets with 'none' behavior otherwise)
+                        if(callingWidget) {
+                            if(callingWidget.changeState)
+                                callingWidget.changeState('complete');
+                        }
+                    }
                 }
             }
         },
@@ -2095,9 +2085,11 @@ define(['jquery',
             outputCell.rendered = false; // force a render
             outputCell.render();
             // If present, add list of "next steps"
-            if (result.next_steps.apps || result.next_steps.methods) {
-                var $body = $('#' + outCellId).find('.panel-body');
-                this.showNextSteps({elt: $body, next_steps: result.next_steps});
+            if (result.next_steps) {
+                if (result.next_steps.apps || result.next_steps.methods) {
+                    var $body = $('#' + outCellId).find('.panel-body');
+                    this.showNextSteps({elt: $body, next_steps: result.next_steps});
+                }
             }
             this.resetProgress(cell);
             if (IPython && IPython.narrative)

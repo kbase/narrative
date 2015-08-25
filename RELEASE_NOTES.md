@@ -7,6 +7,8 @@ This is built on the IPython Notebook (more notes will follow).
 __Changes__
 - Added widgets and methods to support feature-value analyses
 - JIRA KBASE-2626 - Narrative should no longer crash when the Workspace Service is unavailable, but it will produce a 404 error when trying to fetch a Narrative from that Workspace.
+- JIRA NAR-528 - Narrative method panel now allows filtering by input/output type along with additional
+search terms.
 
 ### Version 1.0.3
 __Changes__

@@ -388,8 +388,8 @@ define(['jquery', 'underscore', 'kbwidget',
                          "KBasePhenotypes.PhenotypeSimulationSet",
                          "KBaseFBA.ReactionSensitivityAnalysis",
                          "KBaseGenomes.MetagenomeAnnotation",
-                         "KBaseExpression.ExpressionSeries",
-                         "KBaseExpression.ExpressionSample",
+                         //"KBaseExpression.ExpressionSeries",
+                         //"KBaseExpression.ExpressionSample",
                          "Communities.Metagenome",
                          "Communities.SequenceFile",
                          "Communities.Collection",
@@ -398,7 +398,11 @@ define(['jquery', 'underscore', 'kbwidget',
                          "Communities.Heatmap",
                          "Communities.PCoA",
                          "Communities.TaxonomicMatrix",
-                         "Communities.TaxonomicProfile"
+                         "Communities.TaxonomicProfile",
+                         "KBaseFeatureValues.ExpressionMatrix",
+                         "KBaseFeatureValues.FeatureClusters",
+                         "KBaseFeatureValues.EstimateKResult",
+                         "KBaseCollections.FeatureSet"
                          ];
 
             types.sort(function(a,b){

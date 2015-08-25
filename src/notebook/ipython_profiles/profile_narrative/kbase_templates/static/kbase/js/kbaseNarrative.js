@@ -435,7 +435,6 @@ Narrative.prototype.createAndRunMethod = function(method_id, parameters) {
                 // TODO: update kbaseNarrativeMethodCell to return a promise to mark when rendering is complete
                 var newCell = IPython.notebook.get_selected_cell();
                 var newCellIdx = IPython.notebook.get_selected_index();
-                console.debug(newCell);
                 var newWidget = $('#'+$(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
                     var updateStateAndRun = function(state) {
                         if(newWidget.$inputWidget) {

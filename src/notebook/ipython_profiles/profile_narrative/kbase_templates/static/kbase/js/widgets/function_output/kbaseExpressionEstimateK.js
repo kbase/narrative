@@ -163,7 +163,7 @@ define(['jquery',
                 values.push({
                     x : val[0],
                     y : valY,
-                    label : valY.toFixed(3)
+                    label : "k = " + val[0] + '<br>' + valY.toFixed(3)
                 });
             }
             
@@ -194,7 +194,9 @@ define(['jquery',
                         {
                             strokeColor : 'blue',
                             values : values,
-                            width: 1
+                            width: 1.5,
+                            shape: 'circle',
+                            shapeArea: 9,
                         }
                     ],
                 }

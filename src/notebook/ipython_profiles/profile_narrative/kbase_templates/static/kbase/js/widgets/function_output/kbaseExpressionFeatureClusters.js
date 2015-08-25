@@ -9,7 +9,9 @@ define(['jquery',
 		'kbaseAuthenticatedWidget', 
 		'kbaseTabs',
 		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
+		'jquery-dataTables-bootstrap',
+		'kbaseTreechart',
+		'knhx'
 //        ,'jquery-dataScroller'
 		], function($) {
 	$.KBWidget({
@@ -232,6 +234,39 @@ define(['jquery',
                 updateClusterLinks("clusters2");
             });
 
+            ///////////////////////////////////// Hierarchical dendrogram tab ////////////////////////////////////////////   
+            /*var newick = self.clusterSet.feature_dendrogram;
+            if (newick) {
+                var tree = kn_parse(newick);
+                var root = self.transformKnhxTree(tree.root, 10);
+                console.log(JSON.stringify(root.children[0].children[0].children[0].children[0]));
+                var tabDendro = $("<div style='max-height: 600px;'/>");
+                tabPane.kbaseTabs('addTab', {tab: 'Dendrogram', content: tabDendro, canDelete : false, show: false});
+                var dendroPanel = $("<div/>");
+                tabDendro.append(dendroPanel);
+                dendroPanel.kbaseTreechart({ 
+                    lineStyle: 'square',
+                    dataset: root
+                });
+            }*/
+		},
+		
+		transformKnhxTree: function(node, scale) {
+		    var ret = {};
+		    if (node.d > 0) {
+		        ret.distance = node.d * scale;
+		    } else {
+		        ret.distance = 0;
+		    }
+		    if (node.child && node.child.length > 0) {
+		        var children = [];
+		        ret.children = children;
+		        for (var i = 0; i < node.child.length; i++)
+		            children.push(this.transformKnhxTree(node.child[i], scale));
+		    } else {
+                ret.name = "Name: " + node.name;		        
+		    }
+		    return ret;
 		},
 
 		registerActionButtonClick : function(){
@@ -317,8 +352,9 @@ define(['jquery',
 			var $menu = $(' \
 				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none" > \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
-				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">Show pairwise correlation</a></li> \
+				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \
+				    <li class="divider"></li> \
 				    <li><a tabindex="-1" href="#" methodInput="build_feature_set">Save as a FeatureSet</a></li> \
 				</ul> \
 			');

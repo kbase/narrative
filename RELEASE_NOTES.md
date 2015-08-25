@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 1.0.4
+__Changes__
+- Added widgets and methods to support feature-value analyses
+- JIRA KBASE-2626 - Narrative should no longer crash when the Workspace Service is unavailable, but it will produce a 404 error when trying to fetch a Narrative from that Workspace.
+
 ### Version 1.0.3
 __Changes__
 - JIRA KBASE-1672 - updated text in upload dialogs

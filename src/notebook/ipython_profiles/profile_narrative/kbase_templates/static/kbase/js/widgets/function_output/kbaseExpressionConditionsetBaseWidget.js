@@ -178,14 +178,20 @@ define(['jquery',
             var $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
             $containerDiv.append($overvewContainer);
 
+
+            var conditionsData = self.buildConditionsTableData();
+            var iDisplayLength = 10;
+            var style = 'lftip';
+            if(conditionsData.length<=iDisplayLength) { style = 'fti'; }
+
             var tableGenes = $('<table id="'+pref+'condition-table"  \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
                 </table>')
                 .appendTo($overvewContainer)
                 .dataTable( {
-                    "sDom": 'lftip',
-                    "iDisplayLength": 10,
-                    "aaData": self.buildConditionsTableData(),
+                    "sDom": style,
+                    "iDisplayLength": iDisplayLength,
+                    "aaData": conditionsData,
                     "aoColumns": [
                         { sTitle: "Name", mData: "id"},
                         // { sTitle: "Function", mData: "function"},
@@ -210,7 +216,7 @@ define(['jquery',
             var submatrixStat = this.submatrixStat;
             var tableData = [];
             var stat = submatrixStat.column_set_stat;
-            console.log(submatrixStat);
+            //console.log(submatrixStat);
             for(var i = 0; i < submatrixStat.column_descriptors.length; i++){
                 var desc = submatrixStat.column_descriptors[i];
 

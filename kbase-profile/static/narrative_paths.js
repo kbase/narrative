@@ -10,9 +10,9 @@ require.config({
         'jquery'                                : 'components/jquery/jquery.min',
         'jqueryui'                              : 'components/jquery-ui/ui/minified/jquery-ui.min',
         'jquery-svg'                            : 'components/jquery-extensions/js/jquery.svg',
-        'jquery-dataTables'                     : 'components/jquery-extensions/js/jquery.dataTables',
-        'jquery-dataTables-bootstrap'           : 'components/bootstrap-extensions/js/dataTables.bootstrap',
-        'jquery-nearest'                        : 'components/jquery-nearest/jquery.nearest.min',
+        'jquery-dataTables'                     : 'components/datatables/media/js/jquery.dataTables.min',
+        'jquery-dataTables-bootstrap'           : 'components/datatables/media/js/dataTables.bootstrap.min',
+        'jquery-nearest'                        : 'components/jquery-nearest/src/jquery.nearest.min',
         'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
         'select2'                               : 'components/select2/select2.min',
         'bootstrap'                             : 'components/bootstrap/js/bootstrap.min',
@@ -142,7 +142,7 @@ require.config({
          * END CUSTOM OUTPUT WIDGETS
          ***/
 
-        'd3'                                    : 'kbase/js/ui-common/ext/d3/d3.v3.min',
+        'd3'                                    : 'components/d3/d3.min',//  'kbase/js/ui-common/ext/d3/d3.v3.min',
         'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
         'handlebars'                            : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
         'kbwidget'                              : 'kbase/js/ui-common/src/kbwidget',

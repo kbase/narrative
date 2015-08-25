@@ -135,5 +135,5 @@
     }, 
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md", 
     "version": "1.0.3",
-    "loading_gif": "/static/kbase/images/ajax_loader.gif"
+    "loading_gif": "/static/kbase/images/ajax-loader.gif"
 }

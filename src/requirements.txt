@@ -25,3 +25,4 @@ pexpect
 pickleshare
 simplegeneric
 qgrid
+bokeh

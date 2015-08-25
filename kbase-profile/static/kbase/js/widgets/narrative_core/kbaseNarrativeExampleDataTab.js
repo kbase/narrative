@@ -2,11 +2,7 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'kbwidget', 
-        'narrativeConfig',
-        'kbaseAuthenticatedWidget'], 
-        function( $ ) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeExampleDataTab',
         parent: 'kbaseAuthenticatedWidget',
@@ -15,8 +11,8 @@ define(['jquery',
             ws_name: null, // must be the WS name, not the WS Numeric ID
             ws_url:"https://kbase.us/services/ws",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            loadingImage: window.kbconfig.loading_gif,
-            exampleWsId: 2901, // designed to be a workspace with just a handful of objects
+            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            exampleWsName: 'KBaseExampleData', // designed to be a workspace with just a handful of objects
 	    $importStatus:$('<div>'),
             exampleTypeOrder: [
                 {name:['AssemblyInput','SingleEndLibrary','PairedEndLibrary','ReferenceAssembly'], displayName: "Example Sequence Assembly Inputs", header:'Various types of read data configured for sequence assembly.'},
@@ -24,10 +20,10 @@ define(['jquery',
                 {name:['Genome'], displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
                 {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
                 {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'},
-                {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data Sets", header:'Sets of WGS and amplicon metagenomes'},
+                {name:['ExpressionMatrix'], displayName: "Example ExpressionMatrix", header:'Gene expression data in a gene vs. condition matrix'},
+                {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data", header:'Sets of WGS and amplicon metagenomes'},
                 {name:['TranscriptomeHack'], displayName: "Example Sorghum Transcriptomes", header:'Sorghum bicolor transcriptome data in response to ABA and osmotic stress'}
                 ]
-
         },
 
         ws: null,
@@ -85,7 +81,7 @@ define(['jquery',
             var self = this;
             if (self.narWs && self.ws) {
                 self.ws.list_objects({
-                        ids : [self.options.exampleWsId],
+                        workspaces : [self.options.exampleWsName],
                         includeMetadata: 1
                     },
                     function(infoList) {

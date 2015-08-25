@@ -10,17 +10,13 @@
  * @public
  */
 // kb_require(['kbaseMethodGallery'], 
-define(['jquery', 
-        'kbwidget', 
-        'narrativeConfig',
-        'kbaseAccordion', 
-        'kbaseNarrativeControlPanel'], function( $ ) {
+define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
         parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
-            loadingImage: null,
+            loadingImage: 'static/kbase/images/ajax-loader.gif',
             autopopulate: true,
             title: 'Apps & Methods',
             methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
@@ -53,7 +49,6 @@ define(['jquery',
             if (window.kbconfig && window.kbconfig.urls) {
                 this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
                 this.icon_colors = window.kbconfig.icons.colors;
-                this.options.loadingImage = window.kbconfig.loading_gif;
             }
 
             this.$searchDiv = $('<div>')
@@ -198,9 +193,9 @@ define(['jquery',
              */
             $(document).on('getFunctionSpecs.Narrative',
                 $.proxy(function(e, specSet, callback) {
-                  console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
+                    //console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
                     if (callback) {
-                      console.debug("Trigger: specSet=",specSet);
+                        //console.debug("Trigger: specSet=",specSet);
                         callback(this.getFunctionSpecs(specSet));
                     }
                 }, this)
@@ -436,11 +431,11 @@ define(['jquery',
                                         .attr('target', '_blank')
                                         .attr('href', this.options.methodHelpLink + method.info.id)));
 
-            var $moreBtn = $('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
-                           .append($('<span>')
-                                   .addClass('fa fa-ellipsis-h')
-                                   .css({'color' : '#999'}))
-                           .hide();
+            var $moreBtn =
+                    $('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
+                        .append($('<span>')
+                                    .addClass('fa fa-ellipsis-h')
+                                    .css({'color' : '#999'}));
 
             var $mainDiv = $('<div>')
                            .addClass('kb-data-list-info')
@@ -448,7 +443,7 @@ define(['jquery',
                            .append($name)
                            .append($('<div>')
                                    .append($version)
-                                   .append($moreBtn));
+                                   .append($moreBtn.hide()));
 
             var $newMethod = $('<table>')
                              .css({'width':'100%'})
@@ -460,7 +455,7 @@ define(['jquery',
                                              .css({'width':'70%'})
                                              .append($mainDiv))
                                      .append($('<td>')
-                                             .append($moreBtn)));
+                                             .append($moreBtn.hide())));
 
             return $('<div>')
                    .append($('<hr>').addClass('kb-data-list-row-hr').css({'margin-left':'65px'}))
@@ -502,7 +497,7 @@ define(['jquery',
          * If a spec isn't found, then it won't appear in the return values.
          */
         getFunctionSpecs: function(specSet) {
-            console.debug("getFunctionSpecs(specSet=",specSet,")");
+            //console.debug("getFunctionSpecs(specSet=",specSet,")");
             var results = {};
             if (specSet.apps && specSet.apps instanceof Array) {
                 results.apps = {};
@@ -521,7 +516,7 @@ define(['jquery',
                 }
               */
             }
-            console.debug("getFunctionSpecs returning:",results);
+            //console.debug("getFunctionSpecs returning:",results);
             return results;
         },
 
@@ -711,20 +706,38 @@ define(['jquery',
         },
 
         /**
-         * A *REALLY* simple filter based on whether the given pattern string is present in the
+         * A simple filter based on whether the given pattern string is present in the
          * method's name.
          * Returns true if so, false if not.
          * Doesn't care if its a method or an app, since they both have name fields at their root.
          */
         textFilter: function(pattern, method) {
             var lcName = method.info.name.toLowerCase();
-            return lcName.indexOf(pattern.toLowerCase()) > -1;
+            // match any token in the query, not the full string
+            var tokens = pattern.toLowerCase().split(" ");
+            for(var k=0; k<tokens.length; k++) {
+                if(lcName.indexOf(tokens[k])<0) {
+                    // token not found, so we return false
+                    return false;
+                }
+            }
+            // returns true only if all tokens were found
+            return true;
         },
 
         /**
-         * Returns true if the type is available as in input to the method, false otherwise
+         * Returns true if the type is available as in input to the method, false otherwise, assumes
+         * only the first token in 'type' is the type name
          */
         inputTypeFilter: function(type, spec) {
+            var tokens = type.split(' ');
+            var type = tokens[0];
+            tokens.shift();
+            // first check that other tokens match the method/app name
+            if(!this.textFilter(tokens.join(' '),spec)) {
+                return false;
+            }
+
             var methodFilter = function(type, spec) {
                 for (var i=0; i<spec.parameters.length; i++) {
                     var p = spec.parameters[i];

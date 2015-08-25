@@ -3,10 +3,7 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'kbwidget',
-        'narrativeConfig'], 
-        function( $ ) {
+define(['jquery', 'kbwidget'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeDownloadPanel",
         parent: "kbaseWidget",
@@ -21,7 +18,7 @@ define(['jquery',
         type: null,
         wsId: null,
         objId: null,
-        loadingImage: window.kbconfig.loading_gif,
+        loadingImage: "static/kbase/images/ajax-loader.gif",
         wsUrl: window.kbconfig.urls.workspace,
         transformURL: window.kbconfig.urls.transform,
         ujsURL: window.kbconfig.urls.user_and_job_state,
@@ -70,7 +67,17 @@ define(['jquery',
         	    name: 'TSV', external_type: 'TSV.Pangenome', transform_options: {}
         	}, {
         	    name: "EXCEL", external_type: 'Excel.Pangenome', transform_options: {}
-        	}]
+        	}],
+            
+            'KBaseFeatureValues.ExpressionMatrix':[{
+                name: "TSV", external_type: 'TSV.Matrix', transform_options: {}
+            }],
+
+            'KBaseFeatureValues.FeatureClusters':[{
+                name: "TSV", external_type: 'TSV.FeatureClusters', transform_options: {}
+            }, {
+                name: "SIF", external_type: 'SIF.FeatureClusters', transform_options: {}
+            }]
         },
 
         init: function(options) {

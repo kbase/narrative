@@ -29,6 +29,7 @@ require.config({
         'widgetMaxWidthCorrection'              : 'kbase/js/widgetMaxWidthCorrection',
         'kbapi'                                 : 'kbase/js/widgets/kbapi',
         'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
+        'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
 
         /***
          * CORE NARRATIVE WIDGETS
@@ -59,6 +60,7 @@ require.config({
         'kbaseNarrativeParameterCheckboxInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCheckboxInput',
         'kbaseNarrativeParameterTextareaInput'  : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextareaInput',
         'kbaseNarrativeParameterFileInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterFileInput',
+        'kbaseNarrativeParameterTextSubdataInput' : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextSubdataInput',
         'kbaseNarrativeError'                   : 'kbase/js/widgets/function_output/kbaseNarrativeError',
         'NarrativeManager'                      : 'kbase/js/api/NarrativeManager',
         'ipythonCellMenu'                       : 'kbase/js/widgets/narrative_core/ipythonCellMenu',
@@ -137,7 +139,36 @@ require.config({
         'AbundanceDataView'                     : 'kbase/js/widgets/function_output/kbaseAbundanceDataView',
         'RankAbundancePlot'                     : 'kbase/js/widgets/function_output/kbaseRankAbundancePlot',
 
-        // unfinished ones
+        'kbaseFeatureSet'                       : 'kbase/js/widgets/function_output/kbaseFeatureSet',
+
+        'kbaseExpressionMatrix'                 : 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
+        'kbaseExpressionGenesetBaseWidget'      : 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',
+        'kbaseExpressionHeatmap'                : 'kbase/js/widgets/function_output/kbaseExpressionHeatmap',
+        'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
+        'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
+        'kbaseExpressionEstimateK'              : 'kbase/js/widgets/function_output/kbaseExpressionEstimateK',
+        'kbaseExpressionClusterSet'             : 'kbase/js/widgets/function_output/kbaseExpressionClusterSet',
+        'kbaseExpressionFeatureClusters'        : 'kbase/js/widgets/function_output/kbaseExpressionFeatureClusters',
+
+        'geometry_point'                        : 'kbase/js/ui-common/src/js/geometry/geometry_point',
+        'geometry_rectangle'                    : 'kbase/js/ui-common/src/js/geometry/geometry_rectangle',
+        'geometry_size'                         : 'kbase/js/ui-common/src/js/geometry/geometry_size',
+        'kbaseVisWidget'                        : 'kbase/js/ui-common/src/widgets/kbaseVisWidget',
+        'kbaseHeatmap'                          : 'kbase/js/ui-common/src/widgets/vis/kbaseHeatmap',
+        'kbaseLinechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseLinechart',
+        'kbaseBarchart'                         : 'kbase/js/ui-common/src/widgets/vis/kbaseBarchart',
+        'kbaseScatterplot'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseScatterplot',
+        'kbaseChordchart'                       : 'kbase/js/ui-common/src/widgets/vis/kbaseChordchart',
+        'kbaseCircularHeatmap'                  : 'kbase/js/ui-common/src/widgets/vis/kbaseCircularHeatmap',
+        'kbaseForcedNetwork'                    : 'kbase/js/ui-common/src/widgets/vis/kbaseForcedNetwork',
+        'kbaseHistogram'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseHistogram',
+        'kbaseLineSerieschart'                  : 'kbase/js/ui-common/src/widgets/vis/kbaseLineSerieschart',
+        'kbasePiechart'                         : 'kbase/js/ui-common/src/widgets/vis/kbasePiechart',
+        'kbaseTreechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
+        'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
+
+
+
         /***
          * END CUSTOM OUTPUT WIDGETS
          ***/

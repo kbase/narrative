@@ -1,19 +1,17 @@
-define([
-    'jquery', 
-    'kbwidget', 
-    'narrativeConfig',
-    'kbasePrompt', 
-    'kbaseNarrativeControlPanel',
-    'bootstrap'
-], function( $ ) {
-    "use strict";
+"use strict";
 
+define(['jquery', 
+        'kbwidget', 
+        'kbasePrompt', 
+        'kbaseNarrativeControlPanel',
+        'bootstrap'], 
+        function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeJobsPanel',
         parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
-            loadingImage: window.kbconfig.loading_gif,
+            loadingImage: 'static/kbase/images/ajax-loader.gif',
             autopopulate: true,
             title: 'Jobs',
         },
@@ -255,37 +253,26 @@ define([
                                'print jm.delete_jobs(["' + jobId + '"], as_json=True)\n';
 
             var callbacks = {
-                shell: {
-                    reply: $.proxy(function(content) {
-                        this.handleCallback('shell.reply', content);
-                    }, this),
-                    payload: {
-                        set_next_input: $.proxy(function(content) {
-                            this.handleCallback('shell.payload.set_next_input', content);
-                        }, this)
-                    },
-                },
-                iopub: {
-                    output: $.proxy(function(content) {
-                        this.deleteResponse(content, jobId);
-                    }, this),
-                    clear_output: $.proxy(function(content) {
-                        this.handleCallback('iopub.clear_output', content);
-                    }, this)
-                },
-                input: $.proxy(function(content) {
-                        this.handleCallback('input', content);
-                    }, this)
+                'output' : $.proxy(function(msgType, content) {
+                    var response = this.deleteResponse(msgType, content, jobId);
+                    if (callback)
+                        callback(response);
+                }, this),
+                'execute_reply' : $.proxy(function(content) { 
+                    this.handleCallback('execute_reply', content); 
+                }, this),
+                'clear_output' : $.proxy(function(content) { 
+                    this.handleCallback('clear_output', content); 
+                }, this),
+                'set_next_input' : $.proxy(function(content) { 
+                    this.handleCallback('set_next_input', content); 
+                }, this),
+                'input_request' : $.proxy(function(content) { 
+                    this.handleCallback('input_request', content); 
+                }, this)
             };
 
-            var executeOptions = {
-                silent: true,
-                user_expressions: {},
-                allow_stdin: false,
-                store_history: false
-            };
-
-            var msgid = IPython.notebook.kernel.execute(deleteJobCmd, callbacks, executeOptions);
+            IPython.notebook.kernel.execute(deleteJobCmd, callbacks, {store_history: false, silent: true});
         },
 
         /**
@@ -293,8 +280,8 @@ define([
          * When we get the deletion response from the kernel, we should delete the job.
          * We should *probably* just delete the job anyway, whether there's an error or not.
          */
-        deleteResponse: function(content, jobId) {
-            if (content.msg_type != 'stream') {
+        deleteResponse: function(msgType, content, jobId) {
+            if (msgType != 'stream') {
                 console.error('An error occurred while trying to delete a job');
                 this.refresh(false);
                 return;
@@ -530,40 +517,25 @@ define([
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
                                   'print job_manager.poll_jobs([' + jobParamList + '], as_json=True)\n';
-
             var callbacks = {
-                shell: {
-                    reply: $.proxy(function(content) {
-                        this.handleCallback('shell.reply', content);
-                    }, this),
-                    payload: {
-                        set_next_input: $.proxy(function(content) {
-                            this.handleCallback('shell.payload.set_next_input', content);
-                        }, this)
-                    },
-                },
-                iopub: {
-                    output: $.proxy(function(content) {
-                        this.parseKernelResponse(content, jobInfo);
-                        // this.handleCallback('iopub.output', content);
-                    }, this),
-                    clear_output: $.proxy(function(content) {
-                        this.handleCallback('iopub.clear_output', content);
-                    }, this)
-                },
-                input: $.proxy(function(content) {
-                        this.handleCallback('input', content);
-                    }, this)
+                'output' : $.proxy(function(msgType, content) { 
+                    this.parseKernelResponse(msgType, content, jobInfo); 
+                }, this),
+                'execute_reply' : $.proxy(function(content) { 
+                    this.handleCallback('execute_reply', content); 
+                }, this),
+                'clear_output' : $.proxy(function(content) { 
+                    this.handleCallback('clear_output', content); 
+                }, this),
+                'set_next_input' : $.proxy(function(content) { 
+                    this.handleCallback('set_next_input', content); 
+                }, this),
+                'input_request' : $.proxy(function(content) { 
+                    this.handleCallback('input_request', content); 
+                }, this),
             };
 
-            var executeOptions = {
-                silent: true,
-                user_expressions: {},
-                allow_stdin: false,
-                store_history: false
-            };
-
-            var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, executeOptions);
+            var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: true, store_history: false});
         },
 
         /**
@@ -585,13 +557,13 @@ define([
          * @method
          * Get the kernel response and render it if it's valid.
          */
-        parseKernelResponse: function(content, jobInfo) {
+        parseKernelResponse: function(msgType, content, jobInfo) {
             // if it's not a datastream, display some kind of error, and return.
-            if (content.msg_type != 'stream') {
+            if (msgType != 'stream') {
                 this.showError('Sorry, an error occurred while loading the job list.');
                 return;
             }
-            var buffer = content.content.text;
+            var buffer = content.data;
             if (buffer.length > 0) {
                 var jobStatus = JSON.parse(buffer);
                 this.populateJobsPanel(jobStatus, jobInfo);
@@ -912,7 +884,7 @@ define([
                 }
             }
             // if it's an error, then we need to signal the cell
-            if (status === "error") { // || (jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0)) {
+            if (status === "error" || status === "suspend") { // || (jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0)) {
                 if (jobType === 'njs') {
                     $cell.kbaseNarrativeAppCell('setRunningState', 'error');
                 }

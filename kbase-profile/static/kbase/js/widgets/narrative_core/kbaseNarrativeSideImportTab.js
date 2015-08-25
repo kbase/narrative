@@ -3,11 +3,7 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'kbwidget', 
-        'narrativeConfig',
-        'kbaseAuthenticatedWidget', 
-        'select2'], function( $ ) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( $ ) {
     $.KBWidget({
         name: "kbaseNarrativeSideImportTab",
         parent: "kbaseAuthenticatedWidget",
@@ -17,7 +13,7 @@ define(['jquery',
         },
         token: null,
         wsName: null,
-        loadingImage: window.kbconfig.loading_gif,
+        loadingImage: "static/kbase/images/ajax-loader.gif",
         wsUrl: window.kbconfig.urls.workspace,
         methodStoreURL: window.kbconfig.urls.narrative_method_store,
         methClient: null,
@@ -112,7 +108,7 @@ define(['jquery',
                               .css({'border' : '4px'})
                               .append('Next');
             var $hintDiv  = $('<div>').addClass("kb-method-parameter-hint")
-            	.append("Use the pulldown menu of data types above to select the type of data you wish to import.");
+            	.append("Use the pulldown menu of data types above to select the type of data you wish to import; then click the Next button.");
 
             $nextButton.click(
             		$.proxy(function(event) {
@@ -609,6 +605,28 @@ define(['jquery',
             	} else {
             		self.showError(methodId + " import mode for PhenotypeSet type is not supported yet");
             	}
+            } else if (self.selectedType === 'KBaseFeatureValues.ExpressionMatrix') {
+                if (methodId === 'import_expression_tsv_file') {
+                    var options = {
+                            'format_type': 'Simple',
+                            'fill_missing_values': self.asInt(params['fillMissingValues']),
+                            'data_type': params['dataType']
+                    };
+                    var genome = params['genomeObject'];
+                    if (genome)
+                        options['genome_object_name'] = genome;
+                    var dataScale = params['dataScale'];
+                    if (dataScale)
+                        options['data_scale'] = dataScale;
+                    args = {'external_type': 'TSV.Expression', 
+                            'kbase_type': 'KBaseFeatureValues.ExpressionMatrix', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':options},
+                            'url_mapping': {'TSV.Expression': self.shockURL + '/node/' + params['expressionFile']}};
+                } else {
+                    self.showError(methodId + " import mode for ExpressionMatrix type is not supported yet");
+                }
             } else {
             	self.showError("Import for [" + self.selectedType + "] type is not supported yet.");
             }

@@ -1,5 +1,5 @@
 /**
- * Browsing of heatmaps for a gene set for each condition. Basic statistics for each condition is also provided. 
+ * Browsing of genes with basic stat and heatmap calculated for a set of conditions
  *
  * Pavel Novichkov <psnovichkov@lbl.gov>
  * @public
@@ -10,11 +10,11 @@
         'd3',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',      
-        'kbaseExpressionGenesetBaseWidget'
+        'kbaseExpressionConditionsetBaseWidget'
         ], function($) {
     $.KBWidget({
-        name: 'kbaseExpressionHeatmap',
-        parent: 'kbaseExpressionGenesetBaseWidget',
+        name: 'kbaseExpressionFeatureTableHeatmap',
+        parent: 'kbaseExpressionConditionsetBaseWidget',
         version: '1.0.0',
 
         colorGenerator: null,
@@ -36,12 +36,12 @@
             }
 
 
-            var features = [];
-            if(self.options.geneIds) { features = $.map(self.options.geneIds.split(","), $.trim); }
+            var conditions = [];
+            if(self.options.conditionIds) { conditions = $.map(self.options.conditionIds.split(","), $.trim); }
 
             return{
                 input_data: self.options.workspaceID + "/" + self.options.expressionMatrixID,
-                row_ids: features,
+                column_ids: conditions,
                 fl_column_set_stat: 1,
                 fl_row_set_stats: 1,
                 fl_values: 1
@@ -55,12 +55,12 @@
             var self = this;
             var pref = this.pref;
 
-            self.updateColorGenerator();
             $containerDiv.append(
-                $('<div style="font-size: 1.2em; width:100%; text-align: center;">Browse Conditions</div>')
+                $('<div style="font-size: 1.2em; width:100%; text-align: center;">Browse Features</div>')
             );
             $containerDiv.append(
-                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; text-align: center;">Statistics calculated for the selected features across all conditions</div>')
+                $('<div style="font-size: 1em; margin-top:0.2em; font-style: italic; width:100%; '+
+                    'text-align: center;">Statistics calculated for the selected conditions for all features</div>')
             );
 
             self.$tableDiv = $('<div>');
@@ -81,16 +81,16 @@
 
 
             var minCell = $('<div>')
-                            .addClass('heat_cell')
-                            .css('float','right')
-                            .css('padding','4px')
-                            .css('background',self.colorGenerator(self.minColorValue));
+                             .addClass('heat_cell')
+                             .css('float','right')
+                             .css('padding','4px')
+                             .css('background',self.colorGenerator(self.minColorValue));
 
             var maxCell = $('<div>')
-                            .addClass('heat_cell')
-                            .css('float','right')
-                            .css('padding','4px')
-                            .css('background',self.colorGenerator(self.maxColorValue));
+                             .addClass('heat_cell')
+                             .css('float','right')
+                             .css('padding','4px')
+                             .css('background',self.colorGenerator(self.maxColorValue));
 
             $containerDiv.append('<br><br><br>');
             var padding = '2px';
@@ -164,7 +164,7 @@
             self.updateColorGenerator();
 
             self.$tableDiv.empty();
-            var $tableConditions = $('<table id="' + pref + 'conditions-table" \
+            var $tableFeatures = $('<table id="' + pref + 'features-table" \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
                 </table>')
                 .appendTo(self.$tableDiv)
@@ -172,9 +172,10 @@
                     "sDom": 'lftip',
                     "iDisplayLength": 10,
                     "scrollX": true,
-                    "aaData": self.buildConditionsTableData(),                  
+                    "aaData": self.buildFeaturesTableData(),                  
                     "aoColumns": [
-                        { sTitle: "Condition ID", mData:"id"},
+                        { sTitle: "Feature ID", mData:"id"},
+                        { sTitle: "Function", mData:"function"},
                         { sTitle: "Min", mData:"min"},
                         { sTitle: "Max", mData:"max"},
                         { sTitle: "Average", mData:"avg"},                            
@@ -188,7 +189,7 @@
                                         .addClass('heat_cell')
                                         .css('background',self.colorGenerator(values[i]))
                                         .attr('title', 
-                                            'Feature: ' + self.submatrixStat.row_descriptors[i].id
+                                            'Condition: ' + self.submatrixStat.column_descriptors[i].id
                                              + '\n' + 'Value: ' + values[i].toFixed(2)
                                         );
                                     $heatRow.append(heatCell);
@@ -199,31 +200,34 @@
                     ]
                 } ); 
         },
-        buildConditionsTableData: function(){
+        buildFeaturesTableData: function(){
             var tableData = [];
 
             var submatrixStat = this.submatrixStat;
-            var columnDescriptors = submatrixStat.column_descriptors;
             var rowDescriptors = submatrixStat.row_descriptors;
-            var stat = submatrixStat.column_set_stat;
+            var columnDescriptors = submatrixStat.column_descriptors;
+            var stat = submatrixStat.row_set_stats;
             var values = submatrixStat.values;
-            for(var ci = 0; ci < columnDescriptors.length; ci++){
-                var desc = columnDescriptors[ci];
+            for(var ri = 0; ri < rowDescriptors.length; ri++){
+                var desc = rowDescriptors[ri];
 
-                var columnValues = [];
-                for(var ri = 0; ri < rowDescriptors.length; ri++){
-                    columnValues.push(values[ri][ci]);
+                var rowValues = [];
+                for(var ci = 0; ci < columnDescriptors.length; ci++){
+                    rowValues.push(values[ri][ci]);
                 }
+
+                var gene_function = desc.properties['function'];
 
                 tableData.push(
                     {
                         'id': desc.id,
-                        'min': stat.mins[ci] === null? ' ' : stat.mins[ci].toFixed(2),
-                        'max': stat.maxs[ci] === null? ' ' : stat.maxs[ci].toFixed(2),
-                        'avg': stat.avgs[ci] === null? ' ' : stat.avgs[ci].toFixed(2),
-                        'std': stat.stds[ci] === null? ' ' : stat.stds[ci].toFixed(2),
-                        'missing_values': stat.missing_values[ci],
-                        'values': columnValues
+                        'function' : gene_function ? gene_function : ' ',
+                        'min': stat.mins[ri] ? stat.mins[ri].toFixed(2) : ' ',
+                        'max': stat.maxs[ri] ? stat.maxs[ri].toFixed(2) : ' ',
+                        'avg': stat.avgs[ri] ? stat.avgs[ri].toFixed(2) : ' ',
+                        'std': stat.stds[ri] ? stat.stds[ri].toFixed(2) : ' ',
+                        'missing_values': stat.missing_values[ri],
+                        'values': rowValues
                     }
                 );
             }

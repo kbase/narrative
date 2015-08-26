@@ -133,6 +133,6 @@
         "workspace": "https://ci.kbase.us/services/ws", 
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
-   "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md", 
-    "version": "1.0.3"
+    "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md", 
+    "version": "1.0.4"
 }

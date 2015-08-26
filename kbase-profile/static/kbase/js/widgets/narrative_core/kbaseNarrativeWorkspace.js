@@ -1816,7 +1816,7 @@ define(['jquery',
         /**
          * @method _handle_output
          */
-        handleOutput: function (cell, content, showOutput) {
+        handleOutput: function (cell, content, showOutput, callingWidget) {
             this.dbg('[handle output]');
             this.dbg(content);
             this.dbg(showOutput);
@@ -1927,8 +1927,8 @@ define(['jquery',
                         this.createOutputCell(cell, result);
                         // if we create an output cell, and the callingWidget is defined, then make sure we say it
                         // is complete (this is not updated for widgets with 'none' behavior otherwise)
-                        if(callingWidget) {
-                            if(callingWidget.changeState)
+                        if (callingWidget) {
+                            if (callingWidget.changeState)
                                 callingWidget.changeState('complete');
                         }
                     }

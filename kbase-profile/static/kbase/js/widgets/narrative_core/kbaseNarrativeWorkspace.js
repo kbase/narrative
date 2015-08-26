@@ -400,7 +400,7 @@ define(['jquery',
                     },
                 },
                 iopub: {
-                    output: function(content) { self.handleOutput(data.cell, content.msgType, content, showOutput, handleError, data.widget); },
+                    output: function(content) { self.handleOutput(data.cell, content, showOutput, handleError, data.widget); },
                     clear_output: function(content) { self.handleClearOutput(data.cell, content); },
                 },
                 input: function(content) { self.handleInputRequest(data.cell, content); }
@@ -459,7 +459,7 @@ define(['jquery',
                     },
                 },
                 iopub: {
-                    output: function(content) { self.handleOutput(data.cell, content.msgType, content, "app"); },
+                    output: function(content) { self.handleOutput(data.cell, content, "app"); },
                     clear_output: function(content) { self.handleClearOutput(data.cell, content); },
                 },
                 input: function(content) { self.handleInputRequest(data.cell, content); }
@@ -650,7 +650,6 @@ define(['jquery',
             $(cell.element).off('dblclick');
             $(cell.element).off('keydown');
             $(cell.element).on('click', function() { IPython.narrative.disableKeyboardManager(); });
-            //cell.events.trigger('edit_mode.Cell', {cell: cell} )});
         },
 
         /**
@@ -1633,7 +1632,7 @@ define(['jquery',
                         },
                     },
                     iopub: {
-                        output: function(content) { self.handleOutput(cell, content.msgType, content); },
+                        output: function(content) { self.handleOutput(cell, content); },
                         clear_output: function(content) { self.handleClearOutput(cell, content); },
                     },
                     input: function(content) { self.handleInputRequest(cell, content); }
@@ -1747,8 +1746,8 @@ define(['jquery',
          * @private
          */
         handleExecuteReply: function (cell, content) {
-            // this.dbg('[handleExecuteReply]');
-            // // this.dbg(content);
+            this.dbg('[handleExecuteReply]');
+            this.dbg(content);
 
             // this.dbg(cell);
             /* This catches and displays any errors that don't get piped through
@@ -1756,10 +1755,10 @@ define(['jquery',
              * Any code that makes it that far gets reported through the output
              * mechanism and ends here with an 'ok' message.
              */
-            if (content.status === 'error') {
+            if (content.content.status === 'error') {
                 var errorBlob = {
-                    msg : content.evalue,
-                    type : content.ename
+                    msg : content.content.evalue,
+                    type : content.content.ename
                 };
 
                 if (cell && cell.metadata && cell.metadata['kb-cell'] &&
@@ -1770,7 +1769,7 @@ define(['jquery',
                     return line.replace(/\[\d+(;\d+)?m/g, '');
                 };
 
-                var errTb = content.traceback.map(function(line) {
+                var errTb = content.content.traceback.map(function(line) {
                     return {
                         filename: null,
                         function: null,
@@ -1817,11 +1816,15 @@ define(['jquery',
         /**
          * @method _handle_output
          */
-        handleOutput: function (cell, msgType, content, showOutput) {
-            // copied from outputarea.js
+        handleOutput: function (cell, content, showOutput) {
+            this.dbg('[handle output]');
+            this.dbg(content);
+            this.dbg(showOutput);
+
+            var msgType = content.msg_type;
             var buffer = "";
             if (msgType === "stream") {
-                buffer += content.data;
+                buffer += content.content.text;
                 var lines = buffer.split("\n");
                 var offs = 0,
                     done = false,

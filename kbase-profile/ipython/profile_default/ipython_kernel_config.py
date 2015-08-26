@@ -62,7 +62,7 @@ c = get_config()
 # c.IPKernelApp.log_level = 30
 
 # lines of code to run at IPython startup.
-c.InteractiveShellApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.narrative.services import *' ]
+c.IPKernelApp.exec_lines = [ 'import biokbase.narrative.magics', 'from biokbase.narrative.services import *' ]
 
 # Path to an extra config file to load.
 # 

@@ -252,27 +252,41 @@ define(['jquery',
                                'jm = KBjobManager()\n' +
                                'print jm.delete_jobs(["' + jobId + '"], as_json=True)\n';
 
+            var self = this;
             var callbacks = {
-                'output' : $.proxy(function(msgType, content) {
-                    var response = this.deleteResponse(msgType, content, jobId);
-                    if (callback)
-                        callback(response);
-                }, this),
-                'execute_reply' : $.proxy(function(content) { 
-                    this.handleCallback('execute_reply', content); 
-                }, this),
-                'clear_output' : $.proxy(function(content) { 
-                    this.handleCallback('clear_output', content); 
-                }, this),
-                'set_next_input' : $.proxy(function(content) { 
-                    this.handleCallback('set_next_input', content); 
-                }, this),
-                'input_request' : $.proxy(function(content) { 
-                    this.handleCallback('input_request', content); 
-                }, this)
+                shell: {
+                    reply: function(content) { 
+                        self.handleCallback('reply', content);
+                    },
+                    payload: {
+                        set_next_input: function(content) {
+                           self.handleCallback('set_next_input', content); 
+                       },
+                    },
+                },
+                iopub: {
+                    output: function(content) { 
+                        var response = self.deleteResponse(content.msg_type, content, jobId);
+                        if (callback)
+                            callback(response);
+                    },
+                    clear_output: function(content) { 
+                        self.handleCallback('clear_output', content);
+                    },
+                },
+                input: function(content) {
+                    self.handleCallback('input', content); 
+                }
             };
 
-            IPython.notebook.kernel.execute(deleteJobCmd, callbacks, {store_history: false, silent: true});
+            var executeOptions = {
+                silent: true,
+                user_expressions: {},
+                allow_stdin: false,
+                store_history: false
+            };
+
+            IPython.notebook.kernel.execute(deleteJobCmd, callbacks, executeOptions);
         },
 
         /**
@@ -517,25 +531,60 @@ define(['jquery',
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
                                   'print job_manager.poll_jobs([' + jobParamList + '], as_json=True)\n';
+
+            var self = this;
             var callbacks = {
-                'output' : $.proxy(function(msgType, content) { 
-                    this.parseKernelResponse(msgType, content, jobInfo); 
-                }, this),
-                'execute_reply' : $.proxy(function(content) { 
-                    this.handleCallback('execute_reply', content); 
-                }, this),
-                'clear_output' : $.proxy(function(content) { 
-                    this.handleCallback('clear_output', content); 
-                }, this),
-                'set_next_input' : $.proxy(function(content) { 
-                    this.handleCallback('set_next_input', content); 
-                }, this),
-                'input_request' : $.proxy(function(content) { 
-                    this.handleCallback('input_request', content); 
-                }, this),
+                shell: {
+                    reply: function(content) { 
+                        self.handleCallback('reply', content);
+                    },
+                    payload: {
+                        set_next_input: function(content) {
+                           self.handleCallback('set_next_input', content); 
+                       },
+                    },
+                },
+                iopub: {
+                    output: function(content) { 
+                        self.parseKernelResponse(content, jobInfo);
+                    },
+                    clear_output: function(content) { 
+                        self.handleCallback('clear_output', content);
+                    },
+                },
+                input: function(content) {
+                    self.handleCallback('input', content); 
+                }
             };
 
-            var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: true, store_history: false});
+            var executeOptions = {
+                silent: true,
+                user_expressions: {},
+                allow_stdin: false,
+                store_history: false
+            };
+
+            IPython.notebook.kernel.execute(pollJobsCommand, callbacks, executeOptions);
+
+            // var callbacks = {
+            //     'output' : $.proxy(function(msgType, content) { 
+            //         this.parseKernelResponse(msgType, content, jobInfo); 
+            //     }, this),
+            //     'execute_reply' : $.proxy(function(content) { 
+            //         this.handleCallback('execute_reply', content); 
+            //     }, this),
+            //     'clear_output' : $.proxy(function(content) { 
+            //         this.handleCallback('clear_output', content); 
+            //     }, this),
+            //     'set_next_input' : $.proxy(function(content) { 
+            //         this.handleCallback('set_next_input', content); 
+            //     }, this),
+            //     'input_request' : $.proxy(function(content) { 
+            //         this.handleCallback('input_request', content); 
+            //     }, this),
+            // };
+
+            // var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: true, store_history: false});
         },
 
         /**
@@ -557,13 +606,13 @@ define(['jquery',
          * @method
          * Get the kernel response and render it if it's valid.
          */
-        parseKernelResponse: function(msgType, content, jobInfo) {
+        parseKernelResponse: function(content, jobInfo) {
             // if it's not a datastream, display some kind of error, and return.
-            if (msgType != 'stream') {
+            if (content.msg_type != 'stream') {
                 this.showError('Sorry, an error occurred while loading the job list.');
                 return;
             }
-            var buffer = content.data;
+            var buffer = content.content.text;
             if (buffer.length > 0) {
                 var jobStatus = JSON.parse(buffer);
                 this.populateJobsPanel(jobStatus, jobInfo);

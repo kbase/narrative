@@ -56,9 +56,12 @@ define([
         this.selectedCell = null;
         this.currentVersion = window.kbconfig.version;
         this.dataViewers = null;
-        console.log('Built base Narrative object');
 
         return this;
+    };
+
+    Narrative.prototype.makeKernelCall = function() {
+
     };
 
     // Wrappers for the IPython/Jupyter function so we only maintain it in one place.

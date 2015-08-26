@@ -222,10 +222,10 @@ define(['jquery',
                         'id': desc.id,
                         'name': desc.name ? desc.name : ' ',
                         'function' : gene_function ? gene_function : ' ',
-                        'min': stat.mins[i] === null? ' ' : stat.mins[i].toFixed(2),
-                        'max': stat.maxs[i] === null? ' ' : stat.maxs[i].toFixed(2),
-                        'avg': stat.avgs[i] === null? ' ' : stat.avgs[i].toFixed(2),
-                        'std': stat.stds[i] === null? ' ' : stat.stds[i].toFixed(2),
+                        'min': stat.mins[i] ? stat.mins[i].toFixed(2) : ' ',
+                        'max': stat.maxs[i] ? stat.maxs[i].toFixed(2) : ' ',
+                        'avg': stat.avgs[i] ? stat.avgs[i].toFixed(2) : ' ',
+                        'std': stat.stds[i] ? stat.stds[i].toFixed(2) : ' ',
                         'missing_values': stat.missing_values[i]
                     }
                 );

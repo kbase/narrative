@@ -486,8 +486,21 @@ define(['jquery',
                                         .tooltip({title:'Rename data', 'container':'body'})
                                         .append($('<span>').addClass('fa fa-font').css(css))
                                         .click(function(e) {
-                                            e.stopPropagation(); $alertContainer.empty();
-                                            var $newNameInput = $('<input type="text">').addClass('form-control').val(object_info[1]);
+                                            e.stopPropagation(); 
+                                            $alertContainer.empty();
+                                            var $newNameInput = $('<input type="text">')
+                                                                .addClass('form-control')
+                                                                .val(object_info[1])
+                                                                .on('focus', function() {
+                                                                    if (IPython && IPython.narrative) {
+                                                                        IPython.narrative.disableKeyboardManager();
+                                                                    }
+                                                                })
+                                                                .on('blur', function() {
+                                                                    if (IPython && IPython.narrative) {
+                                                                        IPython.narrative.enableKeyboardManager();
+                                                                    }
+                                                                });
                                             $alertContainer.append($('<div>')
                                                 .append($('<div>').append("Warning: Apps using the old name may break."))
                                                 .append($('<div>').append($newNameInput))
@@ -1032,7 +1045,18 @@ define(['jquery',
                         self.$filterTypeDiv.hide();
                     }
                 });
-            self.$searchInput = $('<input type="text">').addClass('form-control');
+            self.$searchInput = $('<input type="text">')
+                                .addClass('form-control')
+                                .on('focus', function() {
+                                    if (IPython && IPython.narrative) {
+                                        IPython.narrative.disableKeyboardManager();
+                                    }
+                                })
+                                .on('blur', function() {
+                                    if (IPython && IPython.narrative) {
+                                        IPython.narraive.enableKeyboardManager();
+                                    }
+                                });
             self.$searchDiv = $('<div>').addClass("input-group").css({'margin-bottom':'10px'})
                                 .append(self.$searchInput)
                                 .append($("<span>").addClass("input-group-addon")

@@ -649,6 +649,8 @@ define(['jquery',
             // remove its double-click and return functions. sneaky!
             $(cell.element).off('dblclick');
             $(cell.element).off('keydown');
+            $(cell.element).on('click', function() { IPython.narrative.disableKeyboardManager(); });
+            //cell.events.trigger('edit_mode.Cell', {cell: cell} )});
         },
 
         /**

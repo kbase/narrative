@@ -61,6 +61,15 @@ define([
         return this;
     };
 
+    // Wrappers for the IPython/Jupyter function so we only maintain it in one place.
+    Narrative.prototype.disableKeyboardManager = function() {
+        IPython.keyboard_manager.disable();
+    };
+
+    Narrative.prototype.enableKeyboardManager = function() {
+        IPython.keyboard_manager.enable();
+    };
+
     Narrative.prototype.showIPythonCellToolbar = function(cell) {
         if (this.selectedCell && cell != this.selectedCell)
             this.selectedCell.celltoolbar.hide();
@@ -81,6 +90,8 @@ define([
 
         $([IPython.events]).on('select.Cell', $.proxy(function(event, data) {
             this.showIPythonCellToolbar(data.cell);
+            if (data.cell.metadata['kb-cell'])
+                this.disableKeyboardManager();
         }, this));
 
         $([IPython.events]).on('create.Cell', $.proxy(function(event, data) {
@@ -89,6 +100,7 @@ define([
 
         $([IPython.events]).on('delete.Cell', $.proxy(function(event, data) {
             this.showIPythonCellToolbar(IPython.notebook.get_selected_cell());
+            this.enableKeyboardManager();
         }, this));
     };
 

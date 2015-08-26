@@ -61,6 +61,7 @@ define(['jquery',
                     IPython.save_widget.rename_notebook("Your Narrative must be named before you can share it with others.", false);
                     return "<br><br>Please name your Narrative before sharing.<br><br>"
                 }
+                IPython.narrative.disableKeyboardManager();
             }
 
             //!! arg!! I have to refresh to get reattach the events, which are lost when

@@ -507,8 +507,23 @@ define(['jquery',
                     .tooltip({title:'Copy Narrative and Data', 'container':'body'})
                     .append($('<span>').addClass('fa fa-copy').css(css))
                     .click(function(e) {
-                        e.stopPropagation(); $alertContainer.empty(); $alertContainer.show();
-                        var $newNameInput = $('<input type="text">').addClass('form-control').val(ws_info[8].narrative_nice_name+ ' - Copy');
+                        e.stopPropagation(); 
+                        $alertContainer.empty(); 
+                        $alertContainer.show();
+                        var $newNameInput = $('<input type="text">')
+                                            .addClass('form-control')
+                                            .val(ws_info[8].narrative_nice_name+ ' - Copy')
+                                            .on('focus', function() {
+                                                if (IPython && IPython.narrative) {
+                                                    IPython.narrative.disableKeyboardManager();
+                                                }
+                                            })
+                                            .on('blur', function() {
+                                                if (IPython && IPython.narrative) {
+                                                    IPython.narrative.enableKeyboardManager();
+                                                }
+                                            });
+
                         $alertContainer.append(
                             $('<div>').append(
                                 $('<div>').append("Enter a name for the new Narrative"))
@@ -806,8 +821,19 @@ define(['jquery',
                   self.ws.get_object_info_new({objects:[{ref: ws_info[0] + '/' + ws_info[8]['narrative']}], includeMetadata:1},
                     function(object_info_list) {
                         var object_info = object_info_list[0];
-                        var $newNameInput = $('<input type="text">').addClass('form-control')
-                          .val(ws_info[8]['narrative_nice_name']+' - Copy');
+                        var $newNameInput = $('<input type="text">')
+                                            .addClass('form-control')
+                                            .val(ws_info[8]['narrative_nice_name']+' - Copy')
+                                            .on('focus', function() {
+                                                if (IPython && IPython.narrative) {
+                                                    IPython.narrative.disableKeyboardManager();
+                                                }
+                                            })
+                                            .on('blur', function() {
+                                                if (IPython && IPython.narrative) {
+                                                    IPython.narrative.enableKeyboardManager();
+                                                }
+                                            });
                         $dialog.append(
                             $('<div>').append(
                                 $('<div>').append("Enter a name for the new Narrative"))

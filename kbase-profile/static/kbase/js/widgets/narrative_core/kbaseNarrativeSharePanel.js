@@ -217,16 +217,24 @@ WORKSPACE INFO
             
                 if (isOwner) {
                     var $addUsersDiv = $('<div>').css({'margin-top':'10px'});
-                    var $input = $('<input>').attr('type','text').css({'width':self.options.add_user_input_width});
+                    var $input = $('<input>')
+                                 .attr('type','text')
+                                 .css({'width':self.options.add_user_input_width});
                     
                     var $addAction =
-                        $('<div>').addClass('btn-group')
-                            .append($('<button>').addClass('btn btn-default dropdown-toggle ')
-                                .attr('type','button').attr('data-toggle','dropdown').attr('aria-expanded','false')
+                        $('<div>')
+                        .addClass('btn-group')
+                        .append($('<button>')
+                                .addClass('btn btn-default dropdown-toggle ')
+                                .attr('type','button')
+                                .attr('data-toggle','dropdown')
+                                .attr('aria-expanded','false')
                                 .append('<span class="fa fa-caret-down"></span>'))
-                            .append($('<ul>').addClass('dropdown-menu pull-right').attr('role','menu')
-                                    // TODO: pull-right is deprecated, use dropdown-menu-right when bootstrap updates
-                                    .append($('<li>').append(
+                        .append($('<ul>')
+                                .addClass('dropdown-menu pull-right')
+                                .attr('role','menu')
+                                // TODO: pull-right is deprecated, use dropdown-menu-right when bootstrap updates
+                                .append($('<li>').append(
                                         $('<a>').append('Add with view privileges')
                                             .on('click',function() {
                                                 var data = $input.select2("data");

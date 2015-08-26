@@ -1,6 +1,10 @@
-define(['jquery', 'kbwidget', 'kbaseNarrativeDataPanel', 
-        'kbaseNarrativeMethodPanel', 'kbaseNarrativeManagePanel', 
-        'kbaseNarrativeJobsPanel'], function($) {
+define(['jquery', 
+        'kbwidget', 
+        'kbaseNarrativeDataPanel', 
+        'kbaseNarrativeMethodPanel', 
+        'kbaseNarrativeManagePanel', 
+        'kbaseNarrativeJobsPanel',
+        'kbaseNarrative'], function($) {
     $.KBWidget({
         name: 'kbaseNarrativeSidePanel',
         parent: 'kbaseWidget',
@@ -274,6 +278,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeDataPanel',
                     this.$overlay.append(panel);
                     this.currentPanel = panel;
                 }
+                IPython.narrative.disableKeyboardManager();
                 this.$narrativeDimmer.show();
                 this.$elem.find('.kb-side-header').addClass('overlay-active');
                 this.$overlay.show('slide', 'fast', $.proxy(function() {
@@ -283,6 +288,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeDataPanel',
 
         hideOverlay: function() {
             if (this.$overlay) {
+                IPython.narrative.enableKeyboardManager();
                 this.$narrativeDimmer.hide();
                 this.$elem.find('.kb-side-header').removeClass('overlay-active');
                 this.$overlay.hide('slide', 'fast', $.proxy(function() {

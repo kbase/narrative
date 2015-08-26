@@ -10,7 +10,11 @@
  * @public
  */
 // kb_require(['kbaseMethodGallery'], 
-define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], function( $ ) {
+define(['jquery', 
+        'kbwidget', 
+        'kbaseAccordion',
+        'kbaseNarrativeControlPanel',
+        'kbaseNarrative'], function( $ ) {
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
         parent: 'kbaseNarrativeControlPanel',
@@ -68,8 +72,24 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                                         else
                                             this.visualFilter(this.textFilter, txt);
                                     }, this)
+                                )
+                                .on('focus',
+                                    function() {
+                                        console.log('focus');
+                                        if (IPython && IPython.narrative) {
+                                            IPython.narrative.disableKeyboardManager();
+                                        }
+                                    }
+                                )
+                                .on('blur',
+                                    function() {
+                                        console.log('blur');
+                                        if (IPython && IPython.narrative) {
+                                            IPython.narrative.enableKeyboardManager();
+                                        }
+                                    }
                                 );
-            
+
             self.$searchInput.on('keyup', function(e){
                 if (e.keyCode == 27) 
                     self.$searchDiv.hide();

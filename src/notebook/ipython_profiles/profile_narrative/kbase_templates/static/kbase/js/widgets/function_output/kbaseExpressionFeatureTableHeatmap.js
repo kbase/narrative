@@ -222,10 +222,10 @@
                     {
                         'id': desc.id,
                         'function' : gene_function ? gene_function : ' ',
-                        'min': stat.mins[ri] === null? ' ' : stat.mins[ri].toFixed(2),
-                        'max': stat.maxs[ri] === null? ' ' : stat.maxs[ri].toFixed(2),
-                        'avg': stat.avgs[ri] === null? ' ' : stat.avgs[ri].toFixed(2),
-                        'std': stat.stds[ri] === null? ' ' : stat.stds[ri].toFixed(2),
+                        'min': stat.mins[ri] ? stat.mins[ri].toFixed(2) : ' ',
+                        'max': stat.maxs[ri] ? stat.maxs[ri].toFixed(2) : ' ',
+                        'avg': stat.avgs[ri] ? stat.avgs[ri].toFixed(2) : ' ',
+                        'std': stat.stds[ri] ? stat.stds[ri].toFixed(2) : ' ',
                         'missing_values': stat.missing_values[ri],
                         'values': rowValues
                     }

@@ -47,7 +47,7 @@ The document specifically describes how you would build the system on a [Vagrant
 Testing will be composed of three components:
 
 - a ```make test``` directive that runs through a batch of unit-testing of the Narrative, both the front-end Javascript-based components, and the back-end IPython modifications
-- a ```travis.yaml``` file for Travis-CI testing
+- a ```travis.yml``` file for Travis-CI testing
 - a set of Selenium-based end-to-end tests that simulate browser interactions
 
 ## Submitting code

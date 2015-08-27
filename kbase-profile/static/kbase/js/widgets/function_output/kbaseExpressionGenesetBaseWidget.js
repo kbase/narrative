@@ -175,14 +175,19 @@ define(['jquery',
             var $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
             $containerDiv.append($overvewContainer);
 
+            var geneData = self.buildGenesTableData();
+            var iDisplayLength = 10;
+            var style = 'lftip';
+            if(geneData.length<=iDisplayLength) { style = 'fti'; }
+
             var tableGenes = $('<table id="'+pref+'genes-table"  \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
                 </table>')
                 .appendTo($overvewContainer)
                 .dataTable( {
-                    "sDom": 'lftip',
-                    "iDisplayLength": 10,
-                    "aaData": self.buildGenesTableData(),
+                    "sDom": style,
+                    "iDisplayLength": iDisplayLength,
+                    "aaData": geneData,
                     "aoColumns": [
                         { sTitle: "Name", mData: "id"},
                         { sTitle: "Function", mData: "function"},
@@ -217,10 +222,10 @@ define(['jquery',
                         'id': desc.id,
                         'name': desc.name ? desc.name : ' ',
                         'function' : gene_function ? gene_function : ' ',
-                        'min': stat.mins[i] === null? ' ' : stat.mins[i].toFixed(2),
-                        'max': stat.maxs[i] === null? ' ' : stat.maxs[i].toFixed(2),
-                        'avg': stat.avgs[i] === null? ' ' : stat.avgs[i].toFixed(2),
-                        'std': stat.stds[i] === null? ' ' : stat.stds[i].toFixed(2),
+                        'min': stat.mins[i] ? stat.mins[i].toFixed(2) : ' ',
+                        'max': stat.maxs[i] ? stat.maxs[i].toFixed(2) : ' ',
+                        'avg': stat.avgs[i] ? stat.avgs[i].toFixed(2) : ' ',
+                        'std': stat.stds[i] ? stat.stds[i].toFixed(2) : ' ',
                         'missing_values': stat.missing_values[i]
                     }
                 );

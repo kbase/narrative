@@ -16,9 +16,13 @@
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
  */
-define(['jquery', 'underscore', 'kbwidget', 
-        'kbaseNarrativeControlPanel', 'kbaseNarrativeDataList',
-        'kbaseNarrativeSidePublicTab', 'kbaseNarrativeSideImportTab',
+define(['jquery', 
+        'underscore', 
+        'kbwidget', 
+        'kbaseNarrativeControlPanel', 
+        'kbaseNarrativeDataList',
+        'kbaseNarrativeSidePublicTab', 
+        'kbaseNarrativeSideImportTab',
         'kbaseNarrativeExampleDataTab'], 
         function( $, _ ) {
 
@@ -398,7 +402,11 @@ define(['jquery', 'underscore', 'kbwidget',
                          "Communities.Heatmap",
                          "Communities.PCoA",
                          "Communities.TaxonomicMatrix",
-                         "Communities.TaxonomicProfile"
+                         "Communities.TaxonomicProfile",
+                         "KBaseFeatureValues.ExpressionMatrix",
+                         "KBaseFeatureValues.FeatureClusters",
+                         "KBaseFeatureValues.EstimateKResult",
+                         "KBaseCollections.FeatureSet",
                          ];
 
             types.sort(function(a,b){

@@ -121,7 +121,8 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
             var self = this;
             if (!self.objectList) { return; }
 
-            var typeDivs = {};
+            var typeDivs = {}; 
+            var showTypeDiv = {};
             for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
                 var typeInfo = self.options.exampleTypeOrder[t];
                 var $tc = $('<div>')
@@ -132,6 +133,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
                                         .append(typeInfo.header)));
                 for(var k=0; k<typeInfo.name.length; k++) {
                     typeDivs[typeInfo.name[k]] = $tc;
+                    showTypeDiv[typeInfo.name[k]] = false;
                 }
             }
             var $tc = $('<div>')
@@ -161,6 +163,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
 
                 if (typeDivs.hasOwnProperty(typeName)) {
                     typeDivs[typeName].append(obj.$div);
+                    showTypeDiv[typeName] = true;
                 } else {
                     typeDivs['other.types'].append(obj.$div);
                     hasOthers = true;
@@ -168,7 +171,12 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
             }
 
             for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
-                self.$mainPanel.append(typeDivs[self.options.exampleTypeOrder[t].name[0]]);
+                var tn = self.options.exampleTypeOrder[t].name[0];
+                if(showTypeDiv.hasOwnProperty(tn)) {
+                    if(showTypeDiv[tn]) {
+                        self.$mainPanel.append(typeDivs[tn]);
+                    }
+                }
             }
             if (hasOthers) {
                 self.$mainPanel.append(typeDivs['other.types']);

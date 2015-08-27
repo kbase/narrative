@@ -136,12 +136,15 @@
                         <span class="fa fa-navicon"></span>
                     </button>
                     <ul class="dropdown-menu" role="menu" aria-labelledby="kb-nav-menu">
-                        <!-- li><a href="/functional-site/#/ws/" id="workspace-link">Workspaces</a></li -->
                         <li><a href="/functional-site/#/search/?q=*" target="_blank">Search Data</a></li>
                         <li><a href="/functional-site/#/dashboard" target="_blank">Dashboard</a></li>
                         <li><a id="kb-status-btn" href="" target="_blank">KBase Service Status</a></li>
                         <li role="presentation" class="divider"></li>
                         <li><a id="kb-about-btn">About the Narrative</a></li>
+                        <li class="divider"></li>
+                        <li title="About Jupyter Notebook"><a id="notebook_about" href="#">About Jupyter</a></li>
+
+
                         <li><a target="_blank" href="https://kbase.us/narrative-guide/">Narrative User Guide</a></li>
                         <li><a target="_blank" href="https://kbase.us/contact-us/">Contact Us</a></li>
                     </ul>
@@ -197,35 +200,6 @@
             </div>
         </div>
     </nav>
-<!-- <div id="header">
-  <div id="header-container" class="container">
-  <div id="ipython_notebook" class="nav navbar-brand pull-left"><a href="{{default_url}}" title='dashboard'>{% block logo %}<img src='{{static_url("base/images/logo.png") }}' alt='Jupyter Notebook'/>{% endblock %}</a></div>
-
-  {% block header_buttons %}
-
-  {% block login_widget %}
-
-    <span id="login_widget">
-      {% if logged_in %}
-        <button id="logout" class="btn btn-sm navbar-btn">Logout</button>
-      {% elif login_available and not logged_in %}
-        <button id="login" class="btn btn-sm navbar-btn">Login</button>
-      {% endif %}
-    </span>
-
-  {% endblock %}
-
-  {% endblock header_buttons %}
-
-  {% block headercontainer %}
-  {% endblock %}
-  </div>
-  <div class="header-bar"></div>
-
-  {% block header %}
-  {% endblock %}
-</div> -->
-
 <div id="site">
 {% block site %}
 {% endblock %}

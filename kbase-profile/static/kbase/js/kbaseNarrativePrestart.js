@@ -16,7 +16,7 @@ define(['jquery',
             var narrName = IPython.notebook.notebook_name;
             // we do not allow users to leave their narratives untitled
             if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
-                IPython.save_widget.rename_notebook("Please name your Narrative before saving.", false);
+                IPython.save_widget.rename_notebook({notebook: IPython.notebook}); //"Please name your Narrative before saving.", false);
             } else {
                 IPython.narrative.saveNarrative();
             }
@@ -24,7 +24,7 @@ define(['jquery',
     });
     $('#kb-narr-name #name').click(function(e) {
         if (IPython && IPython.save_widget) {
-            IPython.save_widget.rename_notebook("Rename your Narrative.", true);
+            IPython.save_widget.rename_notebook({notebook: IPython.notebook}); //"Rename your Narrative.", true);
             var narrName = IPython.notebook.notebook_name;
             // this code needs to move to the save widget since rename_notebook is async!!
             //$('#kb-narr-name #name').text(narrName);
@@ -58,7 +58,7 @@ define(['jquery',
             if (IPython && IPython.notebook) {
                 var narrName = IPython.notebook.notebook_name;
                 if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
-                    IPython.save_widget.rename_notebook("Your Narrative must be named before you can share it with others.", false);
+                    IPython.save_widget.rename_notebook({notebook: IPython.notebook}); //"Your Narrative must be named before you can share it with others.", false);
                     return "<br><br>Please name your Narrative before sharing.<br><br>"
                 }
                 IPython.narrative.disableKeyboardManager();

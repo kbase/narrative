@@ -83,7 +83,11 @@
 define(['jquery', 
         'base/js/namespace', 
         'base/js/security',
+        'notebook/js/notebook',
         'notebook/js/textcell',
+        'notebook/js/savewidget',
+        'base/js/dialog',
+        'base/js/keyboard',
         'notebook/js/cell',
         'services/config',
         'notebook/js/mathjaxutils',
@@ -93,8 +97,12 @@ define(['jquery',
         ],
     function($, 
              IPython, 
-             security, 
+             security,
+             notebook,
              textCell,
+             saveWidget,
+             dialog,
+             keyboard,
              cell,
              config,
              mathjaxutils,
@@ -157,6 +165,65 @@ define(['jquery',
             catch (error) {
                 this.element.find('div.text_cell_render').html("Error while parsing markdown cell: " + error);
             }
+        };
+
+        // Patch the Notebook to return the right name
+        notebook.Notebook.prototype.get_notebook_name = function() {
+            return this.metadata.name;
+        };
+
+        // Patch the save widget to take in options at save time
+        saveWidget.SaveWidget.prototype.rename_notebook = function(options) {
+            options = options || {};
+            var that = this;
+            var dialog_body = $('<div/>').append(
+                $("<p/>").addClass("rename-message")
+                    .text('Enter a new Narrative name:')
+            ).append(
+                $("<br/>")
+            ).append(
+                $('<input/>').attr('type','text').attr('size','25').addClass('form-control')
+                .val(options.notebook.get_notebook_name())
+            );
+            var d = dialog.modal({
+                title: "Rename Narrative",
+                body: dialog_body,
+                notebook: options.notebook,
+                keyboard_manager: this.keyboard_manager,
+                buttons : {
+                    "OK": {
+                        class: "btn-primary",
+                        click: function () {
+                            var new_name = d.find('input').val();
+                            d.find('.rename-message').text("Renaming and saving...");
+                            d.find('input[type="text"]').prop('disabled', true);
+                            that.notebook.rename(new_name).then(
+                                function () {
+                                    d.modal('hide');
+                                }, function (error) {
+                                    d.find('.rename-message').text(error.message || 'Unknown error');
+                                    d.find('input[type="text"]').prop('disabled', false).focus().select();
+                                }
+                            );
+                            return false;
+                        }
+                    },
+                    "Cancel": {}
+                    },
+                open : function () {
+                    /**
+                     * Upon ENTER, click the OK button.
+                     */
+                    d.find('input[type="text"]').keydown(function (event) {
+                        if (event.which === keyboard.keycodes.enter) {
+                            d.find('.btn-primary').first().click();
+                            return false;
+                        }
+                    });
+                    d.find('input[type="text"]').focus().select();
+                }
+            });
+
         };
 
         // Kickstart the Narrative loading routine once the notebook is loaded.

@@ -178,7 +178,6 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         if obj_ref is None:
             raise HTTPError(404, 'Path "{}" is not a valid Narrative path'.format(path))
         self.log.warn('looking up whether a narrative exists')
-        print('got here.')
         try:
             self.log.warn('trying to get narrative {}'.format(obj_ref))
             return self.narrative_exists(obj_ref)

@@ -22,14 +22,14 @@ define(['jquery',
             }
         }
     });
-    $('#kb-narr-name #name').click(function(e) {
-        if (IPython && IPython.save_widget) {
-            IPython.save_widget.rename_notebook({notebook: IPython.notebook}); //"Rename your Narrative.", true);
-            var narrName = IPython.notebook.notebook_name;
-            // this code needs to move to the save widget since rename_notebook is async!!
-            //$('#kb-narr-name #name').text(narrName);
-        }
-    });
+    // $('#kb-narr-name #name').click(function(e) {
+    //     if (IPython && IPython.save_widget) {
+    //         IPython.save_widget.rename_notebook({notebook: IPython.notebook}); //"Rename your Narrative.", true);
+    //         var narrName = IPython.notebook.notebook_name;
+    //         // this code needs to move to the save widget since rename_notebook is async!!
+    //         //$('#kb-narr-name #name').text(narrName);
+    //     }
+    // });
     $('#kb-kernel-int-btn').click(function(e) {
         if (IPython && IPython.notebook && IPython.notebook.kernel) {
             IPython.notebook.kernel.interrupt();

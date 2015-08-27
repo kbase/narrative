@@ -371,7 +371,7 @@ define([
             var narrname = IPython.notebook.get_notebook_name();
             var username = IPython.notebook.metadata.creator;
             console.log(IPython.notebook.metadata);
-            $('#kb-narr-name #name').text(narrname);
+            // $('#kb-narr-name #name').text(narrname);
             $('#kb-narr-creator').text(username);
             $('.kb-narr-namestamp').css({'display':'block'});
 

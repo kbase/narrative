@@ -83,6 +83,7 @@
 define(['jquery', 
         'base/js/namespace', 
         'base/js/security',
+        'base/js/utils',
         'notebook/js/notebook',
         'notebook/js/textcell',
         'notebook/js/savewidget',
@@ -98,6 +99,7 @@ define(['jquery',
     function($, 
              IPython, 
              security,
+             utils,
              notebook,
              textCell,
              saveWidget,
@@ -172,6 +174,22 @@ define(['jquery',
             return this.metadata.name;
         };
 
+        // Patch the Notebook to not wedge a file extension on a new Narrative name
+        notebook.Notebook.prototype.rename = function(new_name) {
+            var that = this;
+            var parent = utils.url_path_split(this.notebook_path)[0];
+            var new_path = utils.url_path_join(parent, new_name);
+            return this.contents.rename(this.notebook_path, new_path).then(
+                function (json) {
+                    that.notebook_name = json.name;
+                    that.notebook_path = json.path;
+                    that.last_modified = new Date(json.last_modified);
+                    that.session.rename_notebook(json.path);
+                    that.events.trigger('notebook_renamed.Notebook', json);
+                }
+            );
+        };
+
         // Patch the save widget to take in options at save time
         saveWidget.SaveWidget.prototype.rename_notebook = function(options) {
             options = options || {};
@@ -200,6 +218,8 @@ define(['jquery',
                             that.notebook.rename(new_name).then(
                                 function () {
                                     d.modal('hide');
+                                    that.notebook.metadata.name = new_name;
+                                    that.element.find('span.filename').text(new_name);
                                 }, function (error) {
                                     d.find('.rename-message').text(error.message || 'Unknown error');
                                     d.find('input[type="text"]').prop('disabled', false).focus().select();

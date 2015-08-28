@@ -1,13 +1,5 @@
 @import url("//fonts.googleapis.com/css?family=Roboto");
 
-div#notebook {
-	overflow-y: auto;
-}
-
-.cell.selected {
-	border: #ababab solid;
-}
-
 /**
  * Shim to make sure jQuery-ui dialogs are always on front of other DOM elements.
  */

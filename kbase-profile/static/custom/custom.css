@@ -42,13 +42,6 @@ div#notebook {
     background-color: #FFFFFF;
 }
 
-#ipython-main-app {
-    position: relative;
-    font-size: 110%;
-}
-/* Shiran: undoing style introduced by datavis.css */
-pre { outline: none; }
-
 .btn * { color: black; }
 
 .celltoolbar {
@@ -66,4 +59,36 @@ div.input_area {
 div.text_cell_input {
     border: 1px solid #CECECE;
     border-radius: 0px;
+}
+
+div.text_cell_render {
+    margin-bottom: -10px;
+}
+
+div.cell {
+    /*padding: 5px 0px 0 0;*/
+    border: none;
+    border-left: 5px solid #FFF;
+}
+
+div.cell.selected {
+    border: none;
+    border-left: 5px solid #4BB856;
+}
+
+input.raw_input {
+    /*height:auto;*/
+}
+
+div#notebook {
+    overflow-y: auto;
+}
+
+
+body {
+    padding-top: 45px !important;
+}
+
+.prompt {
+    min-width: 10ex;
 }

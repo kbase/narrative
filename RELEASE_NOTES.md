@@ -3,6 +3,13 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 1.0.4
+__Changes__
+- Added widgets and methods to support feature-value analyses
+- JIRA KBASE-2626 - Narrative should no longer crash when the Workspace Service is unavailable, but it will produce a 404 error when trying to fetch a Narrative from that Workspace.
+- JIRA NAR-528 - Narrative method panel now allows filtering by input/output type along with additional
+search terms.
+
 ### Version 1.0.3
 __Changes__
 - JIRA KBASE-1672 - updated text in upload dialogs
@@ -21,6 +28,7 @@ __Bugfixes__
 - JIRA KBASE-1843/KBASE-1849 - fixed issue where a large narrative object (e.g. a large IPython notebook object) fails to save without a decent error message. The maximum size was bumped to 4MB, and a sensible error message was introduced.
 - Fixed issue where duplicated results can appear in the Public Data tab
 - JIRA NAR-758 - added a horizontal scrollbar to widgets who get too wide (this currenly only affects the OTU Abundance data table widget, but others might get affected in the future).
+- JIRA NAR-814 - added a trailing slash to the service status url.
 
 ### Version 1.0.2 - 2/19/2015
 __Bugfixes__

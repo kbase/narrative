@@ -20,16 +20,23 @@ module.exports = function(grunt) {
         requirejs: {
             compile: {
                 options: {
-                    baseUrl: "./static",
+                    baseUrl: "static",
                     mainConfigFile: "static/narrative_paths.js",
                     findNestedDependencies: true,
                     optimize: "uglify2",
                     generateSourceMaps: true,
                     preserveLicenseComments: false,
-                    name: "narrative_paths",
+                    name: "narrativeMain",
                     out: "static/dist/kbase-narrative-min.js",
+                    // excludeShallow: [
+                    //     "IPythonMain",
+                    //     "ipythonCellMenu",
+                    //     "narrativeConfig"
+                    // ]
                     paths : {
                         "IPythonMain": "empty:",
+                        "ipythonCellMenu": "empty:",
+                        "narrativeConfig": "empty:",
                     },
                 }
             }
@@ -60,7 +67,7 @@ module.exports = function(grunt) {
                 actions: [
                     {
                         name: 'requirejs-onefile',
-                        search: 'narrative_paths',
+                        search: 'narrativeMain',
                         replace: function(match) {
                             // do a little sneakiness here. we just did the filerev thing, so get that mapping
                             // and return that (minus the .js on the end)

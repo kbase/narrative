@@ -9,58 +9,54 @@
  * @module Narrative
  * @static
  */
-define(['jquery'], function($) {
+define(['jquery', 
+        'json!kbase/config.json',
+        'json!kbase/icons.json'
+], function($,
+            configSet,
+            iconsSet) {
     "use strict";
 
-    var deferred = new $.Deferred();
-
-    // Dumb thing to get the workspace ID just like the back end does - from the URL at startup.
-    // This snippet keeps the workspace ID local, so it shouldn't be changed if someone pokes at the URL
-    // before trying to fetch it again.
     var workspaceId = null;
     var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
     if (m && m.length > 1)
         workspaceId = parseInt(m[1]);
-
-    var configProm = $.ajax({
-        url: 'static/kbase/config.json',
-        dataType: 'json',
-        cache: false
+    console.log(configSet);
+    var config = {
+        urls:            configSet[configSet['config']],
+        version:         configSet['version'],
+        name:            configSet['name'],
+        git_commit_hash: configSet['git_commit_hash'],
+        git_commit_time: configSet['git_commit_time'],
+        release_notes:   configSet['release_notes'],
+        mode:            configSet['mode'],
+        icons:           iconsSet,
+        workspaceId:     workspaceId,
+        loading_gif:     configSet['loading_gif'],
+    };
+    require.config({
+        paths: {
+            'uiCommonPaths': config.urls.ui_common_root + "widget-paths"
+        }
     });
-    var iconsProm = $.ajax({
-        url: 'static/kbase/icons.json',
-        dataType: 'json',
-        cache: false
-    });
 
-    $.when(configProm, iconsProm).done(
-        // configRes and iconsRes are the arguments resolved from their respective lookups.
-        // they are both arrays with the structure [data, statustext, jqXHR]
-        function loadedConfig(configRes, iconsRes) {
-            var configSet = configRes[0];
-            var iconsSet = iconsRes[0];
-            var config = {
-                urls:            configSet[configSet['config']],
-                version:         configSet['version'],
-                name:            configSet['name'],
-                git_commit_hash: configSet['git_commit_hash'],
-                git_commit_time: configSet['git_commit_time'],
-                // landing_page_map:landingPageMap,
-                release_notes:   configSet['release_notes'],
-                mode:            configSet['mode'],
-                icons:           iconsSet,
-                workspaceId:     workspaceId,
-                loading_gif:     configSet['loading_gif']
+    var updateConfig = function(callback) {
+        // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";
+        require(['uiCommonPaths'], function(pathConfig) {
+            for (var name in pathConfig.paths) {
+                pathConfig.paths[name] = config.urls.ui_common_root + pathConfig.paths[name];
             }
-            deferred.resolve(config);
-        }
-    ).fail(
-        function failedConfig(configFail, iconFail) {
-            console.err('Fatal error - unable to load configuration.');
-            // include other fatal error stuff here - should log the error.
-            deferred.reject(null);
-        }
-    );
+            require.config(pathConfig);
+            config.new_paths = pathConfig;
+            callback(config);
+        }, function(error) { 
+            console.log("Unable to get updated widget paths. Sticking with what we've got.");
+            callback(config);
+        });
+    };
 
-    return deferred.promise();
+    return {
+        updateConfig: updateConfig,
+        config: config
+    };
 });

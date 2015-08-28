@@ -1,13 +1,13 @@
 """
-KBase handlers for authentication in the IPython notebook.
+KBase handlers for authentication in the Jupyter notebook.
 """
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
 from tornado.escape import url_escape
-from IPython.html.base.handlers import IPythonHandler
-from IPython.config import Application
-from IPython.html.auth.login import LoginHandler
-from IPython.html.auth.logout import LogoutHandler
+from notebook.base.handlers import IPythonHandler
+from traitlets.config import Application
+from notebook.auth.login import LoginHandler
+from notebook.auth.logout import LogoutHandler
 
 from biokbase.narrative.common.kblogging import get_logger, log_event
 from biokbase.narrative.common.util import kbase_env

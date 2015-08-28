@@ -1,19 +1,19 @@
 import os
 from tornado.web import HTTPError
 
-from IPython.html.services.contents.checkpoints import (
+from notebook.services.contents.checkpoints import (
     Checkpoints,
     GenericCheckpointsMixin
 )
 from .narrativeio import KBaseWSManagerMixin
-from IPython.utils import tz
+from notebook.services.contents import tz
 
 class KBaseCheckpoints(KBaseWSManagerMixin, Checkpoints):
     def create_checkpoint(self, contents_mgr, path):
         """Create a checkpoint."""
         return dict(
             id=path,
-            last_modified=tz.datetime(2015, 7, 10)
+            last_modified=tz.datetime(2015, 7, 10) # dummy for now, since it can't be None
         )
 
     def restore_checkpoint(self, contents_mgr, checkpoint_id, path):

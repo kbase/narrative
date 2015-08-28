@@ -1,0 +1,10 @@
+#!/bin/bash
+
+export NARRATIVE_DIR=$d
+export JUPYTER_CONFIG_DIR=$NARRATIVE_DIR/kbase-profile
+export IPYTHONDIR=$NARRATIVE_DIR/kbase-profile/ipython
+CFGDIR=$JUPYTER_CONFIG_DIR/static/kbase
+
+cp $NARRATIVE_DIR/src/config.json $JUPYTER_CONFIG_DIR/static/kbase/
+
+jupyter notebook

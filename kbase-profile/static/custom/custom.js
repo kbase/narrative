@@ -252,8 +252,6 @@ define(['jquery',
                 require(['kbaseNarrative'], function(Narrative) {
                     IPython.narrative = new Narrative();
                     IPython.narrative.init();
-                    // IPython.keyboard_manager.edit_mode();
-                    // console.log('disabled keyboard manager');
                 });
             }
         );

@@ -475,6 +475,7 @@ define(['jquery',
                                              .css({'width':'70%'})
                                              .append($mainDiv))
                                      .append($('<td>')
+                                             .css({'width':'15%'})
                                              .append($moreBtn.hide())));
 
             return $('<div>')

@@ -19,6 +19,12 @@
 }
 
 
+#kb-notify-area {
+    display: inline-block;
+    float: left;
+    position: relative;
+}
+
 .kb-navbar-buttons {
     display: inline-block;
     padding-right: 15px;

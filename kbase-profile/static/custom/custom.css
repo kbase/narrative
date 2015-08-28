@@ -84,6 +84,39 @@ div#notebook {
     overflow-y: auto;
 }
 
+span#notebook_name {
+    color: #006698;
+}
+
+span#notebook_name:hover {
+    cursor: pointer;
+    background-color: #e0e0e0;    
+}
+
+#kb-narr-name {
+    font-style: italic;
+    font-family: 'OxygenBold';
+    font-size: 130%;
+    padding-bottom: 7px;
+}
+
+#kb-narr-name > #save_widget {
+    font-style: normal;
+    font-family: 'OxygenBold';
+    padding: 0;
+}
+
+#kb-narr-creator {
+    font-family: 'OxygenBold';
+}
+
+.kb-narr-namestamp {
+    margin-bottom: 0px;
+    margin-top: 5px;
+    padding-left: 20px;
+    border-left: 2px solid #CECECE;
+    display: none;
+}
 
 body {
     padding-top: 45px !important;

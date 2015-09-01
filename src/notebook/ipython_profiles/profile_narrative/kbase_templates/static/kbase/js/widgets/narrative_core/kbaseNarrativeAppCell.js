@@ -469,11 +469,11 @@
             //self.updateDynamicMethodSummaryHeader()
             //self.$dynamicMethodSummary.show();
             if(noAnimation) {
-                $mintarget.find(".panel-footer").hide();
-                $mintarget.find(".panel-body").hide();
+                $mintarget.find(".panel-footer").first().hide();
+                $mintarget.find(".panel-body").first().hide();
             } else {
-                $mintarget.find(".panel-footer").slideUp();
-                $mintarget.find(".panel-body").slideUp();
+                $mintarget.find(".panel-footer").first().slideUp();
+                $mintarget.find(".panel-body").first().slideUp();
             }
             self.inputSteps[stepIdx].$minimizeControl.removeClass("glyphicon-chevron-down")
                               .addClass("glyphicon-chevron-right");
@@ -483,8 +483,8 @@
         maximizeStepView: function(stepIdx) {
             var self = this;
             var $mintarget = self.inputSteps[stepIdx].$stepContainer;
-            $mintarget.find(".panel-body").slideDown();
-            $mintarget.find(".panel-footer").slideDown();
+            $mintarget.find(".panel-body").first().slideDown();
+            $mintarget.find(".panel-footer").first().slideDown();
             self.inputSteps[stepIdx].$minimizeControl.removeClass("glyphicon-chevron-right")
                                 .addClass("glyphicon-chevron-down");
             //self.$dynamicMethodSummary.hide();

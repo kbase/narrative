@@ -438,7 +438,7 @@
               $stepContainer:$stepPanel, 
               $statusPanel:$statusPanel, 
               $outputPanel:$outputPanel,
-              utputWidgetName:outputWidgetName,
+              outputWidgetName:outputWidgetName,
               minimized: false,
               $minimizeControl:$minimizeControl
             }

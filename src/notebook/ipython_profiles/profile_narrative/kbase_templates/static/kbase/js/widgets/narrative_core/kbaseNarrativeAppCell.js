@@ -799,14 +799,36 @@
                         }
                         this.startAppRun();
                     }
+                    else if (state.runningState.appRunState === 'error') {
+                        this.setErrorState(true);
+                        this.minimizeAllSteps();
+                        for (var i=0; i<this.inputSteps.length; i++) {
+                            if (this.inputSteps[i].$stepContainer.hasClass('kb-app-step-running')) {
+                                this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                                this.inputSteps[i].$stepContainer.addClass('kb-app-step-error');
+                            }
+                            this.inputSteps[i].widget.lockInputs();
+                        }
+                    }
                     else if (state.runningState.appRunState === "done") {
                         this.$submitted.show();
                         this.$runButton.hide();
+                        // start minimized if done, todo: save minimization state of steps
+                        this.minimizeAllSteps();
+                        for(var i=0; i<this.inputSteps.length; i++) {
+                            this.inputSteps[i].widget.lockInputs();
+                        }
                     }
                     else if (state.runningState.appRunState === "complete") {
                         this.$submitted.show();
                         this.$runButton.hide();
+                        // start minimized if complete, todo: save minimization state of steps
+                        this.minimizeAllSteps();
+                        for(var i=0; i<this.inputSteps.length; i++) {
+                            this.inputSteps[i].widget.lockInputs();
+                        }
                     }
+                    this.state.runningState.appRunState = state.runningState.appRunState;
                 }
             }
 

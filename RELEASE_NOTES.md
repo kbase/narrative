@@ -3,6 +3,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 1.0.5
+__Changes__
+- Fix for bugs in saving/loading App state and displaying App step output widgets.
+
 ### Version 1.0.4
 __Changes__
 - Added widgets and methods to support feature-value analyses

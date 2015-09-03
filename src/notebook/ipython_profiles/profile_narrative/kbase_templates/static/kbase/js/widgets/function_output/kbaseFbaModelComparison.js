@@ -2,7 +2,8 @@ define(['jquery',
         'kbwidget', 
         'kbaseAuthenticatedWidget',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap'], function($) {
+        'jquery-dataTables-bootstrap',
+        'kbaseTabs'], function($) {
 $.KBWidget({
     name: "FbaModelComparisonWidget",     
     parent: "kbaseAuthenticatedWidget",

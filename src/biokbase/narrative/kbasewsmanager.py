@@ -516,7 +516,8 @@ class KBaseWSNotebookManager(NotebookManager):
             };
             ws_util.alter_workspace_metadata(wsclient, None, updated_metadata, ws_id=wsid)
         except Exception as e:
-            raise web.HTTPError(500, u'Error saving Narrative: %s, %s' % (e.__str__(), wsid))
+            pass
+            # raise web.HTTPError(500, u'Error saving Narrative: %s, %s' % (e.__str__(), wsid))
 
         # Now we can save the Narrative object.
         try:

@@ -6,6 +6,8 @@ This is built on the IPython Notebook (more notes will follow).
 ### Version 1.0.5
 __Changes__
 - Fix for bugs in saving/loading App state and displaying App step output widgets.
+- Fix for a bug that prevented users with edit privileges from saving a shared narrative.
+- Fixed issue where FBA model comparison widget wasn't showing up properly.
 
 ### Version 1.0.4
 __Changes__

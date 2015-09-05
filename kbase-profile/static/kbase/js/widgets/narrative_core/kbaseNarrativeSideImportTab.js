@@ -7,7 +7,14 @@ define(['jquery',
         'kbwidget', 
         'kbaseAuthenticatedWidget', 
         'select2',
-        'narrativeConfig'], function( $ ) {
+        'narrativeConfig',
+        'json!kbase/upload_config.json'], 
+function($,
+         kbwidget,
+         kbaseAuthenticatedWidget,
+         select2,
+         config,
+         transformConfig) {    
     $.KBWidget({
         name: "kbaseNarrativeSideImportTab",
         parent: "kbaseAuthenticatedWidget",
@@ -453,6 +460,144 @@ define(['jquery',
             this.widgetPanelCard1.css('display', '');
         },
         
+
+        buildTransformParameters: function(objectType, methodId, params) {
+            var self = this;
+
+            console.log('building transform params');
+            console.log(transformConfig);
+            // if no objectType known in the config, that's a paddlin'.
+            if (!transformConfig[objectType]) {
+                return null;
+            }
+            // if the type's there, but not the method, that's a paddlin'.
+            if (!transformConfig[objectType][methodId]) {
+                return null;
+            }
+            var mapping = transformConfig[objectType][methodId];
+
+            // start with the easy part.
+            var args = {
+                external_type: mapping.external_type,
+                kbase_type: mapping.kbase_type,
+                object_name: params[mapping.object_name],
+                workspace_name: this.wsName
+            };
+
+            // do the optional args.
+            var optional_args = {
+                validate: {},
+                transform: {}
+            };
+
+            var url_mapping = {};
+
+            /**
+             * mapping has five (ish?) possible keys:
+             * type = string, int, boolean
+             * param = which method parameter name to map to
+             * value = an explicit value to use (takes precedence over 'param' key)
+             * optional = true or false
+             * default - this is its own block with some similar keys:
+             *     param - as above, maps to a method parameter
+             *     value - as above, takes precedence as above, too
+             *     prefix - a prefix string to put in front of the string
+             *     suffix - a suffix string to append to the string
+             * the 'default' parameter takes effect only if no value can be resolved
+             * from the other options.
+             */
+            var resolveParameter = function(mapping, params) {
+                var val = undefined;
+                if (mapping.hasOwnProperty('value')) {
+                    val = mapping.value;
+                }
+                else if (mapping.hasOwnProperty('param') && params.hasOwnProperty(mapping.param)) {
+                    val = params[mapping.param];
+                }
+                if ((!val || val.length === 0) && mapping.hasOwnProperty('default')) {
+                    // go deeper!
+                    val = resolveParameter(mapping.default, params);
+                }
+
+                if (val != undefined) {
+                    if (mapping.hasOwnProperty('prefix'))
+                        val = mapping.prefix + String(val);
+                    if (mapping.hasOwnProperty('suffix'))
+                        val = String(val) + mapping.suffix;
+
+                    if (mapping.type === 'int')
+                        val = self.asInt(val);
+                    else if (mapping.type === 'boolean')
+                        val = self.asBool(val);
+                }
+                return val;
+            };
+
+            // do optional_arguments (some aren't really optional but w/e)
+            for (var argType in mapping.optional_arguments) {
+                for (var paramName in mapping.optional_arguments[argType]) {
+                    // paramName = name of optional arguments parameter
+                    // paramInfo = hash of information about that parameter
+                    // params = big set of params
+                    var paramInfo = mapping.optional_arguments[argType][paramName];
+                    var val = resolveParameter(paramInfo, params);
+                    if (val != undefined) {
+                        optional_args[argType][paramName] = val;
+                    }
+                    else if (val === undefined && !paramInfo.optional) {
+                        // fail!
+                    }
+                }
+            }
+
+            /* do url mapping.
+             * A couple options:
+             * 1. type = shock
+             * 1.a. has 'param' attribute -- resolve the shock url with params[mapping.param] on the end
+             * 1.b. has 'value' attribute -- resolve the shock url with mapping.value on the end
+             *
+             * 2. type = string
+             * 2.a. has 'param' attribute -- url = params[mapping.param]
+             * 2.b. has 'value' attribute -- url = mapping.value
+             */
+            for (var objType in mapping.url_mapping) {
+                var paramInfo = mapping.url_mapping[objType];
+                var paramValue = undefined;
+
+                // value overrides all! fetch it first
+                if (paramInfo.value) 
+                    paramValue = paramInfo.value;
+                // if no value, look for param attribute and resolve it
+                else if (paramInfo.param)
+                    paramValue = params[paramInfo.param];
+
+                // if there's still no param value, it might be optional. if not = error!
+                if (!paramValue) {
+                    if (paramInfo.optional === true)
+                        continue;
+                    else
+                        // error!
+                        continue;
+                }
+
+                var url = undefined;
+                if (paramValue && paramValue.length > 0) {
+                    if (paramInfo.type.toLowerCase() === 'shock') {
+                        url = self.shockURL + '/node/' + paramValue;
+                    }
+                    else if (paramInfo.type.toLowerCase() === 'string') {
+                        url = paramValue;
+                    }
+                }
+                if (url)
+                    url_mapping[objType] = url;
+            }
+            args.optional_arguments = optional_args;
+            args.url_mapping = url_mapping;
+
+            return args;
+        },
+
         runImport: function(callback) {
             var self = this;
             var paramValueArray = this.getInputWidget().getParameters();
@@ -464,8 +609,13 @@ define(['jquery',
                 var paramValue = paramValueArray[i];
                 params[paramId] = paramValue;
             }
-            var uploaderClient = new Transform(this.uploaderURL, {'token': self.token});
+
             var args = null;
+            var testArgs = this.buildTransformParameters(self.selectedType, methodId, params);
+            console.log('test args for import');
+            console.log(testArgs);
+
+            var uploaderClient = new Transform(this.uploaderURL, {'token': self.token});
             if (self.selectedType === 'KBaseGenomes.Genome') {
                 var url = null;
                 if (methodId === 'import_genome_gbk_file') {
@@ -536,11 +686,15 @@ define(['jquery',
                             'optional_arguments': {'validate':{},'transform':options},
                             'url_mapping': {'FASTA.DNA.Assembly': self.shockURL + '/node/' + params['fastaFile']}};
                 } else if (methodId === 'import_reads_pe_fastq_file') {
-                    var urlMapping = {'SequenceReads.1': self.shockURL + '/node/' + params['fastqFile1']};
+                    var urlMapping = {
+                        'SequenceReads.1': self.shockURL + '/node/' + params['fastqFile1']
+                    };
                     if (params['fastqFile2'] && params['fastqFile2'].length > 0)
                         urlMapping['SequenceReads.2'] = self.shockURL + '/node/' + params['fastqFile2'];
-                    var options = {'outward':self.asInt(params['readOrientationOutward']),
-                            'output_file_name': 'pelib.fastq.json'};
+                    var options = {
+                        'outward':self.asInt(params['readOrientationOutward']),
+                        'output_file_name': 'pelib.fastq.json'
+                    };
                     var optInsert = params['insertSizeMean'];
                     if (optInsert)
                         options['insert'] = optInsert;
@@ -558,7 +712,12 @@ define(['jquery',
                             'kbase_type': 'KBaseAssembly.SingleEndLibrary', 
                             'workspace_name': self.wsName, 
                             'object_name': params['outputObject'],
-                            'optional_arguments': {'validate':{},'transform':{'output_file_name': 'selib.fastq.json'}},
+                            'optional_arguments': {
+                                'validate':{},
+                                'transform':{
+                                    'output_file_name': 'selib.fastq.json'
+                                }
+                            },
                             'url_mapping': {'SequenceReads': self.shockURL + '/node/' + params['fastqFile']}};
                 } else {
                     self.showError(methodId + " import mode for ShortReads type is not supported yet");
@@ -678,7 +837,11 @@ define(['jquery',
             }
             if (args) {
                 console.log("Data to be sent to transform service:");
-                console.log(JSON.stringify(args));
+                console.log(args);
+
+                return;
+
+
                 self.showInfo("Sending data...", true);
                 uploaderClient.upload(args,
                     $.proxy(function(data) {

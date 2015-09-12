@@ -641,6 +641,34 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
                 } else {
                     self.showError(methodId + " import mode for GrowthMatrix type is not supported yet");
                 }           
+            } else if (self.selectedType === 'KBaseEnigmaMetals.ChromatographyMatrix') {
+                if (methodId === 'import_chromatography_tsv_file') {
+                    var options = {
+                            'format_type': 'Simple'
+                    };
+                    args = {'external_type': 'TSV.Chromatography', 
+                            'kbase_type': 'KBaseEnigmaMetals.ChromatographyMatrix', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':options},
+                            'url_mapping': {'TSV.Chromatography': self.shockURL + '/node/' + params['growthFile']}};
+                } else {
+                    self.showError(methodId + " import mode for ChromatographyMatrix type is not supported yet");
+                }           
+            } else if (self.selectedType === 'KBaseEnigmaMetals.WellSampleMatrix') {
+                if (methodId === 'import_wellsample_tsv_file') {
+                    var options = {
+                            'format_type': 'Simple'
+                    };
+                    args = {'external_type': 'TSV.WellSample', 
+                            'kbase_type': 'KBaseEnigmaMetals.WellSampleMatrix', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':options},
+                            'url_mapping': {'TSV.WellSample': self.shockURL + '/node/' + params['growthFile']}};
+                } else {
+                    self.showError(methodId + " import mode for WellSampleMatrix type is not supported yet");
+                }           
             } else {
             	self.showError("Import for [" + self.selectedType + "] type is not supported yet.");
             }

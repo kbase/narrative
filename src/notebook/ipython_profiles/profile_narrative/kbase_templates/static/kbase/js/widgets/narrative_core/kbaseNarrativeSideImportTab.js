@@ -651,7 +651,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
                             'workspace_name': self.wsName, 
                             'object_name': params['outputObject'],
                             'optional_arguments': {'validate':{},'transform':options},
-                            'url_mapping': {'TSV.Chromatography': self.shockURL + '/node/' + params['growthFile']}};
+                            'url_mapping': {'TSV.Chromatography': self.shockURL + '/node/' + params['chromatographyFile']}};
                 } else {
                     self.showError(methodId + " import mode for ChromatographyMatrix type is not supported yet");
                 }           
@@ -665,7 +665,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
                             'workspace_name': self.wsName, 
                             'object_name': params['outputObject'],
                             'optional_arguments': {'validate':{},'transform':options},
-                            'url_mapping': {'TSV.WellSample': self.shockURL + '/node/' + params['growthFile']}};
+                            'url_mapping': {'TSV.WellSample': self.shockURL + '/node/' + params['wellSampleFile']}};
                 } else {
                     self.showError(methodId + " import mode for WellSampleMatrix type is not supported yet");
                 }           

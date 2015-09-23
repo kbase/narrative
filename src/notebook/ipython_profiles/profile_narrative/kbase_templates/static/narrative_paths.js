@@ -179,6 +179,7 @@ define([], function() {
             'kbasePiechart'                         : 'kbase/js/ui-common/src/widgets/vis/kbasePiechart',
             'kbaseTreechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
             'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
+            'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
 
             // unfinished ones

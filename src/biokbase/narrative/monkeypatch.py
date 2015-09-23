@@ -20,6 +20,7 @@ import IPython.html.services.notebooks.handlers
 from IPython.html.notebook.handlers import web  # get Tornado hook
 import IPython
 from tornado import web
+import urllib2
 
 import biokbase.auth
 from biokbase.narrative.common.kblogging import get_logger, log_event
@@ -157,8 +158,15 @@ def do_patching(c):
     def write_error(self, status_code, exc_info=None, **kwargs):
         err_obj = exc_info[1]
         app_log.warn("Write error: {}".format(err_obj))
-        # handle  special not-found
-        if err_obj.log_message.startswith('Notebook does not exist'):
+        # handle special not-found
+
+        from pprint import pprint
+        pprint(exc_info)
+        if isinstance(err_obj, web.HTTPError) or isinstance(err_obj, urllib2.HTTPError):
+            app_log.warn("HTTP Error")
+            self.write(self.render_template('notfound.html', narr_id=kbase_env.narrative))
+            return
+        elif err_obj.log_message.startswith('Notebook does not exist'):
             app_log.warn("Not found error")
             self.write(self.render_template('notfound.html', narr_id=kbase_env.narrative))
             return

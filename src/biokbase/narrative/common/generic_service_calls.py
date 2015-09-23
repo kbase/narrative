@@ -134,7 +134,7 @@ def app_state_output_into_method_output(workspace, token, wsClient, methodSpec, 
 
 def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_specs_json, param_values_json, app_job_id):
     appSpec = json.loads(app_spec_json)
-    paramValues = json.loads(param_values_json)
+    paramValues = json.loads(correct_method_specs_json(param_values_json))
     methIdToSpec = json.loads(correct_method_specs_json(method_specs_json))
     njsClient = NarrativeJobService(URLS.job_service, token = token)
     wsClient = workspaceService(URLS.workspace, token = token)
@@ -236,7 +236,10 @@ def build_args(paramValue, paramMapping, workspace, args):
 
 def transform_value(paramValue, workspace, targetTrans):
     if targetTrans == "ref":
-        return workspace + '/' + paramValue
+        if paramValue is None:
+            return None
+        else:
+            return workspace + '/' + paramValue
     if targetTrans == "int":
         if paramValue is None or len(str(paramValue).strip()) == 0:
             return None

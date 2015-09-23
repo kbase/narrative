@@ -193,9 +193,9 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
              */
             $(document).on('getFunctionSpecs.Narrative',
                 $.proxy(function(e, specSet, callback) {
-                  console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
+                    //console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
                     if (callback) {
-                      console.debug("Trigger: specSet=",specSet);
+                        //console.debug("Trigger: specSet=",specSet);
                         callback(this.getFunctionSpecs(specSet));
                     }
                 }, this)
@@ -497,7 +497,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
          * If a spec isn't found, then it won't appear in the return values.
          */
         getFunctionSpecs: function(specSet) {
-            console.debug("getFunctionSpecs(specSet=",specSet,")");
+            //console.debug("getFunctionSpecs(specSet=",specSet,")");
             var results = {};
             if (specSet.apps && specSet.apps instanceof Array) {
                 results.apps = {};
@@ -516,7 +516,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                 }
               */
             }
-            console.debug("getFunctionSpecs returning:",results);
+            //console.debug("getFunctionSpecs returning:",results);
             return results;
         },
 
@@ -706,20 +706,38 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
         },
 
         /**
-         * A *REALLY* simple filter based on whether the given pattern string is present in the
+         * A simple filter based on whether the given pattern string is present in the
          * method's name.
          * Returns true if so, false if not.
          * Doesn't care if its a method or an app, since they both have name fields at their root.
          */
         textFilter: function(pattern, method) {
             var lcName = method.info.name.toLowerCase();
-            return lcName.indexOf(pattern.toLowerCase()) > -1;
+            // match any token in the query, not the full string
+            var tokens = pattern.toLowerCase().split(" ");
+            for(var k=0; k<tokens.length; k++) {
+                if(lcName.indexOf(tokens[k])<0) {
+                    // token not found, so we return false
+                    return false;
+                }
+            }
+            // returns true only if all tokens were found
+            return true;
         },
 
         /**
-         * Returns true if the type is available as in input to the method, false otherwise
+         * Returns true if the type is available as in input to the method, false otherwise, assumes
+         * only the first token in 'type' is the type name
          */
         inputTypeFilter: function(type, spec) {
+            var tokens = type.split(' ');
+            var type = tokens[0];
+            tokens.shift();
+            // first check that other tokens match the method/app name
+            if(!this.textFilter(tokens.join(' '),spec)) {
+                return false;
+            }
+
             var methodFilter = function(type, spec) {
                 for (var i=0; i<spec.parameters.length; i++) {
                     var p = spec.parameters[i];

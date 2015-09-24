@@ -388,8 +388,8 @@ define(['jquery', 'underscore', 'kbwidget',
                          "KBasePhenotypes.PhenotypeSimulationSet",
                          "KBaseFBA.ReactionSensitivityAnalysis",
                          "KBaseGenomes.MetagenomeAnnotation",
-                         "KBaseExpression.ExpressionSeries",
-                         "KBaseExpression.ExpressionSample",
+                         //"KBaseExpression.ExpressionSeries",
+                         //"KBaseExpression.ExpressionSample",
                          "Communities.Metagenome",
                          "Communities.SequenceFile",
                          "Communities.Collection",
@@ -398,7 +398,11 @@ define(['jquery', 'underscore', 'kbwidget',
                          "Communities.Heatmap",
                          "Communities.PCoA",
                          "Communities.TaxonomicMatrix",
-                         "Communities.TaxonomicProfile"
+                         "Communities.TaxonomicProfile",
+                         "KBaseFeatureValues.ExpressionMatrix",
+                         "KBaseFeatureValues.FeatureClusters",
+                         "KBaseFeatureValues.EstimateKResult",
+                         "KBaseCollections.FeatureSet"
                          ];
 
             types.sort(function(a,b){
@@ -973,7 +977,7 @@ define(['jquery', 'underscore', 'kbwidget',
 
                 // create workspace filter
                 var wsInput = $('<select class="form-control kb-import-filter">');
-                wsInput.append('<option>All narratives...</option>');
+                wsInput.append('<option>All Narratives...</option>');
                 for (var i=0; i < wsList.length; i++) {
                     wsInput.append('<option data-id="'+[i].id+'" data-name="'+wsList[i].name+'">'+
                                           wsList[i].displayName+
@@ -1053,7 +1057,7 @@ define(['jquery', 'underscore', 'kbwidget',
 
                 // create workspace filter
                 var wsInput = $('<select class="form-control kb-import-filter">');
-                wsInput.append('<option>All narratives...</option>');
+                wsInput.append('<option>All Narratives...</option>');
                 for (var i=0; i < wsList.length; i++) {
                     wsInput.append('<option data-id="'+wsList[i].id+'" data-name="'+wsList[i].name+'">'+
                                           wsList[i].displayName+

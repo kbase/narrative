@@ -45,6 +45,7 @@ from biokbase.narrative.common.generic_service_calls import prepare_generic_meth
 from biokbase.narrative.common.generic_service_calls import prepare_generic_method_output
 from biokbase.narrative.common.generic_service_calls import is_script_method
 from biokbase.narrative.common.generic_service_calls import create_app_step
+from biokbase.narrative.common.generic_service_calls import correct_method_specs_json
 from biokbase.workspace.client import Workspace as workspaceService
 from biokbase.NarrativeJobService.Client import NarrativeJobService
 
@@ -75,8 +76,8 @@ def _method_call(meth, method_spec_json, param_values_json):
     """
     token = os.environ['KB_AUTH_TOKEN']
     workspace = os.environ['KB_WORKSPACE_ID']
-    methodSpec = json.loads(method_spec_json)
-    paramValues = json.loads(param_values_json)
+    methodSpec = json.loads(correct_method_specs_json(method_spec_json))
+    paramValues = json.loads(correct_method_specs_json(param_values_json))
     methodOut = None
 
     if is_script_method(methodSpec):

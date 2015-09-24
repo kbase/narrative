@@ -20,9 +20,8 @@ from IPython.core.magic import (Magics, magics_class, line_magic,
 from IPython.display import HTML
 # KBase
 import biokbase.auth
-from biokbase.InvocationService.Client import \
-    InvocationService as InvocationClient
-import biokbase.narrative.upload_handler
+# from biokbase.InvocationService.Client import \
+#     InvocationService as InvocationClient
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common.log_common import EVENT_MSG_SEP
 
@@ -176,23 +175,6 @@ class kbasemagics(Magics):
         # Call the clear_token method
         clear_token()
         return
-        
-    @line_magic
-    def uploader(self, line):
-        """
-        Bring up basic input form that allows you to upload files into /tmp/narrative
-        using PLUpload client libraries
-        Note that this is a demonstration prototype!
-        """
-        return HTML(biokbase.narrative.upload_handler.HTML_EXAMPLE)
-        
-    @line_magic
-    def jquploader(self, line):
-        """
-        Bring up an html cell with JQuery UI PLUpload widget that supports drag and drop
-        Note that this is a demonstration prototype!
-        """
-        return HTML(biokbase.narrative.upload_handler.JQUERY_UI_EXAMPLE)
         
     @line_magic
     def inv_session(self, line=None):
@@ -618,42 +600,42 @@ else:
     # based heavily on method here:
     # http://dietbuddha.blogspot.com/2012/11/python-metaprogramming-dynamic-module.html
 
-    icmd = types.ModuleType('icmd', "Top level module for invocation command "
-                                    "helper functions")
-    sys.modules['icmd'] = icmd
+    # icmd = types.ModuleType('icmd', "Top level module for invocation command "
+    #                                 "helper functions")
+    # sys.modules['icmd'] = icmd
 
-    def mkfn(script):
-        def fn(*args):
-            args2 = [script]
-            args2 += list(args)
-            if inv_client is None:
-                ip.magic("inv_session")
-            stdout, stderr = inv_client.run_pipeline(inv_session," ".join(args2),[],200,'/')
-            if stderr:
-                user_msg("\n".join(stderr))
-            return stdout
-        return fn
+    # def mkfn(script):
+    #     def fn(*args):
+    #         args2 = [script]
+    #         args2 += list(args)
+    #         if inv_client is None:
+    #             ip.magic("inv_session")
+    #         stdout, stderr = inv_client.run_pipeline(inv_session," ".join(args2),[],200,'/')
+    #         if stderr:
+    #             user_msg("\n".join(stderr))
+    #         return stdout
+    #     return fn
 
-    # initialize an invocation session
-    ip.magic("inv_session")
-    cmds = inv_client.valid_commands()
-    for category in cmds:
-        catname = str(category['name']).replace('-','_')
-        m = types.ModuleType(catname,category['title'])
-        setattr(icmd,catname, m)
-        sys.modules['icmd.%s' % catname] = m
-        for item in category['items']:
-            script = str(item['cmd']).replace('-','_')
-            fn = mkfn(str(item['cmd']))
-            fn.__name__ = script
-            fn.__doc__ = "Runs the %s script via invocation service" % item['cmd']
-            setattr(m, script, fn)
-    ip.ex('import icmd')
-    try:
-        os.makedirs(workdir)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
-    os.chdir(workdir)
-    user_msg("Invocation service script helper functions have been loaded "
-             "under the icmd.* namespace")
+    # # initialize an invocation session
+    # ip.magic("inv_session")
+    # cmds = inv_client.valid_commands()
+    # for category in cmds:
+    #     catname = str(category['name']).replace('-','_')
+    #     m = types.ModuleType(catname,category['title'])
+    #     setattr(icmd,catname, m)
+    #     sys.modules['icmd.%s' % catname] = m
+    #     for item in category['items']:
+    #         script = str(item['cmd']).replace('-','_')
+    #         fn = mkfn(str(item['cmd']))
+    #         fn.__name__ = script
+    #         fn.__doc__ = "Runs the %s script via invocation service" % item['cmd']
+    #         setattr(m, script, fn)
+    # ip.ex('import icmd')
+    # try:
+    #     os.makedirs(workdir)
+    # except OSError as exception:
+    #     if exception.errno != errno.EEXIST:
+    #         raise
+    # os.chdir(workdir)
+    # user_msg("Invocation service script helper functions have been loaded "
+    #          "under the icmd.* namespace")

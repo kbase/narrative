@@ -176,7 +176,8 @@ define(['jquery',
 		    color='#66FF66';
 		  }
 		  if (n >=80 && n <200){
-		    color='#FF3399';
+		   // color='#FF3399';
+		    color='#FF82FF';
 		  }
 		  if (n >=200){
 		    color='#FF0000';
@@ -192,11 +193,15 @@ define(['jquery',
 		var genesDivdata = document.getElementById(id);
 
 
+		//formattedhits.push({"begin":begin, "seqlength":seqlength, "rownumber":rownumber, "bitscore":bitscore, "id": Hit[i].Hit_id}); 
+
+
+		 var formattedhits = [{}];
 
 
 		var dataForGraphics = function (Hit){
-		  var formattedhits = [{}];
 		  var k=0;
+
 		  for (var i = 0; i < Hit.length; i++) {
 		    for (var j=0; j < Hit[i].Hit_hsps.Hsp.length; j++){
 		      d=Hit[i].Hit_hsps.Hsp[j];
@@ -210,9 +215,10 @@ define(['jquery',
 			end = tmp;
 		      }
 		      var seqlength = end-begin; 
-		      var rownumber = i; 
+		      var rownumber = i+1; 
 		      var bitscore  = d["Hsp_bit-score"];
-			formattedhits.push({"begin":begin, "seqlength":seqlength, "rownumber":rownumber, "bitscore":bitscore, "id": Hit[i].Hit_id}); 
+
+			formattedhits.push({"begin":begin, "seqlength":seqlength, "rownumber":rownumber, "bitscore":bitscore, "val": Hit[i].Hit_id,"height":4}); 
 
 		    }
 		  }
@@ -252,22 +258,68 @@ define(['jquery',
 		  .append("g")
 		  .attr("transform", "translate(" + 10 + "," + margin.top + ")");
 
-
-
 		svg.append("rect")
 		  .attr("x", 0)
 		  .attr("fill","green")
-		  .attr("y", 0)
+		  .attr("y", 10)
 		  .attr("width", x(querylength))
 		  .attr("height",6)
 		  .attr("transform", "translate(" + 10 + "," + margin.top + ")");
 
+                var legendheight=20;
+                var legendrow=[{}];
+		legendrow.push({"begin":0, "seqlength":querylength/5, "rownumber":1, "bitscore":30, "val":"<40", "height":legendheight }); 
+		legendrow.push({"begin":querylength/5, "seqlength":querylength/5, "rownumber":1, "bitscore":45, "val":"40-50" , "height":legendheight }); 
+		legendrow.push({"begin":querylength*2/5, "seqlength":querylength/5, "rownumber":1, "bitscore":60, "val":"50-80", "height":legendheight }); 
+		legendrow.push({"begin":querylength*3/5, "seqlength":querylength/5, "rownumber":1, "bitscore":150, "val":"80-200", "height":legendheight }); 
+		legendrow.push({"begin":querylength*4/5, "seqlength":querylength/5, "rownumber":1, "bitscore":300, "val":">=200", "height":legendheight }); 
+/*
+
+		svg.selectAll("rect")
+		  .data(legendrow)
+		  .enter()
+		  .append("rect")
+		  .attr("fill", function (d){
+		      return (gethitcolor (d.bitscore));
+		      })
+		.attr("y", function(d){
+		    return ((d.rownumber)*7)
+		    })
+		.attr("x", function(d){
+		    return x(d.begin);
+		    })
+		.attr("width", function(d) {
+		    return x(d.seqlength) ;
+		    })
+		.attr("height", function(d){
+		    return d.height; 
+		    })
+		.attr("transform", "translate(" + 10 + "," + 30 + ")");
+*/
+
+svg.selectAll("text")
+   .data(legendrow)
+   .enter()
+   .append("text")
+.text(function(d) {
+        return d.val;
+   })
+.attr("x", function(d, i) {
+		    return x(d.begin) + 10;
+   })
+   .attr("y", function(d) {
+    return ((d.rownumber)*7+15)
+   })
+.attr("font-family", "sans-serif")
+   .attr("font-size", "11px")
+   .attr("fill", "black")
+.attr("transform", "translate(" + 30 + "," + 30 + ")");
 
 
 		//Prepare data to use with d3
 
 		var formattedhits = dataForGraphics(hits);
-
+           
 		//display svg
 
 		svg.selectAll("rect")
@@ -278,7 +330,7 @@ define(['jquery',
 		      return (gethitcolor (d.bitscore));
 		      })
 		.attr("y", function(d){
-		    return (d.rownumber*7)
+		    return ((d.rownumber)*7)
 		    })
 		.attr("x", function(d){
 		    return x(d.begin);
@@ -286,10 +338,13 @@ define(['jquery',
 		.attr("width", function(d) {
 		    return x(d.seqlength) ;
 		    })
-		.attr("height", function(){
-		    return 4; 
+		.attr("height", function(d){
+		    return d.height; 
 		    })
-		.attr("transform", "translate(" + 10 + "," + 30 + ")");
+		.attr("transform", "translate(" + 10 + "," + 35 + ")");
+
+
+
 
 		svg.append("g")
 		  .attr("class", "axis") //Assign "axis" class

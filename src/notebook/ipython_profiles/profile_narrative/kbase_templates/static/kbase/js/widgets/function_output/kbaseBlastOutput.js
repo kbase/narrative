@@ -188,48 +188,34 @@ define(['jquery',
 
 
 
-//		var genex = $('#'+pref+'genes');
 		var id = pref + 'genes';
 		var genesDivdata = document.getElementById(id);
-
-
-		//formattedhits.push({"begin":begin, "seqlength":seqlength, "rownumber":rownumber, "bitscore":bitscore, "id": Hit[i].Hit_id}); 
-
-
-		 var formattedhits = [{}];
-
+	        var formattedhits = [{}];
 
 		var dataForGraphics = function (Hit){
 		  var k=0;
-
 		  for (var i = 0; i < Hit.length; i++) {
 		    for (var j=0; j < Hit[i].Hit_hsps.Hsp.length; j++){
 		      d=Hit[i].Hit_hsps.Hsp[j];
-
 		      var begin   = d["Hsp_query-from"];
 		      var end     = d["Hsp_query-to"];
-
-		      if ( begin > end ){
-			var tmp = begin;
-			begin=end;
-			end = tmp;
-		      }
+		      if ( Number(begin) > Number(end) ){
+                       var  tmp1=begin;
+                       var tmp2 = end;
+                       begin=tmp2;
+                       end=tmp1;		      
+                      }
 		      var seqlength = end-begin; 
 		      var rownumber = i+1; 
 		      var bitscore  = d["Hsp_bit-score"];
-
-			formattedhits.push({"begin":begin, "seqlength":seqlength, "rownumber":rownumber, "bitscore":bitscore, "val": Hit[i].Hit_id,"height":4}); 
-
+                      formattedhits[i]=({"begin":begin, "seqlength":seqlength, "rownumber":rownumber, "bitscore":bitscore, "val": Hit[i].Hit_id,"height":4}); 
 		    }
 		  }
 		  return (formattedhits);
-
 		}
-
 
 		var querylength=data.BlastOutput_iterations.Iteration[0]['Iteration_query-len'];
 		var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
-
 
 		//set up svg display for graphics alignment
 		var margin = {top: 0, right: 0, bottom:0, left:10},
@@ -246,8 +232,6 @@ define(['jquery',
 		var x = d3.scale.linear()
 		  .domain([0, querylength])
 		  .range([0, width-30]);
-
-
 
 		var xAxis = d3.svg.axis()
 		  .scale(x)
@@ -273,9 +257,9 @@ define(['jquery',
 		legendrow.push({"begin":querylength*2/5, "seqlength":querylength/5, "rownumber":1, "bitscore":60, "val":"50-80", "height":legendheight }); 
 		legendrow.push({"begin":querylength*3/5, "seqlength":querylength/5, "rownumber":1, "bitscore":150, "val":"80-200", "height":legendheight }); 
 		legendrow.push({"begin":querylength*4/5, "seqlength":querylength/5, "rownumber":1, "bitscore":300, "val":">=200", "height":legendheight }); 
-/*
 
-		svg.selectAll("rect")
+             //draw legend rectangle
+		svg.selectAll("rect1")
 		  .data(legendrow)
 		  .enter()
 		  .append("rect")
@@ -295,34 +279,36 @@ define(['jquery',
 		    return d.height; 
 		    })
 		.attr("transform", "translate(" + 10 + "," + 30 + ")");
-*/
-
-svg.selectAll("text")
-   .data(legendrow)
-   .enter()
-   .append("text")
-.text(function(d) {
-        return d.val;
-   })
-.attr("x", function(d, i) {
-		    return x(d.begin) + 10;
-   })
-   .attr("y", function(d) {
-    return ((d.rownumber)*7+15)
-   })
-.attr("font-family", "sans-serif")
-   .attr("font-size", "11px")
-   .attr("fill", "black")
-.attr("transform", "translate(" + 30 + "," + 30 + ")");
 
 
-		//Prepare data to use with d3
+            //overlay text
+
+              svg.selectAll("text")
+                 .data(legendrow)
+                 .enter()
+                 .append("text")
+              .text(function(d) {
+                       return d.val;
+                 })
+              .attr("x", function(d, i) {
+                       return x(d.begin) + 10;
+                 })
+                 .attr("y", function(d) {
+                       return ((d.rownumber)*7+15)
+                 })
+              .attr("font-family", "sans-serif")
+                 .attr("font-size", "11px")
+                 .attr("fill", "white")
+              .attr("transform", "translate(" + 30 + "," + 30 + ")");
+
+
+        	//Prepare data to use with d3
 
 		var formattedhits = dataForGraphics(hits);
            
 		//display svg
 
-		svg.selectAll("rect")
+		svg.selectAll("rect2")
 		  .data(formattedhits)
 		  .enter()
 		  .append("rect")
@@ -341,8 +327,7 @@ svg.selectAll("text")
 		.attr("height", function(d){
 		    return d.height; 
 		    })
-		.attr("transform", "translate(" + 10 + "," + 35 + ")");
-
+		.attr("transform", "translate(" + 10 + "," + 70 + ")");
 
 
 

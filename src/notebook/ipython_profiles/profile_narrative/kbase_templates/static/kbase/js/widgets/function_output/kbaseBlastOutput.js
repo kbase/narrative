@@ -415,6 +415,7 @@ define(['jquery',
 		//text alignment tab and use of formatter function to add to the content of the tab
 
 		    var al  = $('#'+pref+'alignments');
+                    al.css({'max-height':400, 'max-width':1080, 'overflow':'scroll'});
 		    var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
 		    for (var i = 0; i < hits.length; i++) {
 		      formatter(hits[i], al);

@@ -394,7 +394,6 @@ define(['jquery',
 		    var bit_score     = Math.round(hsp["Hsp_bit-score"]);
 		    var evalue        = hsp["Hsp_evalue"];
 		    var gaps          = hsp["Hsp_gaps "];
-		    //   var hit_frame     = hsp["Hsp_hit-frame"];
 		    var hit_from      = hsp["Hsp_hit-from"];
 		    var hit_to        = hsp["Hsp_hit-to"];
 		    var hseq          = hsp["Hsp_hseq"];
@@ -403,7 +402,6 @@ define(['jquery',
 		    var num           = hsp["Hsp_num"];
 		    var positive      = hsp["Hsp_positive"];
 		    var qseq          = hsp["Hsp_qseq"];
-		    //    var query_frame   = hsp["Hsp_query-frame"];
 		    var query_from    = hsp["Hsp_query-from"];
 		    var query_to      = hsp["Hsp_query-to"];
 		    var score         = Math.round(hsp["Hsp_score"]);

@@ -101,11 +101,11 @@ cd ..
 # cause odd permission issues in runtime container
 rm -rf "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/notebook/ipython_profiles/profile_narrative/security"
 
-#printf "Installing 'biokbase' package into the virtual environment $venv... \n"
-#cd src/biokbase
-#$PYTHON setup.py install
-#cd ../..
-cp -R "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/biokbase" $installPath/$venv/lib/${PYTHON}/site-packages/
+printf "Installing 'biokbase' package into the virtual environment $venv... \n"
+cd src
+$PYTHON setup.py install
+cd ..
+# cp -R "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/biokbase" $installPath/$venv/lib/${PYTHON}/site-packages/
 
 printf "Creating start script for ipython notebook...\n"
 

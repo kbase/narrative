@@ -117,13 +117,33 @@ define(['jquery',
 		  var accession = d["Hit_accession"];
 		  var hit_def = d["Hit_def"];
 		  var hsps = d["Hit_hsps"].Hsp;
-
+                 
 		  var hsp = hsps[0];
 		  var evalue        = hsp["Hsp_evalue"];
 		  var identity      = hsp["Hsp_identity"];
 		  var positive      = hsp["Hsp_positive"];
-		  var score         = hsp["Hsp_score"];
-		  genesData.push({gene_id: accession , evalue: evalue,  gene_annotation: hit_def,  identity: identity, score: score});
+		  var bit_score         = Math.round(hsp["Hsp_bit-score"]);
+
+                  var align_len = hsp["Hsp_align-len"];
+
+                  var pctid = Math.round((Number(identity) / Number (align_len)) *100)
+
+
+                  var res = hit_def.split ("#");
+                  var id=res[0];
+                  var alias = res[1];
+                  var defline = res[2]; 
+                  if (!id){
+                    id="NA";
+                  } 
+                  if (!alias){
+                    alias="NA";
+                  } 
+                  if (!defline){
+                    defline="NA";
+                  } 
+                  var hit_number = i+1;
+		  genesData.push({hit_number:hit_number,gene_id: id , alias_id: alias, defline_info: defline, evalue: evalue,  identity: pctid, score: bit_score});
 		}
 
 
@@ -144,10 +164,12 @@ define(['jquery',
 		  "aaSorting": [[ 1, "asc" ], [2, "asc"]],
 		  "aoColumns": [
 		  {sTitle: "GeneID", mData: "gene_id"},
+		  {sTitle: "Hit_number", mData: "hit_number"},
+		  {sTitle: "Alias Id(s)", mData: "alias_id"},
 		  {sTitle: "e-value", mData: "evalue"},
 		  {sTitle: "Identity", mData: "identity"},
 		  {sTitle: "Score", mData: "score"},
-		  {sTitle: "function", mData: "gene_annotation"},
+		  {sTitle: "function", mData: "defline_info"},
 		  ],
 		  "aaData": [],
 		  "oLanguage": {
@@ -176,7 +198,8 @@ define(['jquery',
 		    color='#66FF66';
 		  }
 		  if (n >=80 && n <200){
-		    color='#FF3399';
+		   // color='#FF3399';
+		    color='#FF82FF';
 		  }
 		  if (n >=200){
 		    color='#FF0000';
@@ -187,43 +210,34 @@ define(['jquery',
 
 
 
-//		var genex = $('#'+pref+'genes');
 		var id = pref + 'genes';
 		var genesDivdata = document.getElementById(id);
-
-
-
+	        var formattedhits = [{}];
 
 		var dataForGraphics = function (Hit){
-		  var formattedhits = [{}];
 		  var k=0;
 		  for (var i = 0; i < Hit.length; i++) {
 		    for (var j=0; j < Hit[i].Hit_hsps.Hsp.length; j++){
 		      d=Hit[i].Hit_hsps.Hsp[j];
-
 		      var begin   = d["Hsp_query-from"];
 		      var end     = d["Hsp_query-to"];
-
-		      if ( begin > end ){
-			var tmp = begin;
-			begin=end;
-			end = tmp;
-		      }
+		      if ( Number(begin) > Number(end) ){
+                       var  tmp1=begin;
+                       var tmp2 = end;
+                       begin=tmp2;
+                       end=tmp1;		      
+                      }
 		      var seqlength = end-begin; 
-		      var rownumber = i; 
+		      var rownumber = i+1; 
 		      var bitscore  = d["Hsp_bit-score"];
-			formattedhits.push({"begin":begin, "seqlength":seqlength, "rownumber":rownumber, "bitscore":bitscore, "id": Hit[i].Hit_id}); 
-
+                      formattedhits[i]=({"begin":begin, "seqlength":seqlength, "rownumber":rownumber, "bitscore":bitscore, "val": Hit[i].Hit_id,"height":4}); 
 		    }
 		  }
 		  return (formattedhits);
-
 		}
-
 
 		var querylength=data.BlastOutput_iterations.Iteration[0]['Iteration_query-len'];
 		var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
-
 
 		//set up svg display for graphics alignment
 		var margin = {top: 0, right: 0, bottom:0, left:10},
@@ -241,8 +255,6 @@ define(['jquery',
 		  .domain([0, querylength])
 		  .range([0, width-30]);
 
-
-
 		var xAxis = d3.svg.axis()
 		  .scale(x)
 		  .orient("bottom");
@@ -252,33 +264,32 @@ define(['jquery',
 		  .append("g")
 		  .attr("transform", "translate(" + 10 + "," + margin.top + ")");
 
-
-
 		svg.append("rect")
 		  .attr("x", 0)
 		  .attr("fill","green")
-		  .attr("y", 0)
+		  .attr("y", 10)
 		  .attr("width", x(querylength))
 		  .attr("height",6)
 		  .attr("transform", "translate(" + 10 + "," + margin.top + ")");
 
+                var legendheight=20;
+                var legendrow=[{}];
+		legendrow.push({"begin":0, "seqlength":querylength/5, "rownumber":1, "bitscore":30, "val":"<40", "height":legendheight }); 
+		legendrow.push({"begin":querylength/5, "seqlength":querylength/5, "rownumber":1, "bitscore":45, "val":"40-50" , "height":legendheight }); 
+		legendrow.push({"begin":querylength*2/5, "seqlength":querylength/5, "rownumber":1, "bitscore":60, "val":"50-80", "height":legendheight }); 
+		legendrow.push({"begin":querylength*3/5, "seqlength":querylength/5, "rownumber":1, "bitscore":150, "val":"80-200", "height":legendheight }); 
+		legendrow.push({"begin":querylength*4/5, "seqlength":querylength/5, "rownumber":1, "bitscore":300, "val":">=200", "height":legendheight }); 
 
-
-		//Prepare data to use with d3
-
-		var formattedhits = dataForGraphics(hits);
-
-		//display svg
-
-		svg.selectAll("rect")
-		  .data(formattedhits)
+             //draw legend rectangle
+		svg.selectAll("rect1")
+		  .data(legendrow)
 		  .enter()
 		  .append("rect")
 		  .attr("fill", function (d){
 		      return (gethitcolor (d.bitscore));
 		      })
 		.attr("y", function(d){
-		    return (d.rownumber*7)
+		    return ((d.rownumber)*7)
 		    })
 		.attr("x", function(d){
 		    return x(d.begin);
@@ -286,10 +297,61 @@ define(['jquery',
 		.attr("width", function(d) {
 		    return x(d.seqlength) ;
 		    })
-		.attr("height", function(){
-		    return 4; 
+		.attr("height", function(d){
+		    return d.height; 
 		    })
 		.attr("transform", "translate(" + 10 + "," + 30 + ")");
+
+
+            //overlay text
+
+              svg.selectAll("text")
+                 .data(legendrow)
+                 .enter()
+                 .append("text")
+              .text(function(d) {
+                       return d.val;
+                 })
+              .attr("x", function(d, i) {
+                       return x(d.begin) + 10;
+                 })
+                 .attr("y", function(d) {
+                       return ((d.rownumber)*7+15)
+                 })
+              .attr("font-family", "sans-serif")
+                 .attr("font-size", "11px")
+                 .attr("fill", "white")
+              .attr("transform", "translate(" + 30 + "," + 30 + ")");
+
+
+        	//Prepare data to use with d3
+
+		var formattedhits = dataForGraphics(hits);
+           
+		//display svg
+
+		svg.selectAll("rect2")
+		  .data(formattedhits)
+		  .enter()
+		  .append("rect")
+		  .attr("fill", function (d){
+		      return (gethitcolor (d.bitscore));
+		      })
+		.attr("y", function(d){
+		    return ((d.rownumber)*7)
+		    })
+		.attr("x", function(d){
+		    return x(d.begin);
+		    })
+		.attr("width", function(d) {
+		    return x(d.seqlength) ;
+		    })
+		.attr("height", function(d){
+		    return d.height; 
+		    })
+		.attr("transform", "translate(" + 10 + "," + 70 + ")");
+
+
 
 		svg.append("g")
 		  .attr("class", "axis") //Assign "axis" class
@@ -329,10 +391,9 @@ define(['jquery',
 		    hsp=hsps[counter];
 		    matchnumber = counter + 1;
 		    var align_len     = hsp["Hsp_align-len"];
-		    var bit_score     = hsp["Hsp_bit-score"];
+		    var bit_score     = Math.round(hsp["Hsp_bit-score"]);
 		    var evalue        = hsp["Hsp_evalue"];
 		    var gaps          = hsp["Hsp_gaps "];
-		    //   var hit_frame     = hsp["Hsp_hit-frame"];
 		    var hit_from      = hsp["Hsp_hit-from"];
 		    var hit_to        = hsp["Hsp_hit-to"];
 		    var hseq          = hsp["Hsp_hseq"];
@@ -341,10 +402,9 @@ define(['jquery',
 		    var num           = hsp["Hsp_num"];
 		    var positive      = hsp["Hsp_positive"];
 		    var qseq          = hsp["Hsp_qseq"];
-		    //    var query_frame   = hsp["Hsp_query-frame"];
 		    var query_from    = hsp["Hsp_query-from"];
 		    var query_to      = hsp["Hsp_query-to"];
-		    var score         = hsp["Hsp_score"];
+		    var score         = Math.round(hsp["Hsp_score"]);
 
 		    if (gaps==null){
 		      gaps=0;
@@ -415,6 +475,7 @@ define(['jquery',
 		//text alignment tab and use of formatter function to add to the content of the tab
 
 		    var al  = $('#'+pref+'alignments');
+                    al.css({'max-height':400, 'max-width':1080, 'overflow':'scroll'});
 		    var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
 		    for (var i = 0; i < hits.length; i++) {
 		      formatter(hits[i], al);

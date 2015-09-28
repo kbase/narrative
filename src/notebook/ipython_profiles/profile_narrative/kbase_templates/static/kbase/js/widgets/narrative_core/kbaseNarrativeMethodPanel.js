@@ -81,7 +81,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                                     .append(this.$showHideSpan)
                                     .append(' ')
                                     .append(this.$numHiddenSpan)
-                                    .append(' filtered')
+                                    .append(' filtered out')
                                     .addClass('kb-function-toggle')
                                     .hide()
                                     .click($.proxy(function(e) {

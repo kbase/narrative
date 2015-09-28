@@ -117,13 +117,33 @@ define(['jquery',
 		  var accession = d["Hit_accession"];
 		  var hit_def = d["Hit_def"];
 		  var hsps = d["Hit_hsps"].Hsp;
-
+                 
 		  var hsp = hsps[0];
 		  var evalue        = hsp["Hsp_evalue"];
 		  var identity      = hsp["Hsp_identity"];
 		  var positive      = hsp["Hsp_positive"];
-		  var score         = hsp["Hsp_score"];
-		  genesData.push({gene_id: accession , evalue: evalue,  gene_annotation: hit_def,  identity: identity, score: score});
+		  var bit_score         = Math.round(hsp["Hsp_bit-score"]);
+
+                  var align_len = hsp["Hsp_align-len"];
+
+                  var pctid = Math.round((Number(identity) / Number (align_len)) *100)
+
+
+                  var res = hit_def.split ("#");
+                  var id=res[0];
+                  var alias = res[1];
+                  var defline = res[2]; 
+                  if (!id){
+                    id="NA";
+                  } 
+                  if (!alias){
+                    alias="NA";
+                  } 
+                  if (!defline){
+                    defline="NA";
+                  } 
+                  var hit_number = i+1;
+		  genesData.push({hit_number:hit_number,gene_id: id , alias_id: alias, defline_info: defline, evalue: evalue,  identity: pctid, score: bit_score});
 		}
 
 
@@ -144,10 +164,12 @@ define(['jquery',
 		  "aaSorting": [[ 1, "asc" ], [2, "asc"]],
 		  "aoColumns": [
 		  {sTitle: "GeneID", mData: "gene_id"},
+		  {sTitle: "Hit_number", mData: "hit_number"},
+		  {sTitle: "Alias Id(s)", mData: "alias_id"},
 		  {sTitle: "e-value", mData: "evalue"},
 		  {sTitle: "Identity", mData: "identity"},
 		  {sTitle: "Score", mData: "score"},
-		  {sTitle: "function", mData: "gene_annotation"},
+		  {sTitle: "function", mData: "defline_info"},
 		  ],
 		  "aaData": [],
 		  "oLanguage": {
@@ -369,7 +391,7 @@ define(['jquery',
 		    hsp=hsps[counter];
 		    matchnumber = counter + 1;
 		    var align_len     = hsp["Hsp_align-len"];
-		    var bit_score     = hsp["Hsp_bit-score"];
+		    var bit_score     = Math.round(hsp["Hsp_bit-score"]);
 		    var evalue        = hsp["Hsp_evalue"];
 		    var gaps          = hsp["Hsp_gaps "];
 		    //   var hit_frame     = hsp["Hsp_hit-frame"];
@@ -384,7 +406,7 @@ define(['jquery',
 		    //    var query_frame   = hsp["Hsp_query-frame"];
 		    var query_from    = hsp["Hsp_query-from"];
 		    var query_to      = hsp["Hsp_query-to"];
-		    var score         = hsp["Hsp_score"];
+		    var score         = Math.round(hsp["Hsp_score"]);
 
 		    if (gaps==null){
 		      gaps=0;

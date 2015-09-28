@@ -367,6 +367,8 @@ def build_args_njs(paramValue, paramMapping, workspace, paramSpec):
 def is_script_method(methodSpec):
     behavior = methodSpec['behavior']
     if 'kb_service_input_mapping' in behavior:
+        if 'job_id_output_field' in methodSpec:
+            return False
         url = behavior['kb_service_url']
         if len(url) == 0:
             return True
@@ -415,7 +417,7 @@ def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, s
                                 raise ValueError("Unsupported path to job id field in RPC method output for method [" + methodId + "]: " + json.dumps(rpcOutPath))
                             if len(rpcOutPath) == 1:
                                 rpcJobIdField = rpcOutPath[0]
-                if not jobIdFieldFound:
+                if (not jobIdFieldFound) and (jobIdField != 'docker'):
                     raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
                 step['is_long_running'] = 1
                 if rpcJobIdField is not None:

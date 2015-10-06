@@ -1631,7 +1631,7 @@ define(['jquery',
 
             return "import biokbase.narrative.common.service as Service\n" +
                    "method = Service.get_service('generic_service').get_method('method_call')\n" +
-                   "method('" + methodJSON + "', '" + paramsJSON + "')";
+                   "method(r'" + methodJSON + "', r'" + paramsJSON + "')";
         },
 
         /**
@@ -1659,7 +1659,7 @@ define(['jquery',
 
             var paramList = params.map(
                 function(p) {
-                    return "'" + addSlashes(p) + "'";
+                    return "r'" + addSlashes(p) + "'";
                 }
             );
             cmd += "method(" + paramList + ")";

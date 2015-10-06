@@ -394,7 +394,6 @@ define(['jquery',
             };
 
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
-            console.log(code);
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
         },
 

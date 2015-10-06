@@ -163,7 +163,7 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
 
 def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, param_values_json, method_job_id):
     methodSpec = json.loads(method_spec_json)
-    methodInputValues = json.loads(param_values_json)
+    methodInputValues = json.loads(correct_method_specs_json(param_values_json))
     njsClient = NarrativeJobService(URLS.job_service, token = token)
     wsClient = workspaceService(URLS.workspace, token = token)
     if method_job_id.startswith("method:"):

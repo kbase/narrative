@@ -87,6 +87,8 @@ def get_wsobj_meta(wsclient, objtype=ws_narrative_type, ws_id=None):
         if PermissionsError.is_permissions_error(err.message):
             raise PermissionsError(name=err.name, code=err.code,
                                    message=err.message, data=err.data)
+        else:
+            raise
     my_narratives = {}
     for obj in res:
         my_narratives["ws.%s.obj.%s" % (obj[obj_field['wsid']],obj[obj_field['objid']])] = dict(zip(list_objects_fields,obj))

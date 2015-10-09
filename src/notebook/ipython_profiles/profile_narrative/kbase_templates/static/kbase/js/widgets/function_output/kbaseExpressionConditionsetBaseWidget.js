@@ -1,5 +1,5 @@
 /**
- * Base class for viewers visualizaing expression of a set of genes from various aspects
+ * Base class for viewers visualizaing expression of a set of conditions from various aspects
  * 
  * The descendant classes should override:
  * 1. getSubmtrixParams - to set params for get_submatrix_stat method from the KBaseFeatureValues service
@@ -21,15 +21,16 @@ define(['jquery',
         'kbaseFeatureValues-client-api'
         ], function($) {
     $.KBWidget({
-        name: 'kbaseExpressionGenesetBaseWidget',
+        name: 'kbaseExpressionConditionsetBaseWidget',
         parent: 'kbaseAuthenticatedWidget',
         version: '1.0.0',
         options: {
             workspaceID: null,
 
             expressionMatrixID: null,
-            geneIds: null,
-            input_featureset: null,
+            conditionIds: null,
+
+            // input_featureset: null,
 
             // Service URL: should be in window.kbconfig.urls.
             // featureValueURL: 'http://localhost:8889',
@@ -82,18 +83,19 @@ define(['jquery',
         setTestParameters: function(){
             this.options.workspaceID = '645';
             this.options.expressionMatrixID = '9';
-            this.options.geneIds = "VNG0001H,VNG0002G,VNG0003C,VNG0006G,VNG0013C,VNG0014C,VNG0361C,VNG0518H,VNG0868H,VNG0289H,VNG0852C";
+            this.options.conditionIds = "ni__0500um_vs_NRC-1c,ni__1500um_vs_NRC-1c,ura3_Mn_1500um_b_vs_NRC-1d.sig";
         },
 
         // To be overriden to specify additional parameters
         getSubmtrixParams: function(){
             var self = this;
             self.setTestParameters();
-            var features = [];
-            if(self.options.geneIds) { features = $.map(self.options.geneIds.split(","), $.trim); }
+            var conditions = [];
+            if(self.options.conditionIds) { conditions = $.map(self.options.conditionIds.split(","), $.trim); }
             return{
                 input_data: self.options.workspaceID + "/" + self.options.expressionMatrixID,
-                row_ids: features,
+                column_ids: conditions,
+                fl_column_set_stat: 1,
                 // specify your additional parameters
             };
         },
@@ -106,8 +108,8 @@ define(['jquery',
                 var smParams = self.getSubmtrixParams();
 
                 // some parameter checking
-                if(!smParams.row_ids || smParams.row_ids.length===0) {
-                    self.clientError("No Features or FeatureSet selected.  Please include at least one Feature from the data.");
+                if(!smParams.column_ids || smParams.column_ids.length===0) {
+                    self.clientError("No Conditions selected.  Please include at least one Condition from the data.");
                     return;
                 }
 
@@ -122,34 +124,35 @@ define(['jquery',
                         self.clientError(error);
                     });
             };
+            getSubmatrixStatsAndRender();
 
             // if a feature set is defined, use it.
-            if(self.options.featureset) {
-                self.ws.get_objects([{ref:self.options.workspaceID+"/"+self.options.featureset}],
-                    function(fdata) {
-                        var fs = fdata[0].data;
-                        if(!self.options.geneIds) { self.options.geneIds=''; }
+            // if(self.options.featureset) {
+            //     self.ws.get_objects([{ref:self.options.workspaceID+"/"+self.options.featureset}],
+            //         function(fdata) {
+            //             var fs = fdata[0].data;
+            //             if(!self.options.geneIds) { self.options.geneIds=''; }
 
-                        for (var fid in fs.elements) {
-                            if (fs.elements.hasOwnProperty(fid)) {
-                                if(self.options.geneIds) {
-                                    self.options.geneIds += ",";
-                                }
-                                self.options.geneIds += fid;
-                        //        for now we ignore which genome it came from, just use the ids
-                        //        for (var k=0; k<fs.elements[fid].length; k++) {
-                        //            var gid = fs.elements[fid][k];
-                        //        }
-                            }
-                        }
-                        getSubmatrixStatsAndRender();
-                    },
-                    function(error) {
-                        self.clientError(error);
-                    });
-            } else {
-                getSubmatrixStatsAndRender();
-            }
+            //             for (var fid in fs.elements) {
+            //                 if (fs.elements.hasOwnProperty(fid)) {
+            //                     if(self.options.geneIds) {
+            //                         self.options.geneIds += ",";
+            //                     }
+            //                     self.options.geneIds += fid;
+            //             //        for now we ignore which genome it came from, just use the ids
+            //             //        for (var k=0; k<fs.elements[fid].length; k++) {
+            //             //            var gid = fs.elements[fid][k];
+            //             //        }
+            //                 }
+            //             }
+            //             getSubmatrixStatsAndRender();
+            //         },
+            //         function(error) {
+            //             self.clientError(error);
+            //         });
+            // } else {
+            //     getSubmatrixStatsAndRender();
+            // }
         },
 
         render: function(){
@@ -169,28 +172,29 @@ define(['jquery',
             var self = this;
             var pref = this.pref;
 
-            var $overviewSwitch = $("<a/>").html('[Show/Hide Selected Features]');
+            var $overviewSwitch = $("<a/>").html('[Show/Hide Selected Conditions]');
             $containerDiv.append($overviewSwitch);
 
             var $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
             $containerDiv.append($overvewContainer);
 
-            var geneData = self.buildGenesTableData();
+
+            var conditionsData = self.buildConditionsTableData();
             var iDisplayLength = 10;
             var style = 'lftip';
-            if(geneData.length<=iDisplayLength) { style = 'fti'; }
+            if(conditionsData.length<=iDisplayLength) { style = 'fti'; }
 
-            var tableGenes = $('<table id="'+pref+'genes-table"  \
+            var tableGenes = $('<table id="'+pref+'condition-table"  \
                 class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
                 </table>')
                 .appendTo($overvewContainer)
                 .dataTable( {
                     "sDom": style,
                     "iDisplayLength": iDisplayLength,
-                    "aaData": geneData,
+                    "aaData": conditionsData,
                     "aoColumns": [
                         { sTitle: "Name", mData: "id"},
-                        { sTitle: "Function", mData: "function"},
+                        // { sTitle: "Function", mData: "function"},
                         { sTitle: "Min", mData:"min" },
                         { sTitle: "Max", mData:"max" },  
                         { sTitle: "Avg", mData:"avg" },                                                      
@@ -198,7 +202,7 @@ define(['jquery',
                         { sTitle: "Missing", mData:"missing_values" }
                     ],
                     "oLanguage": {
-                                "sEmptyTable": "No genes found!",
+                                "sEmptyTable": "No conditions found!",
                                 "sSearch": "Search: "
                     }                    
                 } );
@@ -208,20 +212,19 @@ define(['jquery',
             });
         },
       
-        buildGenesTableData: function(){
+        buildConditionsTableData: function(){
             var submatrixStat = this.submatrixStat;
             var tableData = [];
-            var stat = submatrixStat.row_set_stats;
-            for(var i = 0; i < submatrixStat.row_descriptors.length; i++){
-                var desc = submatrixStat.row_descriptors[i];
+            var stat = submatrixStat.column_set_stat;
+            //console.log(submatrixStat);
+            for(var i = 0; i < submatrixStat.column_descriptors.length; i++){
+                var desc = submatrixStat.column_descriptors[i];
 
-                var gene_function = desc.properties['function'];
                 tableData.push(
                     {
                         'index': desc.index,
                         'id': desc.id,
                         'name': desc.name ? desc.name : ' ',
-                        'function' : gene_function ? gene_function : ' ',
                         'min': stat.mins[i] ? stat.mins[i].toFixed(2) : ' ',
                         'max': stat.maxs[i] ? stat.maxs[i].toFixed(2) : ' ',
                         'avg': stat.avgs[i] ? stat.avgs[i].toFixed(2) : ' ',

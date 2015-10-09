@@ -171,7 +171,7 @@ define(['jquery',
 
 			///////////////////////////////////// Genes tab ////////////////////////////////////////////          
 			var $tabGenes = $("<div/>");
-			tabPane.kbaseTabs('addTab', {tab: 'Genes', content: $tabGenes, canDelete : false, show: false});
+			tabPane.kbaseTabs('addTab', {tab: 'Features', content: $tabGenes, canDelete : false, show: false});
 
 			///////////////////////////////////// Genes table ////////////////////////////////////////////          
 
@@ -212,10 +212,10 @@ define(['jquery',
 						'index': desc.index,
 						'id': desc.id,
 						'name': desc.name,
-						'min': stat.min === null? ' ' : stat.min.toFixed(2),
-						'max': stat.max === null? ' ' : stat.max.toFixed(2),
-						'avg': stat.avg === null? ' ' : stat.avg.toFixed(2),
-						'std': stat.std === null? ' ' : stat.std.toFixed(2),
+						'min': stat.min ? stat.min.toFixed(2) : ' ',
+						'max': stat.max ? stat.max.toFixed(2) : ' ',
+						'avg': stat.avg ? stat.avg.toFixed(2) : ' ',
+						'std': stat.std ? stat.std.toFixed(2) : ' ',
 						'missing_values': stat.missing_values ? 'Yes' : 'No'
 					}
 				);
@@ -238,10 +238,10 @@ define(['jquery',
 						'id': desc.id,
 						'name': desc.name,
 						'function' : gene_function ? gene_function : ' ',
-						'min': stat.min === null? ' ' : stat.min.toFixed(2),
-						'max': stat.max === null? ' ' : stat.max.toFixed(2),
-						'avg': stat.avg === null? ' ' : stat.avg.toFixed(2),
-						'std': stat.std === null? ' ' : stat.std.toFixed(2),
+						'min': stat.min ? stat.min.toFixed(2) : ' ',
+						'max': stat.max ? stat.max.toFixed(2) : ' ',
+						'avg': stat.avg ? stat.avg.toFixed(2) : ' ',
+						'std': stat.std ? stat.std.toFixed(2) : ' ',
 						'missing_values': stat.missing_values ? 'Yes' : 'No'
 					}
 				);

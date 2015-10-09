@@ -117,8 +117,7 @@ class KBaseWSNotebookManager(NotebookManager):
             wsclient = self.wsclient()
             wsclient.ver()
         except Exception as e:
-            raise web.HTTPError(500, u"Unable to connect to workspace service"
-                                     u" at %s: %s " % (self.kbasews_uri, e))
+            self.log.error("Unable to connect to workspace service at {}: {}".format(self.kbasews_uri, e))
 
         # Map Narrative ids to notebook names
         mapping = Dict()
@@ -158,7 +157,12 @@ class KBaseWSNotebookManager(NotebookManager):
         self.log.debug("Listing Narratives")
         self.log.debug("kbase_session = %s" % str(self.kbase_session))
         wsclient = self.wsclient()
-        all = ws_util.get_wsobj_meta(wsclient)
+        try:
+            all = ws_util.get_wsobj_meta(wsclient)
+        except Exception, e:
+            # Raising the exception here will cause the server to
+            # shut down, so don't crash, just return nothing.
+            return []
 
         self.mapping = {
             ws_id: "%s/%s" % (all[ws_id]['workspace'],all[ws_id]['meta'].get('name',"undefined"))
@@ -266,6 +270,8 @@ class KBaseWSNotebookManager(NotebookManager):
                 objmeta = ws_util.get_wsobj_meta(self.wsclient(), ws_id=m.group('wsid'))
             except ws_util.PermissionsError, err:
                 return False # XXX: kind of a lie!
+            except:
+                return False # Also kind of a lie... will be fixed with Jupyter 4 backend
             if notebook_id in objmeta:
                 self.mapping[notebook_id] = notebook_id
                 return True
@@ -510,7 +516,8 @@ class KBaseWSNotebookManager(NotebookManager):
             };
             ws_util.alter_workspace_metadata(wsclient, None, updated_metadata, ws_id=wsid)
         except Exception as e:
-            raise web.HTTPError(500, u'Error saving Narrative: %s, %s' % (e.__str__(), wsid))
+            pass
+            # raise web.HTTPError(500, u'Error saving Narrative: %s, %s' % (e.__str__(), wsid))
 
         # Now we can save the Narrative object.
         try:
@@ -681,7 +688,3 @@ for handlerstr in tgt_handlers:
     IPython.html.base.handlers.app_log.debug("Patching routes in %s.default_handler" % handlerstr)
     handler = importlib.import_module(handlerstr)
     handler_route_replace(handler.default_handlers, r'(?P<notebook_id>\w+-\w+-\w+-\w+-\w+)',r'(?P<notebook_id>ws\.\d+\.obj\.\d+)')
-
-# Load the plupload handler
-import upload_handler
-upload_handler.insert_plupload_handler()

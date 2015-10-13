@@ -131,8 +131,9 @@ define(['jquery',
 
                   var res = hit_def.split ("#");
                   var id=res[0];
-                  var alias = res[1];
-                  var defline = res[2]; 
+                  var genome_ws_id=res[1];
+                  var alias = res[2];
+                  var defline = res[3]; 
                   if (!id){
                     id="NA";
                   } 

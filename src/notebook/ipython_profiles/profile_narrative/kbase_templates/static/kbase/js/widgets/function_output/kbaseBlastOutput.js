@@ -57,6 +57,12 @@ define(['jquery',
 		  var ready = function(data) {
 		    container.empty();
 		    data=data[0].data;
+
+                     
+
+
+
+
 		    var tabPane = $('<div id="'+pref+'tab-content">');
 		    container.append(tabPane);
 		    tabPane.kbaseTabs({canDelete : true, tabs : []});
@@ -475,6 +481,7 @@ define(['jquery',
 
 		//text alignment tab and use of formatter function to add to the content of the tab
 
+                
 		    var al  = $('#'+pref+'alignments');
                     al.css({'max-height':400, 'max-width':1080, 'overflow':'scroll'});
 		    var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
@@ -491,7 +498,15 @@ define(['jquery',
 
 	  kbws.get_objects([{ref: self.ws_name+"/"+self.ws_id}], function(data) {
 //	  kbws.get_objects([{ref: 'pranjan77:1442854662472'+"/"+'blastn_twoquery_example'}], function(data) {
+              var err = data[0].data.err_msg;
+              if (data[0].data.err_msg){
+              container.empty();
+	      container.append('<p>[Error] ' + data[0].data.err_msg + '</p>');
+
+              }
+              else { 
 	      ready(data)
+              }
 	      },
 	      function(data) {
 	      container.empty();

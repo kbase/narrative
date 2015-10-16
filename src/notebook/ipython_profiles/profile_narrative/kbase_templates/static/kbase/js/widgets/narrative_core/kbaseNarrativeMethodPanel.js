@@ -81,7 +81,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                                     .append(this.$showHideSpan)
                                     .append(' ')
                                     .append(this.$numHiddenSpan)
-                                    .append(' filtered')
+                                    .append(' filtered out')
                                     .addClass('kb-function-toggle')
                                     .hide()
                                     .click($.proxy(function(e) {
@@ -411,10 +411,13 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                     triggerFn(method);
                 }, this));
 
+            var uiName = method.info.name;
+            if (method.info.namespace)
+                uiName = '[' + method.info.namespace + '] ' + uiName;
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
                         .css({'white-space':'normal', 'cursor':'pointer'})
-                        .append($('<a>').append(method.info.name)
+                        .append($('<a>').append(uiName)
                                     .click($.proxy(function(e) {
                                         e.stopPropagation();
                                         triggerFn(method);

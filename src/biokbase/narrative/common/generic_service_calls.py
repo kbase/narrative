@@ -163,7 +163,7 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
 
 def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, param_values_json, method_job_id):
     methodSpec = json.loads(method_spec_json)
-    methodInputValues = json.loads(param_values_json)
+    methodInputValues = json.loads(correct_method_specs_json(param_values_json))
     njsClient = NarrativeJobService(URLS.job_service, token = token)
     wsClient = workspaceService(URLS.workspace, token = token)
     if method_job_id.startswith("method:"):
@@ -417,8 +417,12 @@ def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, s
                                 raise ValueError("Unsupported path to job id field in RPC method output for method [" + methodId + "]: " + json.dumps(rpcOutPath))
                             if len(rpcOutPath) == 1:
                                 rpcJobIdField = rpcOutPath[0]
-                if (not jobIdFieldFound) and (jobIdField != 'docker'):
-                    raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
+                if not jobIdFieldFound:
+                    if jobIdField == 'docker':
+                        if 'kb_service_version' in behavior:
+                            step['service']['service_version'] = behavior['kb_service_version']
+                    else:
+                        raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
                 step['is_long_running'] = 1
                 if rpcJobIdField is not None:
                     step['job_id_output_field'] = rpcJobIdField                                   

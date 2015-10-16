@@ -31,6 +31,7 @@
         "user_and_job_state": "http://kbase.us/services/userandjobstate", 
         "user_profile": "http://dev19.berkeley.kbase.us/services/user_profile/rpc", 
         "workspace": "http://dev04.berkeley.kbase.us:7058", 
+        "catalog": "https://ci.kbase.us/services/catalog",
         "ws_browser": "http://narrative.kbase.us/functional-site/#/ws"
     }, 
     "git_commit_hash": "ba7b4d3", 
@@ -67,6 +68,7 @@
         "user_profile": "https://kbase.us/services/user_profile/rpc", 
         "version_check": "/narrative_version", 
         "workspace": "https://kbase.us/services/ws", 
+        "catalog": "https://kbase.us/services/catalog",
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
     "next": {
@@ -99,6 +101,7 @@
         "user_profile": "https://next.kbase.us/services/user_profile/rpc", 
         "version_check": "/narrative_version", 
         "workspace": "https://next.kbase.us/services/ws", 
+        "catalog": "https://next.kbase.us/services/catalog",
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
     "ci": {
@@ -131,6 +134,7 @@
         "user_profile": "https://ci.kbase.us/services/user_profile/rpc", 
         "version_check": "/narrative_version", 
         "workspace": "https://ci.kbase.us/services/ws", 
+        "catalog": "https://ci.kbase.us/services/catalog",
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md", 

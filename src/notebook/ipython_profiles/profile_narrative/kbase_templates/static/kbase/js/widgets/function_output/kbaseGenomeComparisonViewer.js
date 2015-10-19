@@ -378,13 +378,15 @@ define(['jquery',
 						}					
         				tabPane.kbaseTabs('addTab', {tab: id, content: tabContent, canDelete : true, show: true});
         			});
+        			/* Events should only be attached to elements inside the widget's container
+        			i.e., container.find('.show-function').click(...)
         			$('.show-function'+self.pref).unbind('click');
         			$('.show-function'+self.pref).click(function() {
         				var id = $(this).data('id');
             			if (tabPane.kbaseTabs('hasTab', id)) {
             				tabPane.kbaseTabs('showTab', id);
             				return;
-            			}
+            			}*/
             			var func;
         				for (var i in functions) {
         					if (functions[i].id == id) {

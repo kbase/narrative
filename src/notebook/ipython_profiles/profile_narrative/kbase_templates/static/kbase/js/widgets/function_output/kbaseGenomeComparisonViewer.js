@@ -146,7 +146,8 @@ define(['jquery',
             		var func = functions[i];
     				func.subsystem = func.subsystem.replace(/_/g, ' ');
     				var funcdata = {
-    					"id": '<a class="show-function'+self.pref+'" data-id="'+func.id+'">'+func.id+'</a>',
+    					//"id": '<a class="show-function'+self.pref+'" data-id="'+func.id+'">'+func.id+'</a>',
+    					"id": func.id,
     					"subsystem": func.subsystem,
     					"primclass": func.primclass,
     					"subclass": func.subclass,
@@ -294,7 +295,8 @@ define(['jquery',
             			} else {
 							famdata.funcgenes += count+": "+famindecies[sortedfuncs[j]]+"("+Math.round(100*famindecies[sortedfuncs[j]]/functions[sortedfuncs[j]].numgenes)+"%)";
 							famdata.funcgenomes += count+": "+famgenomes[sortedfuncs[j]]+"("+Math.round(100*famgenomes[sortedfuncs[j]]/functions[sortedfuncs[j]].number_genomes)+"%)";
-							famdata.functions += count+": "+'<a class="show-function'+self.pref+'" data-id="'+functions[sortedfuncs[j]].id+'">'+functions[sortedfuncs[j]].id+'</a>';
+							//famdata.functions += count+": "+'<a class="show-function'+self.pref+'" data-id="'+functions[sortedfuncs[j]].id+'">'+functions[sortedfuncs[j]].id+'</a>';
+							famdata.functions += count+": "+functions[sortedfuncs[j]].id;							
 							famdata.subsystem += count+": "+functions[sortedfuncs[j]].subsystem;
 							famdata.primclass += count+": "+functions[sortedfuncs[j]].primclass;
 							famdata.subclass += count+": "+functions[sortedfuncs[j]].subclass;

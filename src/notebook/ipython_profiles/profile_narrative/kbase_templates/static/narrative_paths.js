@@ -34,6 +34,7 @@ define([], function() {
             'kbapi'                                 : 'kbase/js/widgets/kbapi',
             'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
             'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
+            'catalog-client-api'                    : 'kbase/js/api/Catalog',
 
             /***
              * CORE NARRATIVE WIDGETS
@@ -181,6 +182,7 @@ define([], function() {
             'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
             'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
+            'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
 
             // unfinished ones
             /***

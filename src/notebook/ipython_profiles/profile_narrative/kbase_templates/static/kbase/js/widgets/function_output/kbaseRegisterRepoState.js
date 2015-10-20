@@ -64,10 +64,13 @@ define(['jquery',
             var table = $('<table class="table table-striped table-bordered" \
                     style="margin-left: auto; margin-right: auto;" id="'+pref+'info-table"/>');
             container.append(table);
-            table.append('<tr><td>Is active</td><td id="'+pref+'_active"></td></tr>');
-            table.append('<tr><td>Approval</td><td id="'+pref+'_release_approval"></td></tr>');
-            table.append('<tr><td>Review</td><td id="'+pref+'_review_message"></td></tr>');
-            table.append('<tr><td>State</td><td id="'+pref+'_registration"></td></tr>');
+            table.append('<tr><td width="33%">Timestamp</td><td id="'+pref+'_timestamp"></td></tr>');
+            table.append('<tr><td width="33%">Is active</td><td id="'+pref+'_active"></td></tr>');
+            table.append('<tr><td width="33%">Approval</td><td id="'+pref+'_release_approval"></td></tr>');
+            table.append('<tr><td width="33%">Review</td><td id="'+pref+'_review_message"></td></tr>');
+            table.append('<tr><td width="33%">State</td><td id="'+pref+'_registration"></td></tr>');
+            table.append('<tr><td width="33%">Error</td><td><textarea style="width:100%;" rows="2" readonly id="'+pref+'_error"/></td></tr>');
+            table.append('<tr><td width="33%">Build-log</td><td><textarea style="width:100%;" rows="5" readonly id="'+pref+'_build_log"/></td></tr>');
             self.refreshState();
         },
         
@@ -78,21 +81,32 @@ define(['jquery',
                 function(data) {
                     self.loading(false);
                     console.log(data);
-                    var state = data.registration;
-                    if (state === 'error') {
-                        self.showMessage(data.error_message);
-                    } else {
+                    var showData = function(data, build_log) {
+                        var state = data.registration;
+                        $('#'+pref+'_timestamp').html('' + self.options.output);
                         $('#'+pref+'_active').html('' + data.active);
                         $('#'+pref+'_release_approval').html(data.release_approval);
                         $('#'+pref+'_review_message').html(data.review_message ? data.review_message : "");
                         $('#'+pref+'_registration').html('' + data.registration);
-                        if (state === 'building')
+                        $('#'+pref+'_build_log').val('' + build_log);
+                        if (state === 'error') {
+                            $('#'+pref+'_error').val(data.error_message);
+                        } else if (state !== 'complete') {
                             setTimeout(function(event) {
-                                self.refreshState($active, $release_approval, $review_message, $registration);
+                                self.refreshState();
                             }, 5000);
-                    }
+                        }
+                    };
+                    self.catalogClient.get_build_log(self.options.output, function(data2) {
+                        console.log(data2);
+                        showData(data, data2);
+                    }, function(error) {
+                        console.log(error);
+                        showData(data, error.error.error);
+                    });
                 },
                 function(error) {
+                    console.log(error);
                     self.clientError(error);
                 }
             );

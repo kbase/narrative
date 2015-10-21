@@ -1,0 +1,42 @@
+!!!!  This readme is no longer accurate and needs to be updated  !!!!!!
+
+
+   This directory contains a dockerfile used to build a docker container (http://www.docker.io/) that contains a
+self-contained, running narrative instance.
+   The Dockerfile has some built in assumptions about how/where it is run, mostly due to restrictions by
+Docker
+
+   1) It expects to be run out of a directory that contains a narrative directory (containing the
+      a copy of the narrative repo) and a bootstrap directory containing a bootstrap repo. This
+      is an effort to centralize the configuration of the python environment in the bootstrap module
+   2) The source.list file in this directory also needs to be in the same directory as the Dockerfile,
+      this is used to specify the remote package repos for the apt-get commands.
+
+   It also expects that there is a running docker service on the current host.
+
+   You can create the container with the following command (run from this directory):
+
+docker build -t sychan/narrative .
+
+   Feel free to replace sychan/narrative with whatever name you prefer to call the docker container
+
+   You can then run the container using:
+
+docker run sychan/narrative
+
+   The dockerfile is configured to spin up an ipython notebook listening on the default port (8888) across all
+interfaces. It will come up password protected by default with the kbasetest user password. You can set a
+new password by replacing the --NotebookApp.password= parameter in the CMD string with a different sha1
+hash ( use the IPython.lib.passwd() method to prompt for a password - the return value is the sha1 hash).
+
+   Docker will map the internal port 8888 to a high port on public interface of the hosting machine. Use the
+"docker ps" command to find the port mapping.
+   Example:
+root@docker1:~/dockerstuff/kb_narrative# docker ps
+ID                  IMAGE                      COMMAND                CREATED             STATUS              PORTS
+cf6d42d5ee8b        sychan/narrative2:latest   /bin/sh -c /bin/bash   28 seconds ago      Up 27 seconds       49517->8888         
+
+   In this example, you can see that port 49517 is mapped to port 8888 within the docker container. This means that
+instead of connecting to http://localhost:8888 as you would on your typical ipython notebook, you would point your browser
+at http://external_ip:49517/ to access the notebook.
+

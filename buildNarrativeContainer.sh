@@ -9,8 +9,8 @@ NAR_BASE="kbase/narrbase"
 NAR_BASE_VER="3.0"
 
 # Update the git submodule(s)
-git submodule init
-git submodule update
+#git submodule init
+#git submodule update
 
 # Start by updating the config file to include the current git commit hash and timestamp
 # src/scripts/kb-git-version -f src/config.json -o $VER_OUTFILE

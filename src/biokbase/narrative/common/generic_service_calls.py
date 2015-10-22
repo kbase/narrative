@@ -417,8 +417,12 @@ def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, s
                                 raise ValueError("Unsupported path to job id field in RPC method output for method [" + methodId + "]: " + json.dumps(rpcOutPath))
                             if len(rpcOutPath) == 1:
                                 rpcJobIdField = rpcOutPath[0]
-                if (not jobIdFieldFound) and (jobIdField != 'docker'):
-                    raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
+                if not jobIdFieldFound:
+                    if jobIdField == 'docker':
+                        if 'kb_service_version' in behavior:
+                            step['service']['service_version'] = behavior['kb_service_version']
+                    else:
+                        raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
                 step['is_long_running'] = 1
                 if rpcJobIdField is not None:
                     step['job_id_output_field'] = rpcJobIdField                                   

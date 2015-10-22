@@ -1,4 +1,5 @@
 {
+    "use_local_widgets": true,
     "config": "ci", 
     "dev": {
         "awe": "http://140.221.67.185:7080", 

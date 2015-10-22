@@ -395,9 +395,6 @@ define(['jquery',
 
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
-
-
-                
         },
 
         buildAppCell: function(appSpec) {
@@ -1631,7 +1628,7 @@ define(['jquery',
 
             return "import biokbase.narrative.common.service as Service\n" +
                    "method = Service.get_service('generic_service').get_method('method_call')\n" +
-                   "method('" + methodJSON + "', '" + paramsJSON + "')";
+                   "method(r'" + methodJSON + "', r'" + paramsJSON + "')";
         },
 
         /**
@@ -1662,7 +1659,7 @@ define(['jquery',
                     return "'" + addSlashes(p) + "'";
                 }
             );
-            cmd += "method(" + paramList + ")";
+            cmd += "method(r" + paramList + ")";
 
             return cmd;
         },

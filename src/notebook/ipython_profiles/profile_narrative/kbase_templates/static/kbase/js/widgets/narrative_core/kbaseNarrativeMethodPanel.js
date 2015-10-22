@@ -217,6 +217,12 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                                this.$searchDiv.slideToggle(400);
                                this.$searchInput.focus();
                            }, this)));
+            this.addButton($('<button>')
+                           .addClass('btn btn-xs btn-default')
+                           .append('<span class="glyphicon glyphicon-refresh">')
+                           .click(function(e) {
+                                this.refreshFromService();
+                           }.bind(this)));
             // this.addButton($('<button>')
             //                .addClass('btn btn-xs btn-default')
             //                .append('<span class="fa fa-arrow-right"></span>')

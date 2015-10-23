@@ -278,6 +278,10 @@ class GenericService(object):
         resp = json.loads(ret.read())
 
         if 'result' in resp:
+            # Note: what if there are more than one return values? --mike
+            # we need to check for methods with no return
+            if not resp['result']:
+                return None
             return resp['result'][0]
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')

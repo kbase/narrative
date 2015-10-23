@@ -66,43 +66,78 @@ define(['jquery',
             container.append(table);
             table.append('<tr><td width="33%">Timestamp</td><td id="'+pref+'_timestamp"></td></tr>');
             table.append('<tr><td width="33%">Is active</td><td id="'+pref+'_active"></td></tr>');
-            table.append('<tr><td width="33%">Approval</td><td id="'+pref+'_release_approval"></td></tr>');
-            table.append('<tr><td width="33%">Review</td><td id="'+pref+'_review_message"></td></tr>');
+            table.append('<tr><td width="33%">Release Approval</td><td id="'+pref+'_release_approval"></td></tr>');
+            table.append('<tr><td width="33%">Release Review</td><td id="'+pref+'_review_message"></td></tr>');
             table.append('<tr><td width="33%">State</td><td id="'+pref+'_registration"></td></tr>');
             table.append('<tr><td width="33%">Error</td><td><textarea style="width:100%;" rows="2" readonly id="'+pref+'_error"/></td></tr>');
             table.append('<tr><td width="33%">Build-log</td><td><textarea style="width:100%;" rows="5" readonly id="'+pref+'_build_log"/></td></tr>');
             self.refreshState();
         },
         
+
+        getState: function() {
+            var self = this;
+            if(self.state) return self.state
+            return null;
+        },
+
+        loadState: function(state) {
+            var self = this;
+            if(state) {
+                self.state = state;
+                self.catalogClient.get_build_log(self.options.output, function(data2) {
+                    //console.log(data2);
+                    self.showData(state, data2);
+                }, function(error) {
+                    //console.log(error);
+                    self.showData(data, error.error.error);
+                });
+            }
+        },
+
+        showData : function(data, build_log) {
+            var self = this;
+            self.loading(false);
+            var pref = this.pref;
+            var state = data.registration;
+            $('#'+pref+'_timestamp').html('' + self.options.output);
+            $('#'+pref+'_active').html('' + data.active);
+            $('#'+pref+'_release_approval').html(data.release_approval);
+            $('#'+pref+'_review_message').html(data.review_message ? data.review_message : "");
+            $('#'+pref+'_registration').html('' + data.registration);
+            $('#'+pref+'_error').val(data.error_message);
+            $('#'+pref+'_build_log').val('' + build_log);
+            if (state === 'error') {
+                self.state = data
+                // now always show if something is in error field
+                //$('#'+pref+'_error').val(data.error_message);
+            } else if (state !== 'complete') {
+                setTimeout(function(event) {
+                    self.refreshState();
+                }, 1000);
+            } else {
+                self.state = data
+            }
+        },
+
+
         refreshState: function() {
             var self = this;
-            var pref = this.pref;
             self.catalogClient.get_module_state({git_url: self.options.git_url},
                 function(data) {
-                    self.loading(false);
-                    console.log(data);
-                    var showData = function(data, build_log) {
-                        var state = data.registration;
-                        $('#'+pref+'_timestamp').html('' + self.options.output);
-                        $('#'+pref+'_active').html('' + data.active);
-                        $('#'+pref+'_release_approval').html(data.release_approval);
-                        $('#'+pref+'_review_message').html(data.review_message ? data.review_message : "");
-                        $('#'+pref+'_registration').html('' + data.registration);
-                        $('#'+pref+'_build_log').val('' + build_log);
-                        if (state === 'error') {
-                            $('#'+pref+'_error').val(data.error_message);
-                        } else if (state !== 'complete') {
-                            setTimeout(function(event) {
-                                self.refreshState();
-                            }, 5000);
-                        }
-                    };
+                    // If state was already defined, then it might have been set by the narrative, and
+                    // we just reload it.
+                    if(self.state) {
+                        self.loadState(self.state)
+                        return
+                    }
+                    //console.log(data);
                     self.catalogClient.get_build_log(self.options.output, function(data2) {
-                        console.log(data2);
-                        showData(data, data2);
+                        //console.log(data2);
+                        self.showData(data, data2);
                     }, function(error) {
-                        console.log(error);
-                        showData(data, error.error.error);
+                        //console.log(error);
+                        self.showData(data, error.error.error);
                     });
                 },
                 function(error) {

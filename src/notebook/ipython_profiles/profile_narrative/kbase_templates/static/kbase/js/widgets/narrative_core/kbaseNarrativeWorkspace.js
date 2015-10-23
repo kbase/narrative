@@ -1656,7 +1656,7 @@ define(['jquery',
 
             var paramList = params.map(
                 function(p) {
-                    return "'" + addSlashes(p) + "'";
+                    return "r'" + addSlashes(p) + "'";
                 }
             );
             cmd += "method(r" + paramList + ")";

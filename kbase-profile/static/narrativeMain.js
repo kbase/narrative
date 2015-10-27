@@ -35,11 +35,10 @@ require(['narrative_paths'], function(paths) {
         "use strict";
         console.log('Loading KBase Narrative setup routine.');
 
-        Login.init($('#signin-button'));
-
         config.updateConfig(function(config) { 
             window.kbconfig = config;
             require(['kbaseNarrative'], function(Narrative) {
+                Login.init($('#signin-button'));
                 console.log('Starting IPython main');
                 require(['notebook/js/main']);
             });

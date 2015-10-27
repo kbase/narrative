@@ -21,16 +21,20 @@
  * @module narrativeInit
  * @static
  */
-
+console.log('here?');
 require(['narrative_paths'], function(paths) { 
     require([
         'jquery',
         'narrativeConfig',
-    ], function($, config) {
+        'narrativeLogin'
+    ], 
+    function($, 
+             Config,
+             Login) {
         "use strict";
-        console.log('Initializing KBase config.');
+        console.log('Initializing KBase Tree page.');
 
-        config.updateConfig(function(config) { 
+        Config.updateConfig(function(config) { 
             window.kbconfig = config;
             require(['kbapi', 'narrativeLogin'], function(API, Login) {
                 Login.init($('#signin-button'));

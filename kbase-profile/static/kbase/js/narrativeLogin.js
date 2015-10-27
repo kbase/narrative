@@ -57,6 +57,7 @@ define(['jquery',
         /**
          * Initialize the login widget and bind login/logout callbacks
          */
+        console.log('logging in!');
         var loginWidget = $elem.kbaseLogin({ //$("#signin-button").kbaseLogin({ 
             /* If the notebook kernel's initialized, tell it to set the token.
              * This really only gets called when the user does a login on the Narrative page.

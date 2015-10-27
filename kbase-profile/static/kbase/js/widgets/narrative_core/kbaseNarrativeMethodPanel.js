@@ -101,7 +101,7 @@ define(['jquery',
                                     .append(this.$showHideSpan)
                                     .append(' ')
                                     .append(this.$numHiddenSpan)
-                                    .append(' filtered')
+                                    .append(' filtered out')
                                     .addClass('kb-function-toggle')
                                     .hide()
                                     .click($.proxy(function(e) {
@@ -160,14 +160,6 @@ define(['jquery',
                                  .append(this.$functionPanel)
                                  .append(this.$loadingPanel)
                                  .append(this.$errorPanel));
-
-            // $(document).on('hasFunction.Narrative',
-            //     $.proxy(function(e, service, method, callback) {
-            //         if (callback) {
-            //             callback(this.hasFunction(service, method));
-            //         }
-            //     }, this)
-            // );
 
             $(document).on('filterMethods.Narrative',
                 $.proxy(function(e, filterString) {

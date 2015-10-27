@@ -6,14 +6,14 @@
 # 2. fetch the right tag of jupyter notebook
 # > git clone https://github.com/jupyter/notebook jupyter-notebook
 # > cd jupyter-notebook
-# > git checkout tags/4.0.1
+# > git checkout tags/4.0.5
 #
 # 3. do the install
 # > pip install --pre -e .
 #
 # > get clone https://github.com/ipython/ipywidgets
 # > cd ipywidgets
-# > git checkout tags/4.0.2
+# > git checkout tags/4.0.3
 # > pip install -e .
 #
 # 4. setup configs to be in kbase-config, not in /home/users/.jupyter
@@ -32,10 +32,10 @@
 # 8. Done!
 
 JUPYTER_NOTEBOOK_INSTALL_DIR=jupyter-notebook
-JUPYTER_NOTEBOOK_TAG=4.0.1
+JUPYTER_NOTEBOOK_TAG=4.0.5
 
 IPYWIDGETS_INSTALL_DIR=ipywidgets
-IPYWIDGETS_TAG=4.0.2
+IPYWIDGETS_TAG=4.0.3
 
 PYTHON=python2.7
 

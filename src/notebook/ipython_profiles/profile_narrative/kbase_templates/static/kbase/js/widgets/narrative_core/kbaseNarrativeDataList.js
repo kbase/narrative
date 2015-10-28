@@ -1032,6 +1032,15 @@ define(['jquery',
                         self.$filterTypeDiv.hide();
                     }
                 });
+
+            var $refreshBtn = $('<span>')
+                .addClass('btn btn-xs btn-default')
+                .tooltip({title:'Refresh data list', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                .append('<span class="glyphicon glyphicon-refresh"></span>')
+                .on('click',function() {
+                    self.refresh();
+                });
+
             self.$searchInput = $('<input type="text">').addClass('form-control');
             self.$searchDiv = $('<div>').addClass("input-group").css({'margin-bottom':'10px'})
                                 .append(self.$searchInput)
@@ -1069,6 +1078,7 @@ define(['jquery',
                 self.options.parentControlPanel.addButtonToControlPanel($openSearch);
                 self.options.parentControlPanel.addButtonToControlPanel($openSort);
                 self.options.parentControlPanel.addButtonToControlPanel($openFilter);
+                self.options.parentControlPanel.addButtonToControlPanel($refreshBtn);
             }
             else {
                 $header.addClass('row').css({'margin':'5px'})

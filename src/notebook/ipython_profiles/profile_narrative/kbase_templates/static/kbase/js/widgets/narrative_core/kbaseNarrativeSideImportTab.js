@@ -95,6 +95,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             this.widgetPanel.append(this.widgetPanelCard1);
             this.widgetPanelCard1.append("<div class='kb-cell-run'><h2 class='collapse in'>" +
             		"Import data from your local computer or another data source. First, select the type of data you wish to import." +
+                    ' (See the <a href="http://kbase.us/data-upload-download-guide/" target="_blank">Data Upload/Download Guide</a> for more information.)' +
             		"</h2></div><hr>");
             
             var $nameDiv = $('<div>').addClass("kb-method-parameter-name").css("text-align", "left")

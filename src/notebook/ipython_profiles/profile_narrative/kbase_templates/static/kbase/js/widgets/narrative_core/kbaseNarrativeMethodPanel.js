@@ -313,6 +313,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                     this.methodSpecs = {};
                     for (var i=0; i<methods.length; i++) {
                         this.methodSpecs[methods[i].info.id] = methods[i];
+                        //if(methods[i].info.)
                     }
                 }, this)
             );
@@ -418,8 +419,8 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                 }, this));
 
             var uiName = method.info.name;
-            if (method.info.namespace)
-                uiName = '[' + method.info.namespace + '] ' + uiName;
+            //if (method.info.namespace)
+            //    uiName = '[' + method.info.namespace + '] ' + uiName;
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
                         .css({'white-space':'normal', 'cursor':'pointer'})
@@ -428,7 +429,10 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                                         e.stopPropagation();
                                         triggerFn(method);
                                     }, this)));
-            var $version = $('<span>').addClass("kb-data-list-type").append('v'+method.info.ver); // use type because it is a new line
+            var version_string = 'v'+method.info.ver;
+            if (method.info.namespace)
+                version_string = '[' + method.info.namespace + '] ' + version_string;
+            var $version = $('<span>').addClass("kb-data-list-type").append(version_string); // use type because it is a new line
 
             var $more = $('<div>')
                         .addClass('kb-method-list-more-div')
@@ -722,10 +726,15 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
          */
         textFilter: function(pattern, method) {
             var lcName = method.info.name.toLowerCase();
+            var namespace = '';
+            if(method.info.namespace) {
+                namespace=method.info.namespace.toLowerCase();
+            }
             // match any token in the query, not the full string
             var tokens = pattern.toLowerCase().split(" ");
             for(var k=0; k<tokens.length; k++) {
-                if(lcName.indexOf(tokens[k])<0) {
+                if(lcName.indexOf(tokens[k])<0 &&
+                    namespace.indexOf(tokens[k])<0) {
                     // token not found, so we return false
                     return false;
                 }

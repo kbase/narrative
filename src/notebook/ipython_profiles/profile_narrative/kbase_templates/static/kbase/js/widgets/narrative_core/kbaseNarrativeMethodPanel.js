@@ -213,6 +213,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="fa fa-search"></span>')
+                           .tooltip({title:'Search for Apps & Methods', 'container':'body', delay: { "show": 400, "hide": 50 }})
                            .click($.proxy(function(event) {
                                this.$searchDiv.slideToggle(400);
                                this.$searchInput.focus();
@@ -220,9 +221,25 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-refresh">')
+                           .tooltip({title:'Refresh app/method listings', 'container':'body', delay: { "show": 400, "hide": 50 }})
                            .click(function(e) {
                                 this.refreshFromService();
                            }.bind(this)));
+
+            this.$toggleVersionBtn = $('<button>')
+                                        .addClass('btn btn-xs btn-default')
+                                        .tooltip({title:'Toggle between Release/Beta/Dev versions', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                                        .append('R')
+            this.versionState = 'R';
+            this.addButton(this.$toggleVersionBtn 
+                                   .click(function(e) {
+                                        if(this.versionState=='R') { this.versionState='B'; }
+                                        else if(this.versionState=='B') { this.versionState='D'; }
+                                        else if(this.versionState=='D') { this.versionState='R'; }
+                                        this.$toggleVersionBtn.html(this.versionState);
+                                        this.refreshFromService();
+                                   }.bind(this)));
+
             // this.addButton($('<button>')
             //                .addClass('btn btn-xs btn-default')
             //                .append('<span class="fa fa-arrow-right"></span>')
@@ -305,7 +322,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
             }, event);
         },
 
-        refreshFromService: function() {
+        refreshFromService: function(version) {
             this.showLoadingMessage("Loading KBase Methods from service...");
 
             var methodProm = this.methClient.list_methods_spec({},

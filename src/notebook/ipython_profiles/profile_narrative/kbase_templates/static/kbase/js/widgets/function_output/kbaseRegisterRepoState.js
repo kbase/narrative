@@ -64,13 +64,14 @@ define(['jquery',
             var table = $('<table class="table table-striped table-bordered" \
                     style="margin-left: auto; margin-right: auto;" id="'+pref+'info-table"/>');
             container.append(table);
-            table.append('<tr><td width="33%">Timestamp</td><td id="'+pref+'_timestamp"></td></tr>');
-            table.append('<tr><td width="33%">Is active</td><td id="'+pref+'_active"></td></tr>');
-            table.append('<tr><td width="33%">Release Approval</td><td id="'+pref+'_release_approval"></td></tr>');
-            table.append('<tr><td width="33%">Release Review</td><td id="'+pref+'_review_message"></td></tr>');
-            table.append('<tr><td width="33%">State</td><td id="'+pref+'_registration"></td></tr>');
-            table.append('<tr><td width="33%">Error</td><td><textarea style="width:100%;" rows="2" readonly id="'+pref+'_error"/></td></tr>');
-            table.append('<tr><td width="33%">Build-log</td><td><textarea style="width:100%;" rows="5" readonly id="'+pref+'_build_log"/></td></tr>');
+            var width = "15%"
+            table.append('<tr><td width="'+width+'">Timestamp</td><td id="'+pref+'_timestamp"></td></tr>');
+            table.append('<tr><td width="'+width+'">Is active</td><td id="'+pref+'_active"></td></tr>');
+            table.append('<tr><td width="'+width+'">Release Approval</td><td id="'+pref+'_release_approval"></td></tr>');
+            table.append('<tr><td width="'+width+'">Release Review</td><td id="'+pref+'_review_message"></td></tr>');
+            table.append('<tr><td width="'+width+'">State</td><td id="'+pref+'_registration"></td></tr>');
+            table.append('<tr><td width="'+width+'">Error</td><td><textarea style="width:100%;" rows="2" readonly id="'+pref+'_error"/></td></tr>');
+            table.append('<tr><td width="'+width+'">Build-log</td><td><textarea style="width:100%;" rows="5" readonly id="'+pref+'_build_log"/></td></tr>');
             self.refreshState();
         },
         
@@ -101,14 +102,17 @@ define(['jquery',
             var pref = this.pref;
             var state = data.registration;
             $('#'+pref+'_timestamp').html('' + self.options.output);
-            $('#'+pref+'_active').html('' + data.active);
-            $('#'+pref+'_release_approval').html(data.release_approval);
-            $('#'+pref+'_review_message').html(data.review_message ? data.review_message : "");
-            $('#'+pref+'_registration').html('' + data.registration);
-            $('#'+pref+'_error').val(data.error_message);
+            $('#'+pref+'_active').html(data.active ? ''+data.active : '[unknown]');
+            $('#'+pref+'_release_approval').html(data.release_approval ? data.release_approval : '[unknown]');
+            $('#'+pref+'_review_message').html(data.review_message ? data.review_message : '');
+            $('#'+pref+'_registration').html(state ? state : '[unknown]');
+            $('#'+pref+'_error').val(data.error_message ? data.error_message : '');
             $('#'+pref+'_build_log').val('' + build_log);
+            $('#'+pref+'_build_log').scrollTop($('#'+pref+'_build_log')[0].scrollHeight); // scroll to bottom
             if (state === 'error') {
                 self.state = data
+                $('#'+pref+'_registration').empty()
+                    .append($('<span>').addClass('label label-danger').append(state))
                 // now always show if something is in error field
                 //$('#'+pref+'_error').val(data.error_message);
             } else if (state !== 'complete') {
@@ -116,6 +120,8 @@ define(['jquery',
                     self.refreshState();
                 }, 1000);
             } else {
+                $('#'+pref+'_registration').empty()
+                    .append($('<span>').addClass('label label-success').append(state))
                 self.state = data
             }
         },

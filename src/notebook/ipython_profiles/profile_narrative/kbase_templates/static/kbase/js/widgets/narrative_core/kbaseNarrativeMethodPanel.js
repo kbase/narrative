@@ -213,6 +213,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="fa fa-search"></span>')
+                           .tooltip({title:'Search for Apps & Methods', 'container':'body', delay: { "show": 400, "hide": 50 }})
                            .click($.proxy(function(event) {
                                this.$searchDiv.slideToggle(400);
                                this.$searchInput.focus();
@@ -220,9 +221,30 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-refresh">')
+                           .tooltip({title:'Refresh app/method listings', 'container':'body', delay: { "show": 400, "hide": 50 }})
                            .click(function(e) {
-                                this.refreshFromService();
+                                var version_tag = 'release';
+                                if(this.versionState=='R') { version_tag='release'; }
+                                else if(this.versionState=='B') { version_tag='beta'; }
+                                else if(this.versionState=='D') { version_tag='dev'; }
+                                this.refreshFromService(version_tag);
                            }.bind(this)));
+
+            this.$toggleVersionBtn = $('<button>')
+                                        .addClass('btn btn-xs btn-default')
+                                        .tooltip({title:'Toggle between Release/Beta/Dev versions', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                                        .append('R')
+            this.versionState = 'R';
+            this.addButton(this.$toggleVersionBtn 
+                                   .click(function(e) {
+                                        var version_tag = 'release';
+                                        if(this.versionState=='R') { this.versionState='B'; version_tag='beta'; }
+                                        else if(this.versionState=='B') { this.versionState='D'; version_tag='dev'; }
+                                        else if(this.versionState=='D') { this.versionState='R'; version_tag='release'; }
+                                        this.$toggleVersionBtn.html(this.versionState);
+                                        this.refreshFromService(version_tag);
+                                   }.bind(this)));
+
             // this.addButton($('<button>')
             //                .addClass('btn btn-xs btn-default')
             //                .append('<span class="fa fa-arrow-right"></span>')
@@ -305,19 +327,22 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
             }, event);
         },
 
-        refreshFromService: function() {
+        refreshFromService: function(version_tag) {
             this.showLoadingMessage("Loading KBase Methods from service...");
 
-            var methodProm = this.methClient.list_methods_spec({},
+            var filterParams = {};
+            if(version_tag) { filterParams['tag']=version_tag; }
+            //console.debug(filterParams)
+
+            var methodProm = this.methClient.list_methods_spec(filterParams,
                 $.proxy(function(methods) {
                     this.methodSpecs = {};
                     for (var i=0; i<methods.length; i++) {
                         this.methodSpecs[methods[i].info.id] = methods[i];
-                        //if(methods[i].info.)
                     }
                 }, this)
             );
-            var appProm = this.methClient.list_apps_spec({},
+            var appProm = this.methClient.list_apps_spec(filterParams,
                 $.proxy(function(apps) {
                     this.appSpecs = {};
                     for (var i=0; i<apps.length; i++) {
@@ -325,7 +350,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                     }
                 }, this)
             );
-            var catProm = this.methClient.list_categories({},
+            var catProm = this.methClient.list_categories(filterParams,
                 $.proxy(function(categories) {
                     this.categories = categories[0];
                 }, this)

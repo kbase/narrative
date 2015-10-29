@@ -21,6 +21,8 @@ define([], function() {
             'underscore'                            : 'components/underscore/1.8.2/underscore-min',
             'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
             'select2'                               : 'select2-v3.5.2/select2.min',
+            'plotly'                                : 'components/plotly/plotly_20150812a_webgl/plotly.min',
+//            'plotly'                                : 'components/plotly/plotly-basic',
 
             'narrativeConfig'                       : 'kbase/js/narrativeConfig',
             'narrativeMain'                         : 'narrativeMain',
@@ -162,7 +164,9 @@ define([], function() {
             'kbaseExpressionFeatureTableHeatmap'    : 'kbase/js/widgets/function_output/kbaseExpressionFeatureTableHeatmap',
             'kbaseExpressionConditionsetBaseWidget' : 'kbase/js/widgets/function_output/kbaseExpressionConditionsetBaseWidget',
 
+            'kbaseGrowthMatrix'                      : 'kbase/js/widgets/function_output/kbaseGrowthMatrix',
 
+            
             'geometry_point'                        : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_point',
             'geometry_rectangle'                    : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_rectangle',
             'geometry_size'                         : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_size',
@@ -391,6 +395,9 @@ define([], function() {
             },
             'jquery-dataTables-bootstrap' : {
                 deps : ['jquery', 'jquery-dataTables', 'bootstrap']
+            },
+            'plotly':{
+                deps : ['d3','jquery']
             },
             'kbaseNarrativeAppCell' : {
                 deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 

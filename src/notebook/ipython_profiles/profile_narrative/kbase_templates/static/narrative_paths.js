@@ -191,7 +191,7 @@ define([], function() {
              ***/
 
             'd3'                                    : 'kbase/js/ui-common/ext/d3/d3.min',
-            'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
+            'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer.min',
             'handlebars'                            : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
             'kbwidget'                              : 'kbase/js/ui-common/src/widgets/../kbwidget',
             'kbaseAccordion'                        : 'kbase/js/ui-common/src/widgets/kbaseAccordion',

@@ -1,4 +1,4 @@
-/**
+**
  * "Import" tab on data side panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
@@ -473,6 +473,29 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             	} else {
             		self.showError(methodId + " import mode for Genome type is not supported yet");
             	}
+            } else if (self.selectedType === 'KBaseGenomes.GenomeAnnotation') {
+                var url = null;
+                if (methodId === 'import_genome_gbk_file') {
+                        url = self.shockURL + '/node/' + params['gbkFile'];
+                } else if (methodId === 'import_genome_gbk_ftp') {
+                        url = params['ftpFolder'];
+                }
+                if (url) {
+                        var options = {};
+                        if (params['contigObject'] && params['contigObject'].length > 0) {
+                                options['contigset_object_name'] = params['contigObject'];
+                        } else {
+                                options['contigset_object_name'] = params['outputObject'] + '.contigset';
+                        }
+                        args = {'external_type': 'Genbank.Genome',
+                                        'kbase_type': 'KBaseGenomes.GenomeAnnotation',
+                                        'workspace_name': self.wsName,
+                                        'object_name': params['outputObject'],
+                                        'optional_arguments': {'validate':{},'transform':options},
+                                        'url_mapping': {'Genbank.Genome': url}};
+                } else {
+                        self.showError(methodId + " import mode for GenomeAnnotation type is not supported yet");
+                }
             } else if (self.selectedType === 'Transcript') {
             	if (methodId === 'import_transcript_file') {
             		var options = {'dna':self.asInt(params['dna']),
@@ -507,6 +530,26 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             	} else {
             		self.showError(methodId + " import mode for ContigSet type is not supported yet");
             	}
+            } else if (self.selectedType === 'KBaseGenomes.Assembly') {
+                var url = null;
+###
+                if (methodId === 'import_contigset_fasta_file') {
+                        url = self.shockURL + '/node/' + params['fastaFile'];
+###
+                } else if (methodId === 'import_contigset_fasta_ftp') {
+                        url = params['ftpFolder'];
+                }
+                if (url) {
+                        args = {'external_type': 'FASTA.DNA.Assembly',
+                                        'kbase_type': 'KBaseGenomes.Assembly',
+                                        'workspace_name': self.wsName,
+                                        'object_name': params['outputObject'],
+                                        'optional_arguments': {'validate':{},'transform':
+                                                        {"fasta_reference_only":self.asBool(params['fastaReferenceOnly'])}},
+                                        'url_mapping': {'FASTA.DNA.Assembly': url}};
+                } else {
+                        self.showError(methodId + " import mode for Assembly type is not supported yet");
+                }
             } else if (self.selectedType === 'ShortReads') {
             	if (methodId === 'import_reads_fasta_file') {
             		var options = {'output_file_name': 'reflib.fasta.json'};

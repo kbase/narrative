@@ -767,24 +767,12 @@ class KBaseSearch(object):
         class v1_1(tls.Unicode, TypeMeta):
             """Type spec for the "ContigSet" object"""
             info_text = "KBaseSearch.ContigSet-1.1"
-    class Assembly(tls.Unicode, TypeMeta):
-        """Assembly type"""
-        info_text = "KBaseSearch.Assembly"
-        class v1_0(tls.Unicode, TypeMeta):
-            """Type spec for the "Assembly" object"""
-            info_text = "KBaseSearch.Assembly-1.0"
     class Genome(tls.Unicode, TypeMeta):
         """Genome type"""
         info_text = "KBaseSearch.Genome"
         class v2_0(tls.Unicode, TypeMeta):
             """Genome object holds much of the data relevant for a genome in KBase"""
             info_text = "KBaseSearch.Genome-2.0"
-    class GenomeAnnotation(tls.Unicode, TypeMeta):
-        """GenomeAnnotation type"""
-        info_text = "KBaseSearch.GenomeAnnotation"
-        class v1_0(tls.Unicode, TypeMeta):
-            """GenomeAnnotation object holds much of the data relevant for a genome in KBase"""
-            info_text = "KBaseSearch.GenomeAnnotation-1.0"
     class FeatureSet(tls.Unicode, TypeMeta):
         """FeatureSet type"""
         info_text = "KBaseSearch.FeatureSet"

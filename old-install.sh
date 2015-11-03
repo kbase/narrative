@@ -139,7 +139,8 @@ ipython notebook --profile=narrative --NotebookApp.base_project_url="/narrative"
 chmod +x $installPath/$venv/bin/run_magellan_narrative.sh
 
 # Install KBase data_api package
-git clone https://github.com/kbase/data_api -b develop
+# Temporarily hardcode a commit tag
+git clone https://github.com/kbase/data_api -b 52ade0722e056e6b0625b255282a2cf801f4619e
 cd data_api
 pip install -r requirements.txt
 $PYTHON setup.py install

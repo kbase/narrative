@@ -1,4 +1,4 @@
-**
+/**
  * "Import" tab on data side panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public

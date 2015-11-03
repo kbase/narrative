@@ -89,8 +89,8 @@ define([], function() {
              ***/
             'kbaseDefaultNarrativeInput'            : 'kbase/js/widgets/function_input/kbaseDefaultNarrativeInput',
             'kbaseBuildMediaInput'                  : 'kbase/js/widgets/function_input/kbaseBuildMediaInput',
-            'rastGenomeImportInput'                 : 'kbase/js/widgets/function_input/rastGenomeImportInput', 
-            'kbaseNcbiGenomeImportInput'            : 'kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput', 
+            'rastGenomeImportInput'                 : 'kbase/js/widgets/function_input/rastGenomeImportInput',
+            'kbaseNcbiGenomeImportInput'            : 'kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput',
             'kbaseTabbedInput'                      : 'kbase/js/widgets/function_input/kbaseTabbedInput',
             'create_metagenome_set'                 : 'kbase/js/widgets/function_input/create_metagenome_set',
             'kbStandaloneListSelect'                : 'kbase/js/widgets/function_input/kbStandaloneListselect',
@@ -154,7 +154,7 @@ define([], function() {
             'kbaseExpressionMatrix'                 : 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
             'kbaseExpressionGenesetBaseWidget'      : 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',
             'kbaseExpressionHeatmap'                : 'kbase/js/widgets/function_output/kbaseExpressionHeatmap',
-            'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
+            'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',
             'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
             'kbaseExpressionEstimateK'              : 'kbase/js/widgets/function_output/kbaseExpressionEstimateK',
             'kbaseExpressionClusterSet'             : 'kbase/js/widgets/function_output/kbaseExpressionClusterSet',
@@ -302,7 +302,7 @@ define([], function() {
             // 'kbaseWalkablePath'                : 'kbase/js/ui-common/src/widgets/kbaseWalkablePath',
             // 'kbaseCarousel'                : 'kbase/js/ui-common/src/widgets/kbaseCarousel',
             // 'kbaseMethodDescription'                : 'kbase/js/ui-common/src/widgets/kbaseMethodDescription',
-             'kbasePrompt'                       : 'kbase/js/ui-common/src/widgets/kbasePrompt',
+            //'kbasePrompt'                       : 'kbase/js/ui-common/src/widgets/kbasePrompt',
              'kbaseSearchControls'               : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
             // 'kbaseTabs'                         : 'kbase/js/ui-common/src/widgets/kbaseTabs',
             // 'kbaseVisWidget'                    : 'kbase/js/ui-common/src/widgets/kbaseVisWidget',
@@ -381,8 +381,8 @@ define([], function() {
 
         },
         shim : {
-            'bootstrap' : { 
-                deps : ['jquery'] 
+            'bootstrap' : {
+                deps : ['jquery']
             },
             'underscore' : {
                 exports : '_'
@@ -397,7 +397,7 @@ define([], function() {
                 deps : ['jquery', 'jquery-dataTables', 'bootstrap']
             },
             'kbaseNarrativeAppCell' : {
-                deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 
+                deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell',
                         'kbaseNarrativeCellMenu']
             },
             'kbaseNarrativeMethodCell' : {
@@ -434,7 +434,7 @@ define([], function() {
                 'deps' : ['KBModeling']
             },
             'kbaseTabTable' : {
-                'deps' : ['jquery', 
+                'deps' : ['jquery',
                           'jquery-dataTables',
                           'jquery-dataTables-bootstrap',
                           'bootstrap',
@@ -450,9 +450,9 @@ define([], function() {
                           'kbaseTabTableTabs']
             },
             'kbasePathways' : {
-                'deps' : ['jquery', 
-                          'kbwidget', 
-                          'KBModeling', 
+                'deps' : ['jquery',
+                          'kbwidget',
+                          'KBModeling',
                           'jquery-dataTables',
                           'jquery-dataTables-bootstrap',
                           'bootstrap',

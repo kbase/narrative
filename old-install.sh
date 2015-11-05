@@ -77,7 +77,7 @@ done
 
 
 printf "Creating virtual environment $venv...\n"
-virtualenv --python=$PYTHON $installPath/$venv
+virtualenv --python=$PYTHON --system-site-packages $installPath/$venv
 source $installPath/$venv/bin/activate
 
 printf "Pulling ipython branch $branch from github...\n"

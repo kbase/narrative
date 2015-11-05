@@ -532,10 +532,8 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             	}
             } else if (self.selectedType === 'KBaseGenomes.Assembly') {
                 var url = null;
-###
                 if (methodId === 'import_contigset_fasta_file') {
                         url = self.shockURL + '/node/' + params['fastaFile'];
-###
                 } else if (methodId === 'import_contigset_fasta_ftp') {
                         url = params['ftpFolder'];
                 }

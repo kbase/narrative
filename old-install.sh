@@ -141,8 +141,8 @@ chmod +x $installPath/$venv/bin/run_magellan_narrative.sh
 # Install KBase data_api package
 git clone https://github.com/kbase/data_api -b develop
 cd data_api
-pip install -r requirements.txt
-$PYTHON setup.py install
+# pip install -r requirements.txt
+# $PYTHON setup.py install
 cd ..
 
 printf "Cleaning up after install.sh script...\n"

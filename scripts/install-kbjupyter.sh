@@ -119,7 +119,7 @@ if [ "x$VIRTUAL_ENV" = x ]; then
   console 'ERROR: No Python virtual environment detected! Please activate one first.
   The easiest way to use virtual environments is with the virtualenvwrapper package. See:
   https://virtualenvwrapper.readthedocs.org/en/latest/install.html#basic-installation'
-  console 'You can also run this with the -v {some name} to create a virtual envirnoment'
+  console 'You can also run this with the -v {some name} to create a virtual environment'
   exit 1
 fi
 

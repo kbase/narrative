@@ -125,6 +125,11 @@ fi
 
 cd $VIRTUAL_ENV
 
+# Install external JavaScript code
+# --------------------
+bower install
+npm install
+
 # Install Jupyter code
 # --------------------
 # 1. Setup Jupyter Notebook inside virtualenv

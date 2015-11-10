@@ -162,7 +162,7 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
 
 def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, param_values_json, method_job_id):
     methodSpec = json.loads(method_spec_json)
-    methodInputValues = json.loads(param_values_json)
+    methodInputValues = json.loads(correct_method_specs_json(param_values_json))
     njsClient = NarrativeJobService(URLS.job_service, token = token)
     wsClient = workspaceService(URLS.workspace, token = token)
     if method_job_id.startswith("method:"):
@@ -366,6 +366,8 @@ def build_args_njs(paramValue, paramMapping, workspace, paramSpec):
 def is_script_method(methodSpec):
     behavior = methodSpec['behavior']
     if 'kb_service_input_mapping' in behavior:
+        if 'job_id_output_field' in methodSpec:
+            return False
         url = behavior['kb_service_url']
         if len(url) == 0:
             return True
@@ -415,7 +417,11 @@ def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, s
                             if len(rpcOutPath) == 1:
                                 rpcJobIdField = rpcOutPath[0]
                 if not jobIdFieldFound:
-                    raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
+                    if jobIdField == 'docker':
+                        if 'kb_service_version' in behavior:
+                            step['service']['service_version'] = behavior['kb_service_version']
+                    else:
+                        raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
                 step['is_long_running'] = 1
                 if rpcJobIdField is not None:
                     step['job_id_output_field'] = rpcJobIdField                                   
@@ -609,6 +615,10 @@ class GenericService(object):
         resp = json.loads(ret.read())
 
         if 'result' in resp:
+            # Note: what if there are more than one return values? --mike
+            # we need to check for methods with no return
+            if not resp['result']:
+                return None
             return resp['result'][0]
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')

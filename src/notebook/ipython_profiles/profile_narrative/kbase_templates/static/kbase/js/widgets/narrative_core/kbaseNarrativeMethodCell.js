@@ -73,7 +73,7 @@
                     this.submittedText = '&nbsp;&nbsp; submitted on ' + this.readableTimestamp();
                     if(this.auth()) {
                         if(this.auth().user_id)
-                            this.submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
+                            this.submittedText += ' by <a href="/functional-site/#/people/'+this.auth().user_id
                                 +'" target="_blank">' + this.auth().user_id + "</a>";
                     }
                     this.changeState('submitted');

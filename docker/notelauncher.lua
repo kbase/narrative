@@ -53,7 +53,11 @@ local function get_notebooks(self)
             if first == 1 then
                 for i, v in pairs(container.Ports) do
                     if v.PrivatePort == M.private_port then
-                        portmap[container.Id] = string.format("127.0.0.1:%u", v.PublicPort)
+                        res = docker.client:inspect_container{id=container.Id}
+                        local ports = res.body.NetworkSettings.Ports
+                        local ip = res.body.NetworkSettings.IPAddress
+                        local ip_port = string.format("%s:%d", ip, M.private_port)
+                        portmap[container.Id] = ip_port
                     end
                 end
             end
@@ -115,11 +119,12 @@ local function launch_notebook(self)
         res = docker.client:inspect_container{id=id}
         assert(res.status == 200, "Could not inspect new container: "..id)
         local ports = res.body.NetworkSettings.Ports
+        local ip = res.body.NetworkSettings.IPAddress
         local ThePort = string.format("%d/tcp", M.private_port)
         assert(ports[ThePort] ~= nil, string.format("Port binding for port %s not found!", ThePort))
-        local ip_port = string.format("%s:%d", "127.0.0.1", ports[ThePort][1].HostPort)
+        local ip_port = string.format("%s:%d", ip, M.private_port)
         -- info = { state, ip:port, session, last_time, last_ip }
-        local info = {"queued", ip_port, "*", os.time(), "127.0.0.1"} -- default values except for ip_port
+        local info = {"queued", ip_port, "*", os.time(), ip} -- default values except for ip_port
         return id, info
     else
         ngx.log(ngx.ERR, "Failed to create container: "..p.write(res))

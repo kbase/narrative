@@ -26,11 +26,15 @@ def color_lookup(name):
     colors = data['colors']
     if name == "Genome":
         return '#2196F3'
+    if name == "GenomeAnnotation":
+        return '#2196F3'
     if name ==  "FBAModel":
         return '#4CAF50'
     if name ==  "FBA":
         return '#F44336'
     if name ==  "ContigSet":
+        return '#FF9800'
+    if name ==  "Assembly":
         return '#FF9800'
     if name ==  "ProteomeComparison":
         return '#3F51B5'

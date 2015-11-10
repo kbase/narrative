@@ -65,10 +65,12 @@ define(['jquery',
         
 
         features: null, // genomeId : [{fid: x, data: x}]
+        orphanFeatures: null,
 
         loadFeatureSet: function() {
             var self = this;
             self.features = {};
+            self.orphanFeatures = [];
             self.ws.get_objects([{ref:self.options.workspaceName+"/"+self.options.featureset_name}],
                 function(data) {
                     var fs = data[0].data;
@@ -80,16 +82,19 @@ define(['jquery',
 
                     for (var fid in fs.elements) {
                         if (fs.elements.hasOwnProperty(fid)) {
-
-                            for (var k=0; k<fs.elements[fid].length; k++) {
-                                var gid = fs.elements[fid][k];
-                                if(self.features.hasOwnProperty(gid)) {
-                                    self.features[gid].push({'fid':fid});
-                                } else {
-                                    self.features[gid] = [{'fid':fid}];
+                            if(fs.elements[fid].length>0) {
+                                for (var k=0; k<fs.elements[fid].length; k++) {
+                                    var gid = fs.elements[fid][k];
+                                    if(self.features.hasOwnProperty(gid)) {
+                                        self.features[gid].push({'fid':fid});
+                                    } else {
+                                        self.features[gid] = [{'fid':fid}];
+                                    }
                                 }
+                            } else {
+                                self.orphanFeatures.push(fid);
                             }
-                        }
+                        } 
                     }
                     self.getGenomeData();
                     self.$mainPanel.show();
@@ -111,73 +116,103 @@ define(['jquery',
             self.genomeLookupTable = {};
             self.genomeObjectInfo = {};
             self.featureTableData = [];
-            // first get subdata for each of the genomes to build up the Feature ID to index lookup table
+            //First add any orphan features
+            for(var of=0; of<self.orphanFeatures.length; of++) {
+                self.featureTableData.push({
+                        fid: self.orphanFeatures[of], gid: 'Not linked to a Genome!',
+                        ali: '', type: '', func: ''
+                    }
+                );
+            }
+            // next get subdata for each of the genomes to build up the Feature ID to index lookup table
             var subdata_query = [];
             for(var gid in self.features) {
                 subdata_query.push({ref:gid, included:['features/[*]/id']});
             }
-            self.ws.get_object_subset(subdata_query,
-                function(data) {
-                    for (var k=0; k<data.length; k++) {
-                        self.genomeObjectInfo[subdata_query[k].ref] = data[k].info;
-                        self.genomeLookupTable[subdata_query[k].ref] = {}
-                        for (var f=0; f<data[k].data.features.length; f++) {
-                            self.genomeLookupTable[subdata_query[k].ref][data[k].data.features[f].id] = f; 
-                        }
-                    }
-
-                    for(var gid in self.features) {
-                        var included = [];
-                        for(var f=0; f<self.features[gid].length; f++) {
-                            var idx = self.genomeLookupTable[gid][self.features[gid][f].fid];
-                            included.push('features/'+idx+'/id');
-                            included.push('features/'+idx+'/type');
-                            included.push('features/'+idx+'/function');
-                            included.push('features/'+idx+'/aliases');
+            if(subdata_query.length>0) {
+                self.ws.get_object_subset(subdata_query,
+                    function(data) {
+                        for (var k=0; k<data.length; k++) {
+                            self.genomeObjectInfo[subdata_query[k].ref] = data[k].info;
+                            self.genomeLookupTable[subdata_query[k].ref] = {}
+                            for (var f=0; f<data[k].data.features.length; f++) {
+                                self.genomeLookupTable[subdata_query[k].ref][data[k].data.features[f].id] = f; 
+                            }
                         }
 
-                        var subdata_query2 = [{ref:gid,included:included}];
-                        self.ws.get_object_subset(subdata_query2,
-                            function(featureData) {
-                                var g = featureData[0].data;
-                                // every feature we get back here is something in the list
-                                for(var f=0; f<g.features.length; f++) {
-                                    var aliases = "None";
-                                    if(g.features[f].aliases) {
-                                        if(g.features[f].aliases.length>0) { 
-                                            aliases= g.features[f].aliases.join(', '); 
-                                        }
-                                    }
-
-                                    self.featureTableData.push(
-                                            {
-                                                fid: '<a href="functional-site/#/dataview/'+
-                                                            featureData[0].info[6]+'/'+featureData[0].info[1]+
-                                                            '?sub=Feature&subid='+g.features[f].id + '" target="_blank">'+
-                                                            g.features[f].id+'</a>',
-                                                gid: '<a href="functional-site/#/dataview/'+
-                                                        featureData[0].info[6]+'/'+featureData[0].info[1]+
-                                                        '" target="_blank">'+featureData[0].info[1]+"</a>",
-                                                ali: aliases,
-                                                type: g.features[f].type,
-                                                func: g.features[f].function
-                                            }
-                                        );
+                        for(var gid in self.features) {
+                            var included = [];
+                            for(var f=0; f<self.features[gid].length; f++) {
+                                if(self.features[gid][f].fid in self.genomeLookupTable[gid]) {
+                                    var idx = self.genomeLookupTable[gid][self.features[gid][f].fid];
+                                    included.push('features/'+idx+'/id');
+                                    included.push('features/'+idx+'/type');
+                                    included.push('features/'+idx+'/function');
+                                    included.push('features/'+idx+'/aliases');
+                                } else {
+                                    self.featureTableData.push({
+                                        fid: self.features[gid][f].fid, gid: 'Not found! Lookup failed in '+gid+'.',
+                                        ali: '', type: '', func: ''
+                                    });
                                 }
-                                self.renderFeatureTable(); // just rerender each time
-                                self.loading(true);
-                            },
-                            function(error) {
-                                self.loading(true);
-                                self.renderError(error);
-                            });
-                    }
+                            }
 
-                },
-                function(error) {
-                    self.loading(true);
-                    self.renderError(error);
-                });
+                            var subdata_query2 = [{ref:gid,included:included}];
+                            if(included.length>0) {
+                                self.ws.get_object_subset(subdata_query2,
+                                    function(featureData) {
+                                        var g = featureData[0].data;
+                                        // every feature we get back here is something in the list
+                                        for(var f=0; f<g.features.length; f++) {
+                                            var aliases = "None";
+                                            if(g.features[f].aliases) {
+                                                if(g.features[f].aliases.length>0) {
+                                                    aliases= g.features[f].aliases.join(', ');
+                                                }
+                                            }
+                                            var feature_type = '';
+                                            if(g.features[f].type) { feature_type=g.features[f].type;}
+                                            var feature_function = '';
+                                            if(g.features[f].function) { feature_function=g.features[f].function;}
+
+                                            self.featureTableData.push(
+                                                    {
+                                                        fid: '<a href="functional-site/#/dataview/'+
+                                                                    featureData[0].info[6]+'/'+featureData[0].info[1]+
+                                                                    '?sub=Feature&subid='+g.features[f].id + '" target="_blank">'+
+                                                                    g.features[f].id+'</a>',
+                                                        gid: '<a href="functional-site/#/dataview/'+
+                                                                featureData[0].info[6]+'/'+featureData[0].info[1]+
+                                                                '" target="_blank">'+featureData[0].info[1]+"</a>",
+                                                        ali: aliases,
+                                                        type: feature_type,
+                                                        func: feature_function
+                                                    }
+                                                );
+                                        }
+                                        self.renderFeatureTable(); // just rerender each time
+                                        self.loading(true);
+                                    },
+                                    function(error) {
+                                        self.loading(true);
+                                        self.renderError(error);
+                                    });
+                            } else {
+                                self.renderFeatureTable(); // cannot get proper feature from genome!
+                                self.loading(true);
+                            }
+                        }
+
+                    },
+                    function(error) {
+                        self.loading(true);
+                        self.renderError(error);
+                    });
+            } else {
+                self.renderFeatureTable(); // no genome refs available, but render orphans
+                self.loading(true);
+            }
+
 
         },
 

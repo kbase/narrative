@@ -16,6 +16,7 @@ require.config({
         'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
         'select2'                               : 'components/select2/select2.min',
         'bootstrap'                             : 'components/bootstrap/js/bootstrap.min',
+        'underscore'                            : 'components/underscore/1.8.2/underscore-min',
 
         'narrativeConfig'                       : 'kbase/js/narrativeConfig',
         'narrativeMain'                         : 'narrativeMain',
@@ -30,6 +31,7 @@ require.config({
         'kbapi'                                 : 'kbase/js/widgets/kbapi',
         'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
         'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
+        'catalog-client-api'                    : 'kbase/js/api/Catalog',
 
         /***
          * CORE NARRATIVE WIDGETS
@@ -99,13 +101,18 @@ require.config({
          ***/
         'kbaseDefaultNarrativeOutput'           : 'kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput',
         'kbaseTabTable'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
-        'KBObjects'                             : 'kbase/js/revised-widgets/src/widgets/modeling/KBObjects',
+        'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling',
         'KBaseFBA.FBAModel'                     : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModel',
         'KBaseFBA.FBAModelSet'                  : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModelSet',
         'KBaseFBA.FBA'                          : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBA',
+        'KBaseFBA.FBAComparison'                : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAComparison',
         'KBaseBiochem.Media'                    : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseBiochem.Media',
         'KBasePhenotypes.PhenotypeSet'          : 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSet',
         'KBasePhenotypes.PhenotypeSimulationSet': 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSimulationSet',
+        'KBaseSearch.GenomeSet'                 : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseSearch.GenomeSet',
+        'modelSeedVizConfig'                    : 'kbase/js/revised-widgets/src/widgets/modeling/modelSeedVizConfig',
+        'msPathway'                             : 'kbase/js/revised-widgets/src/widgets/modeling/msPathway',
+        'kbasePathways'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbasePathways',
         // another implementation of kbaseTabs needed for kbaseTabTable
         'kbaseTabTableTabs'                     : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabs',
         'knhx'                                  : 'components/knhxtree/js/knhx',
@@ -168,6 +175,9 @@ require.config({
         'kbasePiechart'                         : 'kbase/js/ui-common/src/widgets/vis/kbasePiechart',
         'kbaseTreechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
         'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
+        'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
+
+        'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
 
 
 
@@ -176,7 +186,7 @@ require.config({
          ***/
 
         'd3'                                    : 'components/d3/d3.min',//  'kbase/js/ui-common/ext/d3/d3.v3.min',
-        'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
+        'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer.min',
         'handlebars'                            : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
         'kbwidget'                              : 'kbase/js/ui-common/src/kbwidget',
         'kbaseAccordion'                        : 'kbase/js/ui-common/src/widgets/kbaseAccordion',
@@ -187,6 +197,9 @@ require.config({
         'kbaseDeletePrompt'                     : 'kbase/js/ui-common/src/widgets/kbaseDeletePrompt',
     },
     shim : {
+        'underscore' : {
+            exports: '_'
+        },
         'jquery-nearest' : {
             deps : ['jquery']
         },
@@ -209,31 +222,66 @@ require.config({
         'knhx' : {
             deps : ['knhx_menu', 'knhx_excanvas', 'knhx_canvastext', 'knhx_easytree']
         },
-        'KBaseFBA.FBAModel' : {
-            deps : ['KBObjects']
-        },
-        'KBaseFBA.FBAModelSet' : {
-            deps : ['KBObjects']
-        },
-        'KBaseFBA.FBA' : {
-            deps : ['KBObjects']
-        },
-        'KBaseBiochem.Media' : {
-            deps : ['KBObjects']
-        },
-        'KBasePhenotypes.PhenotypeSet' : {
-            deps : ['KBObjects']
-        },
-        'KBasePhenotypes.PhenotypeSimulationSet' : {
-            deps : ['KBObjects']
-        },
-        'kbaseTabTable' : {
-            deps : ['jquery', 'jquery-dataTables', 'jquery-dataTables-bootstrap',
-                    'KBObjects', 'KBaseFBA.FBAModel',
-                    'KBaseFBA.FBAModelSet', 'KBaseFBA.FBA', 'KBaseBiochem.Media', 
-                    'KBasePhenotypes.PhenotypeSet', 'KBasePhenotypes.PhenotypeSimulationSet', 
-                    'kbaseTabTableTabs']
-        },
+            'KBaseFBA.FBAModel' : {
+                'deps' : ['KBModeling']
+            },
+            'KBaseFBA.FBAModelSet' : {
+                'deps' : ['KBModeling']
+            },
+            'KBaseFBA.FBA' : {
+                'deps' : ['KBModeling']
+            },
+            'KBaseFBA.FBAComparison' : {
+                'deps' : ['KBModeling']
+            },
+            'KBaseBiochem.Media' : {
+                'deps' : ['KBModeling']
+            },
+            'KBasePhenotypes.PhenotypeSet' : {
+                'deps' : ['KBModeling']
+            },
+            'KBasePhenotypes.PhenotypeSimulationSet' : {
+                'deps' : ['KBModeling']
+            },
+            'KBaseSearch.GenomeSet' : {
+                'deps' : ['KBModeling']
+            },
+            'kbaseTabTable' : {
+                'deps' : ['jquery',
+                          'jquery-dataTables',
+                          'jquery-dataTables-bootstrap',
+                          'bootstrap',
+                          'KBModeling',
+                          'KBaseFBA.FBAModel',
+                          'KBaseFBA.FBAModelSet',
+                          'KBaseFBA.FBA',
+                          'KBaseFBA.FBAComparison',
+                          'KBaseBiochem.Media',
+                          'KBasePhenotypes.PhenotypeSet',
+                          'KBasePhenotypes.PhenotypeSimulationSet',
+                          'KBaseFBA.FBAComparison',
+                          'kbaseTabTableTabs']
+            },
+            'kbasePathways' : {
+                'deps' : ['jquery',
+                          'kbwidget',
+                          'KBModeling',
+                          'jquery-dataTables',
+                          'jquery-dataTables-bootstrap',
+                          'bootstrap',
+                          'msPathway']
+            },
+            'msPathway' : {
+                'deps' : ['jquery',
+                          'modelSeedVizConfig',
+                          'd3']
+            },
+            'kbaseTabTableTabs' : {
+                'deps' : ['jquery',
+                          'jquery-dataTables',
+                          'jquery-dataTables-bootstrap',
+                          'bootstrap']
+            },
         'kbapi' : {
             deps : ['jquery', 'bootstrap', 'kbase-client-api']
         },

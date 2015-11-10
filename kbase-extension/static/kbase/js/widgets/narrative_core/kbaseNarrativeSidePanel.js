@@ -1,4 +1,5 @@
 define(['jquery', 
+        'jqueryui',
         'kbwidget', 
         'kbaseNarrativeDataPanel', 
         'kbaseNarrativeMethodPanel', 
@@ -223,7 +224,7 @@ define(['jquery',
             this.$overlayBody = $('<div class="kb-overlay-body">');
             this.$overlayFooter  = $('<div class="kb-overlay-footer">');
             this.$overlay = $('<div>')
-                            .addClass('kb-side-overlay-container')
+                            .addClass('kb-side-overlay-container');
                             //.append(this.$overlayBody)
                             //.append(this.$overlayFooter);
 

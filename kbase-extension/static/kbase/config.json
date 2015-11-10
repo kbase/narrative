@@ -1,7 +1,9 @@
 {
+    "use_local_widgets": true,
     "config": "ci", 
     "dev": {
-        "awe": "http://140.221.67.185:7080", 
+        "awe": "http://140.221.67.185:7080",
+        "catalog": "https://ci.kbase.us/services/catalog",
         "cdmi": "https://kbase.us/services/cdmi_api/", 
         "data_import_export": "https://kbase.us/services/data_import_export", 
         "fba": "https://kbase.us/services/KBaseFBAModeling/",
@@ -31,6 +33,7 @@
         "user_and_job_state": "http://kbase.us/services/userandjobstate", 
         "user_profile": "http://dev19.berkeley.kbase.us/services/user_profile/rpc", 
         "workspace": "http://dev04.berkeley.kbase.us:7058", 
+        "catalog": "https://ci.kbase.us/services/catalog",
         "ws_browser": "http://narrative.kbase.us/functional-site/#/ws"
     }, 
     "git_commit_hash": "ba7b4d3", 
@@ -38,7 +41,8 @@
     "mode": "production", 
     "name": "KBase Narrative", 
     "prod": {
-        "awe": "https://kbase.us/services/awe-api", 
+        "awe": "https://kbase.us/services/awe-api",
+        "catalog": "https://kbase.us/services/catalog",
         "data_import_export": "https://kbase.us/services/data_import_export",
         "feature_values":"https://kbase.us/services/feature_values/jsonrpc",
         "fba": "https://kbase.us/services/KBaseFBAModeling/", 
@@ -67,10 +71,12 @@
         "user_profile": "https://kbase.us/services/user_profile/rpc", 
         "version_check": "/narrative_version", 
         "workspace": "https://kbase.us/services/ws", 
+        "catalog": "https://kbase.us/services/catalog",
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
     "next": {
-        "awe": "https://next.kbase.us/services/awe-api", 
+        "awe": "https://next.kbase.us/services/awe-api",
+        "catalog": "https://next.kbase.us/services/catalog",
         "data_import_export": "https://next.kbase.us/services/data_import_export", 
         "fba": "https://next.kbase.us/services/KBaseFBAModeling/",
         "feature_values":"https://next.kbase.us/services/feature_values/jsonrpc",
@@ -99,10 +105,12 @@
         "user_profile": "https://next.kbase.us/services/user_profile/rpc", 
         "version_check": "/narrative_version", 
         "workspace": "https://next.kbase.us/services/ws", 
+        "catalog": "https://next.kbase.us/services/catalog",
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
     "ci": {
-        "awe": "https://ci.kbase.us/services/awe-api", 
+        "awe": "https://ci.kbase.us/services/awe-api",
+        "catalog": "https://ci.kbase.us/services/catalog",
         "data_import_export": "https://ci.kbase.us/services/data_import_export", 
         "fba": "https://ci.kbase.us/services/KBaseFBAModeling/",
         "feature_values":"https://ci.kbase.us/services/feature_values/jsonrpc",
@@ -131,6 +139,7 @@
         "user_profile": "https://ci.kbase.us/services/user_profile/rpc", 
         "version_check": "/narrative_version", 
         "workspace": "https://ci.kbase.us/services/ws", 
+        "catalog": "https://ci.kbase.us/services/catalog",
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md", 

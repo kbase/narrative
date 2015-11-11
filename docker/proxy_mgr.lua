@@ -1064,7 +1064,7 @@ use_proxy = function(self)
             new_container()
             -- assign comtainer to session
             local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
-            local returnurl = string.format("%s://%s%s", scheme, ngx.var.host, ngx.var.request_uri)
+            local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)
             return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(returnurl)))
         end
         session_lock.unlock()

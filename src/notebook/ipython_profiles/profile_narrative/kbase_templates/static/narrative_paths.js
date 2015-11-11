@@ -36,6 +36,7 @@ define([], function() {
             'kbapi'                                 : 'kbase/js/widgets/kbapi',
             'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
             'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
+            'catalog-client-api'                    : 'kbase/js/api/Catalog',
 
             /***
              * CORE NARRATIVE WIDGETS
@@ -90,8 +91,8 @@ define([], function() {
              ***/
             'kbaseDefaultNarrativeInput'            : 'kbase/js/widgets/function_input/kbaseDefaultNarrativeInput',
             'kbaseBuildMediaInput'                  : 'kbase/js/widgets/function_input/kbaseBuildMediaInput',
-            'rastGenomeImportInput'                 : 'kbase/js/widgets/function_input/rastGenomeImportInput', 
-            'kbaseNcbiGenomeImportInput'            : 'kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput', 
+            'rastGenomeImportInput'                 : 'kbase/js/widgets/function_input/rastGenomeImportInput',
+            'kbaseNcbiGenomeImportInput'            : 'kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput',
             'kbaseTabbedInput'                      : 'kbase/js/widgets/function_input/kbaseTabbedInput',
             'create_metagenome_set'                 : 'kbase/js/widgets/function_input/create_metagenome_set',
             'kbStandaloneListSelect'                : 'kbase/js/widgets/function_input/kbStandaloneListselect',
@@ -155,7 +156,7 @@ define([], function() {
             'kbaseExpressionMatrix'                 : 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
             'kbaseExpressionGenesetBaseWidget'      : 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',
             'kbaseExpressionHeatmap'                : 'kbase/js/widgets/function_output/kbaseExpressionHeatmap',
-            'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
+            'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',
             'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
             'kbaseExpressionEstimateK'              : 'kbase/js/widgets/function_output/kbaseExpressionEstimateK',
             'kbaseExpressionClusterSet'             : 'kbase/js/widgets/function_output/kbaseExpressionClusterSet',
@@ -182,8 +183,11 @@ define([], function() {
             'kbaseLineSerieschart'                  : 'kbase/js/ui-common/src/widgets/vis/kbaseLineSerieschart',
             'kbasePiechart'                         : 'kbase/js/ui-common/src/widgets/vis/kbasePiechart',
             'kbaseTreechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
+            'kbaseRNASeqPie'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqPie',
             'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
+            'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
+            'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
 
             // unfinished ones
             /***
@@ -191,7 +195,7 @@ define([], function() {
              ***/
 
             'd3'                                    : 'kbase/js/ui-common/ext/d3/d3.min',
-            'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer/colorbrewer',
+            'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer.min',
             'handlebars'                            : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
             'kbwidget'                              : 'kbase/js/ui-common/src/widgets/../kbwidget',
             'kbaseAccordion'                        : 'kbase/js/ui-common/src/widgets/kbaseAccordion',
@@ -289,7 +293,7 @@ define([], function() {
             // 'kbaseIrisWorkspace'                : 'kbase/js/ui-common/src/widgets/iris/kbaseIrisWorkspace',
             // 'jquery.kbase.ws-selector'          : 'kbase/js/ui-common/src/widgets/jquery.kbase.ws-selector',
             // 'kbaseBox'                          : 'kbase/js/ui-common/src/widgets/kbaseBox',
-            // 'kbaseButtonControls'               : 'kbase/js/ui-common/src/widgets/kbaseButtonControls',
+             'kbaseButtonControls'               : 'kbase/js/ui-common/src/widgets/kbaseButtonControls',
             // 'kbaseCardLayoutManager'            : 'kbase/js/ui-common/src/widgets/kbaseCardLayoutManager',
             // 'kbaseDataBrowser'                  : 'kbase/js/ui-common/src/widgets/kbaseDataBrowser',
             // 'kbaseErrorPrompt'                  : 'kbase/js/ui-common/src/widgets/kbaseErrorPrompt',
@@ -302,8 +306,8 @@ define([], function() {
             // 'kbaseWalkablePath'                : 'kbase/js/ui-common/src/widgets/kbaseWalkablePath',
             // 'kbaseCarousel'                : 'kbase/js/ui-common/src/widgets/kbaseCarousel',
             // 'kbaseMethodDescription'                : 'kbase/js/ui-common/src/widgets/kbaseMethodDescription',
-            // 'kbasePrompt'                       : 'kbase/js/ui-common/src/widgets/kbasePrompt',
-            // 'kbaseSearchControls'               : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
+            //'kbasePrompt'                       : 'kbase/js/ui-common/src/widgets/kbasePrompt',
+             'kbaseSearchControls'               : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
             // 'kbaseTabs'                         : 'kbase/js/ui-common/src/widgets/kbaseTabs',
             // 'kbaseVisWidget'                    : 'kbase/js/ui-common/src/widgets/kbaseVisWidget',
             // 'Heatmap_widget'                    : 'kbase/js/ui-common/src/widgets/mak/Heatmap_widget',
@@ -381,8 +385,8 @@ define([], function() {
 
         },
         shim : {
-            'bootstrap' : { 
-                deps : ['jquery'] 
+            'bootstrap' : {
+                deps : ['jquery']
             },
             'underscore' : {
                 exports : '_'
@@ -400,7 +404,7 @@ define([], function() {
                 deps : ['d3','jquery']
             },
             'kbaseNarrativeAppCell' : {
-                deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 
+                deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell',
                         'kbaseNarrativeCellMenu']
             },
             'kbaseNarrativeMethodCell' : {
@@ -437,7 +441,7 @@ define([], function() {
                 'deps' : ['KBModeling']
             },
             'kbaseTabTable' : {
-                'deps' : ['jquery', 
+                'deps' : ['jquery',
                           'jquery-dataTables',
                           'jquery-dataTables-bootstrap',
                           'bootstrap',
@@ -453,9 +457,9 @@ define([], function() {
                           'kbaseTabTableTabs']
             },
             'kbasePathways' : {
-                'deps' : ['jquery', 
-                          'kbwidget', 
-                          'KBModeling', 
+                'deps' : ['jquery',
+                          'kbwidget',
+                          'KBModeling',
                           'jquery-dataTables',
                           'jquery-dataTables-bootstrap',
                           'bootstrap',

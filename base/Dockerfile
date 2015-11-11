@@ -14,8 +14,6 @@
 FROM ubuntu:14.04.1
 MAINTAINER William Riehl wjriehl@lbl.gov
 
-ADD ./sources.list /etc/apt/sources.list
-ADD ./r-packages.R /root/r-packages.R
 
 # Create a deployment directory
 RUN mkdir -p /kb/deployment/services/narrative /tmp/narrative
@@ -72,9 +70,12 @@ libxslt1-dev
 # Pip is currently broken when installed through Ubuntu. Upgrade it with easy_install 
 RUN easy_install -U pip
 
-# Clone in the python bootstrap and run it
-ADD ./bootstrap/kb_python_runtime /mini-bootstrap/kb_python_runtime
-RUN cd /mini-bootstrap/kb_python_runtime/; TARGET=/kb/deployment /bin/bash install-narrative-packages.sh
+ADD ./python-pip-list-narrative /mini-bootstrap/pip-list
+RUN pip install -r /mini-bootstrap/pip-list
 
 # install R packages that seem to be handy
+ADD ./r-packages.R /root/r-packages.R
 RUN R --vanilla < /root/r-packages.R
+
+#
+RUN apt-get install -y nodejs npm && npm install -g grunt-cli && ln -s /usr/bin/nodejs /usr/bin/node

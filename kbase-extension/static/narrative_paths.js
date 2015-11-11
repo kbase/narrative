@@ -16,7 +16,7 @@ require.config({
         'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
         'select2'                               : 'components/select2/select2.min',
         'bootstrap'                             : 'components/bootstrap/js/bootstrap.min',
-        'underscore'                            : 'components/underscore/1.8.2/underscore-min',
+        'underscore'                            : 'components/underscore/underscore-min',
 
         'narrativeConfig'                       : 'kbase/js/narrativeConfig',
         'narrativeMain'                         : 'narrativeMain',

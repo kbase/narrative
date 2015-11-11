@@ -186,7 +186,7 @@
                                       var submittedText = "&nbsp;&nbsp; submitted on "+this.readableTimestamp(new Date().getTime());
                                       if(this.auth()) {
                                           if(this.auth().user_id)
-                                              submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
+                                              submittedText += ' by <a href="/functional-site/#/people/'+this.auth().user_id
                                                                       +'" target="_blank">' + this.auth().user_id + "</a>";
                                       }
                                       this.$submitted.html(submittedText);
@@ -438,7 +438,7 @@
               $stepContainer:$stepPanel, 
               $statusPanel:$statusPanel, 
               $outputPanel:$outputPanel,
-              utputWidgetName:outputWidgetName,
+              outputWidgetName:outputWidgetName,
               minimized: false,
               $minimizeControl:$minimizeControl
             }
@@ -469,11 +469,11 @@
             //self.updateDynamicMethodSummaryHeader()
             //self.$dynamicMethodSummary.show();
             if(noAnimation) {
-                $mintarget.find(".panel-footer").hide();
-                $mintarget.find(".panel-body").hide();
+                $mintarget.find(".panel-footer").first().hide();
+                $mintarget.find(".panel-body").first().hide();
             } else {
-                $mintarget.find(".panel-footer").slideUp();
-                $mintarget.find(".panel-body").slideUp();
+                $mintarget.find(".panel-footer").first().slideUp();
+                $mintarget.find(".panel-body").first().slideUp();
             }
             self.inputSteps[stepIdx].$minimizeControl.removeClass("glyphicon-chevron-down")
                               .addClass("glyphicon-chevron-right");
@@ -483,8 +483,8 @@
         maximizeStepView: function(stepIdx) {
             var self = this;
             var $mintarget = self.inputSteps[stepIdx].$stepContainer;
-            $mintarget.find(".panel-body").slideDown();
-            $mintarget.find(".panel-footer").slideDown();
+            $mintarget.find(".panel-body").first().slideDown();
+            $mintarget.find(".panel-footer").first().slideDown();
             self.inputSteps[stepIdx].$minimizeControl.removeClass("glyphicon-chevron-right")
                                 .addClass("glyphicon-chevron-down");
             //self.$dynamicMethodSummary.hide();
@@ -799,14 +799,36 @@
                         }
                         this.startAppRun();
                     }
+                    else if (state.runningState.appRunState === 'error') {
+                        this.setErrorState(true);
+                        this.minimizeAllSteps();
+                        for (var i=0; i<this.inputSteps.length; i++) {
+                            if (this.inputSteps[i].$stepContainer.hasClass('kb-app-step-running')) {
+                                this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
+                                this.inputSteps[i].$stepContainer.addClass('kb-app-step-error');
+                            }
+                            this.inputSteps[i].widget.lockInputs();
+                        }
+                    }
                     else if (state.runningState.appRunState === "done") {
                         this.$submitted.show();
                         this.$runButton.hide();
+                        // start minimized if done, todo: save minimization state of steps
+                        this.minimizeAllSteps();
+                        for(var i=0; i<this.inputSteps.length; i++) {
+                            this.inputSteps[i].widget.lockInputs();
+                        }
                     }
                     else if (state.runningState.appRunState === "complete") {
                         this.$submitted.show();
                         this.$runButton.hide();
+                        // start minimized if complete, todo: save minimization state of steps
+                        this.minimizeAllSteps();
+                        for(var i=0; i<this.inputSteps.length; i++) {
+                            this.inputSteps[i].widget.lockInputs();
+                        }
                     }
+                    this.state.runningState.appRunState = state.runningState.appRunState;
                 }
             }
 

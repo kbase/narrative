@@ -5,6 +5,8 @@ export JUPYTER_CONFIG_DIR=$NARRATIVE_DIR/kbase-extension
 export IPYTHONDIR=$NARRATIVE_DIR/kbase-extension/ipython
 CFGDIR=$JUPYTER_CONFIG_DIR/static/kbase
 
+source $e/activate
+
 cp $NARRATIVE_DIR/src/config.json $JUPYTER_CONFIG_DIR/static/kbase/
 
 jupyter notebook

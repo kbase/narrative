@@ -27,9 +27,11 @@ RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-git-version -f src/co
 RUN git submodule update --init --recursive && rm -rf .git/modules/modules
 
 # Compile Javascript down into an itty-bitty ball.
-RUN cd src/notebook/ipython_profiles/profile_narrative/kbase_templates && npm install && grunt build
+# RUN cd kbase-extension/
+# src/notebook/ipython_profiles/profile_narrative/kbase_templates && npm install && grunt build
 
-RUN /bin/bash old-install.sh -p /kb/deployment/services narrative
+RUN /bin/bash scripts/install_narrative.sh -v /kb/deployment/services/narrative-venv
+# RUN /bin/bash old-install.sh -p /kb/deployment/services narrative
 
 RUN ./fixupURL.sh
 
@@ -41,7 +43,7 @@ RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_pr
 # proxy environment
 USER nobody
 CMD ["kbasetest"]
-ENTRYPOINT ["/bin/bash", "/kb/deployment/services/narrative-venv/bin/run_magellan_narrative.sh"]
+ENTRYPOINT ["/bin/bash", "/kb/deployment/services/narrative-venv/bin/kbase-narrative"]
 
 ONBUILD USER root
 ONBUILD ADD url.cfg /kb/dev_container/narrative/url.cfg

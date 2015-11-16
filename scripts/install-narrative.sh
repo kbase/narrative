@@ -42,6 +42,7 @@ PYTHON=python2.7
 SCRIPT_TGT="kbase-narrative"
 
 CUR_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+NARRATIVE_ROOT_DIR=$CUR_DIR/..
 SCRIPT_TEMPLATE=$CUR_DIR/jupyter_notebook.tmpl
 
 # clear log
@@ -123,13 +124,14 @@ if [ "x$VIRTUAL_ENV" = x ]; then
   exit 1
 fi
 
-cd $VIRTUAL_ENV
-
 # Install external JavaScript code
 # --------------------
+cd $NARRATIVE_ROOT_DIR
 bower install
 npm install
 
+
+cd $VIRTUAL_ENV
 # Install Jupyter code
 # --------------------
 # 1. Setup Jupyter Notebook inside virtualenv
@@ -148,13 +150,12 @@ git clone https://github.com/ipython/ipywidgets
 cd ipywidgets
 git checkout tags/$IPYWIDGETS_TAG
 pip install -e . >> ${logfile} 2>&1
-cd ../..
 
 # Install Narrative code
 # ----------------------
 console "Installing biokbase modules"
 log "Installing requirements from src/requirements.txt with 'pip'"
-cd src 
+cd $NARRATIVE_ROOT_DIR/src 
 pip install -r requirements.txt >> ${logfile} 2>&1
 if [ $? -ne 0 ]; then
     console "pip install for biokbase requirements failed: please examine $logfile"
@@ -163,7 +164,7 @@ fi
 log "Running local 'setup.py'"
 ${PYTHON} setup.py install >> ${logfile} 2>&1
 log "Done installing biokbase."
-cd ..
+cd $NARRATIVE_ROOT_DIR
 
 # Install KBase data_api package
 # ------------------------------

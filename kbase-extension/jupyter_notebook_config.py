@@ -41,8 +41,6 @@ c.NotebookApp.ip = 'localhost'
 # The default URL to redirect to from `/`
 # c.NotebookApp.default_url = '/tree'
 
-c.NotebookApp.kbase_auth = True
-
 # Whether to open in a browser after starting. The specific browser used is
 # platform dependent and determined by the python standard library `webbrowser`
 # module, unless it is overridden using the --browser (NotebookApp.browser)
@@ -112,7 +110,7 @@ c.NotebookApp.tornado_settings = { 'compress_response': True }
 # c.NotebookApp.kernel_manager_class = <class 'IPython.html.services.kernels.kernelmanager.MappingKernelManager'>
 
 # The file where the cookie secret is stored.
-# c.NotebookApp.cookie_secret_file = u''
+c.NotebookApp.cookie_secret_file = u'/tmp/notebook_cookie'
 
 # Supply SSL options for the tornado HTTPServer. See the tornado docs for
 # details.

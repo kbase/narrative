@@ -8,22 +8,8 @@ NAR_NAME="kbase/narrative"
 NAR_BASE="kbase/narrbase"
 NAR_BASE_VER="3.0"
 
-# Update the git submodule(s)
-#git submodule init
-#git submodule update
-
-# Start by updating the config file to include the current git commit hash and timestamp
-# src/scripts/kb-git-version -f src/config.json -o $VER_OUTFILE
-
-# Compile Javascript down into an itty-bitty ball.
-# Handled in build now
-#cd src/notebook/ipython_profiles/profile_narrative/kbase_templates
-#npm install
-#grunt build
-
-# For everything else to flow right, the container needs to be built from one level above the narrative directory.
-# It needs these files, so temporarily copy them outside.
-#cd ../../../../../../
+# This now lives in the scripts/ directory, one level down.
+# Gotta move up a level where the Dockerfile, etc., are
 
 docker images |grep "^$NAR_BASE "|grep " $NAR_BASE_VER " > /dev/null
 

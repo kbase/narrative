@@ -41,7 +41,7 @@ RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_pr
 # Setup the container to automatically run a script that uses the narrative_mongo profile
 # and configures the notebook server to use /narrative/{CMD} as the prefix for a reverse
 # proxy environment
-USER nobody
+# USER nobody
 CMD ["kbasetest"]
 ENTRYPOINT ["/bin/bash", "/kb/deployment/services/narrative-venv/bin/kbase-narrative"]
 

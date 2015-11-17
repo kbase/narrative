@@ -11,8 +11,6 @@ NAR_BASE_VER="3.0"
 # This now lives in the scripts/ directory, one level down.
 # Gotta move up a level where the Dockerfile, etc., are
 
-cd ..
-
 docker images |grep "^$NAR_BASE "|grep " $NAR_BASE_VER " > /dev/null
 
 if [ $? -eq 1 ] ; then

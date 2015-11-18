@@ -20,6 +20,7 @@
 
 define(['jquery', 
         'underscore',
+        'narrativeConfig',
         'jquery-nearest',
         'kbwidget', 
         'bootstrap', 
@@ -30,18 +31,18 @@ define(['jquery',
         'kbaseNarrativeMethodCell',
         'kbaseNarrativeSidePanel',
         'kbaseNarrativeDataPanel'],
-        function($, _) {
+        function($, _, Config) {
 
     $.KBWidget({
         name: 'kbaseNarrativeWorkspace',
         parent: 'kbaseWidget',
         version: '1.0.0',
         options: {
-            loadingImage: window.kbconfig.loading_gif,
+            loadingImage: Config.get('loading_gif'),
             tableElem: null,
             controlsElem: null,
             ws_id: null,
-            methodStoreURL: 'https://kbase.us/services/narrative_method_store'
+            methodStoreURL: Config.url('narrative_method_store'),
         },
         ws_client: null,
         ws_id: null,
@@ -88,13 +89,11 @@ define(['jquery',
             this.readonly_params = []; // list of params toggled
             this.first_show_controls = true; // 1st panel show
 
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
-                // For generating data/method icons
-                this.data_icons = window.kbconfig.icons.data;
-                this.meth_icons = window.kbconfig.icons.methods;
-                this.icon_colors = window.kbconfig.icons.colors;
-            }
+            var icons = Config.get('icons');
+            this.data_icons = icons.data;
+            this.meth_icons = icons.methods;
+            this.icon_colors = icons.colors;
+
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
 
             // Whenever the notebook gets loaded, it should rebind things.
@@ -1908,7 +1907,7 @@ define(['jquery',
                     buffer = buffer.substr(offs, buffer.length - offs);
                 }
                 if (result.length > 0) {
-                    if (showOutput === "app") { //} && window.kbconfig && window.kbconfig.mode === "debug") {
+                    if (showOutput === "app") {
                         if (!cell.metadata[this.KB_CELL].stackTrace)
                             cell.metadata[this.KB_CELL].stackTrace = [];
                         // try to parse the result as JSON - if so, then it's a final result and we just

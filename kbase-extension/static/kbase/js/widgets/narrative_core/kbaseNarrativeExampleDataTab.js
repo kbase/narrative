@@ -1,17 +1,24 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseAuthenticatedWidget'],
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeExampleDataTab',
         parent: 'kbaseAuthenticatedWidget',
         version: '1.0.0',
         options: {
             ws_name: null, // must be the WS name, not the WS Numeric ID
-            ws_url:"https://kbase.us/services/ws",
+            ws_url: Config.url('workspace'),
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            loadingImage: Config.get('loading_gif'),
             exampleWsName: 'KBaseExampleData', // designed to be a workspace with just a handful of objects
 	    $importStatus:$('<div>'),
             exampleTypeOrder: [
@@ -53,11 +60,9 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
                 .css({'overflow-y':'auto','height':'604px'});
             this.$elem.append(this.$mainPanel);
 
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.ws_url = window.kbconfig.urls.workspace;
-                this.data_icons = window.kbconfig.icons.data;
-                this.icon_colors = window.kbconfig.icons.colors;
-            }
+            var icons = Config.get('icons');
+            this.data_icons = icons.data;
+            this.icon_colors = icons.colors;
             this.showLoading();
 
             var self = this;

@@ -1,3 +1,5 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * Narrative data cell.
  *
@@ -6,12 +8,16 @@
  * @public
  */
 
-define(['jquery', 'underscore', 'kbwidget', 'kbaseNarrativeCell'], function($, _) {
+define(['jquery', 
+        'underscore', 
+        'narrativeConfig',
+        'kbwidget', 
+        'kbaseNarrativeCell'], 
+function($, _, Config) {
 
 // Global singleton for viewers
 // Bill: no longer needed, global viewers are now under IPython.narrative.dataViewers
 //kb_g_viewers = null;
-
 
 /**
  * Get/store info on all viewers from method store.
@@ -211,7 +217,7 @@ $.KBWidget({
     options: {
         info: null, // object info
         cell: null,  // IPython cell
-        lp_url: "/functional-site/#/dataview/",
+        lp_url: Config.url('landing_pages')
     },
     obj_info: null,
     // for 'method_store' service
@@ -230,11 +236,7 @@ $.KBWidget({
         this.obj_info.simple_date = /[^+]*/.exec(this.obj_info.save_date);
         this.ip_cell = options.cell;
         this._initMethodStoreClient();
-    
-        if (window.kbconfig.urls.landing_pages) {
-            this.options.lp_url = window.kbconfig.urls.landing_pages;
-        }
-    
+
         if (!window.KBaseViewers) {
             // we have to wait until the type/method specs are loaded the first time
             var self = this;
@@ -262,7 +264,7 @@ $.KBWidget({
     },
 
     _getMethodStoreURL: function() {
-        var methodStoreURL = window.kbconfig.urls.narrative_method_store;
+        var methodStoreURL = Config.url('narrative_method_store');
         return methodStoreURL;
     },
 

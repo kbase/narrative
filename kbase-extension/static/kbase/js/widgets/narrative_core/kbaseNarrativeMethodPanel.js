@@ -1,3 +1,5 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * A widget that contains functions and function information for the Narrative.
  * When initialized, it uses a loading gif while waiting for functions to load
@@ -9,23 +11,31 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'kbwidget', 
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
         'kbaseAccordion',
         'kbaseNarrativeControlPanel',
-        'kbaseNarrative'], function( $ ) {
+        'kbaseNarrative',
+        'bootstrap'], 
+function ($, Config) {
+    'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
         parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
-            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            loadingImage: Config.get('loading_gif'),
             autopopulate: true,
             title: 'Apps & Methods',
-            methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
-            methodHelpLink: '/functional-site/#/narrativestore/method/',
+            methodStoreURL: Config.url('narrative_method_store'),
+            methodHelpLink: '/#narrativestore/method/'
         },
-        ignoreCategories: { 'inactive' : 1, 'importers' : 1, 'viewers' : 1 },
+        ignoreCategories: {
+            inactive : 1,
+            importers : 1,
+            viewers : 1
+        },
         id2Elem: {},
         methodSpecs: {},  // id -> spec
         appSpecs: {},     // id -> spec
@@ -49,10 +59,7 @@ define(['jquery',
             // DOM structure setup here.
             // After this, just need to update the function list
 
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
-                this.icon_colors = window.kbconfig.icons.colors;
-            }
+            this.icon_colors = Config.get('icons').colors;
 
             this.$searchDiv = $('<div>')
                              .addClass('input-group')
@@ -68,8 +75,9 @@ define(['jquery',
                                         if (txt.indexOf("type:") === 0) {
                                             this.visualFilter(this.inputTypeFilter, txt.substring(5));
                                         }
-                                        else
+                                        else {
                                             this.visualFilter(this.textFilter, txt);
+                                        }
                                     }, this)
                                 )
                                 .on('focus',
@@ -89,11 +97,12 @@ define(['jquery',
                                     }
                                 );
 
-            self.$searchInput.on('keyup', function(e){
-                if (e.keyCode == 27) 
+            self.$searchInput.on('keyup', function (e) {
+                if (e.keyCode == 27) {
                     self.$searchDiv.hide();
+                }
             });
-            
+
             this.$numHiddenSpan = $('<span>0</span>');
             this.$showHideSpan = $('<span>show</span>');
             this.$toggleHiddenDiv = $('<div>')
@@ -246,16 +255,16 @@ define(['jquery',
                                         .tooltip({title:'Toggle between Release/Beta/Dev versions', 'container':'body', delay: { "show": 400, "hide": 50 }})
                                         .append('R')
             this.versionState = 'R';
-            this.addButton(this.$toggleVersionBtn 
-                                   .click(function(e) {
-                                        var versionTag = 'release';
-                                        if(this.versionState=='R') { this.versionState='B'; versionTag='beta'; }
-                                        else if(this.versionState=='B') { this.versionState='D'; versionTag='dev'; }
-                                        else if(this.versionState=='D') { this.versionState='R'; versionTag='release'; }
-                                        this.$toggleVersionBtn.html(this.versionState);
-                                        this.refreshFromService(versionTag);
-                                   }.bind(this)));
-            
+            this.addButton(this.$toggleVersionBtn
+                                .click(function(e) {
+                                    var versionTag = 'release';
+                                    if(this.versionState=='R') { this.versionState='B'; versionTag='beta'; }
+                                    else if(this.versionState=='B') { this.versionState='D'; versionTag='dev'; }
+                                    else if(this.versionState=='D') { this.versionState='R'; versionTag='release'; }
+                                    this.$toggleVersionBtn.html(this.versionState);
+                                    this.refreshFromService(versionTag);
+                                }.bind(this)));
+
             if (!NarrativeMethodStore) {
                 this.showError('Unable to connect to KBase Method Store!');
                 return this;
@@ -335,8 +344,8 @@ define(['jquery',
             this.showLoadingMessage("Loading KBase Methods from service...");
 
             var filterParams = {};
-            if (versionTag) { 
-                filterParams['tag'] = versionTag; 
+            if (versionTag) {
+                filterParams['tag'] = versionTag;
             }
 
             var methodProm = this.methClient.list_methods_spec({},

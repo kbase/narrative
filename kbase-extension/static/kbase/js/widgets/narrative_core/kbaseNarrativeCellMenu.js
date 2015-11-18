@@ -1,13 +1,22 @@
-define(['jquery', 'kbwidget', 'bootstrap'], function($) {
+/*global define*/
+/*jslint white: true*/
+define(['jquery', 
+        'narrativeConfig',
+        'kbwidget', 
+        'bootstrap'], 
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeCellMenu',
         parent: 'kbaseWidget',
-        options: {cell: null, kbWidget:null, kbWidgetType:null},
+        options: {
+            cell: null, 
+            kbWidget:null, 
+            kbWidgetType:null
+        },
 
         init: function(options) {
             this._super(options);
-
-            // console.log(['cell menu', this.options.cell]);
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
                              .css({"background-color": "transparent"})
@@ -28,7 +37,7 @@ define(['jquery', 'kbwidget', 'bootstrap'], function($) {
                                 'margin' : '0'
                          });
 
-            if (window.kbconfig && window.kbconfig.mode === "debug") {
+            if (Config.debug) {
                 this.addMenuItem({
                     icon: 'fa fa-code',
                     text: 'View Job Submission',

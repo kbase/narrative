@@ -1,21 +1,26 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * Widget for viewing and modifying narrative share settings
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'kbwidget', 
+define(['jquery',
         'narrativeConfig',
+        'kbwidget',
         'kbaseAuthenticatedWidget', 
-        'select2'], function( $ ) {
+        'select2'], 
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: "kbaseNarrativeSharePanel", 
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         
         options: {
-            ws_url: "https://kbase.us/services/ws",
-            user_profile_url: "https://kbase.us/services/user_profile/rpc",
+            ws_url: Config.url('workspace'),
+            user_profile_url: Config.url('user_profile'),
+            loadingImage: Config.get('loading_gif'),
             user_page_link:"/functional-site/#/people/",
             loadingImage: null,
             ws_name_or_id: null,
@@ -32,13 +37,6 @@ define(['jquery',
         
         init: function(options) {
             this._super(options);
-            
-            // always overwrite based on kbconfig
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.ws_url = window.kbconfig.urls.workspace;
-                this.options.user_profile_url = window.kbconfig.urls.user_profile;
-                this.options.loadingImage = window.kbconfig.loading_gif;
-            }
             
             this.$notificationPanel = $('<div>');
             this.$elem.append(this.$notificationPanel);

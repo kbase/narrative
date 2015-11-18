@@ -1,3 +1,5 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * An input widget to handle building a media set.
  * This has the option of loading/modifying an existing media.
@@ -5,16 +7,21 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseNarrativeInput'], function( $ ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseNarrativeInput'],
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: "kbaseBuildMediaInput", 
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
-            loadingImage: window.kbconfig.loading_gif,
+            loadingImage: Config.get('loading_gif'),
             //fbaURL: "https://kbase.us/services/fba_model_services",
             //fbaURL: "http://140.221.84.183:7036",
-            fbaURL: "https://kbase.us/services/KBaseFBAModeling",
+            fbaURL: Config.url('fba'),
         },
         mediaType: "KBaseBiochem.Media",
         IGNORE_VERSION: false,

@@ -1,15 +1,22 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput'], function( $ ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseNarrativeParameterInput'],
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: "kbaseNarrativeParameterTextareaInput",
         parent: "kbaseNarrativeParameterInput",
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
+            loadingImage: Config.get('loading_gif'),
             parsedParameterSpec: null,
             isInSidePanel: false
         },

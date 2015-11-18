@@ -1,19 +1,24 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * @author Andreas Wilke <wilke@anl.gov>
  * @public
  */
-
-define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbStandaloneListSelect'],
-    function($) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseNarrativeInput',
+        'kbStandaloneListSelect'],
+    function($, Config) {
     $.KBWidget({
         name: "create_metagenome_set",
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         token: null,
         options: {},
-        ws_id: window.kbconfig.workspaceId,
-        ws_url: window.kbconfig.urls.workspace,
-        loading_image: window.kbconfig.loading_gif,
+        ws_id: Config.get('workspaceId'),
+        ws_url: Config.url('workspace'),
+        loading_image: Config.get('loading_gif'),
 
         /**
          * Builds the input div for a function cell, based on the given method object.

@@ -1,15 +1,22 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseAuthenticatedWidget'],
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: "kbaseNarrativeInput",
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
+            loadingImage: Config.get('loading_gif'),
             method: null,
         },
         IGNORE_VERSION: true,

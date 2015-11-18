@@ -353,7 +353,7 @@ function( $, Config ) {
             if (this.parameterIdLookup) {
                 var widget = this.parameterIdLookup[parameterId];
                 if (widget) {
-                    value = widget.addInputListener(onChangeFunc);
+                    widget.addInputListener(onChangeFunc);
                 }
             }
         },

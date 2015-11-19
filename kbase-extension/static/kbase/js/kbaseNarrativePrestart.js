@@ -71,8 +71,8 @@ define(['jquery',
         }
     });
 
-    $('#kb-add-code-cell').click(function() { IPython.notebook.insert_cell_below('code'); })
-    $('#kb-add-md-cell').click(function() { IPython.notebook.insert_cell_below('markdown'); })
+    $('#kb-add-code-cell').click(function() { IPython.notebook.insert_cell_below('code'); }).tooltip();
+    $('#kb-add-md-cell').click(function() { IPython.notebook.insert_cell_below('markdown'); }).tooltip();
 
 /**
  * Error logging for detectable failure conditions.

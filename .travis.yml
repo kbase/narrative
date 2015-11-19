@@ -1,14 +1,18 @@
+sudo: false
 language: node_js
 node_js:
   - "0.12"
-  - "iojs"
+cache:
+  directories:
+  - kbase-extension/static/components
+  - node_modules
 branches:
   only:
     - develop
     - staging
     - master
+    - jupyter
 before_install:
-  - git clone git://github.com/kbase/bootstrap
-  - sudo pip install -r bootstrap/kb_python_runtime/python-pip-list-narrative
+  - npm install -g bower
   - npm install -g grunt-cli
 script: make && make test

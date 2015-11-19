@@ -31,7 +31,7 @@ SCRIPT_TESTS = $(wildcard test/script-tests/*.t)
 SERVER_TESTS = $(wildcard test/server-tests/*.t)
 
 # Installer script
-INSTALLER = ./scripts/install-kbjupyter.sh
+INSTALLER = ./scripts/install_narrative.sh
 INSTALL_VENV = narrative-venv
 INSTALL_DIR = ./${INSTALL_VENV}
 TEST_INSTALL_LOC = .

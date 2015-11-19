@@ -146,7 +146,7 @@
     "version": "1.0.4",
     "loading_gif": "/static/kbase/images/ajax-loader.gif",
     "tooltip": {
-        "showTime": 750,
-        "hideTime": 0
+        "showDelay": 750,
+        "hideDelay": 0
     }
 }

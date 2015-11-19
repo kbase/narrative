@@ -392,8 +392,8 @@ function($, Config) {
                                             title : 'Explore data', 
                                             container :'#'+this.mainListId,
                                             delay : { 
-                                                show: Config.get('tooltip').showTime, 
-                                                hide: Config.get('tooltip').hideTime
+                                                show: Config.get('tooltip').showDelay, 
+                                                hide: Config.get('tooltip').hideDelay
                                             }
                                         })
                                         .addClass(btnClasses)
@@ -411,8 +411,8 @@ function($, Config) {
                                             title : 'View history to revert changes', 
                                             container : 'body',                     
                                             delay: {
-                                                show: Config.get('tooltip').showTime, 
-                                                hide: Config.get('tooltip').hideTime
+                                                show: Config.get('tooltip').showDelay, 
+                                                hide: Config.get('tooltip').hideDelay
                                             }
                                         })
                                         .append($('<span>').addClass('fa fa-history').css(css))
@@ -436,8 +436,8 @@ function($, Config) {
                                                                     container: 'body',
                                                                     placement: 'bottom',
                                                                     delay: { 
-                                                                        show: Config.get('tooltip').showTime, 
-                                                                        hide: Config.get('tooltip').hideTime
+                                                                        show: Config.get('tooltip').showDelay, 
+                                                                        hide: Config.get('tooltip').hideDelay
                                                                     }
                                                                 });
                                                             } else {
@@ -448,8 +448,8 @@ function($, Config) {
                                                                         container: 'body',
                                                                         placement: 'bottom',
                                                                         delay: { 
-                                                                            show: Config.get('tooltip').showTime, 
-                                                                            hide: Config.get('tooltip').hideTime
+                                                                            show: Config.get('tooltip').showDelay, 
+                                                                            hide: Config.get('tooltip').hideDelay
                                                                         }
                                                                     })
                                                                         .click(function() {
@@ -473,8 +473,8 @@ function($, Config) {
                                                                                     html:true, 
                                                                                     placement:'bottom',
                                                                                     delay: { 
-                                                                                        show: Config.get('tooltip').showTime,
-                                                                                        hide: Config.get('tooltip').hideTime
+                                                                                        show: Config.get('tooltip').showDelay,
+                                                                                        hide: Config.get('tooltip').hideDelay
                                                                                     }
                                                                                  })
                                                                                 ));
@@ -497,8 +497,8 @@ function($, Config) {
                                             title: 'View data provenance and relationships', 
                                             container: 'body',
                                             delay: {
-                                                show: Config.get('tooltip').showTime,
-                                                hide: Config.get('tooltip').hideTime
+                                                show: Config.get('tooltip').showDelay,
+                                                hide: Config.get('tooltip').hideDelay
                                             }
                                         })
                                         .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
@@ -512,8 +512,8 @@ function($, Config) {
                                             title: 'Export / Download data',
                                             container: 'body',
                                             delay: {
-                                                show: Config.get('tooltip').showTime,
-                                                hide: Config.get('tooltip').hideTime
+                                                show: Config.get('tooltip').showDelay,
+                                                hide: Config.get('tooltip').hideDelay
                                             }
                                         })
                                         .append($('<span>').addClass('fa fa-download').css(css))
@@ -533,8 +533,8 @@ function($, Config) {
                                             title: 'Rename data',
                                             container: 'body',
                                             delay: {
-                                                show: Config.get('tooltip').showTime,
-                                                hide: Config.get('tooltip').hideTime
+                                                show: Config.get('tooltip').showDelay,
+                                                hide: Config.get('tooltip').hideDelay
                                             }
                                         })
                                         .append($('<span>').addClass('fa fa-font').css(css))
@@ -585,8 +585,8 @@ function($, Config) {
                                             title: 'Delete data',
                                             container: 'body',
                                             delay: {
-                                                show: Config.get('tooltip').showTime,
-                                                hide: Config.get('tooltip').hideTime
+                                                show: Config.get('tooltip').showDelay,
+                                                hide: Config.get('tooltip').hideDelay
                                             }
                                         })
                                         .append($('<span>').addClass('fa fa-trash-o').css(css))
@@ -676,8 +676,8 @@ function($, Config) {
                     title: object_info[1], 
                     placement: 'bottom', 
                     delay: {
-                        show: Config.get('tooltip').showTime,
-                        hide: Config.get('tooltip').hideTime
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
                     }
                 });
             }
@@ -854,8 +854,8 @@ function($, Config) {
                         'title': 'Drag onto narrative &rarr;'});
             $row.tooltip({
                 delay: { 
-                    show: Config.get('tooltip').showTime,
-                    hide: Config.get('tooltip').hideTime
+                    show: Config.get('tooltip').showDelay,
+                    hide: Config.get('tooltip').hideDelay
                 }, 
                 placement: 'top auto', 
                 html: true, 
@@ -1088,8 +1088,8 @@ function($, Config) {
                     title: 'Search data in narrative', 
                     container: 'body', 
                     delay: { 
-                        show: Config.get('tooltip').showTime, 
-                        hide: Config.get('tooltip').hideTime
+                        show: Config.get('tooltip').showDelay, 
+                        hide: Config.get('tooltip').hideDelay
                     }
                 })
                 .append('<span class="fa fa-search"></span>')
@@ -1110,8 +1110,8 @@ function($, Config) {
                     title: 'Sort data list', 
                     container: 'body', 
                     delay: { 
-                        show: Config.get('tooltip').showTime, 
-                        hide: Config.get('tooltip').hideTime
+                        show: Config.get('tooltip').showDelay, 
+                        hide: Config.get('tooltip').hideDelay
                     }
                 })
                 .append('<span class="fa fa-sort-amount-asc"></span>')
@@ -1131,8 +1131,8 @@ function($, Config) {
                     title: 'Filter data by type',
                     container: 'body',
                     delay: { 
-                        show: Config.get('tooltip').showTime, 
-                        hide: Config.get('tooltip').hideTime
+                        show: Config.get('tooltip').showDelay, 
+                        hide: Config.get('tooltip').hideDelay
                     }
                 })
                 .append('<span class="fa fa-filter"></span>')
@@ -1151,8 +1151,8 @@ function($, Config) {
                                   title: 'Refresh data list', 
                                   container: 'body', 
                                   delay: { 
-                                      show: Config.get('tooltip').showTime, 
-                                      hide: Config.get('tooltip').hideTime
+                                      show: Config.get('tooltip').showDelay, 
+                                      hide: Config.get('tooltip').hideDelay
                                 }
                               })
                               .append('<span class="glyphicon glyphicon-refresh"></span>')

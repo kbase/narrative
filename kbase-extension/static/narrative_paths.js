@@ -14,7 +14,8 @@ require.config({
         'jquery-dataTables-bootstrap'           : 'components/datatables/media/js/dataTables.bootstrap.min',
         'jquery-nearest'                        : 'components/jquery-nearest/src/jquery.nearest.min',
         'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
-        'select2'                               : 'components/select2/select2.min',
+        // 'select2'                               : 'components/select2/select2',
+        'select2'                               : 'kbase/js/patched-components/select2/select2',
         'bootstrap'                             : 'components/bootstrap/js/bootstrap.min',
         'underscore'                            : 'components/underscore/underscore-min',
 

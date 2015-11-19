@@ -482,11 +482,6 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
                 }
                 if (url) {
                         var options = {};
-                        if (params['contigObject'] && params['contigObject'].length > 0) {
-                                options['contigset_object_name'] = params['contigObject'];
-                        } else {
-                                options['contigset_object_name'] = params['outputObject'] + '.contigset';
-                        }
                         args = {'external_type': 'Genbank.Genome',
                                         'kbase_type': 'KBaseGenomeAnnotations.GenomeAnnotation',
                                         'workspace_name': self.wsName,

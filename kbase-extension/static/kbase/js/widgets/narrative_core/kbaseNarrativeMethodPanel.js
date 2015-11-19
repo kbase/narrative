@@ -233,7 +233,14 @@ function ($, Config) {
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="fa fa-search"></span>')
-                           .tooltip({title:'Search for Apps & Methods', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                           .tooltip({
+                                title: 'Search for Apps & Methods',
+                                container: 'body',
+                                delay: { 
+                                    show: Config.get('tooltip').showDelay, 
+                                    hide: Config.get('tooltip').hideDelay
+                                }
+                            })
                            .click($.proxy(function(event) {
                                this.$searchDiv.slideToggle(400);
                                this.$searchInput.focus();
@@ -241,7 +248,14 @@ function ($, Config) {
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-refresh">')
-                           .tooltip({title:'Refresh app/method listings', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                           .tooltip({
+                                title: 'Refresh app/method listings', 
+                                container: 'body',
+                                delay: { 
+                                    show: Config.get('tooltip').showDelay, 
+                                    hide: Config.get('tooltip').hideDelay
+                                }
+                            })
                            .click(function(e) {
                                 var versionTag = 'release';
                                 if(this.versionState=='R') { versionTag='release'; }
@@ -252,7 +266,14 @@ function ($, Config) {
 
             this.$toggleVersionBtn = $('<button>')
                                         .addClass('btn btn-xs btn-default')
-                                        .tooltip({title:'Toggle between Release/Beta/Dev versions', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                                        .tooltip({
+                                            title: 'Toggle between Release/Beta/Dev versions',
+                                            container: 'body',
+                                            delay: { 
+                                                show: Config.get('tooltip').showDelay, 
+                                                hide: Config.get('tooltip').hideDelay
+                                            }
+                                        })
                                         .append('R')
             this.versionState = 'R';
             this.addButton(this.$toggleVersionBtn
@@ -319,26 +340,26 @@ function ($, Config) {
          * description for populating the popup.
          * @private
          */
-        showTooltip: function(method, event) {
-            this.help.$helpTitle.text(method.name);
-            this.help.$helpVersion.text('v' + method.ver);
-            this.help.$helpBody.html(method.tooltip);
-            this.help.$helpLinkout.attr('href', this.options.methodHelpLink + method.id);
-            this.help.$helpPanel.css({
-                                       'left':event.pageX,
-                                       'top':event.pageY
-                                     })
-                                .show();
-        },
+        // showTooltip: function(method, event) {
+        //     this.help.$helpTitle.text(method.name);
+        //     this.help.$helpVersion.text('v' + method.ver);
+        //     this.help.$helpBody.html(method.tooltip);
+        //     this.help.$helpLinkout.attr('href', this.options.methodHelpLink + method.id);
+        //     this.help.$helpPanel.css({
+        //                                'left':event.pageX,
+        //                                'top':event.pageY
+        //                              })
+        //                         .show();
+        // },
 
-        showErrorTooltip: function(method, event) {
-            this.showTooltip({
-                'name' : method.name,
-                'ver' : method.ver,
-                'id' : method.id,
-                'tooltip' : "This method has an internal error and cannot currently be used.<br><br>The detailed error message is:<br>"+method.loading_error
-            }, event);
-        },
+        // showErrorTooltip: function(method, event) {
+        //     this.showTooltip({
+        //         'name' : method.name,
+        //         'ver' : method.ver,
+        //         'id' : method.id,
+        //         'tooltip' : "This method has an internal error and cannot currently be used.<br><br>The detailed error message is:<br>"+method.loading_error
+        //     }, event);
+        // },
 
         refreshFromService: function(versionTag) {
             this.showLoadingMessage("Loading KBase Methods from service...");

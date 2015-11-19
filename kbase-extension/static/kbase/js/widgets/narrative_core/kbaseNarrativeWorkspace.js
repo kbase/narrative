@@ -246,14 +246,18 @@ define(['jquery',
                         this.readWriteMode(true);
                     }
                     var icon = $('#kb-view-mode span');
-                    icon.toggleClass("fa-eye", this.user_readonly);
+                    icon.toggleClass('fa-eye', this.user_readonly);
                     icon.toggleClass('fa-pencil', !this.user_readonly);
                 }
             }, this));
             $('#kb-view-mode').tooltip({
               title: 'Toggle view-only mode',
-              'container': 'body',
-              delay: {"show": 400, "hide": 50}
+              container: 'body',
+              delay: {
+                show: Config.get('tooltip').showDelay, 
+                hide: Config.get('tooltip').hideDelay
+              },
+              placement: 'bottom'
             });
 
             this.initDeleteCellModal();

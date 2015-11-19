@@ -143,9 +143,11 @@ function($, Config) {
             this.addMenuItem({
                 icon: 'fa fa-trash-o',
                 text: 'Delete Cell',
-                action: $.proxy(function() {
-                                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
-                                }, this)
+                action: $.proxy(
+                    function() {
+                        this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
+                    }, 
+                this)
             });
 
             // this shows whether the app is running
@@ -165,7 +167,12 @@ function($, Config) {
                     .append($('<span class="dropdown">')
                               .append($btn)
                               .append(this.$menu)));
-            $deleteBtn.tooltip();
+            $deleteBtn.tooltip({
+                delay: {
+                    show: Config.get('tooltip').showDelay,
+                    hide: Config.get('tooltip').hideDelay
+                }
+            });
 
             return this;
         },

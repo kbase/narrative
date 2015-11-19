@@ -43,6 +43,8 @@ default: build-narrative
 # runs the installer to locally build the Narrative in a
 # local venv.
 build-narrative:
+	bower install && \
+	npm install && \
 	$(INSTALLER) -v $(INSTALL_VENV)
 
 test: test-backend test-frontend-unit test-frontend-e2e
@@ -64,8 +66,6 @@ test-backend:
 # This is achieved through the grunt test invocation
 test-frontend-unit:
 	@echo "running frontend unit tests"
-	bower install && \
-	npm install && \
 	grunt test
 	@echo "done"
 

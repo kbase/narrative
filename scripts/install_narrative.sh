@@ -114,6 +114,12 @@ done
 
 console "Install: complete log in: $logfile"
 
+# (temporary?)
+# Setup git submodules
+# --------------------
+git submodule init
+git submodule update
+
 # Setup virtualenv
 # ----------------
 if [ "x$VIRTUAL_ENV" = x ]; then

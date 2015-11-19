@@ -1717,7 +1717,7 @@ button.kb-method-run {
     moz-box-shadow: 1px 1px 1px #ccc;
 }
 button.kb-method-run:hover {
-    background-color: #1E88E5;;
+    background-color: #1E88E5;
 }
 
 
@@ -1746,11 +1746,32 @@ div[class="tooltip-inner"] {
 .tooltip {
     z-index: 2000 !important;
 }
-.tooltip.top .tooltip-inner {
+.tooltip-inner {
     background-color: #1B69B6;
 }
 .tooltip.top .tooltip-arrow {
-    border-top-color: #1B69B6;
+  border-top-color: #1B69B6;
+}
+.tooltip.top-left .tooltip-arrow {
+  border-top-color: #1B69B6;
+}
+.tooltip.top-right .tooltip-arrow {
+  border-top-color: #1B69B6;
+}
+.tooltip.right .tooltip-arrow {
+  border-right-color: #1B69B6;
+}
+.tooltip.left .tooltip-arrow {
+  border-left-color: #1B69B6;
+}
+.tooltip.bottom .tooltip-arrow {
+  border-bottom-color: #1B69B6;
+}
+.tooltip.bottom-left .tooltip-arrow {
+  border-bottom-color: #1B69B6;
+}
+.tooltip.bottom-right .tooltip-arrow {
+  border-bottom-color: #1B69B6;
 }
 
 .kb-data-main-panel {
@@ -2010,7 +2031,7 @@ div[class="tooltip-inner"] {
     margin: 5px;
 }
 .kb-data-list-btn:hover {
-    background-color: #1E88E5;;
+    background-color: #1E88E5;
 }
 .kb-data-list-btn[disabled] {
     box-shadow: none;
@@ -2031,7 +2052,7 @@ div[class="tooltip-inner"] {
     margin: 5px;
 }
 .kb-data-list-cancel-btn:hover {
-    background-color: #CECECE;;
+    background-color: #CECECE;
 }
 
 .kb-data-list-row-hr {
@@ -2316,7 +2337,7 @@ div[class="tooltip-inner"] {
 }
 
 .kb-import-info {
-    font-weight:
+    font-weight: normal;
 }
 
 .kb-import-status {

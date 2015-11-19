@@ -1505,7 +1505,7 @@ to accomodate the the icon intruding into its space. This technique makes space
 in the column in which the icon lives, and does this by shrinking the select
 control with padding, and then scooting the icon back into its column.
 */
-.kb-method-parameter-input .select2-container {
+.kb-method-parameter-input > div {
     /* allow space for the required (red arrow), satisfied (green checkbox) icon */
     padding-right: 20px;
 }

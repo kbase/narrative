@@ -1,7 +1,7 @@
 // Bind all page buttons right at startup.
 define(['jquery',
         'narrativeConfig', 
-        'jqueryui', 
+        'bootstrap', 
         'kbaseNarrativeSharePanel', 
         'bootstrap'], function($) {
     $(document).on('workspaceIdQuery.Narrative', function(e, callback) {

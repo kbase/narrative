@@ -1493,6 +1493,32 @@ div#notebook_panel {
 .kb-method-parameter-input input {
    font-weight: bold;
 }
+
+/*
+This set of styles is a to accomodate the required/satisfied icon which appears 
+between the select input control and the help text to the right of it. The 
+problem is that within the columns used for layout the select is set to 100% width
+and yet the icon is placed right next to it. The result is that the icon is shoved
+to the right of the select control and into the next column, overlapping the
+help text. The old method handling this was to scoot the help text far enough over 
+to accomodate the the icon intruding into its space. This technique makes space
+in the column in which the icon lives, and does this by shrinking the select
+control with padding, and then scooting the icon back into its column.
+*/
+.kb-method-parameter-input .select2-container {
+    /* allow space for the required (red arrow), satisfied (green checkbox) icon */
+    padding-right: 20px;
+}
+.kb-method-parameter-input .kb-method-parameter-accepted-glyph, 
+.kb-method-parameter-input .kb-method-parameter-required-glyph {
+    /* This scoots the icon inside */
+    margin-left: -15px;
+    font-size: 15px;
+}
+.kb-method-parameter-hint {
+    padding-left: 7px;
+}
+
 .kb-parameter-data-selection {
    font-weight: bold;
 }
@@ -1717,7 +1743,7 @@ button.kb-method-run {
     moz-box-shadow: 1px 1px 1px #ccc;
 }
 button.kb-method-run:hover {
-    background-color: #1E88E5;;
+    background-color: #1E88E5;
 }
 
 
@@ -1737,20 +1763,41 @@ For data in KBase workspace
 }
 
 /* === Tooltips  === */
-
+/* see bootstrap styles, e.g. bootstrap.css, for the original definitions */
 div[class="tooltip-inner"] {
     max-width: 400px;
     white-space: pre-wrap;
     text-align: left;
 }
-.tooltip {
+.notebook_app .tooltip {
     z-index: 2000 !important;
 }
-.tooltip.top .tooltip-inner {
+.notebook_app .tooltip-inner {
     background-color: #1B69B6;
 }
-.tooltip.top .tooltip-arrow {
-    border-top-color: #1B69B6;
+.notebook_app .tooltip.top .tooltip-arrow {
+  border-top-color: #1B69B6;
+}
+.notebook_app .tooltip.top-left .tooltip-arrow {
+  border-top-color: #1B69B6;
+}
+.notebook_app .tooltip.top-right .tooltip-arrow {
+  border-top-color: #1B69B6;
+}
+.notebook_app .tooltip.right .tooltip-arrow {
+  border-right-color: #1B69B6;
+}
+.notebook_app .tooltip.left .tooltip-arrow {
+  border-left-color: #1B69B6;
+}
+.notebook_app .tooltip.bottom .tooltip-arrow {
+  border-bottom-color: #1B69B6;
+}
+.notebook_app .tooltip.bottom-left .tooltip-arrow {
+  border-bottom-color: #1B69B6;
+}
+.notebook_app .tooltip.bottom-right .tooltip-arrow {
+  border-bottom-color: #1B69B6;
 }
 
 .kb-data-main-panel {
@@ -2010,7 +2057,7 @@ div[class="tooltip-inner"] {
     margin: 5px;
 }
 .kb-data-list-btn:hover {
-    background-color: #1E88E5;;
+    background-color: #1E88E5;
 }
 .kb-data-list-btn[disabled] {
     box-shadow: none;
@@ -2031,7 +2078,7 @@ div[class="tooltip-inner"] {
     margin: 5px;
 }
 .kb-data-list-cancel-btn:hover {
-    background-color: #CECECE;;
+    background-color: #CECECE;
 }
 
 .kb-data-list-row-hr {
@@ -2316,7 +2363,7 @@ div[class="tooltip-inner"] {
 }
 
 .kb-import-info {
-    font-weight:
+    font-weight: normal;
 }
 
 .kb-import-status {

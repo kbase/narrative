@@ -2,12 +2,13 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'jquery-nearest',
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'kbaseNarrativeDownloadPanel'], 
-        function($) {
+define([
+    'jquery', 
+    'jquery-nearest',
+    'kbwidget', 
+    'kbaseAuthenticatedWidget', 
+    'kbaseNarrativeDownloadPanel'
+], function($) {
     $.KBWidget({
         name: 'kbaseNarrativeDataList',
         parent: 'kbaseAuthenticatedWidget',
@@ -659,7 +660,7 @@ define(['jquery',
                     .hide()
                     .html($('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">').append('<span class="fa fa-ellipsis-h" style="color:#888" />'));
             var toggleAdvanced = function() {
-                    if (self.selectedObject == object_info[0] && $moreRow.is(':visible')) {
+                    if (self.selectedObject === object_info[0] && $moreRow.is(':visible')) {
                         // assume selection handling occurs before this is called
                         // so if we are now selected and the moreRow is visible, leave it...
                         return;
@@ -752,7 +753,7 @@ define(['jquery',
                     // (a) find nearest cell using 'jquery-nearest'
                     var $near_elt = $($elt.nearest('.cell'));
                     var near_idx = 0;
-                    if ($near_elt == null || $near_elt.data() == null) {
+                    if ($near_elt === null || $near_elt.data() === null) {
                       // no cell found, so place at top
                     }
                     else {
@@ -782,9 +783,16 @@ define(['jquery',
 
             // Add tooltip to indicate this functionality
             $row.attr({'data-toggle': 'tooltip',
-                       'data-placement': 'top',
                         'title': 'Drag onto narrative &rarr;'});
-            $row.tooltip({delay: { show: 1500, hide: 0 }, html: true});
+            $row.tooltip({
+                delay: { show: 1000, hide: 0 }, 
+                placement: 'top auto', 
+                html: true, 
+                viewport: {
+                    selector: '#kb-side-panel .kb-narr-side-panel:nth-child(1) .kb-narr-panel-body',
+                    padding: 2
+                }
+            });
 
             return this;
         },

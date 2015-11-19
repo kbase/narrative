@@ -388,7 +388,14 @@ function($, Config) {
                                                         'view provenance</a><br>'))*/
 
             var $openLandingPage = $('<span>')
-                                        .tooltip({title:'Explore data', 'container':'#'+this.mainListId})
+                                        .tooltip({
+                                            title : 'Explore data', 
+                                            container :'#'+this.mainListId,
+                                            delay : { 
+                                                show: Config.get('tooltip').showTime, 
+                                                hide: Config.get('tooltip').hideTime
+                                            }
+                                        })
                                         .addClass(btnClasses)
                                         .append($('<span>').addClass('fa fa-binoculars').css(css))
                                         .click(function(e) {
@@ -400,7 +407,14 @@ function($, Config) {
 
             var $openHistory = $('<span>')
                                         .addClass(btnClasses).css(css)
-                                        .tooltip({title:'View history to revert changes', 'container':'body'})
+                                        .tooltip({
+                                            title : 'View history to revert changes', 
+                                            container : 'body',                     
+                                            delay: {
+                                                show: Config.get('tooltip').showTime, 
+                                                hide: Config.get('tooltip').hideTime
+                                            }
+                                        })
                                         .append($('<span>').addClass('fa fa-history').css(css))
                                         .click(function(e) {
                                             e.stopPropagation(); $alertContainer.empty();
@@ -417,11 +431,27 @@ function($, Config) {
                                                         for(var k=0; k<history.length;k++) {
                                                             var $revertBtn = $('<button>').append('v'+history[k][4]).addClass('kb-data-list-btn');
                                                             if (k==0) {
-                                                                $revertBtn.tooltip({title:'Current Version', 'container':'body',placement:'bottom'});
+                                                                $revertBtn.tooltip({
+                                                                    title: 'Current Version', 
+                                                                    container: 'body',
+                                                                    placement: 'bottom',
+                                                                    delay: { 
+                                                                        show: Config.get('tooltip').showTime, 
+                                                                        hide: Config.get('tooltip').hideTime
+                                                                    }
+                                                                });
                                                             } else {
                                                                 var revertRef = {wsid:history[k][6], objid:history[k][0], ver:history[k][4]};
                                                                 (function(revertRefLocal) {
-                                                                    $revertBtn.tooltip({title:'Revert to this version?', 'container':'body',placement:'bottom'})
+                                                                    $revertBtn.tooltip({
+                                                                        title: 'Revert to this version?', 
+                                                                        container: 'body',
+                                                                        placement: 'bottom',
+                                                                        delay: { 
+                                                                            show: Config.get('tooltip').showTime, 
+                                                                            hide: Config.get('tooltip').hideTime
+                                                                        }
+                                                                    })
                                                                         .click(function() {
                                                                             self.ws.revert_object(revertRefLocal,
                                                                                 function(reverted_obj_info) {
@@ -437,8 +467,17 @@ function($, Config) {
                                                                         .append($('<td>').append($revertBtn))
                                                                         .append($('<td>').append('Saved by '+history[k][5]+'<br>'+self.getTimeStampStr(history[k][3])))
                                                                         .append($('<td>').append($('<span>').css({margin:'4px'}).addClass('fa fa-info pull-right'))
-                                                                                 .tooltip({title:history[k][2]+'<br>'+history[k][8]+'<br>'+history[k][9]+' bytes', container:'body',html:true,placement:'bottom'}))
-                                                                                );
+                                                                                 .tooltip({
+                                                                                    title: history[k][2]+'<br>'+history[k][8]+'<br>'+history[k][9]+' bytes', 
+                                                                                    container: 'body',
+                                                                                    html:true, 
+                                                                                    placement:'bottom',
+                                                                                    delay: { 
+                                                                                        show: Config.get('tooltip').showTime,
+                                                                                        hide: Config.get('tooltip').hideTime
+                                                                                    }
+                                                                                 })
+                                                                                ));
                                                         }
                                                         $alertContainer.append($tbl);
                                                     },
@@ -454,7 +493,14 @@ function($, Config) {
 
             var $openProvenance = $('<span>')
                                         .addClass(btnClasses).css(css)
-                                        .tooltip({title:'View data provenance and relationships', 'container':'body'})
+                                        .tooltip({
+                                            title: 'View data provenance and relationships', 
+                                            container: 'body',
+                                            delay: {
+                                                show: Config.get('tooltip').showTime,
+                                                hide: Config.get('tooltip').hideTime
+                                            }
+                                        })
                                         .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
                                         .click(function(e) {
                                             e.stopPropagation(); $alertContainer.empty();
@@ -462,7 +508,14 @@ function($, Config) {
                                         });
             var $download = $('<span>')
                                         .addClass(btnClasses).css(css)
-                                        .tooltip({title:'Export / Download data', 'container':'body'})
+                                        .tooltip({
+                                            title: 'Export / Download data',
+                                            container: 'body',
+                                            delay: {
+                                                show: Config.get('tooltip').showTime,
+                                                hide: Config.get('tooltip').hideTime
+                                            }
+                                        })
                                         .append($('<span>').addClass('fa fa-download').css(css))
                                         .click(function(e) {
                                             e.stopPropagation(); $alertContainer.empty();
@@ -476,7 +529,14 @@ function($, Config) {
 
             var $rename = $('<span>')
                                         .addClass(btnClasses).css(css)
-                                        .tooltip({title:'Rename data', 'container':'body'})
+                                        .tooltip({
+                                            title: 'Rename data',
+                                            container: 'body',
+                                            delay: {
+                                                show: Config.get('tooltip').showTime,
+                                                hide: Config.get('tooltip').hideTime
+                                            }
+                                        })
                                         .append($('<span>').addClass('fa fa-font').css(css))
                                         .click(function(e) {
                                             e.stopPropagation(); 
@@ -521,7 +581,14 @@ function($, Config) {
                                         });
             var $delete = $('<span>')
                                         .addClass(btnClasses).css(css)
-                                        .tooltip({title:'Delete data'})
+                                        .tooltip({
+                                            title: 'Delete data',
+                                            container: 'body',
+                                            delay: {
+                                                show: Config.get('tooltip').showTime,
+                                                hide: Config.get('tooltip').hideTime
+                                            }
+                                        })
                                         .append($('<span>').addClass('fa fa-trash-o').css(css))
                                         .click(function(e) {
                                             e.stopPropagation();
@@ -604,7 +671,16 @@ function($, Config) {
                                 e.stopPropagation();
                                 self.insertViewer(object_key);
                             });
-            if (isShortened) { $name.tooltip({title:object_info[1], placement:'bottom', delay: { show: 750, hide: 0 } }); }
+            if (isShortened) { 
+                $name.tooltip({
+                    title: object_info[1], 
+                    placement: 'bottom', 
+                    delay: {
+                        show: Config.get('tooltip').showTime,
+                        hide: Config.get('tooltip').hideTime
+                    }
+                });
+            }
 
             var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
             var $type = $('<div>').addClass("kb-data-list-type").append(type);
@@ -777,7 +853,10 @@ function($, Config) {
             $row.attr({'data-toggle': 'tooltip',
                         'title': 'Drag onto narrative &rarr;'});
             $row.tooltip({
-                delay: { show: 1000, hide: 0 }, 
+                delay: { 
+                    show: Config.get('tooltip').showTime,
+                    hide: Config.get('tooltip').hideTime
+                }, 
                 placement: 'top auto', 
                 html: true, 
                 viewport: {
@@ -1005,7 +1084,14 @@ function($, Config) {
 
             var $openSearch = $('<span>')
                 .addClass('btn btn-xs btn-default')
-                .tooltip({title:'Search data in narrative', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                .tooltip({
+                    title: 'Search data in narrative', 
+                    container: 'body', 
+                    delay: { 
+                        show: Config.get('tooltip').showTime, 
+                        hide: Config.get('tooltip').hideTime
+                    }
+                })
                 .append('<span class="fa fa-search"></span>')
                 .on('click',function() {
                     if(!self.$searchDiv.is(':visible')) {
@@ -1020,7 +1106,14 @@ function($, Config) {
 
             var $openSort = $('<span>')
                 .addClass('btn btn-xs btn-default')
-                .tooltip({title:'Sort data list', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                .tooltip({
+                    title: 'Sort data list', 
+                    container: 'body', 
+                    delay: { 
+                        show: Config.get('tooltip').showTime, 
+                        hide: Config.get('tooltip').hideTime
+                    }
+                })
                 .append('<span class="fa fa-sort-amount-asc"></span>')
                 .on('click',function() {
                     if(!self.$sortByDiv.is(':visible')) {
@@ -1034,7 +1127,14 @@ function($, Config) {
 
             var $openFilter = $('<span>')
                 .addClass('btn btn-xs btn-default')
-                .tooltip({title:'Filter data by type', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                .tooltip({
+                    title: 'Filter data by type',
+                    container: 'body',
+                    delay: { 
+                        show: Config.get('tooltip').showTime, 
+                        hide: Config.get('tooltip').hideTime
+                    }
+                })
                 .append('<span class="fa fa-filter"></span>')
                 .on('click',function() {
                     if(!self.$filterTypeDiv.is(':visible')) {
@@ -1047,7 +1147,14 @@ function($, Config) {
                 });
             var $refreshBtn = $('<span>')
                               .addClass('btn btn-xs btn-default')
-                              .tooltip({title: 'Refresh data list', 'container': 'body', delay: { 'show': 400, 'hide': 50 }})
+                              .tooltip({
+                                  title: 'Refresh data list', 
+                                  container: 'body', 
+                                  delay: { 
+                                      show: Config.get('tooltip').showTime, 
+                                      hide: Config.get('tooltip').hideTime
+                                }
+                              })
                               .append('<span class="glyphicon glyphicon-refresh"></span>')
                               .on('click', function() {
                                   self.refresh();

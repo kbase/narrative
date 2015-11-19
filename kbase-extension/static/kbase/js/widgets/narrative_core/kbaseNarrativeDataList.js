@@ -5,12 +5,13 @@
  * @public
  */
 define([
-    'jquery', 
+    'jquery',
+    'narrativeConfig',
     'jquery-nearest',
-    'kbwidget', 
-    'kbaseAuthenticatedWidget', 
-    'kbaseNarrativeDownloadPanel'
-], function($) {
+    'kbwidget',
+    'kbaseAuthenticatedWidget',
+    'kbaseNarrativeDownloadPanel'], 
+function($, Config) {
     $.KBWidget({
         name: 'kbaseNarrativeDataList',
         parent: 'kbaseAuthenticatedWidget',

@@ -292,7 +292,7 @@ require.config({
             deps : ['jquery', 'jquery-svg']
         },
         'bootstrap' : {
-            deps : ['jquery']
+            deps : ['jquery', 'jqueryui']
         },
     }
 });

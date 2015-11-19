@@ -1737,40 +1737,40 @@ For data in KBase workspace
 }
 
 /* === Tooltips  === */
-
+/* see bootstrap styles, e.g. bootstrap.css, for the original definitions */
 div[class="tooltip-inner"] {
     max-width: 400px;
     white-space: pre-wrap;
     text-align: left;
 }
-.tooltip {
+.notebook_app .tooltip {
     z-index: 2000 !important;
 }
-.tooltip-inner {
+.notebook_app .tooltip-inner {
     background-color: #1B69B6;
 }
-.tooltip.top .tooltip-arrow {
+.notebook_app .tooltip.top .tooltip-arrow {
   border-top-color: #1B69B6;
 }
-.tooltip.top-left .tooltip-arrow {
+.notebook_app .tooltip.top-left .tooltip-arrow {
   border-top-color: #1B69B6;
 }
-.tooltip.top-right .tooltip-arrow {
+.notebook_app .tooltip.top-right .tooltip-arrow {
   border-top-color: #1B69B6;
 }
-.tooltip.right .tooltip-arrow {
+.notebook_app .tooltip.right .tooltip-arrow {
   border-right-color: #1B69B6;
 }
-.tooltip.left .tooltip-arrow {
+.notebook_app .tooltip.left .tooltip-arrow {
   border-left-color: #1B69B6;
 }
-.tooltip.bottom .tooltip-arrow {
+.notebook_app .tooltip.bottom .tooltip-arrow {
   border-bottom-color: #1B69B6;
 }
-.tooltip.bottom-left .tooltip-arrow {
+.notebook_app .tooltip.bottom-left .tooltip-arrow {
   border-bottom-color: #1B69B6;
 }
-.tooltip.bottom-right .tooltip-arrow {
+.notebook_app .tooltip.bottom-right .tooltip-arrow {
   border-bottom-color: #1B69B6;
 }
 

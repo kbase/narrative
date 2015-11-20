@@ -12,21 +12,14 @@ module.exports = function (config) {
             'karma-requirejs'
         ],
         files: [
-            // had to add these all by hand, or Karma goes bugnuts.
-            /* These are the external dependencies. The bower components
-             * come with a LOT of stuff that isn't necessary, and causes
-             * problems when loaded in the test browser. Things like tests,
-             * or auto-generated minified AND maxified files that overlap.
-             *
-             * It's cleaner to just load the list of them by hand, then
-             * have the Require apparatus take over.
-             */
-            {pattern: 'kbase-extension/static/components/**/*.js', included: false},
-            {pattern: 'kbase-extension/static/kbase/js/*.js', included: false},
-            {pattern: 'kbase-extension/static/kbase/js/widgets/**/*.js', included: false},
+            // {pattern: 'kbase-extension/static/components/**/*.js', included: false},
+            // {pattern: 'kbase-extension/static/kbase/js/*.js', included: false},
+            // {pattern: 'kbase-extension/static/kbase/js/widgets/**/*.js', included: false},
+            // {pattern: 'kbase-extension/static/**/*.json', included: false},
+
             {pattern: 'test/unit/spec/**/*.js', included: false},
-            {pattern: 'kbase-extension/static/**/*.json', included: false},
-            {pattern: 'test/unit/main-test.js'}
+            'kbase-extension/static/narrative_paths.js',
+            'test/unit/test-main.js'
         ],
         // test results reporter to use
         // possible values: 'dots', 'progress'
@@ -43,10 +36,13 @@ module.exports = function (config) {
         autoWatch: false,
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: ['PhantomJS'],
+        browsers: ['Chrome'],
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
-        singleRun: true
+        singleRun: true,
+        proxies: {
+            '/static/': 'http://localhost:8888/static'
+        }
 
     });
 };

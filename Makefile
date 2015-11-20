@@ -66,7 +66,7 @@ test-backend:
 # This is achieved through the grunt test invocation
 test-frontend-unit:
 	@echo "running frontend unit tests"
-	grunt test
+	python test/unit/run_tests.py
 	@echo "done"
 
 # test-frontend-e2e should use Selenium to perform an end-

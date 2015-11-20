@@ -161,12 +161,12 @@ span#searchspan{
   border-radius: 4px !important;
   margin-right: 0;
 }
-.btn-xs { /* don't use drop-shadow on profile menu */
+.btn { /* don't use drop-shadow on profile menu */
   border: 0;
   box-shadow: none;
   -webkit-box-shadow: none;
   moz-box-shadow: none;
-  font-size: 18px;
+  xfont-size: 18px;
 }
 .btn-xs .glyphicon-user { /* also resize user btn */
   padding: 14px 5px 14px 5px;
@@ -814,9 +814,9 @@ p span.notification{
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
-.btn-group {
+/*.btn-group {
     margin-right: 5px;
-}
+}*/
 
 #menus {
     padding-left: 0px;
@@ -2083,7 +2083,8 @@ div[class="tooltip-inner"] {
 
 .kb-data-list-row-hr {
     width:70%;
-    margin: 2px;
+    margin: 2px auto;
+    
 }
 
 
@@ -2672,4 +2673,33 @@ div[class="tooltip-inner"] {
     font: 12px monospace;
     border: none;
     display: inline;
+}
+
+/* bootstrap sillines */
+
+/* margin left doesn't really seeem to play well */
+.btn-toolbar {
+    margin-left: 0;
+    padding-left: -5px;
+}
+
+.kb-narr-side-panel .btn-group .btn {
+    padding: 3px 4px 3px 4px;
+    font-size: 16px;
+}
+
+.btn-subtle {
+    color: #888;
+    margin: 0px
+}
+.btn-subtle .fa {
+    color: #888;
+}
+.btn-subtle .fa::before {
+    color: #888;
+}
+
+
+.notebook_app .btn.active {
+    box-shadow: none;
 }

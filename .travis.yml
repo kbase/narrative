@@ -13,6 +13,7 @@ branches:
     - master
     - jupyter
 before_install:
+  - pip install virtualenv
   - npm install -g bower
   - npm install -g grunt-cli
 script: make && make test

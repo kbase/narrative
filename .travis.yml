@@ -16,4 +16,6 @@ before_install:
   - pip install virtualenv
   - npm install -g bower
   - npm install -g grunt-cli
+install:
+  - pip install -r src/requirements.txt
 script: make && make test

@@ -1,15 +1,20 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-
-define(['jquery', 'kbwidget', 'kbaseNarrativeInput'], function( $ ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseNarrativeInput'],
+function($, Config) {
     $.KBWidget({
         name: "rastGenomeImportInput",
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
+            loadingImage: Config.get('loading_gif'),
         },
 
         /**

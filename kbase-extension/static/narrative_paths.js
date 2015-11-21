@@ -4,6 +4,8 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths : {
+        configPath                              : 'kbase',
+
         'domReady'                              : 'components/requirejs/domReady',
         'json'                                  : 'components/requirejs-json/json',
         'text'                                  : 'components/requirejs-text/text',

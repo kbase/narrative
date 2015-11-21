@@ -1,3 +1,5 @@
+/*global define*/
+/*jslint white: true*/
 // leave at least 2 line with only a star on it below, or doc generation fails
 /**
  *
@@ -80,8 +82,8 @@
  * @class customjs
  * @static
  */
-define(['jquery', 
-        'base/js/namespace', 
+define(['jquery',
+        'base/js/namespace',
         'base/js/security',
         'base/js/utils',
         'notebook/js/notebook',
@@ -94,7 +96,7 @@ define(['jquery',
         'notebook/js/mathjaxutils',
         'components/marked/lib/marked',
         'components/requirejs/require',
-        'narrative_paths',
+        'narrative_paths'
         ],
     function($, 
              IPython, 
@@ -109,13 +111,13 @@ define(['jquery',
              config,
              mathjaxutils,
              marked) {
-        "use strict";
+        'use strict';
 
         // Patch the security mechanisms to allow any JavaScript to run for now.
         // TODO: update this so only the few KBase commands run.
         security.sanitize_html = function(html, allow_css) { return html; };
-        security.sanitize_css = function(css, tagPolicy) { return css };
-        security.sanitize_stylesheets = function(html, tagPolicy) { return html };
+        security.sanitize_css = function(css, tagPolicy) { return css; };
+        security.sanitize_stylesheets = function(html, tagPolicy) { return html; };
 
         // Patch the MarkdownCell renderer to run the Javascript we need.
         textCell.MarkdownCell.prototype.render = function() {

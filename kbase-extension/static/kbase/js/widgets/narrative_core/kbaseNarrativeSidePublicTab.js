@@ -1,9 +1,16 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * "Import" tab on data side panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseAuthenticatedWidget'],
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: "kbaseNarrativeSidePublicTab",
         parent: "kbaseAuthenticatedWidget",
@@ -13,14 +20,14 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
         	addToNarrativeButton: null,
         	selectedItems: null,
         	landing_page_url: "/functional-site/#/", // !! always include trailing slash
-        	lp_url: "/functional-site/#/dataview/",
+        	lp_url: Config.url('landing_pages'),
 		    ws_name: null
         },
         token: null,
         wsName: null,
-        searchUrlPrefix: window.kbconfig.urls.search,
-        loadingImage: "static/kbase/images/ajax-loader.gif",
-        wsUrl: window.kbconfig.urls.workspace,
+        searchUrlPrefix: Config.url('search'),
+        loadingImage: Config.get('loading_gif'),
+        wsUrl: Config.url('workspace'),
         wsClient: null,
         categories: ['genomes', 'metagenomes', 'media', 'plant_gnms'
                      /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations',
@@ -52,21 +59,19 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
         init: function(options) {
             this._super(options);
             var self = this;
-            if (window.kbconfig.urls) {
-                if (window.kbconfig.urls.landing_pages) {
-                    this.options.lp_url = window.kbconfig.urls.landing_pages;
-                }
-            }
+
+            self.data_icons = Config.get('icons').data;
+            self.icon_colors = Config.get('icons').colors;
             if (self.options.ws_name) {
                 self.wsName = self.options.ws_name;
                 self.render();
             } else {
                 $(document).on(
-                        'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-                            //console.log('side panel import tab -- setting ws to ' + info.wsId);
-                            self.wsName = info.wsId;
-                            self.render();
-                        }, this)
+                    'setWorkspaceName.Narrative', $.proxy(function(e, info) {
+                        //console.log('side panel import tab -- setting ws to ' + info.wsId);
+                        self.wsName = info.wsId;
+                        self.render();
+                    }, this)
                 );
             }
             return this;
@@ -77,10 +82,6 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function( $ ) {
         	if ((!this.token) || (!this.wsName))
         	    return;
         	self.$elem.empty();
-            self.data_icons = window.kbconfig.icons.data;
-            self.icon_colors = window.kbconfig.icons.colors;
-        	if (!self.data_icons)
-        		return;
 
             this.wsClient = new Workspace(this.wsUrl, {'token': this.token});
             var mrg = {'margin': '10px 0px 10px 0px'};

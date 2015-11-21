@@ -1,14 +1,23 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput', 'select2', 'handlebars'], function( $ ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseNarrativeParameterInput',
+        'select2',
+        'handlebars'],
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: "kbaseNarrativeParameterTextSubdataInput",
         parent: "kbaseNarrativeParameterInput",
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
+            loadingImage: Config.get('loading_gif'),
             parsedParameterSpec: null,
             wsObjSelectPageSize : 20,
             isInSidePanel: false,

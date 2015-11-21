@@ -1,13 +1,22 @@
-define(['jquery', 'kbwidget', 'bootstrap'], function($) {
+/*global define*/
+/*jslint white: true*/
+define(['jquery', 
+        'narrativeConfig',
+        'kbwidget', 
+        'bootstrap'], 
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeCellMenu',
         parent: 'kbaseWidget',
-        options: {cell: null, kbWidget:null, kbWidgetType:null},
+        options: {
+            cell: null, 
+            kbWidget:null, 
+            kbWidgetType:null
+        },
 
         init: function(options) {
             this._super(options);
-
-            // console.log(['cell menu', this.options.cell]);
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
                              .css({"background-color": "transparent"})
@@ -28,7 +37,7 @@ define(['jquery', 'kbwidget', 'bootstrap'], function($) {
                                 'margin' : '0'
                          });
 
-            if (window.kbconfig && window.kbconfig.mode === "debug") {
+            if (Config.debug) {
                 this.addMenuItem({
                     icon: 'fa fa-code',
                     text: 'View Job Submission',
@@ -134,9 +143,11 @@ define(['jquery', 'kbwidget', 'bootstrap'], function($) {
             this.addMenuItem({
                 icon: 'fa fa-trash-o',
                 text: 'Delete Cell',
-                action: $.proxy(function() {
-                                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
-                                }, this)
+                action: $.proxy(
+                    function() {
+                        this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
+                    }, 
+                this)
             });
 
             // this shows whether the app is running
@@ -156,7 +167,12 @@ define(['jquery', 'kbwidget', 'bootstrap'], function($) {
                     .append($('<span class="dropdown">')
                               .append($btn)
                               .append(this.$menu)));
-            $deleteBtn.tooltip();
+            $deleteBtn.tooltip({
+                delay: {
+                    show: Config.get('tooltip').showDelay,
+                    hide: Config.get('tooltip').hideDelay
+                }
+            });
 
             return this;
         },

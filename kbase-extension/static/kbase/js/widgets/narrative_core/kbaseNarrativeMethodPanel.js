@@ -1,3 +1,5 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * A widget that contains functions and function information for the Narrative.
  * When initialized, it uses a loading gif while waiting for functions to load
@@ -9,24 +11,31 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-// kb_require(['kbaseMethodGallery'], 
-define(['jquery', 
-        'kbwidget', 
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
         'kbaseAccordion',
         'kbaseNarrativeControlPanel',
-        'kbaseNarrative'], function( $ ) {
+        'kbaseNarrative',
+        'bootstrap'], 
+function ($, Config) {
+    'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
         parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
-            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            loadingImage: Config.get('loading_gif'),
             autopopulate: true,
             title: 'Apps & Methods',
-            methodStoreURL: 'http://dev19.berkeley.kbase.us/narrative_method_store',
-            methodHelpLink: '/functional-site/#/narrativestore/method/',
+            methodStoreURL: Config.url('narrative_method_store'),
+            methodHelpLink: '/#narrativestore/method/'
         },
-        ignoreCategories: { 'inactive' : 1, 'importers' : 1, 'viewers' : 1 },
+        ignoreCategories: {
+            inactive : 1,
+            importers : 1,
+            viewers : 1
+        },
         id2Elem: {},
         methodSpecs: {},  // id -> spec
         appSpecs: {},     // id -> spec
@@ -50,10 +59,7 @@ define(['jquery',
             // DOM structure setup here.
             // After this, just need to update the function list
 
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.methodStoreURL = window.kbconfig.urls.narrative_method_store;
-                this.icon_colors = window.kbconfig.icons.colors;
-            }
+            this.icon_colors = Config.get('icons').colors;
 
             this.$searchDiv = $('<div>')
                              .addClass('input-group')
@@ -69,8 +75,9 @@ define(['jquery',
                                         if (txt.indexOf("type:") === 0) {
                                             this.visualFilter(this.inputTypeFilter, txt.substring(5));
                                         }
-                                        else
+                                        else {
                                             this.visualFilter(this.textFilter, txt);
+                                        }
                                     }, this)
                                 )
                                 .on('focus',
@@ -90,11 +97,12 @@ define(['jquery',
                                     }
                                 );
 
-            self.$searchInput.on('keyup', function(e){
-                if (e.keyCode == 27) 
+            self.$searchInput.on('keyup', function (e) {
+                if (e.keyCode == 27) {
                     self.$searchDiv.hide();
+                }
             });
-            
+
             this.$numHiddenSpan = $('<span>0</span>');
             this.$showHideSpan = $('<span>show</span>');
             this.$toggleHiddenDiv = $('<div>')
@@ -225,16 +233,58 @@ define(['jquery',
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="fa fa-search"></span>')
+                           .tooltip({
+                                title: 'Search for Apps & Methods',
+                                container: 'body',
+                                delay: { 
+                                    show: Config.get('tooltip').showDelay, 
+                                    hide: Config.get('tooltip').hideDelay
+                                }
+                            })
                            .click($.proxy(function(event) {
                                this.$searchDiv.slideToggle(400);
                                this.$searchInput.focus();
                            }, this)));
-            // this.addButton($('<button>')
-            //                .addClass('btn btn-xs btn-default')
-            //                .append('<span class="fa fa-arrow-right"></span>')
-            //                .click($.proxy(function(event) {
-            //                    this.trigger('toggleSidePanelOverlay.Narrative', this.$methodGallery);
-            //                }, this)));
+            this.addButton($('<button>')
+                           .addClass('btn btn-xs btn-default')
+                           .append('<span class="glyphicon glyphicon-refresh">')
+                           .tooltip({
+                                title: 'Refresh app/method listings', 
+                                container: 'body',
+                                delay: { 
+                                    show: Config.get('tooltip').showDelay, 
+                                    hide: Config.get('tooltip').hideDelay
+                                }
+                            })
+                           .click(function(e) {
+                                var versionTag = 'release';
+                                if(this.versionState=='R') { versionTag='release'; }
+                                else if(this.versionState=='B') { versionTag='beta'; }
+                                else if(this.versionState=='D') { versionTag='dev'; }
+                                this.refreshFromService(versionTag);
+                           }.bind(this)));
+
+            this.$toggleVersionBtn = $('<button>')
+                                        .addClass('btn btn-xs btn-default')
+                                        .tooltip({
+                                            title: 'Toggle between Release/Beta/Dev versions',
+                                            container: 'body',
+                                            delay: { 
+                                                show: Config.get('tooltip').showDelay, 
+                                                hide: Config.get('tooltip').hideDelay
+                                            }
+                                        })
+                                        .append('R')
+            this.versionState = 'R';
+            this.addButton(this.$toggleVersionBtn
+                                .click(function(e) {
+                                    var versionTag = 'release';
+                                    if(this.versionState=='R') { this.versionState='B'; versionTag='beta'; }
+                                    else if(this.versionState=='B') { this.versionState='D'; versionTag='dev'; }
+                                    else if(this.versionState=='D') { this.versionState='R'; versionTag='release'; }
+                                    this.$toggleVersionBtn.html(this.versionState);
+                                    this.refreshFromService(versionTag);
+                                }.bind(this)));
 
             if (!NarrativeMethodStore) {
                 this.showError('Unable to connect to KBase Method Store!');
@@ -290,29 +340,34 @@ define(['jquery',
          * description for populating the popup.
          * @private
          */
-        showTooltip: function(method, event) {
-            this.help.$helpTitle.text(method.name);
-            this.help.$helpVersion.text('v' + method.ver);
-            this.help.$helpBody.html(method.tooltip);
-            this.help.$helpLinkout.attr('href', this.options.methodHelpLink + method.id);
-            this.help.$helpPanel.css({
-                                       'left':event.pageX,
-                                       'top':event.pageY
-                                     })
-                                .show();
-        },
+        // showTooltip: function(method, event) {
+        //     this.help.$helpTitle.text(method.name);
+        //     this.help.$helpVersion.text('v' + method.ver);
+        //     this.help.$helpBody.html(method.tooltip);
+        //     this.help.$helpLinkout.attr('href', this.options.methodHelpLink + method.id);
+        //     this.help.$helpPanel.css({
+        //                                'left':event.pageX,
+        //                                'top':event.pageY
+        //                              })
+        //                         .show();
+        // },
 
-        showErrorTooltip: function(method, event) {
-            this.showTooltip({
-                'name' : method.name,
-                'ver' : method.ver,
-                'id' : method.id,
-                'tooltip' : "This method has an internal error and cannot currently be used.<br><br>The detailed error message is:<br>"+method.loading_error
-            }, event);
-        },
+        // showErrorTooltip: function(method, event) {
+        //     this.showTooltip({
+        //         'name' : method.name,
+        //         'ver' : method.ver,
+        //         'id' : method.id,
+        //         'tooltip' : "This method has an internal error and cannot currently be used.<br><br>The detailed error message is:<br>"+method.loading_error
+        //     }, event);
+        // },
 
-        refreshFromService: function() {
+        refreshFromService: function(versionTag) {
             this.showLoadingMessage("Loading KBase Methods from service...");
+
+            var filterParams = {};
+            if (versionTag) {
+                filterParams['tag'] = versionTag;
+            }
 
             var methodProm = this.methClient.list_methods_spec({},
                 $.proxy(function(methods) {
@@ -431,7 +486,10 @@ define(['jquery',
                                         e.stopPropagation();
                                         triggerFn(method);
                                     }, this)));
-            var $version = $('<span>').addClass("kb-data-list-type").append('v'+method.info.ver); // use type because it is a new line
+            var versionStr = 'v'+method.info.ver;
+            if (method.info.namespace)
+                versionStr = '[' + method.info.namespace + '] ' + versionStr;
+            var $version = $('<span>').addClass("kb-data-list-type").append(versionStr); // use type because it is a new line
 
             var $more = $('<div>')
                         .addClass('kb-method-list-more-div')
@@ -726,10 +784,15 @@ define(['jquery',
          */
         textFilter: function(pattern, method) {
             var lcName = method.info.name.toLowerCase();
+            var namespace = '';
+            if (method.info.namespace) {
+                namespace = method.info.namespace.toLowerCase();
+            }
             // match any token in the query, not the full string
-            var tokens = pattern.toLowerCase().split(" ");
+            var tokens = pattern.toLowerCase().split(' ');
             for(var k=0; k<tokens.length; k++) {
-                if(lcName.indexOf(tokens[k])<0) {
+                if(lcName.indexOf(tokens[k]) < 0 &&
+                   namespace.indexOf(tokens[k]) < 0) {
                     // token not found, so we return false
                     return false;
                 }

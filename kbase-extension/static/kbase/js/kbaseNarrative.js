@@ -19,8 +19,8 @@ define([
     'ipythonCellMenu',
     'base/js/events',
     'notebook/js/notebook'
-], function($, 
-            config,
+], function($,
+            Config,
             kbaseNarrativeSidePanel,
             kbaseNarrativeOutputCell,
             kbaseNarrativeWorkspace,
@@ -54,7 +54,7 @@ define([
         this.versionCheckTime = 6000*60*1000;
         this.versionHtml = 'KBase Narrative';
         this.selectedCell = null;
-        this.currentVersion = window.kbconfig.version;
+        this.currentVersion = Config.get('version');
         this.dataViewers = null;
 
         return this;
@@ -73,6 +73,12 @@ define([
         IPython.keyboard_manager.enable();
     };
 
+    /**
+     * @method
+     * Shows the cell toolbar above the given non-KBase cell (e.g. only
+     * code and markdown cells).
+     * Updates the currently selected cell to be the one passed in.
+     */
     Narrative.prototype.showIPythonCellToolbar = function(cell) {
         if (this.selectedCell && cell != this.selectedCell)
             this.selectedCell.celltoolbar.hide();
@@ -82,6 +88,11 @@ define([
             this.selectedCell.celltoolbar.show();
     };
 
+    /**
+     * Registers Narrative responses to a few IPython events - mainly some
+     * visual effects for managing when the cell toolbar should be shown, 
+     * but it also disables the keyboard manager when KBase cells are selected.
+     */
     Narrative.prototype.registerEvents = function() {
         $([IPython.events]).on('status_idle.Kernel',function () {
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle-o');
@@ -107,6 +118,11 @@ define([
         }, this));
     };
 
+    /**
+     * The "Upgrade your container" dialog should be made available when 
+     * there's a more recent version of the Narrative ready to use. This
+     * dialog then lets the user shut down their existing Narrative container.
+     */
     Narrative.prototype.initUpgradeDialog = function() {
         var $newVersion = $('<span>')
                           .append('<b>No new version</b>');  // init to the current version
@@ -136,7 +152,7 @@ define([
                                                 .append($('<span>').append('Your current version of the Narrative is <b>' + this.currentVersion + '</b>. Version '))
                                                 .append($newVersion)
                                                 .append($('<span>').append(' is now available.<br><br>' + 
-                                                                           'See <a href="' + window.kbconfig.release_notes + '" target="_blank">here</a> for current release notes.<br>' +
+                                                                           'See <a href="' + Config.get('release_notes') + '" target="_blank">here</a> for current release notes.<br>' +
                                                                            'Click "Update and Reload" to reload with the latest version!<br><br>' + 
                                                                            '<b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b>')))
                                         .append($('<div>')
@@ -154,11 +170,15 @@ define([
         // }, this.versionCheckTime);
     };
 
+    /**
+     * Looks up what is the current version of the Narrative.
+     * This should eventually get rolled into a Narrative Service method call.
+     */
     Narrative.prototype.checkVersion = function($newVersion) {
         // look up new version here.
         var self = this;
         $.ajax({
-            url: window.kbconfig.urls.version_check,
+            url: Config.url('version_check'),
             async: true,
             dataType: 'text',
             crossDomain: true,
@@ -178,45 +198,37 @@ define([
     };
 
     Narrative.prototype.initAboutDialog = function() {
-        if (window.kbconfig &&
-            window.kbconfig.name &&
-            window.kbconfig.version) {
-            var $versionDiv = $('<div>')
-                              .append('<b>Version:</b> ' + window.kbconfig.version);
-            if (window.kbconfig.git_commit_hash && window.kbconfig.git_commit_time)
-                $versionDiv.append('<br><b>Git Commit:</b> ' + window.kbconfig.git_commit_hash + ' -- ' + window.kbconfig.git_commit_time);
-            if (window.kbconfig.release_notes)
-                $versionDiv.append('<br>View release notes on <a href="' + window.kbconfig.release_notes + '" target="_blank">Github</a>');
+        var $versionDiv = $('<div>')
+                          .append('<b>Version:</b> ' + Config.get('version'));
+        $versionDiv.append('<br><b>Git Commit:</b> ' + Config.get('git_commit_hash') + ' -- ' + Config.get('git_commit_time'));
+        $versionDiv.append('<br>View release notes on <a href="' + Config.get('release_notes') + '" target="_blank">Github</a>');
 
-            if (window.kbconfig.urls) {
-                var urlList = Object.keys(window.kbconfig.urls).sort();
-                var $versionTable = $('<table>')
-                                    .addClass('table table-striped table-bordered');
-                $.each(urlList,
-                    function(idx, val) {
-                        var url = window.kbconfig.urls[val].toString();
-                        // if url looks like a url (starts with http), include it.
-                        // ignore job proxy and submit ticket
-                        if (val === 'narrative_job_proxy' || val === 'submit_jira_ticket')
-                            return;
-                        if (url && url.toLowerCase().indexOf('http') == 0) {
-                            var $testTarget = $('<td>');
-                            $versionTable.append($('<tr>')
-                                                 .append($('<td>').append(val))
-                                                 .append($('<td>').append(url)));
-                        }
-                    }
-                );
-                var $verAccordion = $('<div style="margin-top:15px">');
-                $verAccordion.kbaseAccordion({
-                    elements: [{
-                        title: 'KBase Service URLs',
-                        body: $versionTable
-                    }]
-                })
-                $versionDiv.append($verAccordion);
+        var urlList = Object.keys(Config.get('urls')).sort();
+        var $versionTable = $('<table>')
+                            .addClass('table table-striped table-bordered');
+        $.each(urlList,
+            function(idx, val) {
+                var url = Config.url(val).toString();
+                // if url looks like a url (starts with http), include it.
+                // ignore job proxy and submit ticket
+                if (val === 'narrative_job_proxy' || val === 'submit_jira_ticket')
+                    return;
+                if (url && url.toLowerCase().indexOf('http') == 0) {
+                    var $testTarget = $('<td>');
+                    $versionTable.append($('<tr>')
+                                         .append($('<td>').append(val))
+                                         .append($('<td>').append(url)));
+                }
             }
-        }
+        );
+        var $verAccordion = $('<div style="margin-top:15px">');
+        $verAccordion.kbaseAccordion({
+            elements: [{
+                title: 'KBase Service URLs',
+                body: $versionTable
+            }]
+        })
+        $versionDiv.append($verAccordion);
 
         var $shutdownButton = $('<button>')
                               .attr({'type':'button', 'data-dismiss':'modal'})

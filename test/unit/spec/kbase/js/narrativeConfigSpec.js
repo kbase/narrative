@@ -14,7 +14,7 @@ define(['jquery', 'narrativeConfig'], function($, config) {
         });
 
         it('tries to update paths from ui-common', function() {
-            config.updateConfig(function(cfg) { console.log('what'); console.log(cfg.new_paths); });
+            config.updateConfig(function(cfg) { });
         });
     });
 });

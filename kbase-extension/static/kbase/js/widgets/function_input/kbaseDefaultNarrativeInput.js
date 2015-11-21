@@ -1,18 +1,21 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
 
 define(['jquery', 
-        'kbwidget', 
         'narrativeConfig',
-        'kbaseNarrativeInput'], function( $ ) {
+        'kbwidget', 
+        'kbaseNarrativeInput'],
+function($, Config) {
     $.KBWidget({
         name: "kbaseDefaultNarrativeInput",
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
-            loadingImage: window.kbconfig.loading_gif,
+            loadingImage: Config.get('loading_gif'),
         },
 
         init: function(options) {

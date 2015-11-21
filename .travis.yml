@@ -1,14 +1,22 @@
-language: node_js
-node_js:
-  - "0.12"
-  - "iojs"
+sudo: false
+language: python
+python:
+  - "2.7"
+cache:
+  directories:
+  - kbase-extension/static/components
+  - node_modules
+  - narrative-venv
 branches:
   only:
     - develop
     - staging
     - master
+    - jupyter
 before_install:
-  - git clone git://github.com/kbase/bootstrap
-  - sudo pip install -r bootstrap/kb_python_runtime/python-pip-list-narrative
+  - pip install virtualenv
+  - npm install -g bower
   - npm install -g grunt-cli
+install:
+  - pip install -r src/requirements.txt
 script: make && make test

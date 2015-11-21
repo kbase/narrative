@@ -1,15 +1,22 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * KBase widget to upload file content into shock node.
  */
-define(['jquery', 'kbwidget', 'kbaseNarrativeParameterInput'], function( $ ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseNarrativeParameterInput'],
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeParameterFileInput',
         parent: "kbaseNarrativeParameterInput",
         version: '1.0.0',
         options: {
         	isInSidePanel: false,
-            shockUrl: window.kbconfig.urls.shock,
-            ujsUrl: window.kbconfig.urls.user_and_job_state,
+            shockUrl: Config.url('shock'),
+            ujsUrl: Config.url('user_and_job_state'),
             fullShockSearchToResume: false,
             serviceNameInUJS: "ShockUploader",
             maxFileStatesInUJS: 100,

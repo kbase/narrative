@@ -19,7 +19,7 @@ argparser.add_argument('-d', '--debug', action='store_true',
                        help="Whether to enter debug mode in Karma")
 options = argparser.parse_args(sys.argv[1:])
 
-nb_command = ['narrative-venv/bin/kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"']
+nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"']
 
 nb_server = subprocess.Popen(nb_command, stderr=subprocess.STDOUT,
                              stdout=subprocess.PIPE)

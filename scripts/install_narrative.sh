@@ -90,7 +90,7 @@ function make_activate_venv () {
 # -----------
 
 force_ipython=''
-no_venv=''
+no_venv=0
 while [ $# -gt 0 ]; do
     case $1 in
         -h | --help | -\?)
@@ -122,7 +122,8 @@ git submodule update
 
 # Setup virtualenv
 # ----------------
-if [ "x$VIRTUAL_ENV" = x ]; then
+if [ "x$VIRTUAL_ENV" = x ] && [ ! $no_venv -eq 1 ]
+then
   console 'ERROR: No Python virtual environment detected! Please activate one first.
   The easiest way to use virtual environments is with the virtualenvwrapper package. See:
   https://virtualenvwrapper.readthedocs.org/en/latest/install.html#basic-installation'

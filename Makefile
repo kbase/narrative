@@ -45,7 +45,7 @@ default: build-narrative
 build-narrative:
 	bower install && \
 	npm install && \
-	bash $(INSTALLER) -v $(INSTALL_VENV)
+	bash $(INSTALLER) --no-venv
 
 test: test-backend test-frontend-unit test-frontend-e2e
 	@echo "done running backend and frontend test scripts"

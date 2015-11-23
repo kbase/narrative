@@ -33,7 +33,7 @@ the Narrative work. These are all Python based.
 
     The set of Python dependencies you'll need to install are located in the KBase Bootstrap git repo. Grab that and use pip to install the list of dependencies.
 
-        > git clone kbase@git.kbase.us:bootstrap
+        > git clone https://github.com/kbase/bootstrap.git
         > pip install -r bootstrap/kb_python_runtime/python-pip-list-narrative
 
     If you have any problems at this stage, make sure that your Python and pip versions are up to date and in sync with each other.

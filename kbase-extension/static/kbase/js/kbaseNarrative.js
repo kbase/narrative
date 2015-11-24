@@ -57,6 +57,7 @@ define([
         this.currentVersion = Config.get('version');
         this.dataViewers = null;
 
+        IPython.keyboard_manager.disable();
         return this;
     };
 
@@ -70,7 +71,7 @@ define([
     };
 
     Narrative.prototype.enableKeyboardManager = function() {
-        IPython.keyboard_manager.enable();
+        // IPython.keyboard_manager.enable();
     };
 
     /**

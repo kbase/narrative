@@ -56,6 +56,7 @@ function($, Config) {
          * Renders this cell and its contained input widget.
          */
         render: function() {
+            self = this;
             this.$inputDiv = $('<div>');
             this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
 
@@ -128,11 +129,11 @@ function($, Config) {
             var methodId = this.options.cellId + '-method-details-'+this.genUUID();
             var buttonLabel = 'details';
             var methodDesc = this.method.info.tooltip;
-            var $menuSpan = $('<div class="pull-right">');
-
+//            var $menuSpan = $('<div class="pull-right">');
+//
             this.$header = $('<div>').css({'margin-top':'4px'})
-                              .addClass('kb-func-desc')
-                              .append($menuSpan)
+                              .addClass('kb-func-desc');
+//                              .append($menuSpan)
             this.$staticMethodInfo = $('<div>')
                               .append('<h1><b>' + this.method.info.name + '</b></h1>')
                               .append($('<h2>')
@@ -141,7 +142,7 @@ function($, Config) {
                                             ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + this.method.info.id +
                                                 '" target="_blank">more...</a>'
                                       ));
-
+             
             this.$header.append(this.$staticMethodInfo);
 
             this.$dynamicMethodSummary = $('<div>');
@@ -169,7 +170,11 @@ function($, Config) {
                                       .css({'overflow' : 'hidden'})
                                       .append($buttons));
 
-            this.cellMenu = $menuSpan.kbaseNarrativeCellMenu({'kbWidget':this, 'kbWidgetType':'method'});
+//             this.cellMenu = $menuSpan.kbaseNarrativeCellMenu({'kbWidget':this, 'kbWidgetType':'method'});
+            var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
+            console.log('CELLMENU');
+            console.log(cellMenu);
+            // console.log(cellMenu.$runningIcon);
             this.$elem.append(this.$cellPanel);
 
             // Add minimize/restore actions.
@@ -186,6 +191,18 @@ function($, Config) {
             var inputWidgetName = this.method.widgets.input;
             if (!inputWidgetName || inputWidgetName === 'null')
                 inputWidgetName = this.defaultInputWidget;
+            
+                        
+            this.$elem
+                .closest('.cell')
+                .trigger('set-title', [self.method.info.name]); 
+            
+            
+            var methodIcon = '<div class="fa-stack fa-2x"><i class="fa fa-square fa-stack-2x method-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cube"></i></div>';
+            
+            this.$elem
+                .closest('.cell')
+                .trigger('set-icon', [methodIcon]);
 
             require([inputWidgetName], 
               $.proxy(function() {
@@ -299,11 +316,16 @@ function($, Config) {
         /* Show/hide running icon */
         displayRunning: function(is_running, had_error) {
             if (is_running) {
+                var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
+                console.log('displayRunning: ');
+                console.log(cellMenu);
                 this.cellMenu.$runningIcon.show();
                 // never show error icon while running
                 this.cellMenu.$errorIcon.hide();
-            }
-            else {
+            } else {
+                var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
+                console.log('displayRunning: ');
+                console.log(cellMenu);
                 this.cellMenu.$runningIcon.hide();
                 // only display error when not running
                 if (had_error) { this.cellMenu.$errorIcon.show(); }

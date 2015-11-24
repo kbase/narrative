@@ -324,8 +324,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
         try:
             self.rename_narrative(self._obj_ref_from_path(path), self.get_userid(), new_name)
-        except PermissionsErr as err:
-            raise HTTPError(403, err.message)
+        except PermissionsError as err:
+            pass
+            # raise HTTPError(403, err.message)
         except Exception as err:
             raise HTTPError(500, u'An error occurred while renaming your Narrative: {}'.format(err))
 

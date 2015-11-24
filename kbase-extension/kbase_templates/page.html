@@ -108,7 +108,7 @@
 </head>
 
 <body class="{% block bodyclasses %}{% endblock %}" {% block params %}{% endblock %}>
-
+    
     <noscript>
         <div id='noscript'>
           IPython Notebook requires JavaScript.<br>
@@ -119,7 +119,7 @@
     {% block loading_message %}
     <div id="kb-wait-for-ws">
         <img src="{{ static_url("kbase/images/kbase_logo_rect.png") }}"
-                class="kb-logo"></img>
+                class="kb-logo">
         <div id="kb-wait-for-ws-loader">
             <i class="fa fa-4x fa-spinner fa-spin"></i>
         </div>
@@ -127,7 +127,7 @@
     </div>
     {% endblock %}
 
-    <nav class="navbar-kbase navbar-fixed-top">
+    <nav class="navbar-kbase navbar-fixed-top" id="header">
         <div class="container-fluid">
             <div class="navbar-header">
                 <div style="display:inline-block">

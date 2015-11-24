@@ -195,7 +195,8 @@ class KBaseWSManagerMixin(object):
             }
             self.ws_client().alter_workspace_metadata({'wsi': {'id': ws_id}, 'new':updated_metadata})
         except WorkspaceClient.ServerError, err:
-            raise self._ws_err_to_perm_err(err)
+            pass
+#            raise self._ws_err_to_perm_err(err)
         except Exception as e:
             raise HTTPError(500, u'Error adjusting Narrative metadata: %s, %s' % (e.__str__(), ws_id))
 
@@ -249,8 +250,6 @@ class KBaseWSManagerMixin(object):
             obj_info = self.ws_client().save_objects({'id': ws_id,
                                                       'objects': [ws_save_obj]})[0]
 
-            # tweak the workspace's metadata to properly present its narrative
-            self.ws_client().alter_workspace_metadata({'wsi': {'id': ws_id}, 'new':{'narrative':obj_info[0]}})
             return (nb, obj_info[6], obj_info[0])
 
         except WorkspaceClient.ServerError, err:

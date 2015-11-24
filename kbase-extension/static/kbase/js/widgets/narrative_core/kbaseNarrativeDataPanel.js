@@ -1,3 +1,5 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * Widget to display a table of data objects from a kbase workspace.
  *
@@ -16,16 +18,17 @@
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'underscore', 
-        'kbwidget', 
-        'kbaseNarrativeControlPanel', 
+define(['jquery',
+        'underscore',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseNarrativeControlPanel',
         'kbaseNarrativeDataList',
-        'kbaseNarrativeSidePublicTab', 
+        'kbaseNarrativeSidePublicTab',
         'kbaseNarrativeSideImportTab',
-        'kbaseNarrativeExampleDataTab'], 
-        function( $, _ ) {
-
+        'kbaseNarrativeExampleDataTab'],
+function($, _, Config) {
+    'use strict';
     $.KBWidget({
         name: "kbaseNarrativeDataPanel",
         parent: "kbaseNarrativeControlPanel",
@@ -42,12 +45,11 @@ define(['jquery',
         loadedData: {},
         options: {
             title: 'Data',
-            loadingImage: "static/kbase/images/ajax-loader.gif",
+            loadingImage: Config.get('loading_gif'),
             notLoggedInMsg: "Please log in to view a workspace.",
-            workspaceURL: "https://kbase.us/services/ws",
-            wsBrowserURL: "/functional-site/#/ws/",
+            workspaceURL: Config.url('workspace'),
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
-            lp_url: "/functional-site/#/dataview/",
+            lp_url: Config.url('landing_pages'), 
             container: null,
             ws_name: null,
         },
@@ -75,16 +77,9 @@ define(['jquery',
                 this.ws_name = options.ws_name;
             }
 
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.workspaceURL = window.kbconfig.urls.workspace;
-                this.options.wsBrowserURL = window.kbconfig.urls.ws_browser;
-                this.options.landingPageURL = window.kbconfig.urls.landing_pages;
-                if (window.kbconfig.urls.landing_pages) {
-                    this.options.lp_url = window.kbconfig.urls.landing_pages;
-                }
-            }
-            this.data_icons = window.kbconfig.icons.data;
-            this.icon_colors = window.kbconfig.icons.colors;
+            var icons = Config.get('icons');
+            this.data_icons = icons.data;
+            this.icon_colors = icons.colors;
 
             var $dataList = $('<div>');
             this.body().append($dataList);
@@ -499,6 +494,7 @@ define(['jquery',
                 }
 
                 return $.when(p).done(function(workspaces) {
+                    var prom;
                     if (view == 'mine') {
                         prom = getMyData(workspaces);
                     } else if (view == 'shared') {

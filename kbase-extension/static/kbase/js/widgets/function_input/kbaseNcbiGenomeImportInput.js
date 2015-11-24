@@ -1,16 +1,22 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * Input widget for import NCBI genomes into workspace.
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget', 'kbaseNarrativeInput'], function( $ ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseNarrativeInput'],
+function($, Config) {
     $.KBWidget({
         name: "NcbiGenomeImportInput",
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
-            loadingImage: window.kbconfig.loading_gif,
+            loadingImage: Config.get('loading_gif'),
         },
 
         init: function(options) {

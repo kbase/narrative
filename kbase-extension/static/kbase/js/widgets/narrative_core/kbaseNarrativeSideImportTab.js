@@ -1,20 +1,23 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * "Import" tab on data side panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
 define(['jquery', 
+        'narrativeConfig',
         'kbwidget', 
         'kbaseAuthenticatedWidget', 
         'select2',
-        'narrativeConfig',
         'json!kbase/upload_config.json'], 
 function($,
+         Config,
          kbwidget,
          kbaseAuthenticatedWidget,
          select2,
-         config,
-         transformConfig) {    
+         transformConfig) {
+    'use strict';
     $.KBWidget({
         name: "kbaseNarrativeSideImportTab",
         parent: "kbaseAuthenticatedWidget",
@@ -24,13 +27,13 @@ function($,
         },
         token: null,
         wsName: null,
-        loadingImage: "static/kbase/images/ajax-loader.gif",
-        wsUrl: window.kbconfig.urls.workspace,
-        methodStoreURL: window.kbconfig.urls.narrative_method_store,
+        loadingImage: Config.get('loading_gif'),
+        wsUrl: Config.url('workspace'),
+        methodStoreURL: Config.url('narrative_method_store'),
         methClient: null,
-        uploaderURL: window.kbconfig.urls.transform,
-        ujsURL: window.kbconfig.urls.user_and_job_state,
-        shockURL: window.kbconfig.urls.shock,
+        uploaderURL: Config.url('transform'),
+        ujsURL: Config.url('user_and_job_state'),
+        shockURL: Config.url('shock'),
         methods: null,          // {method_id -> method_spec}
         methodFullInfo: null,   // {method_id -> method_full_info}
         types: null,            // {type_name -> type_spec}

@@ -76,11 +76,11 @@ module.exports = function(grunt) {
         // Testing with Karma!
         'karma': {
             unit: {
-                configFile: 'test/karma.conf.js'
+                configFile: 'test/unit/karma.conf.js'
             },
             dev: {
                 // to do - add watch here
-                configFile: 'test/karma.conf.js',
+                configFile: 'test/unit/karma.conf.js',
                 reporters: ['progress', 'coverage'],
                 coverageReporter: {
                     dir: 'build/test-coverage/',

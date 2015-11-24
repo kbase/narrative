@@ -1,9 +1,17 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbStandaloneListSelect'], function($) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseNarrativeInput',
+        'kbStandaloneListSelect'],
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: "devVizSelector",
         parent: "kbaseNarrativeInput",
@@ -17,8 +25,8 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbStandaloneListSelect'], 
             //order: "average",
         },
 
-	    ws_url: "https://kbase.us/services/ws/",
-        loading_image: window.kbconfig.loading_gif,
+	    ws_url: Config.url('workspace'),
+        loading_image: Config.get('loading_gif'),
 
         /**
          * Builds the input div for a function cell, based on the given method object.

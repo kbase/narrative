@@ -31,7 +31,7 @@ SCRIPT_TESTS = $(wildcard test/script-tests/*.t)
 SERVER_TESTS = $(wildcard test/server-tests/*.t)
 
 # Installer script
-INSTALLER = ./scripts/install-kbjupyter.sh
+INSTALLER = ./scripts/install_narrative.sh
 INSTALL_VENV = narrative-venv
 INSTALL_DIR = ./${INSTALL_VENV}
 TEST_INSTALL_LOC = .
@@ -43,7 +43,9 @@ default: build-narrative
 # runs the installer to locally build the Narrative in a
 # local venv.
 build-narrative:
-	$(INSTALLER) -v $(INSTALL_VENV)
+	bower install && \
+	npm install && \
+	bash $(INSTALLER) --no-venv
 
 test: test-backend test-frontend-unit test-frontend-e2e
 	@echo "done running backend and frontend test scripts"
@@ -64,9 +66,7 @@ test-backend:
 # This is achieved through the grunt test invocation
 test-frontend-unit:
 	@echo "running frontend unit tests"
-	bower install && \
-	npm install && \
-	grunt test
+	python test/unit/run_tests.py
 	@echo "done"
 
 # test-frontend-e2e should use Selenium to perform an end-

@@ -1,18 +1,27 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbaseNarrativeParameterTextInput',
-    'kbaseNarrativeParameterDropdownInput', 'kbaseNarrativeParameterCheckboxInput',
-    'kbaseNarrativeParameterTextareaInput', 'kbaseNarrativeParameterFileInput',
-    'kbaseNarrativeParameterTextSubdataInput'],
-    function( $ ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbaseNarrativeInput',
+        'kbaseNarrativeParameterTextInput',
+        'kbaseNarrativeParameterDropdownInput',
+        'kbaseNarrativeParameterCheckboxInput',
+        'kbaseNarrativeParameterTextareaInput',
+        'kbaseNarrativeParameterFileInput',
+        'kbaseNarrativeParameterTextSubdataInput'],
+function( $, Config ) {
+    'use strict';
     $.KBWidget({
         name: "kbaseNarrativeMethodInput",
         parent: "kbaseNarrativeInput",
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
+            loadingImage: Config.get('loading_gif'),
             isInSidePanel: false
         },
 
@@ -344,7 +353,7 @@ define(['jquery', 'kbwidget', 'kbaseNarrativeInput', 'kbaseNarrativeParameterTex
             if (this.parameterIdLookup) {
                 var widget = this.parameterIdLookup[parameterId];
                 if (widget) {
-                    value = widget.addInputListener(onChangeFunc);
+                    widget.addInputListener(onChangeFunc);
                 }
             }
         },

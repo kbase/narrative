@@ -1,3 +1,5 @@
+/*global define*/
+/*jslint white: true*/
 // leave at least 2 line with only a star on it below, or doc generation fails
 /**
  *
@@ -81,49 +83,41 @@
  * @static
  */
 define(['jquery',
-    'base/js/namespace',
-    'base/js/security',
-    'base/js/utils',
-    'base/js/page',
-    'notebook/js/notebook',
-    'notebook/js/textcell',
-    'notebook/js/savewidget',
-    'base/js/dialog',
-    'base/js/keyboard',
-    'notebook/js/cell',
-    'services/config',
-    'notebook/js/mathjaxutils',
-    'components/marked/lib/marked',
-    'components/requirejs/require',
-    'narrative_paths'    
-],
-    function ($,
-        IPython,
-        security,
-        utils,
-        page,
-        notebook,
-        textCell,
-        saveWidget,
-        dialog,
-        keyboard,
-        cell,
-        config,
-        mathjaxutils,
-        marked) {
-        "use strict";
+        'base/js/namespace',
+        'base/js/security',
+        'base/js/utils',
+        'notebook/js/notebook',
+        'notebook/js/textcell',
+        'notebook/js/savewidget',
+        'base/js/dialog',
+        'base/js/keyboard',
+        'notebook/js/cell',
+        'services/config',
+        'notebook/js/mathjaxutils',
+        'components/marked/lib/marked',
+        'components/requirejs/require',
+        'narrative_paths'
+        ],
+    function($, 
+             IPython, 
+             security,
+             utils,
+             notebook,
+             textCell,
+             saveWidget,
+             dialog,
+             keyboard,
+             cell,
+             config,
+             mathjaxutils,
+             marked) {
+        'use strict';
 
         // Patch the security mechanisms to allow any JavaScript to run for now.
         // TODO: update this so only the few KBase commands run.
-        security.sanitize_html = function (html, allow_css) {
-            return html;
-        };
-        security.sanitize_css = function (css, tagPolicy) {
-            return css;
-        };
-        security.sanitize_stylesheets = function (html, tagPolicy) {
-            return html;
-        };
+        security.sanitize_html = function(html, allow_css) { return html; };
+        security.sanitize_css = function(css, tagPolicy) { return css; };
+        security.sanitize_stylesheets = function(html, tagPolicy) { return html; };
 
         // Patch the MarkdownCell renderer to run the Javascript we need.
         textCell.MarkdownCell.prototype.render = function () {
@@ -233,7 +227,8 @@ define(['jquery',
                 this.element.find('div.text_cell_render').html("Error while parsing markdown cell: " + error);
             }
         };
-
+        
+        
         // Patch the Notebook to return the right name
         notebook.Notebook.prototype.get_notebook_name = function () {
             return this.metadata.name;

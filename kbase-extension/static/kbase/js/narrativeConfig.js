@@ -13,8 +13,9 @@
  */
 define(['json!kbase/config.json',
         'json!kbase/icons.json'
-], function(configSet,
-            iconsSet) {
+], 
+function(configSet,
+         iconsSet) {
     'use strict';
 
     // Get the workspace id from the URL
@@ -33,11 +34,14 @@ define(['json!kbase/config.json',
         git_commit_time: configSet.git_commit_time,
         release_notes:   configSet.release_notes,
         mode:            configSet.mode,
+        tooltip:         configSet.tooltip,
         icons:           iconsSet,
         workspaceId:     workspaceId,
         loading_gif:     configSet.loading_gif,
         use_local_widgets: configSet.use_local_widgets
     };
+
+    var debug = config.mode === "debug";
 
     // Add a remote UI-common to the Require.js config
     require.config({
@@ -57,7 +61,7 @@ define(['json!kbase/config.json',
      * as configured with the use_local_widgets flag, then skip this step
      * and just run the callback.
      */
-    var updateConfig = function(callback) {
+    function updateConfig(callback) {
         if (!config.use_local_widgets) {
             // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";
             require(['uiCommonPaths'], function(pathConfig) {
@@ -83,8 +87,25 @@ define(['json!kbase/config.json',
         }
     };
 
+    /**
+     * Simple wrapper to return a URL by its key. If not present, just returns undefined.
+     */
+    function url(key) {
+        return config.urls[key];
+    };
+
+    /**
+     * Simple wrapper to return some value by its key. If not present, just returns undefined.
+     */
+    function get(key) {
+        return config[key];
+    };
+
     return {
         updateConfig: updateConfig,
-        config: config
+        config: config,
+        url: url,
+        get: get,
+        debug: debug
     };
 });

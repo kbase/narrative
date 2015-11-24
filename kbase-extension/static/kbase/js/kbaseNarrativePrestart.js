@@ -1,9 +1,12 @@
+/*global define*/
+/*jslint white: true*/
 // Bind all page buttons right at startup.
 define(['jquery',
         'narrativeConfig', 
         'bootstrap', 
         'kbaseNarrativeSharePanel', 
-        'bootstrap'], function($) {
+        'bootstrap'], function($, Config) {
+    'use strict';
     $(document).on('workspaceIdQuery.Narrative', function(e, callback) {
         if (callback) {
             callback(workspaceId);
@@ -41,7 +44,7 @@ define(['jquery',
         }
     });
     $('#kb-del-btn').click(function(e) {
-        if (IPython && IPython.notebook)
+        if (IPython && IPython.notebook) 
             IPython.notebook.delete_cell();
     });
     $('#kb-jira-btn').attr('href', window.kbconfig.urls.submit_jira_ticket + '%20' + window.kbconfig.version);
@@ -71,8 +74,25 @@ define(['jquery',
         }
     });
 
-    $('#kb-add-code-cell').click(function() { IPython.notebook.insert_cell_below('code'); })
-    $('#kb-add-md-cell').click(function() { IPython.notebook.insert_cell_below('markdown'); })
+    $('#kb-add-code-cell').click(function() {
+        IPython.notebook.insert_cell_below('code'); 
+    })
+    .tooltip({
+        delay: { 
+            show: Config.get('tooltip').showDelay, 
+            hide: Config.get('tooltip').hideDelay
+        }
+    });
+
+    $('#kb-add-md-cell').click(function() { 
+        IPython.notebook.insert_cell_below('markdown');
+    })
+    .tooltip({
+        delay: { 
+            show: Config.get('tooltip').showDelay, 
+            hide: Config.get('tooltip').hideDelay
+        }
+    });
 
 /**
  * Error logging for detectable failure conditions.
@@ -85,6 +105,7 @@ define(['jquery',
  */
 window._kb_failed_once = false;
 window.KBFail = function(is_fatal, where, what) {
+    'use strict';
     if (!IPython || !IPython.notebook || !IPython.notebook.kernel) {
         return false;
     }
@@ -126,7 +147,8 @@ window.KBFail = function(is_fatal, where, what) {
  * for the function.
  */
 window.KBError = function(where, what) {
-  return KBFail(false, where, what);
+    'use strict';
+    return KBFail(false, where, what);
 }
 
 /**
@@ -138,7 +160,7 @@ window.KBError = function(where, what) {
  * @param what  (string) What happened
  */
 window.KBFatal = function(where, what) {
-
+  'use strict';
   var res = KBFail(true, where, what);
 
   var version = 'unknown';

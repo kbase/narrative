@@ -473,22 +473,17 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             	} else {
             		self.showError(methodId + " import mode for Genome type is not supported yet");
             	}
-            } else if (self.selectedType === 'KBaseGenomes.GenomeAnnotation') {
+            } else if (self.selectedType === 'KBaseGenomeAnnotations.GenomeAnnotation') {
                 var url = null;
-                if (methodId === 'import_genome_gbk_file') {
+                if (methodId === 'import_genomeannotation_gbk_file') {
                         url = self.shockURL + '/node/' + params['gbkFile'];
-                } else if (methodId === 'import_genome_gbk_ftp') {
+                } else if (methodId === 'import_genomeannotation_gbk_ftp') {
                         url = params['ftpFolder'];
                 }
                 if (url) {
                         var options = {};
-                        if (params['contigObject'] && params['contigObject'].length > 0) {
-                                options['contigset_object_name'] = params['contigObject'];
-                        } else {
-                                options['contigset_object_name'] = params['outputObject'] + '.contigset';
-                        }
                         args = {'external_type': 'Genbank.Genome',
-                                        'kbase_type': 'KBaseGenomes.GenomeAnnotation',
+                                        'kbase_type': 'KBaseGenomeAnnotations.GenomeAnnotation',
                                         'workspace_name': self.wsName,
                                         'object_name': params['outputObject'],
                                         'optional_arguments': {'validate':{},'transform':options},
@@ -530,16 +525,16 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             	} else {
             		self.showError(methodId + " import mode for ContigSet type is not supported yet");
             	}
-            } else if (self.selectedType === 'KBaseGenomes.Assembly') {
+            } else if (self.selectedType === 'KBaseGenomeAnnotations.Assembly') {
                 var url = null;
-                if (methodId === 'import_contigset_fasta_file') {
+                if (methodId === 'import_assembly_fasta_file') {
                         url = self.shockURL + '/node/' + params['fastaFile'];
-                } else if (methodId === 'import_contigset_fasta_ftp') {
+                } else if (methodId === 'import_assembly_fasta_ftp') {
                         url = params['ftpFolder'];
                 }
                 if (url) {
                         args = {'external_type': 'FASTA.DNA.Assembly',
-                                        'kbase_type': 'KBaseGenomes.Assembly',
+                                        'kbase_type': 'KBaseGenomeAnnotations.Assembly',
                                         'workspace_name': self.wsName,
                                         'object_name': params['outputObject'],
                                         'optional_arguments': {'validate':{},'transform':

@@ -1,18 +1,23 @@
+/*global define*/
+/*jslint white: true*/
 define(['jquery', 
+        'narrativeConfig',
         'jqueryui',
         'kbwidget', 
         'kbaseNarrativeDataPanel', 
         'kbaseNarrativeMethodPanel', 
         'kbaseNarrativeManagePanel', 
         'kbaseNarrativeJobsPanel',
-        'kbaseNarrative'], function($) {
+        'kbaseNarrative'],
+function($, Config) {
+    'use strict',
     $.KBWidget({
         name: 'kbaseNarrativeSidePanel',
         parent: 'kbaseWidget',
         options: {
-            loadingImage: window.kbconfig.loading_gif,
+            loadingImage: Config.get('loading_gif'),
             autorender: true,
-            workspaceURL: "https://kbase.us/services/ws", //used for data importer
+            workspaceURL: Config.url('workspace'),
             landingPageURL: "/functional-site/#/", // used for data importer
         },
         $dataWidget: null,
@@ -27,13 +32,6 @@ define(['jquery',
          */
         init: function(options) {
             this._super(options);
-
-            if (!window.kbconfig || !window.kbconfig.urls || !window.kbconfig.urls.workspace) {
-                KBFatal('kbaseNarrativeSidePanel.init', 'Failed to load base configuration');
-                return this;
-            }
-            this.options.workspaceURL = window.kbconfig.urls.workspace;
-
             var analysisWidgets = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeDataPanel',
@@ -136,32 +134,6 @@ define(['jquery',
                                 minimizeFn();
                             });
             this.$tabs.header.prepend($hide_btn);
-
-                // var $panel = $('#kb-side-panel');
-                // var hide_idx = [2], keep_idx = [1], narr = 1;
-                // // Hide and show panels
-                // _.map(['tab', 'header'], function (subdiv) {
-                //     var divs = $panel.find('div.kb-side-' + subdiv);
-                //     _.map(hide_idx, function (i) {
-                //         $(divs[i]).hide();
-                //         $(divs[i]).removeClass('active');
-                //     });
-                //     if (subdiv == 'tab') {
-                //         $(divs[narr]).find('.kb-title').hide();
-                //     }
-                //     else {
-                //         // Plop a 'hide' button before the tab bar
-                //         var $hide_btn = $('<div>').attr({id: 'kb-view-mode-narr-hide'})
-                //           .append($('<span>').addClass('fa fa-caret-up'))
-                //           .click(function () {
-                //               self.hideControlPanels();
-                //           });
-                //         //$(divs[0]).prepend($hide_btn);
-                //         $panel.prepend($hide_btn);
-                //     }
-                //     //$(divs[narr]).addClass('active').css({'width': '366px'});
-                // });
-
         },
 
         /**

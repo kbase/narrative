@@ -10,11 +10,14 @@
  */
 
 (function( $, undefined ) {
-  require(['jquery', 
-           'handlebars', 
-           'kbwidget', 
-           'kbaseAuthenticatedWidget',
-           'kbaseNarrativeCellMenu'], function($) {
+require(['jquery',
+         'narrativeConfig',
+         'handlebars', 
+         'kbwidget', 
+         'kbaseAuthenticatedWidget',
+         'kbaseNarrativeCellMenu'], 
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",
         parent: "kbaseAuthenticatedWidget",
@@ -44,7 +47,7 @@
             this.method = JSON.parse(this.options.method);
             this.cellId = this.options.cellId;
             this.initErrorModal();
-            this.methClient = new NarrativeMethodStore(window.kbconfig.urls.narrative_method_store);
+            this.methClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
             this.render();
             return this;
         },

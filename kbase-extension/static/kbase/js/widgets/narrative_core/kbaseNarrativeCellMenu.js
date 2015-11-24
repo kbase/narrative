@@ -1,6 +1,10 @@
-/*global define,IPython*/
-/*jslint white:true,browser:true*/
-define(['jquery', 'kbwidget', 'bootstrap'], function ($) {
+/*global define*/
+/*jslint white: true*/
+define(['jquery', 
+        'narrativeConfig',
+        'kbwidget', 
+        'bootstrap'], 
+function($, Config) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeCellMenu',
@@ -56,10 +60,7 @@ define(['jquery', 'kbwidget', 'bootstrap'], function ($) {
             this.$menu = $('<ul>')
                 .addClass('dropdown-menu dropdown-menu-right');
             
-            
-            
-          
-            if (window.kbconfig && window.kbconfig.mode === "debug") {
+            if (Config.debug) {
                 this.addMenuItem({
                     icon: 'fa fa-code',
                     text: 'View Job Submission',

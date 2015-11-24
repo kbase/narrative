@@ -1,9 +1,15 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * "Download" panel for each element in data list panel.
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget'], function( $ ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget'],
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: "kbaseNarrativeDownloadPanel",
         parent: "kbaseWidget",
@@ -18,12 +24,12 @@ define(['jquery', 'kbwidget'], function( $ ) {
         type: null,
         wsId: null,
         objId: null,
-        loadingImage: "static/kbase/images/ajax-loader.gif",
-        wsUrl: window.kbconfig.urls.workspace,
-        transformURL: window.kbconfig.urls.transform,
-        ujsURL: window.kbconfig.urls.user_and_job_state,
-        shockURL: window.kbconfig.urls.shock,
-        exportURL: window.kbconfig.urls.data_import_export,
+        loadingImage: Config.get('loading_gif'),
+        wsUrl: Config.url('workspace'),
+        transformURL: Config.url('transform'),
+        ujsURL: Config.url('user_and_job_state'),
+        shockURL: Config.url('shock'),
+        exportURL: Config.url('data_import_export'),
         timer: null,
         
         downloaders: {  // type -> {name: ..., external_type: ...[, transform_options: ...[, unzip: <file_ext>]}

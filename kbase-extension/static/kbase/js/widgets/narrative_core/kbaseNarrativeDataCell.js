@@ -1,3 +1,5 @@
+/*global define*/
+/*jslint white: true*/
 /**
  * Narrative data cell.
  *
@@ -6,47 +8,46 @@
  * @public
  */
 
-define(['jquery', 'underscore', 'kbwidget', 'kbaseNarrativeCell'], function ($, _) {
+define(['jquery', 
+        'underscore', 
+        'narrativeConfig',
+        'kbwidget', 
+        'kbaseNarrativeCell'], 
+function($, _, Config) {
 
 // Global singleton for viewers
 // Bill: no longer needed, global viewers are now under IPython.narrative.dataViewers
 //kb_g_viewers = null;
 
-
-    /**
-     * Get/store info on all viewers from method store.
-     *
-     * Parameters:
-     *  mclient - Method store client
-     */
-    var KBaseNarrativeViewers = function (mclient, done) {
-        this.viewers = {};
-        this.landing_page_urls = {};
-        this.type_names = {};
-        this.specs = {};
-        this.method_ids = [];
-        var self = this;
-        // Get application types, and populate data structures
-        mclient.list_categories({'load_methods': 1, 'load_apps': 0, 'load_types': 1},
-            function (data) {
-                var methodInfo = data[1];
-                var aTypes = data[3];
-                _.each(aTypes, function (val, key) {
-                    if (val.loading_error) {
-                        console.error("Error loading method [" + key + "]: " + val.loading_error);
-                    } else if (val.view_method_ids && val.view_method_ids.length > 0) {
-                        //console.debug("adding view method[" + key + "]=", val);
-                        var mid = val.view_method_ids[0];
-                        if (!methodInfo[mid]) {
-                            console.log('Can\'t find method info for id: ' + mid);
-                        } else if (methodInfo[mid].loading_error) {
-                            console.log('There is an error for method info with id [' + mid + ']: ' + methodInfo[mid].loading_error);
-                        } else {
-                            self.viewers[key] = mid;
-                            self.landing_page_urls[key] = val.landing_page_url_prefix;
-                            self.type_names[key] = val.name;
-                            self.method_ids.push(mid);
-                        }
+/**
+ * Get/store info on all viewers from method store.
+ *
+ * Parameters:
+ *  mclient - Method store client
+ */
+var KBaseNarrativeViewers = function(mclient, done) {
+    this.viewers = {};
+    this.landing_page_urls = {};
+    this.type_names = {};
+    this.specs = {};
+    this.method_ids = [];
+    var self = this;
+    // Get application types, and populate data structures
+    mclient.list_categories({'load_methods': 1, 'load_apps': 0, 'load_types': 1},
+        function(data) {
+    		var methodInfo = data[1];
+            var aTypes = data[3];
+            _.each(aTypes, function(val, key) {
+                if (val.loading_error) {
+                    console.error("Error loading method [" + key + "]: " + val.loading_error);
+                }
+                else if (val.view_method_ids && val.view_method_ids.length > 0) {
+                    //console.debug("adding view method[" + key + "]=", val);
+                    var mid = val.view_method_ids[0];
+                    if (!methodInfo[mid]) {
+                    	console.log('Can\'t find method info for id: ' + mid);
+                    } else if (methodInfo[mid].loading_error) {
+                    	console.log('There is an error for method info with id [' + mid + ']: ' + methodInfo[mid].loading_error);
                     } else {
                         //console.warn("No output types for: " + key);
                     }
@@ -190,8 +191,34 @@ define(['jquery', 'underscore', 'kbwidget', 'kbaseNarrativeCell'], function ($, 
                 this.prev = true;
             });
         }
-        return elt.append($('<pre>').append(md_desc));
-    };
+        md_desc += p[0] + ": " + p[1];
+        this.prev = true;
+      });
+    }
+    return elt.append($('<pre>').append(md_desc));
+};
+
+/**
+ * NarrativeDataCell widget.
+ *
+ * This is the widget passed into
+ * the viewer.
+*/
+
+$.KBWidget({
+    name: 'kbaseNarrativeDataCell',
+    parent: 'kbaseNarrativeCell',
+    version: '0.0.1',
+    options: {
+        info: null, // object info
+        cell: null,  // IPython cell
+        lp_url: Config.url('landing_pages')
+    },
+    obj_info: null,
+    // for 'method_store' service
+    method_client: null,
+    // IPython cell
+    ip_cell: null,
 
     /**
      * NarrativeDataCell widget.
@@ -199,6 +226,18 @@ define(['jquery', 'underscore', 'kbwidget', 'kbaseNarrativeCell'], function ($, 
      * This is the widget passed into
      * the viewer.
      */
+    init: function(options) {
+        //console.debug("kbaseNarrativeDataCell.init.start");
+        this._super(options);
+        this.obj_info = options.info;
+        this.obj_info.bare_type = /[^-]*/.exec(this.obj_info.type);
+        this.obj_info.simple_date = /[^+]*/.exec(this.obj_info.save_date);
+        this.ip_cell = options.cell;
+        this._initMethodStoreClient();
+
+        if (!window.KBaseViewers) {
+            // we have to wait until the type/method specs are loaded the first time
+            var self = this;
 
     $.KBWidget({
         name: 'kbaseNarrativeDataCell',
@@ -247,28 +286,10 @@ define(['jquery', 'underscore', 'kbwidget', 'kbaseNarrativeCell'], function ($, 
                 this.render(options.info);
             }
 
-            return this;
-        },
-        _initMethodStoreClient: function () {
-            if (this.method_client === null) {
-                this.method_client = new NarrativeMethodStore(this._getMethodStoreURL());
-            }
-        },
-        _getMethodStoreURL: function () {
-            var methodStoreURL = window.kbconfig.urls.narrative_method_store;
-            return methodStoreURL;
-        },
-        /**
-         * Instantiate viewer widget for a data object.
-         *
-         * @param object_info (object) Object with info about data item
-         * @return Whatever the 'viewer' function returns.
-         */
-        render: function () {
-            var $label = $('<span>').addClass('label label-info').append('Data');
-            var baseClass = 'kb-cell-output';
-            var panelClass = 'panel-default';
-            var headerClass = 'kb-out-desc';
+    _getMethodStoreURL: function() {
+        var methodStoreURL = Config.url('narrative_method_store');
+        return methodStoreURL;
+    },
 
             var is_default = false; // default-viewer
             var self = this;

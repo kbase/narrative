@@ -69,7 +69,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
     Additional metadata fields
     {
-        'id' : User specified title for the narrative alphanumerica + _
+        'id' : User specified title for the narrative alphanumeric + _
         'creator' : {username of the creator of this notebook},
         'description' : 'description of notebook',
         'data_dependencies' : { list of kbase id strings }
@@ -199,7 +199,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
     def _wsobj_to_model(self, nar, content=True):
         nar_id = 'ws.{}.obj.{}'.format(nar['wsid'], nar['objid'])
         model = base_model('{} - {} - {}'.format(nar['saved_by'], nar_id, nar['name']), nar_id)
-        model['format'] = 'v3'
+        model['format'] = 'json'
         model['last_modified'] = nar['save_date']
         model['type'] = 'notebook'
 
@@ -245,10 +245,12 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 if content:
                     model['format'] = 'json'
                     model['content'] = nbformat.reads(json.dumps(nar_obj['data']), 4)
+                    model['name'] = nar_obj['data']['metadata'].get('name', 'Untitled')
                     util.kbase_env.narrative = 'ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid'])
                     util.kbase_env.workspace = model['content'].metadata.ws_name
                 if user is not None:
                     model['writable'] = self.narrative_writable('{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), user)
+                self.log.info('Got narrative {}'.format(model['name']))
             except HTTPError:
                 raise
             except PermissionsError as e:
@@ -322,8 +324,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
 
         try:
             self.rename_narrative(self._obj_ref_from_path(path), self.get_userid(), new_name)
-        except PermissionsErr as err:
-            raise HTTPError(403, err.message)
+        except PermissionsError as err:
+            pass
+            # raise HTTPError(403, err.message)
         except Exception as err:
             raise HTTPError(500, u'An error occurred while renaming your Narrative: {}'.format(err))
 

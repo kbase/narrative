@@ -3,11 +3,16 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery',
-    'NarrativeManager',
-    'narrativeConfig',
-    'kbwidget',
-    'kbaseNarrativeControlPanel'], function ($, NarrativeManager) {
+define(['jquery', 
+        'narrativeConfig',
+        'NarrativeManager', 
+        'narrativeConfig',
+        'kbwidget', 
+        'kbaseNarrativeControlPanel'],
+function($, 
+         Config, 
+         NarrativeManager) {
+    'use strict',
     $.KBWidget({
         name: "kbaseNarrativeManagePanel",
         parent: "kbaseNarrativeControlPanel",
@@ -24,10 +29,10 @@ define(['jquery',
         loadedData: {},
         options: {
             title: 'Narratives',
-            loadingImage: window.kbconfig.loading_gif,
-            ws_url: "https://kbase.us/services/ws",
-            nms_url: "https://kbase.us/services/narrative_method_store/rpc",
-            user_name_fetch_url: "https://kbase.us/services/genome_comparison/users?usernames=",
+            loadingImage: Config.get('loading_gif'),
+            ws_url: Config.url('workspace'),
+            nms_url: Config.url('narrative_method_store'),
+            user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
             ws_name: null,
             nar_name: null,
@@ -48,11 +53,6 @@ define(['jquery',
             }
             if (this.options.nar_name) {
                 this.nar_name = options.nar_name;
-            }
-
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.ws_url = window.kbconfig.urls.workspace;
-                this.options.nms_url = window.kbconfig.urls.narrative_method_store;
             }
 
             this.$mainPanel = $('<div>')//.css({'height':'600px'});
@@ -78,10 +78,8 @@ define(['jquery',
                 'notebook_saved.Notebook', $.proxy(function (e) {
                     this.refresh();
                 }, this)
-                );
-
-            this.landingPageMap = window.kbconfig.landing_page_map;
-
+            );
+            
             if (this.ws_name && this.nar_name && this.ws) {
                 this.refresh();
             }

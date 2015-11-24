@@ -21,6 +21,9 @@ options = argparser.parse_args(sys.argv[1:])
 
 nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"']
 
+if not hasattr(sys, 'real_prefix'):
+    nb_command[0] = 'narrative-venv/bin/kbase-narrative'
+
 nb_server = subprocess.Popen(nb_command, stderr=subprocess.STDOUT,
                              stdout=subprocess.PIPE)
 
@@ -32,7 +35,7 @@ while 1:
     print(line)
     if 'The IPython Notebook is running at: http://localhost:8888/':
         break
-    if 'Control-C' in line:
+    if 'is already in use' in line:
         raise ValueError(
             'The port 8888 was already taken, kill running notebook servers'
         )
@@ -54,9 +57,11 @@ test_command = ['grunt', 'test']
 
 resp = 1
 try:
+    print "Jupyter server started, starting test script."
     resp = subprocess.check_call(test_command, stderr=subprocess.STDOUT)
 except subprocess.CalledProcessError:
     pass
 finally:
+    print "Done running tests, killing server."
     nb_server.kill()
 sys.exit(resp)

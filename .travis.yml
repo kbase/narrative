@@ -6,7 +6,6 @@ cache:
   directories:
   - kbase-extension/static/components
   - node_modules
-  - narrative-venv
 branches:
   only:
     - develop

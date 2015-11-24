@@ -161,12 +161,12 @@ span#searchspan{
   border-radius: 4px !important;
   margin-right: 0;
 }
-.btn-xs { /* don't use drop-shadow on profile menu */
+.btn { /* don't use drop-shadow on profile menu */
   border: 0;
   box-shadow: none;
   -webkit-box-shadow: none;
   moz-box-shadow: none;
-  font-size: 18px;
+  xfont-size: 18px;
 }
 .btn-xs .glyphicon-user { /* also resize user btn */
   padding: 14px 5px 14px 5px;
@@ -191,12 +191,21 @@ p.clear{
     clear: both;
 }
 
-div#header {
+/*div#header {
     border-bottom: 1px solid #AAA;
     position: relative;
     padding: 0 0 0 20px;
     height: 56px;
+}*/
+
+#header {
+    height: 70px;
+    position:fixed;
+    display: block;
+    box-sizing: border-box;
 }
+
+
 
 p#site-title {
     height: 46px;
@@ -814,9 +823,9 @@ p span.notification{
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
-.btn-group {
+/*.btn-group {
     margin-right: 5px;
-}
+}*/
 
 #menus {
     padding-left: 0px;
@@ -830,6 +839,10 @@ div#notebook_panel {
     -webkit-box-shadow: none; /*0 -1px 0px rgba(0, 0, 0, 0.1);*/
     -moz-box-shadow: none; /*0 -1px 0px rgba(0, 0, 0, 0.1); */
     box-shadow: none; /* 0 -1px 0px rgba(0, 0, 0, 0.1); */
+}
+
+#notebook {
+    padding-top: 1em;
 }
 
 .version-stamp a {
@@ -2083,7 +2096,8 @@ div[class="tooltip-inner"] {
 
 .kb-data-list-row-hr {
     width:70%;
-    margin: 2px;
+    margin: 2px auto;
+    
 }
 
 
@@ -2672,4 +2686,107 @@ div[class="tooltip-inner"] {
     font: 12px monospace;
     border: none;
     display: inline;
+}
+
+/* bootstrap sillines */
+
+/* margin left doesn't really seeem to play well */
+.btn-toolbar {
+    margin-left: 0;
+    padding-left: -5px;
+}
+
+.kb-narr-side-panel .btn-group .btn {
+    padding: 3px 4px 3px 4px;
+    font-size: 16px;
+}
+
+.btn-subtle {
+    color: #888;
+    margin: 0px
+}
+.btn-subtle .fa {
+    color: #888;
+}
+.btn-subtle .fa::before {
+    color: #888;
+}
+
+
+.notebook_app .btn.active {
+    box-shadow: none;
+}
+
+
+/* Fooling around with the narrative cells */
+
+.cell {
+    xborder: 1px red solid;
+}
+.notebook_app .inner_cell {
+    xborder: 1px blue dashed;
+    overflow: visible;
+    margin-right: 4px;
+}
+.notebook_app .cell.selected .inner_cell > div:nth-child(2),
+.notebook_app .cell.selected .inner_cell > div:nth-child(3) {
+    background-color: #FFF;
+}
+
+.notebook_app .celltoolbar > .button_container {
+    width: 100%;
+}
+
+.notebook_app .prompt {
+    font-size: 12px;
+    color: silver;
+    width: 75px;
+}
+
+.notebook_app .code_cell {
+    background-color: #FFF;
+}
+
+.notebook_app .cell.unselected div.text_cell_render {
+    border-color: white;
+}
+.notebook_app .cell.selected div.text_cell_render {
+    border-color: #CFCFCF;
+}
+
+.notebook_app .buttons .dropdown-menu {
+    height: auto !important;
+    overflow: visible !important;
+        
+}
+
+.notebook_app .btn.disabled .fa {
+    color: #E8E8E8;
+}
+
+.notebook_app .cell .btn {
+    background-color: transparent;
+}
+
+.notebook_app .kb-cell-toolbar .title {
+    font-weight: bold;
+    font-size: 110%;
+}
+
+
+/* narrative cell icons */
+
+.cell.selected .prompt .method-icon {
+    color: rgb(103, 58, 183);
+}
+.cell.selected .prompt .app-icon {
+    color: rgb(0, 150, 136);
+}
+.cell.selected .prompt .markdown-icon {
+    color: #000;
+}
+
+
+.cell > .inner_cell > .ctb_hideshow {
+    display: block;
 }

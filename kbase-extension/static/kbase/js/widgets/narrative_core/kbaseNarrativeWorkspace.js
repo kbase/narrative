@@ -314,7 +314,7 @@ define(['jquery',
          */
         buildMethodCell: function(method) {
             var cell = IPython.notebook.insert_cell_below('markdown');
-            cell.celltoolbar.hide();
+            // cell.celltoolbar.hide();
 
             // make this a function input cell, as opposed to an output cell
             this.setMethodCell(cell, method);
@@ -419,7 +419,7 @@ define(['jquery',
 
         buildAppCell: function(appSpec) {
             var cell = IPython.notebook.insert_cell_below('markdown');
-            cell.celltoolbar.hide();
+            // cell.celltoolbar.hide();
             this.removeCellEditFunction(cell);
 
             var tempContent = '<img src="' + this.options.loadingImage + '">';
@@ -2210,7 +2210,7 @@ define(['jquery',
          */
         addOutputCell: function(currentIndex, widget) {
             var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
-            cell.celltoolbar.hide();
+            // cell.celltoolbar.hide();
             this.setOutputCell(cell, widget);
             this.removeCellEditFunction(cell);
 
@@ -2219,7 +2219,7 @@ define(['jquery',
 
         addErrorCell: function(currentIndex) {
             var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
-            cell.celltoolbar.hide();
+            // cell.celltoolbar.hide();
             this.setErrorCell(cell);
             this.removeCellEditFunction(cell);
             return cell;

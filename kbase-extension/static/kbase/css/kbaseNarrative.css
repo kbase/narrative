@@ -191,12 +191,21 @@ p.clear{
     clear: both;
 }
 
-div#header {
+/*div#header {
     border-bottom: 1px solid #AAA;
     position: relative;
     padding: 0 0 0 20px;
     height: 56px;
+}*/
+
+#header {
+    height: 70px;
+    position:fixed;
+    display: block;
+    box-sizing: border-box;
 }
+
+
 
 p#site-title {
     height: 46px;
@@ -830,6 +839,10 @@ div#notebook_panel {
     -webkit-box-shadow: none; /*0 -1px 0px rgba(0, 0, 0, 0.1);*/
     -moz-box-shadow: none; /*0 -1px 0px rgba(0, 0, 0, 0.1); */
     box-shadow: none; /* 0 -1px 0px rgba(0, 0, 0, 0.1); */
+}
+
+#notebook {
+    padding-top: 1em;
 }
 
 .version-stamp a {
@@ -2702,4 +2715,78 @@ div[class="tooltip-inner"] {
 
 .notebook_app .btn.active {
     box-shadow: none;
+}
+
+
+/* Fooling around with the narrative cells */
+
+.cell {
+    xborder: 1px red solid;
+}
+.notebook_app .inner_cell {
+    xborder: 1px blue dashed;
+    overflow: visible;
+    margin-right: 4px;
+}
+.notebook_app .cell.selected .inner_cell > div:nth-child(2),
+.notebook_app .cell.selected .inner_cell > div:nth-child(3) {
+    background-color: #FFF;
+}
+
+.notebook_app .celltoolbar > .button_container {
+    width: 100%;
+}
+
+.notebook_app .prompt {
+    font-size: 12px;
+    color: silver;
+    width: 75px;
+}
+
+.notebook_app .code_cell {
+    background-color: #FFF;
+}
+
+.notebook_app .cell.unselected div.text_cell_render {
+    border-color: white;
+}
+.notebook_app .cell.selected div.text_cell_render {
+    border-color: #CFCFCF;
+}
+
+.notebook_app .buttons .dropdown-menu {
+    height: auto !important;
+    overflow: visible !important;
+        
+}
+
+.notebook_app .btn.disabled .fa {
+    color: #E8E8E8;
+}
+
+.notebook_app .cell .btn {
+    background-color: transparent;
+}
+
+.notebook_app .kb-cell-toolbar .title {
+    font-weight: bold;
+    font-size: 110%;
+}
+
+
+/* narrative cell icons */
+
+.cell.selected .prompt .method-icon {
+    color: rgb(103, 58, 183);
+}
+.cell.selected .prompt .app-icon {
+    color: rgb(0, 150, 136);
+}
+.cell.selected .prompt .markdown-icon {
+    color: #000;
+}
+
+
+.cell > .inner_cell > .ctb_hideshow {
+    display: block;
 }

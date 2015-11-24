@@ -2721,10 +2721,11 @@ div[class="tooltip-inner"] {
 /* Fooling around with the narrative cells */
 
 .cell {
-    xborder: 1px red solid;
+}
+.notebook_app .cell.selected {
+    background-color: #EEFFE3;
 }
 .notebook_app .inner_cell {
-    xborder: 1px blue dashed;
     overflow: visible;
     margin-right: 4px;
 }
@@ -2748,10 +2749,10 @@ div[class="tooltip-inner"] {
 }
 
 .notebook_app .cell.unselected div.text_cell_render {
-    border-color: white;
+    border: 1px solid transparent;
 }
 .notebook_app .cell.selected div.text_cell_render {
-    border-color: #CFCFCF;
+    border: 1px solid #CFCFCF;
 }
 
 .notebook_app .buttons .dropdown-menu {

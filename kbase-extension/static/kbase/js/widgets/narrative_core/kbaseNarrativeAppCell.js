@@ -29,7 +29,7 @@
             methodStoreURL: 'https://kbase.us/services/narrative_method_store',
 
             appHelpLink: '/functional-site/#/narrativestore/app/',
-            methodHelpLink: '/functional-site/#/narrativestore/method/',
+            methodHelpLink: '/functional-site/#/narrativestore/method/'
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -246,7 +246,7 @@
 
             this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
 
-            var appInfo = this.appSpec.info.name;
+            var appTitle = this.appSpec.info.name;
             this.$methodPanel = $('<div>')
                                 .addClass('kb-app-steps');
             var stepHeaderText = "Step ";
@@ -297,7 +297,7 @@
                                         .addClass('panel-heading')
                                         .append($('<div>').addClass('app-panel-heading')
                                                    .append($('<div>')
-                                                           .append($('<h1><b>' + appInfo + '</b></h1>')))
+                                                           .append($('<h1><b>' + appTitle + '</b></h1>')))
                                                    .append($appSubtitleDiv)
                                                    .append($appSubmittedStamp)))
                              .append($('<div>')
@@ -310,9 +310,19 @@
                                      .addClass('panel-footer')
                                      .css({'overflow' : 'hidden'})
                                      .append($buttons));
-            require(['kbaseNarrativeCellMenu'], $.proxy(function() {
-                this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
-            }, this));
+                        
+            this.$elem
+                .closest('.cell')
+                .trigger('set-title', [appTitle]);             
+            
+            var appIcon = '<div class="fa-stack fa-2x"><i  class="fa fa-square fa-stack-2x app-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cubes"></i></div>';
+            this.$elem
+                .closest('.cell')
+                .trigger('set-icon', [appIcon]);
+            
+            //require(['kbaseNarrativeCellMenu'], $.proxy(function() {
+            //    this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
+            //}, this));
 
 
             //now we link the step parameters together that are linked
@@ -622,16 +632,24 @@
 
         /* Show/hide running icon */
         displayRunning: function(is_running, had_error) {
+            var cellMenu = this.$elem.closest('.cell').find('.button_container');
             if (is_running) {
-                this.cellMenu.$runningIcon.show();
+                cellMenu.trigger('start-running');
+                // cellMenu.data('runningIcon').show();
+                // this.cellMenu.$runningIcon.show();
                 // never show error icon while running
-                this.cellMenu.$errorIcon.hide();
-            }
-            else {
-                this.cellMenu.$runningIcon.hide();
+                // this.cellMenu.$errorIcon.hide();
+                cellMenu.data('errorIcon').hide();
+            } else {
+                // this.cellMenu.$runningIcon.hide();
                 // only display error when not running
-                if (had_error) { this.cellMenu.$errorIcon.show(); }
-                else { this.cellMenu.$errorIcon.hide(); }
+                if (had_error) { 
+                    //this.cellMenu.$errorIcon.show(); 
+                    cellMenu.data('errorIcon').show();
+                } else { 
+                    // this.cellMenu.$errorIcon.hide(); 
+                    cellMenu.data('errorIcon').hide();
+                }
             }
         },
 

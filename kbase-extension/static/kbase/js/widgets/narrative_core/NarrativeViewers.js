@@ -139,7 +139,7 @@ function($, _, Config, Clients) {
             var methodId = viewerInfo.viewers[o.bare_type];
             if (!methodId) {
                 console.debug("No viewer found for type=" + o.bare_type);
-                return { widget: defaultViewer(dataCell), title: null };
+                return { widget: defaultViewer(dataCell), title: 'Unknown Data Type' };
             }
             var spec = viewerInfo.specs[methodId];
             var inputParamId = spec['parameters'][0]['id'];
@@ -166,7 +166,7 @@ function($, _, Config, Clients) {
                 output[mapping.target_property] = param;
             });
 
-            output.widgetTitle = viewerInfo.typeNames[o.bare_type];  //spec.info.name;
+            output.widgetTitle = viewerInfo.typeNames[o.bare_type] || 'Unknown Data Type'; //spec.info.name;
             output.landing_page_url_prefix = viewerInfo.landingPageUrls[o.bare_type];
             var outputWidget = spec.widgets.output;
             var w = null;
@@ -185,6 +185,7 @@ function($, _, Config, Clients) {
                 }, function () {
                     console.error("error making widget: " + outputWidget);
                     $elem = defaultViewer(dataCell);
+                    output.widgetTitle = 'Unknown Data Type';
                 });
             }
             return {
@@ -216,7 +217,7 @@ function($, _, Config, Clients) {
                 this.prev = true;
             });
         }
-        return $('<pre>').append(mdDesc);
+        return $('<div>').append($('<pre>').append(mdDesc));
     }
 
     return {

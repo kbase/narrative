@@ -1,17 +1,19 @@
 "use strict";
 
-define(['jquery', 
-        'kbwidget', 
-        'kbasePrompt', 
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'kbasePrompt',
         'kbaseNarrativeControlPanel',
-        'bootstrap'], 
-        function( $ ) {
+        'bootstrap'],
+function($, Config) {
+    'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeJobsPanel',
         parent: 'kbaseNarrativeControlPanel',
         version: '0.0.1',
         options: {
-            loadingImage: 'static/kbase/images/ajax-loader.gif',
+            loadingImage: Config.get('loading_gif'),
             autopopulate: true,
             title: 'Jobs',
         },
@@ -86,9 +88,20 @@ define(['jquery',
 
             var $refreshBtn = $('<button>')
                               .addClass('btn btn-xs btn-default')
-                              .click($.proxy(function(event) { this.refresh(); }, this))
+                              .click($.proxy(function(event) {
+                                  $refreshBtn.tooltip('hide');
+                                  this.refresh();
+                              }, this))
                               .append($('<span>')
-                                      .addClass('glyphicon glyphicon-refresh'));
+                                      .addClass('glyphicon glyphicon-refresh'))
+                              .tooltip({
+                                    title : 'Refresh job status', 
+                                    container : 'body',                     
+                                    delay: {
+                                        show: Config.get('tooltip').showDelay, 
+                                        hide: Config.get('tooltip').hideDelay
+                                    }
+                              });
 
             var $headerDiv = $('<div>')
                               .append('Jobs')

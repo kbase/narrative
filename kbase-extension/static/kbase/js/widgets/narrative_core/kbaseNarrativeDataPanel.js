@@ -143,14 +143,24 @@ function($, _, Config) {
 
             //this.dataImporter();
 
-            this.addButton($('<button>')
-                           .addClass('btn btn-xs btn-default')
-                           .tooltip({title:'Hide / Show data browser', 'container':'body', delay: { "show": 400, "hide": 50 }})
-                           .append('<span class="fa fa-arrow-right"></span>')
-                           .click($.proxy(function(event) {
-                               this.trigger('hideGalleryPanelOverlay.Narrative');
-                               this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
-                           }, this)));
+            this.$slideoutBtn = $('<button>')
+                .addClass('btn btn-xs btn-default')
+                .tooltip({
+                    title: 'Hide / Show data browser', 
+                    container: 'body', 
+                    delay: { 
+                        show: Config.get('tooltip').showDelay, 
+                        hide: Config.get('tooltip').hideDelay 
+                    }
+                })
+                .append('<span class="fa fa-arrow-right"></span>')
+                .click(function(event) {
+                    this.$slideoutBtn.tooltip('hide');
+                    this.trigger('hideGalleryPanelOverlay.Narrative');
+                    this.trigger('toggleSidePanelOverlay.Narrative', this.$overlayPanel);
+                }.bind(this));
+
+            this.addButton(this.$slideoutBtn);
 
             setTimeout(function() {
                 if (self.ws_name && self.token) {

@@ -230,12 +230,6 @@ define(['jquery',
             }
         };
         
-        
-        // Patch the Notebook to return the right name
-        notebook.Notebook.prototype.get_notebook_name = function () {
-            return this.metadata.name;
-        };
-
         // Patch the Notebook to not wedge a file extension on a new Narrative name
         notebook.Notebook.prototype.rename = function (new_name) {
             var that = this;

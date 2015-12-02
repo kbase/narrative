@@ -319,17 +319,17 @@ function($, Config) {
                 var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
                 console.log('displayRunning: ');
                 console.log(cellMenu);
-                this.cellMenu.$runningIcon.show();
+                // this.cellMenu.$runningIcon.show();
                 // never show error icon while running
-                this.cellMenu.$errorIcon.hide();
+                // this.cellMenu.$errorIcon.hide();
             } else {
                 var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
                 console.log('displayRunning: ');
                 console.log(cellMenu);
-                this.cellMenu.$runningIcon.hide();
+                // this.cellMenu.$runningIcon.hide();
                 // only display error when not running
-                if (had_error) { this.cellMenu.$errorIcon.show(); }
-                else { this.cellMenu.$errorIcon.hide(); }
+                // if (had_error) { this.cellMenu.$errorIcon.show(); }
+                // else { this.cellMenu.$errorIcon.hide(); }
             }
         },
 

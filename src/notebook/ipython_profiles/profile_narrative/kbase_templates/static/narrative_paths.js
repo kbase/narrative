@@ -448,7 +448,8 @@ define([], function() {
                           'KBasePhenotypes.PhenotypeSet',
                           'KBasePhenotypes.PhenotypeSimulationSet',
                           'KBaseFBA.FBAComparison',
-                          'kbaseTabTableTabs']
+                          'kbaseTabTableTabs',
+                          'kbasePMIBarchart']
             },
             'kbasePathways' : {
                 'deps' : ['jquery',

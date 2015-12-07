@@ -37,25 +37,31 @@ function($, Config) {
                 $menuBtn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
                 .append($('<span class="fa fa-cog" style="font-size:14pt">')),
                 // $collapseBtn = $('<button class="btn btn-default" role="button" data-toggle="collapse" href="#' + outputPane.id + '" aria-controls="' + $outputPane.id + '">Open</button>'),
-                $collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button"><span class="fa fa-chevron-down"></button>')
+                $collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle"><span class="fa fa-chevron-down"></button>')
                 .on('click', function () {
-                    self.$elem.trigger('toggle-output');
-                    var icon = $(this).find('span.fa');
-                    if (icon.hasClass('fa-chevron-right')) {
-                        icon.removeClass('fa-chevron-right');
-                        icon.addClass('fa-chevron-down');
-                    } else {
-                        icon.removeClass('fa-chevron-down');
-                        icon.addClass('fa-chevron-right');
-                    }
-                })
+                    self.$elem.trigger('toggle.toolbar');                    
+                });
 
-            this.$elem.on('toggle-output', function () {
-                var pane = self.$elem.closest('.cell').find('.inner_cell > div:nth-child(3)');
-                if (pane) {
-                    pane.toggle();
-                }
+            var cell = this.options.cell;
+
+            /* 
+             * Each cell type unfortunately has a different top level layout.
+             * Not that it matters, but I don't see why there isn't a uniform layout 
+             * for the primary layout areas - prompt, toolbar, body, as they exist
+             * now, and another nice one would be a message/notification are
+             */
+            this.$elem.on('toggle.toolbar', function () {                
+                var $cellNode = self.$elem.closest('.cell');
+                $cellNode
+                    .trigger('toggle.cell');
             });
+            
+//            this.$elem.on('toggle-output-all', function () {
+//                self.$elem
+//                    .closest('.notebook')
+//                    .find('.cell .inner_cell > div:nth-child(3)')
+//                    .toggle();
+//            });
 
             this.$menu = $('<ul>')
                 .addClass('dropdown-menu dropdown-menu-right');
@@ -196,20 +202,11 @@ function($, Config) {
             this.$elem.on('hide-error', function () {
                 self.$errorIcon.hide();
             });
-
-
+            
+            
             var $dropdownMenu = $('<span class="btn-group">')
                 .append($menuBtn)
                 .append(this.$menu);
-
-            this.$elem.on('show-buttons', function () {
-                $deleteBtn.removeClass('disabled');
-                $dropdownMenu.find('.btn').removeClass('disabled');
-            });
-            this.$elem.on('hide-buttons', function () {
-                $deleteBtn.addClass('disabled');
-                $dropdownMenu.find('.btn').addClass('disabled');
-            });
 
             this.$elem.append(
                 $('<div class="kb-cell-toolbar container-fluid">')
@@ -235,42 +232,80 @@ function($, Config) {
                 )
             );
             $deleteBtn.tooltip();
+            
+            /*
+             * Events emitted by the cell to indicate that the toolbar should be
+             * selected or unselected. Or rather, that the cell has been selected
+             * or unselected.
+             */
+            this.$elem.on('selected.toolbar', function (e) {
+                e.stopPropagation();
+                console.log('toolbar selected...');
+                console.log($deleteBtn);
+                $deleteBtn.removeClass('disabled');
+                $dropdownMenu.find('.btn').removeClass('disabled');
+            });
+            this.$elem.on('unselected.toolbar', function (e) {
+                e.stopPropagation();
+                console.log('toolbar unselected');
+                console.log($deleteBtn);
+                $deleteBtn.addClass('disabled');
+                $dropdownMenu.find('.btn').addClass('disabled');
+            });
+
+
+            /*
+             * A workaround to provide the default state to buttons, et al.
+             * jupyter should call select/unselect on each cell as they are added,
+             * to allow the cell to set up state. There is an unselect cell method,
+             * but no unselect event upon which to trigger actions.
+             * Actually, there should be a 'can unselect' as well, since a cell
+             * might no be happy with being left in an unfinished state.
+            */
+            $dropdownMenu.find('.btn').addClass('disabled');
+            $deleteBtn.addClass('disabled');
+
             // Set up title.
-            var $titleNode = this.$elem.find('[data-element="title"]');
-            this.$elem.on('set-title', function (e, title) {                
+            var $titleNode = this.$elem.find('[data-element="title"]');            
+            this.$elem.on('set-title.toolbar', function (e, title) { 
                 e.stopPropagation();
                 $titleNode.html(title);
             });
             
-            // And an icon -- hack to go into the input prompt for now...
-            //$cell =  = $(options.cell.element);
+            /* And an icon -- hack to go into the input prompt for now...
+             *
+             * Get the cell node from the cell passed in, rather than use our
+             * node and find it.
+             * $cell =  = $(options.cell.element);
+            */
            
-            this.$elem.on('set-icon', function (e, icon) {
-                var $cell = self.$elem.closest('.cell'),
+            this.$elem.on('set-icon.toolbar', function (e, icon) {
+                var $cell = $(self.options.cell.element), 
                     $iconNode = $cell.find('.prompt');
-                console.log('ICON'); 
-                console.log($cell);
-                console.log($iconNode);
                 e.stopPropagation();
                 var wrapped = '<div style="text-align: center;">' + icon + '</div>';
                 $iconNode.html(wrapped)
-                
-                console.log(wrapped);
-                console.log($iconNode);
             });
-            var $cell = (options && options.cell && $(options.cell.element)) || self.$elem.closest('.cell');
-            console.log('CELL');
-            console.log($cell);
-            var icon = $cell.data('icon');
+            
+            var $cell = (options && options.cell && $(options.cell.element)) || self.$elem.closest('.cell'),
+                icon = $cell.data('icon');
+            
             if (icon) {
-                this.$elem.trigger('set-icon', [icon]);
+                this.$elem.trigger('set-icon.toolbar', [icon]);
             }
 
             // but maybe have the title already.
             var title = $cell.data('title');
+            // var title = cell.metadata.kbstate.title;
             if (title) {
-                this.$elem.trigger('set-title', [title]);
+                this.$elem.trigger('set-title.toolbar', [title]);
             }
+            
+            // Rendering done, now add events.
+            
+            // Events done, not call actions.
+            // this.options.cell.celltoobar.renderToggleState();
+
 
             return this;
         },

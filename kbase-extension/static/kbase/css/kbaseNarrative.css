@@ -2791,3 +2791,11 @@ div[class="tooltip-inner"] {
 .cell > .inner_cell > .ctb_hideshow {
     display: block;
 }
+
+.cell.selected .btn-default {
+    color: #000;
+}
+
+.cell.unselected .btn-default {
+    color: #CCC;
+}

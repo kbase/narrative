@@ -81,12 +81,19 @@ define([
      * Updates the currently selected cell to be the one passed in.
      */
     Narrative.prototype.showIPythonCellToolbar = function(cell) {
-        if (this.selectedCell && cell != this.selectedCell)
-            this.selectedCell.celltoolbar.hide();
-        this.selectedCell = cell;
-        // show the new one
-        if (this.selectedCell && !this.selectedCell.metadata['kb-cell'])
-            this.selectedCell.celltoolbar.show();
+//        if (this.selectedCell && cell !== this.selectedCell) {
+//            this.selectedCell.celltoolbar.hide();
+//        }
+//        this.selectedCell = cell;
+//        // show the new one
+//        if (this.selectedCell && !this.selectedCell.metadata['kb-cell']) {
+//            this.selectedCell.celltoolbar.show();            
+//        }
+        
+        // tell the toolbar that it is selected. For now, the toolbar is in 
+        // charge.
+        $(cell.element).trigger('select.toolbar');
+        
     };
 
     /**
@@ -105,8 +112,11 @@ define([
 
         $([IPython.events]).on('select.Cell', $.proxy(function(event, data) {
             this.showIPythonCellToolbar(data.cell);
-            if (data.cell.metadata['kb-cell'])
+            if (data.cell.metadata['kb-cell']) {
                 this.disableKeyboardManager();
+            }
+            // data.cell.events.trigger('selected.cell');
+            $(data.cell.element).trigger('selected.cell');
         }, this));
 
         $([IPython.events]).on('create.Cell', $.proxy(function(event, data) {

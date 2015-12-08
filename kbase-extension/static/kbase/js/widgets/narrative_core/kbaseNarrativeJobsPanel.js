@@ -1,12 +1,13 @@
-"use strict";
-
+/*global define*/
+/*jslint white: true*/
 define(['jquery',
         'narrativeConfig',
         'kbwidget',
         'kbasePrompt',
         'kbaseNarrativeControlPanel',
-        'bootstrap'],
-function($, Config) {
+        'bootstrap',
+        'BootstrapDialog'],
+function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap, BootstrapDialog) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeJobsPanel',
@@ -49,6 +50,19 @@ function($, Config) {
 
         init: function(options) {
             this._super(options);
+
+            this.newJobsModal = new BootstrapDialog({
+                title: 'Wat.',
+                body: $('<div>omg. wtf. bbq.</div>'),
+                buttons: [ $('<button class="btn-danger">Button!</button>').click(function(event){this.newJobsModal.hide()}.bind(this)) ],
+                closeButton: true
+            });
+            this.newJobsModalToo = new BootstrapDialog({
+                title: 'FFFUUUUUUU',
+                body: $('<div>yo muthafucka weeeee</div>'),
+                buttons: [$('<button class="btn-primary">Close.</button>')],
+            });
+
             this.title.append(this.$jobCountBadge);
             $(document).on('registerMethod.Narrative', $.proxy(
                 function(e, jobInfo) {
@@ -102,6 +116,23 @@ function($, Config) {
                                         hide: Config.get('tooltip').hideDelay
                                     }
                               });
+
+            var $testBtn = $('<button>')
+                           .addClass('btn btn-xs btn-default')
+                           .append($('<span>').addClass('fa fa-bitcoin'))
+                           .click(function(event) {
+                               $testBtn.tooltip('hide');
+                               this.newJobsModal.show();
+                               console.log(this.newJobsModal.getTitle());
+                           }.bind(this));
+            var $testBtn2 = $('<button>')
+                           .addClass('btn btn-xs btn-default')
+                           .append($('<span>').addClass('fa fa-bitcoin'))
+                           .click(function(event) {
+                               $testBtn2.tooltip('hide');
+                               this.newJobsModalToo.show();
+                               console.log(this.newJobsModal.getTitle());
+                           }.bind(this));
 
             var $headerDiv = $('<div>')
                               .append('Jobs')
@@ -167,6 +198,8 @@ function($, Config) {
             });
 
             this.addButton($refreshBtn);
+            this.addButton($testBtn);
+            this.addButton($testBtn2);
 
             this.body().append(this.$jobsPanel)
                        .append(this.$loadingPanel)

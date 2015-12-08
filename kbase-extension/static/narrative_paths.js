@@ -6,6 +6,7 @@ require.config({
     paths : {
         configPath                              : 'kbase',
         NarrativeViewers                        : 'kbase/js/widgets/narrative_core/NarrativeViewers',
+        BootstrapDialog                          : 'kbase/js/widgets/narrative_core/BootstrapDialog',
         'domReady'                              : 'components/requirejs/domReady',
         'json'                                  : 'components/requirejs-json/json',
         'text'                                  : 'components/requirejs-text/text',

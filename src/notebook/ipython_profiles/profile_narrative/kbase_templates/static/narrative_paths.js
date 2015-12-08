@@ -184,6 +184,8 @@ define([], function() {
             'kbasePiechart'                         : 'kbase/js/ui-common/src/widgets/vis/kbasePiechart',
             'kbaseTreechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
             'kbaseRNASeqPie'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqPie',
+            'kbaseRNASeqHistogram'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqHistogram',
+            'kbasePMIBarchart'                        : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePMIBarchart',
             'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
             'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
@@ -454,7 +456,8 @@ define([], function() {
                           'KBasePhenotypes.PhenotypeSet',
                           'KBasePhenotypes.PhenotypeSimulationSet',
                           'KBaseFBA.FBAComparison',
-                          'kbaseTabTableTabs']
+                          'kbaseTabTableTabs',
+                          'kbasePMIBarchart']
             },
             'kbasePathways' : {
                 'deps' : ['jquery',

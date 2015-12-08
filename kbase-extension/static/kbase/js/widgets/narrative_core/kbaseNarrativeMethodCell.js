@@ -69,6 +69,7 @@ function($, Config) {
                              .append('Run');
             this.$runButton.click(
                 $.proxy(function(event) {
+                    console.log('** clicked' + (new Date()).getTime());
                     event.preventDefault();
 
                     if (!this.checkMethodRun())
@@ -80,6 +81,7 @@ function($, Config) {
                             this.submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
                                 +'" target="_blank">' + this.auth().user_id + "</a>";
                     }
+                    console.log('** submitted' + (new Date()).getTime());
                     this.changeState('submitted');
                     this.minimizeView();
                     this.trigger('runCell.Narrative', {
@@ -172,9 +174,6 @@ function($, Config) {
 
 //             this.cellMenu = $menuSpan.kbaseNarrativeCellMenu({'kbWidget':this, 'kbWidgetType':'method'});
             var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
-            console.log('CELLMENU');
-            console.log(cellMenu);
-            // console.log(cellMenu.$runningIcon);
             this.$elem.append(this.$cellPanel);
 
             // Add minimize/restore actions.
@@ -195,14 +194,13 @@ function($, Config) {
                         
             this.$elem
                 .closest('.cell')
-                .trigger('set-title', [self.method.info.name]); 
-            
+                .trigger('set-title.cell', [self.method.info.name]); 
             
             var methodIcon = '<div class="fa-stack fa-2x"><i class="fa fa-square fa-stack-2x method-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cube"></i></div>';
             
             this.$elem
                 .closest('.cell')
-                .trigger('set-icon', [methodIcon]);
+                .trigger('set-icon.cell', [methodIcon]);
 
             require([inputWidgetName], 
               $.proxy(function() {
@@ -315,21 +313,35 @@ function($, Config) {
 
         /* Show/hide running icon */
         displayRunning: function(is_running, had_error) {
+            var $cellMenu = this.$elem.closest('.cell').find('.button_container');
             if (is_running) {
-                var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
-                console.log('displayRunning: ');
-                console.log(cellMenu);
-                this.cellMenu.$runningIcon.show();
+                // var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
+                $cellMenu.trigger('runningIndicator.toolbar', {enabled: true});
+                $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
+                //console.log('displayRunning: ');
+                //console.log(cellMenu);
+                
+                //this.cellMenu.$runningIcon.show();
                 // never show error icon while running
-                this.cellMenu.$errorIcon.hide();
+                // this.cellMenu.$errorIcon.hide();
             } else {
-                var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
-                console.log('displayRunning: ');
-                console.log(cellMenu);
-                this.cellMenu.$runningIcon.hide();
-                // only display error when not running
-                if (had_error) { this.cellMenu.$errorIcon.show(); }
-                else { this.cellMenu.$errorIcon.hide(); }
+                $cellMenu.trigger('runningIndicator.toolbar', {enabled: false});
+                if (had_error) {
+                    $cellMenu.trigger('errorIndicator.toolbar', {enabled: true});                   
+                } else {
+                    $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
+
+                }
+
+                
+                
+//                var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
+//                console.log('displayRunning: ');
+//                console.log(cellMenu);
+//                this.cellMenu.$runningIcon.hide();
+//                // only display error when not running
+//                if (had_error) { this.cellMenu.$errorIcon.show(); }
+//                else { this.cellMenu.$errorIcon.hide(); }
             }
         },
 
@@ -367,6 +379,12 @@ function($, Config) {
         changeState: function(runState) {
             if (!this.$cellPanel)
                 return;
+            
+            var $toolbar = this.$elem.find('.button_container');
+            $toolbar.trigger('run-state.toolbar', {
+                status: this.runState.toLowerCase()
+            });
+            
             if (this.runState !== runState) {
                 this.runState = runState.toLowerCase();
                 switch(this.runState) {

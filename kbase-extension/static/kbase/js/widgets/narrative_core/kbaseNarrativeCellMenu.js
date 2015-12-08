@@ -176,8 +176,12 @@ function($, Config) {
 //                }, this)
 //            });
 
-            // this shows whether the app is running
             var self = this;
+            
+            // Job State Icon
+            this.$jobStateIcon = $('<span>');
+
+            // this shows whether the app is running
             this.$runningIcon = $("<span>")
                 .addClass("fa fa-circle-o-notch fa-spin")
                 .css({color: "rgb(42,121,191)"})
@@ -188,6 +192,79 @@ function($, Config) {
             });
             this.$elem.on('stop-running', function () {
                 self.$runningIcon.hide();
+            });
+            this.$elem.on('runningIndicator.toolbar', function (e, data) {
+//                if (data.enabled) {
+//                    self.$runningIcon.show();
+//                } else {
+//                    self.$runningIcon.hide();
+//                }
+//                if (data.enabled) {
+//                    self.$jobStateIcon.html(makeIcon({
+//                        class: 'wifi', 
+//                        color: 'orange', 
+//                        spin: true,
+//                        label: 'Sending'
+//                    }));
+//                }
+            });
+            
+            function makeIcon(icon) {
+                var spinClass = icon.spin ? 'fa-spin' : '',
+                    label = icon.label ? icon.label + ' ' : '',
+                    iconHtml = '<span>'+label+'<i class="fa fa-' + icon.class + " " + spinClass +'" style="color: '+ (icon.color || '#000') +'"></i></span>';
+                console.log(iconHtml);
+                return iconHtml;
+            }
+            
+            this.$elem.on('run-state.toolbar', function (e, data) {
+                switch (data.status) {
+                    case 'submitted':
+                        self.$jobStateIcon.html(makeIcon({
+                            class: 'asterisk', 
+                            color: 'orange', 
+                            spin: true,
+                            label: 'Queued'
+                        }));
+                        break;
+                    case 'running': 
+                        self.$jobStateIcon.html(makeIcon({class: 'circle-o-notch', color: 'blue', spin: true, label: 'Running'}));
+                        break;
+                    case 'complete':
+                        self.$jobStateIcon.html(makeIcon({class: 'check', color: 'green', label: 'Finished'}));
+                        break;
+                    case 'error': 
+                        self.$jobStateIcon.html('ERROR');
+                        break;
+                    default: 
+                        self.$jobStateIcon.html('?: ' + data.status); 
+                }
+            })
+            
+            this.$elem.on('job-state.toolbar', function (e, data) {
+                switch (data.status) {
+                    case 'queued':
+                        self.$jobStateIcon.html(makeIcon({
+                            class: 'asterisk', 
+                            color: 'orange', 
+                            spin: true,
+                            label: 'Queued'
+                        }));
+                        break;
+                    case 'in-progress':
+                    case 'running': 
+                        self.$jobStateIcon.html(makeIcon({class: 'circle-o-notch', color: 'blue', spin: true, label: 'Running'}));
+                        break;
+                    case 'error': 
+                        self.$jobStateIcon.html('ERROR');
+                        break;
+                    case 'complete':
+                    case 'completed':
+                        self.$jobStateIcon.html(makeIcon({class: 'check', color: 'green', label: 'Finished'}));
+                        break;
+                    default: 
+                        self.$jobStateIcon.html('?: ' + data.status); 
+                }
             });
 
             // this shows on error
@@ -201,6 +278,13 @@ function($, Config) {
             });
             this.$elem.on('hide-error', function () {
                 self.$errorIcon.hide();
+            });
+            this.$elem.on('errorIndicator.toolbar', function (e, data) {
+                if (data.enabled) {
+                    self.$errorIcon.show();
+                } else {
+                    self.$errorIcon.hide();
+                }
             });
             
             
@@ -225,6 +309,7 @@ function($, Config) {
                         .append($('<div class="buttons pull-right">')
                             .append(this.$runningIcon)
                             .append(this.$errorIcon)
+                            .append(this.$jobStateIcon)
                             .append($deleteBtn)
                             .append($dropdownMenu)
                         )
@@ -284,7 +369,7 @@ function($, Config) {
                     $iconNode = $cell.find('.prompt');
                 e.stopPropagation();
                 var wrapped = '<div style="text-align: center;">' + icon + '</div>';
-                $iconNode.html(wrapped)
+                $iconNode.html(wrapped);
             });
             
             var $cell = (options && options.cell && $(options.cell.element)) || self.$elem.closest('.cell'),

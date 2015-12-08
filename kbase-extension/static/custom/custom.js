@@ -132,7 +132,6 @@ define(['jquery',
         };
 
         cellToolbar.CellToolbar.prototype.renderToggleState = function () {
-            console.log('in render toggle state');
             var $kbToolbar = $(this.element).find('.kb-cell-toolbar'),
                 $icon = $kbToolbar.find('[data-button="toggle"] > span.fa'),
                 toggleState = this.cell.getCellState('toggleState', 'unknown');
@@ -270,9 +269,40 @@ define(['jquery',
         };
         
         cell.Cell.prototype.renderToggleState = function () {
-            console.log('root renderToggleState');
             this.celltoolbar.renderToggleState();
         };
+        
+        function cellType(cell) {
+            // Cells are (currently) rendered twice. The first time the kb metadata
+            // is not available, but we can rely on future renders.
+            if (cell.renderCount > 1) {
+                return;
+            }
+
+            var type = cell.metadata &&
+                    cell.metadata['kb-cell'] &&
+                    cell.metadata['kb-cell']['type'];
+                
+            // Markdown cells don't of course have a kb cell type.
+            if (type === undefined) {
+                return;
+            }
+                
+            switch (type) {
+                case 'function_input': 
+                    return 'method';
+                    break;
+                case 'kb_app':
+                    return 'app';
+                    break;
+                case 'function_output':
+                    return 'output';
+                    break;
+                default:
+                    return 'Unknown: ' + type;                    
+            }
+            
+        }
 
         textCell.MarkdownCell.prototype.render = function () {
             /*
@@ -289,6 +319,21 @@ define(['jquery',
              * I would argue that there should just be a method "needRender".
              */
             var needsToRender = textCell.TextCell.prototype.render.apply(this);
+            
+            // which cell type is it? KBase hosts apps, methods, and output cells
+            // within markdown cells.
+            if (cell.renderCount === undefined) {
+                cell.renderCount = 0;
+            }
+            cell.renderCount += 1;
+            var kbCellType = cellType(this);
+            
+            if (kbCellType) {
+                this.set_rendered(this.get_text());
+                this.typeset();
+                return needsToRender;
+            }
+            
             if (needsToRender) {
                 var that = this,
                     text = this.get_text(),
@@ -301,7 +346,7 @@ define(['jquery',
                 var text_and_math = mathjaxutils.remove_math(text);
                 text = text_and_math[0];
                 math = text_and_math[1];
-
+                
                 marked(text, function (err, html) {
                     html = mathjaxutils.replace_math(html, math);
                     html = security.sanitize_html(html);
@@ -336,7 +381,8 @@ define(['jquery',
                     }
 
                     that.setCellState('title', title || '');
-
+                    // that.setCellState('icon', '<i class="fa fa-2x fa-paragraph markdown-icon"></i>');
+console.log('RENDER');
                     that.set_rendered($html);
                     that.typeset();
                     that.events.trigger("rendered.MarkdownCell", {cell: that});
@@ -381,10 +427,17 @@ define(['jquery',
 
             $cellNode
                 .on('set-icon.cell', function (e, icon) {
-                    console.log('setting icon..');
                     cell.setCellState('icon', icon);
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
                     $menu.trigger('set-icon.toolbar', [icon]);
+                });
+                
+            $cellNode
+                .on('job-state.cell', function (e, data) {
+                    console.log('on JOB STATE:');
+                console.log(data);
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    $menu.trigger('job-state.toolbar', data);
                 });
 
 
@@ -410,22 +463,16 @@ define(['jquery',
                 .on('selected.cell', function (e) {
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
                     cell.setCellState('selected', true); 
-                   console.log('set selected state');
-                    console.log(cell.getCellState('selected'));
                     $menu.trigger('selected.toolbar');
                 });
 
             this.events.on('rendered.MarkdownCell', function (e, data) {
-                console.log('markdown cell rendered');
-                console.log(data.cell);
-                console.log(data.cell === cell);
                 cell.renderToggleState();
                 $(cell.element).trigger('set-title.cell', cell.getCellState('title'));
                 $(cell.element).trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
             });
 
             this.events.on('preset_activated.CellToolbar', function (e, data) {
-                console.log('preset activated');
                 if (data.name === 'KBase') {
                     // This is really the kick-off for the narrative, since the
                     // presets on the celltoobar are loaded via event calls,
@@ -435,9 +482,12 @@ define(['jquery',
                     // Set up the toolbar based on the state.
                     $(cell.element)
                         .trigger('set-title.cell', [cell.getCellState('title', '')]);
-
+                    
                     $(cell.element)
-                        .trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
+                        .trigger('set-icon.cell', [cell.getCellState('icon', '')]);
+
+                    //$(cell.element)
+                     //   .trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
                     
                     if (cell.getCellState('selected')) {
                         cell.select();
@@ -514,8 +564,6 @@ define(['jquery',
                 .on('selected.cell', function (e) {
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
                     cell.setCellState('selected', true);
-                    console.log('set selected state');
-                    console.log(cell.getCellState('selected'));
                     $menu.trigger('selected.toolbar');
                 });                
                 

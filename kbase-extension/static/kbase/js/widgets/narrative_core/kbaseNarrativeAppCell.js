@@ -313,12 +313,12 @@
                         
             this.$elem
                 .closest('.cell')
-                .trigger('set-title', [appTitle]);             
+                .trigger('set-title.cell', [appTitle]);             
             
             var appIcon = '<div class="fa-stack fa-2x"><i  class="fa fa-square fa-stack-2x app-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cubes"></i></div>';
             this.$elem
                 .closest('.cell')
-                .trigger('set-icon', [appIcon]);
+                .trigger('set-icon.cell', [appIcon]);
             
             //require(['kbaseNarrativeCellMenu'], $.proxy(function() {
             //    this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
@@ -632,23 +632,16 @@
 
         /* Show/hide running icon */
         displayRunning: function(is_running, had_error) {
-            var cellMenu = this.$elem.closest('.cell').find('.button_container');
+            var $cellMenu = this.$elem.closest('.cell').find('.button_container');
             if (is_running) {
-                cellMenu.trigger('start-running');
-                // cellMenu.data('runningIcon').show();
-                // this.cellMenu.$runningIcon.show();
-                // never show error icon while running
-                // this.cellMenu.$errorIcon.hide();
-                cellMenu.data('errorIcon').hide();
+                $cellMenu.trigger('runningIndicator.toolbar', {enabled: true});
+                $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
             } else {
-                // this.cellMenu.$runningIcon.hide();
-                // only display error when not running
-                if (had_error) { 
-                    //this.cellMenu.$errorIcon.show(); 
-                    cellMenu.data('errorIcon').show();
-                } else { 
-                    // this.cellMenu.$errorIcon.hide(); 
-                    cellMenu.data('errorIcon').hide();
+                 $cellMenu.trigger('runningIndicator.toolbar', {enabled: false});
+                if (had_error) {
+                    $cellMenu.trigger('errorIndicator.toolbar', {enabled: true});                   
+                } else {
+                    $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
                 }
             }
         },

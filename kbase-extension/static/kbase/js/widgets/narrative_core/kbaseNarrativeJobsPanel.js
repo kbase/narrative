@@ -613,6 +613,8 @@ define(['jquery',
                 return;
             }
             var buffer = content.content.text;
+            console.log('PARSE KERNEL RESPONSE:');
+            console.log(buffer);
             if (buffer.length > 0) {
                 var jobStatus = JSON.parse(buffer);
                 this.populateJobsPanel(jobStatus, jobInfo);
@@ -688,6 +690,9 @@ define(['jquery',
                 for (var i=0; i<sortedJobs.length; i++) {
                     var jobId = sortedJobs[i];
                     var info = jobInfo[jobId];
+                    console.log('JOB: ' + i);                    
+                    console.log(info);
+                    fetchedJobStatus[jobId];
 
                     // if the id shows up in the "render me!" list:
                     // only those we fetched might still be running.
@@ -698,6 +703,10 @@ define(['jquery',
                             stillRunning++;
                         this.jobStates[jobId].state = fetchedJobStatus[jobId];
                         this.updateCell(jobId, jobInfo[jobId]);
+                    } else {
+                        this.jobStates[jobId].status = 'complete';
+                        this.jobStates[jobId].state = {job_date: 'complete'};
+                        this.updateCell(jobId, info);
                     }
                     // updating the given state first allows us to just pass the id and the status set to
                     // the renderer. If the status set doesn't exist (e.g. we didn't look it up in the 
@@ -889,11 +898,24 @@ define(['jquery',
             // don't do anything if we don't know the source cell. it might have been deleted.
             if (!source)
                 return;
+            
+            console.log('JOBS PANEL: updateCell');
+            console.log(source);
 
             var $cell = $('#' + source);
             // don't do anything if we know what the source should be, but we can't find it.
             if (!$cell)
                 return;
+            
+            console.log($cell);
+            console.log('JOB STATE:');
+            console.log(jobState);
+            console.log(jobType);
+            
+            var $parentCell = $cell.closest('.cell');
+            $parentCell.trigger('job-state.cell', {
+                status: jobState.status
+            });
 
             // if it's running and an NJS job, then it's in an app cell
             if (jobState.state.running_step_id && jobType === 'njs') {

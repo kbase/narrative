@@ -27,6 +27,16 @@
                 return this;
             },
             render: function () {
+                var icon = '<i class="fa fa-2x fa-file-o"></i>';
+                
+//                this.$elem
+//                .closest('.cell')
+//                .trigger('set-title.cell', [appTitle]);             
+            
+                this.$elem
+                    .closest('.cell')
+                    .trigger('set-icon.cell', [icon]);
+            
                 switch (this.options.type) {
                     case 'method':
                         this.renderMethodOutputCell();

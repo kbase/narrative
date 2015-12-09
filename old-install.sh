@@ -78,6 +78,7 @@ done
 
 printf "Creating virtual environment $venv...\n"
 virtualenv --python=$PYTHON --system-site-packages $installPath/$venv
+source $installPath/$venv/bin/activate
 
 printf "Pulling ipython branch $branch from github...\n"
 git clone https://github.com/ipython/ipython.git -b $branch
@@ -93,7 +94,6 @@ if [ -n "$commit" ]; then
 fi
 
 printf "Installing ipython into the virtual environment $venv...\n"
-source $installPath/$venv/bin/activate
 $PYTHON setup.py install
 cd ..
 
@@ -103,6 +103,7 @@ rm -rf "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/notebook/ipython_profiles
 
 printf "Installing 'biokbase' package into the virtual environment $venv... \n"
 cd src
+pip install -r requirements.txt
 $PYTHON setup.py install
 cd ..
 # cp -R "$( cd $(dirname ${BASH_SOURCE[0]}) && pwd)/src/biokbase" $installPath/$venv/lib/${PYTHON}/site-packages/
@@ -144,6 +145,9 @@ cd data_api
 pip install -r requirements.txt
 $PYTHON setup.py install
 cd ..
+
+# Get out of virtual environment.
+deactivate
 
 printf "Cleaning up after install.sh script...\n"
 rm -rf ipython

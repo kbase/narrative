@@ -286,8 +286,17 @@ p#site-title {
 
 
 #content-column {
-    height: 100%;
+    /* height: 100%;
     margin-left: 380px;
+    */
+    /*
+    position: fixed;
+    left: 380px;
+    top: 70px;
+    right: 0; 
+    bottom: 0;
+    overflow: auto;
+    */
 }
 
 #workspace {
@@ -2723,7 +2732,8 @@ div[class="tooltip-inner"] {
 .cell {
 }
 .notebook_app .cell.selected {
-    background-color: #EEFFE3;
+    /* background-color: #EEFFE3;*/
+    background-color: #E8EFFF;
 }
 .notebook_app .inner_cell {
     overflow: visible;
@@ -2786,6 +2796,24 @@ div[class="tooltip-inner"] {
 .cell.selected .prompt .markdown-icon {
     color: #000;
 }
+
+.cell.selected .prompt .app-output-icon {
+    color: #000;
+}
+
+.cell.selected .prompt .method-output-icon {
+    color: #000;
+}
+
+.cell.selected .prompt .data-viewer-icon {
+    color: #000;
+}
+
+.cell.selected .prompt .error-icon {
+    color: red;
+}
+
+.cell.selected .prompt 
 
 
 .cell > .inner_cell > .ctb_hideshow {

@@ -5,7 +5,7 @@ require.config({
     // with this one (kbase-profile/static)
     paths : {
         configPath                              : 'kbase',
-
+        NarrativeViewers                        : 'kbase/js/widgets/narrative_core/NarrativeViewers',
         'domReady'                              : 'components/requirejs/domReady',
         'json'                                  : 'components/requirejs-json/json',
         'text'                                  : 'components/requirejs-text/text',

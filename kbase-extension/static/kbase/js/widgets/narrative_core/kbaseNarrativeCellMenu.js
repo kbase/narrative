@@ -213,7 +213,6 @@ function($, Config) {
                 var spinClass = icon.spin ? 'fa-spin' : '',
                     label = icon.label ? icon.label + ' ' : '',
                     iconHtml = '<span>'+label+'<i class="fa fa-' + icon.class + " " + spinClass +'" style="color: '+ (icon.color || '#000') +'"></i></span>';
-                console.log(iconHtml);
                 return iconHtml;
             }
             
@@ -325,15 +324,11 @@ function($, Config) {
              */
             this.$elem.on('selected.toolbar', function (e) {
                 e.stopPropagation();
-                console.log('toolbar selected...');
-                console.log($deleteBtn);
                 $deleteBtn.removeClass('disabled');
                 $dropdownMenu.find('.btn').removeClass('disabled');
             });
             this.$elem.on('unselected.toolbar', function (e) {
                 e.stopPropagation();
-                console.log('toolbar unselected');
-                console.log($deleteBtn);
                 $deleteBtn.addClass('disabled');
                 $dropdownMenu.find('.btn').addClass('disabled');
             });
@@ -354,6 +349,13 @@ function($, Config) {
             var $titleNode = this.$elem.find('[data-element="title"]');            
             this.$elem.on('set-title.toolbar', function (e, title) { 
                 e.stopPropagation();
+//                if (typeof title === 'object') {
+//                    if (title.suffix) {
+//                        $titleNode.html($titleNode.html() + '(' + title.suffix + ')');
+//                    }
+//                } else {
+//                    $titleNode.html(title);
+//                }
                 $titleNode.html(title);
             });
             

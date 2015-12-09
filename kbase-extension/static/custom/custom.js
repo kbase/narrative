@@ -382,7 +382,6 @@ define(['jquery',
 
                     that.setCellState('title', title || '');
                     // that.setCellState('icon', '<i class="fa fa-2x fa-paragraph markdown-icon"></i>');
-console.log('RENDER');
                     that.set_rendered($html);
                     that.typeset();
                     that.events.trigger("rendered.MarkdownCell", {cell: that});
@@ -434,8 +433,6 @@ console.log('RENDER');
                 
             $cellNode
                 .on('job-state.cell', function (e, data) {
-                    console.log('on JOB STATE:');
-                console.log(data);
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
                     $menu.trigger('job-state.toolbar', data);
                 });
@@ -469,7 +466,7 @@ console.log('RENDER');
             this.events.on('rendered.MarkdownCell', function (e, data) {
                 cell.renderToggleState();
                 $(cell.element).trigger('set-title.cell', cell.getCellState('title'));
-                $(cell.element).trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
+                //$(cell.element).trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
             });
 
             this.events.on('preset_activated.CellToolbar', function (e, data) {

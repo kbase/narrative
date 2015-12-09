@@ -411,7 +411,7 @@ define([
                 dataType: 'json',
                 crossDomain: true,
                 success: function(data, res, jqXHR) {
-                    if (username in data.data && data.data[username].fullName) {
+                    if (data.data && typeof data.data[username] === 'object' && data.data[username].fullName) {
                         var fullName = data.data[username].fullName;
                         $('#kb-narr-creator').text(fullName + ' (' + username + ')');
                     }

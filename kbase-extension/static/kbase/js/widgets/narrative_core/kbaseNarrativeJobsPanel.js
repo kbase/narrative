@@ -113,13 +113,6 @@ function($,
                                     }
                               });
 
-            var $testBtn = $('<button>')
-                           .addClass('btn btn-xs btn-default')
-                           .append($('<span>').addClass('fa fa-bitcoin'))
-                           .click(function(event) {
-                               $testBtn.tooltip('hide');
-                               this.jobsModal.show();
-                           }.bind(this));
             var $headerDiv = $('<div>')
                               .append('Jobs')
                               .append($('<button>')
@@ -182,7 +175,6 @@ function($,
             });
 
             this.addButton($refreshBtn);
-            this.addButton($testBtn);
 
             this.body().append(this.$jobsPanel)
                        .append(this.$loadingPanel)

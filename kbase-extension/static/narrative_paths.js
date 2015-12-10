@@ -4,9 +4,10 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths : {
+        Util                                    : 'kbase/js/util/Util',
         configPath                              : 'kbase',
         NarrativeViewers                        : 'kbase/js/widgets/narrative_core/NarrativeViewers',
-        BootstrapDialog                          : 'kbase/js/widgets/narrative_core/BootstrapDialog',
+        BootstrapDialog                         : 'kbase/js/widgets/narrative_core/BootstrapDialog',
         'domReady'                              : 'components/requirejs/domReady',
         'json'                                  : 'components/requirejs-json/json',
         'text'                                  : 'components/requirejs-text/text',

@@ -5,6 +5,7 @@
 /*jslint white: true*/
 
 define(['a_module'], function(Module) {
+    'use strict';
     describe('Test the module', function() {
         it('Should do things', function() {
 

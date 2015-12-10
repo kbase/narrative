@@ -6,8 +6,16 @@ define(['jquery',
         'kbasePrompt',
         'kbaseNarrativeControlPanel',
         'bootstrap',
-        'BootstrapDialog'],
-function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap, BootstrapDialog) {
+        'BootstrapDialog',
+        'Util'],
+function($,
+         Config,
+         kbwidget,
+         kbasePrompt,
+         kbaseNarrativeControlPanel,
+         bootstrap,
+         BootstrapDialog,
+         Util) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeJobsPanel',
@@ -50,18 +58,6 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
 
         init: function(options) {
             this._super(options);
-
-            this.newJobsModal = new BootstrapDialog({
-                title: 'Wat.',
-                body: $('<div>omg. wtf. bbq.</div>'),
-                buttons: [ $('<button class="btn-danger">Button!</button>').click(function(event){this.newJobsModal.hide()}.bind(this)) ],
-                closeButton: true
-            });
-            this.newJobsModalToo = new BootstrapDialog({
-                title: 'FFFUUUUUUU',
-                body: $('<div>yo muthafucka weeeee</div>'),
-                buttons: [$('<button class="btn-primary">Close.</button>')],
-            });
 
             this.title.append(this.$jobCountBadge);
             $(document).on('registerMethod.Narrative', $.proxy(
@@ -122,18 +118,8 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
                            .append($('<span>').addClass('fa fa-bitcoin'))
                            .click(function(event) {
                                $testBtn.tooltip('hide');
-                               this.newJobsModal.show();
-                               console.log(this.newJobsModal.getTitle());
+                               this.jobsModal.show();
                            }.bind(this));
-            var $testBtn2 = $('<button>')
-                           .addClass('btn btn-xs btn-default')
-                           .append($('<span>').addClass('fa fa-bitcoin'))
-                           .click(function(event) {
-                               $testBtn2.tooltip('hide');
-                               this.newJobsModalToo.show();
-                               console.log(this.newJobsModal.getTitle());
-                           }.bind(this));
-
             var $headerDiv = $('<div>')
                               .append('Jobs')
                               .append($('<button>')
@@ -165,41 +151,38 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
                                .addClass('kb-error')
                                .hide();
 
-            this.$jobsModalBody = $('<div>');
-            this.$jobsModalTitle = $('<div>').html('Remove Job?');
+            this.jobsModalTitle = 'Remove Job?';
 
-            var buttonList = [
-                {
-                    name : 'Cancel',
-                    type : 'default',
-                    callback : function(e, $prompt) {
-                        $prompt.closePrompt();
-                        this.removeId = null;
-                    },
-                },
-                {
-                    name : 'Delete Job',
-                    type : 'danger',
-                    callback : $.proxy(function(e, $prompt) {
-                        if (this.removeId) {
-                            this.deleteJob(this.removeId);
-                        }
-                        if (this.deleteCallback)
-                            this.deleteCallback(true);
-                        this.deleteCallback = null;
-                        $prompt.closePrompt();
-                    }, this)
-                }
+            var modalButtons = [
+                $('<button class="btn-default">')
+                .append('Cancel')
+                .click(function(event) {
+                    this.jobsModal.hide();
+                    this.removeId = null;
+                }.bind(this)),
+
+                $('<button class="btn-danger">')
+                .append('Delete Job')
+                .click(function(event) {
+                    if (this.removeId) {
+                        this.deleteJob(this.removeId);
+                    }
+                    if (this.deleteCallback) {
+                        this.deleteCallback(true);
+                    }
+                    this.deleteCallback = null;
+                    this.jobsModal.hide();
+                }.bind(this))
             ];
-            this.$jobsModal = $('<div>').kbasePrompt({
-                title : this.$jobsModalTitle,
-                body : this.$jobsModalBody,
-                controls : buttonList
+
+            this.jobsModal = new BootstrapDialog({
+                title: this.jobsModalTitle,
+                body: $('<div>'),
+                buttons: modalButtons
             });
 
             this.addButton($refreshBtn);
             this.addButton($testBtn);
-            this.addButton($testBtn2);
 
             this.body().append(this.$jobsPanel)
                        .append(this.$loadingPanel)
@@ -209,7 +192,6 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
                 this.initJobStates();
                 this.refresh();
             }
-
 
             return this;
         },
@@ -280,12 +262,12 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
                     warningText = "This job has completed running. You may safely remove it without affecting your Narrative.";
                 }
             }
-            this.$jobsModalBody.empty().append(warningText + '<br><br>' + removeText);
-            this.$jobsModalTitle.empty().html('Remove Job?');
+            this.jobsModal.setBody($('<div>').append(warningText + '<br><br>' + removeText));
+            this.jobsModal.setTitle('Remove Job?');
             this.removeId = jobId;
 
             this.deleteCallback = callback;
-            this.$jobsModal.openPrompt();
+            this.jobsModal.show();
         },
 
         /**
@@ -352,7 +334,7 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
             }
             catch(err) {
                 // ignore and return. assume it failed.
-                // I guess we don't really care if it fails, though, the user just wants that job to be outro'd.
+                // I guess we don't really care if it fails, though, the user just wants that job to go away.
                 // Comment this out for now, until we make some sensible error popup or something.
                 // return false;
             }
@@ -546,9 +528,9 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
                         specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
                         if (specInfo && jobIncomplete) {
                             jobParamList.push("['" + jobId + "', " +
-                                              "'" + this.safeJSONStringify(specInfo.appSpec) + "', " +
-                                              "'" + this.safeJSONStringify(specInfo.methodSpecs) + "', " +
-                                              "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
+                                              "'" + Util.safeJSONStringify(specInfo.appSpec) + "', " +
+                                              "'" + Util.safeJSONStringify(specInfo.methodSpecs) + "', " +
+                                              "'" + Util.safeJSONStringify(specInfo.parameterValues) + "']");
                         }
                     }
                     // otherwise, it's a method cell, so fetch info that way.
@@ -557,8 +539,8 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
                         if (jobIncomplete) {
                             if (specInfo) {
                                 jobParamList.push("['" + jobId + "', " +
-                                                  "'" + this.safeJSONStringify(specInfo.methodSpec) + "', " +
-                                                  "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
+                                                  "'" + Util.safeJSONStringify(specInfo.methodSpec) + "', " +
+                                                  "'" + Util.safeJSONStringify(specInfo.parameterValues) + "']");
                             }
                             else {
                                 jobParamList.push("['" + jobId + "']");
@@ -611,41 +593,6 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
             };
 
             IPython.notebook.kernel.execute(pollJobsCommand, callbacks, executeOptions);
-
-            // var callbacks = {
-            //     'output' : $.proxy(function(msgType, content) { 
-            //         this.parseKernelResponse(msgType, content, jobInfo); 
-            //     }, this),
-            //     'execute_reply' : $.proxy(function(content) { 
-            //         this.handleCallback('execute_reply', content); 
-            //     }, this),
-            //     'clear_output' : $.proxy(function(content) { 
-            //         this.handleCallback('clear_output', content); 
-            //     }, this),
-            //     'set_next_input' : $.proxy(function(content) { 
-            //         this.handleCallback('set_next_input', content); 
-            //     }, this),
-            //     'input_request' : $.proxy(function(content) { 
-            //         this.handleCallback('input_request', content); 
-            //     }, this),
-            // };
-
-            // var msgid = IPython.notebook.kernel.execute(pollJobsCommand, callbacks, {silent: true, store_history: false});
-        },
-
-        /**
-         * @method
-         * convenience to stringify a structure while escaping everything that needs it.
-         * @private
-         */
-        safeJSONStringify: function(method) {
-            var esc = function(s) { 
-                return s.replace(/'/g, "&apos;")
-                        .replace(/"/g, "&quot;");
-            };
-            return JSON.stringify(method, function(key, value) {
-                return (typeof(value) === 'string') ? esc(value) : value;
-            });
         },
 
         /**
@@ -833,16 +780,16 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
             var runTime = null;
             if (jobState.state) {
                 if (jobState.state.complete_time) {
-                    completedTime = this.makePrettyTimestamp(jobState.state.complete_time);
+                    completedTime = Util.prettyTimestamp(jobState.state.complete_time);
                     if (jobState.state.start_time) {
-                        runTime = this.calcTimeDiffReadable(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
+                        runTime = Util.calcTimeDiffReadable(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
                     }
                 }
                 else if (jobState.state.ujs_info) {
                     if (jobState.state.ujs_info[5] !== null) {
-                        completedTime = this.makePrettyTimestamp(jobState.state.ujs_info[5]);
+                        completedTime = Util.prettyTimestamp(jobState.state.ujs_info[5]);
                         if (jobState.state.ujs_info[3]) {
-                            runTime = this.calcTimeDiffReadable(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
+                            runTime = Util.calcTimeDiffReadable(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
                         }
                     }
                 }
@@ -906,7 +853,7 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
                 $infoTable.append(this.makeInfoRow('Run Time', runTime));
             }
             else if (jobState.timestamp) {
-                started = this.makePrettyTimestamp(jobState.timestamp);
+                started = Util.prettyTimestamp(jobState.timestamp);
                 $infoTable.append(this.makeInfoRow('Started', started));
             }
 
@@ -1101,7 +1048,6 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
                 $errBtn.append(' ' + btnText);
             $errBtn.click($.proxy(function(e) {
                 this.removeId = jobId;
-                this.$jobsModalTitle.html('Job Error');
                 /* 1. jobState.source doesn't exist = not pointed at a cell
                  * 2. $('#jobState.source') doesn't exist = cell is missing
                  * 3. jobstate.state.error is a string.
@@ -1177,9 +1123,9 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
                                   .append(this.makeInfoRow('Type', errorType))
                                   .append(this.makeInfoRow('Error', errorText));
 
-                this.$jobsModalBody.empty();
-                this.$jobsModalBody.append($('<div>').append(headText))
-                                   .append($errorTable);
+                this.jobsModal.setTitle('Job Error');
+                var $modalBody = $('<div>').append(headText)
+                                           .append($errorTable);
                 if (jobState.state.traceback) {
                     var $tb = $('<div>');
                     $tb.kbaseAccordion({
@@ -1188,11 +1134,14 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
                             body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
                         }]
                     });
-                    this.$jobsModalBody.append($tb);
+                    // this.$jobsModalBody.append($tb);
+                    $modalBody.append($tb);
                 }
 
-                this.$jobsModalBody.append($('<div>').append(removeText));
-                this.$jobsModal.openPrompt();
+                $modalBody.append($('<div>').append(removeText));
+                this.jobsModal.setBody($modalBody);
+                this.jobsModal.show();
+
             }, this));
             return $errBtn;
         },
@@ -1231,29 +1180,6 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
                        }
                    })
                    .tooltip();
-        },
-
-        /**
-         * @method makePrettyTimestamp
-         * Makes a div containing the 'started time' in units of time ago, with a Bootstrap 3 tooltip
-         * that gives the exact time.
-         *
-         * Note that this tooltip needs to be activated with the $().tooltip() method before it'll function.
-         *
-         * @param timestamp the timestamp to calculate this div around. Should be in a Date.parse() parseable format.
-         * @param suffix an optional suffix for the time element. e.g. "ago" or "from now".
-         * @return a div element with the timestamp calculated to be in terms of how long ago, with a tooltip containing the exact time.
-         * @private
-         */
-        makePrettyTimestamp: function(timestamp, suffix) {
-            var d = this.parseDate(timestamp);
-
-            var parsedTime = this.parseTimestamp(null, d);
-            var timediff = this.calcTimeDiffRelative(null, d);
-            var timeMillis = d ? d.getTime() : "";
-
-            var timeHtml = '<span href="#" data-toggle="tooltip" title="' + parsedTime + '" millis="' + timeMillis + '" >' + timediff + '</span>';
-            return timeHtml;
         },
 
         /**
@@ -1302,163 +1228,5 @@ function($, Config, kbwidget, kbasePrompt, kbaseNarrativeControlPanel, bootstrap
             this.$errorPanel.show();
         },
 
-        /**
-         * @method parseTimestamp
-         * Parses the user_and_job_state timestamp and returns it as a user-
-         * readable string in the UTC time.
-         *
-         * This assumes that the timestamp string is in the following format:
-         * 
-         * YYYY-MM-DDThh:mm:ssZ, where Z is the difference
-         * in time to UTC in the format +/-HHMM, eg:
-         *   2012-12-17T23:24:06-0500 (EST time)
-         *   2013-04-03T08:56:32+0000 (UTC time)
-         * 
-         * If the string is not in that format, this method returns the unchanged
-         * timestamp.
-         *        
-         * @param {String} timestamp - the timestamp string returned by the service
-         * @returns {String} a parsed timestamp in the format "YYYY-MM-DD HH:MM:SS" in the browser's local time.
-         * @private
-         */
-        parseTimestamp: function(timestamp, dateObj) {
-            var d = null;
-            if (timestamp)
-                d = this.parseDate(timestamp);
-            else if(dateObj)
-                d = dateObj;
-
-            if (d === null)
-                return timestamp;
-
-            var addLeadingZeroes = function(value) {
-                value = String(value);
-                if (value.length === 1)
-                    return '0' + value;
-                return value;
-            };
-
-            return d.getFullYear() + '-' + 
-                   addLeadingZeroes((d.getMonth() + 1)) + '-' + 
-                   addLeadingZeroes(d.getDate()) + ' ' + 
-                   addLeadingZeroes(d.getHours()) + ':' + 
-                   addLeadingZeroes(d.getMinutes()) + ':' + 
-                   addLeadingZeroes(d.getSeconds());
-        },
-
-        /**
-         * @method calcTimeDifference
-         * Turns the difference between two Date objects
-         * into something human readable, e.g. "-1.5 hrs"
-         *
-         * essentially does d2-d1, and makes it legible.
-         */
-        calcTimeDiffReadable: function(d1, d2) {
-            // start with seconds
-            var timeDiff = Math.abs((d2 - d1) / 1000 );
-
-            var unit = ' sec';
-
-            // if > 60 seconds, go to minutes.
-            if (timeDiff >= 60) {
-                timeDiff /= 60;
-                unit = ' min';
-
-                // if > 60 minutes, go to hours.
-                if (timeDiff >= 60) {
-                    timeDiff /= 60;
-                    unit = ' hrs';
-
-                    // if > 24 hours, go to days
-                    if (timeDiff >= 24) {
-                        timeDiff /= 24;
-                        unit = ' days';
-                    }
-
-                    // now we're in days. if > 364.25, go to years)
-                    if (timeDiff >= 364.25) {
-                        timeDiff /= 364.25;
-                        unit = ' yrs';
-
-                        // now we're in years. just for fun, if we're over a century, do that too.
-                        if (timeDiff >= 100) {
-                            timeDiff /= 100;
-                            unit = ' centuries';
-
-                            // ok, fine, i'll do millennia, too.
-                            if (timeDiff >= 10) {
-                                timeDiff /= 10;
-                                unit = ' millennia';
-                            }
-                        }
-                    }
-                }
-            }
-
-            return timeDiff.toFixed(1) + unit;
-        },
-
-        /**
-         * @method calcTimeDifference
-         * From two timestamps (i.e. Date.parse() parseable), calculate the
-         * time difference and return it as a human readable string.
-         *
-         * @param {String} time - the timestamp to calculate a difference from
-         * @returns {String} - a string representing the time difference between the two parameter strings
-         */
-        calcTimeDiffRelative: function(timestamp, dateObj) {
-            var now = new Date();
-            var time = null;
-
-            if (timestamp)
-                time = this.parseDate(timestamp);
-            else if(dateObj)
-                time = dateObj;
-
-            if (time === null)
-                return 'Unknown time';
-
-            // so now, 'time' and 'now' are both Date() objects
-            var timediff = this.calcTimeDiffReadable(now, time);
-
-            if (time > now)
-                timediff += ' from now';
-            else
-                timediff += ' ago';
-
-            return timediff;
-        },
-
-        /**
-         * VERY simple date parser.
-         * Returns a valid Date object if that time stamp's real. 
-         * Returns null otherwise.
-         * @param {String} time - the timestamp to convert to a Date
-         * @returns {Object} - a Date object or null if the timestamp's invalid.
-         */
-        parseDate: function(time) {
-            var d = new Date(time);
-            // if that doesn't work, then split it apart.
-            if (Object.prototype.toString.call(d) !== '[object Date]') {
-                var t = time.split(/[^0-9]/);
-                while (t.length < 7) {
-                    t.append(0);
-                }
-                d = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5], t[6]);
-                if (Object.prototype.toString.call(d) === '[object Date]') {
-                    if (isNaN(d.getTime())) {
-                        return null;
-                    }
-                    else {
-                        d.setFullYear(t[0]);
-                        return d;
-                    }
-                }
-                return null;
-            }
-            else {
-                return d;
-            }
-        },
     });
 });

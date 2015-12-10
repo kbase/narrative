@@ -27,6 +27,7 @@
                 return this;
             },
             render: function () {
+                var icon;
                 switch (this.options.type) {
                     case 'method':
                         this.renderMethodOutputCell();
@@ -44,20 +45,33 @@
                         this.renderErrorOutputCell();
                         break;
                 }
+                                
+//                this.$elem
+//                .closest('.cell')
+//                .trigger('set-title.cell', [appTitle]);             
+            
+
             },
             renderViewerCell: function () {
                 require(['kbaseNarrativeDataCell'], $.proxy(function () {
                     var $label = $('<span>').addClass('label label-info').append('Viewer');
-                    this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label);
+                    this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'data viewer');
+                    var $cell = this.$elem.closest('.cell');
+                    $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-table data-viewer-icon"></i>']);
                 }, this));
             },
             renderMethodOutputCell: function () {
                 var $label = $('<span>').addClass('label label-info').append('Output');
-                this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label);
+                this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'method output');
+                var $cell = this.$elem.closest('.cell');
+                $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o method-output-icon"></i>']);
             },
             // same as method for now
             renderAppOutputCell: function () {
-                this.renderMethodOutputCell();
+                var $label = $('<span>').addClass('label label-info').append('Output');
+                this.renderCell('kb-cell-output', 'panel-default', 'kb-out-desc', $label, 'app output');
+                var $cell = this.$elem.closest('.cell');
+                $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-file-o app-output-icon"></i>']);
             },
             renderErrorOutputCell: function () {
                 require(['kbaseNarrativeError'], $.proxy(function () {
@@ -65,12 +79,18 @@
                         this.options.title = 'Narrative Error';
                     var $label = $('<span>').addClass('label label-danger').append('Error');
                     this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $label);
+                    var $cell = this.$elem.closest('.cell');
+                    $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-exclamation-triangle error-icon"></i>']);
                 }, this));
             },
-            renderCell: function (baseClass, panelClass, headerClass, $label) {
+            renderCell: function (baseClass, panelClass, headerClass, $label, titleSuffix) {
                 // set up the widget line
                 var widget = this.options.widget;
                 var methodName = this.options.title ? this.options.title : 'Unknown method';
+                var title = methodName;
+                if (titleSuffix) {
+                    title += ' (' + titleSuffix + ')';
+                }
 
 // TODO: a label which can appear above or instaead of the icon in the prmopt area.
 //            this.$elem
@@ -79,7 +99,7 @@
 
                 this.$elem
                     .closest('.cell')
-                    .trigger('set-title', [methodName]);
+                    .trigger('set-title', [title]);
 
                 var widgetData = this.options.data;
                 if (widget === 'kbaseDefaultNarrativeOutput')

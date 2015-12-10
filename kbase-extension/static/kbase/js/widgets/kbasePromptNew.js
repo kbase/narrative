@@ -74,10 +74,20 @@ define(['jquery', 'kbwidget', 'bootstrap'], function($) {
             //fixme: hack for jim to fix?  
             // This results in destroying the modal on close, intead of hiding.  
             // Critical for modals that are dynamically populated
-            $('.modal').on('hidden.bs.modal', function () {
-                $(this).data('bs.modal', null);
-                $(this).remove();
-            });
+            // EAP - but this breaks the bootstrap modal "auto management" of 
+            // modals that are not already inserted into the dom. E.g. the
+            // documented method for modal usage is to point the modal to 
+            // an existing dom node. If the dom node is not in the dom tree,
+            // I guess bootstrap's modal() will insert it by itself into the 
+            // bottom of the body (you can see this happen in the inspector).
+            // But it doesn't expect it to be removed later, and will fail
+            // after some # of usages (that may depend on how many auto-generated
+            // modals have been placed at the bottom of the page.
+            // 
+            //$('.modal').on('hidden.bs.modal', function () {
+            //    $(this).data('bs.modal', null);
+            //    $(this).remove();
+            //});
 
             //fixme: I didn't bother figuring this one out?
             $('.focusedInput').focus();

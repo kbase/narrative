@@ -83,70 +83,282 @@
  * @static
  */
 define(['jquery',
-        'base/js/namespace',
-        'base/js/security',
-        'base/js/utils',
-        'base/js/page',
-        'notebook/js/notebook',
-        'notebook/js/textcell',
-        'notebook/js/savewidget',
-        'base/js/dialog',
-        'base/js/keyboard',
-        'notebook/js/cell',
-        'services/config',
-        'notebook/js/mathjaxutils',
-        'components/marked/lib/marked',
-        'components/requirejs/require',
-        'narrative_paths'
-        ],
-    function($, 
-             IPython, 
-             security,
-             utils,
-             page,
-             notebook,
-             textCell,
-             saveWidget,
-             dialog,
-             keyboard,
-             cell,
-             config,
-             mathjaxutils,
-             marked) {
+    'base/js/namespace',
+    'base/js/security',
+    'base/js/utils',
+    'base/js/page',
+    'notebook/js/codecell',
+    'notebook/js/notebook',
+    'notebook/js/textcell',
+    'notebook/js/savewidget',
+    'notebook/js/celltoolbar',
+    'base/js/dialog',
+    'base/js/keyboard',
+    'notebook/js/cell',
+    'services/config',
+    'notebook/js/mathjaxutils',
+    'components/marked/lib/marked',
+    'components/requirejs/require',
+    'narrative_paths'
+],
+    function ($,
+        IPython,
+        security,
+        utils,
+        page,
+        codeCell,
+        notebook,
+        textCell,
+        saveWidget,
+        cellToolbar,
+        dialog,
+        keyboard,
+        cell,
+        config,
+        mathjaxutils,
+        marked) {
         'use strict';
 
         // Patch the security mechanisms to allow any JavaScript to run for now.
         // TODO: update this so only the few KBase commands run.
-        security.sanitize_html = function(html, allow_css) { return html; };
-        security.sanitize_css = function(css, tagPolicy) { return css; };
-        security.sanitize_stylesheets = function(html, tagPolicy) { return html; };
+        security.sanitize_html = function (html, allow_css) {
+            return html;
+        };
+        security.sanitize_css = function (css, tagPolicy) {
+            return css;
+        };
+        security.sanitize_stylesheets = function (html, tagPolicy) {
+            return html;
+        };
+
+        cellToolbar.CellToolbar.prototype.renderToggleState = function () {
+            var $kbToolbar = $(this.element).find('.kb-cell-toolbar'),
+                $icon = $kbToolbar.find('[data-button="toggle"] > span.fa'),
+                toggleState = this.cell.getCellState('toggleState', 'unknown');
+            switch (toggleState) {
+                case 'closed':
+                    if ($icon.hasClass('fa-chevron-down')) {
+                        $icon.removeClass('fa-chevron-down');
+                        $icon.addClass('fa-chevron-right');
+                    }
+                    break;
+                case 'open':
+                    if ($icon.hasClass('fa-chevron-right')) {
+                        $icon.removeClass('fa-chevron-right');
+                        $icon.addClass('fa-chevron-down');
+                    }
+                    break;
+                case 'unknown':
+                    if ($icon.hasClass('fa-chevron-right')) {
+                        $icon.removeClass('fa-chevron-right');
+                        $icon.addClass('fa-chevron-down');
+                    }
+                    break;
+
+            }
+        };
+        
+        // disable hiding of the toolbar
+        cellToolbar.CellToolbar.prototype.hide  = function () {
+            return;
+        }
+
+        textCell.MarkdownCell.prototype.renderToggleState = function () {
+            cell.Cell.prototype.renderToggleState.apply(this);
+            var $cellNode = $(this.element);
+            switch (this.getCellState('toggleState', 'unknown')) {
+                case 'closed':
+                    $cellNode.find('.inner_cell > div:nth-child(3)').hide();
+                    break;
+                case 'open':
+                    $cellNode.find('.inner_cell > div:nth-child(3)').show();
+                    break;
+                case 'unknown':
+                    $cellNode.find('.inner_cell > div:nth-child(3)').show();
+                    break;
+            }
+        };
 
         // Patch the MarkdownCell renderer to run the Javascript we need.
+        textCell.MarkdownCell.options_default = {
+            cm_config: {
+                mode: 'ipythongfm'
+            },
+            xplaceholder: "Type _Markdown_ and LaTeX: $\\alpha^2$" +
+                "<!-- " +
+                "The above text is Markdown and LaTeX markup.\n" +
+                "It is provided as a quick sample of what you can do in a Markdown cell.\n" +
+                "Markdown cells are marked with the paragraph icon.\n" +
+                "This is a comment, so it does not appear when rendered.\n" +
+                "Also note that the first item in the cell or the first first-level" +
+                "header will appear as the cell title." +
+                "-->"
+        };
+//        textCell.MarkdownCell.prototype.toJSON = function () {
+//            var data = cell.Cell.prototype.toJSON.apply(this);
+//            data.source = this.get_text();
+//            console.log('to json');
+//            console.log(this.get_text());
+//            console.log(data.source);
+//            if (data.source == this.placeholder) {
+//                data.source = "";
+//            }
+//            return data;
+//        };
+//        textCell.MarkdownCell.prototype.unrender = function () {
+//            var cont = cell.Cell.prototype.unrender.apply(this);
+//            if (cont) {
+//                console.log('unrender');
+//                console.log(this.get_text());
+//                console.log(this.element);
+//                var text_cell = this.element;
+//                //if (this.get_text() === this.placeholder) {
+//                //    this.set_text('');
+//                //}
+//                this.refresh();
+//            }
+//            return cont;
+//        };
+        var original_unselect = cell.Cell.prototype.unselect;
+        cell.Cell.prototype.unselect = function (leave_selected) {
+            var wasSelected = original_unselect.apply(this, [leave_selected]);
+            // ignore the return value -- it represents the initial selected
+            // state of the cell. We don't really care, or do we? 
+            // in theory, if the cell was not initially selected, we don't need
+            // to issue an event.
+            //if (cont) {
+            // tell the toolbar we are unselected.
+            // this.events.trigger('unselected.cell');
+            $(this.element).trigger('unselected.cell');
+            //}
+            return wasSelected;
+        };
+        
+        
+        cell.Cell.prototype.getCellState = function (name, defaultValue) {
+            if (!this.metadata.kbstate) {
+                this.metadata.kbstate = {};
+            }
+            var value = this.metadata.kbstate[name];
+            if (value === undefined) {
+                return defaultValue;
+            } else {
+                return value;
+            }
+        };
+        cell.Cell.prototype.setCellState = function (name, value) {
+            if (!this.metadata.kbstate) {
+                this.metadata.kbstate = {};
+            }
+            this.metadata.kbstate[name] = value;
+        };
+        
+         cell.Cell.prototype.toggle = function () {
+            switch (this.getCellState('toggleState', 'unknown')) {
+                case 'closed':
+                    this.setCellState('toggleState', 'open');
+                    break;
+                case 'open':
+                    this.setCellState('toggleState', 'closed');
+                    break;
+                case 'unknown':
+                    this.setCellState('toggleState', 'closed');
+                    break;
+            }
+            this.renderToggleState();
+        };
+        
+        cell.Cell.prototype.renderToggleState = function () {
+            this.celltoolbar.renderToggleState();
+        };
+        
+        function cellType(cell) {
+            // Cells are (currently) rendered twice. The first time the kb metadata
+            // is not available, but we can rely on future renders.
+            if (cell.renderCount > 1) {
+                return;
+            }
+
+            var type = cell.metadata &&
+                    cell.metadata['kb-cell'] &&
+                    cell.metadata['kb-cell']['type'];
+                
+            // Markdown cells don't of course have a kb cell type.
+            if (type === undefined) {
+                return;
+            }
+                
+            switch (type) {
+                case 'function_input': 
+                    return 'method';
+                    break;
+                case 'kb_app':
+                    return 'app';
+                    break;
+                case 'function_output':
+                    return 'output';
+                    break;
+                default:
+                    return 'Unknown: ' + type;                    
+            }
+            
+        }
+
         textCell.MarkdownCell.prototype.render = function () {
-            var cont = textCell.TextCell.prototype.render.apply(this);
-            if (cont) {
+            /*
+             * Ahem, these silly javascript method overriding or extensions. 
+             * First, you need to know what the parent object prototype
+             * does, in order for this to make any sense. For rendering, what 
+             * does it mean to extend or override the rendering? Does the parent
+             * class actually do any rendering, i.e. create display elements based
+             * on data? In this case, no. TextCell has no base render method, but
+             * above that Cell does, but it only checks to see if the rendering 
+             * flags mean that rendering is required and returns that value. It
+             * is that return value which is used here to determine whether 
+             * rendering should be done or not. 
+             * I would argue that there should just be a method "needRender".
+             */
+            var needsToRender = textCell.TextCell.prototype.render.apply(this);
+            
+            // which cell type is it? KBase hosts apps, methods, and output cells
+            // within markdown cells.
+            if (cell.renderCount === undefined) {
+                cell.renderCount = 0;
+            }
+            cell.renderCount += 1;
+            var kbCellType = cellType(this);
+            
+            if (kbCellType) {
+                this.set_rendered(this.get_text());
+                this.typeset();
+                return needsToRender;
+            }
+            
+            if (needsToRender) {
                 var that = this,
                     text = this.get_text(),
                     math = null,
-                    title, $html;
+                    $html;
+
                 if (text === "") {
                     text = this.placeholder;
                 }
                 var text_and_math = mathjaxutils.remove_math(text);
                 text = text_and_math[0];
                 math = text_and_math[1];
+                
                 marked(text, function (err, html) {
                     html = mathjaxutils.replace_math(html, math);
                     html = security.sanitize_html(html);
                     try {
                         $html = $($.parseHTML(html, undefined, true));
-                        
+
                         // Extract title from h1, if any. otheriwse, first 50 characters
                         var title = $html.filter('h1').first().first().text();
-                        if (!title) {
-                            title = $html.first().html().substr(0,50) || '';
+                        if (!title && $html.first().html()) {
+                            title = $html.first().html().substr(0, 50) || '';
                         }
-                        
+
                         // add anchors to headings
                         $html.find(":header").addBack(":header").each(function (i, h) {
                             h = $(h);
@@ -161,57 +373,126 @@ define(['jquery',
                         });
                         // links in markdown cells should open in new tabs
                         $html.find("a[href]").not('[href^="#"]').attr("target", "_blank");
-                        
-                        
+
+
                     } catch (error) {
                         title = 'Markdown Error';
                         $html = "Error while parsing markdown cell: " + error;
                     }
 
-                    $(that.element)
-                        .trigger('set-title', [title || '?']);
-                    
-                    console.log('setting icon for markdown');
-                    $(that.element)
-                        .trigger('set-icon', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
-                    
+                    that.setCellState('title', title || '');
+                    // that.setCellState('icon', '<i class="fa fa-2x fa-paragraph markdown-icon"></i>');
                     that.set_rendered($html);
                     that.typeset();
                     that.events.trigger("rendered.MarkdownCell", {cell: that});
                 });
             }
-            return cont;
+            return needsToRender;
         };
 
         /** @method bind_events **/
         textCell.MarkdownCell.prototype.bind_events = function () {
             textCell.TextCell.prototype.bind_events.apply(this);
-            var that = this;
 
+            var cell = this,
+                $cellNode = $(this.element),
+                $toolbar = $cellNode.find('.celltoolbar > .button_container');
+
+            /*
+             * This is the trick to get the markdown to render, and the edit area
+             * to disappear, when the user clicks out of the edit area.
+             */
             this.code_mirror.on('blur', function () {
-                that.render();
+                cell.render();
             });
-            
-            var $cellNode = $(this.element);
 
+
+            /*
+             * The cell toolbar buttons area knows how to set the title and 
+             * icon for itself. But we store the title and icon here in case
+             * the celltoolbar is not fully built yet. In that case, it will
+             * look at the containing cell to see if it has been set yet, and if
+             * so will use that (of course listening for these events too.)
+             */
             $cellNode
-                .on('set-title', function (e, title) {
+                .on('set-title.cell', function (e, title) {
                     if (title === undefined) {
                         return;
-                    } 
-                    $cellNode.data('title', title);
-                    $cellNode             
-                        .find('.celltoolbar > .button_container')
-                        .trigger('set-title', [title || '?']);
+                    }
+                    cell.setCellState('title', title);
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    $menu.trigger('set-title.toolbar', [title || '']);
                 });
-            $cellNode               
-                .on('set-icon', function (e, icon) {
-                   $cellNode.data('icon', icon);
-                    $cellNode
-                    .find('.celltoolbar > .button_container')
-                    .trigger('set-icon', [icon]);
-            });
+
+            $cellNode
+                .on('set-icon.cell', function (e, icon) {
+                    cell.setCellState('icon', icon);
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    $menu.trigger('set-icon.toolbar', [icon]);
+                });
                 
+            $cellNode
+                .on('job-state.cell', function (e, data) {
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    $menu.trigger('job-state.toolbar', data);
+                });
+
+
+            /*
+             * This is how the cell propagates the select/unselect events to
+             * the child "widget" -- the celltoolbar in this case.
+             * But, of course, it is a hack.
+             * - we should be able to add it as a behavior on the cell prototype
+             * - we should be able to propagate it to the celltoolbar itself, we
+             *   are talking to the button area, because that is what we are able
+             *   to control inside the celltoolbar
+             */
+            // this.events
+            $(this.element)
+                .on('unselected.cell', function (e) {
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    cell.setCellState('selected', false);
+                    $menu.trigger('unselected.toolbar');
+                });
+
+            // this.events
+            $(this.element)
+                .on('selected.cell', function (e) {
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    cell.setCellState('selected', true); 
+                    $menu.trigger('selected.toolbar');
+                });
+
+            this.events.on('rendered.MarkdownCell', function (e, data) {
+                cell.renderToggleState();
+                $(cell.element).trigger('set-title.cell', cell.getCellState('title'));
+                //$(cell.element).trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
+            });
+
+            this.events.on('preset_activated.CellToolbar', function (e, data) {
+                if (data.name === 'KBase') {
+                    // This is really the kick-off for the narrative, since the
+                    // presets on the celltoobar are loaded via event calls,
+                    // so are not necessarily part of the synchronous process
+                    // which builds the UI, and also of course the 
+                   
+                    // Set up the toolbar based on the state.
+                    $(cell.element)
+                        .trigger('set-title.cell', [cell.getCellState('title', '')]);
+                    
+                    $(cell.element)
+                        .trigger('set-icon.cell', [cell.getCellState('icon', '')]);
+
+                    //$(cell.element)
+                     //   .trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
+                    
+                    if (cell.getCellState('selected')) {
+                        cell.select();
+                    }
+                    
+                    cell.renderToggleState();
+                }
+            });
 
 //            this.element.click(function () {
 //                var cont = that.unrender();
@@ -229,7 +510,104 @@ define(['jquery',
                 this.element.find('div.text_cell_render').html("Error while parsing markdown cell: " + error);
             }
         };
+
+        /*
+         * NEW:
+         * 
+         * Extend the Cell bind_events.
+         * 
+         * Adds cell toggling.
+         */
+        var original_cell_bind_events = cell.Cell.prototype.bind_events;
+        cell.Cell.prototype.bind_events = function () {
+            var cell = this;
+            original_cell_bind_events.apply(this);
+            $(this.element)
+                .on('toggle.cell', function (e) {
+                    // Alas, it has no discriminating attributes!
+                    cell.toggle();
+                });
+        };
+
+        /*
+         * NEW:
+         * 
+         * Extend the CodeCell bind_events method to add handling of toolbar
+         * events.
+         * 
+         *  A note on "extension" of a function object's function prototype:
+         *  We first save the existing function, and then replace it with a new
+         *  one which in its first statement executes the original one.
+         *  This represents the existing behavior.
+         *  Code following this represents the additional or extended behavior.
+         *
+         */
+        var original_bind_events = codeCell.CodeCell.prototype.bind_events;
+        codeCell.CodeCell.prototype.bind_events = function () {
+            original_bind_events.apply(this);
+            var $cellNode = $(this.element), cell = this;
+
+            // TODO: toggle state on the cell object so we can be sure about this.
+                
+            $cellNode
+                .on('unselected.cell', function (e) {
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    cell.setCellState('selected', false);
+                    $menu.trigger('unselected.toolbar');
+                });
+
+            // this.events
+            $cellNode
+                .on('selected.cell', function (e) {
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    cell.setCellState('selected', true);
+                    $menu.trigger('selected.toolbar');
+                });                
+                
+        };
         
+        /*
+         * NEW: 
+         * 
+         * Hides and shows code cell components based on the current toggle 
+         * state of the cell, as reflected in the cell metadata
+         * (via getCellState).
+         */
+        codeCell.CodeCell.prototype.renderToggleState = function () {
+            cell.Cell.prototype.renderToggleState.apply(this);
+            var $cellNode = $(this.element);
+            switch (this.getCellState('toggleState', 'unknown')) {
+                case 'closed':
+                    $cellNode.find('.input .input_area').hide();
+                    $cellNode.find('.widget-area').hide();
+                    $cellNode.find('.output_wrapper').hide();
+                    break;
+                case 'open':
+                    $cellNode.find('.input .input_area').show();
+                    $cellNode.find('.widget-area').show();
+                    $cellNode.find('.output_wrapper').show();
+                    break;
+                case 'unknown':
+                    $cellNode.find('.input .input_area').show();
+                    $cellNode.find('.widget-area').show();
+                    $cellNode.find('.output_wrapper').show();
+                    break;
+            }
+        };
+
+        notebook.Notebook.prototype.eachCell = function (fun) {
+            var cells = this.get_cells();
+            cells.forEach(function (cell) {
+                fun(cell);
+            });
+        }
+
+
+        // Patch the Notebook to return the right name
+        notebook.Notebook.prototype.get_notebook_name = function () {
+            return this.metadata.name;
+        };
+
         // Patch the Notebook to not wedge a file extension on a new Narrative name
         notebook.Notebook.prototype.rename = function (new_name) {
             var that = this;
@@ -303,18 +681,26 @@ define(['jquery',
         };
 
         // Kickstart the Narrative loading routine once the notebook is loaded.
-        $([IPython.events]).on('notebook_loaded.Notebook',
-            function narrativeStart() {
-                require(['kbaseNarrative'], function (Narrative) {
-                    IPython.narrative = new Narrative();
-                    IPython.narrative.init();
-                });
-            }
-        );
-    
-        page.Page.prototype._resize_site = function() {
-        // Update the site's size.
-        $('div#site').height($(window).height() - $('#header').css('height'));
-    };
+        $([IPython.events]).on('notebook_loaded.Notebook', function () {
+            require(['kbaseNarrative'], function (Narrative) {
+                IPython.narrative = new Narrative();
+                IPython.narrative.init();
+            });
+        });
+
+        /*
+         * We override this method because jupyter uses .height() rather than 
+         * css('height'). In the former just the internal height is returned, 
+         * although later versions of jquery (should be the one we are using,
+         * but it didn't appear to be so) should have fixed this behavior when
+         * box-sizing: border-box is used. I tried that, but it didn't seem to
+         * work. Using css('height'), however, works.
+         * This bug was manifested in a permanent scrollbar for the main content
+         * area, since its size was set too tall.
+         */
+        page.Page.prototype._resize_site = function () {
+            // Update the site's size.
+            $('div#site').height($(window).height() - $('#header').css('height'));
+        };
     }
 );

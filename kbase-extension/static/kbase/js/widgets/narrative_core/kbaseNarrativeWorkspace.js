@@ -219,12 +219,12 @@ define(['jquery',
             // Global functions for setting icons
             $(document).on('setDataIcon.Narrative',
               $.proxy(function (e, param) {
-                    this.setDataIcon(param.elt, param.type)
+                    this.setDataIcon(param.elt, param.type);
                 },
                 this));
             $(document).on('setMethodIcon.Narrative',
               $.proxy(function (e, param) {
-                    this.setMethodIcon(param.elt, param.is_app)
+                    this.setMethodIcon(param.elt, param.is_app);
                 },
                 this));
 
@@ -1973,7 +1973,7 @@ define(['jquery',
 
 
         createViewerCell: function(cellIndex, data, widget) {
-            var cell = this.addOutputCell(cellIndex, widget);
+            var cell = this.addOutputCell(cellIndex, widget, data.placement || 'below');
             var title = "Data Viewer";
             var type = "viewer";
 
@@ -1986,7 +1986,7 @@ define(['jquery',
                                '"title":"' + title + '", ' +
                                '"time":' + this.getTimestamp() + '}';
 
-            cellText = '<div id="' + outCellId + '"></div>\n' +
+            var cellText = '<div id="' + outCellId + '"></div>\n' +
                        '<script>' +
                        '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
                        '</script>';
@@ -2211,8 +2211,16 @@ define(['jquery',
          * @private
          * @return id of <div> inside cell where content can be placed
          */
-        addOutputCell: function(currentIndex, widget) {
-            var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
+        addOutputCell: function(currentIndex, widget, placement) {
+            var cell;
+            switch (placement) {
+                case 'above':
+                    cell = IPython.notebook.insert_cell_above('markdown', currentIndex);
+                    break;
+                case 'below':
+                default: 
+                    var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
+            }
             // cell.celltoolbar.hide();
             this.setOutputCell(cell, widget);
             this.removeCellEditFunction(cell);

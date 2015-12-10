@@ -58,7 +58,7 @@ function ($) {
     };
 
     BootstrapDialog.prototype.getBody = function () {
-        return this.$dialogBody;
+        return this.$dialogBody.children();
     };
 
     BootstrapDialog.prototype.setButtons = function (buttonList) {
@@ -88,6 +88,10 @@ function ($) {
 
     BootstrapDialog.prototype.hide = function() {
         this.$modal.modal('hide');
+    };
+
+    BootstrapDialog.prototype.getElement = function() {
+        return this.$modal;
     };
 
     return BootstrapDialog;

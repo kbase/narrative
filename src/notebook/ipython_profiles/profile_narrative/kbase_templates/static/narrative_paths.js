@@ -185,6 +185,7 @@ define([], function() {
             'kbaseTreechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
             'kbaseRNASeqPie'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqPie',
             'kbaseRNASeqHistogram'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqHistogram',
+            'kbaseCummerbundPlot'                        : 'kbase/js/ui-common/src/widgets/kbaseCummerbundPlot',
             'kbasePMIBarchart'                        : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePMIBarchart',
             'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
             'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',

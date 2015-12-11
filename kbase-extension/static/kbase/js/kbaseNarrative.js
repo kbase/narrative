@@ -460,6 +460,7 @@ define([
      * for now, it just passes through to the usual save.
      */
     Narrative.prototype.saveNarrative = function() {
+        this.narrController.saveAllCellStates();
         IPython.notebook.save_checkpoint();
     };
 

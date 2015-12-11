@@ -2118,6 +2118,11 @@ define(['jquery',
         */
         showNextSteps: function(obj) {
           var $elt = obj.elt, next_steps = obj.next_steps;
+
+          // if the element already has a 'kb-app-next' div, don't add another one.
+          if ($elt.has('.kb-app-next').length)
+            return;
+
           var $tgt = $('<div>').addClass('kb-app-next');
           var $title = $('<h3>').text('Suggested next steps:');
           $tgt.append($title);

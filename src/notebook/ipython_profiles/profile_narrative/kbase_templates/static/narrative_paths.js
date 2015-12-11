@@ -21,7 +21,7 @@ define([], function() {
             'underscore'                            : 'components/underscore/1.8.2/underscore-min',
             'jquery_cookie'                         : 'components/jquery-extensions/js/jquery.cookie.min',
             'select2'                               : 'select2-v3.5.2/select2.min',
-
+            'plotly'                                : 'components/plotly/plotly-latest.min',
             'narrativeConfig'                       : 'kbase/js/narrativeConfig',
             'narrativeMain'                         : 'narrativeMain',
             'kbaseLogin'                            : 'kbase/js/widgets/kbaseLoginFuncSite',
@@ -163,7 +163,27 @@ define([], function() {
             'kbaseExpressionFeatureTableHeatmap'    : 'kbase/js/widgets/function_output/kbaseExpressionFeatureTableHeatmap',
             'kbaseExpressionConditionsetBaseWidget' : 'kbase/js/widgets/function_output/kbaseExpressionConditionsetBaseWidget',
 
+            'kbaseGrowthMatrixAbstract'             : 'kbase/js/widgets/function_output/kbaseGrowthMatrixAbstract',
+            'kbaseGrowthMatrix'                     : 'kbase/js/widgets/function_output/kbaseGrowthMatrix',
+            'kbaseGrowthCurves'                     : 'kbase/js/widgets/function_output/kbaseGrowthCurves',
+            'kbaseGrowthParamsPlot'                 : 'kbase/js/widgets/function_output/kbaseGrowthParamsPlot',
+            'kbaseGrowthParams2DPlot'               : 'kbase/js/widgets/function_output/kbaseGrowthParams2DPlot',
+                        
+            'kbaseWellSampleHistogram'              : 'kbase/js/widgets/function_output/kbaseWellSampleHistogram',
+            'kbaseWellSample2DPlot'                 : 'kbase/js/widgets/function_output/kbaseWellSample2DPlot',
+            'kbaseChromatographyMatrix'             : 'kbase/js/widgets/function_output/kbaseChromatographyMatrix',
+            
+            'kbaseGrowthParamsPlotInput'            : 'kbase/js/widgets/function_input/kbaseGrowthParamsPlotInput',
+            'kbaseGrowthParams2DPlotInput'          : 'kbase/js/widgets/function_input/kbaseGrowthParams2DPlotInput', 
+            'kbaseWellSampleHistogramInput'         : 'kbase/js/widgets/function_input/kbaseWellSampleHistogramInput', 
+            'kbaseWellSample2DPlotInput'            : 'kbase/js/widgets/function_input/kbaseWellSample2DPlotInput', 
+            
+            'kbaseNarrativeParameterCustomTextSubdataInput' :  'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomTextSubdataInput',
+            'kbaseNarrativeParameterCustomButtonInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomButtonInput',
+            'kbaseNarrativeParameterCustomDropdownGroupInput': 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomDropdownGroupInput',
 
+            
+            
             'geometry_point'                        : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_point',
             'geometry_rectangle'                    : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_rectangle',
             'geometry_size'                         : 'kbase/js/ui-common/src/widgets/../js/geometry/geometry_size',
@@ -180,6 +200,9 @@ define([], function() {
             'kbasePiechart'                         : 'kbase/js/ui-common/src/widgets/vis/kbasePiechart',
             'kbaseTreechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
             'kbaseRNASeqPie'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqPie',
+            'kbaseRNASeqHistogram'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqHistogram',
+            'kbaseCummerbundPlot'                        : 'kbase/js/ui-common/src/widgets/kbaseCummerbundPlot',
+            'kbasePMIBarchart'                        : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePMIBarchart',
             'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
             'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
@@ -396,6 +419,9 @@ define([], function() {
             'jquery-dataTables-bootstrap' : {
                 deps : ['jquery', 'jquery-dataTables', 'bootstrap']
             },
+            'plotly':{
+                deps : ['d3','jquery']
+            },
             'kbaseNarrativeAppCell' : {
                 deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell',
                         'kbaseNarrativeCellMenu']
@@ -447,7 +473,8 @@ define([], function() {
                           'KBasePhenotypes.PhenotypeSet',
                           'KBasePhenotypes.PhenotypeSimulationSet',
                           'KBaseFBA.FBAComparison',
-                          'kbaseTabTableTabs']
+                          'kbaseTabTableTabs',
+                          'kbasePMIBarchart']
             },
             'kbasePathways' : {
                 'deps' : ['jquery',

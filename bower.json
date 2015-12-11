@@ -13,6 +13,7 @@
     "requirejs-text": "2.0.14",
     "select2": "~3.5.2",
     "select2-bootstrap-css": "^1.4.5",
-    "underscore": "~1.8.3"
+    "underscore": "~1.8.3",
+    "plotly.js": "~1.2.0"
   }
 }

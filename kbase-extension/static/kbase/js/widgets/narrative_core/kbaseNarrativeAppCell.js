@@ -79,12 +79,12 @@
 
             // initialize the state
             this.state = {
-                    runningState: {
-                        appRunState: "input", // could be 'input' || 'running' || 'error' || 'done', something else?
-                        runningStep: null
-                    },
-                    step: { }
-                };
+                runningState: {
+                    appRunState: "input", // could be 'input' || 'running' || 'error' || 'done', something else?
+                    runningStep: null
+                },
+                step: { }
+            };
             this.initErrorModal();
 
             this.fetchMethodInfo();
@@ -235,11 +235,11 @@
                 .attr('type', 'button')
                 .attr('value', 'Reset')
                 .addClass('kb-app-run kb-app-reset')
-                .append('Reset')
+                .append('Edit and Re-Run')
                 .css({'margin-right':'5px', 'margin-left':'10px'})
                 .click(
                     $.proxy(function(event) {
-                    self.resetAppRun(true);
+                    self.resetAppRun(false);
                 }, this)
             )
             .hide();
@@ -821,19 +821,10 @@
                             this.inputSteps[i].widget.lockInputs();
                         }
                     }
-                    else if (state.runningState.appRunState === "done") {
+                    else if (state.runningState.appRunState === "done" || state.runningState.appRunState === "complete") {
                         this.$submitted.show();
                         this.$runButton.hide();
                         // start minimized if done, todo: save minimization state of steps
-                        this.minimizeAllSteps();
-                        for(var i=0; i<this.inputSteps.length; i++) {
-                            this.inputSteps[i].widget.lockInputs();
-                        }
-                    }
-                    else if (state.runningState.appRunState === "complete") {
-                        this.$submitted.show();
-                        this.$runButton.hide();
-                        // start minimized if complete, todo: save minimization state of steps
                         this.minimizeAllSteps();
                         for(var i=0; i<this.inputSteps.length; i++) {
                             this.inputSteps[i].widget.lockInputs();
@@ -899,13 +890,16 @@
                     }
                 }
             }
-            else if (state === 'complete') {
+            else if (state === 'complete' || state === 'done') {
                 for (var i=0; i<this.inputSteps.length; i++) {
                     this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
                 }
                 this.state.runningState.runningStep = null;
                 this.state.runningState.appRunState = state;
                 this.$stopButton.hide();
+                this.$resetButton.show();
+                this.displayRunning(false);
+                
                 // Show the 'next-steps' to take, if there are any
                 this.getNextSteps(
                   $.proxy(function(next_steps) {
@@ -971,10 +965,10 @@
         setStepOutput: function(stepId, output, state, preventSave) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
-                    if (this.inputStepLookup[stepId].outputWidget) {
-                        //output is already set and cannot change, so we do not rerender
-                        return;
-                    }
+                    // if (this.inputStepLookup[stepId].outputWidget) {
+                    //     //output is already set and cannot change, so we do not rerender
+                    //     return;
+                    // }
                     // clear the output panel, and assume we are no longer running this step
                     this.inputStepLookup[stepId].$outputPanel.empty();
                     this.inputStepLookup[stepId].$stepContainer.removeClass("kb-app-step-running");

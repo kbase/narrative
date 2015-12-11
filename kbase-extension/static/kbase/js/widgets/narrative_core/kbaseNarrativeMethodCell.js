@@ -12,11 +12,14 @@
 (function( $, undefined ) {
 require(['jquery',
          'narrativeConfig',
+         'Util',
          'handlebars', 
          'kbwidget', 
          'kbaseAuthenticatedWidget',
          'kbaseNarrativeCellMenu'], 
-function($, Config) {
+function($, 
+         Config,
+         Util) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",
@@ -106,10 +109,24 @@ function($, Config) {
                               )
                               .hide();
 
+            this.$resetButton = $('<button>')
+                                .attr('type', 'button')
+                                .attr('value', 'Cancel')
+                                .addClass('kb-app-run')
+                                .append('Edit and Re-Run')
+                                .css({'margin-right':'5px'})
+                                .click(
+                                    $.proxy(function(event) {
+                                        this.stopRunning();
+                                    }, this)
+                                )
+                                .hide();
+
             var $buttons = $('<div>')
                            .addClass('buttons pull-left')
                            .append(this.$runButton)
                            .append(this.$stopButton)
+                           .append(this.$resetButton)
                            .append(this.$submitted);
 
             var $progressBar = $('<div>')
@@ -128,7 +145,7 @@ function($, Config) {
                                .append($('<p>')
                                        .addClass('text-success'));
 
-            var methodId = this.options.cellId + '-method-details-'+this.genUUID();
+            var methodId = this.options.cellId + '-method-details-'+Util.uuid();
             var buttonLabel = 'details';
             var methodDesc = this.method.info.tooltip;
 //            var $menuSpan = $('<div class="pull-right">');
@@ -271,13 +288,13 @@ function($, Config) {
          */
         getState: function() {
             return {
-                'runningState' : {
-                    'runState' : this.runState,
-                    'submittedText' : this.submittedText,
-                    'outputState' : this.allowOutput
+                runningState : {
+                    runState : this.runState,
+                    submittedText : this.submittedText,
+                    outputState : this.allowOutput
                 },
-                'minimized' : this.panel_minimized,
-                'params' : this.$inputWidget.getState()
+                minimized : this.panel_minimized,
+                params : this.$inputWidget.getState()
             };
         },
 
@@ -287,6 +304,7 @@ function($, Config) {
          * @public
          */
         loadState: function(state) {
+            console.log(state);
             // cases (for older ones)
             // 1. state looks like:
             // { params: {},
@@ -369,8 +387,6 @@ function($, Config) {
             }, this)]);
         },
 
-
-
         /**
          * @method
          * Updates the method cell's state.
@@ -394,8 +410,10 @@ function($, Config) {
                         this.$submitted.html(this.submittedText).show();
                         this.$runButton.hide();
                         this.$stopButton.hide();
+                        this.$resetButton.hide();
                         this.$inputWidget.lockInputs();
                         this.displayRunning(true);
+                        this.allowOutput = true;
                         break;
                     case 'complete':
                         this.$cellPanel.removeClass('kb-app-step-running');
@@ -403,6 +421,7 @@ function($, Config) {
                         this.$submitted.html(this.submittedText).show();
                         this.$runButton.hide();
                         this.$stopButton.hide();
+                        this.$resetButton.show();
                         this.$inputWidget.lockInputs();
                         this.displayRunning(false);
                         // maybe unlock? show a 'last run' box?
@@ -413,6 +432,7 @@ function($, Config) {
                         this.$cellPanel.addClass('kb-app-step-running');
                         this.$runButton.hide();
                         this.$stopButton.show();
+                        this.$resetButton.hide();
                         this.$inputWidget.lockInputs();
                         this.displayRunning(true);
                         break;
@@ -421,6 +441,7 @@ function($, Config) {
                         this.$cellPanel.addClass('kb-app-step-error');
                         this.$runButton.hide();
                         this.$stopButton.show();
+                        this.$resetButton.hide();
                         this.$inputWidget.lockInputs();
                         this.$elem.find('.kb-app-panel').addClass('kb-app-error');
                         this.displayRunning(false, true);
@@ -428,9 +449,11 @@ function($, Config) {
                     default:
                         this.$cellPanel.removeClass('kb-app-step-running');
                         this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
+                        this.$cellPanel.removeClass('kb-app-step-error');
                         this.$submitted.hide();
                         this.$runButton.show();
                         this.$stopButton.hide();
+                        this.$resetButton.hide();
                         this.$inputWidget.unlockInputs();
                         this.displayRunning(false);
                         break;
@@ -483,8 +506,6 @@ function($, Config) {
         },
 
         initErrorModal: function() {
-            // var errorModalId = "app-error-modal-"+ this.genUUID();
-            // var modalLabel = "app-error-modal-lablel-"+ this.genUUID();
             this.$errorModalContent = $('<div>');
             this.$errorModal =  $('<div tabindex="-1" role="dialog" aria-hidden="true">').addClass("modal fade");
             this.$errorModal.append(
@@ -509,13 +530,6 @@ function($, Config) {
                 this.$inputWidget.refresh();
         },
 
-        genUUID: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);
-            });
-        },
-
         /* temp hack to deal with current state of NJS */
         getSpecAndParameterInfo: function() {
             return {
@@ -528,13 +542,12 @@ function($, Config) {
             if (data.cellId && this.allowOutput) {
                 this.allowOutput = false;
                 // Show the 'next-steps' to take, if there are any
-                var self = this;
-                this.getNextSteps( function(next_steps) {
+                this.getNextSteps(function(next_steps) {
                     data.next_steps = next_steps;
-                    self.trigger('createOutputCell.Narrative', data);
-                    self.changeState('complete');
-                });
+                    this.trigger('createOutputCell.Narrative', data);
+                }.bind(this));
             }
+            this.changeState('complete');
         },
 
 

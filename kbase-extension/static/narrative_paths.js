@@ -4,8 +4,11 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths : {
+        plotly                                  : 'components/plotly.js/dist/plotly.min',
+        Util                                    : 'kbase/js/util/Util',
         configPath                              : 'kbase',
         NarrativeViewers                        : 'kbase/js/widgets/narrative_core/NarrativeViewers',
+        BootstrapDialog                         : 'kbase/js/widgets/narrative_core/BootstrapDialog',
         'domReady'                              : 'components/requirejs/domReady',
         'json'                                  : 'components/requirejs-json/json',
         'text'                                  : 'components/requirejs-text/text',
@@ -95,13 +98,34 @@ require.config({
         'create_metagenome_set'                 : 'kbase/js/widgets/function_input/create_metagenome_set',
         'kbStandaloneListSelect'                : 'kbase/js/widgets/function_input/kbStandaloneListselect',
         'devVizSelector'                        : 'kbase/js/widgets/function_input/devDataViz',
+            
+        'kbaseGrowthParamsPlotInput'            : 'kbase/js/widgets/function_input/kbaseGrowthParamsPlotInput',
+        'kbaseGrowthParams2DPlotInput'          : 'kbase/js/widgets/function_input/kbaseGrowthParams2DPlotInput', 
+        'kbaseWellSampleHistogramInput'         : 'kbase/js/widgets/function_input/kbaseWellSampleHistogramInput', 
+        'kbaseWellSample2DPlotInput'            : 'kbase/js/widgets/function_input/kbaseWellSample2DPlotInput', 
+
+        'kbaseNarrativeParameterCustomTextSubdataInput' :  'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomTextSubdataInput',
+        'kbaseNarrativeParameterCustomButtonInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomButtonInput',
+        'kbaseNarrativeParameterCustomDropdownGroupInput': 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomDropdownGroupInput',
         /***
          * END CUSTOM INPUT WIDGETS
          ***/
 
+
+
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+        'kbaseGrowthMatrixAbstract'             : 'kbase/js/widgets/function_output/kbaseGrowthMatrixAbstract',
+        'kbaseGrowthMatrix'                     : 'kbase/js/widgets/function_output/kbaseGrowthMatrix',
+        'kbaseGrowthCurves'                     : 'kbase/js/widgets/function_output/kbaseGrowthCurves',
+        'kbaseGrowthParamsPlot'                 : 'kbase/js/widgets/function_output/kbaseGrowthParamsPlot',
+        'kbaseGrowthParams2DPlot'               : 'kbase/js/widgets/function_output/kbaseGrowthParams2DPlot',
+
+        'kbaseWellSampleHistogram'              : 'kbase/js/widgets/function_output/kbaseWellSampleHistogram',
+        'kbaseWellSample2DPlot'                 : 'kbase/js/widgets/function_output/kbaseWellSample2DPlot',
+        'kbaseChromatographyMatrix'             : 'kbase/js/widgets/function_output/kbaseChromatographyMatrix',
+
         'kbaseDefaultNarrativeOutput'           : 'kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput',
         'kbaseTabTable'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
         'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling',

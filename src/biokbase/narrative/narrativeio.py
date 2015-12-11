@@ -362,7 +362,7 @@ class KBaseWSManagerMixin(object):
                            'includeMetadata': 1}
         if ws_id:
             try:
-                int(ws_id)
+                int(ws_id)  # will throw an exception if ws_id isn't an int
                 list_obj_params['ids'] = [ws_id]
             except ValueError:
                 raise
@@ -372,6 +372,9 @@ class KBaseWSManagerMixin(object):
         except WorkspaceClient.ServerError, err:
             raise self._ws_err_to_perm_err(err)
         my_narratives = [dict(zip(list_objects_fields, obj)) for obj in res]
+        for nar in my_narratives:
+            nar['name'] = nar['meta'].get('name', 'Untitled')
+
         return my_narratives
 
     def narrative_permissions(self, obj_ref, user=None):

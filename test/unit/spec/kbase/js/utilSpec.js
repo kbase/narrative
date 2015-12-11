@@ -23,7 +23,5 @@ define(['Util'], function(Util) {
             expect(d).toEqual(jasmine.any(Object));
             expect(d.toDateString()).toBe('Wed Dec 09 2015');
         });
-
-
     });
 });

@@ -253,7 +253,7 @@ define(['jquery',
             this.metadata.kbstate[name] = value;
         };
         
-         cell.Cell.prototype.toggle = function () {
+        cell.Cell.prototype.toggle = function () {
             switch (this.getCellState('toggleState', 'unknown')) {
                 case 'closed':
                     this.setCellState('toggleState', 'open');
@@ -685,6 +685,71 @@ define(['jquery',
             require(['kbaseNarrative'], function (Narrative) {
                 IPython.narrative = new Narrative();
                 IPython.narrative.init();
+
+                /*
+                 * Override the move-cursor-down-or-next-cell and 
+                 * move-cursor-up-or-previous-cell actions.
+                 *
+                 * When editing a textcell (markdown or code), if a user uses 
+                 * the arrow keys to move to another cell, it normally lands
+                 * there in edit mode.
+                 * 
+                 * This is bad for KBase-ified markdown cells, since it shows
+                 * the div and script tags that are used to render them, and
+                 * screws up the state management. These overrides just
+                 * check if the next cell is a KBase cell, and doesn't enable
+                 * edit mode if so.
+                 */
+                IPython.keyboard_manager.actions.register(
+                    {
+                        handler: function(env, event) {
+                            var index = env.notebook.get_selected_index();
+                            var cell = env.notebook.get_cell(index);
+                            if (cell.at_bottom() && index !== (env.notebook.ncells()-1)) {
+                                if(event){
+                                    event.preventDefault();
+                                }
+                                env.notebook.command_mode();
+                                env.notebook.select_next();
+                                if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
+                                    env.notebook.edit_mode();
+                                    var cm = env.notebook.get_selected_cell().code_mirror;
+                                    cm.setCursor(0, 0);
+                                }
+                            }
+                            return false;
+                        }
+                    },
+                    'move-cursor-down-or-next-cell',
+                    'ipython'
+                );
+
+                IPython.keyboard_manager.actions.register(
+                    {
+                        handler: function(env, event) {
+                            var index = env.notebook.get_selected_index();
+                            var cell = env.notebook.get_cell(index);
+                            var cm = env.notebook.get_selected_cell().code_mirror;
+                            var cur = cm.getCursor();
+                            if (cell && cell.at_top() && index !== 0 && cur.ch === 0) {
+                                if(event){
+                                    event.preventDefault();
+                                }
+                                env.notebook.command_mode();
+                                env.notebook.select_prev();
+                                if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
+                                    env.notebook.edit_mode();
+                                    cm = env.notebook.get_selected_cell().code_mirror;
+                                    cm.setCursor(cm.lastLine(), 0);
+                                }
+                            }
+                            return false;
+                        }
+                    },
+                    'move-cursor-up-or-previous-cell',
+                    'ipython'
+                );
+
             });
         });
 

@@ -749,7 +749,6 @@ define(['jquery',
                     'move-cursor-up-or-previous-cell',
                     'ipython'
                 );
-
             });
         });
 

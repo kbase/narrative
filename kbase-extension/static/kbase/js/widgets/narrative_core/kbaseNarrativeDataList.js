@@ -8,11 +8,12 @@ define([
     'jquery',
     'underscore',
     'narrativeConfig',
+    'Util',
     'jquery-nearest',
     'kbwidget',
     'kbaseAuthenticatedWidget',
     'kbaseNarrativeDownloadPanel'],
-    function ($, _, Config) {
+    function ($, _, Config, Util) {
         $.KBWidget({
             name: 'kbaseNarrativeDataList',
             parent: 'kbaseAuthenticatedWidget',
@@ -91,7 +92,7 @@ define([
                 this.$loadingDiv = $('<div>').addClass('kb-data-loading')
                     .append('<img src="' + this.options.loadingImage + '">');
                 this.$elem.append(this.$loadingDiv);
-                this.mainListId = this.genUUID();
+                this.mainListId = Util.uuid();
                 this.$mainListDiv = $('<div id=' + this.mainListId + '>')
                     .css({'overflow-x': 'hidden', 'overflow-y': 'auto', 'height': this.mainListPanelHeight})
                     .on('scroll', function () {
@@ -246,7 +247,7 @@ define([
                             }
                             self.objectList.push(
                                 {
-                                    key: self.genUUID(), // always generate the DnD key
+                                    key: Util.uuid(), // always generate the DnD key
                                     $div: null, //self.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
                                     info: infoList[i],
                                     attached: false
@@ -366,8 +367,7 @@ define([
             addDataControls: function (object_info, $alertContainer) {
                 var self = this;
                 var $btnToolbar = $('<span>')
-                    .addClass('btn-toolbar')
-                    .attr('role', 'toolbar');
+                    .addClass('btn-group');
 
                 var btnClasses = "btn btn-xs btn-default";
                 var css = {'color': '#888'};
@@ -924,7 +924,7 @@ define([
                 }
                 //console.log(cell, near_idx);
 
-                //var cell_id = self.genUUID();
+                //var cell_id = Util.uuid();
                 //cell.rendered = false;
                 //cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
                 //cell.render();
@@ -1030,7 +1030,7 @@ define([
                         // This will be used for 'id' of rendered element.
                         // But do *not* replace an existing key.
                         if (self.objectList[i].key == undefined) {
-                            self.objectList[i].key = self.genUUID();
+                            self.objectList[i].key = Util.uuid();
                         }
                         self.attachRow(i);
                     }
@@ -1566,11 +1566,5 @@ define([
                 return Math.floor(seconds) + " seconds ago";
             },
             monthLookup: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-            genUUID: function () {
-                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                    return v.toString(16);
-                });
-            }
         })
     });

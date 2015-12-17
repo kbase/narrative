@@ -3,6 +3,17 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 1.1.0
+__Changes__
+- Updated 'filtered' in method panel to 'filtered out'.
+- Added uploaders for Feature-Value pair data.
+- Added viewers for BLAST output.
+- Added bokeh (Python) and Plot.ly (JS) dependencies.
+- Added KBase data_api methods.
+- Added a refresh button to the method panel.
+- Added support for method specs based on namespacing.
+- Added preliminary third party SDK support.
+
 ### Version 1.0.5
 __Changes__
 - Fix for bugs in saving/loading App state and displaying App step output widgets.

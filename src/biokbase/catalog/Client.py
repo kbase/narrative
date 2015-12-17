@@ -258,12 +258,32 @@ class Catalog(object):
                           [params], json_rpc_context)
         return resp[0]
   
-    def get_build_log(self, timestamp, json_rpc_context = None):
+    def get_build_log(self, registration_id, json_rpc_context = None):
         if json_rpc_context and type(json_rpc_context) is not dict:
             raise ValueError('Method get_build_log: argument json_rpc_context is not type dict as required.')
         resp = self._call('Catalog.get_build_log',
-                          [timestamp], json_rpc_context)
+                          [registration_id], json_rpc_context)
         return resp[0]
+  
+    def get_parsed_build_log(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method get_parsed_build_log: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.get_parsed_build_log',
+                          [params], json_rpc_context)
+        return resp[0]
+  
+    def list_builds(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method list_builds: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.list_builds',
+                          [params], json_rpc_context)
+        return resp[0]
+  
+    def delete_module(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method delete_module: argument json_rpc_context is not type dict as required.')
+        self._call('Catalog.delete_module',
+                   [params], json_rpc_context)
   
     def migrate_module_to_new_git_url(self, params, json_rpc_context = None):
         if json_rpc_context and type(json_rpc_context) is not dict:

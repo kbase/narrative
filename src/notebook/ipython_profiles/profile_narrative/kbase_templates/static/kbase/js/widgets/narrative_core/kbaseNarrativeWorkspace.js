@@ -2073,7 +2073,12 @@ define(['jquery',
         * Returns the <div> that was populated.
         */
         showNextSteps: function(obj) {
-          var $elt = obj.elt, next_steps = obj.next_steps;
+          var $elt = obj.elt;
+          // if the element already has a 'kb-app-next' div, don't add another one.
+          if ($elt.has('.kb-app-next').length)
+            return;
+
+          var next_steps = obj.next_steps;
           var $tgt = $('<div>').addClass('kb-app-next');
           var $title = $('<h3>').text('Suggested next steps:');
           $tgt.append($title);

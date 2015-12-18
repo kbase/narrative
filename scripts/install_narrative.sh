@@ -134,7 +134,7 @@ fi
 # Install external JavaScript code
 # --------------------
 cd $NARRATIVE_ROOT_DIR
-bower install
+bower install --allow-root
 npm install
 
 

@@ -24,8 +24,7 @@ define(['jquery',
             catalogURL: 'https://ci.kbase.us/services/catalog',
 			loadingImage: "static/kbase/images/ajax-loader.gif"
 		},
-		// Prefix for all element ids
-		pref: null,
+
 		// Catalog client
 		catalogClient: null,
 
@@ -134,11 +133,11 @@ define(['jquery',
                         for(var k=self.log.length; k<log_length; k++) {
                             if(k>=skip) {
                                 self.log.push(build_info.log[k-skip]);
-                                self.appendLineToLog(build_info.log[k-skip].content,skip);
+                                self.appendLineToLog(build_info.log[k-skip].content);
                             } else {
                                 // odd- we're getting a chunk before an earlier chunk
                                 self.log.push({'content':'','is_error':0})
-                                self.appendLineToLog('',skip); // odd, we're 
+                                self.appendLineToLog(''); // odd, we're 
                             }
                         }
 
@@ -155,7 +154,7 @@ define(['jquery',
         },
 
 
-        appendLineToLog: function(line, skip) {
+        appendLineToLog: function(line) {
             self = this;
             self.$log_window.val(self.$log_window.val()+line)
 

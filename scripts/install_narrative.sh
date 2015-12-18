@@ -156,8 +156,8 @@ console "Installing ipywidgets from directory 'ipywidgets'"
 # git clone https://github.com/ipython/ipywidgets
 # cd ipywidgets
 # git checkout tags/$IPYWIDGETS_TAG
-pip install ipywidgets==$IPYWIDGETS_TAG
-pip install -e . >> ${logfile} 2>&1
+pip install ipywidgets==$IPYWIDGETS_TAG >> ${logfile} 2>&1
+# pip install -e . >> ${logfile} 2>&1
 
 # Install Narrative code
 # ----------------------
@@ -179,7 +179,7 @@ cd $NARRATIVE_ROOT_DIR
 git clone https://github.com/kbase/data_api -b develop
 cd data_api
 pip install -r requirements.txt
-$PYTHON setup.py install
+$PYTHON setup.py install >> ${logfile} 2>&1
 cd ..
 rm -rf data_api
 

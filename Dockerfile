@@ -31,7 +31,6 @@ RUN git submodule update --init --recursive && rm -rf .git/modules/modules
 # src/notebook/ipython_profiles/profile_narrative/kbase_templates && npm install && grunt build
 
 RUN /bin/bash scripts/install_narrative.sh -v /kb/deployment/services/narrative-venv
-# RUN /bin/bash old-install.sh -p /kb/deployment/services narrative
 
 RUN ./fixupURL.sh
 

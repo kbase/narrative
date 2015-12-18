@@ -73,6 +73,9 @@ RUN easy_install -U pip
 ADD ./python-pip-list-narrative /mini-bootstrap/pip-list
 RUN pip install -r /mini-bootstrap/pip-list
 
+ADD ./biokbase-requirements.txt /mini-bootstrap/biokbase-requirements
+RUN pip install -r /mini-bootstrap/biokbase-requirements
+
 # install R packages that seem to be handy
 ADD ./r-packages.R /root/r-packages.R
 RUN R --vanilla < /root/r-packages.R

@@ -78,4 +78,4 @@ ADD ./r-packages.R /root/r-packages.R
 RUN R --vanilla < /root/r-packages.R
 
 #
-RUN apt-get install -y nodejs npm && npm install -g grunt-cli && ln -s /usr/bin/nodejs /usr/bin/node
+RUN apt-get install -y nodejs npm && npm install -g grunt-cli bower && ln -s /usr/bin/nodejs /usr/bin/node

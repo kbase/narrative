@@ -134,8 +134,9 @@ fi
 # Install external JavaScript code
 # --------------------
 cd $NARRATIVE_ROOT_DIR
-bower install --allow-root
-npm install
+npm install -g bower >> ${logfile} 2>&1
+npm install >> ${logfile} 2>&1
+bower install --allow-root --config.interactive=false >> ${logfile} 2>&1
 
 
 cd $VIRTUAL_ENV

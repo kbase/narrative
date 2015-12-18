@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM kbase/narrbase:3.0
+FROM kbase/narrbase:3.1
 MAINTAINER Bill Riehl wjriehl@lbl.gov
 
 EXPOSE 8888

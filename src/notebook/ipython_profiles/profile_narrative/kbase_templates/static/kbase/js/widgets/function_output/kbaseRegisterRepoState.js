@@ -16,7 +16,9 @@ define(['jquery',
 		options: {
 		    git_url: null,
 		    git_commit_hash: null,
-		    output: null,
+
+            output: null, // this is generally the registration_id
+            registration_id: null,
 
 			// Service URL: should be in window.kbconfig.urls.
             catalogURL: 'https://ci.kbase.us/services/catalog',
@@ -33,27 +35,32 @@ define(['jquery',
         init: function(options) {
             this._super(options);
             this.registration_id = options.output;
-            this.pref = this.uuid();
+            if(options.registration_id) {
+                this.registration_id = options.registration_id;
+            }
             if (window.kbconfig && window.kbconfig.urls)
                 this.options.catalogURL = window.kbconfig.urls.catalog;
             // Create a message pane
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
             this.loading(true);
+
+
             this.log = [];
             return this;
         },
 
         loggedInCallback: function(event, auth) {
-            // error if not properly initialized
-            if (this.options.git_url == null) {
-                this.showMessage("[Error] Couldn't retrieve repository state.");
-                return this;
-            }
             // Build a client
-            this.catalogClient = new Catalog(this.options.catalogURL, auth);           
-            // Let's go...
-            this.render();           
+
+            this.catalogClient = new Catalog(this.options.catalogURL, auth);
+
+            if(!this.registration_id) {
+                this.loading(false);
+                this.showMessage("No registration_id provided or returned, so no build log can be shown.");
+            } else {
+                this.render();
+            }
             return this;
         },
 
@@ -64,7 +71,6 @@ define(['jquery',
 
         render: function() {
             var self = this;
-            var pref = this.pref;
             var container = this.$elem;
 
             var $table = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" />');
@@ -112,7 +118,7 @@ define(['jquery',
             var chunk_size = 10000
             
             self.catalogClient.get_parsed_build_log({
-                                            'registration_id':self.options.output,
+                                            'registration_id':self.registration_id,
                                             'skip':skip,
                                             'limit':chunk_size
                                         },

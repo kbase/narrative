@@ -211,6 +211,7 @@ define([], function() {
 
             'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
             'kbaseViewLiveRunLog'                   : 'kbase/js/widgets/function_output/kbaseViewLiveRunLog',
+            'kbaseReportView'                       : 'kbase/js/widgets/function_output/kbaseReportView',
 
             // unfinished ones
             /***

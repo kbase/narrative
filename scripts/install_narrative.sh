@@ -35,7 +35,7 @@ JUPYTER_NOTEBOOK_INSTALL_DIR=jupyter_notebook
 JUPYTER_NOTEBOOK_TAG=4.0.6
 
 IPYWIDGETS_INSTALL_DIR=ipywidgets
-IPYWIDGETS_TAG=4.0.3
+IPYWIDGETS_TAG=4.1.1
 
 PYTHON=python2.7
 
@@ -153,9 +153,10 @@ cd ..
 # Setup ipywidgets addon
 log "Installing ipywidgets using $PYTHON"
 console "Installing ipywidgets from directory 'ipywidgets'"
-git clone https://github.com/ipython/ipywidgets
-cd ipywidgets
-git checkout tags/$IPYWIDGETS_TAG
+# git clone https://github.com/ipython/ipywidgets
+# cd ipywidgets
+# git checkout tags/$IPYWIDGETS_TAG
+pip install ipywidgets==$IPYWIDGETS_TAG
 pip install -e . >> ${logfile} 2>&1
 
 # Install Narrative code

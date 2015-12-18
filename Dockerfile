@@ -36,7 +36,7 @@ RUN /bin/bash scripts/install_narrative.sh -v /kb/deployment/services/narrative-
 RUN ./fixupURL.sh
 
 WORKDIR /tmp
-RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_profiles /tmp/narrative; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
+RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_profiles /tmp/narrative /kb/dev_container/narrative/kbase-extension; find / -xdev \( -perm -4000 \) -type f -print -exec rm {} \;
 
 # Setup the container to automatically run a script that uses the narrative_mongo profile
 # and configures the notebook server to use /narrative/{CMD} as the prefix for a reverse

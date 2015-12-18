@@ -8,6 +8,7 @@ kbase-extension/security/
 kbase-extension/log/
 kbase-extension/kbase_templates/old/
 kbase-extension/static/components/
+kbase-extension/static/ext_components/
 node_modules/
 install.log
 /nbproject/private/

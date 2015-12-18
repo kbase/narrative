@@ -73,14 +73,14 @@ define(['jquery',
                     .append($('<td width="'+width+'">State</td>'))
                     .append(self.$state_td));
 
-            self.$log_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;" rows="20" readonly>')
+            self.$log_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;resize:vertical;" rows="20" readonly>')
             container.append(self.$log_window);
 
             self.$track_checkbox= $('<input type="checkbox">').prop('checked', true);;
             var $checkboxContainer = $('<div>').addClass('checkbox').css({width:"100%"})
                 .append($('<label>')
                     .append(self.$track_checkbox)
-                    .append('Track Log'));
+                    .append('Auto scroll to new log output'));
             
             container.append($checkboxContainer)
 

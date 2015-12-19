@@ -11,7 +11,7 @@
 # Made available under the KBase Open Source License
 #
 
-FROM kbase/narrbase:3.1
+FROM kbase/narrbase:4.1
 MAINTAINER Bill Riehl wjriehl@lbl.gov
 
 EXPOSE 8888
@@ -24,13 +24,17 @@ WORKDIR /kb/dev_container/narrative
 # Generate a version file that we can scrape later
 RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-git-version -f src/config.json -o /kb/deployment/ui-common/narrative_version
 
-RUN git submodule update --init --recursive && rm -rf .git/modules/modules
+RUN git submodule update --init; rm -rf .git/modules/modules
+
+# Install Javascript dependencies
+RUN npm install && bower install --allow-root --config.interactive=false
 
 # Compile Javascript down into an itty-bitty ball.
+# (commented out for now)
 # RUN cd kbase-extension/
 # src/notebook/ipython_profiles/profile_narrative/kbase_templates && npm install && grunt build
 
-RUN /bin/bash scripts/install_narrative.sh -v /kb/deployment/services/narrative-venv
+RUN /bin/bash scripts/install_narrative_docker.sh
 
 RUN ./fixupURL.sh
 

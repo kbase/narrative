@@ -16,39 +16,50 @@ define(['jquery',
 		options: {
 		    git_url: null,
 		    git_commit_hash: null,
-		    output: null,
+
+            output: null, // this is generally the registration_id
+            registration_id: null,
 
 			// Service URL: should be in window.kbconfig.urls.
             catalogURL: 'https://ci.kbase.us/services/catalog',
 			loadingImage: "static/kbase/images/ajax-loader.gif"
 		},
-		// Prefix for all element ids
-		pref: null,
+
 		// Catalog client
 		catalogClient: null,
 
+
+        log: null,
+
         init: function(options) {
             this._super(options);
-            this.pref = this.uuid();
+            this.registration_id = options.output;
+            if(options.registration_id) {
+                this.registration_id = options.registration_id;
+            }
             if (window.kbconfig && window.kbconfig.urls)
                 this.options.catalogURL = window.kbconfig.urls.catalog;
             // Create a message pane
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
             this.loading(true);
+
+
+            this.log = [];
             return this;
         },
 
         loggedInCallback: function(event, auth) {
-            // error if not properly initialized
-            if (this.options.git_url == null) {
-                this.showMessage("[Error] Couldn't retrieve repository state.");
-                return this;
-            }
             // Build a client
-            this.catalogClient = new Catalog(this.options.catalogURL, auth);           
-            // Let's go...
-            this.render();           
+
+            this.catalogClient = new Catalog(this.options.catalogURL, auth);
+
+            if(!this.registration_id) {
+                this.loading(false);
+                this.showMessage("No registration_id provided or returned, so no build log can be shown.");
+            } else {
+                this.render();
+            }
             return this;
         },
 
@@ -59,107 +70,120 @@ define(['jquery',
 
         render: function() {
             var self = this;
-            var pref = this.pref;
             var container = this.$elem;
-            var table = $('<table class="table table-striped table-bordered" \
-                    style="margin-left: auto; margin-right: auto;" id="'+pref+'info-table"/>');
-            container.append(table);
+
+            var $table = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" />');
+
+            container.append($table);
             var width = "15%"
-            table.append('<tr><td width="'+width+'">Timestamp</td><td id="'+pref+'_timestamp"></td></tr>');
-            table.append('<tr><td width="'+width+'">Is active</td><td id="'+pref+'_active"></td></tr>');
-            table.append('<tr><td width="'+width+'">Release Approval</td><td id="'+pref+'_release_approval"></td></tr>');
-            table.append('<tr><td width="'+width+'">Release Review</td><td id="'+pref+'_review_message"></td></tr>');
-            table.append('<tr><td width="'+width+'">State</td><td id="'+pref+'_registration"></td></tr>');
-            table.append('<tr><td width="'+width+'">Error</td><td><textarea style="width:100%;" rows="2" readonly id="'+pref+'_error"/></td></tr>');
-            table.append('<tr><td width="'+width+'">Build-log</td><td><textarea style="width:100%;" rows="5" readonly id="'+pref+'_build_log"/></td></tr>');
-            self.refreshState();
+
+            $table.append('<tr><td width="'+width+'">Registration ID</td><td>'+self.registration_id+'</td></tr>');
+            //table.append('<tr><td width="'+width+'">Is active</td><td id="'+pref+'_active"></td></tr>');
+            //table.append('<tr><td width="'+width+'">Release Approval</td><td id="'+pref+'_release_approval"></td></tr>');
+            //table.append('<tr><td width="'+width+'">Release Review</td><td id="'+pref+'_review_message"></td></tr>');
+            self.$registration_state_td = $('<td></td>')
+            $table.append(
+                $('<tr>')
+                    .append($('<td width="'+width+'">Progress</td>'))
+                    .append(self.$registration_state_td));
+            //table.append('<tr><td width="'+width+'">Error Mssg</td><td><textarea style="width:100%;" rows="2" readonly id="'+pref+'_error"/></td></tr>');
+
+            self.$log_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;resize:vertical;" rows="20" readonly>')
+            container.append(self.$log_window);
+
+            self.$track_checkbox= $('<input type="checkbox">').prop('checked', true);;
+            var $checkboxContainer = $('<div>').addClass('checkbox').css({width:"100%"})
+                .append($('<label>')
+                    .append(self.$track_checkbox)
+                    .append('Auto scroll to new log output'));
+            
+            //$checkboxContainer.append($('<label>').append(self.$track_checkbox));
+            container.append($checkboxContainer)
+
+            self.getLogAndState(self.registration_id,0);
         },
         
 
         getState: function() {
-            var self = this;
-            if(self.state) return self.state
             return null;
         },
 
         loadState: function(state) {
+        },
+
+        getLogAndState: function(registration_id, skip) {
             var self = this;
-            if(state) {
-                self.state = state;
-                self.catalogClient.get_build_log(self.options.output, function(data2) {
-                    //console.log(data2);
-                    self.showData(state, data2);
-                }, function(error) {
-                    //console.log(error);
-                    self.showData(data, error.error.error);
-                });
+
+            var chunk_size = 10000
+            
+            self.catalogClient.get_parsed_build_log({
+                                            'registration_id':self.registration_id,
+                                            'skip':skip,
+                                            'limit':chunk_size
+                                        },
+                    function(build_info) {
+
+                        // display the state
+                        self.updateBuildState(build_info.registration, build_info.error_message);
+
+                        // make sure our log array is big enough
+                        var log_length = skip+build_info.log.length;
+                        self.last_log_line = log_length;
+
+                        for(var k=self.log.length; k<log_length; k++) {
+                            if(k>=skip) {
+                                self.log.push(build_info.log[k-skip]);
+                                self.appendLineToLog(build_info.log[k-skip].content);
+                            } else {
+                                // odd- we're getting a chunk before an earlier chunk
+                                self.log.push({'content':'','is_error':0})
+                                self.appendLineToLog(''); // odd, we're 
+                            }
+                        }
+
+                        // get the next chunk if there is more
+                        if(build_info.log.length == chunk_size) {
+                            setTimeout(self.getLogAndState(registration_id, skip+chunk_size), 50);
+                            self.getLogAndState(registration_id, skip+chunk_size);
+                        }
+
+                    }, function(error) {
+                        console.error(error);
+                        //self.showData(data, error.error.error);
+                    });
+        },
+
+
+        appendLineToLog: function(line) {
+            self = this;
+            self.$log_window.val(self.$log_window.val()+line)
+
+            if(self.$track_checkbox.prop('checked')) {
+                self.$log_window.scrollTop(self.$log_window[0].scrollHeight); // scroll to bottom
             }
         },
 
-        showData : function(data, build_log) {
+        updateBuildState: function(state, error) {
             var self = this;
             self.loading(false);
-            var pref = this.pref;
-            var state = data.registration;
-            $('#'+pref+'_timestamp').html('' + self.options.output);
-            $('#'+pref+'_active').html(data.active ? ''+data.active : '[unknown]');
-            $('#'+pref+'_release_approval').html(data.release_approval ? data.release_approval : '[unknown]');
-            $('#'+pref+'_review_message').html(data.review_message ? data.review_message : '');
-            $('#'+pref+'_registration').html(state ? state : '[unknown]');
-            $('#'+pref+'_error').val(data.error_message ? data.error_message : '');
-            $('#'+pref+'_build_log').val('' + build_log);
-            $('#'+pref+'_build_log').scrollTop($('#'+pref+'_build_log')[0].scrollHeight); // scroll to bottom
+            self.$registration_state_td
             if (state === 'error') {
-                self.state = data
-                $('#'+pref+'_registration').empty()
+                self.$registration_state_td.empty()
                     .append($('<span>').addClass('label label-danger').append(state))
+                    .append('<br><br>')
+                    .append(error)
+
                 // now always show if something is in error field
                 //$('#'+pref+'_error').val(data.error_message);
             } else if (state !== 'complete') {
+                self.$registration_state_td.empty().append(state)
                 setTimeout(function(event) {
-                    self.refreshState();
+                    self.getLogAndState(self.registration_id, self.last_log_line);
                 }, 1000);
             } else {
-                $('#'+pref+'_registration').empty()
+                self.$registration_state_td.empty()
                     .append($('<span>').addClass('label label-success').append(state))
-                self.state = data
             }
-        },
-
-
-        refreshState: function() {
-            var self = this;
-            self.catalogClient.get_module_state({git_url: self.options.git_url},
-                function(data) {
-                    // If state was already defined, then it might have been set by the narrative, and
-                    // we just reload it.
-                    if(self.state) {
-                        self.loadState(self.state)
-                        return
-                    }
-                    //console.log(data);
-                    self.catalogClient.get_build_log(self.options.output, function(data2) {
-                        //console.log(data2);
-                        self.showData(data, data2);
-                    }, function(error) {
-                        //console.log(error);
-                        self.showData(data, error.error.error);
-                    });
-                },
-                function(error) {
-                    console.log(error);
-                    self.clientError(error);
-                }
-            );
-        },
-
-        getData: function() {
-            return {
-                type: 'RegisterRepoState',
-                id: this.options.expressionMatrixID,
-                workspace: this.options.workspaceID,
-                title: 'Repository State'
-            };
         },
 
         loading: function(isLoading) {
@@ -171,7 +195,6 @@ define(['jquery',
 
         showMessage: function(message) {
             var span = $("<span/>").append(message);
-
             this.$messagePane.append(span);
             this.$messagePane.show();
         },
@@ -179,19 +202,6 @@ define(['jquery',
         hideMessage: function() {
             this.$messagePane.hide();
             this.$messagePane.empty();
-        },
-
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
-        },
-
-        clientError: function(error){
-            this.loading(false);
-            this.showMessage(error.error.error);
-        }        
+        }     
     });
 });

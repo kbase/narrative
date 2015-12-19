@@ -35,6 +35,7 @@ define([], function() {
             'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
             'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
             'catalog-client-api'                    : 'kbase/js/api/Catalog',
+            'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
 
             /***
              * CORE NARRATIVE WIDGETS
@@ -210,6 +211,8 @@ define([], function() {
             'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
             'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
+            'kbaseViewLiveRunLog'                   : 'kbase/js/widgets/function_output/kbaseViewLiveRunLog',
+            'kbaseReportView'                       : 'kbase/js/widgets/function_output/kbaseReportView',
 
             // unfinished ones
             /***

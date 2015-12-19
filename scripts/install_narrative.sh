@@ -43,7 +43,7 @@ SCRIPT_TGT="kbase-narrative"
 
 CUR_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 NARRATIVE_ROOT_DIR=$CUR_DIR/..
-SCRIPT_TEMPLATE=$CUR_DIR/jupyter_notebook.tmpl
+SCRIPT_TEMPLATE=$CUR_DIR/start_local_narrative.tmpl
 
 # clear log
 logfile=`pwd`/install.log

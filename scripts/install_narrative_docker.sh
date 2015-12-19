@@ -11,7 +11,7 @@ SCRIPT_TGT="kbase-narrative"
 
 CUR_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 NARRATIVE_ROOT_DIR=$CUR_DIR/..
-SCRIPT_TEMPLATE=$CUR_DIR/jupyter_notebook.tmpl
+SCRIPT_TEMPLATE=$CUR_DIR/start_docker_narrative.tmpl
 
 function console () {
     now=`date '+%Y-%m-%d %H:%M:%S'`
@@ -46,7 +46,6 @@ while read s
         if [ $i = 0 ]
             then
             echo d=`pwd`
-            echo e=$(dirname `which python`)
             i=1
         fi
 done < $SCRIPT_TEMPLATE > $SCRIPT_TGT

@@ -6,8 +6,18 @@ DS=$( date +%Y%m%d%H%M )
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
 NAR_NAME="kbase/narrative"
 NAR_BASE="kbase/narrbase"
-NAR_BASE_VER="3.1"
+NAR_BASE_VER="4.1"
+NAR_PREREQ="kbase/narrprereq"
+NAR_PREREQ_VER="1.0"
 
+# Make sure the prereq image is there. If not, build it.
+docker images |grep "^$NAR_PREREQ "|grep " $NAR_PREREQ_VER " > /dev/null
+
+if [ $? -eq 1 ] ; then
+    echo "Build prereq image"
+fi
+
+# Make sure the base image is there. If not, build it.
 docker images |grep "^$NAR_BASE "|grep " $NAR_BASE_VER " > /dev/null
 
 if [ $? -eq 1 ] ; then

@@ -13,4 +13,4 @@ ADD https://github.com/jupyter/notebook/archive/${JUPYTER_VERSION}.tar.gz /kb/in
 RUN cd /kb/installers/jupyter_notebook && tar -xvf notebook-${JUPYTER_VERSION}.tar.gz && cd notebook-${JUPYTER_VERSION} && pip install --pre -e .
 
 # Install IPywidgets
-pip install ipywidgets==${IPYWIDGETS_VERSION}
+RUN pip install ipywidgets==${IPYWIDGETS_VERSION}

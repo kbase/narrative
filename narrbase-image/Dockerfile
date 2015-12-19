@@ -6,6 +6,11 @@ ENV IPYWIDGETS_VERSION 4.1.1
 
 RUN mkdir -p /kb/installers
 
-ADD https://github.com/jupyter/notebook/archive/${JUPYTER_VERSION}.tar.gz /kb/installers/jupyter_notebook/jupyter.tar.gz
-ADD https://github.com/ipython/ipywidgets/archive/${IPYWIDGETS_VERSION}.tar.gz /kb/installers/ipywidgets/ipywidgets.tar.gz
+# Download Jupyter Notebook
+ADD https://github.com/jupyter/notebook/archive/${JUPYTER_VERSION}.tar.gz /kb/installers/jupyter_notebook/notebook-${JUPYTER_VERSION}.tar.gz
 
+# Install Jupyter Notebook
+RUN cd /kb/installers/jupyter_notebook && tar -xvf notebook-${JUPYTER_VERSION}.tar.gz && cd notebook-${JUPYTER_VERSION} && pip install --pre -e .
+
+# Install IPywidgets
+pip install ipywidgets==${IPYWIDGETS_VERSION}

@@ -45,7 +45,7 @@ RUN chown -R nobody:www-data /kb/dev_container/narrative/src/notebook/ipython_pr
 # and configures the notebook server to use /narrative/{CMD} as the prefix for a reverse
 # proxy environment
 USER nobody
-ENTRYPOINT ["kbase-narrative", "--NotebookApp.open_browser=False", "--ip=*"]
+ENTRYPOINT ["kbase-narrative"]
 
 ONBUILD USER root
 ONBUILD ADD url.cfg /kb/dev_container/narrative/url.cfg

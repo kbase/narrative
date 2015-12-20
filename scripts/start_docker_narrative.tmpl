@@ -10,4 +10,4 @@ CFGDIR=$JUPYTER_CONFIG_DIR/static/kbase
 
 cp $NARRATIVE_DIR/src/config.json $JUPYTER_CONFIG_DIR/static/kbase/
 
-jupyter notebook "$@"
+jupyter notebook --NotebookApp.base_url=/narrative --NotebookApp.open_browser=False --ip=* "$@"

@@ -3,7 +3,7 @@
 
 This document schedules how to deploy the Narrative on a fresh developer’s server instance with Docker provisioning
 
-Last updated: Bill Riehl <wjriehl@lbl.gov> 12/21/2015
+Last updated: Bill Riehl <wjriehl@lbl.gov> 12/22/2015
 
 Bill Riehl <wjriehl@lbl.gov>
 Keith Keller <kkeller@lbl.gov>
@@ -14,7 +14,6 @@ Dan Gunter <dkgunter@lbl.gov>
 
 1.  A front end with Nginx 1.3.13+ and some supporting Lua libraries. These implement a dynamic proxy and the provisioning logic that spins up/down docker containers.
 2.  A server running Docker to host the containers
-3.  A Docker container for the actual image.
 
 This document will walk through the server building process. For this developer’s tutorial, we built a local VM using Vagrant through Virtualbox. The base Vagrant image we used was hashicorp/precise64, which provides a clean Ubuntu 14.04 LTS image.  
 <http://www.vagrantup.com>
@@ -67,7 +66,7 @@ This uses Nginx with the embedded Lua module from the nginx-extras package, desc
 
     sudo su - root
     # these next two should add the nginx repo properly
-    apt-get install-y  python-software-properties
+    apt-get install -y python-software-properties
     add-apt-repository ppa:nginx/stable
     apt-get update
     apt-get install -y nginx-extras
@@ -114,30 +113,9 @@ One last step before getting Docker and the Narrative installed is the installat
 This includes a few instructions, but some more details are available here:
 <http://docs.docker.io/en/latest/installation/ubuntulinux/>
 
-## Upgrade Linux kernel
-
-Docker currently uses (at minimum) the 3.8 Linux kernel, so if your host is running an older
-kernel (e.g., Ubuntu 12.04), you’ll need to install the new kernel and restart.
-
-    sudo su - root
-    apt-get update
-    apt-get install -y linux-image-generic-lts-raring linux-headers-generic-lts-raring
-    shutdown -r now
-    # now, log back in
-    vagrant ssh
-    cd kb_narr
-
 ## Install Docker
 
-The [Docker installation tutorials](https://docs.docker.com/installation/#installation) include detailed instructions for how to install Docker on various operating systems. For the OS used in this tutorial - Ubuntu 14.04 - use `wget` to fetch and run the installation script:
-
-    wget -qO- https://get.docker.com/ | sh
-
-You can test the installation with the command:
-
-    sudo docker run hello-world
-
-See more details on the [Docker installer guide for Ubuntu 14.04](https://docs.docker.com/installation/ubuntulinux/).
+The [Docker installation tutorials](https://docs.docker.com/engine/installation/ubuntulinux/) include detailed instructions for how to install Docker on various operating systems. For the OS used in this tutorial - Ubuntu 14.04 - follow the instructions given at that link. That will walk you through everything you need, just follow the Trusty/14.04 steps.
 
 Next, you'll need to set up groups so docker and www-data can play nice with each other (so we can get proxied external access to the deployed containers that’ll be running the Narrative).  
 
@@ -150,26 +128,30 @@ Then stop and restart docker and Nginx.
     service docker start
     service nginx start
 
-Next, run buildNarrativeContainer.sh to build the base Docker container for narrative instances and the first Narrative container on top of it.
+## Build the Narrative Docker images
 
-    cd ~/kb_narr/narrative
-    ./buildNarrativeContainer.sh
+Once Docker is installed, you can now build the Narrative images, using the build_narrative_container.sh script.
 
-This will take around half an hour to pull, compile, and deploy the various components. So go get a cup of coffee or take a nap at this point.
+    cd ~/kb_narr/narrative/scripts
+    ./build_narrative_container.sh
 
-A quick breakdown of this function:
+This will take around 30-40 minutes to pull, compile, and deploy the three images. These are:
+
+  * kbase/narrprereq - the "pre required" system level requirements, including several Ubuntu, Python, and R packages.
+  * kbase/narrbase - this layer has the versions of the Jupyter Notebook and IPywidgets (now its own component) we use for the Narrative.
+  * kbase/narrative - the narrative image itself.
+
+These three images are built separately for easier management. Since the Narrative code will likely be changing the most often, it is built last. The base dependencies are least likely to change (and take the longest to build), so we try to minimize building them.
+
+A quick breakdown of the Docker build process function:
 
 * `docker build`: translates to “Build a new Docker container from the Dockerfile in the present working directory.”
 * `-q`: this directive is for “quiet” mode. The current container builds generate lots of output and reach some internal docker limit of how much log output can be stored. A symptom of this problem is that the build will halt with the error "invalid byte in chunk length".
-* `-t <username>/<container name>`: this tags the new container with a given name, instead of just a UUID. You can give it an additional :tag (e.g. kbase/narrative:tag) on the end, otherwise it’ll tag it as “latest”. When a new version is made, the current “latest” tagged container will give up its name and fall back on a UUID.
+* `-t <username>/<container name>`: this tags the new container with a given name, instead of just a hash id. You can give it an additional :tag (e.g. kbase/narrative:tag) on the end, otherwise it’ll tag it as “latest”. When a new version is made, the current “latest” tagged container will give up its name and fall back on a hash.
 
-To keep track of older container when a new one is produced, we create a new tag with a datestamp
+To keep track of older containers when a new one is produced, we create a new tag with a datestamp
 
     sudo docker tag kbase/narrative:latest kbase/narrative:`date +%Y%m%d`
-
-### Intermediate containers
-
-In previous incarnations of this script this would create a whole slew of intermediate container layers that all get built on top of each other. Currently, the intermediate containers are deleted as we go. Still, it may be useful to know how to deal with this situation. 
 
 You can see which containers are active or exited with:
 
@@ -189,7 +171,9 @@ All of those with status “Exit 0” can be safely deleted. This command will f
 
     docker ps -a | grep Exit | awk '{print $1}' | xargs docker rm
 
-## Deploy KBase Functional Site
+The `docker_cleanup.sh` script in the narrative/scripts directory will take care of this for you.
+
+## Deploy KBase Functional Site (NEEDS UPDATING - Bill, 12/22/2015)
 
 Finally, deploy the rest of the functional site (this is external to the Narrative apparatus, but should be on the same system, so it can handle login, etc.)
 
@@ -246,7 +230,7 @@ You can use the container ID to look at the container’s stdout and stderr with
 
 (or other ID)  
 
-That’s a fragment of a longer UUID. If that’s not unique in your list, you can get the whole thing with
+That’s a fragment of a longer id. If that’s not unique in your list, you can get the whole thing with
 
     docker ps --no-trunc
 
@@ -256,7 +240,7 @@ A container will remain up as long as a user maintains a websocket connection to
 
 There have been a few cases where this didn’t happen properly and users don’t see updated changes. A container can be manually shut down and removed with this command:
 
-    docker stop <container UUID>
-    docker rm <container UUID>
+    docker stop <container id>
+    docker rm <container id>
 
 Though this might cause inconsistencies in the Nginx/Lua proxy cache.

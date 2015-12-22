@@ -21,6 +21,7 @@
 define(['jquery', 
         'underscore',
         'narrativeConfig',
+        'BootstrapDialog',
         'jquery-nearest',
         'kbwidget', 
         'bootstrap', 
@@ -31,7 +32,7 @@ define(['jquery',
         'kbaseNarrativeMethodCell',
         'kbaseNarrativeSidePanel',
         'kbaseNarrativeDataPanel'],
-        function($, _, Config) {
+        function($, _, Config, BootstrapDialog) {
 
     $.KBWidget({
         name: 'kbaseNarrativeWorkspace',
@@ -855,20 +856,51 @@ define(['jquery',
             }
             else {
                 // Add copy button
+
+    // <!-- Modal dialog for copying a narrative in view-only mode -->
+    // <div class="modal fade" tabIndex="-1" role="dialog"
+    //      aria-labelledby="myModalLabel" aria-hidden="true"
+    //      id="kb-ro-copy-dlg">
+    //     <div class="modal-dialog">
+    //         <div class="modal-content">
+    //             <div class="modal-header">
+    //                 <button type="button" class="close" data-dismiss="modal"
+    //                         aria-label="Close">
+    //                     <span aria-hidden="true">&times;</span></button>
+    //                 <h4 class="modal-title" id="myModalLabel">Copy a
+    //                     narrative</h4>
+    //             </div>
+    //             <div class="modal-body"></div>
+    //         </div>
+    //     </div>
+    // </div>
+
+                if (!this.copyModal) {
+                    this.copyModal = new BootstrapDialog({
+                        title: 'Copy a narrative',
+                        body: $('<div>'),
+                        closeButton: true
+                        // buttons: modalButtons
+                    });
+                }
+
+
                 $('.navbar-right').prepend(
                   $('<button>').addClass('btn btn-default navbar-btn kb-nav-btn')
                     .append($('<div>').addClass('fa fa-copy'))
                     .append($('<div>').text("copy").addClass('kb-nav-btn-txt'))
                     .click(function () {
-                        var $dlg = $('#kb-ro-copy-dlg');
-                        $dlg.modal();
-                        var $panel = $dlg.find(".modal-body");
+                        this.copyModal.show();
+                        // var $dlg = $('#kb-ro-copy-dlg');
+                        // $dlg.modal();
+                        var $panel = this.copyModal.getBody();
+                        // var $panel = $dlg.find(".modal-body");
                         var $jump = $("<div>").css({'margin-top': '20px'})
                           .append($("<button>").addClass('btn btn-info')
                             .text("Open this narrative"));
                         $(document).trigger('copyThis.Narrative', [$panel, null, $jump]);
                         return '';
-                    })
+                    }.bind(this))
                 );
                 // Add view-only info/badge
                 $('.navbar-right').prepend(

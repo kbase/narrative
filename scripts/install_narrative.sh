@@ -89,17 +89,12 @@ function make_activate_venv () {
 # Arg parsing
 # -----------
 
-force_ipython=''
 no_venv=0
 while [ $# -gt 0 ]; do
     case $1 in
         -h | --help | -\?)
             usage
             exit 0
-            ;;
-        --ipython) 
-            force_ipython=1
-            shift
             ;;
         --no-venv)
             no_venv=1

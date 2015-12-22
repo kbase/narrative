@@ -3,9 +3,9 @@
 
 This document schedules how to deploy the Narrative on a fresh developer’s server instance with Docker provisioning
 
-Last updated: Dan Gunter <dkgunter@lbl.gov> 7/18/2014
+Last updated: Bill Riehl <wjriehl@lbl.gov> 12/21/2015
 
-Bill Riehl <wjriehl@lbl.gov> 7/15/2014
+Bill Riehl <wjriehl@lbl.gov>
 Keith Keller <kkeller@lbl.gov>
 Dan Gunter <dkgunter@lbl.gov>
 (based on a document written by Steve Chan, emeritus)
@@ -56,7 +56,6 @@ Next, bring in the Narrative and Bootstrap repos (as yourself):
     mkdir kb_narr
     cd kb_narr
     git clone http://github.com/kbase/narrative
-    git clone http://github.com/kbase/bootstrap
     git clone http://github.com/kbase/ui-common
 
 # Set up the Nginx environment

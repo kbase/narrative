@@ -857,24 +857,6 @@ define(['jquery',
             else {
                 // Add copy button
 
-    // <!-- Modal dialog for copying a narrative in view-only mode -->
-    // <div class="modal fade" tabIndex="-1" role="dialog"
-    //      aria-labelledby="myModalLabel" aria-hidden="true"
-    //      id="kb-ro-copy-dlg">
-    //     <div class="modal-dialog">
-    //         <div class="modal-content">
-    //             <div class="modal-header">
-    //                 <button type="button" class="close" data-dismiss="modal"
-    //                         aria-label="Close">
-    //                     <span aria-hidden="true">&times;</span></button>
-    //                 <h4 class="modal-title" id="myModalLabel">Copy a
-    //                     narrative</h4>
-    //             </div>
-    //             <div class="modal-body"></div>
-    //         </div>
-    //     </div>
-    // </div>
-
                 if (!this.copyModal) {
                     this.copyModal = new BootstrapDialog({
                         title: 'Copy a narrative',
@@ -883,7 +865,6 @@ define(['jquery',
                         // buttons: modalButtons
                     });
                 }
-
 
                 $('.navbar-right').prepend(
                   $('<button>').addClass('btn btn-default navbar-btn kb-nav-btn')

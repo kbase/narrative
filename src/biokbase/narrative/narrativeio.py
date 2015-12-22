@@ -373,7 +373,11 @@ class KBaseWSManagerMixin(object):
             raise self._ws_err_to_perm_err(err)
         my_narratives = [dict(zip(list_objects_fields, obj)) for obj in res]
         for nar in my_narratives:
-            nar['name'] = nar['meta'].get('name', 'Untitled')
+            # Look first for the name in the object metadata. if it's not there, use
+            # the object's name. If THAT'S not there, use Untitled.
+            # This gives support for some rather old narratives that don't
+            # have their name stashed in the metadata.
+            nar['name'] = nar['meta'].get('name', nar.get('name', 'Untitled'))
 
         return my_narratives
 

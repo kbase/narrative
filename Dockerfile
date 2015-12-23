@@ -37,7 +37,7 @@ RUN npm install && bower install --allow-root --config.interactive=false
 # Add Tini. Tini operates as a process subreaper for jupyter. This prevents
 # kernel crashes. See Jupyter Notebook known issues here:
 # http://jupyter-notebook.readthedocs.org/en/latest/public_server.html#known-issues
-ENV TINI_VERSION 0.6.0
+ENV TINI_VERSION v0.8.4
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
 RUN chmod +x /usr/bin/tini
 

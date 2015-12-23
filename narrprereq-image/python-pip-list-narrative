@@ -11,6 +11,7 @@ jinja2
 jsonrpcbase
 jsonschema
 markdown
+matplotlib==1.4.3
 networkx
 nose
 oauth2==1.5.167
@@ -18,6 +19,7 @@ oauthlib==0.1.3
 paramiko==1.12.2
 pexpect
 pika==0.9.8
+plotly
 poster
 pyasn1==0.1.3
 pycrypto>=2.6

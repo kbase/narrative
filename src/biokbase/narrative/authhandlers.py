@@ -9,7 +9,9 @@ from traitlets.config import Application
 from notebook.auth.login import LoginHandler
 from notebook.auth.logout import LogoutHandler
 
-from biokbase.narrative.common.kblogging import get_logger, log_event
+from biokbase.narrative.common.kblogging import (
+    get_logger, log_event
+)
 from biokbase.narrative.common.util import kbase_env
 import biokbase.auth
 

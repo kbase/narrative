@@ -1,4 +1,4 @@
-FROM kbase/narrprereq:1.0
+FROM kbase/narrprereq:1.1
 MAINTAINER William Riehl wjriehl@lbl.gov
 
 ENV JUPYTER_VERSION 4.0.6

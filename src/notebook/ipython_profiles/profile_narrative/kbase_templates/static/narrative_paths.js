@@ -35,6 +35,7 @@ define([], function() {
             'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
             'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
             'catalog-client-api'                    : 'kbase/js/api/Catalog',
+            'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
 
             /***
              * CORE NARRATIVE WIDGETS
@@ -200,13 +201,18 @@ define([], function() {
             'kbasePiechart'                         : 'kbase/js/ui-common/src/widgets/vis/kbasePiechart',
             'kbaseTreechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
             'kbaseRNASeqPie'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqPie',
+            'kbaseRNASeqAnalysis'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqAnalysis',
+            'kbaseRNASeqSample'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqSample',
             'kbaseRNASeqHistogram'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqHistogram',
             'kbaseCummerbundPlot'                        : 'kbase/js/ui-common/src/widgets/kbaseCummerbundPlot',
+            'kbaseExpressionSampleTable'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTable',
             'kbasePMIBarchart'                        : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePMIBarchart',
             'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
             'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
             'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
+            'kbaseViewLiveRunLog'                   : 'kbase/js/widgets/function_output/kbaseViewLiveRunLog',
+            'kbaseReportView'                       : 'kbase/js/widgets/function_output/kbaseReportView',
 
             // unfinished ones
             /***

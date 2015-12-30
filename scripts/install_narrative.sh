@@ -35,7 +35,7 @@ JUPYTER_NOTEBOOK_INSTALL_DIR=jupyter_notebook
 JUPYTER_NOTEBOOK_TAG=4.0.6
 
 IPYWIDGETS_INSTALL_DIR=ipywidgets
-IPYWIDGETS_TAG=4.0.3
+IPYWIDGETS_TAG=4.1.1
 
 PYTHON=python2.7
 
@@ -43,7 +43,7 @@ SCRIPT_TGT="kbase-narrative"
 
 CUR_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 NARRATIVE_ROOT_DIR=$CUR_DIR/..
-SCRIPT_TEMPLATE=$CUR_DIR/jupyter_notebook.tmpl
+SCRIPT_TEMPLATE=$CUR_DIR/start_local_narrative.tmpl
 
 # clear log
 logfile=`pwd`/install.log
@@ -89,17 +89,12 @@ function make_activate_venv () {
 # Arg parsing
 # -----------
 
-force_ipython=''
 no_venv=0
 while [ $# -gt 0 ]; do
     case $1 in
         -h | --help | -\?)
             usage
             exit 0
-            ;;
-        --ipython) 
-            force_ipython=1
-            shift
             ;;
         --no-venv)
             no_venv=1
@@ -134,8 +129,8 @@ fi
 # Install external JavaScript code
 # --------------------
 cd $NARRATIVE_ROOT_DIR
-bower install
-npm install
+npm install >> ${logfile} 2>&1
+bower install --allow-root --config.interactive=false >> ${logfile} 2>&1
 
 
 cd $VIRTUAL_ENV
@@ -153,10 +148,11 @@ cd ..
 # Setup ipywidgets addon
 log "Installing ipywidgets using $PYTHON"
 console "Installing ipywidgets from directory 'ipywidgets'"
-git clone https://github.com/ipython/ipywidgets
-cd ipywidgets
-git checkout tags/$IPYWIDGETS_TAG
-pip install -e . >> ${logfile} 2>&1
+# git clone https://github.com/ipython/ipywidgets
+# cd ipywidgets
+# git checkout tags/$IPYWIDGETS_TAG
+pip install ipywidgets==$IPYWIDGETS_TAG >> ${logfile} 2>&1
+# pip install -e . >> ${logfile} 2>&1
 
 # Install Narrative code
 # ----------------------
@@ -178,7 +174,7 @@ cd $NARRATIVE_ROOT_DIR
 git clone https://github.com/kbase/data_api -b develop
 cd data_api
 pip install -r requirements.txt
-$PYTHON setup.py install
+$PYTHON setup.py install >> ${logfile} 2>&1
 cd ..
 rm -rf data_api
 

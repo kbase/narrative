@@ -8,8 +8,6 @@ export JUPYTER_PATH=$NARRATIVE_DIR/kbase-extension
 export IPYTHONDIR=$NARRATIVE_DIR/kbase-extension/ipython
 CFGDIR=$JUPYTER_CONFIG_DIR/static/kbase
 
-source $e/activate
-
 cp $NARRATIVE_DIR/src/config.json $JUPYTER_CONFIG_DIR/static/kbase/
 
-jupyter notebook "$@"
+jupyter notebook --NotebookApp.base_url=/narrative --NotebookApp.open_browser=False --ip=* "$@"

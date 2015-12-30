@@ -13,7 +13,7 @@ class KBaseCheckpoints(KBaseWSManagerMixin, Checkpoints):
         """Create a checkpoint."""
         return dict(
             id=path,
-            last_modified=tz.datetime(2015, 7, 10) # dummy for now, since it can't be None
+            last_modified=tz.utcnow()
         )
 
     def restore_checkpoint(self, contents_mgr, checkpoint_id, path):

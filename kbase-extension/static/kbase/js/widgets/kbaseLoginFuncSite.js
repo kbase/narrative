@@ -73,18 +73,48 @@ define('kbaseLogin', ['jquery',
             if (!$.cookie(this.cookieName))
                 return {};
 
-            var chips = localStorage.getItem('kbase_session');
+            var chips = this.decodeCookie($.cookie(this.cookieName));
+            // var chips = localStorage.getItem('kbase_session');
 
-            if (chips != undefined  && chips != null) {
-                chips = JSON.parse(chips);
-            }
-            else {
-                chips = {};
-            }
+            // if (chips != undefined  && chips != null) {
+            //     chips = JSON.parse(chips);
+            // }
+            // else {
+            //     chips = {};
+            // }
 
             return field == undefined
                 ? chips
                 : chips[field];
+        },
+
+        /**
+         * Decodes a Globus authentication token, transforming the token
+         * plain string into a map of field names to values.
+         * 
+         * @function decodeToken
+         * @private
+         * 
+         * @param {string} - A globus auth token
+         * 
+         * @returns {GlobusAuthToken} an object representing the decoded
+         * token.
+         */
+        decodeCookie: function (token) {
+            var parts = token.split('|');
+            var map = {};
+            var i;
+            for (i = 0; i < parts.length; i++) {
+                var fieldParts = parts[i].split('=');
+                var key = fieldParts[0];
+                var value = fieldParts[1];
+                map[key] = value;
+            }
+            if (map.token) {
+                map.token = map.token.replace(/PIPESIGN/g, '|').replace(/EQUALSSIGN/g, '=');
+                map.success = 1;
+            }
+            return map;
         },
 
         sessionId : function () {
@@ -128,7 +158,7 @@ define('kbaseLogin', ['jquery',
 
             if (kbaseCookie.user_id) {
 
-                if (!this.is_token_valid(this.get_kbase_cookie('token'))) {
+                if (!this.is_token_valid(kbaseCookie.token)) {
                     localStorage.removeItem('kbase_session');
                     // nuke the cookie, too, just in case it's still there.
                     $.removeCookie(this.cookieName, { path: '/', domain: '.kbase.us' });

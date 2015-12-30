@@ -143,8 +143,8 @@
         "ws_browser": "https://narrative.kbase.us/functional-site/#/ws"
     }, 
     "release_notes": "https://github.com/kbase/narrative/blob/staging/RELEASE_NOTES.md", 
-    "version": "1.0.4",
-    "loading_gif": "/static/kbase/images/ajax-loader.gif",
+    "version": "2.0.0",
+    "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif",
     "tooltip": {
         "showDelay": 750,
         "hideDelay": 0

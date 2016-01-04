@@ -13,7 +13,7 @@ for (var file in window.__karma__.files) {
 }
 
 requirejs.config({
-    baseUrl: '/static/',
+    baseUrl: '/narrative/static/',
 
     paths: {
         moment: 'components/moment/moment',

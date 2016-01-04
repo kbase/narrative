@@ -31,7 +31,6 @@ c.NotebookApp.ip = 'localhost'
 # c.NotebookApp.server_extensions = []
 c.NotebookApp.server_extensions=['biokbase.narrative.narrativehandler']
 
-
 # The random bytes used to secure cookies. By default this is a new random
 # number every time you start the Notebook. Set it to a value in a config file
 # to enable logins to persist across server sessions.

@@ -395,9 +395,6 @@ define(['jquery',
 
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
             IPython.notebook.kernel.execute(code, callbacks, {silent: true});
-
-
-                
         },
 
         buildAppCell: function(appSpec) {
@@ -1631,7 +1628,7 @@ define(['jquery',
 
             return "import biokbase.narrative.common.service as Service\n" +
                    "method = Service.get_service('generic_service').get_method('method_call')\n" +
-                   "method('" + methodJSON + "', '" + paramsJSON + "')";
+                   "method(r'" + methodJSON + "', r'" + paramsJSON + "')";
         },
 
         /**
@@ -1659,10 +1656,10 @@ define(['jquery',
 
             var paramList = params.map(
                 function(p) {
-                    return "'" + addSlashes(p) + "'";
+                    return "r'" + addSlashes(p) + "'";
                 }
             );
-            cmd += "method(" + paramList + ")";
+            cmd += "method(r" + paramList + ")";
 
             return cmd;
         },
@@ -2076,7 +2073,12 @@ define(['jquery',
         * Returns the <div> that was populated.
         */
         showNextSteps: function(obj) {
-          var $elt = obj.elt, next_steps = obj.next_steps;
+          var $elt = obj.elt;
+          // if the element already has a 'kb-app-next' div, don't add another one.
+          if ($elt.has('.kb-app-next').length)
+            return;
+
+          var next_steps = obj.next_steps;
           var $tgt = $('<div>').addClass('kb-app-next');
           var $title = $('<h3>').text('Suggested next steps:');
           $tgt.append($title);

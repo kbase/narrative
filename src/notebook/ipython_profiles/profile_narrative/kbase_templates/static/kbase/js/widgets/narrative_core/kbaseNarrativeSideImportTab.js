@@ -95,6 +95,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             this.widgetPanel.append(this.widgetPanelCard1);
             this.widgetPanelCard1.append("<div class='kb-cell-run'><h2 class='collapse in'>" +
             		"Import data from your local computer or another data source. First, select the type of data you wish to import." +
+                    ' (See the <a href="http://kbase.us/data-upload-download-guide/" target="_blank">Data Upload/Download Guide</a> for more information.)' +
             		"</h2></div><hr>");
             
             var $nameDiv = $('<div>').addClass("kb-method-parameter-name").css("text-align", "left")
@@ -472,6 +473,24 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             	} else {
             		self.showError(methodId + " import mode for Genome type is not supported yet");
             	}
+            } else if (self.selectedType === 'KBaseGenomeAnnotations.GenomeAnnotation') {
+                var url = null;
+                if (methodId === 'import_genomeannotation_gbk_file') {
+                        url = self.shockURL + '/node/' + params['gbkFile'];
+                } else if (methodId === 'import_genomeannotation_gbk_ftp') {
+                        url = params['ftpFolder'];
+                }
+                if (url) {
+                        var options = {};
+                        args = {'external_type': 'Genbank.Genome',
+                                        'kbase_type': 'KBaseGenomeAnnotations.GenomeAnnotation',
+                                        'workspace_name': self.wsName,
+                                        'object_name': params['outputObject'],
+                                        'optional_arguments': {'validate':{},'transform':options},
+                                        'url_mapping': {'Genbank.Genome': url}};
+                } else {
+                        self.showError(methodId + " import mode for GenomeAnnotation type is not supported yet");
+                }
             } else if (self.selectedType === 'Transcript') {
             	if (methodId === 'import_transcript_file') {
             		var options = {'dna':self.asInt(params['dna']),
@@ -506,6 +525,24 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
             	} else {
             		self.showError(methodId + " import mode for ContigSet type is not supported yet");
             	}
+            } else if (self.selectedType === 'KBaseGenomeAnnotations.Assembly') {
+                var url = null;
+                if (methodId === 'import_assembly_fasta_file') {
+                        url = self.shockURL + '/node/' + params['fastaFile'];
+                } else if (methodId === 'import_assembly_fasta_ftp') {
+                        url = params['ftpFolder'];
+                }
+                if (url) {
+                        args = {'external_type': 'FASTA.DNA.Assembly',
+                                        'kbase_type': 'KBaseGenomeAnnotations.Assembly',
+                                        'workspace_name': self.wsName,
+                                        'object_name': params['outputObject'],
+                                        'optional_arguments': {'validate':{},'transform':
+                                                        {"fasta_reference_only":self.asBool(params['fastaReferenceOnly'])}},
+                                        'url_mapping': {'FASTA.DNA.Assembly': url}};
+                } else {
+                        self.showError(methodId + " import mode for Assembly type is not supported yet");
+                }
             } else if (self.selectedType === 'ShortReads') {
             	if (methodId === 'import_reads_fasta_file') {
             		var options = {'output_file_name': 'reflib.fasta.json'};
@@ -656,6 +693,48 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'select2'], function( 
                 } else {
                     self.showError(methodId + " import mode for ExpressionMatrix type is not supported yet");
                 }
+            } else if (self.selectedType === 'KBaseEnigmaMetals.GrowthMatrix') {
+                if (methodId === 'import_growth_tsv_file') {
+                    var options = {
+                            'format_type': 'Simple'
+                    };
+                    args = {'external_type': 'TSV.Growth', 
+                            'kbase_type': 'KBaseEnigmaMetals.GrowthMatrix', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':options},
+                            'url_mapping': {'TSV.Growth': self.shockURL + '/node/' + params['growthFile']}};
+                } else {
+                    self.showError(methodId + " import mode for GrowthMatrix type is not supported yet");
+                }           
+            } else if (self.selectedType === 'KBaseEnigmaMetals.ChromatographyMatrix') {
+                if (methodId === 'import_chromatography_tsv_file') {
+                    var options = {
+                            'format_type': 'Simple'
+                    };
+                    args = {'external_type': 'TSV.Chromatography', 
+                            'kbase_type': 'KBaseEnigmaMetals.ChromatographyMatrix', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':options},
+                            'url_mapping': {'TSV.Chromatography': self.shockURL + '/node/' + params['chromatographyFile']}};
+                } else {
+                    self.showError(methodId + " import mode for ChromatographyMatrix type is not supported yet");
+                }           
+            } else if (self.selectedType === 'KBaseEnigmaMetals.WellSampleMatrix') {
+                if (methodId === 'import_wellsample_tsv_file') {
+                    var options = {
+                            'format_type': 'Simple'
+                    };
+                    args = {'external_type': 'TSV.WellSample', 
+                            'kbase_type': 'KBaseEnigmaMetals.WellSampleMatrix', 
+                            'workspace_name': self.wsName, 
+                            'object_name': params['outputObject'],
+                            'optional_arguments': {'validate':{},'transform':options},
+                            'url_mapping': {'TSV.WellSample': self.shockURL + '/node/' + params['wellSampleFile']}};
+                } else {
+                    self.showError(methodId + " import mode for WellSampleMatrix type is not supported yet");
+                }           
             } else {
             	self.showError("Import for [" + self.selectedType + "] type is not supported yet.");
             }

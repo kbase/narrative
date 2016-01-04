@@ -81,7 +81,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                                     .append(this.$showHideSpan)
                                     .append(' ')
                                     .append(this.$numHiddenSpan)
-                                    .append(' filtered')
+                                    .append(' filtered out')
                                     .addClass('kb-function-toggle')
                                     .hide()
                                     .click($.proxy(function(e) {
@@ -213,10 +213,38 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="fa fa-search"></span>')
+                           .tooltip({title:'Search for Apps & Methods', 'container':'body', delay: { "show": 400, "hide": 50 }})
                            .click($.proxy(function(event) {
                                this.$searchDiv.slideToggle(400);
                                this.$searchInput.focus();
                            }, this)));
+            this.addButton($('<button>')
+                           .addClass('btn btn-xs btn-default')
+                           .append('<span class="glyphicon glyphicon-refresh">')
+                           .tooltip({title:'Refresh app/method listings', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                           .click(function(e) {
+                                var version_tag = 'release';
+                                if(this.versionState=='R') { version_tag='release'; }
+                                else if(this.versionState=='B') { version_tag='beta'; }
+                                else if(this.versionState=='D') { version_tag='dev'; }
+                                this.refreshFromService(version_tag);
+                           }.bind(this)));
+
+            this.$toggleVersionBtn = $('<button>')
+                                        .addClass('btn btn-xs btn-default')
+                                        .tooltip({title:'Toggle between Release/Beta/Dev versions', 'container':'body', delay: { "show": 400, "hide": 50 }})
+                                        .append('R')
+            this.versionState = 'R';
+            this.addButton(this.$toggleVersionBtn 
+                                   .click(function(e) {
+                                        var version_tag = 'release';
+                                        if(this.versionState=='R') { this.versionState='B'; version_tag='beta'; }
+                                        else if(this.versionState=='B') { this.versionState='D'; version_tag='dev'; }
+                                        else if(this.versionState=='D') { this.versionState='R'; version_tag='release'; }
+                                        this.$toggleVersionBtn.html(this.versionState);
+                                        this.refreshFromService(version_tag);
+                                   }.bind(this)));
+
             // this.addButton($('<button>')
             //                .addClass('btn btn-xs btn-default')
             //                .append('<span class="fa fa-arrow-right"></span>')
@@ -299,10 +327,14 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
             }, event);
         },
 
-        refreshFromService: function() {
+        refreshFromService: function(version_tag) {
             this.showLoadingMessage("Loading KBase Methods from service...");
 
-            var methodProm = this.methClient.list_methods_spec({},
+            var filterParams = {};
+            if(version_tag) { filterParams['tag']=version_tag; }
+            //console.debug(filterParams)
+
+            var methodProm = this.methClient.list_methods_spec(filterParams,
                 $.proxy(function(methods) {
                     this.methodSpecs = {};
                     for (var i=0; i<methods.length; i++) {
@@ -310,7 +342,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                     }
                 }, this)
             );
-            var appProm = this.methClient.list_apps_spec({},
+            var appProm = this.methClient.list_apps_spec(filterParams,
                 $.proxy(function(apps) {
                     this.appSpecs = {};
                     for (var i=0; i<apps.length; i++) {
@@ -318,7 +350,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                     }
                 }, this)
             );
-            var catProm = this.methClient.list_categories({},
+            var catProm = this.methClient.list_categories(filterParams,
                 $.proxy(function(categories) {
                     this.categories = categories[0];
                 }, this)
@@ -411,15 +443,21 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                     triggerFn(method);
                 }, this));
 
+            var uiName = method.info.name;
+            //if (method.info.namespace)
+            //    uiName = '[' + method.info.namespace + '] ' + uiName;
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
                         .css({'white-space':'normal', 'cursor':'pointer'})
-                        .append($('<a>').append(method.info.name)
+                        .append($('<a>').append(uiName)
                                     .click($.proxy(function(e) {
                                         e.stopPropagation();
                                         triggerFn(method);
                                     }, this)));
-            var $version = $('<span>').addClass("kb-data-list-type").append('v'+method.info.ver); // use type because it is a new line
+            var version_string = 'v'+method.info.ver;
+            if (method.info.namespace)
+                version_string = '[' + method.info.namespace + '] ' + version_string;
+            var $version = $('<span>').addClass("kb-data-list-type").append(version_string); // use type because it is a new line
 
             var $more = $('<div>')
                         .addClass('kb-method-list-more-div')
@@ -713,10 +751,15 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
          */
         textFilter: function(pattern, method) {
             var lcName = method.info.name.toLowerCase();
+            var namespace = '';
+            if(method.info.namespace) {
+                namespace=method.info.namespace.toLowerCase();
+            }
             // match any token in the query, not the full string
             var tokens = pattern.toLowerCase().split(" ");
             for(var k=0; k<tokens.length; k++) {
-                if(lcName.indexOf(tokens[k])<0) {
+                if(lcName.indexOf(tokens[k])<0 &&
+                    namespace.indexOf(tokens[k])<0) {
                     // token not found, so we return false
                     return false;
                 }

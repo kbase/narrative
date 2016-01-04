@@ -73,7 +73,7 @@
                     this.submittedText = '&nbsp;&nbsp; submitted on ' + this.readableTimestamp();
                     if(this.auth()) {
                         if(this.auth().user_id)
-                            this.submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
+                            this.submittedText += ' by <a href="/functional-site/#/people/'+this.auth().user_id
                                 +'" target="_blank">' + this.auth().user_id + "</a>";
                     }
                     this.changeState('submitted');
@@ -100,10 +100,24 @@
                               )
                               .hide();
 
+            this.$resetButton = $('<button>')
+                                .attr('type', 'button')
+                                .attr('value', 'Cancel')
+                                .addClass('kb-app-run')
+                                .append('Edit and Re-Run')
+                                .css({'margin-right':'5px'})
+                                .click(
+                                    $.proxy(function(event) {
+                                        this.stopRunning();
+                                    }, this)
+                                )
+                                .hide();
+
             var $buttons = $('<div>')
                            .addClass('buttons pull-left')
                            .append(this.$runButton)
                            .append(this.$stopButton)
+                           .append(this.$resetButton)
                            .append(this.$submitted);
 
             var $progressBar = $('<div>')
@@ -253,13 +267,13 @@
          */
         getState: function() {
             return {
-                'runningState' : {
-                    'runState' : this.runState,
-                    'submittedText' : this.submittedText,
-                    'outputState' : this.allowOutput
+                runningState : {
+                    runState : this.runState,
+                    submittedText : this.submittedText,
+                    outputState : this.allowOutput
                 },
-                'minimized' : this.panel_minimized,
-                'params' : this.$inputWidget.getState()
+                minimized : this.panel_minimized,
+                params : this.$inputWidget.getState()
             };
         },
 
@@ -351,7 +365,9 @@
                         this.$submitted.html(this.submittedText).show();
                         this.$runButton.hide();
                         this.$stopButton.hide();
+                        this.$resetButton.hide();
                         this.$inputWidget.lockInputs();
+                        this.allowOutput = true;
                         this.displayRunning(true);
                         break;
                     case 'complete':
@@ -360,6 +376,7 @@
                         this.$submitted.html(this.submittedText).show();
                         this.$runButton.hide();
                         this.$stopButton.hide();
+                        this.$resetButton.show();
                         this.$inputWidget.lockInputs();
                         this.displayRunning(false);
                         // maybe unlock? show a 'last run' box?
@@ -370,6 +387,7 @@
                         this.$cellPanel.addClass('kb-app-step-running');
                         this.$runButton.hide();
                         this.$stopButton.show();
+                        this.$resetButton.hide();
                         this.$inputWidget.lockInputs();
                         this.displayRunning(true);
                         break;
@@ -377,7 +395,8 @@
                         this.$submitted.html(this.submittedText).show();
                         this.$cellPanel.addClass('kb-app-step-error');
                         this.$runButton.hide();
-                        this.$stopButton.show();
+                        this.$stopButton.hide();
+                        this.$resetButton.show();
                         this.$inputWidget.lockInputs();
                         this.$elem.find('.kb-app-panel').addClass('kb-app-error');
                         this.displayRunning(false, true);
@@ -385,9 +404,11 @@
                     default:
                         this.$cellPanel.removeClass('kb-app-step-running');
                         this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
+                        this.$cellPanel.removeClass('kb-app-step-error');
                         this.$submitted.hide();
                         this.$runButton.show();
                         this.$stopButton.hide();
+                        this.$resetButton.hide();
                         this.$inputWidget.unlockInputs();
                         this.displayRunning(false);
                         break;

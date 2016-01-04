@@ -485,10 +485,10 @@ define(['jquery',
                     if (jobType === "njs") {
                         specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
                         if (specInfo && jobIncomplete) {
-                            jobParamList.push("['" + jobId + "', " +
-                                              "'" + this.safeJSONStringify(specInfo.appSpec) + "', " +
-                                              "'" + this.safeJSONStringify(specInfo.methodSpecs) + "', " +
-                                              "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
+                            jobParamList.push("[r'" + jobId + "', " +
+                                              "r'" + this.safeJSONStringify(specInfo.appSpec) + "', " +
+                                              "r'" + this.safeJSONStringify(specInfo.methodSpecs) + "', " +
+                                              "r'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
                         }
                     }
                     // otherwise, it's a method cell, so fetch info that way.
@@ -496,12 +496,12 @@ define(['jquery',
                         specInfo = $sourceCell.kbaseNarrativeMethodCell('getSpecAndParameterInfo');
                         if (jobIncomplete) {
                             if (specInfo) {
-                                jobParamList.push("['" + jobId + "', " +
-                                                  "'" + this.safeJSONStringify(specInfo.methodSpec) + "', " +
-                                                  "'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
+                                jobParamList.push("[r'" + jobId + "', " +
+                                                  "r'" + this.safeJSONStringify(specInfo.methodSpec) + "', " +
+                                                  "r'" + this.safeJSONStringify(specInfo.parameterValues) + "']");
                             }
                             else {
-                                jobParamList.push("['" + jobId + "']");
+                                jobParamList.push("[r'" + jobId + "']");
                             }
                         }
                     }

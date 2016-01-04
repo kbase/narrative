@@ -79,12 +79,12 @@
 
             // initialize the state
             this.state = {
-                    runningState: {
-                        appRunState: "input", // could be 'input' || 'running' || 'error' || 'done', something else?
-                        runningStep: null
-                    },
-                    step: { }
-                };
+                runningState: {
+                    appRunState: "input", // could be 'input' || 'running' || 'error' || 'done', something else?
+                    runningStep: null
+                },
+                step: { }
+            };
             this.initErrorModal();
 
             this.fetchMethodInfo();
@@ -186,7 +186,7 @@
                                       var submittedText = "&nbsp;&nbsp; submitted on "+this.readableTimestamp(new Date().getTime());
                                       if(this.auth()) {
                                           if(this.auth().user_id)
-                                              submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
+                                              submittedText += ' by <a href="/functional-site/#/people/'+this.auth().user_id
                                                                       +'" target="_blank">' + this.auth().user_id + "</a>";
                                       }
                                       this.$submitted.html(submittedText);
@@ -235,11 +235,11 @@
                 .attr('type', 'button')
                 .attr('value', 'Reset')
                 .addClass('kb-app-run kb-app-reset')
-                .append('Reset')
+                .append('Edit and Re-Run')
                 .css({'margin-right':'5px', 'margin-left':'10px'})
                 .click(
                     $.proxy(function(event) {
-                    self.resetAppRun(true);
+                    self.resetAppRun(false);
                 }, this)
             )
             .hide();
@@ -787,7 +787,6 @@
 
             // if we were in the running state before, set the values
             if (state.runningState) {
-                
                 if (state.runningState.appRunState) {
                     if (state.runningState.submittedText) {
                         this.$submitted.html(state.runningState.submittedText);
@@ -810,19 +809,11 @@
                             this.inputSteps[i].widget.lockInputs();
                         }
                     }
-                    else if (state.runningState.appRunState === "done") {
+                    else if (state.runningState.appRunState === "done" || state.runningState.appRunState === "complete") {
                         this.$submitted.show();
                         this.$runButton.hide();
+                        this.$resetButton.show();
                         // start minimized if done, todo: save minimization state of steps
-                        this.minimizeAllSteps();
-                        for(var i=0; i<this.inputSteps.length; i++) {
-                            this.inputSteps[i].widget.lockInputs();
-                        }
-                    }
-                    else if (state.runningState.appRunState === "complete") {
-                        this.$submitted.show();
-                        this.$runButton.hide();
-                        // start minimized if complete, todo: save minimization state of steps
                         this.minimizeAllSteps();
                         for(var i=0; i<this.inputSteps.length; i++) {
                             this.inputSteps[i].widget.lockInputs();
@@ -888,13 +879,16 @@
                     }
                 }
             }
-            else if (state === 'complete') {
+            else if (state === 'complete' || state === 'done') {
                 for (var i=0; i<this.inputSteps.length; i++) {
                     this.inputSteps[i].$stepContainer.removeClass('kb-app-step-running');
                 }
                 this.state.runningState.runningStep = null;
                 this.state.runningState.appRunState = state;
                 this.$stopButton.hide();
+                this.$resetButton.show();
+                this.displayRunning(false);
+
                 // Show the 'next-steps' to take, if there are any
                 this.getNextSteps(
                   $.proxy(function(next_steps) {
@@ -908,34 +902,35 @@
         },
 
 
-    /**
-    * Get next steps, and invoke `render_cb` to render
-    * the specs returned by the trigger:getFunctionSpecs.Narrative for
-    * each of the possible apps/methods.
-    */
-    getNextSteps: function(render_cb) {
-      var app = this.appSpec;
-      //console.debug("Find next steps for app", app);
-      // fetch full info, which contains suggested next steps
-      var params = {ids: [app.info.id]};
-      var result = {};
-      this.methClient.get_app_full_info(params,
-        $.proxy(function(info_list) {
-          //console.debug("Got full info for app:", info_list);
-          var sugg = info_list[0].suggestions;
-          //console.debug("Suggestions for app:", sugg);
-          var params = {apps: sugg.next_apps,methods: sugg.next_methods };
-          //console.debug("Getting function specs, params=", params);
-          // Pass callback to render each retrieved function spec
-          this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
-            render_cb(specs);
-          }]);
-        }, this),
-        $.proxy(function() {
-          KBError("kbaseNarrativeMethodCell.getNextSteps",
-          "Could not get full info for app:" + app.info.id);
-        }, this));
-      },
+        /**
+         * Get next steps, and invoke `render_cb` to render
+         * the specs returned by the trigger:getFunctionSpecs.Narrative for
+         * each of the possible apps/methods.
+         */
+        getNextSteps: function(render_cb) {
+            var app = this.appSpec;
+            //console.debug("Find next steps for app", app);
+            // fetch full info, which contains suggested next steps
+            var params = {ids: [app.info.id]};
+            var result = {};
+            this.methClient.get_app_full_info(params,
+                $.proxy(function(info_list) {
+                    //console.debug("Got full info for app:", info_list);
+                    var sugg = info_list[0].suggestions;
+                    //console.debug("Suggestions for app:", sugg);
+                    var params = {apps: sugg.next_apps,methods: sugg.next_methods };
+                    //console.debug("Getting function specs, params=", params);
+                    // Pass callback to render each retrieved function spec
+                    this.trigger('getFunctionSpecs.Narrative', [params, function(specs) {
+                        render_cb(specs);
+                    }]);
+                }, this),
+                $.proxy(function() {
+                    KBError("kbaseNarrativeMethodCell.getNextSteps",
+                        "Could not get full info for app:" + app.info.id);
+                }, this)
+            );
+        },
 
         /*
          * Handle error in app.
@@ -960,10 +955,10 @@
         setStepOutput: function(stepId, output, state, preventSave) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
-                    if (this.inputStepLookup[stepId].outputWidget) {
-                        //output is already set and cannot change, so we do not rerender
-                        return;
-                    }
+                    // if (this.inputStepLookup[stepId].outputWidget) {
+                    //     //output is already set and cannot change, so we do not rerender
+                    //     return;
+                    // }
                     // clear the output panel, and assume we are no longer running this step
                     this.inputStepLookup[stepId].$outputPanel.empty();
                     this.inputStepLookup[stepId].$stepContainer.removeClass("kb-app-step-running");

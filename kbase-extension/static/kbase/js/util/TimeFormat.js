@@ -16,11 +16,10 @@ define([], function() {
      * Note that this tooltip needs to be activated with the $().tooltip() method before it'll function.
      *
      * @param timestamp the timestamp to calculate this div around. Should be in a Date.parse() parseable format.
-     * @param suffix an optional suffix for the time element. e.g. "ago" or "from now".
      * @return a div element with the timestamp calculated to be in terms of how long ago, with a tooltip containing the exact time.
      * @private
      */
-    function prettyTimestamp (timestamp, suffix) {
+    function prettyTimestamp (timestamp) {
         var d = parseDate(timestamp);
 
         var parsedTime = reformatDate(d);
@@ -82,32 +81,46 @@ define([], function() {
      * @returns {String} a parsed timestamp in the format "YYYY-MM-DD HH:MM:SS" in the browser's local time.
      * @private
      */
-    function reformatISOTimestamp (timestamp) {
+    function reformatISOTimeString (timestamp) {
         var dateObj = parseDate(timestamp);
-        if (dateObj === null)
+        if (dateObj === null) {
             return timestamp;
+        }
         return reformatDate(dateObj);
     }
 
+    /**
+     * @method reformatDate
+     * Reformats a date from a JavaScript Date object to the following format:
+     *
+     * YYYY-MM-DD HH:MM:SS
+     * e.g.
+     * 2016-01-05 13:26:02
+     * 
+     * Adds leading zeros to each field if necessary.
+     * @param {Object} dateObj - the JavaScript Date object to format.
+     * @returns {String} a parsed timestamp as above in the browser's local time.
+     * @private
+     */
     function reformatDate (dateObj) {
         var addLeadingZero = function (value) {
             value = String(value);
-            if (value.length === 1)
+            if (value.length === 1) {
                 return '0' + value;
+            }
             return value;
-        }
+        };
 
         return dateObj.getFullYear() + '-' + 
-               addLeadingZero((dateObj.getMonth() + 1)) + '-' + 
+               addLeadingZero(dateObj.getMonth() + 1) + '-' + 
                addLeadingZero(dateObj.getDate()) + ' ' + 
                addLeadingZero(dateObj.getHours()) + ':' + 
                addLeadingZero(dateObj.getMinutes()) + ':' + 
                addLeadingZero(dateObj.getSeconds());
-
     }
 
     /**
-     * @method calcTimeDifference
+     * @method calcTimeDiffRelative
      * From two timestamps (i.e. Date.parse() parseable), calculate the
      * time difference and return it as a human readable string.
      *
@@ -118,21 +131,25 @@ define([], function() {
         var now = new Date();
         var time = null;
 
-        if (timestamp)
+        if (timestamp) {
             time = parseDate(timestamp);
-        else if(dateObj)
+        }
+        else if (dateObj) {
             time = dateObj;
-
-        if (time === null)
+        }
+        if (time === null) {
             return 'Unknown time';
+        }
 
         // so now, 'time' and 'now' are both Date() objects
         var timediff = calcTimeDiffReadable(now, time);
 
-        if (time > now)
+        if (time > now) {
             timediff += ' from now';
-        else
+        }
+        else {
             timediff += ' ago';
+        }
 
         return timediff;
     }
@@ -191,14 +208,11 @@ define([], function() {
         return timeDiff.toFixed(1) + unit;
     }
 
-    function calcTimeDifference () {
-
-    }
-
     return {
         parseDate: parseDate,
         prettyTimestamp: prettyTimestamp,
-        calcTimeDifference: calcTimeDifference,
-        reformatDate: reformatDate
+        calcTimeDifference: calcTimeDiffRelative,
+        reformatDate: reformatDate,
+        reformatISOTimeString: reformatISOTimeString
     };
 });

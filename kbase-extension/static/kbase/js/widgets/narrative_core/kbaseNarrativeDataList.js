@@ -4,15 +4,14 @@
 * @author Michael Sneddon <mwsneddon@lbl.gov>
 * @public
 */
-define([
-'jquery',
-'underscore',
-'narrativeConfig',
-'Util/String',
-'jquery-nearest',
-'kbwidget',
-'kbaseAuthenticatedWidget',
-'kbaseNarrativeDownloadPanel'],
+define(['jquery',
+        'underscore',
+        'narrativeConfig',
+        'Util/String',
+        'jquery-nearest',
+        'kbwidget',
+        'kbaseAuthenticatedWidget',
+        'kbaseNarrativeDownloadPanel'],
 function ($, _, Config, StringUtil) {
     'use strict';
     $.KBWidget({

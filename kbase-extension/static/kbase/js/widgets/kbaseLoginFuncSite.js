@@ -69,19 +69,10 @@ define('kbaseLogin', ['jquery',
         narrCookieName : 'kbase_narr_session',
 
         get_kbase_cookie : function (field) {
-
             if (!$.cookie(this.cookieName))
                 return {};
 
             var chips = this.decodeCookie($.cookie(this.cookieName));
-            // var chips = localStorage.getItem('kbase_session');
-
-            // if (chips != undefined  && chips != null) {
-            //     chips = JSON.parse(chips);
-            // }
-            // else {
-            //     chips = {};
-            // }
 
             return field == undefined
                 ? chips
@@ -736,12 +727,11 @@ define('kbaseLogin', ['jquery',
 
             this.registerLogin =
                 function(args) {
-
                     if ( args.success ) {
                         this.data('loginDialog').dialogModal().trigger('clearMessages');
-                        this.data("entrance").hide();
-                        this.data("loggedinuser_id").text(args.name);
-                        this.data("userdisplay").show();
+                        this.data('entrance').hide();
+                        this.data('loggedinuser_id').text(args.name);
+                        this.data('userdisplay').show();
                         this.data('loginDialog').closePrompt();
                     }
                     else {

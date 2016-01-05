@@ -12,14 +12,14 @@
 (function( $, undefined ) {
 require(['jquery',
          'narrativeConfig',
-         'Util',
+         'Util/String',
          'handlebars', 
          'kbwidget', 
          'kbaseAuthenticatedWidget',
          'kbaseNarrativeCellMenu'], 
 function($, 
          Config,
-         Util) {
+         StringUtil) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",
@@ -145,7 +145,7 @@ function($,
                                .append($('<p>')
                                        .addClass('text-success'));
 
-            var methodId = this.options.cellId + '-method-details-'+Util.uuid();
+            var methodId = this.options.cellId + '-method-details-'+StrilUtil.uuid();
             var buttonLabel = 'details';
             var methodDesc = this.method.info.tooltip;
 //            var $menuSpan = $('<div class="pull-right">');

@@ -145,7 +145,7 @@ function($,
                                .append($('<p>')
                                        .addClass('text-success'));
 
-            var methodId = this.options.cellId + '-method-details-'+StrilUtil.uuid();
+            var methodId = this.options.cellId + '-method-details-'+StringUtil.uuid();
             var buttonLabel = 'details';
             var methodDesc = this.method.info.tooltip;
 //            var $menuSpan = $('<div class="pull-right">');

@@ -148,11 +148,8 @@ function($,
             var methodId = this.options.cellId + '-method-details-'+StringUtil.uuid();
             var buttonLabel = 'details';
             var methodDesc = this.method.info.tooltip;
-//            var $menuSpan = $('<div class="pull-right">');
-//
             this.$header = $('<div>').css({'margin-top':'4px'})
-                              .addClass('kb-func-desc');
-//                              .append($menuSpan)
+                           .addClass('kb-func-desc');
             this.$staticMethodInfo = $('<div>')
                               .append('<h1><b>' + this.method.info.name + '</b></h1>')
                               .append($('<h2>')

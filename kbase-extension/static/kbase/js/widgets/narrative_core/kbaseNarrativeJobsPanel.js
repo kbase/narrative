@@ -776,14 +776,14 @@ function($,
                 if (jobState.state.complete_time) {
                     completedTime = TimeFormat.prettyTimestamp(jobState.state.complete_time);
                     if (jobState.state.start_time) {
-                        runTime = TimeFormat.calcTimeDiffReadable(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
+                        runTime = TimeFormat.calcTimeFromNow(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
                     }
                 }
                 else if (jobState.state.ujs_info) {
                     if (jobState.state.ujs_info[5] !== null) {
                         completedTime = TimeFormat.prettyTimestamp(jobState.state.ujs_info[5]);
                         if (jobState.state.ujs_info[3]) {
-                            runTime = TimeFormat.calcTimeDiffReadable(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
+                            runTime = TimeFormat.calcTimeFromNow(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
                         }
                     }
                 }

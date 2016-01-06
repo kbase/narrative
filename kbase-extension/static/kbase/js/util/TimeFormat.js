@@ -10,20 +10,20 @@ define([], function() {
 
     /**
      * @method makePrettyTimestamp
-     * Makes a div containing the 'started time' in units of time ago, with a Bootstrap 3 tooltip
+     * Makes a span containing the 'started time' in units of time ago, with a Bootstrap 3 tooltip
      * that gives the exact time.
      *
      * Note that this tooltip needs to be activated with the $().tooltip() method before it'll function.
      *
-     * @param timestamp the timestamp to calculate this div around. Should be in a Date.parse() parseable format.
-     * @return a div element with the timestamp calculated to be in terms of how long ago, with a tooltip containing the exact time.
+     * @param timestamp the timestamp to calculate this span around. Should be in a Date.parse() parseable format.
+     * @return a span element with the timestamp calculated to be in terms of how long ago, with a tooltip containing the exact time.
      * @private
      */
     function prettyTimestamp (timestamp) {
         var d = parseDate(timestamp);
 
         var parsedTime = reformatDate(d);
-        var timediff = calcTimeDiffRelative(d);
+        var timediff = calcTimeFromNow(d);
         var timeMillis = d ? d.getTime() : "";
 
         var timeHtml = '<span href="#" data-toggle="tooltip" title="' + parsedTime + '" millis="' + timeMillis + '" >' + timediff + '</span>';
@@ -38,15 +38,25 @@ define([], function() {
      * @returns {Object} - a Date object or null if the timestamp's invalid.
      */
     function parseDate (time) {
+        /**
+         * Some trickery here based on this StackOverflow post:
+         * http://stackoverflow.com/questions/1353684/detecting-an-invalid-date-date-instance-in-javascript
+         *
+         * Try to make a new Date object.
+         * If that fails, break it apart - This might be caused by some issues with the typical ISO
+         * timestamp style in certain browsers' implementations. From breaking it apart, build a 
+         * new Date object directly.
+         */
         var d = new Date(time);
-        // if that doesn't work, then split it apart.
         if (Object.prototype.toString.call(d) !== '[object Date]') {
             var t = time.split(/[^0-9]/);
             while (t.length < 7) {
                 t.append(0);
             }
             d = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5], t[6]);
+            // Test the new Date object
             if (Object.prototype.toString.call(d) === '[object Date]') {
+                // This would mean its got the 'Invalid Date' status.
                 if (isNaN(d.getTime())) {
                     return null;
                 }
@@ -58,6 +68,9 @@ define([], function() {
             return null;
         }
         else {
+            if (isNaN(d.getTime())) {
+                return null;
+            }
             return d;
         }
     }
@@ -98,11 +111,17 @@ define([], function() {
      * 2016-01-05 13:26:02
      * 
      * Adds leading zeros to each field if necessary.
+     * 
+     * If it is not a dateObj, this just returns the input, unchanged.
+     *
      * @param {Object} dateObj - the JavaScript Date object to format.
      * @returns {String} a parsed timestamp as above in the browser's local time.
      * @private
      */
     function reformatDate (dateObj) {
+        if (Object.prototype.toString.call(dateObj) !== '[object Date]') {
+            return dateObj;
+        }
         var addLeadingZero = function (value) {
             value = String(value);
             if (value.length === 1) {
@@ -120,14 +139,14 @@ define([], function() {
     }
 
     /**
-     * @method calcTimeDiffRelative
+     * @method calcTimeFromNow
      * From two timestamps (i.e. Date.parse() parseable), calculate the
      * time difference and return it as a human readable string.
      *
      * @param {String} time - the timestamp to calculate a difference from
      * @returns {String} - a string representing the time difference between the two parameter strings
      */
-    function calcTimeDiffRelative (timestamp, dateObj) {
+    function calcTimeFromNow (timestamp, dateObj) {
         var now = new Date();
         var time = null;
 
@@ -142,7 +161,7 @@ define([], function() {
         }
 
         // so now, 'time' and 'now' are both Date() objects
-        var timediff = calcTimeDiffReadable(now, time);
+        var timediff = calcTimeDifference(now, time);
 
         if (time > now) {
             timediff += ' from now';
@@ -157,13 +176,13 @@ define([], function() {
     /**
      * @method calcTimeDifference
      * Turns the difference between two Date objects
-     * into something human readable, e.g. "-1.5 hrs"
+     * into something human readable, e.g. "1.5 hrs"
      *
-     * essentially does d2-d1, and makes it legible.
+     * essentially does |d2-d1|, and makes it legible.
      * 
      * @return {string} Time difference.
      */
-    function calcTimeDiffReadable (d1, d2) {
+    function calcTimeDifference (d1, d2) {
         // start with seconds
         var timeDiff = Math.abs((d2 - d1) / 1000 );
 
@@ -211,7 +230,8 @@ define([], function() {
     return {
         parseDate: parseDate,
         prettyTimestamp: prettyTimestamp,
-        calcTimeDifference: calcTimeDiffRelative,
+        calcTimeFromNow: calcTimeFromNow,
+        calcTimeDifference: calcTimeDifference,
         reformatDate: reformatDate,
         reformatISOTimeString: reformatISOTimeString
     };

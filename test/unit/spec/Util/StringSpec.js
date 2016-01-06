@@ -7,7 +7,7 @@
 define(['Util/String'], function(StringUtil) {
     'use strict';
     
-    describe('KBase Utility function module', function() {
+    describe('KBase String Utility function module', function() {
         it('uuid() should create a uuid', function() {
             var uuid = StringUtil.uuid();
             expect(uuid.length).toBe(36);

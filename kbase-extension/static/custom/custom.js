@@ -237,6 +237,15 @@ define(['jquery',
             return wasSelected;
         };
         
+        var original_select = cell.Cell.prototype.select;
+        cell.Cell.prototype.select = function () {
+            var wasSelected = original_select.apply(this);
+            if (wasSelected) {
+                $(this.element).trigger('selected.cell');
+            }
+            return wasSelected;
+        };
+        
         
         cell.Cell.prototype.getCellState = function (name, defaultValue) {
             if (!this.metadata.kbstate) {
@@ -533,7 +542,7 @@ define(['jquery',
             // Use another hook on double click to toggle the cell open if it 
             // was closed.
             // Note that the base Cell bind_events already has a default
-            // double click behavior.
+            // double click behavior
             $(this.element)
                 .on('dblclick', function (e) {
                     // if cell state is closed...

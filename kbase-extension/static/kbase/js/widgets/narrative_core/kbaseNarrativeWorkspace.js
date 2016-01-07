@@ -21,7 +21,8 @@
 define(['jquery', 
         'underscore',
         'narrativeConfig',
-        'BootstrapDialog',
+        'Util/BootstrapDialog',
+        'Util/String',
         'jquery-nearest',
         'kbwidget', 
         'bootstrap', 
@@ -32,8 +33,11 @@ define(['jquery',
         'kbaseNarrativeMethodCell',
         'kbaseNarrativeSidePanel',
         'kbaseNarrativeDataPanel'],
-        function($, _, Config, BootstrapDialog) {
-
+function($, 
+         _,
+         Config,
+         BootstrapDialog,
+         StringUtil) {
     $.KBWidget({
         name: 'kbaseNarrativeWorkspace',
         parent: 'kbaseWidget',
@@ -326,7 +330,7 @@ define(['jquery',
             // THIS IS WRONG! FIX THIS LATER!
             // But it should work for now... nothing broke up to this point, right?
             var cellIndex = IPython.notebook.ncells() - 1;
-            var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
+            var cellId = 'kb-cell-' + cellIndex + '-' + StringUtil.uuid();
 
             // The various components are HTML STRINGS, not jQuery objects.
             // This is because the cell expects a text input, not a jQuery input.
@@ -433,7 +437,7 @@ define(['jquery',
 
             this.setAppCell(cell, appSpec);
             var cellIndex = IPython.notebook.ncells() - 1;
-            var cellId = 'kb-cell-' + cellIndex + '-' + this.uuidgen();
+            var cellId = 'kb-cell-' + cellIndex + '-' + StringUtil.uuid();
 
             // The various components are HTML STRINGS, not jQuery objects.
             // This is because the cell expects a text input, not a jQuery input.
@@ -1516,12 +1520,14 @@ define(['jquery',
                     if (cell.metadata[this.KB_CELL]) {
                         widget = null; // default is app cell
                         var state = 'input'; // default is input... also doubles as a proxy for output cells
-                        if (this.isFunctionCell(cell))
+                        if (this.isFunctionCell(cell)) {
                             widget = 'kbaseNarrativeMethodCell';
-                        else if (this.isAppCell(cell))
+                        } else if (this.isAppCell(cell)) {
                             widget = 'kbaseNarrativeAppCell';
-                        if (widget)
+                        }
+                        if (widget) {
                             state = $(cell.element).find('div[id^=kb-cell-]')[widget]('getRunningState');
+                        }
 
                         if (state === 'input') {
                             IPython.notebook.delete_cell(index);
@@ -1561,8 +1567,7 @@ define(['jquery',
                             //         break;
                             // }
                         }
-                    }
-                    else {
+                    } else {
                         IPython.notebook.delete_cell(index);
                     }
                 }
@@ -1990,7 +1995,7 @@ define(['jquery',
             var title = "Data Viewer";
             var type = "viewer";
 
-            var uuid = this.uuidgen();
+            var uuid = StringUtil.uuid();
             var outCellId = 'kb-cell-out-' + uuid;
             var outputData = '{"data":' + this.safeJSONStringify(data) + ', ' +
                                '"type":"' + type + '", ' +
@@ -2089,7 +2094,7 @@ define(['jquery',
             var outputCell = isError ? this.addErrorCell(IPython.notebook.find_cell_index(cell), widget) :
                                        this.addOutputCell(IPython.notebook.find_cell_index(cell), widget);
 
-            var uuid = this.uuidgen();
+            var uuid = StringUtil.uuid();
             var outCellId = 'kb-cell-out-' + uuid;
             var outputData = '{"data":' + data + ', ' +
                                '"type":"' + outputType + '", ' +
@@ -2372,16 +2377,6 @@ define(['jquery',
         initLogging: function(level) {
             Logger.useDefaults();
             Logger.setLevel(level);
-        },
-        /**
-         * uuid generator
-         *
-         * @private
-         */
-        uuidgen: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);});
         },
 
         /**

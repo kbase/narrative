@@ -58,7 +58,7 @@ define(['jquery',
          * Initialize the login widget and bind login/logout callbacks
          */
         console.log('logging in!');
-        var loginWidget = $elem.kbaseLogin({ //$("#signin-button").kbaseLogin({ 
+        var loginWidget = $elem.kbaseLogin({
             /* If the notebook kernel's initialized, tell it to set the token.
              * This really only gets called when the user does a login on the Narrative page.
              * And since the user needs to be logged in already to get to the Narrative (in production),
@@ -66,7 +66,6 @@ define(['jquery',
              * So having it fail if no IPython.notebook is present is okay here.
              */
             login_callback: function(args) {
-                // window.kb = new KBCacheClient(args.token);
                 ipythonLogin(args.token);
             },
 

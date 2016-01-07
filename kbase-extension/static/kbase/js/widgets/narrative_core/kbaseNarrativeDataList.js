@@ -4,16 +4,15 @@
 * @author Michael Sneddon <mwsneddon@lbl.gov>
 * @public
 */
-define([
-'jquery',
-'underscore',
-'narrativeConfig',
-'Util',
-'jquery-nearest',
-'kbwidget',
-'kbaseAuthenticatedWidget',
-'kbaseNarrativeDownloadPanel'],
-function ($, _, Config, Util) {
+define(['jquery',
+        'underscore',
+        'narrativeConfig',
+        'Util/String',
+        'jquery-nearest',
+        'kbwidget',
+        'kbaseAuthenticatedWidget',
+        'kbaseNarrativeDownloadPanel'],
+function ($, _, Config, StringUtil) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeDataList',
@@ -93,7 +92,7 @@ function ($, _, Config, Util) {
             this.$loadingDiv = $('<div>').addClass('kb-data-loading')
                 .append('<img src="' + this.options.loadingImage + '">');
             this.$elem.append(this.$loadingDiv);
-            this.mainListId = Util.uuid();
+            this.mainListId = StringUtil.uuid();
             this.$mainListDiv = $('<div id=' + this.mainListId + '>')
                 .css({'overflow-x': 'hidden', 'overflow-y': 'auto', 'height': this.mainListPanelHeight})
                 .on('scroll', function () {
@@ -248,7 +247,7 @@ function ($, _, Config, Util) {
                         }
                         self.objectList.push(
                             {
-                                key: Util.uuid(), // always generate the DnD key
+                                key: StringUtil.uuid(), // always generate the DnD key
                                 $div: null, //self.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
                                 info: infoList[i],
                                 attached: false
@@ -925,7 +924,7 @@ function ($, _, Config, Util) {
             }
             //console.log(cell, near_idx);
 
-            //var cell_id = Util.uuid();
+            //var cell_id = StringUtil.uuid();
             //cell.rendered = false;
             //cell.set_text('<div id="' + cell_id + '">&nbsp;</div>');
             //cell.render();
@@ -1031,7 +1030,7 @@ function ($, _, Config, Util) {
                     // This will be used for 'id' of rendered element.
                     // But do *not* replace an existing key.
                     if (self.objectList[i].key == undefined) {
-                        self.objectList[i].key = Util.uuid();
+                        self.objectList[i].key = StringUtil.uuid();
                     }
                     self.attachRow(i);
                 }

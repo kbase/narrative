@@ -115,8 +115,6 @@ define([
             if (data.cell.metadata['kb-cell']) {
                 this.disableKeyboardManager();
             }
-            // data.cell.events.trigger('selected.cell');
-            $(data.cell.element).trigger('selected.cell');
         }, this));
 
         $([IPython.events]).on('create.Cell', $.proxy(function(event, data) {

@@ -892,7 +892,8 @@ function($,
                     submitState = 'running';
                 else if (status.indexOf('queue') != -1 || status.indexOf('submit') != -1)
                     submitState = 'submitted';
-                $cell.kbaseNarrativeMethodCell('changeState', submitState);
+                $cell.kbaseNarrativeMethodCell('changeState', submitState, 
+                        {'job_id': jobId, 'job_type': jobType, 'status': status});
             }
             // if we have outputs, those need to be passed along
             if (jobState.state.widget_outputs && Object.keys(jobState.state.widget_outputs).length > 0) {

@@ -34,6 +34,7 @@ function($,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
         allowOutput: true,
         runState: 'input',
+        jobDetails: null,
 
         /**
          * @private
@@ -294,7 +295,8 @@ function($,
                     outputState : this.allowOutput
                 },
                 minimized : this.panel_minimized,
-                params : this.$inputWidget.getState()
+                params : this.$inputWidget.getState(),
+                jobDetails: this.jobDetails
             };
         },
 
@@ -323,6 +325,9 @@ function($,
                 this.changeState(state.runningState.runState);
                 if(state.minimized) {
                     this.minimizeView(true); // true so that we don't show slide animation
+                }
+                if (state.hasOwnProperty('jobDetails')) {
+                    this.jobDetails = state.jobDetails;
                 }
             }
             else
@@ -392,7 +397,7 @@ function($,
          * Updates the method cell's state.
          * Currently supports "input", "submitted", "running", or "complete".
          */
-        changeState: function(runState) {
+        changeState: function(runState, jobDetails) {
             if (!this.$cellPanel)
                 return;
             
@@ -458,6 +463,17 @@ function($,
                         this.displayRunning(false);
                         break;
                 }
+            }
+            
+            if (!jobDetails)
+                jobDetails = this.jobDetails;
+            
+            if (jobDetails) {
+                var jobId = jobDetails['job_id'];
+                var jobType = jobDetails['job_type'];
+                var status = jobDetails['status'];
+                console.log("kbaseNarrativeMethodCell.changeState: ", jobId, jobType, status);
+                this.jobDetails = jobDetails;
             }
         },
 

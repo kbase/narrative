@@ -26,7 +26,10 @@ define(['jquery', 'Util/TimeFormat'], function($, TF) {
             var tsDiv = TF.prettyTimestamp(testISOTime);
             tsDiv = $(tsDiv);
             expect(tsDiv.is('span')).toBe(true);
-            expect(tsDiv.attr('title')).toBe(reformattedString);
+
+            var title = tsDiv.attr('title');
+            expect(new Date(title).toUTCString()).toBe(new Date(reformattedString).toUTCString());
+            // expect(tsDiv.attr('title')).toBe(reformattedString);
         });
 
         it('prettyTimestamp should throw an error with a bad timestamp', function() {
@@ -40,7 +43,8 @@ define(['jquery', 'Util/TimeFormat'], function($, TF) {
 
         it('reformatISOTimeString should work with a good ISO string', function() {
             var newTimeStr = TF.reformatISOTimeString(testISOTime);
-            expect(newTimeStr).toBe(reformattedString);
+            expect(new Date(newTimeStr).toUTCString())
+                  .toBe(new Date(reformattedString).toUTCString());
         });
 
         it('reformatISOTimeString should not reformat a bad timestamp', function() {
@@ -51,7 +55,8 @@ define(['jquery', 'Util/TimeFormat'], function($, TF) {
 
         it('reformatDate should reformat a date object into a good string', function() {
             var d = new Date(testISOTime);
-            expect(TF.reformatDate(d)).toBe(reformattedString);
+            var retDate = TF.reformatDate(d);
+            expect(new Date(retDate).toUTCString()).toBe(new Date(reformattedString).toUTCString());
         });
 
         it('reformatDate should return the same input with a bad date', function() {

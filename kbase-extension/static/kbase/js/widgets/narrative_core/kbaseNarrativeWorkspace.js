@@ -21,7 +21,7 @@
 define(['jquery', 
         'underscore',
         'narrativeConfig',
-        'BootstrapDialog',
+        'Util/BootstrapDialog',
         'Util/String',
         'jquery-nearest',
         'kbwidget', 

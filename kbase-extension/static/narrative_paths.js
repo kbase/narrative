@@ -8,7 +8,6 @@ require.config({
         Util                                    : 'kbase/js/util/',
         configPath                              : 'kbase',
         NarrativeViewers                        : 'kbase/js/widgets/narrative_core/NarrativeViewers',
-        BootstrapDialog                         : 'kbase/js/widgets/narrative_core/BootstrapDialog',
         'domReady'                              : 'ext_components/requirejs/domReady',
         'json'                                  : 'ext_components/requirejs-json/json',
         'text'                                  : 'ext_components/requirejs-text/text',

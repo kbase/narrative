@@ -4,7 +4,7 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['jquery', 'BootstrapDialog'], function($, Dialog) {
+define(['jquery', 'Util/BootstrapDialog'], function($, Dialog) {
     var $simpleBody = $('<div>').append('This is a body text');
     var simpleTitle = 'Title';
     var simpleButtons = [

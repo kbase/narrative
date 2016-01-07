@@ -168,13 +168,16 @@ define(['jquery',
             var $cellNode = $(this.element);
             switch (this.getCellState('toggleState', 'unknown')) {
                 case 'closed':
-                    $cellNode.find('.inner_cell > div:nth-child(3)').hide();
+                    $cellNode.find('.inner_cell > div:nth-child(2)').css('display', 'none');
+                    $cellNode.find('.inner_cell > div:nth-child(3)').css('display', 'none');
                     break;
                 case 'open':
-                    $cellNode.find('.inner_cell > div:nth-child(3)').show();
+                    $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
+                    $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
                     break;
                 case 'unknown':
-                    $cellNode.find('.inner_cell > div:nth-child(3)').show();
+                    $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
+                    $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
                     break;
             }
         };
@@ -526,6 +529,17 @@ define(['jquery',
                 .on('toggle.cell', function (e) {
                     // Alas, it has no discriminating attributes!
                     cell.toggle();
+                });
+            // Use another hook on double click to toggle the cell open if it 
+            // was closed.
+            // Note that the base Cell bind_events already has a default
+            // double click behavior.
+            $(this.element)
+                .on('dblclick', function (e) {
+                    // if cell state is closed...
+                    if (cell.getCellState('toggleState', 'unknown') === 'closed') {
+                        cell.toggle();
+                    }
                 });
         };
 

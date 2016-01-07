@@ -16,7 +16,8 @@ require(['jquery',
          'handlebars', 
          'kbwidget', 
          'kbaseAuthenticatedWidget',
-         'kbaseNarrativeCellMenu'], 
+         'kbaseNarrativeCellMenu',
+         'kbaseTabs'], 
 function($, 
          Config,
          Util) {
@@ -35,6 +36,9 @@ function($,
         allowOutput: true,
         runState: 'input',
         jobDetails: null,
+        $jobProcessTabs: null,     // Use this tabs panel to add more tabs like Report widget
+        $jobStatusDiv: null,       // Panel showing status + error details if any
+        $jobLogsPanel: null,       // Job log (only for dynamic repo async calls)
 
         /**
          * @private
@@ -322,12 +326,11 @@ function($,
                 this.allowOutput = state.runningState.outputState;
                 this.$inputWidget.loadState(state.params);
                 this.submittedText = state.runningState.submittedText;
+                if (state.hasOwnProperty('jobDetails'))
+                    this.jobDetails = state.jobDetails;
                 this.changeState(state.runningState.runState);
                 if(state.minimized) {
                     this.minimizeView(true); // true so that we don't show slide animation
-                }
-                if (state.hasOwnProperty('jobDetails')) {
-                    this.jobDetails = state.jobDetails;
                 }
             }
             else
@@ -465,15 +468,36 @@ function($,
                 }
             }
             
-            if (!jobDetails)
-                jobDetails = this.jobDetails;
+            if (jobDetails) {
+                this.jobDetails = jobDetails; // Put this data into widget for next saveState operation
+            } else {
+                jobDetails = this.jobDetails; // Get data from previously saved widget state (this is
+                                              // necessary because job panel doesn't call this method for
+                                              // finished jobs (it's called from init without UJS info)
+            }
             
             if (jobDetails) {
+                if (!this.$jobProcessTabs) {
+                    this.$jobProcessTabs = $('<div>').addClass('panel-body').addClass('kb-cell-output'); //('panel-footer');
+                    this.$cellPanel.append(this.$jobProcessTabs); // TODO: We need to remove it on Cancel
+                    this.$jobProcessTabs.kbaseTabs({canDelete: false, tabs: []});
+                    this.$jobStatusDiv = $('<div>');
+                    this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Status', content: this.$jobStatusDiv, 
+                        canDelete: false, show: true});
+                }
                 var jobId = jobDetails['job_id'];
                 var jobType = jobDetails['job_type'];
                 var status = jobDetails['status'];
-                console.log("kbaseNarrativeMethodCell.changeState: ", jobId, jobType, status);
-                this.jobDetails = jobDetails;
+                var state = this.runState;
+                status = status.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+                state = state.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+                this.$jobStatusDiv.empty();
+                this.$jobStatusDiv.append(state + ' (' + status + ')');
+                if (!this.$jobLogsPanel) {
+                    this.$jobLogsPanel = $('<div>');
+                    this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Logs', content: this.$jobLogsPanel, 
+                        canDelete: false, show: false});
+                }
             }
         },
 

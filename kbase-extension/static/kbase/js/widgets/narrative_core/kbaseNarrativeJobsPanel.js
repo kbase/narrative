@@ -6,8 +6,9 @@ define(['jquery',
         'kbasePrompt',
         'kbaseNarrativeControlPanel',
         'bootstrap',
-        'BootstrapDialog',
-        'Util'],
+        'Util/BootstrapDialog',
+        'Util/TimeFormat',
+        'Util/String'],
 function($,
          Config,
          kbwidget,
@@ -15,7 +16,8 @@ function($,
          kbaseNarrativeControlPanel,
          bootstrap,
          BootstrapDialog,
-         Util) {
+         TimeFormat,
+         StringUtil) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeJobsPanel',
@@ -520,9 +522,9 @@ function($,
                         specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
                         if (specInfo && jobIncomplete) {
                             jobParamList.push("['" + jobId + "', " +
-                                              "'" + Util.safeJSONStringify(specInfo.appSpec) + "', " +
-                                              "'" + Util.safeJSONStringify(specInfo.methodSpecs) + "', " +
-                                              "'" + Util.safeJSONStringify(specInfo.parameterValues) + "']");
+                                              "'" + StringUtil.safeJSONStringify(specInfo.appSpec) + "', " +
+                                              "'" + StringUtil.safeJSONStringify(specInfo.methodSpecs) + "', " +
+                                              "'" + StringUtil.safeJSONStringify(specInfo.parameterValues) + "']");
                         }
                     }
                     // otherwise, it's a method cell, so fetch info that way.
@@ -531,8 +533,8 @@ function($,
                         if (jobIncomplete) {
                             if (specInfo) {
                                 jobParamList.push("['" + jobId + "', " +
-                                                  "'" + Util.safeJSONStringify(specInfo.methodSpec) + "', " +
-                                                  "'" + Util.safeJSONStringify(specInfo.parameterValues) + "']");
+                                                  "'" + StringUtil.safeJSONStringify(specInfo.methodSpec) + "', " +
+                                                  "'" + StringUtil.safeJSONStringify(specInfo.parameterValues) + "']");
                             }
                             else {
                                 jobParamList.push("['" + jobId + "']");
@@ -772,16 +774,16 @@ function($,
             var runTime = null;
             if (jobState.state) {
                 if (jobState.state.complete_time) {
-                    completedTime = Util.prettyTimestamp(jobState.state.complete_time);
+                    completedTime = TimeFormat.prettyTimestamp(jobState.state.complete_time);
                     if (jobState.state.start_time) {
-                        runTime = Util.calcTimeDiffReadable(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
+                        runTime = TimeFormat.calcTimeFromNow(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
                     }
                 }
                 else if (jobState.state.ujs_info) {
                     if (jobState.state.ujs_info[5] !== null) {
-                        completedTime = Util.prettyTimestamp(jobState.state.ujs_info[5]);
+                        completedTime = TimeFormat.prettyTimestamp(jobState.state.ujs_info[5]);
                         if (jobState.state.ujs_info[3]) {
-                            runTime = Util.calcTimeDiffReadable(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
+                            runTime = TimeFormat.calcTimeFromNow(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
                         }
                     }
                 }
@@ -845,7 +847,7 @@ function($,
                 $infoTable.append(this.makeInfoRow('Run Time', runTime));
             }
             else if (jobState.timestamp) {
-                started = Util.prettyTimestamp(jobState.timestamp);
+                started = TimeFormat.prettyTimestamp(jobState.timestamp);
                 $infoTable.append(this.makeInfoRow('Started', started));
             }
 

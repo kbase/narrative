@@ -5,10 +5,9 @@ require.config({
     // with this one (kbase-profile/static)
     paths : {
         plotly                                  : 'ext_components/plotly.js/dist/plotly.min',
-        Util                                    : 'kbase/js/util/Util',
+        Util                                    : 'kbase/js/util/',
         configPath                              : 'kbase',
         NarrativeViewers                        : 'kbase/js/widgets/narrative_core/NarrativeViewers',
-        BootstrapDialog                         : 'kbase/js/widgets/narrative_core/BootstrapDialog',
         'domReady'                              : 'ext_components/requirejs/domReady',
         'json'                                  : 'ext_components/requirejs-json/json',
         'text'                                  : 'ext_components/requirejs-text/text',

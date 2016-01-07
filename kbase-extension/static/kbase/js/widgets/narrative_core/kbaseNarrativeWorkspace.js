@@ -1516,12 +1516,14 @@ define(['jquery',
                     if (cell.metadata[this.KB_CELL]) {
                         widget = null; // default is app cell
                         var state = 'input'; // default is input... also doubles as a proxy for output cells
-                        if (this.isFunctionCell(cell))
+                        if (this.isFunctionCell(cell)) {
                             widget = 'kbaseNarrativeMethodCell';
-                        else if (this.isAppCell(cell))
+                        } else if (this.isAppCell(cell)) {
                             widget = 'kbaseNarrativeAppCell';
-                        if (widget)
+                        }
+                        if (widget) {
                             state = $(cell.element).find('div[id^=kb-cell-]')[widget]('getRunningState');
+                        }
 
                         if (state === 'input') {
                             IPython.notebook.delete_cell(index);
@@ -1561,8 +1563,7 @@ define(['jquery',
                             //         break;
                             // }
                         }
-                    }
-                    else {
+                    } else {
                         IPython.notebook.delete_cell(index);
                     }
                 }

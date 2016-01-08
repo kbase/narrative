@@ -541,7 +541,7 @@ function($,
                                     $reportPanel.kbaseReportView(result);
                                     return $reportPanel;
                                 }, 
-                                canDelete: false, show: false});
+                                canDelete: false, show: true});
 
                             this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'New Data Objects', showContentCallback: 
                                 function() {

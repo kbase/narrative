@@ -221,7 +221,7 @@ function($, Config) {
                 // if the parameter is actually defined, then continue
                 if(param){
                     if(!self.firstLookup) { self.clearInput(); }
-                    autofillData=[];
+                    self.autofillData=[];
                     self.firstLookup = false;
                     self.isFetching = true;
                     self.trigger('workspaceQuery.Narrative', 
@@ -572,7 +572,7 @@ function($, Config) {
             for(var i=0; i<p.length; i++) {
                 var errorDetectedHere = false;
                 if (p[i]===null) { continue; }
-                pVal = p[i].trim();
+                var pVal = p[i].trim();
                 // if it is a required field and not empty, keep the required icon around but we have an error (only for the first element)
                 if (pVal==='' && self.required && i===0) {
                     self.rowInfo[i].$row.removeClass("kb-method-parameter-row-error");

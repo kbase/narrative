@@ -313,7 +313,7 @@ function($,
          * @public
          */
         loadState: function(state) {
-            console.log(state);
+            //console.log(state);
             // cases (for older ones)
             // 1. state looks like:
             // { params: {},
@@ -495,7 +495,7 @@ function($,
             }
             
             if (jobDetails) {
-                console.log(jobDetails)
+                //console.log(jobDetails)
                 if (!this.$jobProcessTabs) {
                     this.$jobProcessTabs = $('<div>').addClass('panel-body').addClass('kb-cell-output');
                     this.$elem.append(this.$jobProcessTabs); // TODO: We need to remove it on Cancel
@@ -519,7 +519,6 @@ function($,
                     this.hasLogsPanelLoaded = true;
                     this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Console Log', showContentCallback: 
                         function() {
-                            console.debug('BOOYEAH!')
                             var $jobLogsPanel = $('<div>');
                             $jobLogsPanel.kbaseViewLiveRunLog({'job_id': jobId});
                             return $jobLogsPanel;
@@ -531,13 +530,10 @@ function($,
                     if(!this.hasResultLoaded) {
                         this.hasResultLoaded = true; // make sure we only display once
                         // Check if the job details gives a report, if so, then we can add two more tabs
-
                         if(jobDetails['result']['workspace_name'] && jobDetails['result']['report_name']) {
 
-                            //if(jobDetails['result'][])
                             this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Report', showContentCallback: 
                                 function() {
-                                    console.debug('YEAH! REPORT!')
                                     var $reportPanel = $('<div>');
                                     var result = jobDetails.result;
                                     result['showReportText'] = true;
@@ -549,7 +545,6 @@ function($,
 
                             this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'New Data Objects', showContentCallback: 
                                 function() {
-                                    console.debug('YEAH! REPORT!')
                                     var $reportPanel = $('<div>');
                                     var result = jobDetails.result;
                                     result['showReportText'] = false;

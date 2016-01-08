@@ -124,7 +124,7 @@ define(['jquery',
                                 var displayData = [];
                                 for(var k=0; k<objInfo.length; k++) {
 
-                                    //var nameHTML = $('<a>').append(objInfo[k][1])
+                                    //var $name = $('<a>').append(objInfo[k][1]);
                                     /* TODO: we need code something like this to show data objects on click
                                     var obj = _.findWhere(self.objectList, {key: key});
                                     var info = self.createInfoObject(obj.info);

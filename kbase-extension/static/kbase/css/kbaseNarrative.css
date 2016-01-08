@@ -1411,6 +1411,11 @@ div#notebook_panel {
     margin: 0 0 10px 0;
 }
 
+/* override from some jupyter style? */
+.rendered_html :link {
+  text-decoration: none;
+}
+
 .kb-cell-output .nav>li>a {
     padding: 5px 10px;
 }

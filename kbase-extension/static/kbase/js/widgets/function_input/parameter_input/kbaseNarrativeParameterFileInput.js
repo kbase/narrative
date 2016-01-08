@@ -303,7 +303,6 @@ function($, Config) {
             	self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
             	self.rowDivs[0].$feedback.show();
             	self.rowDivs[0].$error.hide();
-            	errorDetectedHere = true;
             	if (self.uploadWasStarted) {
             		errorMessages.push("required field "+self.spec.ui_name+" is not 100% ready.");
             	} else {

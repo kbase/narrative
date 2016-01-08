@@ -18,7 +18,8 @@ require(['jquery',
          'kbaseAuthenticatedWidget',
          'kbaseNarrativeCellMenu',
          'kbaseTabs',
-         'kbaseViewLiveRunLog'], 
+         'kbaseViewLiveRunLog',
+         'kbaseReportView'], 
 function($, 
          Config,
          StringUtil) {
@@ -36,10 +37,14 @@ function($,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
         allowOutput: true,
         runState: 'input',
+
+        // elements and variables needed for job details and tracking
         jobDetails: null,
         $jobProcessTabs: null,     // Use this tabs panel to add more tabs like Report widget
         $jobStatusDiv: null,       // Panel showing status + error details if any
-        $jobLogsPanel: null,       // Job log (only for dynamic repo async calls)
+
+        hasLogsPanelLoaded: false,
+        hasResultLoaded: false,
 
         /**
          * @private
@@ -381,7 +386,8 @@ function($,
                         this.$jobProcessTabs.remove();
                         this.$jobProcessTabs = null;
                         this.$jobStatusDiv = null;
-                        this.$jobLogsPanel = null;
+                        this.hasLogsPanelLoaded = false;
+                        this.hasResultLoaded = false;
                     }
                     if (this.jobDetails)
                         this.jobDetails = null;
@@ -474,15 +480,22 @@ function($,
                 }
             }
             
+
+
             if (jobDetails) {
-                this.jobDetails = jobDetails; // Put this data into widget for next saveState operation
+                // Put this data into widget (with results) for next saveState operation
+                if(result) { jobDetails['result'] = result; }
+                this.jobDetails = jobDetails; 
+                
             } else {
+                if(result) { this.jobDetails['result'] = result; }
                 jobDetails = this.jobDetails; // Get data from previously saved widget state (this is
                                               // necessary because job panel doesn't call this method for
                                               // finished jobs (it's called from init without UJS info)
             }
             
             if (jobDetails) {
+                console.log(jobDetails)
                 if (!this.$jobProcessTabs) {
                     this.$jobProcessTabs = $('<div>').addClass('panel-body').addClass('kb-cell-output');
                     this.$elem.append(this.$jobProcessTabs); // TODO: We need to remove it on Cancel
@@ -502,15 +515,51 @@ function($,
                 state = state.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
                 this.$jobStatusDiv.empty();
                 this.$jobStatusDiv.append(state + ' (' + status + ')');
-                if (!this.$jobLogsPanel) {
-                    this.$jobLogsPanel = $('<div>');
-                    this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Logs', content: this.$jobLogsPanel, 
+                if (!this.hasLogsPanelLoaded) {
+                    this.hasLogsPanelLoaded = true;
+                    this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Console Log', showContentCallback: 
+                        function() {
+                            console.debug('BOOYEAH!')
+                            var $jobLogsPanel = $('<div>');
+                            $jobLogsPanel.kbaseViewLiveRunLog({'job_id': jobId});
+                            return $jobLogsPanel;
+                        }, 
                         canDelete: false, show: false});
-                    this.$jobLogsPanel.kbaseViewLiveRunLog({'job_id': jobId});
+                    
                 }
-                if (result) {
-                    console.log('Showing report: ', result);
-                    // TODO: show report widget here
+                if (jobDetails['result']) {
+                    if(!this.hasResultLoaded) {
+                        this.hasResultLoaded = true; // make sure we only display once
+                        // Check if the job details gives a report, if so, then we can add two more tabs
+
+                        if(jobDetails['result']['workspace_name'] && jobDetails['result']['report_name']) {
+
+                            //if(jobDetails['result'][])
+                            this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Report', showContentCallback: 
+                                function() {
+                                    console.debug('YEAH! REPORT!')
+                                    var $reportPanel = $('<div>');
+                                    var result = jobDetails.result;
+                                    result['showReportText'] = true;
+                                    result['showCreatedObjects'] = false;
+                                    $reportPanel.kbaseReportView(result);
+                                    return $reportPanel;
+                                }, 
+                                canDelete: false, show: false});
+
+                            this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'New Data Objects', showContentCallback: 
+                                function() {
+                                    console.debug('YEAH! REPORT!')
+                                    var $reportPanel = $('<div>');
+                                    var result = jobDetails.result;
+                                    result['showReportText'] = false;
+                                    result['showCreatedObjects'] = true;
+                                    $reportPanel.kbaseReportView(result);
+                                    return $reportPanel;
+                                }, 
+                                canDelete: false, show: false});
+                        }
+                    }
                 }
             }
         },

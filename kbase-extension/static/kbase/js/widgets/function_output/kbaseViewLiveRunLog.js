@@ -21,7 +21,6 @@ define(['jquery',
         // Catalog client
         job_service: null,
 
-
         log: null,
 
         init: function(options) {
@@ -61,28 +60,28 @@ define(['jquery',
             var self = this;
             var container = this.$elem;
 
-            var $table = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" />');
+            //var $table = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" />');
 
-            container.append($table);
-            var width = "15%"
+            //container.append($table);
+            //var width = "15%"
 
-            $table.append('<tr><td width="'+width+'">Job ID</td><td>'+self.job_id+'</td></tr>');
-            self.$state_td = $('<td></td>')
-            $table.append(
-                $('<tr>')
-                    .append($('<td width="'+width+'">State</td>'))
-                    .append(self.$state_td));
+            //$table.append('<tr><td width="'+width+'">Job ID</td><td>'+self.job_id+'</td></tr>');
+            //self.$state_td = $('<td></td>')
+            //$table.append(
+            //    $('<tr>')
+            //        .append($('<td width="'+width+'">State</td>'))
+            //        .append(self.$state_td));
 
             self.$log_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;resize:vertical;" rows="20" readonly>')
             container.append(self.$log_window);
 
             self.$track_checkbox= $('<input type="checkbox">').prop('checked', true);;
-            var $checkboxContainer = $('<div>').addClass('checkbox').css({width:"100%"})
+            self.$checkboxContainer = $('<div>').addClass('checkbox').css({width:"100%"})
                 .append($('<label>')
                     .append(self.$track_checkbox)
                     .append('Auto scroll to new log output'));
             
-            container.append($checkboxContainer)
+            container.append(self.$checkboxContainer)
 
             self.getLogAndState(0);
         },
@@ -128,15 +127,17 @@ define(['jquery',
                                 }, function(error) {
                                     console.error(error);
                                     self.hideMessage();
-                                    self.showMessage('Warning- unable to fetch log.  This Job may not have been run from an SDK module.')
+                                    self.showMessage('Warning- unable to fetch log.  This Job may be too old or does not yet support console log tracking.')
                                     self.$log_window.hide();
+                                    self.$checkboxContainer.hide();
                                 });
 
                     }, function(error) {
                         console.error(error);
                         self.hideMessage();
-                        self.showMessage('Error in fetching Job- The Job may have been deleted, or is too old, or the Job ID is incorrect.')
+                        self.showMessage('Error in fetching console log for this Job.  The Job may not yet support console log tracking, or is too old, or has been deleted.')
                         self.$log_window.hide();
+                        self.$checkboxContainer.hide();
                     });
         },
 
@@ -165,9 +166,7 @@ define(['jquery',
             var self = this;
             self.loading(false);
 
-            if(build_state.finished) {
-                self.$state_td.empty().append(build_state.status)
-            } else {
+            if(!build_state.finished) {
                 setTimeout(function(event) {
                     self.getLogAndState(self.last_log_line);
                 }, 1000);
@@ -193,10 +192,13 @@ define(['jquery',
         },
 
         loading: function(isLoading) {
-            if (isLoading)
-                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
-            else
+            if (isLoading) {
+                //this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+                this.showMessage('<i class="fa fa-spinner fa-spin"></i>');
+            }
+            else {
                 this.hideMessage();                
+            }
         },
 
         showMessage: function(message) {

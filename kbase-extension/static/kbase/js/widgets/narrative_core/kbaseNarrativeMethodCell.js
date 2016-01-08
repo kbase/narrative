@@ -17,7 +17,8 @@ require(['jquery',
          'kbwidget', 
          'kbaseAuthenticatedWidget',
          'kbaseNarrativeCellMenu',
-         'kbaseTabs'], 
+         'kbaseTabs',
+         'kbaseViewLiveRunLog'], 
 function($, 
          Config,
          StringUtil) {
@@ -376,6 +377,14 @@ function($,
         stopRunning: function() {
             this.trigger('cancelJobCell.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
                 if (isCanceled) {
+                    if (this.$jobProcessTabs) {
+                        this.$jobProcessTabs.remove();
+                        this.$jobProcessTabs = null;
+                        this.$jobStatusDiv = null;
+                        this.$jobLogsPanel = null;
+                    }
+                    if (this.jobDetails)
+                        this.jobDetails = null;
                     this.changeState('input');
                 }
             }, this)]);
@@ -397,7 +406,7 @@ function($,
          * Updates the method cell's state.
          * Currently supports "input", "submitted", "running", or "complete".
          */
-        changeState: function(runState, jobDetails) {
+        changeState: function(runState, jobDetails, result) {
             if (!this.$cellPanel)
                 return;
             
@@ -475,14 +484,17 @@ function($,
             
             if (jobDetails) {
                 if (!this.$jobProcessTabs) {
-                    this.$jobProcessTabs = $('<div>').addClass('panel-body').addClass('kb-cell-output'); //('panel-footer');
-                    this.$cellPanel.append(this.$jobProcessTabs); // TODO: We need to remove it on Cancel
+                    this.$jobProcessTabs = $('<div>').addClass('panel-body').addClass('kb-cell-output');
+                    this.$elem.append(this.$jobProcessTabs); // TODO: We need to remove it on Cancel
+                                                             // and move into this.$cellPanel on finish
                     this.$jobProcessTabs.kbaseTabs({canDelete: false, tabs: []});
                     this.$jobStatusDiv = $('<div>');
                     this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Status', content: this.$jobStatusDiv, 
                         canDelete: false, show: true});
                 }
                 var jobId = jobDetails['job_id'];
+                if (jobId.indexOf(':') > 0)
+                    jobId = jobId.split(':')[1];
                 var jobType = jobDetails['job_type'];
                 var status = jobDetails['status'];
                 var state = this.runState;
@@ -494,6 +506,11 @@ function($,
                     this.$jobLogsPanel = $('<div>');
                     this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Logs', content: this.$jobLogsPanel, 
                         canDelete: false, show: false});
+                    this.$jobLogsPanel.kbaseViewLiveRunLog({'job_id': jobId});
+                }
+                if (result) {
+                    console.log('Showing report: ', result);
+                    // TODO: show report widget here
                 }
             }
         },
@@ -584,7 +601,7 @@ function($,
                     this.trigger('createOutputCell.Narrative', data);
                 }.bind(this));
             }
-            this.changeState('complete');
+            this.changeState('complete', null, data.result);
         },
 
 

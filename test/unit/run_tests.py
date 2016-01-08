@@ -2,6 +2,7 @@
 # developebd by the Jupyter team here;
 # https://github.com/jupyter/jupyter-js-services/blob/master/test/run_test.py
 #
+from __future__ import print_function
 
 import subprocess
 import sys
@@ -24,7 +25,7 @@ nb_command = ['kbase-narrative', '--no-browser', '--NotebookApp.allow_origin="*"
 if not hasattr(sys, 'real_prefix'):
     nb_command[0] = 'narrative-venv/bin/kbase-narrative'
 
-nb_server = subprocess.Popen(nb_command, stderr=subprocess.STDOUT,
+nb_server = subprocess.Popen(nb_command, shell=False, stderr=subprocess.STDOUT,
                              stdout=subprocess.PIPE)
 
 # wait for notebook server to start up
@@ -57,11 +58,11 @@ test_command = ['grunt', 'test']
 
 resp = 1
 try:
-    print "Jupyter server started, starting test script."
+    print("Jupyter server started, starting test script.")
     resp = subprocess.check_call(test_command, stderr=subprocess.STDOUT)
 except subprocess.CalledProcessError:
     pass
 finally:
-    print "Done running tests, killing server."
+    print("Done running tests, killing server.")
     nb_server.kill()
 sys.exit(resp)

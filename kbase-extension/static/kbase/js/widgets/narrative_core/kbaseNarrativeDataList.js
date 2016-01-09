@@ -357,12 +357,13 @@ function ($, _, Config, StringUtil) {
                 self.$currentSelectedRow = null;
                 self.selectedObject = null;
                 self.trigger('removeFilterMethods.Narrative');
-            } else {
-                $selectedRow.addClass('kb-data-list-obj-row-selected');
-                self.$currentSelectedRow = $selectedRow;
-                self.selectedObject = object_info[0];
-                self.trigger('filterMethods.Narrative', 'type:' + object_info[2].split('-')[0].split('.')[1]);
             }
+            // } else {
+            //     $selectedRow.addClass('kb-data-list-obj-row-selected');
+            //     self.$currentSelectedRow = $selectedRow;
+            //     self.selectedObject = object_info[0];
+            //     self.trigger('filterMethods.Narrative', 'type:' + object_info[2].split('-')[0].split('.')[1]);
+            // }
         },
         addDataControls: function (object_info, $alertContainer) {
             var self = this;

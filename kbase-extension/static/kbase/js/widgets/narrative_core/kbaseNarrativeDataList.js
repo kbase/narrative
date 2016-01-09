@@ -378,6 +378,37 @@ function ($, _, Config, StringUtil) {
              .append('<a href="'+this.options.landing_page_url+'objgraphview/'+object_info[7] +'/'+object_info[1] +'" target="_blank">'+
              'view provenance</a><br>'))*/
 
+            var $filterMethodInput = $('<span>')
+                .tooltip({
+                    title: 'Show Methods with this as input',
+                    container: '#' + this.mainListId,
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                })
+                .addClass(btnClasses)
+                .append($('<span>').addClass('fa fa-sign-in').css(css))
+                .click(function (e) {
+                    this.trigger('filterMethods.Narrative', 'in_type:' + object_info[2].split('-')[0].split('.')[1]);
+                }.bind(this));
+
+            var $filterMethodOutput = $('<span>')
+                .tooltip({
+                    title: 'Show Methods with this as output',
+                    container: '#' + this.mainListId,
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                })
+                .addClass(btnClasses)
+                .append($('<span>').addClass('fa fa-sign-out').css(css))
+                .click(function (e) {
+                    this.trigger('filterMethods.Narrative', 'out_type:' + object_info[2].split('-')[0].split('.')[1]);
+                }.bind(this));
+
+
             var $openLandingPage = $('<span>')
                 .tooltip({
                     title: 'Explore data',
@@ -628,6 +659,10 @@ function ($, _, Config, StringUtil) {
                             })));
                 });
 
+            if (!IPython.narrative.readonly) {
+                $btnToolbar.append($filterMethodInput)
+                           .append($filterMethodOutput);
+            }
             $btnToolbar.append($openLandingPage);
             if (!IPython.narrative.readonly)
                 $btnToolbar.append($openHistory);

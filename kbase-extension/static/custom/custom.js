@@ -543,13 +543,13 @@ define(['jquery',
             // was closed.
             // Note that the base Cell bind_events already has a default
             // double click behavior
-            $(this.element)
-                .on('dblclick', function (e) {
-                    // if cell state is closed...
-                    if (cell.getCellState('toggleState', 'unknown') === 'closed') {
-                        cell.toggle();
-                    }
-                });
+            // $(this.element)
+            //     .on('dblclick', function (e) {
+            //         // if cell state is closed...
+            //         if (cell.getCellState('toggleState', 'unknown') === 'closed') {
+            //             cell.toggle();
+            //         }
+            //     });
         };
 
         /*

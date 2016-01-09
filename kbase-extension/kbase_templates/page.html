@@ -12,6 +12,7 @@
     
     {% block stylesheet %}
     <link rel="stylesheet" href="{{ static_url("style/style.min.css") }}" type="text/css"/>
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNarrative.css") }}" type="text/css" />
     {% endblock %}
     <link rel="stylesheet" href="{{ static_url("custom/custom.css") }}" type="text/css" />
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseStylesheet.css") }}" type="text/css" />
@@ -58,6 +59,7 @@
           {% endif %}
           baseUrl: '{{static_url("", include_version=False)}}',
           paths: {
+            'auth/js/main': 'auth/js/main.min',
             nbextensions : '{{ base_url }}nbextensions',
             kernelspecs : '{{ base_url }}kernelspecs',
             underscore : 'components/underscore/underscore-min',
@@ -65,10 +67,11 @@
             jquery: 'components/jquery/jquery.min',
             bootstrap: 'components/bootstrap/js/bootstrap.min',
             bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
-            jqueryui: 'components/jquery-ui/ui/minified/jquery-ui.min',
+            'jquery-ui': 'components/jquery-ui/ui/minified/jquery-ui.min',
             moment: 'components/moment/moment',
             codemirror: 'components/codemirror',
             termjs: 'components/term.js/src/term',
+            typeahead: 'components/jquery-typeahead/dist/jquery.typeahead',
           },
           shim: {
             underscore: {
@@ -86,9 +89,9 @@
               deps: ["bootstrap"],
               exports: "Tour"
             },
-            jqueryui: {
-              deps: ["jquery"],
-              exports: "$"
+            'jquery-ui': {
+              deps: ['jquery'],
+              exports: '$'
             }
           }
       });
@@ -96,6 +99,7 @@
       require.config({
           map: {
               '*':{
+                'jqueryui': 'jquery-ui',
                 'contents': '{{ contents_js_source }}',
               }
           }

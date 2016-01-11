@@ -410,6 +410,14 @@ define(['jquery',
                 $cellNode = $(this.element),
                 $toolbar = $cellNode.find('.celltoolbar > .button_container');
 
+            this.element.dblclick(function () {
+                var cont = cell.unrender();
+                if (cont) {
+                    cell.focus_editor();
+                }
+            });
+
+
             /*
              * This is the trick to get the markdown to render, and the edit area
              * to disappear, when the user clicks out of the edit area.

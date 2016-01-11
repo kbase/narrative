@@ -121,7 +121,9 @@ define(['jquery',
                         self.ws.get_object_info_new({'objects':objIds},
                             function(objInfo) {
 
+                                var pref = self.uuid();
                                 var displayData = [];
+                                var dataNameToInfo = {};
                                 for(var k=0; k<objInfo.length; k++) {
 
                                     //var $name = $('<a>').append(objInfo[k][1]);
@@ -137,10 +139,20 @@ define(['jquery',
                                     });*/
 
                                     displayData.push({
-                                        'name':objInfo[k][1],
+                                        'name': '<a class="report_row_'+pref+'" data-objname="'+objInfo[k][1]+'">' + objInfo[k][1] + '</a>',
                                         'type':objInfo[k][2].split('-')[0].split('.')[1],
                                         'fullType':objInfo[k][2],
-                                        'description': objsCreated[k].description ? objsCreated[k].description : ''
+                                        'description': objsCreated[k].description ? objsCreated[k].description : '',
+                                        'ws_info': objInfo[k]
+                                    });
+                                    dataNameToInfo[objInfo[k][1]] = objInfo[k];
+                                }
+
+                                function reportRowEvents() {
+                                    $('.report_row_'+pref).unbind('click');
+                                    $('.report_row_'+pref).click(function() {
+                                        var objName = [$(this).data('objname')];
+                                        self.openViewerCell(dataNameToInfo[objName]);
                                     });
                                 }
 
@@ -166,6 +178,7 @@ define(['jquery',
                                             .append('<td style="color:'+color+';">'+displayData[k].description+'</td>'));
                                     }
                                     $tblDiv.append($objTable)
+                                    reportRowEvents();
                                 } else {
                                     var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
                                                     .addClass("table table-bordered table-striped");
@@ -210,10 +223,12 @@ define(['jquery',
                                                                 "oLanguage": {
                                                                             "sEmptyTable": "No objects specified!",
                                                                             "sSearch": "Search Created Objects: "
-                                                                }
+                                                                },
+                                                                "fnDrawCallback": reportRowEvents
                                                             } );
                                     //$tblDiv.append($objTable)
                                 }
+                                
                             }, function(error) {
                                 console.error(error);
                             });
@@ -223,7 +238,30 @@ define(['jquery',
 
             this.loading(false);
         },
+        
+        openViewerCell: function(ws_info) {
+            var self = this;
+            var cell = IPython.notebook.get_selected_cell();
+            var near_idx = 0;
+            if (cell) {
+                near_idx = IPython.notebook.find_cell_index(cell);
+                $(cell.element).off('dblclick');
+                $(cell.element).off('keydown');
+            }
+            var info = self.createInfoObject(ws_info);
+            self.trigger('createViewerCell.Narrative', {
+                'nearCellIdx': near_idx,
+                'widget': 'kbaseNarrativeDataCell',
+                'info': info
+            });
+        },
 
+        createInfoObject: function (info) {
+            return _.object(['id', 'name', 'type', 'save_date', 'version',
+                'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
+                'meta'], info);
+        },
+        
         loading: function(isLoading) {
             if (isLoading) {
                 //this.showMessage("<img src='" + this.options.loadingImage + "'/>");
@@ -284,6 +322,14 @@ define(['jquery',
                     obj['ver'] = objectVer;
             }
             return obj;
+        },
+
+        uuid: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
+                function(c) {
+                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                    return v.toString(16);
+                });
         }
 
     });

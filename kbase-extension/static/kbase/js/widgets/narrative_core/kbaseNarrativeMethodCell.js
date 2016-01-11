@@ -45,6 +45,9 @@ function($,
 
         hasLogsPanelLoaded: false,
         hasResultLoaded: false,
+        isJobStatusLoadedFromState: false,
+        completedStatus: [ 'completed', 'done', 'deleted', 'suspend', 'error', 'not_found_error', 'unauthorized_error', 'awe_error' ],
+
 
         /**
          * @private
@@ -329,8 +332,11 @@ function($,
                 this.allowOutput = state.runningState.outputState;
                 this.$inputWidget.loadState(state.params);
                 this.submittedText = state.runningState.submittedText;
-                if (state.hasOwnProperty('jobDetails'))
+                if (state.hasOwnProperty('jobDetails')) {
                     this.jobDetails = state.jobDetails;
+                    if (this.jobDetails['status'])
+                        this.isJobStatusLoadedFromState = true;
+                }
                 this.changeState(state.runningState.runState);
                 if(state.minimized) {
                     this.minimizeView(true); // true so that we don't show slide animation
@@ -495,17 +501,25 @@ function($,
             }
             
             if (jobDetails) {
-                //console.log(jobDetails)
                 if (!this.$jobProcessTabs) {
                     this.$jobProcessTabs = $('<div>').addClass('panel-body').addClass('kb-cell-output');
-                    this.$elem.append(this.$jobProcessTabs); // TODO: We need to remove it on Cancel
-                                                             // and move into this.$cellPanel on finish
+                    var targetPanel = this.$elem;
+                    if (this.isJobStatusLoadedFromState && jobDetails['status']) {
+                        if ($.inArray(jobDetails['status'].toLowerCase(), this.completedStatus) >= 0) {
+                            // We move job status panel into cell panel rather than outside because when
+                            // job is done (or finished with error) we want to be able to collapse this 
+                            // panel as part of cell panel collapse.
+                            targetPanel = this.$cellPanel;
+                        }
+                    }
+                    targetPanel.append(this.$jobProcessTabs);
                     this.$jobProcessTabs.kbaseTabs({canDelete: false, tabs: []});
                     this.$jobStatusDiv = $('<div>');
                     this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Status', content: this.$jobStatusDiv, 
                         canDelete: false, show: true});
                 }
                 var jobId = jobDetails['job_id'];
+                var fullJobId = jobId;
                 if (jobId.indexOf(':') > 0)
                     jobId = jobId.split(':')[1];
                 var jobType = jobDetails['job_type'];
@@ -513,14 +527,34 @@ function($,
                 var state = this.runState;
                 status = status.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
                 state = state.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+                if (status === 'Suspend' || status === 'Error' || status === 'Unknown' || status === 'Awe_error') {
+                    status = this.makeJobErrorButton(fullJobId, 'Error');
+                    //this.$jobStatusDiv.addClass('kb-jobs-error');
+                }
+                else if (status === 'Deleted') {
+                    status = this.makeJobErrorButton(fullJobId, 'Deleted');
+                    //this.$jobStatusDiv.addClass('kb-jobs-error');
+                }
+                else if (status === 'Not_found_error') {
+                    status = this.makeJobErrorButton(fullJobId, 'Job Not Found');
+                    //this.$jobStatusDiv.addClass('kb-jobs-error');
+                }
+                else if (status === 'Unauthorized_error') {
+                    status = this.makeJobErrorButton(fullJobId, 'Unauthorized');
+                    //this.$jobStatusDiv.addClass('kb-jobs-error');
+                }
+                else if (status === 'Network_error') {
+                    status = this.makeJobErrorButton(fullJobId, 'Network Error');
+                    //this.$jobStatusDiv.addClass('kb-jobs-error');
+                }
                 this.$jobStatusDiv.empty();
-                this.$jobStatusDiv.append(state + ' (' + status + ')');
+                this.$jobStatusDiv.append(status);
                 if (!this.hasLogsPanelLoaded) {
                     this.hasLogsPanelLoaded = true;
                     this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Console Log', showContentCallback: 
                         function() {
                             var $jobLogsPanel = $('<div>');
-                            $jobLogsPanel.kbaseViewLiveRunLog({'job_id': jobId});
+                            $jobLogsPanel.kbaseViewLiveRunLog({'job_id': jobId, 'show_loading_error': false});
                             return $jobLogsPanel;
                         }, 
                         canDelete: false, show: false});
@@ -559,6 +593,19 @@ function($,
             }
         },
 
+        makeJobErrorButton: function(jobId, btnText) {
+            var $errBtn = $('<div>')
+                .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
+                .css('background-color', '#F44336')
+                .append('<span class="fa fa-warning" style="color:white"></span>');
+            if (btnText)
+                $errBtn.append(' ' + btnText);
+            $errBtn.click($.proxy(function(e) {
+                this.trigger('openJobErrorDialog.Narrative', [jobId, btnText]);
+            }, this));
+            return $errBtn;
+        },
+        
         isAwaitingInput: function() {
             if(this.runState) {
                 if(this.runState==='input') { return true; }

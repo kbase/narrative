@@ -901,7 +901,7 @@ function($,
                 else if (status.indexOf('queue') != -1 || status.indexOf('submit') != -1)
                     submitState = 'submitted';
                 $cell.kbaseNarrativeMethodCell('changeState', submitState, 
-                        {'job_id': jobId, 'job_type': jobType, 'status': status});
+                        {'job_id': jobId, 'job_state': jobState, 'job_info': jobInfo});
             }
             // if we have outputs, those need to be passed along
             if (jobState.state.widget_outputs && Object.keys(jobState.state.widget_outputs).length > 0) {
@@ -932,7 +932,7 @@ function($,
                     $cell.kbaseNarrativeAppCell('setRunningState', 'error');
                 }
                 else {
-                    $cell.kbaseNarrativeMethodCell('changeState', 'error');
+                    $cell.kbaseNarrativeMethodCell('changeState', 'error', {});
                 }
                 this.completeJob(jobId, this.jobStates[jobId]);
             }

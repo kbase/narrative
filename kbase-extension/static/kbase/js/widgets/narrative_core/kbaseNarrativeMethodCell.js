@@ -334,7 +334,7 @@ function($,
                 this.submittedText = state.runningState.submittedText;
                 if (state.hasOwnProperty('jobDetails')) {
                     this.jobDetails = state.jobDetails;
-                    if (this.jobDetails['status'])
+                    if (this.jobDetails['job_id'])
                         this.isJobStatusLoadedFromState = true;
                 }
                 this.changeState(state.runningState.runState);
@@ -522,30 +522,22 @@ function($,
                 var fullJobId = jobId;
                 if (jobId.indexOf(':') > 0)
                     jobId = jobId.split(':')[1];
-                var jobType = jobDetails['job_type'];
+                var jobState = jobDetails['job_state'];
+                var jobInfo = jobDetails['job_info'];
                 var status = jobDetails['status'];
-                var state = this.runState;
+                if (!status)
+                    status = status = jobState.status.toLowerCase();
                 status = status.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
-                state = state.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
                 if (status === 'Suspend' || status === 'Error' || status === 'Unknown' || status === 'Awe_error') {
-                    status = this.makeJobErrorButton(fullJobId, 'Error');
-                    //this.$jobStatusDiv.addClass('kb-jobs-error');
-                }
-                else if (status === 'Deleted') {
-                    status = this.makeJobErrorButton(fullJobId, 'Deleted');
-                    //this.$jobStatusDiv.addClass('kb-jobs-error');
-                }
-                else if (status === 'Not_found_error') {
-                    status = this.makeJobErrorButton(fullJobId, 'Job Not Found');
-                    //this.$jobStatusDiv.addClass('kb-jobs-error');
-                }
-                else if (status === 'Unauthorized_error') {
-                    status = this.makeJobErrorButton(fullJobId, 'Unauthorized');
-                    //this.$jobStatusDiv.addClass('kb-jobs-error');
-                }
-                else if (status === 'Network_error') {
-                    status = this.makeJobErrorButton(fullJobId, 'Network Error');
-                    //this.$jobStatusDiv.addClass('kb-jobs-error');
+                    status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Error');
+                } else if (status === 'Deleted') {
+                    status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Deleted');
+                } else if (status === 'Not_found_error') {
+                    status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Job Not Found');
+                } else if (status === 'Unauthorized_error') {
+                    status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Unauthorized');
+                } else if (status === 'Network_error') {
+                    status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Network Error');
                 }
                 this.$jobStatusDiv.empty();
                 this.$jobStatusDiv.append(status);
@@ -558,7 +550,6 @@ function($,
                             return $jobLogsPanel;
                         }, 
                         canDelete: false, show: false});
-                    
                 }
                 if (jobDetails['result']) {
                     if(!this.hasResultLoaded) {
@@ -593,17 +584,113 @@ function($,
             }
         },
 
-        makeJobErrorButton: function(jobId, btnText) {
+        makeJobErrorPanel: function(jobId, jobState, jobInfo, btnText) {
             var $errBtn = $('<div>')
                 .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
                 .css('background-color', '#F44336')
                 .append('<span class="fa fa-warning" style="color:white"></span>');
             if (btnText)
                 $errBtn.append(' ' + btnText);
-            $errBtn.click($.proxy(function(e) {
-                this.trigger('openJobErrorDialog.Narrative', [jobId, btnText]);
-            }, this));
-            return $errBtn;
+            var headText = $errBtn; //"An error has been detected in this job!";
+            var errorText = "The KBase servers are reporting an error for this job:";
+            var errorType = "Unknown";
+
+            /* 1. jobState.source doesn't exist = not pointed at a cell
+             * 2. $('#jobState.source') doesn't exist = cell is missing
+             * 3. jobstate.state.error is a string.
+             * 4. jobstate.state is missing.
+             */
+            if (!jobState || !jobState.source) {
+                errorText = "This job is not associated with a Running Cell.";
+                errorType = "Unknown Cell";                    
+            }
+            else if ($('#' + jobState.source).length === 0) {
+                errorText = "The App Cell associated with this job can no longer be found in your Narrative.";
+                errorType = "Missing Cell";
+            }
+            else if (btnText === 'Deleted') {
+                errorText = "This job has already been deleted from KBase Servers.";
+                errorType = "Invalid Job";
+            }
+            else if (btnText === 'Job Not Found') {
+                errorText = "This job was not found to be running on KBase Servers. It may have been deleted, or may not be started yet.";
+                errorType = "Invalid Job";
+            }
+            else if (btnText === 'Unauthorized') {
+                errorText = "You do not have permission to view information about this job.";
+                errorType = "Unauthorized";
+            }
+            else if (btnText === 'Network Error') {
+                errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
+                errorType = "Network";
+            }
+            else if (jobState.state.error) {
+                errorText = $('<div class="kb-jobs-error-modal">').append(jobState.state.error);
+                errorType = "Runtime";
+                if (jobState.state.error === 'awe_error')
+                    errorType = 'AWE Error';                    
+            }
+
+            /* error types:
+             * 1. jobState.state.error is a real string. Just cough it up.
+             * 2. jobState.state is missing
+             * 3. jobInfo is partly missing (e.g., lost the cell that it should point to)
+             * 4. jobInfo is still partly missing (e.g., dont' know what cell it should point to)
+             */
+            else if (Object.keys(jobState.state.step_errors).length !== 0) {
+                errorType = "Runtime";
+                errorText = $('<div class="kb-jobs-error-modal">');
+                for (var stepId in jobState.state.step_errors) {
+                    if (jobState.state.step_errors.hasOwnProperty(stepId)) {
+                        // contort that into the method name
+                        // gotta search for it in the spec for the method id, first.
+                        var methodName = "Unknown method: " + stepId;
+                        if (jobId.indexOf("njs:") == 0) {
+                            var methodId = null;
+                            for (var i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
+                                if (stepId === jobInfo.spec.appSpec.steps[i].step_id) {
+                                    methodId = jobInfo.spec.appSpec.steps[i].method_id;
+                                    break;
+                                }
+                            }
+                            if (methodId)
+                                methodName = jobInfo.spec.methodSpecs[methodId].info.name;
+                        }
+                        else {
+                            methodName = jobInfo.spec.methodSpec.info.name;
+                        }
+                        errorText.append($('<b>').append('In ' + methodName + ':<br>'))
+                                .append(jobState.state.step_errors[stepId] + '<br><br>');
+                    }
+                }
+            }
+
+            function makeInfoRow(heading, info) {
+                return $('<tr>').append($('<th>')
+                        .append(heading + ':'))
+                        .append($('<td>')
+                        .append(info));
+            }
+            
+            var $errorTable = $('<table class="table table-bordered">')
+                    .append(makeInfoRow('Id', jobId))
+                    .append(makeInfoRow('Type', errorType))
+                    .append(makeInfoRow('Error', errorText));
+
+            var $modalBody = $('<div>').append(headText)
+                    .append($errorTable);
+            if (jobState && jobState.state && jobState.state.traceback) {
+                var $tb = $('<div>');
+                $tb.kbaseAccordion({
+                    elements: [{
+                        title: 'Detailed Error Information',
+                        body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
+                    }]
+                });
+                $modalBody.append($tb);
+            }
+
+            return $modalBody;
         },
         
         isAwaitingInput: function() {

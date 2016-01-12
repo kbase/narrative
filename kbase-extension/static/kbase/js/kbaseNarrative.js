@@ -101,21 +101,26 @@ function($,
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
         });
 
-        $([Jupyter.events]).on('select.Cell', $.proxy(function(event, data) {
+        $([Jupyter.events]).on('select.Cell', function(event, data) {
             this.showJupyterCellToolbar(data.cell);
             if (data.cell.metadata['kb-cell']) {
                 this.disableKeyboardManager();
             }
-        }, this));
+        }.bind(this));
 
-        $([Jupyter.events]).on('create.Cell', $.proxy(function(event, data) {
+        $([Jupyter.events]).on('create.Cell', function(event, data) {
             this.showJupyterCellToolbar(data.cell);
-        }, this));
+        }.bind(this));
 
-        $([Jupyter.events]).on('delete.Cell', $.proxy(function(event, data) {
+        $([Jupyter.events]).on('delete.Cell', function(event, data) {
             this.showJupyterCellToolbar(Jupyter.notebook.get_selected_cell());
             this.enableKeyboardManager();
-        }, this));
+        }.bind(this));
+
+        $([Jupyter.events]).on('notebook_save_failed.Notebook', function(event, data) {
+            this.saveFailed(event, data);
+        }.bind(this));
+
     };
 
     /**
@@ -283,6 +288,68 @@ function($,
         $('#notebook').append($versionModal);
     };
 
+    Narrative.prototype.saveFailed = function() {
+        Jupyter.save_widget.set_save_status('Narrative save failed!');
+        console.log(event);
+        console.log(data);
+
+        var errorText;
+        // 413 means that the Narrative is too large to be saved.
+        // currently - 4/6/2015 - there's a hard limit of 4MB per KBase Narrative.
+        // Any larger object will throw a 413 error, and we need to show some text.
+        if (data.xhr.status === 413) {
+            errorText = 'Due to current system constraints, a Narrative may not exceed ' + 
+                        this.maxNarrativeSize + ' of text.<br><br>' +
+                        'Errors of this sort are usually due to excessive size ' + 
+                        'of outputs from Code Cells, or from large objects ' + 
+                        'embedded in Markdown Cells.<br><br>' +
+                        'Please decrease the document size and try to save again.';
+        }
+        else if (data.xhr.responseText) {
+            var $error = $($.parseHTML(data.xhr.responseText));
+            errorText = $error.find('#error-message > h3').text();
+
+            if (errorText) {
+                /* gonna throw in a special case for workspace permissions issues for now.
+                 * if it has this pattern:
+                 * 
+                 * User \w+ may not write to workspace \d+
+                 * change the text to something more sensible.
+                 */
+
+                var res = /User\s+(\w+)\s+may\s+not\s+write\s+to\s+workspace\s+(\d+)/.exec(errorText);
+                if (res) {
+                    errorText = "User " + res[1] + " does not have permission to save to workspace " + res[2] + ".";
+                }
+            }
+        }
+        else {
+            errorText = 'An unknown error occurred!';
+        }
+
+        Jupyter.dialog.modal({
+            title: "Narrative save failed!",
+            body: $('<div>').append(errorText),
+            buttons : {
+                "OK": {
+                    class: "btn-primary",
+                    click: function () {
+                    }
+                }
+            },
+            open : function (event, ui) {
+                var that = $(this);
+                // Upon ENTER, click the OK button.
+                that.find('input[type="text"]').keydown(function (event, ui) {
+                    if (event.which === utils.keycodes.ENTER) {
+                        that.find('.btn-primary').first().click();
+                    }
+                });
+                that.find('input[type="text"]').focus();
+            }
+        });
+    };
+
     // This should not be run until AFTER the notebook has been loaded!
     // It depends on elements of the Notebook metadata.
     Narrative.prototype.init = function() {
@@ -290,76 +357,12 @@ function($,
         this.initAboutDialog();
         this.initUpgradeDialog();
 
-        // Override the base Jupyter event that happens when a notebook fails to save.
-        // TODO: pop this out into another function. Shouldn't be in init().
-        $([Jupyter.events]).on('notebook_save_failed.Notebook', $.proxy(function(event, data) {
-            Jupyter.save_widget.set_save_status('Narrative save failed!');
-            console.log(event);
-            console.log(data);
-
-            var errorText;
-            // 413 means that the Narrative is too large to be saved.
-            // currently - 4/6/2015 - there's a hard limit of 4MB per KBase Narrative.
-            // Any larger object will throw a 413 error, and we need to show some text.
-            if (data.xhr.status === 413) {
-                errorText = 'Due to current system constraints, a Narrative may not exceed ' + 
-                            this.maxNarrativeSize + ' of text.<br><br>' +
-                            'Errors of this sort are usually due to excessive size ' + 
-                            'of outputs from Code Cells, or from large objects ' + 
-                            'embedded in Markdown Cells.<br><br>' +
-                            'Please decrease the document size and try to save again.';
-            }
-            else if (data.xhr.responseText) {
-                var $error = $($.parseHTML(data.xhr.responseText));
-                errorText = $error.find('#error-message > h3').text();
-
-                if (errorText) {
-                    /* gonna throw in a special case for workspace permissions issues for now.
-                     * if it has this pattern:
-                     * 
-                     * User \w+ may not write to workspace \d+
-                     * change the text to something more sensible.
-                     */
-
-                    var res = /User\s+(\w+)\s+may\s+not\s+write\s+to\s+workspace\s+(\d+)/.exec(errorText);
-                    if (res) {
-                        errorText = "User " + res[1] + " does not have permission to save to workspace " + res[2] + ".";
-                    }
-                }
-            }
-            else {
-                errorText = 'An unknown error occurred!';
-            }
-
-            Jupyter.dialog.modal({
-                title: "Narrative save failed!",
-                body: $('<div>').append(errorText),
-                buttons : {
-                    "OK": {
-                        class: "btn-primary",
-                        click: function () {
-                        }
-                    }
-                },
-                open : function (event, ui) {
-                    var that = $(this);
-                    // Upon ENTER, click the OK button.
-                    that.find('input[type="text"]').keydown(function (event, ui) {
-                        if (event.which === utils.keycodes.ENTER) {
-                            that.find('.btn-primary').first().click();
-                        }
-                    });
-                    that.find('input[type="text"]').focus();
-                }
-            });
-        }, this));
-
-
         var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
 
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0,0);
         
+        // Disable autosave so as not to spam the Workspace.
         Jupyter.notebook.set_autosave_interval(0);
         kbaseCellToolbar.register(Jupyter.notebook);
         Jupyter.CellToolbar.activate_preset("KBase");
@@ -368,46 +371,30 @@ function($,
         this.ws_name = null;
 
         if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
-            // hide all cell toolbars.
-            // well trigger the one to show later.
-
             $.each(Jupyter.notebook.get_cells(), function(idx, cell) {
                 cell.celltoolbar.hide();
             });
 
             this.ws_name = Jupyter.notebook.metadata.ws_name;
-            var narrname = Jupyter.notebook.get_notebook_name();
             var username = Jupyter.notebook.metadata.creator;
-            console.log(Jupyter.notebook.metadata);
 
-            $('#kb-narr-creator').text(username);
+            $('#kb-narr-creator').html('<a href="' + Config.url('profile_page') + username + '">' + username + '</a>');
             $('.kb-narr-namestamp').css({'display':'block'});
 
-            var token = null;
-            if (window.kb && window.kb.token)
-                token = window.kb.token;
-
-            $.ajax({
-                type: 'GET',
-                url: 'https://kbase.us/services/genome_comparison/users?usernames=' + username + '&token=' + token,
-                dataType: 'json',
-                crossDomain: true,
-                success: function(data, res, jqXHR) {
-                    if (data.data && typeof data.data[username] === 'object' && data.data[username].fullName) {
-                        var fullName = data.data[username].fullName;
-                        $('#kb-narr-creator').text(fullName + ' (' + username + ')');
-                    }
+            new UserProfile(Config.url('user_profile')).get_user_profile([username],
+                function(profile) {
+                    $('#kb-narr-creator').html('<a href="' + Config.url('profile_page') + username + '">' + profile[0].user.realname + ' (' + username + ')' + '</a>');
+                },
+                function(error) {
+                    // no op - just leave the username in place
                 }
-            });
+            );
 
             // This puts the cell menu in the right place.
             $([Jupyter.events]).trigger('select.Cell', {cell: Jupyter.notebook.get_selected_cell()});
         }
         if (this.ws_name) {
-            /* It's ON like DONKEY KONG! */
-            $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + this.ws_name);
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
-                loadingImage: "/static/kbase/images/ajax-loader.gif",
                 ws_id: Jupyter.notebook.metadata.ws_name
             });
             $sidePanel.render();

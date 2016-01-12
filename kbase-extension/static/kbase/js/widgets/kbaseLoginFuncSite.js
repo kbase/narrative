@@ -50,17 +50,18 @@
 
 define([
     'jquery',
+    'narrativeConfig',
+    'kbase-client-api',
     'jquery_cookie',
     'kbwidget',
     'kbasePrompt',
     'bootstrap'
-], function ($) {
+], function ($, Config) {
     $.KBWidget({
         name: "kbaseLogin",
         version: "1.0.0",
         options: {
             style: 'text',
-            //loginURL : "http://140.221.92.231/services/authorization/Sessions/Login",
             loginURL: "https://kbase.us/services/authorization/Sessions/Login",
             possibleFields: ['verified', 'name', 'opt_in', 'kbase_sessionid', 'token', 'groups', 'user_id', 'email', 'system_admin'],
             fields: ['name', 'kbase_sessionid', 'user_id', 'token']
@@ -287,18 +288,16 @@ define([
                             .css('white-space', 'nowrap')
                             .append(
                                 $.jqElem('div')  //so as to style the link in blue.
-                                .css('text-align', 'right')
+                                .css('text-align', 'center')
                                 .append(
                                     $('<a></a>')
-                                    .attr('id', 'loggedinuser_id')
                                     .css('font-weight', 'bold')
+                                    .attr('id', 'loggedinuser_id')
+                                    .addClass('btn btn-link')
                                     .attr('href', 'https://gologin.kbase.us/account/UpdateProfile')
-                                    .attr('target', '_blank')
-                                    .css('padding-right', '0px')
-                                    .css('padding-left', '0px'))))
+                                    .attr('target', '_blank'))))
                         .append(
                             $('<li></li>')
-                            // .addClass('pull-right')
                             .css('text-align', 'center')
                             .append(
                                 $('<span></span>')
@@ -319,12 +318,28 @@ define([
 
             this.registerLogin =
                 function (args) {
+                    var setUsernameField = function(name, id) {
+                        this.data('loggedinuser_id').text(name)
+                            .attr('href', '/functional-site/#/people/' + id)
+                            .click();
+                    }.bind(this);
+
                     if (args.success) {
                         this.data("loginlink").hide();
-                        this.data('loggedinuser_id').text(args.name)
-                            .attr('href', '/functional-site/#/people/' + args.user_id)
-                            .click();
-                        this.data("userdisplay").show();
+                        if (args.name) {
+                            setUsernameField(args.name, args.user_id);
+                        }
+                        else {
+                            var profileClient = new UserProfile(Config.url('user_profile'));
+                            profileClient.get_user_profile([args.user_id])
+                            .done(function(users) {
+                                setUsernameField(users[0].user.realname, args.user_id);
+                            }.bind(this))
+                            .fail(function(error) {
+                                setUsernameField(args.user_id, args.user_id);
+                            }.bind(this));
+                        }
+                        this.data('userdisplay').show();
                         this.data('loginDialog').closePrompt();
                     } else {
                         this.data('loginDialog').dialogModal().trigger('error', args.message);
@@ -339,360 +354,7 @@ define([
             return $prompt;
 
         },
-        _hiddenStyle: function () {
 
-            this._createLoginDialog();
-
-            this.registerLogin =
-                function (args) {
-                    if (args.success) {
-                        this.data('loginDialog').closePrompt();
-                    } else {
-                        this.data('loginDialog').dialogModal().trigger('error', args.message);
-                    }
-                };
-
-            return undefined;
-        },
-        _slimStyle: function () {
-
-            this.data('loginDialog', undefined);
-
-            var $prompt = $('<span></span>')
-                .addClass('form-inline')
-                .append(
-                    $('<span></span>')
-                    .attr('id', 'entrance')
-                    .append(
-                        $('<span></span>')
-                        .addClass('input-group')
-                        .append(
-                            $('<span></span>')
-                            .addClass('input-group-addon')
-                            .append('username: ')
-                            .bind('click',
-                                function (e) {
-                                    $(this).next().focus();
-                                }
-                            )
-                            )
-                        .append(
-                            $('<input>')
-                            .attr('type', 'text')
-                            .attr('name', 'user_id')
-                            .attr('id', 'user_id')
-                            .attr('size', '20')
-                            .val(this.options.user_id)
-                            )
-                        .append(
-                            $('<span></span>')
-                            .addClass('input-group-addon')
-                            .append(' password: ')
-                            .bind('click',
-                                function (e) {
-                                    $(this).next().focus();
-                                }
-                            )
-                            )
-                        .append(
-                            $('<input>')
-                            .attr('type', 'password')
-                            .attr('name', 'password')
-                            .attr('id', 'password')
-                            .attr('size', '20')
-                            )
-                        //.append('&nbsp;')
-                        .append(
-                            $('<button></button>')
-                            .attr('id', 'loginbutton')
-                            .addClass('btn btn-primary')
-                            .append(
-                                $('<i></i>')
-                                .attr('id', 'loginicon')
-                                .addClass('icon-lock')
-                                )
-                            )
-                        )
-                    )
-                .append(
-                    $('<span></span>')
-                    .attr('id', 'userdisplay')
-                    .attr('style', 'display : none;')
-                    .addClass('input-group')
-                    .append(
-                        $('<span></span>')
-                        .addClass('input-group-addon')
-                        //.attr('style', 'text-align : center')
-                        .append('Logged in as ')
-                        .append(
-                            $('<span></span>')
-                            .attr('id', 'loggedinuser_id')
-                            .attr('style', 'font-weight : bold')
-                            .append('user_id\n')
-                            )
-                        )
-                    .append(
-                        $('<button></button>')
-                        .addClass('btn btn-default')
-                        .attr('id', 'logoutbutton')
-                        .append(
-                            $('<i></i>')
-                            .attr('id', 'logouticon')
-                            .addClass('icon-signout')
-                            )
-                        )
-                    );
-
-
-            this._rewireIds($prompt, this);
-
-            this.data('password').keypress(
-                $.proxy(
-                    function (e) {
-                        if (e.keyCode === 13.) {
-                            this.data('loginbutton').trigger("click");
-                            e.stopPropagation();
-                        }
-                    },
-                    this
-                    )
-                );
-
-            this.registerLogin =
-                function (args) {
-
-                    this.data('loginicon').removeClass().addClass('icon-lock');
-
-                    if (args.success) {
-                        this.data("entrance").hide();
-                        this.data('user_id').val('');
-                        this.data('password').val('');
-                        this.data("loggedinuser_id").text(args.name);
-                        this.data("userdisplay").show();
-                    } else {
-
-                        var $errorModal = $('<div></div>').kbasePrompt(
-                            {
-                                title: 'Login failed',
-                                body: $('<div></div>')
-                                    .attr('class', 'alert alert-error')
-                                    .append(
-                                        $('<div></div>')
-                                        .append(
-                                            $('<div></div>')
-                                            .addClass('pull-left')
-                                            .append(
-                                                $('<i></i>')
-                                                .addClass('icon-warning-sign')
-                                                .attr('style', 'float: left; margin-right: .3em;')
-                                                )
-                                            )
-                                        .append(
-                                            $('<div></div>')
-                                            .append(
-                                                $('<strong></strong>').append(args.message)
-                                                )
-                                            )
-                                        )
-                                ,
-                                controls: ['okayButton']
-                            }
-                        );
-                        $errorModal.openPrompt();
-
-                    }
-                };
-
-            this.specificLogout = function (args) {
-                this.data("userdisplay").hide();
-                this.data("entrance").show();
-            };
-
-            this.data('loginbutton').bind(
-                'click',
-                $.proxy(
-                    function (evt) {
-
-                        this.data('loginicon').removeClass().addClass('icon-refresh');
-
-                        this.login(
-                            this.data('user_id').val(),
-                            this.data('password').val(),
-                            function (args) {
-
-                                this.registerLogin(args);
-
-                                if (this.options.login_callback) {
-                                    this.options.login_callback.call(this, args);
-                                }
-                            }
-                        );
-
-                    },
-                    this
-                    )
-                );
-
-            this.data('logoutbutton').bind('click',
-                $.proxy(
-                    function (e) {
-                        this.logout();
-                        this.data('user_id').focus();
-                    },
-                    this
-                    )
-                );
-
-            return $prompt;
-
-        },
-        _microStyle: function () {
-            var $prompt = $('<span></span>')
-                .append(
-                    $('<button></button>')
-                    .addClass('btn btn-primary')
-                    .attr('id', 'loginbutton')
-                    .append(
-                        $('<i></i>')
-                        .attr('id', 'loginicon')
-                        .addClass('icon-lock')
-                        )
-                    );
-
-            this._rewireIds($prompt, this);
-
-            this._createLoginDialog();
-
-            this.data('loginbutton').bind(
-                'click',
-                $.proxy(
-                    function (evt) {
-                        this.openDialog();
-                    },
-                    this
-                    )
-                );
-
-            this.registerLogin =
-                function (args) {
-
-                    if (args.success) {
-
-                        this.data('loginDialog').dialogModal().trigger('clearMessages');
-                        this.data('loginDialog').closePrompt();
-
-                        this.data('loginbutton').tooltip(
-                            {
-                                title: 'Logged in as ' + args.name
-                            }
-                        );
-
-                        this.data('loginicon').removeClass().addClass('icon-user');
-
-                        this.data('loginbutton').bind(
-                            'click',
-                            $.proxy(
-                                function (evt) {
-                                    this.logout();
-                                },
-                                this
-                                )
-                            );
-                    } else {
-                        this.data('loginDialog').dialogModal().trigger('error', args.message);
-                    }
-                };
-
-            this.specificLogout =
-                function () {
-                    this.data('loginbutton').tooltip('destroy');
-                    this.data('loginicon').removeClass().addClass('icon-lock');
-                };
-
-            return $prompt;
-
-        },
-        _buttonStyle: function () {
-            var $prompt = $('<div></div>')
-                .attr('style', 'width : 250px; border : 1px solid gray')
-                .append(
-                    $('<h4></h4>')
-                    .attr('style', 'padding : 5px; margin-top : 0px; background-color : lightgray ')
-                    .addClass('text-center')
-                    .append('User\n')
-                    )
-                .append(
-                    $('<div></div>')
-                    .attr('id', 'entrance')
-                    .append(
-                        $('<p></p>')
-                        .attr('style', 'text-align : center')
-                        .append(
-                            $('<button></button>')
-                            .attr('id', 'loginbutton')
-                            .append('Login')
-                            .addClass('btn btn-primary')
-                            )
-                        )
-                    )
-                .append(
-                    $('<div></div>')
-                    .attr('id', 'userdisplay')
-                    .attr('style', 'display : none;')
-                    .append(
-                        $('<p></p>')
-                        .attr('style', 'text-align : center')
-                        .append('Logged in as ')
-                        .append(
-                            $('<span></span>')
-                            .attr('id', 'loggedinuser_id')
-                            .attr('style', 'font-weight : bold')
-                            .append('user_id\n')
-                            )
-                        .append(
-                            $('<button></button>')
-                            .attr('id', 'logoutbutton')
-                            .append('Logout\n')
-                            .addClass('btn btn-default')
-                            )
-                        )
-                    );
-
-            this._rewireIds($prompt, this);
-
-            this._createLoginDialog();
-
-            this.data('loginbutton').bind('click',
-                $.proxy(
-                    function (event) {
-                        this.openDialog();
-                    },
-                    this
-                    )
-                );
-
-            this.data('logoutbutton').bind('click', $.proxy(this.logout, this));
-
-            this.registerLogin =
-                function (args) {
-                    if (args.success) {
-                        this.data('loginDialog').dialogModal().trigger('clearMessages');
-                        this.data('entrance').hide();
-                        this.data('loggedinuser_id').text(args.name);
-                        this.data('userdisplay').show();
-                        this.data('loginDialog').closePrompt();
-                    } else {
-                        this.data('loginDialog').dialogModal().trigger('error', args.message);
-                    }
-                };
-
-            this.specificLogout = function (args) {
-                this.data("userdisplay").hide();
-                this.data("entrance").show();
-            };
-
-            return $prompt;
-        },
         _createLoginDialog: function () {
             var $elem = this.$elem;
 

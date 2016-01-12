@@ -73,7 +73,13 @@ function ($, Config) {
                                     $.proxy(function(e) {
                                         var txt = this.$searchInput.val().trim().toLowerCase();
                                         if (txt.indexOf("type:") === 0) {
-                                            this.visualFilter(this.inputTypeFilter, txt.substring(5));
+                                            this.visualFilter(this.objectTypeFilter, txt.substring(5));
+                                        }
+                                        else if (txt.indexOf("in_type:") === 0) {
+                                            this.visualFilter(this.inputTypeFilter, txt.substring(8));
+                                        }
+                                        else if (txt.indexOf("out_type:") === 0) {
+                                            this.visualFilter(this.outputTypeFilter, txt.substring(9));
                                         }
                                         else {
                                             this.visualFilter(this.textFilter, txt);
@@ -175,7 +181,6 @@ function ($, Config) {
                         this.$searchDiv.show();
                         this.$searchInput.val(filterString);
                         this.$searchInput.trigger('input');
-                        //this.$searchInput.focus();
                     }
                 }, this)
             );
@@ -804,20 +809,47 @@ function ($, Config) {
         /**
          * Returns true if the type is available as in input to the method, false otherwise, assumes
          * only the first token in 'type' is the type name
+         *
+         * 'style' should be one of three values:
+         * "object" = the type appears in either ins or outs of the method
+         * "input" = the type only appears in input fields
+         * "output" = the type only appears in output fields
          */
-        inputTypeFilter: function(type, spec) {
+        typeFilter: function(type, spec, style) {
+            style = style.toLowerCase();
+
             var tokens = type.split(' ');
             var type = tokens[0];
             tokens.shift();
             // first check that other tokens match the method/app name
-            if(!this.textFilter(tokens.join(' '),spec)) {
+            if (!this.textFilter(tokens.join(' '), spec)) {
                 return false;
             }
 
             var methodFilter = function(type, spec) {
                 for (var i=0; i<spec.parameters.length; i++) {
                     var p = spec.parameters[i];
+
                     if (p.text_options && p.text_options.valid_ws_types && p.text_options.valid_ws_types.length > 0) {
+                        // outputs have "is_output_name" in text_options
+                        var isOutput = p.text_options.is_output_name; // 0 or 1
+                        var checkThisParam = true;
+                        switch (style) {
+                            case 'input':
+                                if (isOutput)
+                                    checkThisParam = false;
+                                break;
+                            case 'output':
+                                if (!isOutput)
+                                    checkThisParam = false;
+                                break;
+                            case 'object': // always check
+                                break;
+                            default: break;
+                        }
+
+                        if (!checkThisParam)
+                            continue;
                         var validTypes = p.text_options.valid_ws_types;
                         for (var j=0; j<validTypes.length; j++) {
                             if (validTypes[j].toLowerCase().indexOf(type) !== -1)
@@ -825,14 +857,12 @@ function ($, Config) {
                         }
                     }
                 }
-                return false;
-            };
+            }
             if (spec.steps) {
                 // ignoring apps right now
                 for (var i=0; i<spec.steps.length; i++) {
                     var methodSpec = this.methodSpecs[spec.steps[i].method_id];
                     if (!methodSpec || methodSpec === undefined || methodSpec === null) {
-//                        console.error('missing spec for ' + spec.steps[i].method_id);
                     }
                     else if (methodFilter(type, methodSpec))
                         return true;
@@ -841,6 +871,18 @@ function ($, Config) {
             } else {
                 return methodFilter(type, spec);
             }
+        },
+
+        objectTypeFilter: function(type, spec) {
+            return this.typeFilter(type, spec, 'object');
+        },
+
+        inputTypeFilter: function(type, spec) {
+            return this.typeFilter(type, spec, 'input');
+        },
+
+        outputTypeFilter: function(type, spec) {
+            return this.typeFilter(type, spec, 'output');
         },
 
         /**
@@ -864,8 +906,6 @@ function ($, Config) {
                     if (!filterFn(fnInput, set[id])) {
                         self.id2Elem[type][id].hide();
                         self.id2Elem[type][id].addClass('kb-function-dim');
-                        // self.methodSet[methId].$elem.hide();
-                        // self.methodSet[methId].$elem.addClass('kb-function-dim');
                         numHidden++;
                     }
                     else {

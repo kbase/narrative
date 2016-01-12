@@ -362,11 +362,6 @@ define([
             });
         }, this));
 
-//        $('[data-toggle="tooltip"]').tooltip({
-//            placement: 'auto',
-//            delay: {show: 500, hide: 0}
-//        });
-        
         /*
          * Before we get everything loading, just grey out the whole %^! page
          */

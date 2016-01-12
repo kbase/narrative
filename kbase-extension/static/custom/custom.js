@@ -410,6 +410,14 @@ define(['jquery',
                 $cellNode = $(this.element),
                 $toolbar = $cellNode.find('.celltoolbar > .button_container');
 
+            this.element.dblclick(function () {
+                var cont = cell.unrender();
+                if (cont) {
+                    cell.focus_editor();
+                }
+            });
+
+
             /*
              * This is the trick to get the markdown to render, and the edit area
              * to disappear, when the user clicks out of the edit area.
@@ -543,13 +551,13 @@ define(['jquery',
             // was closed.
             // Note that the base Cell bind_events already has a default
             // double click behavior
-            $(this.element)
-                .on('dblclick', function (e) {
-                    // if cell state is closed...
-                    if (cell.getCellState('toggleState', 'unknown') === 'closed') {
-                        cell.toggle();
-                    }
-                });
+            // $(this.element)
+            //     .on('dblclick', function (e) {
+            //         // if cell state is closed...
+            //         if (cell.getCellState('toggleState', 'unknown') === 'closed') {
+            //             cell.toggle();
+            //         }
+            //     });
         };
 
         /*
@@ -745,8 +753,8 @@ define(['jquery',
                             return false;
                         }
                     },
-                    'move-cursor-down-or-next-cell',
-                    'ipython'
+                    'move-cursor-down',
+                    'jupyter-notebook'
                 );
 
                 IPython.keyboard_manager.actions.register(
@@ -771,8 +779,8 @@ define(['jquery',
                             return false;
                         }
                     },
-                    'move-cursor-up-or-previous-cell',
-                    'ipython'
+                    'move-cursor-up',
+                    'jupyter-notebook'
                 );
             });
         });

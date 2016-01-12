@@ -1,10 +1,10 @@
 /**
  * This is the entry point for the Narrative's front-end. It initializes
  * the login session, fires up the data and function widgets, and creates
- * the kbaseNarrativeWorkspace wrapper around the IPython notebook that
+ * the kbaseNarrativeWorkspace wrapper around the Jupyter notebook that
  * does fun things like manage widgets and cells and kernel events to talk to them.
  *
- * To set global variables, use: IPython.narrative.<name> = value
+ * To set global variables, use: Jupyter.narrative.<name> = value
  */
 define([
     'jquery', 
@@ -19,24 +19,25 @@ define([
     'ipythonCellMenu',
     'base/js/events',
     'notebook/js/notebook'
-], function($,
-            Config,
-            kbaseNarrativeSidePanel,
-            kbaseNarrativeOutputCell,
-            kbaseNarrativeWorkspace,
-            kbaseNarrativeMethodCell,
-            narrativeLogin,
-            kbaseClient,
-            kbaseNarrativePrestart,
-            kbaseCellToolbar,
-            events,
-            Notebook) {
+], 
+function($,
+         Config,
+         kbaseNarrativeSidePanel,
+         kbaseNarrativeOutputCell,
+         kbaseNarrativeWorkspace,
+         kbaseNarrativeMethodCell,
+         narrativeLogin,
+         kbaseClient,
+         kbaseNarrativePrestart,
+         kbaseCellToolbar,
+         events,
+         Notebook) {
     "use strict";
 
     /**
      * @constructor
      * The base, namespaced Narrative object. This is mainly used at start-up time, and
-     * gets injected into the IPython namespace.
+     * gets injected into the Jupyter namespace.
      * 
      * Most of its methods below - init, registerEvents, initAboutDialog, initUpgradeDialog,
      * checkVersion, updateVersion - are set up at startup time.
@@ -57,7 +58,7 @@ define([
         this.currentVersion = Config.get('version');
         this.dataViewers = null;
 
-        IPython.keyboard_manager.disable();
+        Jupyter.keyboard_manager.disable();
         return this;
     };
 
@@ -65,13 +66,13 @@ define([
 
     };
 
-    // Wrappers for the IPython/Jupyter function so we only maintain it in one place.
+    // Wrappers for the Jupyter/Jupyter function so we only maintain it in one place.
     Narrative.prototype.disableKeyboardManager = function() {
-        IPython.keyboard_manager.disable();
+        Jupyter.keyboard_manager.disable();
     };
 
     Narrative.prototype.enableKeyboardManager = function() {
-        // IPython.keyboard_manager.enable();
+        // Jupyter.keyboard_manager.enable();
     };
 
     /**
@@ -80,49 +81,39 @@ define([
      * code and markdown cells).
      * Updates the currently selected cell to be the one passed in.
      */
-    Narrative.prototype.showIPythonCellToolbar = function(cell) {
-//        if (this.selectedCell && cell !== this.selectedCell) {
-//            this.selectedCell.celltoolbar.hide();
-//        }
-//        this.selectedCell = cell;
-//        // show the new one
-//        if (this.selectedCell && !this.selectedCell.metadata['kb-cell']) {
-//            this.selectedCell.celltoolbar.show();            
-//        }
-        
+    Narrative.prototype.showJupyterCellToolbar = function(cell) {
         // tell the toolbar that it is selected. For now, the toolbar is in 
         // charge.
         $(cell.element).trigger('select.toolbar');
-        
     };
 
     /**
-     * Registers Narrative responses to a few IPython events - mainly some
+     * Registers Narrative responses to a few Jupyter events - mainly some
      * visual effects for managing when the cell toolbar should be shown, 
      * but it also disables the keyboard manager when KBase cells are selected.
      */
     Narrative.prototype.registerEvents = function() {
-        $([IPython.events]).on('status_idle.Kernel',function () {
+        $([Jupyter.events]).on('status_idle.Kernel',function () {
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle-o');
         });
 
-        $([IPython.events]).on('status_busy.Kernel',function () {
+        $([Jupyter.events]).on('status_busy.Kernel',function () {
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
         });
 
-        $([IPython.events]).on('select.Cell', $.proxy(function(event, data) {
-            this.showIPythonCellToolbar(data.cell);
+        $([Jupyter.events]).on('select.Cell', $.proxy(function(event, data) {
+            this.showJupyterCellToolbar(data.cell);
             if (data.cell.metadata['kb-cell']) {
                 this.disableKeyboardManager();
             }
         }, this));
 
-        $([IPython.events]).on('create.Cell', $.proxy(function(event, data) {
-            this.showIPythonCellToolbar(data.cell);
+        $([Jupyter.events]).on('create.Cell', $.proxy(function(event, data) {
+            this.showJupyterCellToolbar(data.cell);
         }, this));
 
-        $([IPython.events]).on('delete.Cell', $.proxy(function(event, data) {
-            this.showIPythonCellToolbar(IPython.notebook.get_selected_cell());
+        $([Jupyter.events]).on('delete.Cell', $.proxy(function(event, data) {
+            this.showJupyterCellToolbar(Jupyter.notebook.get_selected_cell());
             this.enableKeyboardManager();
         }, this));
     };
@@ -299,9 +290,10 @@ define([
         this.initAboutDialog();
         this.initUpgradeDialog();
 
-        // Override the base IPython event that happens when a notebook fails to save.
-        $([IPython.events]).on('notebook_save_failed.Notebook', $.proxy(function(event, data) {
-            IPython.save_widget.set_save_status('Narrative save failed!');
+        // Override the base Jupyter event that happens when a notebook fails to save.
+        // TODO: pop this out into another function. Shouldn't be in init().
+        $([Jupyter.events]).on('notebook_save_failed.Notebook', $.proxy(function(event, data) {
+            Jupyter.save_widget.set_save_status('Narrative save failed!');
             console.log(event);
             console.log(data);
 
@@ -339,7 +331,7 @@ define([
                 errorText = 'An unknown error occurred!';
             }
 
-            IPython.dialog.modal({
+            Jupyter.dialog.modal({
                 title: "Narrative save failed!",
                 body: $('<div>').append(errorText),
                 buttons : {
@@ -362,35 +354,32 @@ define([
             });
         }, this));
 
-        /*
-         * Before we get everything loading, just grey out the whole %^! page
-         */
+
         var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
 
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0,0);
         
-        IPython.notebook.set_autosave_interval(0);
-        kbaseCellToolbar.register(IPython.notebook);
-        IPython.CellToolbar.activate_preset("KBase");
-        IPython.CellToolbar.global_show();
-
+        Jupyter.notebook.set_autosave_interval(0);
+        kbaseCellToolbar.register(Jupyter.notebook);
+        Jupyter.CellToolbar.activate_preset("KBase");
+        Jupyter.CellToolbar.global_show();
 
         this.ws_name = null;
 
-        if (IPython && IPython.notebook && IPython.notebook.metadata) {
+        if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
             // hide all cell toolbars.
             // well trigger the one to show later.
 
-            $.each(IPython.notebook.get_cells(), function(idx, cell) {
+            $.each(Jupyter.notebook.get_cells(), function(idx, cell) {
                 cell.celltoolbar.hide();
             });
 
-            this.ws_name = IPython.notebook.metadata.ws_name;
-            var narrname = IPython.notebook.get_notebook_name();
-            var username = IPython.notebook.metadata.creator;
-            console.log(IPython.notebook.metadata);
-            // $('#kb-narr-name #name').text(narrname);
+            this.ws_name = Jupyter.notebook.metadata.ws_name;
+            var narrname = Jupyter.notebook.get_notebook_name();
+            var username = Jupyter.notebook.metadata.creator;
+            console.log(Jupyter.notebook.metadata);
+
             $('#kb-narr-creator').text(username);
             $('.kb-narr-namestamp').css({'display':'block'});
 
@@ -412,14 +401,14 @@ define([
             });
 
             // This puts the cell menu in the right place.
-            $([IPython.events]).trigger('select.Cell', {cell: IPython.notebook.get_selected_cell()});
+            $([Jupyter.events]).trigger('select.Cell', {cell: Jupyter.notebook.get_selected_cell()});
         }
         if (this.ws_name) {
             /* It's ON like DONKEY KONG! */
             $('a#workspace-link').attr('href', $('a#workspace-link').attr('href') + 'objects/' + this.ws_name);
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
                 loadingImage: "/static/kbase/images/ajax-loader.gif",
-                ws_id: IPython.notebook.metadata.ws_name
+                ws_id: Jupyter.notebook.metadata.ws_name
             });
             $sidePanel.render();
             $(document).trigger('setWorkspaceName.Narrative', {'wsId' : this.ws_name, 'narrController': this.narrController});
@@ -429,6 +418,12 @@ define([
         }
     };
 
+    /**
+     * @method
+     * @public
+     * This manually deletes the Docker container that this Narrative runs in, if there is one.
+     * If it can't, or if this is being run locally, it pops up an alert saying so.
+     */
     Narrative.prototype.updateVersion = function() {
         var user = $('#signin-button').kbaseLogin('session', 'user_id');
         var prom = $.ajax({
@@ -448,13 +443,11 @@ define([
     /**
      * @method
      * @public
-     * This triggers a save, but does a few steps first:
-     * ....or, it will soon.
-     * for now, it just passes through to the usual save.
+     * This triggers a save, but saves all cell states first.
      */
     Narrative.prototype.saveNarrative = function() {
         this.narrController.saveAllCellStates();
-        IPython.notebook.save_checkpoint();
+        Jupyter.notebook.save_checkpoint();
     };
 
     /**
@@ -484,15 +477,15 @@ define([
                 // the method initializes an internal method input widget, but rendering and initializing is
                 // async, so we have to wait and check back before we can load the parameter state.
                 // TODO: update kbaseNarrativeMethodCell to return a promise to mark when rendering is complete
-                var newCell = IPython.notebook.get_selected_cell();
-                var newCellIdx = IPython.notebook.get_selected_index();
+                var newCell = Jupyter.notebook.get_selected_cell();
+                var newCellIdx = Jupyter.notebook.get_selected_index();
                 var newWidget = $('#'+$(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
                 var updateStateAndRun = function(state) {
                     if(newWidget.$inputWidget) {
                         // if the $inputWidget is not null, we are good to go, so set the parameters
                         newWidget.loadState(parameters);
                         // make sure the new cell is still selected, then run the method
-                        IPython.notebook.select(newCellIdx);
+                        Jupyter.notebook.select(newCellIdx);
                         newWidget.runMethod();
                     } else {
                         // not ready yet, keep waiting

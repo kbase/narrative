@@ -743,7 +743,7 @@ define(['jquery',
                                     event.preventDefault();
                                 }
                                 env.notebook.command_mode();
-                                env.notebook.select_next();
+                                env.notebook.select_next(true);
                                 if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
                                     env.notebook.edit_mode();
                                     var cm = env.notebook.get_selected_cell().code_mirror;
@@ -769,7 +769,7 @@ define(['jquery',
                                     event.preventDefault();
                                 }
                                 env.notebook.command_mode();
-                                env.notebook.select_prev();
+                                env.notebook.select_prev(true);
                                 if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
                                     env.notebook.edit_mode();
                                     cm = env.notebook.get_selected_cell().code_mirror;

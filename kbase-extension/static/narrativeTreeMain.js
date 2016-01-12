@@ -21,7 +21,6 @@
  * @module narrativeInit
  * @static
  */
-console.log('here?');
 require(['narrative_paths'], function(paths) { 
     require([
         'jquery',

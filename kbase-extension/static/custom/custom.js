@@ -753,8 +753,8 @@ define(['jquery',
                             return false;
                         }
                     },
-                    'move-cursor-down-or-next-cell',
-                    'ipython'
+                    'move-cursor-down',
+                    'jupyter-notebook'
                 );
 
                 IPython.keyboard_manager.actions.register(
@@ -779,8 +779,8 @@ define(['jquery',
                             return false;
                         }
                     },
-                    'move-cursor-up-or-previous-cell',
-                    'ipython'
+                    'move-cursor-up',
+                    'jupyter-notebook'
                 );
             });
         });

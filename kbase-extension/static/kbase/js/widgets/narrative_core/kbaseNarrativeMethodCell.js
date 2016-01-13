@@ -500,12 +500,18 @@ function($,
                                               // finished jobs (it's called from init without UJS info)
             }
             
-            if (jobDetails) {
+            if (jobDetails && jobDetails['job_id']) {
+                var jobState = jobDetails['job_state'];
+                var jobInfo = jobDetails['job_info'];
+                var status = jobDetails['status'];
+                if (!status)
+                    status = jobState.status;
                 if (!this.$jobProcessTabs) {
                     this.$jobProcessTabs = $('<div>').addClass('panel-body').addClass('kb-cell-output');
                     var targetPanel = this.$elem;
-                    if (this.isJobStatusLoadedFromState && jobDetails['status']) {
-                        if ($.inArray(jobDetails['status'].toLowerCase(), this.completedStatus) >= 0) {
+                    console.log(this.isJobStatusLoadedFromState, status, jobState, jobInfo);
+                    if (this.isJobStatusLoadedFromState && status) {
+                        if ($.inArray(status.toLowerCase(), this.completedStatus) >= 0) {
                             // We move job status panel into cell panel rather than outside because when
                             // job is done (or finished with error) we want to be able to collapse this 
                             // panel as part of cell panel collapse.
@@ -522,11 +528,6 @@ function($,
                 var fullJobId = jobId;
                 if (jobId.indexOf(':') > 0)
                     jobId = jobId.split(':')[1];
-                var jobState = jobDetails['job_state'];
-                var jobInfo = jobDetails['job_info'];
-                var status = jobDetails['status'];
-                if (!status)
-                    status = status = jobState.status.toLowerCase();
                 status = status.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
                 if (status === 'Suspend' || status === 'Error' || status === 'Unknown' || status === 'Awe_error') {
                     status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Error');
@@ -538,6 +539,8 @@ function($,
                     status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Unauthorized');
                 } else if (status === 'Network_error') {
                     status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Network Error');
+                } else {
+                    status = this.makeJobStatusPanel(fullJobId, jobState, jobInfo, status);
                 }
                 this.$jobStatusDiv.empty();
                 this.$jobStatusDiv.append(status);
@@ -584,6 +587,30 @@ function($,
             }
         },
 
+        makeJobStatusPanel: function(jobId, jobState, jobInfo, statusText) {
+            function makeInfoRow(heading, info) {
+                return $('<tr>').append($('<th>')
+                        .append(heading + ':'))
+                        .append($('<td>')
+                        .append(info));
+            }
+            
+            var $infoTable = $('<table class="table table-bordered">')
+                    .append(makeInfoRow('Job Id', jobId))
+                    .append(makeInfoRow('Status', statusText));
+            
+            if (jobState && jobState.state && jobState.state.start_timestamp)
+                $infoTable.append(makeInfoRow('Submitted', this.readableTimestamp(jobState.state.start_timestamp)));
+            
+            $infoTable.append(makeInfoRow('Time in queue', 'Unknown'))
+                    .append(makeInfoRow('Position in queue', 'Unknown'))
+                    .append(makeInfoRow('Execution Started', 'Unknown'))
+                    .append(makeInfoRow('Execution Finished', 'Unknown'))
+                    .append(makeInfoRow('Execution Time', 'Unknown'));
+
+            return $infoTable;
+        },
+        
         makeJobErrorPanel: function(jobId, jobState, jobInfo, btnText) {
             var $errBtn = $('<div>')
                 .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
@@ -639,7 +666,7 @@ function($,
              */
             else if (Object.keys(jobState.state.step_errors).length !== 0) {
                 errorType = "Runtime";
-                errorText = $('<div class="kb-jobs-error-modal">');
+                errorText = $('<div>');  // class="kb-jobs-error-modal">');
                 for (var stepId in jobState.state.step_errors) {
                     if (jobState.state.step_errors.hasOwnProperty(stepId)) {
                         // contort that into the method name
@@ -660,7 +687,8 @@ function($,
                             methodName = jobInfo.spec.methodSpec.info.name;
                         }
                         errorText.append($('<b>').append('In ' + methodName + ':<br>'))
-                                .append(jobState.state.step_errors[stepId] + '<br><br>');
+                                .append($('<pre style="max-height:250px; overflow-y: auto">').append(jobState.state.step_errors[stepId]))
+                                .append('<br><br>');
                     }
                 }
             }
@@ -673,7 +701,7 @@ function($,
             }
             
             var $errorTable = $('<table class="table table-bordered">')
-                    .append(makeInfoRow('Id', jobId))
+                    .append(makeInfoRow('Job Id', jobId))
                     .append(makeInfoRow('Type', errorType))
                     .append(makeInfoRow('Error', errorText));
 

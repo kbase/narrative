@@ -932,7 +932,8 @@ function($,
                     $cell.kbaseNarrativeAppCell('setRunningState', 'error');
                 }
                 else {
-                    $cell.kbaseNarrativeMethodCell('changeState', 'error', {});
+                    $cell.kbaseNarrativeMethodCell('changeState', 'error', 
+                            {'job_id': jobId, 'job_state': jobState, 'job_info': jobInfo});
                 }
                 this.completeJob(jobId, this.jobStates[jobId]);
             }

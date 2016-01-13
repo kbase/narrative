@@ -18,7 +18,8 @@ define([
     'kbaseNarrativePrestart',
     'ipythonCellMenu',
     'base/js/events',
-    'notebook/js/notebook'
+    'notebook/js/notebook',
+    'Util/Display'
 ], 
 function($,
          Config,
@@ -31,7 +32,8 @@ function($,
          kbaseNarrativePrestart,
          kbaseCellToolbar,
          events,
-         Notebook) {
+         Notebook,
+         DisplayUtil) {
     "use strict";
 
     /**
@@ -57,6 +59,8 @@ function($,
         this.selectedCell = null;
         this.currentVersion = Config.get('version');
         this.dataViewers = null;
+        this.profileClient = new UserProfile(Config.url('user_profile'));
+        this.cachedUserIds = {};
 
         Jupyter.keyboard_manager.disable();
         return this;
@@ -357,7 +361,7 @@ function($,
         this.initAboutDialog();
         this.initUpgradeDialog();
 
-        var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
+        // var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
 
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0,0);
@@ -368,40 +372,29 @@ function($,
         Jupyter.CellToolbar.activate_preset("KBase");
         Jupyter.CellToolbar.global_show();
 
-        this.ws_name = null;
-
         if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
             $.each(Jupyter.notebook.get_cells(), function(idx, cell) {
                 cell.celltoolbar.hide();
             });
 
-            this.ws_name = Jupyter.notebook.metadata.ws_name;
-            var username = Jupyter.notebook.metadata.creator;
+            var creatorId = Jupyter.notebook.metadata.creator;
 
-            $('#kb-narr-creator').html('<a href="' + Config.url('profile_page') + username + '">' + username + '</a>');
             $('.kb-narr-namestamp').css({'display':'block'});
 
-            new UserProfile(Config.url('user_profile')).get_user_profile([username],
-                function(profile) {
-                    $('#kb-narr-creator').html('<a href="' + Config.url('profile_page') + username + '">' + profile[0].user.realname + ' (' + username + ')' + '</a>');
-                },
-                function(error) {
-                    // no op - just leave the username in place
-                }
-            );
+            DisplayUtil.displayRealName(creatorId, $('#kb-narr-creator'));
 
             // This puts the cell menu in the right place.
             $([Jupyter.events]).trigger('select.Cell', {cell: Jupyter.notebook.get_selected_cell()});
         }
-        if (this.ws_name) {
+        if (this.getWorkspaceName() !== null) {
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
-                ws_id: Jupyter.notebook.metadata.ws_name
+                ws_id: this.getWorkspaceName()
             });
-            $sidePanel.render();
-            $(document).trigger('setWorkspaceName.Narrative', {'wsId' : this.ws_name, 'narrController': this.narrController});
+            $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
+            $(document).trigger('setWorkspaceName.Narrative', {'wsId' : this.getWorkspaceName(), 'narrController': this.narrController});
         }
         else {
-            KBFatal("Narrative.init", "Unable to locate workspace name from the Narrative object!");
+            KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');
         }
     };
 
@@ -485,6 +478,13 @@ function($,
         ]);
     };
 
+    Narrative.prototype.getWorkspaceName = function() {
+        return Jupyter.notebook.metadata.ws_name || null;
+    };
+
+    Narrative.prototype.lookupUserProfile = function(username) {
+        return displayUtil.lookupUserProfile(username);
+    };
 
     return Narrative;
 });

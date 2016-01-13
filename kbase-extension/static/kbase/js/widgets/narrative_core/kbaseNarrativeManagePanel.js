@@ -5,13 +5,15 @@
  */
 define(['jquery', 
         'narrativeConfig',
-        'NarrativeManager', 
+        'NarrativeManager',
+        'Util/Display',
         'narrativeConfig',
         'kbwidget', 
         'kbaseNarrativeControlPanel'],
 function($, 
          Config, 
-         NarrativeManager) {
+         NarrativeManager,
+         DisplayUtil) {
     'use strict',
     $.KBWidget({
         name: "kbaseNarrativeManagePanel",
@@ -34,6 +36,7 @@ function($,
             nms_url: Config.url('narrative_method_store'),
             user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
             landing_page_url: "/functional-site/#/", // !! always include trailing slash
+            profile_page_url: Config.url('profile_page'),
             ws_name: null,
             nar_name: null,
             new_narrative_link: "/functional-site/#/narrativemanager/new"
@@ -830,7 +833,7 @@ function($,
                 if (data.ws_info[2] === this._attributes.auth.user_id) {
                 } else {
                     $dataCol.append($usrNameSpan).append('<br>');
-                    this.displayRealName(data.ws_info[2], $usrNameSpan);
+                    DisplayUtil.displayRealName(data.ws_info[2], $usrNameSpan);
                 }
                 var summary = this.getNarSummary(data.nar_info);
                 if (summary) {
@@ -1277,34 +1280,6 @@ function($,
         },
         monthLookup: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
         /* we really need to stop all this copy pasting */
-        real_name_lookup: {},
-        displayRealName: function (username, $targetSpan) {
-            var self = this;
-            if (self.ws) { // make sure we are logged in and have some things
-
-                if (self.real_name_lookup[username] && self.real_name_lookup[username] !== "...") {
-                    $targetSpan.html(self.real_name_lookup[username] + " (" + username + ")");
-                } else {
-                    self.real_name_lookup[username] = "..."; // set a temporary value so we don't search again
-                    $targetSpan.html(username);
-                    $.ajax({
-                        type: "GET",
-                        url: self.options.user_name_fetch_url + username + "&token=" + self._attributes.auth.token,
-                        dataType: "json",
-                        crossDomain: true,
-                        success: function (data, res, jqXHR) {
-                            if (username in data['data'] && data['data'][username]['fullName']) {
-                                self.real_name_lookup[username] = data['data'][username]['fullName'];
-                                $targetSpan.html(self.real_name_lookup[username] + " (" + username + ")");
-                            }
-                        },
-                        error: function (jqXHR, textStatus, errorThrown) {
-                            //do nothing
-                        }
-                    });
-                }
-            }
-        }
 
     });
 

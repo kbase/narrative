@@ -22,6 +22,7 @@ define(['jquery',
         'underscore',
         'narrativeConfig',
         'kbwidget',
+        'kbaseNarrative',
         'kbaseNarrativeControlPanel',
         'kbaseNarrativeDataList',
         'kbaseNarrativeSidePublicTab',
@@ -69,12 +70,8 @@ function($, _, Config) {
             this._super(options);
             var self = this;
             
-            if (this.options.wsId) {
-                this.ws_name = options.wsId;
-                this.options.ws_name = options.wsId;
-            }
-            if (this.options.ws_name) {
-                this.ws_name = options.ws_name;
+            if (Jupyter && Jupyter.narrative) {
+                this.ws_name = Jupyter.narrative.getWorkspaceName();
             }
 
             var icons = Config.get('icons');
@@ -83,13 +80,13 @@ function($, _, Config) {
 
             var $dataList = $('<div>');
             this.body().append($dataList);
-            this.dataListWidget = $dataList["kbaseNarrativeDataList"](
-                                    {
-                                        ws_name: this.ws_name,
-                                        ws_url: this.options.workspaceURL,
-                                        loadingImage: this.options.loadingImage,
-                                        parentControlPanel: this
-                                    });
+            this.dataListWidget = 
+                $dataList["kbaseNarrativeDataList"](
+                    {
+                        ws_name: this.ws_name,
+                        parentControlPanel: this
+                    }
+                );
 
             $(document).on(
                 'setWorkspaceName.Narrative', $.proxy(function(e, info) {
@@ -141,8 +138,6 @@ function($, _, Config) {
             if (this.ws_name)
                 this.trigger('workspaceUpdated.Narrative', this.ws_name);
 
-            //this.dataImporter();
-
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
@@ -161,21 +156,6 @@ function($, _, Config) {
                 }.bind(this));
 
             this.addButton(this.$slideoutBtn);
-
-            setTimeout(function() {
-                if (self.ws_name && self.token) {
-                    if (!self.dataImporterStarted) {
-                        self.dataImporter();
-                    } else {
-                        //console.log("DataPanel: dataImporter was already started");
-                    }
-                } else {
-                    if (!self.ws_name)
-                        console.error("Workspace name is not defined");
-                    if (!self.token)
-                        console.error("Token is not defined");
-                }
-            }, 5000);
             
             return this;
         },
@@ -196,7 +176,6 @@ function($, _, Config) {
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
             this.isLoggedIn = true;
             if (this.ws_name) {
-                //this.refresh();
                 this.dataImporter();
             } else {
                 //console.error("ws_name is not defined");
@@ -1170,7 +1149,7 @@ function($, _, Config) {
                     $byUser.append(' by '+object_info[5])
                         .click(function(e) {
                             e.stopPropagation();
-                            window.open(self.options.landing_page_url+'people/'+object_info[5]);
+                            window.open(Config.url('profile_page') + object_info[5]);
                         });
                 }
 
@@ -1192,31 +1171,6 @@ function($, _, Config) {
                     narName = narrativeNameLookup[obj.ws];
                 }
                 var $narName = $('<span>').addClass("kb-data-list-narrative").append(narName);
-                //var $savedByUserSpan = $('<td>').addClass('kb-data-list-username-td').append(object_info[5]);
-                //this.displayRealName(object_info[5],$savedByUserSpan);
-
-                //var typeLink = '<a href="'+this.options.landing_page_url+'spec/module/'+type_module+'" target="_blank">' +type_module+"</a>.<wbr>" +
-                //                '<a href="'+this.options.landing_page_url+'spec/type/'+object_info[2]+'" target="_blank">' +(type_tokens[1].replace('-','&#8209;')) + '.' + type_tokens[2] + '</a>';
-                //var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
-                //                .append(
-                //                    $('<table style="width:100%;">')
-                //                        .append("<tr><th>Permament Id</th><td>" +object_info[6]+ "/" +object_info[0]+ "/" +object_info[4] + '</td></tr>')
-                //                        .append("<tr><th>Full Type</th><td>"+typeLink+'</td></tr>')
-                //                        .append($('<tr>').append('<th>Saved by</th>').append($savedByUserSpan))
-                //                        .append(metadataText));
-
-                //var $toggleAdvancedViewBtn = $('<span>').addClass("kb-data-list-more")//.addClass('btn btn-default btn-xs kb-data-list-more-btn')
-                //    .hide()
-                //    .html('<span class="fa fa-ellipsis-h" style="color:#999" aria-hidden="true"/>');
-                //var toggleAdvanced = function() {
-                //        if ($moreRow.is(':visible')) {
-                //            $moreRow.slideUp('fast');
-                //            $toggleAdvancedViewBtn.show();
-                //        } else {
-                //            $moreRow.slideDown('fast');
-                //            $toggleAdvancedViewBtn.hide();
-                //        }
-                //    };
 
                 var $btnToolbar = $('<span>').addClass('btn-toolbar pull-right').attr('role', 'toolbar').hide();
                 var btnClasses = "btn btn-xs btn-default";

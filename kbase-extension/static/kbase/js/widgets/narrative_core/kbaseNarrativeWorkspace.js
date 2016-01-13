@@ -755,7 +755,7 @@ function($,
                   if (info[5] == 'w' || info[5] == 'a') {
                       is_ro = false;
                   }
-                  IPython.narrative.readonly = is_ro; // set globally
+                  Jupyter.narrative.readonly = is_ro; // set globally
                   // console.debug("set_readonly_mode.end: callback_value=" + is_ro);
                   return callback(is_ro);
               },
@@ -2325,11 +2325,6 @@ function($,
          * @returns this
          */
         render: function() {
-            var creator = IPython.notebook.metadata.creator;
-            if (creator) {// insert agnosticism here
-                $('.creator-stamp').text('Created by ' + creator);
-            }
-
             this.rebindActionButtons();
             this.hideGeneratedCodeCells();
             var cells = IPython.notebook.get_cells();

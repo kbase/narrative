@@ -64,18 +64,6 @@ function($, Config) {
             this.wsName = Jupyter.narrative.getWorkspaceName();
             this.render();
 
-            // if (self.options.ws_name) {
-            //     self.wsName = self.options.ws_name;
-            //     self.render();
-            // } else {
-            //     $(document).on(
-            //         'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-            //             //console.log('side panel import tab -- setting ws to ' + info.wsId);
-            //             self.wsName = info.wsId;
-            //             self.render();
-            //         }, this)
-            //     );
-            // }
             return this;
         },
 

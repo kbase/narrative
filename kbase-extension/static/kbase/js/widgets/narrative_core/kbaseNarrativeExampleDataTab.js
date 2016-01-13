@@ -70,6 +70,7 @@ function($, Config) {
                 this.narWs = Jupyter.narrative.getWorkspaceName();
                 this.getExampleDataAndRender();
             }
+
             return this;
         },
 

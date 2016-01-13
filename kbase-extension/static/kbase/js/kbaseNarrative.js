@@ -419,7 +419,6 @@ function($,
                 ws_id: this.getWorkspaceName()
             });
             $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
-            $(document).trigger('setWorkspaceName.Narrative', {'wsId' : this.getWorkspaceName(), 'narrController': this.narrController});
         }
         else {
             KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');

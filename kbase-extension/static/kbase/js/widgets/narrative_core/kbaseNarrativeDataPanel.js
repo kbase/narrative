@@ -88,15 +88,6 @@ function($, _, Config) {
                     }
                 );
 
-            // $(document).on(
-            //     'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-            //         this.ws_name = info.wsId;
-            //         this.narrWs = info.narrController;
-            //         this.dataListWidget.setWorkspace(this.ws_name);
-            //         this.setWorkspace(this.ws_name);
-            //     }, this)
-            // );
-
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
              */
@@ -196,16 +187,6 @@ function($, _, Config) {
             // this.refresh();
             return this;
         },
-
-        // setWorkspace: function(ws_name) {
-        //     this.ws_name = ws_name;
-        //     if (this.wsClient) {
-        //         //this.refresh();
-        //         this.dataImporter(this.ws_name);
-        //     } else {
-        //         //console.error("token is not defined");
-        //     }
-        // },
 
         /**
          * Set the narrative workspace (parent) into the data widget
@@ -326,11 +307,6 @@ function($, _, Config) {
             this.dataImporterStarted = true;
             var self = this;
             var maxObjFetch = 300000;
-
-            // var narWSName;
-            // $(document).on('setWorkspaceName.Narrative', function(e, info){
-            //     narWSName = info.wsId;
-            // })
 
             var self = this;
             var user = $("#signin-button").kbaseLogin('session', 'user_id');

@@ -38,11 +38,18 @@ TEST_INSTALL_LOC = .
 BACKEND_TEST_SCRIPT = scripts/narrative_backend_tests.sh
 FRONTEND_TEST_DIR = test
 
-default: build-narrative
+# Docker build script
+DOCKER_INSTALLER = ./scripts/build_narrative_container.sh
+
+
+default: build-narrative-container
+
+build-narrative-container:
+	sh $(DOCKER_INSTALLER)
 
 # runs the installer to locally build the Narrative in a
 # local venv.
-build-narrative:
+build-travis-narrative:
 	bower install && \
 	npm install && \
 	bash $(INSTALLER) --no-venv
@@ -77,6 +84,7 @@ test-frontend-e2e:
 	cd $(FRONTEND_TEST_DIR)
 	@echo "done"
 
+# no op
 deploy:
 
 

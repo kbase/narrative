@@ -47,14 +47,8 @@ function($,
         
         init: function(options) {
             this._super(options);
-            var self = this;
-            $(document).on(
-                'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-                    self.wsName = info.wsId;
-                }, this)
-            );
-            if (self.options.ws_name)
-                self.wsName = self.options.ws_name;
+            this.wsName = Jupyter.narrative.getWorkspaceName();
+
             return this;
         },
         

@@ -7,7 +7,8 @@
 define(['jquery',
         'narrativeConfig',
         'kbwidget',
-        'kbaseAuthenticatedWidget'],
+        'kbaseAuthenticatedWidget',
+        'kbaseNarrative'],
 function($, Config) {
     'use strict';
     $.KBWidget({
@@ -65,16 +66,11 @@ function($, Config) {
             this.icon_colors = icons.colors;
             this.showLoading();
 
-            var self = this;
-            if (self.options.ws_name) {
-                self.narWs = self.options.ws_name;
-                self.getExampleDataAndRender();
-            } else {
-                $(document).on('setWorkspaceName.Narrative', function(e, info){
-                    self.narWs = info.wsId;
-                    self.getExampleDataAndRender();
-                });
+            if (Jupyter && Jupyter.narrative) {
+                this.narWs = Jupyter.narrative.getWorkspaceName();
+                this.getExampleDataAndRender();
             }
+
             return this;
         },
 

@@ -21,7 +21,6 @@ function($, Config) {
             user_profile_url: Config.url('user_profile'),
             loadingImage: Config.get('loading_gif'),
             user_page_link:"/functional-site/#/people/",
-            loadingImage: null,
             ws_name_or_id: null,
             max_name_length: 35,
             max_list_height: '250px',
@@ -44,12 +43,7 @@ function($, Config) {
             this.getInfoAndRender();
 
             if (!this.options.ws_name_or_id) {
-                $(document).on(
-                    'setWorkspaceName.Narrative', $.proxy(function (e, info) {
-                        this.options.ws_name_or_id = info.wsId;
-                        this.refresh();
-                    }, this)
-                    );
+                //fail!
             }
 
             return this;

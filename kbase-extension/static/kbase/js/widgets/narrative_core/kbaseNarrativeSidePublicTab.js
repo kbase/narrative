@@ -58,22 +58,12 @@ function($, Config) {
 
         init: function(options) {
             this._super(options);
-            var self = this;
 
-            self.data_icons = Config.get('icons').data;
-            self.icon_colors = Config.get('icons').colors;
-            if (self.options.ws_name) {
-                self.wsName = self.options.ws_name;
-                self.render();
-            } else {
-                $(document).on(
-                    'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-                        //console.log('side panel import tab -- setting ws to ' + info.wsId);
-                        self.wsName = info.wsId;
-                        self.render();
-                    }, this)
-                );
-            }
+            this.data_icons = Config.get('icons').data;
+            this.icon_colors = Config.get('icons').colors;
+            this.wsName = Jupyter.narrative.getWorkspaceName();
+            this.render();
+
             return this;
         },
 

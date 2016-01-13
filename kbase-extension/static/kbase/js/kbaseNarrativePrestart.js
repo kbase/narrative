@@ -44,28 +44,6 @@ $('#kb-jira-btn').attr('href', window.kbconfig.urls.submit_jira_ticket + '%20' +
 $('#kb-status-btn').attr('href', window.kbconfig.urls.status_page);
 
 
-var $dataList = $('<div>');
-var $shareWidget = $dataList['kbaseNarrativeSharePanel']({});
-$('#kb-share-btn').popover({
-    html : true,
-    placement : "bottom",
-    content: function() {
-        // we do not allow users to leave thier narratives untitled
-        if (Jupyter && Jupyter.notebook) {
-            var narrName = Jupyter.notebook.notebook_name;
-            if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
-                Jupyter.save_widget.rename_notebook({notebook: Jupyter.notebook}); //"Your Narrative must be named before you can share it with others.", false);
-                return "<br><br>Please name your Narrative before sharing.<br><br>"
-            }
-            Jupyter.narrative.disableKeyboardManager();
-        }
-
-        //!! arg!! I have to refresh to get reattach the events, which are lost when
-        //the popover is hidden!!!  makes it a little slower because we refetch permissions from ws each time
-        $shareWidget.refresh();
-        return $dataList;
-    }
-});
 
 $('#kb-add-code-cell').click(function() {
     Jupyter.notebook.insert_cell_below('code'); 

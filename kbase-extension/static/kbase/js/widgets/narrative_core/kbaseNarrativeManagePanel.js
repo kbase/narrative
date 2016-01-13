@@ -54,20 +54,11 @@ function($,
             if (this.options.ws_name) {
                 this.ws_name = options.ws_name;
             }
-            if (this.options.nar_name) {
-                this.nar_name = options.nar_name;
-            }
 
             this.$mainPanel = $('<div>')//.css({'height':'600px'});
             this.body().append(this.$mainPanel);
 
-            $(document).on(
-                'setWorkspaceName.Narrative', $.proxy(function (e, info) {
-                    this.ws_name = info.wsId;
-                    this.nar_name = info.narrController;
-                    this.refresh();
-                }, this)
-                );
+            this.ws_name = Jupyter.narrative.getWorkspaceName();
 
             $(document).on(
                 'copyThis.Narrative', $.proxy(function (e, panel, active, jump) {
@@ -77,13 +68,13 @@ function($,
                 }, this)
                 );
 
-            $([IPython.events]).on(
+            $([Jupyter.events]).on(
                 'notebook_saved.Notebook', $.proxy(function (e) {
                     this.refresh();
                 }, this)
             );
             
-            if (this.ws_name && this.nar_name && this.ws) {
+            if (this.ws_name && this.ws) {
                 this.refresh();
             }
             return this;
@@ -93,7 +84,7 @@ function($,
             this.ws = new Workspace(this.options.ws_url, auth);
             this.manager = new NarrativeManager({ws_url: this.options.ws_url, nms_url: this.options.nms_url}, auth);
             this.my_user_id = auth.user_id;
-            if (this.ws_name && this.nar_name)
+            if (this.ws_name)
                 this.refresh();
             return this;
         },
@@ -983,13 +974,13 @@ function($,
                                 .addClass('form-control')
                                 .val(ws_info[8]['narrative_nice_name'] + ' - Copy')
                                 .on('focus', function () {
-                                    if (IPython && IPython.narrative) {
-                                        IPython.narrative.disableKeyboardManager();
+                                    if (Jupyter && Jupyter.narrative) {
+                                        Jupyter.narrative.disableKeyboardManager();
                                     }
                                 })
                                 .on('blur', function () {
-                                    if (IPython && IPython.narrative) {
-                                        IPython.narrative.enableKeyboardManager();
+                                    if (Jupyter && Jupyter.narrative) {
+                                        Jupyter.narrative.enableKeyboardManager();
                                     }
                                 });
                             $dialog.append(

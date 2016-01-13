@@ -127,6 +127,33 @@ function($,
 
     };
 
+    Narrative.prototype.initSharePanel = function() {
+        var $sharePanel = $('<div>');
+        var $shareWidget = $sharePanel.kbaseNarrativeSharePanel({
+            ws_name_or_id: this.getWorkspaceName()
+        });
+        $('#kb-share-btn').popover({
+            html : true,
+            placement : "bottom",
+            content: function() {
+                // we do not allow users to leave thier narratives untitled
+                if (Jupyter && Jupyter.notebook) {
+                    var narrName = Jupyter.notebook.notebook_name;
+                    if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
+                        Jupyter.save_widget.rename_notebook({notebook: Jupyter.notebook}); //"Your Narrative must be named before you can share it with others.", false);
+                        return "<br><br>Please name your Narrative before sharing.<br><br>"
+                    }
+                    Jupyter.narrative.disableKeyboardManager();
+                }
+
+                //!! arg!! I have to refresh to get reattach the events, which are lost when
+                //the popover is hidden!!!  makes it a little slower because we refetch permissions from ws each time
+                $shareWidget.refresh();
+                return $sharePanel;
+            }
+        });
+    }
+
     /**
      * The "Upgrade your container" dialog should be made available when 
      * there's a more recent version of the Narrative ready to use. This
@@ -387,6 +414,7 @@ function($,
             $([Jupyter.events]).trigger('select.Cell', {cell: Jupyter.notebook.get_selected_cell()});
         }
         if (this.getWorkspaceName() !== null) {
+            this.initSharePanel();
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
                 ws_id: this.getWorkspaceName()
             });

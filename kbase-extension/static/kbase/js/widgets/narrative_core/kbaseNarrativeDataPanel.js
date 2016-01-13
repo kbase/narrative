@@ -88,14 +88,14 @@ function($, _, Config) {
                     }
                 );
 
-            $(document).on(
-                'setWorkspaceName.Narrative', $.proxy(function(e, info) {
-                    this.ws_name = info.wsId;
-                    this.narrWs = info.narrController;
-                    this.dataListWidget.setWorkspace(this.ws_name);
-                    this.setWorkspace(this.ws_name);
-                }, this)
-            );
+            // $(document).on(
+            //     'setWorkspaceName.Narrative', $.proxy(function(e, info) {
+            //         this.ws_name = info.wsId;
+            //         this.narrWs = info.narrController;
+            //         this.dataListWidget.setWorkspace(this.ws_name);
+            //         this.setWorkspace(this.ws_name);
+            //     }, this)
+            // );
 
             /**
              * This should be triggered if something wants to know what data is loaded from the current workspace
@@ -176,7 +176,7 @@ function($, _, Config) {
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
             this.isLoggedIn = true;
             if (this.ws_name) {
-                this.dataImporter();
+                this.dataImporter(this.ws_name);
             } else {
                 //console.error("ws_name is not defined");
             }
@@ -197,15 +197,15 @@ function($, _, Config) {
             return this;
         },
 
-        setWorkspace: function(ws_name) {
-            this.ws_name = ws_name;
-            if (this.wsClient) {
-                //this.refresh();
-                this.dataImporter();
-            } else {
-                //console.error("token is not defined");
-            }
-        },
+        // setWorkspace: function(ws_name) {
+        //     this.ws_name = ws_name;
+        //     if (this.wsClient) {
+        //         //this.refresh();
+        //         this.dataImporter(this.ws_name);
+        //     } else {
+        //         //console.error("token is not defined");
+        //     }
+        // },
 
         /**
          * Set the narrative workspace (parent) into the data widget
@@ -320,17 +320,17 @@ function($, _, Config) {
          * I'm throwing this here because I have no idea how to
          * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
-        dataImporter: function() {
+        dataImporter: function(narWSName) {
             if (this.dataImporterStarted)
                 return;
             this.dataImporterStarted = true;
             var self = this;
             var maxObjFetch = 300000;
 
-            var narWSName;
-            $(document).on('setWorkspaceName.Narrative', function(e, info){
-                narWSName = info.wsId;
-            })
+            // var narWSName;
+            // $(document).on('setWorkspaceName.Narrative', function(e, info){
+            //     narWSName = info.wsId;
+            // })
 
             var self = this;
             var user = $("#signin-button").kbaseLogin('session', 'user_id');

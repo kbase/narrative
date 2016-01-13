@@ -28,7 +28,7 @@ def autodoc_fix_traitlets(app, what, name, obj, options, signature, return_annot
     :rtype: tuple
     """
     app.debug("Called for {} with signature {}".format(what, signature))
-    if what == "class" and signature is not None and 'IPython.utils.traitlets' in signature:
+    if what == "class" and signature is not None and 'traitlets' in signature:
         app.debug("Changing signature for traitlets subclass")
         signature = "(Unicode, TypeMeta)"
     return signature, return_annotation

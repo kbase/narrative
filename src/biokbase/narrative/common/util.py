@@ -31,13 +31,15 @@ class _KBaseEnv(object):
     env_narrative  = "KB_NARRATIVE"
     env_session    = "KB_SESSION"
     env_client_ip  = "KB_CLIENT_IP"
+    env_workspace  = "KB_WORKSPACE_ID"
     env_user       = None
 
     _defaults = {'auth_token': 'none',
                  'narrative': 'none',
                  'session': 'none',
                  'client_ip': '0.0.0.0',
-                 'user': 'anonymous'}
+                 'user': 'anonymous',
+                 'workspace': 'none'}
 
     def __getattr__(self, name):
         ename = "env_" + name

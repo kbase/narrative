@@ -1,0 +1,190 @@
+/*
+Placeholder for custom user CSS
+
+mainly to be overridden in profile/static/custom/custom.css
+
+This will always be an empty file in IPython
+*/
+
+#site {
+    overflow: visible;
+}
+
+div#notebook {
+    min-width: 460px;
+}
+
+/* disable the standard notebook, bottom spacer */
+#notebook {
+    min-height: 0;
+    height: 0;
+}
+#notebook > .end_space {
+    min-height: 0;
+    height: 0;
+}
+
+#notebook-container {
+    box-shadow: none;
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    width: auto;
+    min-width: 460px;
+}
+
+@media (min-width: 1200px)
+#notebook-container {
+    width: auto;
+}
+
+@media (min-width: 992px)
+#notebook-container {
+    width: auto;
+}
+
+@media (min-width: 768px)
+#notebook-container {
+    width: auto;
+}
+
+.notebook_app {
+    overflow-y: auto;
+    background-color: #FFFFFF;
+}
+
+.btn * { color: black; }
+
+.celltoolbar {
+    height: auto;
+    background: none;
+    border: none;
+    border-bottom: none;
+}
+
+div.input_area {
+    border: 1px solid #CECECE;
+    border-radius: 0px;
+}
+
+div.text_cell_input {
+    border: 1px solid #CECECE;
+    border-radius: 0px;
+}
+
+/*div.text_cell_render {
+    margin-bottom: -10px;
+}*/
+
+div.cell {
+    /*padding: 5px 0px 0 0;*/
+    margin: 6px 0 6px 0;
+    padding: 6px 0 6px 0;
+    border: 1px solid #CCC;
+    border-left: 5px solid  #CCC;
+}
+
+div.cell.selected {
+    border: 1px solid #4BB856;
+    border-left: 5px solid #4BB856;
+}
+
+input.raw_input {
+    /*height:auto;*/
+}
+
+div#notebook {
+    overflow-y: auto;
+}
+
+span#notebook_name {
+    color: #006698;
+}
+
+span#notebook_name:hover {
+    cursor: pointer;
+    background-color: #e0e0e0;    
+}
+
+#kb-narr-name {
+    font-style: italic;
+    font-family: 'OxygenBold';
+    font-size: 130%;
+    padding-bottom: 7px;
+}
+
+#kb-narr-name > #save_widget {
+    font-style: normal;
+    font-family: 'OxygenBold';
+    padding: 0;
+}
+
+#kb-narr-creator {
+    font-family: 'OxygenBold';
+}
+
+.kb-narr-namestamp {
+    margin-bottom: 0px;
+    margin-top: 5px;
+    padding-left: 20px;
+    border-left: 2px solid #CECECE;
+    display: none;
+}
+
+body {
+    padding-top: 70px !important;
+}
+
+.prompt {
+    min-width: 10ex;
+}
+
+
+
+.ui-draggable.kb-data-inflight {
+    display: block;
+    border: 2px gray solid;
+    background-color: #FEFFD6 !important;
+    border-radius: 4px;
+    z-index: 1000;
+}
+.ui-draggable.kb-data-inflight.-over {
+    border-color: green;
+    background-color: #EFFCEB !important;
+}
+
+.kb-data-list-drag-target {
+    transition: all 0.25s ease;
+}
+
+.kb-data-list-drag-target.-drag-active {
+    background-color: #FEFFD6;
+}
+
+.kb-data-list-drag-target.-drag-hover {
+    background-color: #EFFCEB;
+    border-color: green;
+    
+}
+.kb-data-list-drag-target.-drag-hover {
+    height: 90px;
+    transition: all 0.25s ease;
+}
+
+.kb-data-list-drag-target {
+    display: block;
+    border: 2px orange dashed;
+    height: 40px;
+    text-align: center;
+    padding: 6px;
+    border-radius: 4px;
+}
+
+#notebook-container {
+     position: fixed;
+    left: 380px;
+    top: 70px;
+    right: 0; 
+    bottom: 0;
+    overflow: auto;
+    padding-bottom: 100px;
+}

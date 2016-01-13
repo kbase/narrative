@@ -36,8 +36,7 @@ import hashlib
 import re
 import sys
 # Third-party
-import IPython.utils.traitlets as trt
-from IPython.core.application import Application
+import traitlets as trt
 from biokbase.njs_mock.Client import NJSMock
 from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.workspace.client import Workspace as workspaceService

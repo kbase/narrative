@@ -19,8 +19,8 @@ import sys
 import time
 import traceback
 # Third-party
-import IPython.utils.traitlets as trt
-from IPython.core.application import Application
+import traitlets as trt
+# from IPython.core.application import Application
 # Local
 from biokbase.narrative.common import kbtypes, kblogging
 from biokbase.narrative.common.log_common import EVENT_MSG_SEP

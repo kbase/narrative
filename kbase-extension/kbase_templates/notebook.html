@@ -1,0 +1,143 @@
+{% extends "page.html" %}
+
+{% block stylesheet %}
+
+{% if mathjax_url %}
+<script type="text/javascript" src="{{mathjax_url}}?config=TeX-AMS_HTML-full,Safe&delayStartupUntil=configured" charset="utf-8"></script>
+{% endif %}
+<script type="text/javascript">
+// MathJax disabled, set as null to distingish from *missing* MathJax,
+// where it will be undefined, and should prompt a dialog later.
+window.mathjax_url = "{{mathjax_url}}";
+</script>
+
+<link rel="stylesheet" href="{{ static_url("components/bootstrap-tour/build/css/bootstrap-tour.min.css") }}" type="text/css" />
+<link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}">
+
+{{super()}}
+<link rel="stylesheet" href="{{ static_url("kbase/css/contigBrowserStyles.css") }}" type="text/css" />
+<link rel="stylesheet" href="{{ static_url("ext_components/datatables/media/css/dataTables.bootstrap.min.css") }}" type="text/css" />
+<link rel="stylesheet" href="{{ static_url("ext_components/select2/select2.css") }}" type="text/css" />
+<link rel="stylesheet" href="{{ static_url("ext_components/select2-bootstrap-css/select2-bootstrap.css") }}" type="text/css" />
+
+<link rel="stylesheet" href="{{ static_url("notebook/css/override.css") }}" type="text/css" />
+<link rel="stylesheet" href=""  id='kernel-css'                             type="text/css" />
+
+{% endblock %}
+
+{% block bodyclasses %}notebook_app {{super()}}{% endblock %}
+
+
+
+{% block params %}
+
+{{super()}}
+data-project="{{project}}"
+data-base-url="{{base_url}}"
+data-ws-url="{{ws_url}}"
+data-notebook-name="{{notebook_name}}"
+data-notebook-path="{{notebook_path}}"
+
+{% endblock %}
+
+
+{% block headercontainer %}
+
+
+<!-- <span id="save_widget" class="pull-left save_widget">
+    <span id="notebook_name" class="filename"></span>
+    <span class="checkpoint_status"></span>
+    <span class="autosave_status"></span>
+</span>
+ -->
+<span id="kernel_logo_widget">
+  <img class="current_kernel_logo" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"/>
+</span>
+
+{% endblock headercontainer %}
+
+{% block header %}
+<div id="menubar-container" class="container">
+<div id="menubar">
+    <div id="menus" class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <button type="button" class="btn btn-default navbar-btn navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+              <i class="fa fa-bars"></i>
+              <span class="navbar-text">Menu</span>
+            </button>
+            <p id="kernel_indicator" class="navbar-text indicator_area">
+              <span class="kernel_indicator_name">Kernel</span>
+              <i id="kernel_indicator_icon"></i>
+            </p>
+            <i id="readonly-indicator" class="navbar-text" title='This notebook is read-only'>
+                <span class="fa-stack">
+                    <i class="fa fa-save fa-stack-1x"></i>
+                    <i class="fa fa-ban fa-stack-2x text-danger"></i>
+                </span>
+            </i>
+            <i id="modal_indicator" class="navbar-text"></i>
+            <span id="notification_area"></span>
+        </div>
+    </div>
+</div>
+
+{% endblock header %}
+
+{% block site %}
+
+<div id="main-container">
+
+    <div id="left-column">
+        <div id="kb-side-panel"></div>
+    </div>
+    <div id="content-column">
+        <span id="kb-add-code-cell"
+              class="kb-data-list-add-data-button fa fa-terminal fa-2x"
+              style="position:fixed; bottom:15px; right:75px; z-index:5"
+              data-toggle="tooltip" data-placement="top" Title="Add Code Cell"></span>
+        <span id="kb-add-md-cell"
+              class="kb-data-list-add-data-button fa fa-paragraph fa-2x"
+              style="position:fixed; bottom:15px; right:10px; z-index:5"
+              data-toggle="tooltip" data-placement="top" Title="Add Markdown Cell"></span>
+
+        <div id="ipython-main-app">
+            <div id="notebook_panel">
+                <div id="notebook"></div>
+                <div id='tooltip' class='ipython_tooltip' style='display:none'></div>
+                <div id="kb-ws-progress"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- <div id='widget-tooltip' class='ipython_tooltip' style='display:none; min-height: 25px;'>Test message</div> -->
+<div id='kb-error-dialog'></div>
+
+{% endblock %}
+
+{% block after_site %}
+
+<div id="pager">
+    <div id="pager-contents">
+        <div id="pager-container" class="container"></div>
+    </div>
+    <div id='pager-button-area'></div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+{{super()}}
+<script type="text/javascript">
+    sys_info = {{sys_info}};
+</script>
+
+<script src="{{ static_url("components/text-encoding/lib/encoding.js") }}" charset="utf-8"></script>
+
+<!-- Because the narrative (in this version) requires that some Javascript is loaded before
+    running the main IPython stack, a little wrapper script had to be written. More details there. -->
+<script src="{{ static_url("narrativeMain.js") }}" charset="utf-8"></script>
+<!-- not used in this version, but left behind for posterity.
+    <script src="{{ static_url("notebook/js/main.js") }}" charset="utf-8"></script> 
+-->
+{% endblock %}

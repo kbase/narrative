@@ -31,22 +31,24 @@ SCRIPT_TESTS = $(wildcard test/script-tests/*.t)
 SERVER_TESTS = $(wildcard test/server-tests/*.t)
 
 # Installer script
-INSTALLER = ./old-install.sh
+INSTALLER = ./scripts/install_narrative.sh
+INSTALL_VENV = narrative-venv
+INSTALL_DIR = ./${INSTALL_VENV}
 TEST_INSTALL_LOC = .
-TEST_VENV = narrative-venv
-BACKEND_TEST_SCRIPT = narrative_backend_tests.sh
-FRONTEND_TEST_DIR = src/notebook/ipython_profiles/profile_narrative/kbase_templates
+BACKEND_TEST_SCRIPT = scripts/narrative_backend_tests.sh
+FRONTEND_TEST_DIR = test
 
 default: build-narrative
 
 # runs the installer to locally build the Narrative in a
 # local venv.
 build-narrative:
-	$(INSTALLER) -p . -v $(TEST_VENV)
-
+	bower install && \
+	npm install && \
+	bash $(INSTALLER) --no-venv
 
 test: test-backend test-frontend-unit test-frontend-e2e
-	@echo "running backend and frontend test scripts"
+	@echo "done running backend and frontend test scripts"
 
 # test-backend should use nose, or the like, to test our
 # Python extensions to the IPython notebook.
@@ -64,9 +66,7 @@ test-backend:
 # This is achieved through the grunt test invocation
 test-frontend-unit:
 	@echo "running frontend unit tests"
-	cd $(FRONTEND_TEST_DIR) && \
-	npm install && \
-	grunt test
+	python test/unit/run_tests.py
 	@echo "done"
 
 # test-frontend-e2e should use Selenium to perform an end-
@@ -77,62 +77,6 @@ test-frontend-e2e:
 	cd $(FRONTEND_TEST_DIR)
 	@echo "done"
 
-# # test-all is deprecated. 
-# # test-all: test-client test-scripts test-service
-# #
-# # test-client: This is a test of a client library. If it is a
-# # client-server module, then it should be run against a running
-# # server. You can say that this also tests the server, and I
-# # agree. You can add a test-service dependancy to the test-client
-# # target if it makes sense to you. This test example assumes there is
-# # already a tested running server.
-# test-client:
-# 	# run each test
-# 	for t in $(CLIENT_TESTS) ; do \
-# 		if [ -f $$t ] ; then \
-# 			/usr/bin/env python $$t ; \
-# 			if [ $$? -ne 0 ] ; then \
-# 				exit 1 ; \
-# 			fi \
-# 		fi \
-# 	done
-
-# # test-scripts: A script test should test the command line scripts. If
-# # the script is a client in a client-server architecture, then there
-# # should be tests against a running server. You can add a test-service
-# # dependency to the test-client target. You could also add a
-# # deploy-service and start-server dependancy to the test-scripts
-# # target if it makes sense to you. Future versions of the makefiles
-# # for services will move in this direction.
-# test-scripts:
-# 	# run each test
-# 	for t in $(SCRIPT_TESTS) ; do \
-# 		if [ -f $$t ] ; then \
-# 			/usr/bin/env python $$t ; \
-# 			if [ $$? -ne 0 ] ; then \
-# 				exit 1 ; \
-# 			fi \
-# 		fi \
-# 	done
-
-# # test-service: A server test should not rely on the client libraries
-# # or scripts--you should not have a test-service target that depends
-# # on the test-client or test-scripts targets. Otherwise, a circular
-# # dependency graph could result.
-# test-service:
-# 	# run each test
-# 	for t in $(SERVER_TESTS) ; do \
-# 		if [ -f $$t ] ; then \
-# 			/usr/bin/env python $$t ; \
-# 			if [ $$? -ne 0 ] ; then \
-# 				exit 1 ; \
-# 			fi \
-# 		fi \
-# 	done
-
-# builds the Docker container for deployment.
-# assumes the presence of a running docker service and an Ubuntu 14.04
-# base container to build on
 deploy:
 
 

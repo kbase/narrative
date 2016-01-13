@@ -20,6 +20,7 @@
                     tab : 'T3',
                     content : $('<div></div>').html("I am a tab 3"),
                     show : true,                                    //boolean. This tab gets shown by default. If not specified, the first tab is shown
+                    showContentCallback: function // if you don't want to show the content right away, add a callback method that returns the content...
                 },
             ],
         }
@@ -120,8 +121,13 @@ define(['jquery', 'kbwidget', 'kbaseDeletePrompt'], function($) {
             }
 
             var $tab = $('<div></div>')
-                .addClass('tab-pane fade')
-                .append(tab.content);
+                .addClass('tab-pane fade');
+
+            var hasContent = false;
+            if(tab.content) {
+                $tab.append(tab.content);
+                hasContent = true;
+            }
 
             if (this.options.border) {
                 $tab.css('border', 'solid ' + this.options.borderColor);
@@ -170,7 +176,12 @@ define(['jquery', 'kbwidget', 'kbaseDeletePrompt'], function($) {
                                             relatedTarget   : previous
                                         })
                                     });
-
+                                if(!hasContent) {
+                                    if(tab.showContentCallback) {
+                                        $tab.append(tab.showContentCallback());
+                                        hasContent = true;
+                                    }
+                                }
                             }
                         )
                     .append(

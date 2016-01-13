@@ -16,7 +16,10 @@ require(['jquery',
          'handlebars', 
          'kbwidget', 
          'kbaseAuthenticatedWidget',
-         'kbaseNarrativeCellMenu'], 
+         'kbaseNarrativeCellMenu',
+         'kbaseTabs',
+         'kbaseViewLiveRunLog',
+         'kbaseReportView'], 
 function($, 
          Config,
          StringUtil) {
@@ -34,6 +37,17 @@ function($,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
         allowOutput: true,
         runState: 'input',
+
+        // elements and variables needed for job details and tracking
+        jobDetails: null,
+        $jobProcessTabs: null,     // Use this tabs panel to add more tabs like Report widget
+        $jobStatusDiv: null,       // Panel showing status + error details if any
+
+        hasLogsPanelLoaded: false,
+        hasResultLoaded: false,
+        isJobStatusLoadedFromState: false,
+        completedStatus: [ 'completed', 'done', 'deleted', 'suspend', 'error', 'not_found_error', 'unauthorized_error', 'awe_error' ],
+
 
         /**
          * @private
@@ -291,7 +305,8 @@ function($,
                     outputState : this.allowOutput
                 },
                 minimized : this.panel_minimized,
-                params : this.$inputWidget.getState()
+                params : this.$inputWidget.getState(),
+                jobDetails: this.jobDetails
             };
         },
 
@@ -301,7 +316,7 @@ function($,
          * @public
          */
         loadState: function(state) {
-            console.log(state);
+            //console.log(state);
             // cases (for older ones)
             // 1. state looks like:
             // { params: {},
@@ -317,6 +332,11 @@ function($,
                 this.allowOutput = state.runningState.outputState;
                 this.$inputWidget.loadState(state.params);
                 this.submittedText = state.runningState.submittedText;
+                if (state.hasOwnProperty('jobDetails')) {
+                    this.jobDetails = state.jobDetails;
+                    if (this.jobDetails['job_id'])
+                        this.isJobStatusLoadedFromState = true;
+                }
                 this.changeState(state.runningState.runState);
                 if(state.minimized) {
                     this.minimizeView(true); // true so that we don't show slide animation
@@ -368,6 +388,15 @@ function($,
         stopRunning: function() {
             this.trigger('cancelJobCell.Narrative', [this.cellId, true, $.proxy(function(isCanceled) {
                 if (isCanceled) {
+                    if (this.$jobProcessTabs) {
+                        this.$jobProcessTabs.remove();
+                        this.$jobProcessTabs = null;
+                        this.$jobStatusDiv = null;
+                        this.hasLogsPanelLoaded = false;
+                        this.hasResultLoaded = false;
+                    }
+                    if (this.jobDetails)
+                        this.jobDetails = null;
                     this.changeState('input');
                 }
             }, this)]);
@@ -389,7 +418,7 @@ function($,
          * Updates the method cell's state.
          * Currently supports "input", "submitted", "running", or "complete".
          */
-        changeState: function(runState) {
+        changeState: function(runState, jobDetails, result) {
             if (!this.$cellPanel)
                 return;
             
@@ -456,8 +485,242 @@ function($,
                         break;
                 }
             }
+            
+
+
+            if (jobDetails) {
+                // Put this data into widget (with results) for next saveState operation
+                if(result) { jobDetails['result'] = result; }
+                this.jobDetails = jobDetails; 
+                
+            } else {
+                if(result) { this.jobDetails['result'] = result; }
+                jobDetails = this.jobDetails; // Get data from previously saved widget state (this is
+                                              // necessary because job panel doesn't call this method for
+                                              // finished jobs (it's called from init without UJS info)
+            }
+            
+            if (jobDetails && jobDetails['job_id']) {
+                var jobState = jobDetails['job_state'];
+                var jobInfo = jobDetails['job_info'];
+                var status = jobDetails['status'];
+                if (!status)
+                    status = jobState.status;
+                if (!this.$jobProcessTabs) {
+                    this.$jobProcessTabs = $('<div>').addClass('panel-body').addClass('kb-cell-output');
+                    var targetPanel = this.$elem;
+                    console.log(this.isJobStatusLoadedFromState, status, jobState, jobInfo);
+                    if (this.isJobStatusLoadedFromState && status) {
+                        if ($.inArray(status.toLowerCase(), this.completedStatus) >= 0) {
+                            // We move job status panel into cell panel rather than outside because when
+                            // job is done (or finished with error) we want to be able to collapse this 
+                            // panel as part of cell panel collapse.
+                            targetPanel = this.$cellPanel;
+                        }
+                    }
+                    targetPanel.append(this.$jobProcessTabs);
+                    this.$jobProcessTabs.kbaseTabs({canDelete: false, tabs: []});
+                    this.$jobStatusDiv = $('<div>');
+                    this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Status', content: this.$jobStatusDiv, 
+                        canDelete: false, show: true});
+                }
+                var jobId = jobDetails['job_id'];
+                var fullJobId = jobId;
+                if (jobId.indexOf(':') > 0)
+                    jobId = jobId.split(':')[1];
+                status = status.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); });
+                if (status === 'Suspend' || status === 'Error' || status === 'Unknown' || status === 'Awe_error') {
+                    status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Error');
+                } else if (status === 'Deleted') {
+                    status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Deleted');
+                } else if (status === 'Not_found_error') {
+                    status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Job Not Found');
+                } else if (status === 'Unauthorized_error') {
+                    status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Unauthorized');
+                } else if (status === 'Network_error') {
+                    status = this.makeJobErrorPanel(fullJobId, jobState, jobInfo, 'Network Error');
+                } else {
+                    status = this.makeJobStatusPanel(fullJobId, jobState, jobInfo, status);
+                }
+                this.$jobStatusDiv.empty();
+                this.$jobStatusDiv.append(status);
+                if (!this.hasLogsPanelLoaded) {
+                    this.hasLogsPanelLoaded = true;
+                    this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Console Log', showContentCallback: 
+                        function() {
+                            var $jobLogsPanel = $('<div>');
+                            $jobLogsPanel.kbaseViewLiveRunLog({'job_id': jobId, 'show_loading_error': false});
+                            return $jobLogsPanel;
+                        }, 
+                        canDelete: false, show: false});
+                }
+                if (jobDetails['result']) {
+                    if(!this.hasResultLoaded) {
+                        this.hasResultLoaded = true; // make sure we only display once
+                        // Check if the job details gives a report, if so, then we can add two more tabs
+                        if(jobDetails['result']['workspace_name'] && jobDetails['result']['report_name']) {
+
+                            this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Report', showContentCallback: 
+                                function() {
+                                    var $reportPanel = $('<div>');
+                                    var result = jobDetails.result;
+                                    result['showReportText'] = true;
+                                    result['showCreatedObjects'] = false;
+                                    $reportPanel.kbaseReportView(result);
+                                    return $reportPanel;
+                                }, 
+                                canDelete: false, show: true});
+
+                            this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'New Data Objects', showContentCallback: 
+                                function() {
+                                    var $reportPanel = $('<div>');
+                                    var result = jobDetails.result;
+                                    result['showReportText'] = false;
+                                    result['showCreatedObjects'] = true;
+                                    $reportPanel.kbaseReportView(result);
+                                    return $reportPanel;
+                                }, 
+                                canDelete: false, show: false});
+                        }
+                    }
+                }
+            }
         },
 
+        makeJobStatusPanel: function(jobId, jobState, jobInfo, statusText) {
+            function makeInfoRow(heading, info) {
+                return $('<tr>').append($('<th>')
+                        .append(heading + ':'))
+                        .append($('<td>')
+                        .append(info));
+            }
+            
+            var $infoTable = $('<table class="table table-bordered">')
+                    .append(makeInfoRow('Job Id', jobId))
+                    .append(makeInfoRow('Status', statusText));
+            
+            if (jobState && jobState.state && jobState.state.start_timestamp)
+                $infoTable.append(makeInfoRow('Submitted', this.readableTimestamp(jobState.state.start_timestamp)));
+            
+            $infoTable.append(makeInfoRow('Time in queue', 'Unknown'))
+                    .append(makeInfoRow('Position in queue', 'Unknown'))
+                    .append(makeInfoRow('Execution Started', 'Unknown'))
+                    .append(makeInfoRow('Execution Finished', 'Unknown'))
+                    .append(makeInfoRow('Execution Time', 'Unknown'));
+
+            return $infoTable;
+        },
+        
+        makeJobErrorPanel: function(jobId, jobState, jobInfo, btnText) {
+            var $errBtn = $('<div>')
+                .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
+                .css('background-color', '#F44336')
+                .append('<span class="fa fa-warning" style="color:white"></span>');
+            if (btnText)
+                $errBtn.append(' ' + btnText);
+            var headText = $errBtn; //"An error has been detected in this job!";
+            var errorText = "The KBase servers are reporting an error for this job:";
+            var errorType = "Unknown";
+
+            /* 1. jobState.source doesn't exist = not pointed at a cell
+             * 2. $('#jobState.source') doesn't exist = cell is missing
+             * 3. jobstate.state.error is a string.
+             * 4. jobstate.state is missing.
+             */
+            if (!jobState || !jobState.source) {
+                errorText = "This job is not associated with a Running Cell.";
+                errorType = "Unknown Cell";                    
+            }
+            else if ($('#' + jobState.source).length === 0) {
+                errorText = "The App Cell associated with this job can no longer be found in your Narrative.";
+                errorType = "Missing Cell";
+            }
+            else if (btnText === 'Deleted') {
+                errorText = "This job has already been deleted from KBase Servers.";
+                errorType = "Invalid Job";
+            }
+            else if (btnText === 'Job Not Found') {
+                errorText = "This job was not found to be running on KBase Servers. It may have been deleted, or may not be started yet.";
+                errorType = "Invalid Job";
+            }
+            else if (btnText === 'Unauthorized') {
+                errorText = "You do not have permission to view information about this job.";
+                errorType = "Unauthorized";
+            }
+            else if (btnText === 'Network Error') {
+                errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
+                errorType = "Network";
+            }
+            else if (jobState.state.error) {
+                errorText = $('<div class="kb-jobs-error-modal">').append(jobState.state.error);
+                errorType = "Runtime";
+                if (jobState.state.error === 'awe_error')
+                    errorType = 'AWE Error';                    
+            }
+
+            /* error types:
+             * 1. jobState.state.error is a real string. Just cough it up.
+             * 2. jobState.state is missing
+             * 3. jobInfo is partly missing (e.g., lost the cell that it should point to)
+             * 4. jobInfo is still partly missing (e.g., dont' know what cell it should point to)
+             */
+            else if (Object.keys(jobState.state.step_errors).length !== 0) {
+                errorType = "Runtime";
+                errorText = $('<div>');  // class="kb-jobs-error-modal">');
+                for (var stepId in jobState.state.step_errors) {
+                    if (jobState.state.step_errors.hasOwnProperty(stepId)) {
+                        // contort that into the method name
+                        // gotta search for it in the spec for the method id, first.
+                        var methodName = "Unknown method: " + stepId;
+                        if (jobId.indexOf("njs:") == 0) {
+                            var methodId = null;
+                            for (var i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
+                                if (stepId === jobInfo.spec.appSpec.steps[i].step_id) {
+                                    methodId = jobInfo.spec.appSpec.steps[i].method_id;
+                                    break;
+                                }
+                            }
+                            if (methodId)
+                                methodName = jobInfo.spec.methodSpecs[methodId].info.name;
+                        }
+                        else {
+                            methodName = jobInfo.spec.methodSpec.info.name;
+                        }
+                        errorText.append($('<b>').append('In ' + methodName + ':<br>'))
+                                .append($('<pre style="max-height:250px; overflow-y: auto">').append(jobState.state.step_errors[stepId]))
+                                .append('<br><br>');
+                    }
+                }
+            }
+
+            function makeInfoRow(heading, info) {
+                return $('<tr>').append($('<th>')
+                        .append(heading + ':'))
+                        .append($('<td>')
+                        .append(info));
+            }
+            
+            var $errorTable = $('<table class="table table-bordered">')
+                    .append(makeInfoRow('Job Id', jobId))
+                    .append(makeInfoRow('Type', errorType))
+                    .append(makeInfoRow('Error', errorText));
+
+            var $modalBody = $('<div>').append(headText)
+                    .append($errorTable);
+            if (jobState && jobState.state && jobState.state.traceback) {
+                var $tb = $('<div>');
+                $tb.kbaseAccordion({
+                    elements: [{
+                        title: 'Detailed Error Information',
+                        body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
+                    }]
+                });
+                $modalBody.append($tb);
+            }
+
+            return $modalBody;
+        },
+        
         isAwaitingInput: function() {
             if(this.runState) {
                 if(this.runState==='input') { return true; }
@@ -544,7 +807,7 @@ function($,
                     this.trigger('createOutputCell.Narrative', data);
                 }.bind(this));
             }
-            this.changeState('complete');
+            this.changeState('complete', null, data.result);
         },
 
 

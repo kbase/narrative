@@ -1,6 +1,7 @@
 /**
  * Output widget to vizualize registered dynamic repo state.
  * Roman Sutormin <rsutormin@lbl.gov>
+ * Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
 

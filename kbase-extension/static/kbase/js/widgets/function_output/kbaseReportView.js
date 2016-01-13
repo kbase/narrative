@@ -20,6 +20,11 @@ define(['jquery',
 
             report_window_line_height: 10,
 
+            showReportText: true,
+            showCreatedObjects: false,
+
+            inNarrative: true,  // todo: toggles whether data links show in narrative or new page
+
             wsURL: window.kbconfig.urls.workspace,
             loadingImage: "static/kbase/images/ajax-loader.gif"
         },
@@ -96,131 +101,174 @@ define(['jquery',
                 }
             }
 
-            var $report_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;resize:vertical;" rows="'+
-                                        self.options.report_window_line_height+'" readonly>')
-                                        .append(self.reportData.text_message);
-            self.$mainPanel.append($report_window);
+            if(self.options.showReportText) {
+                var $report_window = $('<textarea style="width:100%;font-family:Monaco,monospace;font-size:9pt;color:#555;resize:vertical;" rows="'+
+                                            self.options.report_window_line_height+'" readonly>')
+                                            .append(self.reportData.text_message);
+                self.$mainPanel.append($report_window);
+            }
 
+            if(self.options.showCreatedObjects) {
+                if(self.reportData.objects_created) {
+                    if(self.reportData.objects_created.length>0) {
 
-            if(self.reportData.objects_created) {
-                if(self.reportData.objects_created.length>0) {
+                        var objsCreated = self.reportData.objects_created;
 
-                    var objsCreated = self.reportData.objects_created;
+                        var objIds = []
+                        for(var i=0; i<objsCreated.length; i++) {
+                            objIds.push({'ref':objsCreated[i].ref})
+                        }
+                        self.ws.get_object_info_new({'objects':objIds},
+                            function(objInfo) {
 
-                    var objIds = []
-                    for(var i=0; i<objsCreated.length; i++) {
-                        objIds.push({'ref':objsCreated[i].ref})
-                    }
-                    self.ws.get_object_info_new({'objects':objIds},
-                        function(objInfo) {
+                                var pref = self.uuid();
+                                var displayData = [];
+                                var dataNameToInfo = {};
+                                for(var k=0; k<objInfo.length; k++) {
 
-                            var displayData = [];
-                            for(var k=0; k<objInfo.length; k++) {
+                                    //var $name = $('<a>').append(objInfo[k][1]);
+                                    /* TODO: we need code something like this to show data objects on click
+                                    var obj = _.findWhere(self.objectList, {key: key});
+                                    var info = self.createInfoObject(obj.info);
+                                    // Insert the narrative data cell into the div we just rendered
+                                    //$('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+                                    self.trigger('createViewerCell.Narrative', {
+                                        'nearCellIdx': near_idx,
+                                        'widget': 'kbaseNarrativeDataCell',
+                                        'info' : info
+                                    });*/
 
-                                //var nameHTML = $('<a>').append(objInfo[k][1])
-                                /* TODO: we need code something like this to show data objects on click
-                                var obj = _.findWhere(self.objectList, {key: key});
-                                var info = self.createInfoObject(obj.info);
-                                // Insert the narrative data cell into the div we just rendered
-                                //$('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
-                                self.trigger('createViewerCell.Narrative', {
-                                    'nearCellIdx': near_idx,
-                                    'widget': 'kbaseNarrativeDataCell',
-                                    'info' : info
-                                });*/
-
-                                displayData.push({
-                                    'name':objInfo[k][1],
-                                    'type':objInfo[k][2].split('-')[0].split('.')[1],
-                                    'fullType':objInfo[k][2],
-                                    'description': objsCreated[k].description ? objsCreated[k].description : ''
-                                });
-                            }
-
-                            var iDisplayLength = 5;
-                            var sDom = "ft<ip>";
-                            var $tblDiv = $('<div>').css('margin-top','10px');
-                            self.$mainPanel.append($tblDiv);
-                            if(displayData.length<=iDisplayLength) { 
-                                var $objTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">');
-
-                                displayData.sort(function(a, b) {
-                                  return a.name < b.name;
-                                });
-                                var color = '#555';
-                                $objTable.append($('<tr>')
-                                        .append('<th style="width:30%;color:'+color+';"><b>Created Object Name</b></th>')
-                                        .append('<th style="width:20%;color:'+color+';"><b>Type</b></th>')
-                                        .append('<th style="color:'+color+';"><b>Description</b></th>'));
-                                for(var k=0; k<displayData.length; k++) {
-                                    $objTable.append($('<tr>')
-                                        .append('<td style="width:30%;color:'+color+';">'+displayData[k].name+'</td>')
-                                        .append('<td style="width:20%;color:'+color+';">'+displayData[k].type+'</td>')
-                                        .append('<td style="color:'+color+';">'+displayData[k].description+'</td>'));
+                                    displayData.push({
+                                        'name': '<a class="report_row_'+pref+'" data-objname="'+objInfo[k][1]+'">' + objInfo[k][1] + '</a>',
+                                        'type':objInfo[k][2].split('-')[0].split('.')[1],
+                                        'fullType':objInfo[k][2],
+                                        'description': objsCreated[k].description ? objsCreated[k].description : '',
+                                        'ws_info': objInfo[k]
+                                    });
+                                    dataNameToInfo[objInfo[k][1]] = objInfo[k];
                                 }
-                                $tblDiv.append($objTable)
-                            } else {
-                                var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
-                                                .addClass("table table-bordered table-striped");
-                                $tblDiv.append($tbl);
 
+                                function reportRowEvents() {
+                                    $('.report_row_'+pref).unbind('click');
+                                    $('.report_row_'+pref).click(function() {
+                                        var objName = [$(this).data('objname')];
+                                        self.openViewerCell(dataNameToInfo[objName]);
+                                    });
+                                }
+
+                                var iDisplayLength = 5;
                                 var sDom = "ft<ip>";
+                                var $tblDiv = $('<div>').css('margin-top','10px');
+                                self.$mainPanel.append($tblDiv);
+                                if(displayData.length<=iDisplayLength) { 
+                                    var $objTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">');
 
-                                var tblSettings = {
-                                    "sPaginationType": "full_numbers",
-                                    "iDisplayLength": iDisplayLength,
-                                    "sDom": sDom,
-                                    "aaSorting": [[ 0, "asc" ]],
-                                    "aoColumns": [
-                                                    { sTitle: "<b>Created Object Name</b>", mData: "name", sWidth: "30%"},
-                                                    { sTitle: "<b>Type</b>", mData:"type", sWidth: "20%"},
-                                                    { sTitle: "<b>Description</b>", mData:"description" }
-                                                ],
-                                                "aaData": [],
-                                                "oLanguage": {
-                                                    "sSearch": "Search: ",
-                                                    "sEmptyTable": "No created objects."
-                                                }
-                                    };
-                                var objTable = $tbl.dataTable(tblSettings);
-                                objTable.fnAddData(displayData);
+                                    displayData.sort(function(a, b) {
+                                      return a.name < b.name;
+                                    });
+                                    var color = '#555';
+                                    $objTable.append($('<tr>')
+                                            .append('<th style="width:30%;color:'+color+';"><b>Created Object Name</b></th>')
+                                            .append('<th style="width:20%;color:'+color+';"><b>Type</b></th>')
+                                            .append('<th style="color:'+color+';"><b>Description</b></th>'));
+                                    for(var k=0; k<displayData.length; k++) {
+                                        $objTable.append($('<tr>')
+                                            .append('<td style="width:30%;color:'+color+';">'+displayData[k].name+'</td>')
+                                            .append('<td style="width:20%;color:'+color+';">'+displayData[k].type+'</td>')
+                                            .append('<td style="color:'+color+';">'+displayData[k].description+'</td>'));
+                                    }
+                                    $tblDiv.append($objTable)
+                                    reportRowEvents();
+                                } else {
+                                    var $tbl = $('<table cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin-left: 0px; margin-right: 0px;">')
+                                                    .addClass("table table-bordered table-striped");
+                                    $tblDiv.append($tbl);
+
+                                    var sDom = "ft<ip>";
+
+                                    var tblSettings = {
+                                        "sPaginationType": "full_numbers",
+                                        "iDisplayLength": iDisplayLength,
+                                        "sDom": sDom,
+                                        "aaSorting": [[ 0, "asc" ]],
+                                        "aoColumns": [
+                                                        { sTitle: "<b>Created Object Name</b>", mData: "name", sWidth: "30%"},
+                                                        { sTitle: "<b>Type</b>", mData:"type", sWidth: "20%"},
+                                                        { sTitle: "<b>Description</b>", mData:"description" }
+                                                    ],
+                                                    "aaData": [],
+                                                    "oLanguage": {
+                                                        "sSearch": "Search: ",
+                                                        "sEmptyTable": "No created objects."
+                                                    }
+                                        };
+                                    var objTable = $tbl.dataTable(tblSettings);
+                                    objTable.fnAddData(displayData);
 
 
-                                var $objTable = $('<table ' + 
-                                                    'class="table table-bordered table-striped" style="width:100%;margin-left:0px; margin-right:0px;">'+
-                                                        '</table>')
-                                                        .dataTable( {
-                                                            "sPaginationType": "full_numbers",
-                                                            "sDom": sDom,
-                                                            "iDisplayLength": iDisplayLength,
-                                                            "aaSorting": [[ 0, "asc" ], [1, "asc"]],
-                                                            "aaData": displayData,
-                                                            "aoColumns": [
-                                                                { sTitle: "Created Object Name", mData: "name", sWidth: "20%"},
-                                                                { sTitle: "Type", mData:"type", sWidth: "20%"},
-                                                                { sTitle: "Description", mData:"description" }
-                                                            ],
-                                                            "oLanguage": {
-                                                                        "sEmptyTable": "No objects specified!",
-                                                                        "sSearch": "Search Created Objects: "
-                                                            }
-                                                        } );
-                                //$tblDiv.append($objTable)
-                            }
-                        }, function(error) {
-                            console.error(error);
-                        });
+                                    var $objTable = $('<table ' + 
+                                                        'class="table table-bordered table-striped" style="width:100%;margin-left:0px; margin-right:0px;">'+
+                                                            '</table>')
+                                                            .dataTable( {
+                                                                "sPaginationType": "full_numbers",
+                                                                "sDom": sDom,
+                                                                "iDisplayLength": iDisplayLength,
+                                                                "aaSorting": [[ 0, "asc" ], [1, "asc"]],
+                                                                "aaData": displayData,
+                                                                "aoColumns": [
+                                                                    { sTitle: "Created Object Name", mData: "name", sWidth: "20%"},
+                                                                    { sTitle: "Type", mData:"type", sWidth: "20%"},
+                                                                    { sTitle: "Description", mData:"description" }
+                                                                ],
+                                                                "oLanguage": {
+                                                                            "sEmptyTable": "No objects specified!",
+                                                                            "sSearch": "Search Created Objects: "
+                                                                },
+                                                                "fnDrawCallback": reportRowEvents
+                                                            } );
+                                    //$tblDiv.append($objTable)
+                                }
+                                
+                            }, function(error) {
+                                console.error(error);
+                            });
+                    }
                 }
             }
 
             this.loading(false);
         },
+        
+        openViewerCell: function(ws_info) {
+            var self = this;
+            var cell = IPython.notebook.get_selected_cell();
+            var near_idx = 0;
+            if (cell) {
+                near_idx = IPython.notebook.find_cell_index(cell);
+                $(cell.element).off('dblclick');
+                $(cell.element).off('keydown');
+            }
+            var info = self.createInfoObject(ws_info);
+            self.trigger('createViewerCell.Narrative', {
+                'nearCellIdx': near_idx,
+                'widget': 'kbaseNarrativeDataCell',
+                'info': info
+            });
+        },
 
+        createInfoObject: function (info) {
+            return _.object(['id', 'name', 'type', 'save_date', 'version',
+                'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
+                'meta'], info);
+        },
+        
         loading: function(isLoading) {
-            if (isLoading)
-                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
-            else
+            if (isLoading) {
+                //this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+                this.showMessage('<i class="fa fa-spinner fa-spin"></i>');
+            } else {
                 this.hideMessage();                
+            }
         },
 
         showMessage: function(message) {
@@ -274,6 +322,14 @@ define(['jquery',
                     obj['ver'] = objectVer;
             }
             return obj;
+        },
+
+        uuid: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
+                function(c) {
+                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                    return v.toString(16);
+                });
         }
 
     });

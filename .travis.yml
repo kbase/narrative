@@ -18,4 +18,4 @@ before_install:
   - npm install -g grunt-cli
 install:
   - pip install -r src/requirements.txt
-script: make && make test
+script: make build-travis-narrative && make test

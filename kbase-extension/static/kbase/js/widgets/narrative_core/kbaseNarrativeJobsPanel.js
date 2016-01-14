@@ -45,7 +45,6 @@ function($,
          * }
          */
         jobStates: null,
-        jobInfo: {},
 
         /* when populated should have structure:
          * {
@@ -96,12 +95,6 @@ function($,
                         else 
                             this.deleteJob(jobId, callback);
                     }
-                }, this)
-            );
-            
-            $(document).on('openJobErrorDialog.Narrative', $.proxy(
-                function(e, jobId, btnText) {
-                    this.openJobErrorDialog(jobId, btnText);
                 }, this)
             );
 
@@ -508,6 +501,7 @@ function($,
 
             // This contains all the job info like this:
             // { jobId: {spec: {}, state: {}} }
+            var jobInfo = {};
             // This contains the list of lookup parameters for each job.
             // We pass back all specs/parameters so the back end can munge them into the right 
             // output structures.
@@ -547,7 +541,7 @@ function($,
                             }
                         }
                     }
-                    this.jobInfo[jobId] = { 'spec': specInfo };
+                    jobInfo[jobId] = { 'spec': specInfo };
                 }
                 else
                     this.jobStates[jobId].status = 'error';
@@ -574,7 +568,7 @@ function($,
                 },
                 iopub: {
                     output: function(content) { 
-                        self.parseKernelResponse(content, self.jobInfo);
+                        self.parseKernelResponse(content, jobInfo);
                     },
                     clear_output: function(content) { 
                         self.handleCallback('clear_output', content);
@@ -1037,120 +1031,115 @@ function($,
          * @param {string} btnText - the text of the button. If empty or null, the button just gets a /!\ icon.
          */
         makeJobErrorButton: function(jobId, jobInfo, btnText) {
-            var $errBtn = $('<div>')
-                          .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
-                          .append('<span class="fa fa-warning" style="color:white"></span>');
-            if (btnText)
-                $errBtn.append(' ' + btnText);
-            $errBtn.click($.proxy(function(e) {
-                this.openJobErrorDialog(jobId, btnText);
-            }, this));
-            return $errBtn;
-        },
-                
-        openJobErrorDialog: function(jobId, btnText) {
             var jobState = this.jobStates[jobId];
             var removeText = "Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?";
             var headText = "An error has been detected in this job!";
             var errorText = "The KBase servers are reporting an error for this job:";
             var errorType = "Unknown";
 
-            var jobInfo = this.jobInfo[jobId];
-            this.removeId = jobId;
-            /* 1. jobState.source doesn't exist = not pointed at a cell
-             * 2. $('#jobState.source') doesn't exist = cell is missing
-             * 3. jobstate.state.error is a string.
-             * 4. jobstate.state is missing.
-             */
-            if (!jobState || !jobState.source) {
-                errorText = "This job is not associated with a Running Cell.";
-                errorType = "Unknown Cell";                    
-            }
-            else if ($('#' + jobState.source).length === 0) {
-                errorText = "The App Cell associated with this job can no longer be found in your Narrative.";
-                errorType = "Missing Cell";
-            }
-            else if (btnText === 'Deleted') {
-                errorText = "This job has already been deleted from KBase Servers.";
-                errorType = "Invalid Job";
-            }
-            else if (btnText === 'Job Not Found') {
-                errorText = "This job was not found to be running on KBase Servers. It may have been deleted, or may not be started yet.";
-                errorType = "Invalid Job";
-            }
-            else if (btnText === 'Unauthorized') {
-                errorText = "You do not have permission to view information about this job.";
-                errorType = "Unauthorized";
-            }
-            else if (btnText === 'Network Error') {
-                errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
-                errorType = "Network";
-            }
-            else if (jobState.state.error) {
-                errorText = $('<div class="kb-jobs-error-modal">').append(jobState.state.error);
-                errorType = "Runtime";
-                if (jobState.state.error === 'awe_error')
-                    errorType = 'AWE Error';                    
-            }
+            var $errBtn = $('<div>')
+                          .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
+                          .append('<span class="fa fa-warning" style="color:white"></span>');
+            if (btnText)
+                $errBtn.append(' ' + btnText);
+            $errBtn.click($.proxy(function(e) {
+                this.removeId = jobId;
+                /* 1. jobState.source doesn't exist = not pointed at a cell
+                 * 2. $('#jobState.source') doesn't exist = cell is missing
+                 * 3. jobstate.state.error is a string.
+                 * 4. jobstate.state is missing.
+                 */
+                if (!jobState || !jobState.source) {
+                    errorText = "This job is not associated with a Running Cell.";
+                    errorType = "Unknown Cell";                    
+                }
+                else if ($('#' + jobState.source).length === 0) {
+                    errorText = "The App Cell associated with this job can no longer be found in your Narrative.";
+                    errorType = "Missing Cell";
+                }
+                else if (btnText === 'Deleted') {
+                    errorText = "This job has already been deleted from KBase Servers.";
+                    errorType = "Invalid Job";
+                }
+                else if (btnText === 'Job Not Found') {
+                    errorText = "This job was not found to be running on KBase Servers. It may have been deleted, or may not be started yet.";
+                    errorType = "Invalid Job";
+                }
+                else if (btnText === 'Unauthorized') {
+                    errorText = "You do not have permission to view information about this job.";
+                    errorType = "Unauthorized";
+                }
+                else if (btnText === 'Network Error') {
+                    errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
+                    errorType = "Network";
+                }
+                else if (jobState.state.error) {
+                    errorText = $('<div class="kb-jobs-error-modal">').append(jobState.state.error);
+                    errorType = "Runtime";
+                    if (jobState.state.error === 'awe_error')
+                        errorType = 'AWE Error';                    
+                }
 
-            /* error types:
-             * 1. jobState.state.error is a real string. Just cough it up.
-             * 2. jobState.state is missing
-             * 3. jobInfo is partly missing (e.g., lost the cell that it should point to)
-             * 4. jobInfo is still partly missing (e.g., dont' know what cell it should point to)
-             */
-            else if (Object.keys(jobState.state.step_errors).length !== 0) {
-                errorType = "Runtime";
-                errorText = $('<div class="kb-jobs-error-modal">');
-                for (var stepId in jobState.state.step_errors) {
-                    if (jobState.state.step_errors.hasOwnProperty(stepId)) {
-                        // contort that into the method name
-                        // gotta search for it in the spec for the method id, first.
-                        var methodName = "Unknown method: " + stepId;
-                        if (this.jobTypeFromId(jobId) === "njs") {
-                            var methodId = null;
-                            for (var i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
-                                if (stepId === jobInfo.spec.appSpec.steps[i].step_id) {
-                                    methodId = jobInfo.spec.appSpec.steps[i].method_id;
-                                    break;
+                /* error types:
+                 * 1. jobState.state.error is a real string. Just cough it up.
+                 * 2. jobState.state is missing
+                 * 3. jobInfo is partly missing (e.g., lost the cell that it should point to)
+                 * 4. jobInfo is still partly missing (e.g., dont' know what cell it should point to)
+                 */
+                else if (Object.keys(jobState.state.step_errors).length !== 0) {
+                    errorType = "Runtime";
+                    errorText = $('<div class="kb-jobs-error-modal">');
+                    for (var stepId in jobState.state.step_errors) {
+                        if (jobState.state.step_errors.hasOwnProperty(stepId)) {
+                            // contort that into the method name
+                            // gotta search for it in the spec for the method id, first.
+                            var methodName = "Unknown method: " + stepId;
+                            if (this.jobTypeFromId(jobId) === "njs") {
+                                var methodId = null;
+                                for (var i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
+                                    if (stepId === jobInfo.spec.appSpec.steps[i].step_id) {
+                                        methodId = jobInfo.spec.appSpec.steps[i].method_id;
+                                        break;
+                                    }
                                 }
+                                if (methodId)
+                                    methodName = jobInfo.spec.methodSpecs[methodId].info.name;
                             }
-                            if (methodId)
-                                methodName = jobInfo.spec.methodSpecs[methodId].info.name;
+                            else {
+                                methodName = jobInfo.spec.methodSpec.info.name;
+                            }
+                            errorText.append($('<b>').append('In ' + methodName + ':<br>'))
+                                     .append(jobState.state.step_errors[stepId] + '<br><br>');
                         }
-                        else {
-                            methodName = jobInfo.spec.methodSpec.info.name;
-                        }
-                        errorText.append($('<b>').append('In ' + methodName + ':<br>'))
-                        .append(jobState.state.step_errors[stepId] + '<br><br>');
                     }
                 }
-            }
+ 
+                var $errorTable = $('<table class="table table-bordered">')
+                                  .append(this.makeInfoRow('Id', jobId))
+                                  .append(this.makeInfoRow('Type', errorType))
+                                  .append(this.makeInfoRow('Error', errorText));
 
-            var $errorTable = $('<table class="table table-bordered">')
-            .append(this.makeInfoRow('Id', jobId))
-            .append(this.makeInfoRow('Type', errorType))
-            .append(this.makeInfoRow('Error', errorText));
+                this.jobsModal.setTitle('Job Error');
+                var $modalBody = $('<div>').append(headText)
+                                           .append($errorTable);
+                if (jobState.state.traceback) {
+                    var $tb = $('<div>');
+                    $tb.kbaseAccordion({
+                        elements: [{
+                            title: 'Detailed Error Information',
+                            body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
+                        }]
+                    });
+                    // this.$jobsModalBody.append($tb);
+                    $modalBody.append($tb);
+                }
 
-            this.jobsModal.setTitle('Job Error');
-            var $modalBody = $('<div>').append(headText)
-            .append($errorTable);
-            if (jobState && jobState.state && jobState.state.traceback) {
-                var $tb = $('<div>');
-                $tb.kbaseAccordion({
-                    elements: [{
-                        title: 'Detailed Error Information',
-                        body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
-                    }]
-                });
-                // this.$jobsModalBody.append($tb);
-                $modalBody.append($tb);
-            }
+                $modalBody.append($('<div>').append(removeText));
+                this.jobsModal.setBody($modalBody);
+                this.jobsModal.show();
 
-            $modalBody.append($('<div>').append(removeText));
-            this.jobsModal.setBody($modalBody);
-            this.jobsModal.show();
-
+            }, this));
+            return $errBtn;
         },
 
 

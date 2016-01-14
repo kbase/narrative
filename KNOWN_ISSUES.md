@@ -1,3 +1,5 @@
+Last updated 1/14/2016, 12:00pm
+
   * Markdown cells render a little different. Previously headers could be made by "###text" on its own line, now a space is needed: "### text" on that line.
   * The "view only" mode has a gigantic margin on the left side. [KBASE-3370](https://atlassian.kbase.us/browse/KBASE-3370)
   * All cells sit in a container that makes it easier to see what's selected or not, which brings up issues.

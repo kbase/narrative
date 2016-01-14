@@ -1,35 +1,18 @@
 /*
-Placeholder for custom user CSS
+This CSS file is for overriding the Jupyter CSS. Any KBase-component
+CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
 
-mainly to be overridden in profile/static/custom/custom.css
-
-This will always be an empty file in IPython
+(or the specific css file if available)
 */
 
 #site {
     overflow: visible;
 }
 
-div#notebook {
-    min-width: 460px;
-}
-
 /* disable the standard notebook, bottom spacer */
-#notebook {
-    min-height: 0;
-    height: 0;
-}
 #notebook > .end_space {
     min-height: 0;
     height: 0;
-}
-
-#notebook-container {
-    box-shadow: none;
-    -moz-box-shadow: none;
-    -webkit-box-shadow: none;
-    width: auto;
-    min-width: 460px;
 }
 
 @media (min-width: 1200px)
@@ -94,6 +77,10 @@ input.raw_input {
 
 div#notebook {
     overflow-y: auto;
+    min-width: 460px;
+    min-height: 0;
+    height: 0;
+    padding-top: 0;
 }
 
 span#notebook_name {
@@ -105,30 +92,6 @@ span#notebook_name:hover {
     background-color: #e0e0e0;    
 }
 
-#kb-narr-name {
-    font-style: italic;
-    font-family: 'OxygenBold';
-    font-size: 130%;
-    padding-bottom: 7px;
-}
-
-#kb-narr-name > #save_widget {
-    font-style: normal;
-    font-family: 'OxygenBold';
-    padding: 0;
-}
-
-#kb-narr-creator {
-    font-family: 'OxygenBold';
-}
-
-.kb-narr-namestamp {
-    margin-bottom: 0px;
-    margin-top: 5px;
-    padding-left: 20px;
-    border-left: 2px solid #CECECE;
-    display: none;
-}
 
 body {
     padding-top: 70px !important;
@@ -139,48 +102,13 @@ body {
 }
 
 
-
-.ui-draggable.kb-data-inflight {
-    display: block;
-    border: 2px gray solid;
-    background-color: #FEFFD6 !important;
-    border-radius: 4px;
-    z-index: 1000;
-}
-.ui-draggable.kb-data-inflight.-over {
-    border-color: green;
-    background-color: #EFFCEB !important;
-}
-
-.kb-data-list-drag-target {
-    transition: all 0.25s ease;
-}
-
-.kb-data-list-drag-target.-drag-active {
-    background-color: #FEFFD6;
-}
-
-.kb-data-list-drag-target.-drag-hover {
-    background-color: #EFFCEB;
-    border-color: green;
-    
-}
-.kb-data-list-drag-target.-drag-hover {
-    height: 90px;
-    transition: all 0.25s ease;
-}
-
-.kb-data-list-drag-target {
-    display: block;
-    border: 2px orange dashed;
-    height: 40px;
-    text-align: center;
-    padding: 6px;
-    border-radius: 4px;
-}
-
 #notebook-container {
-     position: fixed;
+    box-shadow: none;
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    width: auto;
+    min-width: 460px;
+    position: fixed;
     left: 380px;
     top: 70px;
     right: 0; 

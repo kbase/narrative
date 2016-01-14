@@ -18,6 +18,69 @@
     z-index: 1001;
 }
 
+#kb-narr-name {
+    font-style: italic;
+    font-family: 'OxygenBold';
+    font-size: 130%;
+    padding-bottom: 7px;
+}
+
+#kb-narr-name > #save_widget {
+    font-style: normal;
+    font-family: 'OxygenBold';
+    padding: 0;
+}
+
+#kb-narr-creator {
+    font-family: 'OxygenBold';
+}
+
+.kb-narr-namestamp {
+    margin-bottom: 0px;
+    margin-top: 5px;
+    padding-left: 20px;
+    border-left: 2px solid #CECECE;
+    display: none;
+}
+
+.ui-draggable.kb-data-inflight {
+    display: block;
+    border: 2px gray solid;
+    background-color: #FEFFD6 !important;
+    border-radius: 4px;
+    z-index: 1000;
+}
+.ui-draggable.kb-data-inflight.-over {
+    border-color: green;
+    background-color: #EFFCEB !important;
+}
+
+.kb-data-list-drag-target {
+    transition: all 0.25s ease;
+}
+
+.kb-data-list-drag-target.-drag-active {
+    background-color: #FEFFD6;
+}
+
+.kb-data-list-drag-target.-drag-hover {
+    background-color: #EFFCEB;
+    border-color: green;
+    
+}
+.kb-data-list-drag-target.-drag-hover {
+    height: 90px;
+    transition: all 0.25s ease;
+}
+
+.kb-data-list-drag-target {
+    display: block;
+    border: 2px orange dashed;
+    height: 40px;
+    text-align: center;
+    padding: 6px;
+    border-radius: 4px;
+}
 
 #kb-notify-area {
     display: inline-block;

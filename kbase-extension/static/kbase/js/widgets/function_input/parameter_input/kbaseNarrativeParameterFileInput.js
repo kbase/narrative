@@ -185,11 +185,12 @@ function($, Config) {
         	self.fileName.val(file.name);
     		prcText.val("?..%");
     		self.onChange();
+    		console.log("kbaseNarrativeParameterFileInput.fileSelected: after self.onChange()");
             var curTime = new Date().getTime();
     		var ujsKey = "File:"+file.size+":"+file.lastModifiedDate.getTime()+":"+file.name+":"+self.getUser();
             var ujsClient = new UserAndJobState(self.options.ujsUrl, {'token': self.token});
         	var shockClient = new ShockClient({url: self.options.shockUrl, token: self.token});
-            ujsClient.list_state(self.options.serviceNameInUJS, 0, function(data) {
+            /*ujsClient.list_state(self.options.serviceNameInUJS, 0, function(data) {
             	if (data.length >= self.options.maxFileStatesInUJS) {
             		for (var keyPos in data) {
             			removeFileState(data[keyPos]);
@@ -197,17 +198,19 @@ function($, Config) {
             	}
     		}, function(error) {
     			console.log(error);
-    		});
+    		});*/
             ujsClient.get_has_state(self.options.serviceNameInUJS, ujsKey, 0, function(data) {
+                console.log("kbaseNarrativeParameterFileInput.fileSelected, in ujsClient.get_has_state: ", data);
     			var value = data[1];
     			if (value != null)
     				value = value.split(" ")[0];
     			processAfterNodeCheck(value != null ? value : prevShockNodeId);
     		}, function(error) {
+                console.error("kbaseNarrativeParameterFileInput.fileSelected, in ujsClient.get_has_state: ", error);
     			processAfterNodeCheck(prevShockNodeId);
     		});
     		
-            function removeFileState(key) {
+            /*function removeFileState(key) {
                 ujsClient.get_state(self.options.serviceNameInUJS, key, 0, function(value) {
         			var parts = value.split(" ");
         			var nodeId = parts[0];
@@ -228,18 +231,21 @@ function($, Config) {
         		}, function(error) {
         			console.log(error);
         		});
-            }
+            }*/
             
             function processAfterNodeCheck(storedShockNodeId) {
+                console.log("kbaseNarrativeParameterFileInput.fileSelected, in processAfterNodeCheck: storedShockNodeId=", storedShockNodeId);
             	self.selectFileMode(false);
             	self.cancelUpload = false;
             	shockClient.upload_node(file, storedShockNodeId, self.options.fullShockSearchToResume, function(info) {
+                    console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.upload_node: self.shockNodeId=", self.shockNodeId, info);
             		if (info.uploaded_size) {
             			var shockNodeWasntDefined = self.shockNodeId == null || self.shockNodeId !== info['node_id'];
             			if (shockNodeWasntDefined) {
             				self.shockNodeId = info['node_id'];
             				var fileState = self.shockNodeId + " " + curTime;
             				ujsClient.set_state(self.options.serviceNameInUJS, ujsKey, fileState, function(data) {
+                                console.log("kbaseNarrativeParameterFileInput.fileSelected, in ujsClient.set_state: ", data);
             					console.log("UJS file state saved: " + fileState);
             	    		}, function(error) {
             	            	console.log("Error saving shock node " + self.shockNodeId + " into UJS:");
@@ -253,6 +259,7 @@ function($, Config) {
                             self.uploadWasStarted = false;
                             self.onChange();
             				shockClient.change_node_file_name(self.shockNodeId, file.name, function(info) {
+                                console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.change_node_file_name: ", info);
             					//showShockInfo(self.shockNodeId);
             				}, function(error) {
             	            	console.log("Error changing file name for shock node " + self.shockNodeId);
@@ -267,10 +274,12 @@ function($, Config) {
             	        self.onChange();
             		}
             	}, function(error) {
+                    console.error("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.upload_node: ", error);
             		self.selectFileMode(true);
                     self.uploadWasStarted = false;
             		alert("Error: " + error);
             	}, function() {
+                    console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.upload_node: uploading was cancelled");
             		return self.cancelUpload;
             	});
             }

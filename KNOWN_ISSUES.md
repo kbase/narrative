@@ -8,4 +8,4 @@ Last updated 1/14/2016, 2:36pm
   * The data panel can still, occasionally, spin nonstop at page load. [KBASE-3338](https://atlassian.kbase.us/browse/KBASE-3338)
   * The 'About Jupyter' dialog in the Kernel menu is non-functional
   * Missing Jupyter menu bar [KBASE-3371](https://atlassian.kbase.us/browse/KBASE-3371)
-  * Opening new narrative and clicking "share" on top-right results in two "Rename Narrative" dialogs on top of one another. Share tooltip doesn't dismiss when clicking outside of tooptip.
+  * Opening new narrative and clicking "share" on top-right results in two "Rename Narrative" dialogs on top of one another. Share tooltip doesn't dismiss when clicking outside of tooltip.

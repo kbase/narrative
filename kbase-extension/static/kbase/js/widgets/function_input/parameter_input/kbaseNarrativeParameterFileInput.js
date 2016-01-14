@@ -279,7 +279,7 @@ function($, Config) {
                     self.uploadWasStarted = false;
             		alert("Error: " + error);
             	}, function() {
-                    console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.upload_node: uploading was cancelled");
+                    console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.upload_node: check was-upload-cancelled=" + self.cancelUpload);
             		return self.cancelUpload;
             	});
             }

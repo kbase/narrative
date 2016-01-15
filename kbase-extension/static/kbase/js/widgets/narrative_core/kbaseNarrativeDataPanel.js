@@ -108,10 +108,9 @@ function($, _, Config) {
              */
             $(document).on(
                 'updateData.Narrative', $.proxy(function(e) {
-                    //this.refresh();
                     this.dataListWidget.refresh();
                 },
-                this )
+                this)
             );
 
             /**
@@ -237,7 +236,6 @@ function($, _, Config) {
             } else {
                 return {};
             }
-
         },
 
         /**
@@ -252,9 +250,6 @@ function($, _, Config) {
             this.$errorPanel.hide();
             this.$loadingPanel.show();
         },
-
-
-
 
         buildTabs: function(tabs, isOuter) {
             var $header = $('<div>');

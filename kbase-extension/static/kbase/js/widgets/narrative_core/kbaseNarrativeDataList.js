@@ -93,7 +93,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             this.$elem.append(this.$controllerDiv);
             this.renderController();
             this.$loadingDiv = $('<div>').addClass('kb-data-loading')
-                .append('<img src="' + this.options.loadingImage + '">');
+                .append('<img src="' + this.options.loadingImage + '">')
+                .hide();
             this.$elem.append(this.$loadingDiv);
             this.mainListId = StringUtil.uuid();
             this.$mainListDiv = $('<div id=' + this.mainListId + '>')
@@ -126,7 +127,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
 
             this.showLoading();
             if (this.options.ws_name) {
-                this.setWorkspace(this.options.ws_name);
+                this.ws_name = this.options.ws_name;
+                // this.setWorkspace(this.options.ws_name);
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
@@ -135,7 +137,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         setWorkspace: function (ws_name) {
             this.ws_name = ws_name;
-            //this.ws_name = "janakacore"; // for testing a bigish workspace
+            // this.ws_name = "janakacore"; // for testing a bigish workspace
             //this.ws_name = "KBasePublicGenomesV4"; // for testing a very big workspace
             this.refresh();
         },

@@ -27,9 +27,13 @@ if [ $? -eq 1 ] ; then
 fi
 
 echo "Building latest version"
+
 # Build the Narrative container and tag it (as a backup)
 docker build -q -t $NAR_NAME .
 docker tag $NAR_NAME:latest $NAR_NAME:$DS
+
+# Update the Git hash in the config file to be hosted at *.kbase.us/narrative_version
+./src/scripts/kb-git-version -f src/config.json -o /kb/deployment/ui-common/narrative_version
 
 # Remove any provisioned, but not used, containers
 curl -L -X DELETE http://localhost/proxy_map/provisioned || echo "Ignore Error"

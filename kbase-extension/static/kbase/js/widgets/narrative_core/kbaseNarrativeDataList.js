@@ -142,6 +142,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         refresh: function (showError) {
             var self = this;
 
+            console.log('DataList: refresh -- ' + self.ws_name);
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (self.refreshTimer === null) {
@@ -224,6 +225,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         reloadWsData: function () {
             var self = this;
+            console.log('DataList: reloadWsData');
             if (self.ws_name && self.ws) {
                 // empty the existing object list first
                 self.objectList = [];
@@ -235,6 +237,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         getNextDataChunk: function (skip) {
             var self = this;
+            console.log('getNextDataChunk - ' + skip);
             self.ws.list_objects({
                 workspaces: [self.ws_name],
                 includeMetadata: 1,
@@ -1518,8 +1521,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             this.ws = new Workspace(this.options.ws_url, auth);
             this.my_user_id = auth.user_id;
             this.isLoggedIn = true;
-            if (this.ws_name)
-                this.refresh();
+            this.refresh();
             return this;
         },
         /**

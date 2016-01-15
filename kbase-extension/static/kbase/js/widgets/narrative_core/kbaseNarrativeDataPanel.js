@@ -81,7 +81,7 @@ function($, _, Config) {
             var $dataList = $('<div>');
             this.body().append($dataList);
             this.dataListWidget = 
-                $dataList["kbaseNarrativeDataList"](
+                $dataList.kbaseNarrativeDataList(
                     {
                         ws_name: this.ws_name,
                         parentControlPanel: this

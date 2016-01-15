@@ -1,4 +1,4 @@
-/*global define,IPython*/
+/*global define,Jupyter*/
 /*jslint white: true*/
 /**
 * @author Michael Sneddon <mwsneddon@lbl.gov>
@@ -587,13 +587,13 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                         .addClass('form-control')
                         .val(object_info[1])
                         .on('focus', function () {
-                            if (IPython && IPython.narrative) {
-                                IPython.narrative.disableKeyboardManager();
+                            if (Jupyter && Jupyter.narrative) {
+                                Jupyter.narrative.disableKeyboardManager();
                             }
                         })
                         .on('blur', function () {
-                            if (IPython && IPython.narrative) {
-                                IPython.narrative.enableKeyboardManager();
+                            if (Jupyter && Jupyter.narrative) {
+                                Jupyter.narrative.enableKeyboardManager();
                             }
                         });
                     $alertContainer.append($('<div>')
@@ -672,15 +672,15 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                             })));
                 });
 
-            if (!IPython.narrative.readonly) {
+            if (!Jupyter.narrative.readonly) {
                 $btnToolbar.append($filterMethodInput)
                            .append($filterMethodOutput);
             }
             $btnToolbar.append($openLandingPage);
-            if (!IPython.narrative.readonly)
+            if (!Jupyter.narrative.readonly)
                 $btnToolbar.append($openHistory);
             $btnToolbar.append($openProvenance);
-            if (!IPython.narrative.readonly) {
+            if (!Jupyter.narrative.readonly) {
                 $btnToolbar.append($download)
                     .append($rename)
                     .append($delete);
@@ -874,7 +874,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                     cell = $(e.target.previousSibling).data().cell;
                     placement = 'below';
                 }
-                cellIndex = IPython.notebook.find_cell_index(cell);
+                cellIndex = Jupyter.notebook.find_cell_index(cell);
 
                 $(document).trigger('createViewerCell.Narrative', {
                     nearCellIdx: cellIndex,
@@ -963,10 +963,10 @@ function ($, _, Config, StringUtil, DisplayUtil) {
 
         insertViewer: function (key) {
             var self = this;
-            var cell = IPython.notebook.get_selected_cell();
+            var cell = Jupyter.notebook.get_selected_cell();
             var near_idx = 0;
             if (cell) {
-                near_idx = IPython.notebook.find_cell_index(cell);
+                near_idx = Jupyter.notebook.find_cell_index(cell);
                 $(cell.element).off('dblclick');
                 $(cell.element).off('keydown');
             }
@@ -1082,13 +1082,12 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                     }
                     self.attachRow(i);
                 }
-                this.$addDataButton.toggle(!(IPython.narrative && IPython.narrative.readonly === true));
+                this.$addDataButton.toggle(!(Jupyter.narrative && Jupyter.narrative.readonly === true));
             } else {
-                // todo: show an upload button or some other message if there are no elements
                 var $noDataDiv = $('<div>')
                     .css({'text-align': 'center', 'margin': '20pt'})
                     .append('This Narrative has no data yet.<br><br>');
-                if (IPython && IPython.narrative && !IPython.narrative.readonly) {
+                if (Jupyter && Jupyter.narrative && !Jupyter.narrative.readonly) {
                     $noDataDiv.append($("<button>")
                         .append('Add Data')
                         .addClass('kb-data-list-add-data-text-button')
@@ -1246,13 +1245,13 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             self.$searchInput = $('<input type="text">')
                 .addClass('form-control')
                 .on('focus', function () {
-                    if (IPython && IPython.narrative) {
-                        IPython.narrative.disableKeyboardManager();
+                    if (Jupyter && Jupyter.narrative) {
+                        Jupyter.narrative.disableKeyboardManager();
                     }
                 })
                 .on('blur', function () {
-                    if (IPython && IPython.narrative) {
-                        IPython.narraive.enableKeyboardManager();
+                    if (Jupyter && Jupyter.narrative) {
+                        Jupyter.narraive.enableKeyboardManager();
                     }
                 });
             self.$searchDiv = $('<div>').addClass("input-group").css({'margin-bottom': '10px'})

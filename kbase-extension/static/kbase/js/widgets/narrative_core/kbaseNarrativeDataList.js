@@ -237,7 +237,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         getNextDataChunk: function (skip) {
             var self = this;
-            console.log('getNextDataChunk - ' + skip);
+            console.log('DataList: getNextDataChunk - ' + skip);
             self.ws.list_objects({
                 workspaces: [self.ws_name],
                 includeMetadata: 1,
@@ -245,6 +245,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 limit: self.options.ws_chunk_size
             },
                 function (infoList) {
+                    console.log('DataList: getNextDataChunk return');
+                    console.log(infoList);
                     // object_info:
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
                     // [3] : timestamp save_date // [4] : int version // [5] : username saved_by

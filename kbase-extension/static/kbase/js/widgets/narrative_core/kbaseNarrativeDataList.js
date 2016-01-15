@@ -125,10 +125,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 self.refresh();
             })
 
-            this.showLoading();
             if (this.options.ws_name) {
                 this.ws_name = this.options.ws_name;
-                // this.setWorkspace(this.options.ws_name);
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
@@ -1516,8 +1514,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
          * @private
          */
         loggedInCallback: function (event, auth) {
+            console.log('DataList: loggedInCallback');
             this.ws = new Workspace(this.options.ws_url, auth);
-            //this.user_profile = new UserProfile(this.options.user_profile_url, auth);
             this.my_user_id = auth.user_id;
             this.isLoggedIn = true;
             if (this.ws_name)

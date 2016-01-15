@@ -187,10 +187,14 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                             self.$mainListDiv.empty();
                             self.$mainListDiv.append($('<div>').css({'color': '#F44336', 'margin': '10px'})
                                 .append('Error: Unable to connect to KBase data.'));
-                            self.hideLoading();
                         }
+                        self.hideLoading();
                     });
             } else {
+                console.error('DataList: missing variable(s)');
+                console.error('ws_name: ' + self.ws_name);
+                console.error('ws: ' + self.ws);
+                self.hideLoading();
                 /*Not really an error yet because we don't know what order things are being called
                  var where = "kbaseNarrativeDataList.refresh";
                  if (!self.ws) {

@@ -92,17 +92,17 @@ require.config({
          ***/
         'kbaseDefaultNarrativeInput'            : 'kbase/js/widgets/function_input/kbaseDefaultNarrativeInput',
         'kbaseBuildMediaInput'                  : 'kbase/js/widgets/function_input/kbaseBuildMediaInput',
-        'rastGenomeImportInput'                 : 'kbase/js/widgets/function_input/rastGenomeImportInput', 
-        'kbaseNcbiGenomeImportInput'            : 'kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput', 
+        'rastGenomeImportInput'                 : 'kbase/js/widgets/function_input/rastGenomeImportInput',
+        'kbaseNcbiGenomeImportInput'            : 'kbase/js/widgets/function_input/kbaseNcbiGenomeImportInput',
         'kbaseTabbedInput'                      : 'kbase/js/widgets/function_input/kbaseTabbedInput',
         'create_metagenome_set'                 : 'kbase/js/widgets/function_input/create_metagenome_set',
         'kbStandaloneListSelect'                : 'kbase/js/widgets/function_input/kbStandaloneListselect',
         'devVizSelector'                        : 'kbase/js/widgets/function_input/devDataViz',
-            
+
         'kbaseGrowthParamsPlotInput'            : 'kbase/js/widgets/function_input/kbaseGrowthParamsPlotInput',
-        'kbaseGrowthParams2DPlotInput'          : 'kbase/js/widgets/function_input/kbaseGrowthParams2DPlotInput', 
-        'kbaseWellSampleHistogramInput'         : 'kbase/js/widgets/function_input/kbaseWellSampleHistogramInput', 
-        'kbaseWellSample2DPlotInput'            : 'kbase/js/widgets/function_input/kbaseWellSample2DPlotInput', 
+        'kbaseGrowthParams2DPlotInput'          : 'kbase/js/widgets/function_input/kbaseGrowthParams2DPlotInput',
+        'kbaseWellSampleHistogramInput'         : 'kbase/js/widgets/function_input/kbaseWellSampleHistogramInput',
+        'kbaseWellSample2DPlotInput'            : 'kbase/js/widgets/function_input/kbaseWellSample2DPlotInput',
 
         'kbaseNarrativeParameterCustomTextSubdataInput' :  'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomTextSubdataInput',
         'kbaseNarrativeParameterCustomButtonInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomButtonInput',
@@ -178,7 +178,7 @@ require.config({
         'kbaseExpressionMatrix'                 : 'kbase/js/widgets/function_output/kbaseExpressionMatrix',
         'kbaseExpressionGenesetBaseWidget'      : 'kbase/js/widgets/function_output/kbaseExpressionGenesetBaseWidget',
         'kbaseExpressionHeatmap'                : 'kbase/js/widgets/function_output/kbaseExpressionHeatmap',
-        'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',    
+        'kbaseExpressionSparkline'              : 'kbase/js/widgets/function_output/kbaseExpressionSparkline',
         'kbaseExpressionPairwiseCorrelation'    : 'kbase/js/widgets/function_output/kbaseExpressionPairwiseCorrelation',
         'kbaseExpressionEstimateK'              : 'kbase/js/widgets/function_output/kbaseExpressionEstimateK',
         'kbaseExpressionClusterSet'             : 'kbase/js/widgets/function_output/kbaseExpressionClusterSet',
@@ -204,6 +204,7 @@ require.config({
         'kbaseRNASeqPie'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqPie',
         'kbaseRNASeqAnalysis'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqAnalysis',
         'kbaseRNASeqSample'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqSample',
+        'kbaseButtonControls'                        : 'kbase/js/ui-common/src/widgets/kbaseButtonControls',
         'kbaseRNASeqHistogram'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqHistogram',
         'kbaseCummerbundPlot'                        : 'kbase/js/ui-common/src/widgets/kbaseCummerbundPlot',
         'kbaseExpressionSampleTable'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTable',
@@ -246,7 +247,7 @@ require.config({
             deps : ['jquery', 'jquery-dataTables', 'bootstrap']
         },
         'kbaseNarrativeAppCell' : {
-            deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell', 
+            deps : ['kbaseNarrativeMethodCell', 'kbaseNarrativeOutputCell',
                     'kbaseNarrativeCellMenu']
         },
         'kbaseNarrativeMethodCell' : {

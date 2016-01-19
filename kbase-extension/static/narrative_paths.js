@@ -205,6 +205,7 @@ require.config({
         'kbaseRNASeqAnalysis'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqAnalysis',
         'kbaseRNASeqSample'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqSample',
         'kbaseButtonControls'                        : 'kbase/js/ui-common/src/widgets/kbaseButtonControls',
+        'kbaseSearchControls'                        : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
         'kbaseRNASeqHistogram'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqHistogram',
         'kbaseCummerbundPlot'                        : 'kbase/js/ui-common/src/widgets/kbaseCummerbundPlot',
         'kbaseExpressionSampleTable'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTable',

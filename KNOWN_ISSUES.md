@@ -10,4 +10,5 @@ Last updated 1/14/2016, 2:36pm
   * Missing Jupyter menu bar [KBASE-3371](https://atlassian.kbase.us/browse/KBASE-3371)
   * Opening new narrative and clicking "share" on top-right results in two "Rename Narrative" dialogs on top of one another. Share tooltip doesn't dismiss when clicking outside of tooltip.
   * Missing the 'narrative_version' file that should be available at *.kbase.us/narrative_version
-  * Missing the same hash file that should be inside the Narrative image.
+  * ~~Missing the same hash file that should be inside the Narrative image.~~
+  * Entering a narrative can be started with multiple cells already selected (should be just the first one or none. probably none.)

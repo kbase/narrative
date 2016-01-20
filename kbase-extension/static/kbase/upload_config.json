@@ -384,7 +384,6 @@
         }
     },
 
-
     "KBaseFeatureValues.ExpressionMatrix": {
         "import_expression_tsv_file": {
             "external_type" : "TSV.Expression",
@@ -425,6 +424,81 @@
                     "type" : "shock",
                     "param" : "expressionFile",
                     "optional" : false
+                }
+            }
+        }
+    },
+
+    "KBaseEnigmaMetals.GrowthMatrix": {
+        "import_growth_tsv_file": {
+            "external_type": "TSV.Growth",
+            "kbase_type": "KBaseEnigmaMetals.GrowthMatrix",
+            "object_name": "outputObject",
+            "optional_arguments": {
+                "validate": {},
+                "transform": {
+                    "format_type": {
+                        "type": "string",
+                        "value": "Simple",
+                        "optional": false
+                    }
+                }
+            },
+            "url_mapping": {
+                "TSV.Growth": {
+                    "type": "shock",
+                    "param": "growthFile",
+                    "optional": false
+                }
+            }
+        }
+    },
+
+    "KBaseEnigmaMetals.ChromatographyMatrix": {
+        "import_chromatography_tsv_file": {
+            "external_type": "TSV.Chromatography",
+            "kbase_type": "KBaseEnigmaMetals.ChromatographyMatrix",
+            "object_name": "outputObject",
+            "optional_arguments": {
+                "validate": {},
+                "transform": {
+                    "format_type": {
+                        "type": "string",
+                        "value": "Simple",
+                        "optional": false
+                    }
+                }
+            },
+            "url_mapping": {
+                "TSV.Chromatography": {
+                    "type": "shock",
+                    "param": "chromatographyFile",
+                    "optional": false
+                }
+            }
+        }
+    },
+
+    "KBaseEnigmaMetals.WellSampleMatrix": {
+        "import_wellsample_tsv_file": {
+            "external_type": "TSV.WellSample",
+            "kbase_type": "KBaseEnigmaMetals.WellSampleMatrix",
+            "object_name": "outputObject",
+            "optional_arguments": {
+                "validate": {},
+                "transform": {
+                    "format_type": {
+                        "type": "string",
+                        "value" : "Simple",
+                        "optional": false
+                    }
+                }
+            },
+            "url_mapping": {
+                "TSV.WellSample": {
+                    "type": "shock",
+                    "param": "wellSampleFile",
+                    "optional": false
                 }
             }
         }

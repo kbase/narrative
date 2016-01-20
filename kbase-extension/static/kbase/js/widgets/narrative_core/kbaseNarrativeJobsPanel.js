@@ -199,7 +199,7 @@ function($,
         /**
          * @method
          * Initializes the jobStates object that the panel knows about.
-         * We treat the IPython.notebook.metadata.job_ids as a (more or less) read-only 
+         * We treat the Jupyter.notebook.metadata.job_ids as a (more or less) read-only 
          * object for the purposes of loading and refreshing.
          * 
          * At load time, that gets adapted into the jobStates object, which is used to
@@ -208,9 +208,9 @@ function($,
         initJobStates: function() {
             if (this.jobStates === null)
                 this.jobStates = {};
-            if (IPython.notebook && IPython.notebook.metadata && IPython.notebook.metadata.job_ids) {
+            if (Jupyter.notebook && Jupyter.notebook.metadata && Jupyter.notebook.metadata.job_ids) {
                 // this is actually like: ['apps': [list of app jobs], 'methods':[list of method jobs]
-                var jobIds = IPython.notebook.metadata.job_ids;
+                var jobIds = Jupyter.notebook.metadata.job_ids;
                 for (var jobType in jobIds) {
                     if (!(jobIds[jobType] instanceof Array))
                         continue;
@@ -308,7 +308,7 @@ function($,
                 store_history: false
             };
 
-            IPython.notebook.kernel.execute(deleteJobCmd, callbacks, executeOptions);
+            Jupyter.notebook.kernel.execute(deleteJobCmd, callbacks, executeOptions);
         },
 
         /**
@@ -334,14 +334,14 @@ function($,
             }
 
             // first, wipe the metadata
-            var appIds = IPython.notebook.metadata.job_ids.apps;
+            var appIds = Jupyter.notebook.metadata.job_ids.apps;
             appIds = appIds.filter(function(val) { return val.id !== jobId });
-            IPython.notebook.metadata.job_ids.apps = appIds;
+            Jupyter.notebook.metadata.job_ids.apps = appIds;
 
             // ...and from the method list
-            var methodIds = IPython.notebook.metadata.job_ids.methods;
+            var methodIds = Jupyter.notebook.metadata.job_ids.methods;
             methodIds = methodIds.filter(function(val) { return val.id !== jobId });
-            IPython.notebook.metadata.job_ids.methods = methodIds;
+            Jupyter.notebook.metadata.job_ids.methods = methodIds;
 
             // remove it from the 'cache' in this jobs panel
             delete this.source2Job[this.jobStates[jobId].source];
@@ -351,7 +351,7 @@ function($,
             this.removeId = null;
             
             // save the narrative!
-            IPython.notebook.save_checkpoint();
+            Jupyter.notebook.save_checkpoint();
 
 
             this.refresh(false);
@@ -397,30 +397,30 @@ function($,
          */
         registerJob: function(jobInfo, isApp) {
             // Check to make sure the Narrative has been instantiated to begin with.
-            if (!IPython || !IPython.notebook || !IPython.notebook.kernel || !IPython.notebook.metadata)
+            if (!Jupyter || !Jupyter.notebook || !Jupyter.notebook.kernel || !Jupyter.notebook.metadata)
                 return;
 
             // If the job ids hasn't been inited yet, or it was done in the old way (as an array) then do it.
-            if (!IPython.notebook.metadata.job_ids || 
-                Object.prototype.toString.call(IPython.notebook.metadata.job_ids) === '[object Array]') {
-                IPython.notebook.metadata.job_ids = {
+            if (!Jupyter.notebook.metadata.job_ids || 
+                Object.prototype.toString.call(Jupyter.notebook.metadata.job_ids) === '[object Array]') {
+                Jupyter.notebook.metadata.job_ids = {
                     'methods' : [],
                     'apps' : []
                 };
             }
             // Double-check that it has the right properties
-            if (!IPython.notebook.metadata.job_ids['methods'])
-                IPython.notebook.metadata.job_ids['methods'] = [];
-            if (!IPython.notebook.metadata.job_ids['apps'])
-                IPython.notebook.metadata.job_ids['apps'] = [];
+            if (!Jupyter.notebook.metadata.job_ids['methods'])
+                Jupyter.notebook.metadata.job_ids['methods'] = [];
+            if (!Jupyter.notebook.metadata.job_ids['apps'])
+                Jupyter.notebook.metadata.job_ids['apps'] = [];
 
             var type = isApp ? 'apps' : 'methods';
-            IPython.notebook.metadata.job_ids[type].push(jobInfo);
+            Jupyter.notebook.metadata.job_ids[type].push(jobInfo);
             // put a stub in the job states
             this.jobStates[jobInfo.id] = $.extend({}, jobInfo, {'status' : null, '$elem' : 'null'});
             this.source2Job[jobInfo.source] = jobInfo.id;
             // save the narrative!
-            IPython.notebook.save_checkpoint();
+            Jupyter.notebook.save_checkpoint();
 
             this.refresh();
         },
@@ -476,23 +476,23 @@ function($,
                 );
             }
 
-            // If none of the base IPython stuff shows up, then it's not inited yet.
+            // If none of the base Jupyter stuff shows up, then it's not inited yet.
             // Just return silently.
-            if (!IPython || !IPython.notebook || !IPython.notebook.kernel || 
-                !IPython.notebook.metadata)
+            if (!Jupyter || !Jupyter.notebook || !Jupyter.notebook.kernel || 
+                !Jupyter.notebook.metadata)
                 return;
 
             // If we don't have any job ids, or it's length is zero, just show a 
             // message and return.
-            if (!IPython.notebook.metadata.job_ids || 
-                IPython.notebook.metadata.job_ids.length === 0 ||
+            if (!Jupyter.notebook.metadata.job_ids || 
+                Jupyter.notebook.metadata.job_ids.length === 0 ||
                 Object.keys(this.jobStates).length === 0) {
                 this.populateJobsPanel();
                 return;
             }
 
             // If we're in readonly mode, don't lookup job info.
-            if (!IPython.narrative || IPython.narrative.readonly === true) {
+            if (!Jupyter.narrative || Jupyter.narrative.readonly === true) {
                 return;
             }
 
@@ -586,7 +586,7 @@ function($,
                 store_history: false
             };
 
-            IPython.notebook.kernel.execute(pollJobsCommand, callbacks, executeOptions);
+            Jupyter.notebook.kernel.execute(pollJobsCommand, callbacks, executeOptions);
         },
 
         /**
@@ -610,7 +610,7 @@ function($,
 
         /** 
          * @method
-         * Generic callback handler for the IPython kernel.
+         * Generic callback handler for the Jupyter kernel.
          */
         handleCallback: function(call, content) {
             if (content.status === 'error') {
@@ -986,25 +986,25 @@ function($,
                 if (compTime && startTime) {
                     runTime = new Date(compTime) - new Date(startTime);
                 }
-                if (IPython.notebook.metadata.job_ids.job_usage) {
-                    IPython.notebook.metadata.job_ids.job_usage.run_time += runTime;
-                    IPython.notebook.metadata.job_ids.job_usage.queue_time += queueTime;
+                if (Jupyter.notebook.metadata.job_ids.job_usage) {
+                    Jupyter.notebook.metadata.job_ids.job_usage.run_time += runTime;
+                    Jupyter.notebook.metadata.job_ids.job_usage.queue_time += queueTime;
                 }
                 else {
-                    IPython.notebook.metadata.job_ids.job_usage = {
+                    Jupyter.notebook.metadata.job_ids.job_usage = {
                         run_time : runTime,
                         queue_time : queueTime
                     };
                 }
                 // I kinda hate how I did this to begin with, but here's the least-resistant path.
                 // We basically have to search. Lame.
-                for (var i=0; i<IPython.notebook.metadata.job_ids.apps.length; i++) {
-                    if (IPython.notebook.metadata.job_ids.apps[i].id === jobId)
-                        IPython.notebook.metadata.job_ids.apps[i] = jobState;
+                for (var i=0; i<Jupyter.notebook.metadata.job_ids.apps.length; i++) {
+                    if (Jupyter.notebook.metadata.job_ids.apps[i].id === jobId)
+                        Jupyter.notebook.metadata.job_ids.apps[i] = jobState;
                 }
-                for (var i=0; i<IPython.notebook.metadata.job_ids.methods.length; i++) {
-                    if (IPython.notebook.metadata.job_ids.methods[i].id === jobId)
-                        IPython.notebook.metadata.job_ids.methods[i] = jobState;
+                for (var i=0; i<Jupyter.notebook.metadata.job_ids.methods.length; i++) {
+                    if (Jupyter.notebook.metadata.job_ids.methods[i].id === jobId)
+                        Jupyter.notebook.metadata.job_ids.methods[i] = jobState;
                 }
             }
         },
@@ -1196,7 +1196,7 @@ function($,
                 this.$errorPanel.append($('<div>').append(error));
             }
 
-            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            // If it's an object, expect an error object as returned by the execute_reply callback from the Jupyter kernel.
             else if (typeof error === 'object') {
                 var $details = $('<div>');
                 $details.append($('<div>').append('<b>Type:</b> ' + error.ename))

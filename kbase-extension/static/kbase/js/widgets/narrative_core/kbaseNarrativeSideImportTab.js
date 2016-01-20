@@ -10,13 +10,15 @@ define(['jquery',
         'kbwidget', 
         'kbaseAuthenticatedWidget', 
         'select2',
-        'json!kbase/upload_config.json'], 
+        'json!kbase/upload_config.json',
+        'Util/String'], 
 function($,
          Config,
          kbwidget,
          kbaseAuthenticatedWidget,
          select2,
-         transformConfig) {
+         transformConfig,
+         StringUtil) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeSideImportTab",
@@ -56,8 +58,8 @@ function($,
             var self = this;
             this.inputWidget = {};
             this.tabs = {};
-            var errorModalId = "app-error-modal-" + self.uuid();
-            var modalLabel = "app-error-modal-lablel-" + self.uuid();
+            var errorModalId = "app-error-modal-" + StringUtil.uuid();
+            var modalLabel = "app-error-modal-lablel-" + StringUtil.uuid();
 
             // Build error modal
             self.$errorModalContent = $('<div>');
@@ -333,7 +335,7 @@ function($,
 
             // These are the 'delete' and 'run' buttons for the cell
 
-            var methodUuid = 'import-method-details-'+this.uuid();
+            var methodUuid = 'import-method-details-'+StringUtil.uuid();
             var buttonLabel = 'details';
             var methodTitle = methodSpec.info.tooltip.trim();
             var methodDescr = this.methodFullInfo[methodId].description.trim();
@@ -620,7 +622,6 @@ function($,
                     self.showInfo("Sending data...", true);
                     uploaderClient.upload(args,
                         $.proxy(function(data) {
-                            console.log(data);
                             self.waitForJob(data[1], callback);
                         }, this),
                         $.proxy(function(error) {
@@ -966,15 +967,6 @@ function($,
             this.token = null;
             this.render();
             return this;
-        },
-        
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                }
-            );
         }
     });
 });

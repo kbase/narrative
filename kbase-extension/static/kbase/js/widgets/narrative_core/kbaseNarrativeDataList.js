@@ -1,4 +1,4 @@
-/*global define,IPython*/
+/*global define,Jupyter*/
 /*jslint white: true*/
 /**
 * @author Michael Sneddon <mwsneddon@lbl.gov>
@@ -93,7 +93,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             this.$elem.append(this.$controllerDiv);
             this.renderController();
             this.$loadingDiv = $('<div>').addClass('kb-data-loading')
-                .append('<img src="' + this.options.loadingImage + '">');
+                .append('<img src="' + this.options.loadingImage + '">')
+                .hide();
             this.$elem.append(this.$loadingDiv);
             this.mainListId = StringUtil.uuid();
             this.$mainListDiv = $('<div id=' + this.mainListId + '>')
@@ -124,9 +125,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 self.refresh();
             })
 
-            this.showLoading();
             if (this.options.ws_name) {
-                this.setWorkspace(this.options.ws_name);
+                this.ws_name = this.options.ws_name;
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
@@ -135,13 +135,14 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         setWorkspace: function (ws_name) {
             this.ws_name = ws_name;
-            //this.ws_name = "janakacore"; // for testing a bigish workspace
+            // this.ws_name = "janakacore"; // for testing a bigish workspace
             //this.ws_name = "KBasePublicGenomesV4"; // for testing a very big workspace
             this.refresh();
         },
         refresh: function (showError) {
             var self = this;
 
+            console.log('DataList: refresh -- ' + self.ws_name);
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (self.refreshTimer === null) {
@@ -185,10 +186,14 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                             self.$mainListDiv.empty();
                             self.$mainListDiv.append($('<div>').css({'color': '#F44336', 'margin': '10px'})
                                 .append('Error: Unable to connect to KBase data.'));
-                            self.hideLoading();
                         }
+                        self.hideLoading();
                     });
             } else {
+                console.error('DataList: missing variable(s)');
+                console.error('ws_name: ' + self.ws_name);
+                console.error('ws: ' + self.ws);
+                self.hideLoading();
                 /*Not really an error yet because we don't know what order things are being called
                  var where = "kbaseNarrativeDataList.refresh";
                  if (!self.ws) {
@@ -220,6 +225,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         reloadWsData: function () {
             var self = this;
+            console.log('DataList: reloadWsData');
             if (self.ws_name && self.ws) {
                 // empty the existing object list first
                 self.objectList = [];
@@ -231,6 +237,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         getNextDataChunk: function (skip) {
             var self = this;
+            console.log('DataList: getNextDataChunk - ' + skip);
             self.ws.list_objects({
                 workspaces: [self.ws_name],
                 includeMetadata: 1,
@@ -238,6 +245,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 limit: self.options.ws_chunk_size
             },
                 function (infoList) {
+                    console.log('DataList: getNextDataChunk return');
+                    console.log(infoList);
                     // object_info:
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
                     // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
@@ -578,13 +587,13 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                         .addClass('form-control')
                         .val(object_info[1])
                         .on('focus', function () {
-                            if (IPython && IPython.narrative) {
-                                IPython.narrative.disableKeyboardManager();
+                            if (Jupyter && Jupyter.narrative) {
+                                Jupyter.narrative.disableKeyboardManager();
                             }
                         })
                         .on('blur', function () {
-                            if (IPython && IPython.narrative) {
-                                IPython.narrative.enableKeyboardManager();
+                            if (Jupyter && Jupyter.narrative) {
+                                Jupyter.narrative.enableKeyboardManager();
                             }
                         });
                     $alertContainer.append($('<div>')
@@ -663,15 +672,15 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                             })));
                 });
 
-            if (!IPython.narrative.readonly) {
+            if (!Jupyter.narrative.readonly) {
                 $btnToolbar.append($filterMethodInput)
                            .append($filterMethodOutput);
             }
             $btnToolbar.append($openLandingPage);
-            if (!IPython.narrative.readonly)
+            if (!Jupyter.narrative.readonly)
                 $btnToolbar.append($openHistory);
             $btnToolbar.append($openProvenance);
-            if (!IPython.narrative.readonly) {
+            if (!Jupyter.narrative.readonly) {
                 $btnToolbar.append($download)
                     .append($rename)
                     .append($delete);
@@ -865,7 +874,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                     cell = $(e.target.previousSibling).data().cell;
                     placement = 'below';
                 }
-                cellIndex = IPython.notebook.find_cell_index(cell);
+                cellIndex = Jupyter.notebook.find_cell_index(cell);
 
                 $(document).trigger('createViewerCell.Narrative', {
                     nearCellIdx: cellIndex,
@@ -954,10 +963,10 @@ function ($, _, Config, StringUtil, DisplayUtil) {
 
         insertViewer: function (key) {
             var self = this;
-            var cell = IPython.notebook.get_selected_cell();
+            var cell = Jupyter.notebook.get_selected_cell();
             var near_idx = 0;
             if (cell) {
-                near_idx = IPython.notebook.find_cell_index(cell);
+                near_idx = Jupyter.notebook.find_cell_index(cell);
                 $(cell.element).off('dblclick');
                 $(cell.element).off('keydown');
             }
@@ -1073,13 +1082,12 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                     }
                     self.attachRow(i);
                 }
-                this.$addDataButton.toggle(!(IPython.narrative && IPython.narrative.readonly === true));
+                this.$addDataButton.toggle(!(Jupyter.narrative && Jupyter.narrative.readonly === true));
             } else {
-                // todo: show an upload button or some other message if there are no elements
                 var $noDataDiv = $('<div>')
                     .css({'text-align': 'center', 'margin': '20pt'})
                     .append('This Narrative has no data yet.<br><br>');
-                if (IPython && IPython.narrative && !IPython.narrative.readonly) {
+                if (Jupyter && Jupyter.narrative && !Jupyter.narrative.readonly) {
                     $noDataDiv.append($("<button>")
                         .append('Add Data')
                         .addClass('kb-data-list-add-data-text-button')
@@ -1237,13 +1245,13 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             self.$searchInput = $('<input type="text">')
                 .addClass('form-control')
                 .on('focus', function () {
-                    if (IPython && IPython.narrative) {
-                        IPython.narrative.disableKeyboardManager();
+                    if (Jupyter && Jupyter.narrative) {
+                        Jupyter.narrative.disableKeyboardManager();
                     }
                 })
                 .on('blur', function () {
-                    if (IPython && IPython.narrative) {
-                        IPython.narraive.enableKeyboardManager();
+                    if (Jupyter && Jupyter.narrative) {
+                        Jupyter.narraive.enableKeyboardManager();
                     }
                 });
             self.$searchDiv = $('<div>').addClass("input-group").css({'margin-bottom': '10px'})
@@ -1510,12 +1518,11 @@ function ($, _, Config, StringUtil, DisplayUtil) {
          * @private
          */
         loggedInCallback: function (event, auth) {
+            console.log('DataList: loggedInCallback');
             this.ws = new Workspace(this.options.ws_url, auth);
-            //this.user_profile = new UserProfile(this.options.user_profile_url, auth);
             this.my_user_id = auth.user_id;
             this.isLoggedIn = true;
-            if (this.ws_name)
-                this.refresh();
+            this.refresh();
             return this;
         },
         /**

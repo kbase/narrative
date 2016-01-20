@@ -55,7 +55,7 @@
     <script>
       require.config({
           {% if version_hash %}
-          urlArgs: "v={{version_hash}}",
+          // urlArgs: "v={{version_hash}}",
           {% endif %}
           baseUrl: '{{static_url("", include_version=False)}}',
           paths: {

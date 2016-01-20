@@ -10,13 +10,15 @@ define(['jquery',
         'kbwidget', 
         'kbaseAuthenticatedWidget', 
         'select2',
-        'json!kbase/upload_config.json'], 
+        'json!kbase/upload_config.json',
+        'Util/String'], 
 function($,
          Config,
          kbwidget,
          kbaseAuthenticatedWidget,
          select2,
-         transformConfig) {
+         transformConfig,
+         StringUtil) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeSideImportTab",
@@ -620,7 +622,6 @@ function($,
                     self.showInfo("Sending data...", true);
                     uploaderClient.upload(args,
                         $.proxy(function(data) {
-                            console.log(data);
                             self.waitForJob(data[1], callback);
                         }, this),
                         $.proxy(function(error) {

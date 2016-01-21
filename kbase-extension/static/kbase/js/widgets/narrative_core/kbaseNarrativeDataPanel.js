@@ -13,7 +13,6 @@
  *
  * Triggers events:
  * dataUpdated.Narrative - when the loaded data table gets updated.
- * workspaceUpdated.Narrative - when the current workspace ID gets updated
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
@@ -125,9 +124,6 @@ function($, _, Config) {
                 this)
             );
 
-            if (this.ws_name)
-                this.trigger('workspaceUpdated.Narrative', this.ws_name);
-
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
@@ -209,7 +205,6 @@ function($, _, Config) {
          * @public
          */
         refresh: function() {
-//            this.dataListWidget.refresh();
             return;
         },
 
@@ -1270,10 +1265,6 @@ function($, _, Config) {
                 return self.options.lp_url+ws+'/'+name;
             }
 
-            function wsURL(ws) {
-                return ''; // no more links to WS Browser
-            }
-
             var monthLookup = ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"];
             // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
             function getTimeStampStr(objInfoTimeStamp) {
@@ -1322,16 +1313,16 @@ function($, _, Config) {
             };
         },
 
-        isCustomIcon: function (icon_list) {
-            return (icon_list.length > 0 && icon_list[0].length > 4 &&
-            icon_list[0].substring(0, 4) == 'icon');
-        },
+        // isCustomIcon: function (icon_list) {
+        //     return (icon_list.length > 0 && icon_list[0].length > 4 &&
+        //     icon_list[0].substring(0, 4) == 'icon');
+        // },
 
-        logoColorLookup:function(type) {
-            var code = 0;
-            for (var i=0; i < type.length; code += type.charCodeAt(i++));
-            return this.icon_colors[ code % this.icon_colors.length ];
-        },
+        // logoColorLookup:function(type) {
+        //     var code = 0;
+        //     for (var i=0; i < type.length; code += type.charCodeAt(i++));
+        //     return this.icon_colors[ code % this.icon_colors.length ];
+        // },
 
         currentWsIsTemp: function() {
             this.$myDataHeader.empty();

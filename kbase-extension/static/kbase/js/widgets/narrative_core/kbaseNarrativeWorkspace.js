@@ -110,13 +110,6 @@ function($,
                 }, this)
             );
 
-            $(document).on('workspaceUpdated.Narrative',
-                $.proxy(function(e, ws_id) {
-                    this.ws_id = ws_id;
-                },
-                this)
-            );
-
             $(document).on('dataUpdated.Narrative',
                 $.proxy(function(event) {
                     if (IPython && IPython.notebook) {

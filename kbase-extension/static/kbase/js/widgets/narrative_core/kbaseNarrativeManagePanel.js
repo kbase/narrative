@@ -175,8 +175,8 @@ function($,
                                     if (objList[i] !== null && objList[i][2].indexOf('KBaseNarrative.Narrative') === 0) {
                                         self.allNarData[i].nar_info = objList[i];
                                     } else {
-                                        console.error('Corrupted Workspace: ');
-                                        console.error('Searching for narrative: ', narRefsToLookup[i], ' but got: ', objList[i]);
+                                        // console.error('Corrupted Workspace: ');
+                                        // console.error('Searching for narrative: ', narRefsToLookup[i], ' but got: ', objList[i]);
                                         self.allNarData[i].error = true;
                                         (function (errorIndex) {
                                             self.ws.get_object_info_new({objects: [narRefsToLookup[errorIndex]], includeMetadata: 1, ignoreErrors: 0},
@@ -202,7 +202,7 @@ function($,
                                 self.renderPanel();
                             },
                             function (error) {
-                                console.error(error);
+                                // console.error(error);
                             });
                     },
                     function (error) {

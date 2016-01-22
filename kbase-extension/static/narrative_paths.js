@@ -7,7 +7,7 @@ require.config({
         plotly                                  : 'ext_components/plotly.js/dist/plotly.min',
         util                                    : 'kbase/js/util/',
         configPath                              : 'kbase',
-        narrativeViewers                        : 'kbase/js/widgets/narrative_core/NarrativeViewers',
+        narrativeViewers                        : 'kbase/js/widgets/narrative_core/narrativeViewers',
         'domReady'                              : 'ext_components/requirejs/domReady',
         'json'                                  : 'ext_components/requirejs-json/json',
         'text'                                  : 'ext_components/requirejs-text/text',

@@ -207,14 +207,9 @@ function($, _, Config, Clients) {
         if (_.isEmpty(o.meta)) {
             mdDesc += "No metadata";
         } else {
-            mdDesc += "Metadata\n";
-            this.prev = false;
+            mdDesc += "Metadata";
             _.each(_.pairs(o.meta), function (p) {
-                if (this.prev) {
-                    mdDesc += "\n";
-                }
-                mdDesc += p[0] += ": " + p[1];
-                this.prev = true;
+                mdDesc += '\n' + p[0] + ': ' + p[1];
             });
         }
         return $('<div>').append($('<pre>').append(mdDesc));

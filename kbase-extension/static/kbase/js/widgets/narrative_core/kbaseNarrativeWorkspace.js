@@ -103,7 +103,7 @@ function($,
 
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
-            $([IPython.events]).on('notebook_loaded.Notebook',
+            $([Jupyter.events]).on('notebook_loaded.Notebook',
                 $.proxy(function() {
                     this.rebindActionButtons();
                     this.hideGeneratedCodeCells();
@@ -112,7 +112,7 @@ function($,
 
             $(document).on('dataUpdated.Narrative',
                 $.proxy(function(event) {
-                    if (IPython && IPython.notebook) {
+                    if (Jupyter && Jupyter.notebook) {
                         // XXX: This is a hell of a hack. I hate
                         // using the 'first time' bit like this,
                         // but without some heavy rewiring, it's difficult
@@ -197,7 +197,7 @@ function($,
                       // console.debug("adding next steps in create");
                       params.next_steps = data.next_steps;
                     }
-                    this.createOutputCell(IPython.notebook.get_cell(cellIndex),
+                    this.createOutputCell(Jupyter.notebook.get_cell(cellIndex),
                                           params);
                 }, this)
             );
@@ -281,10 +281,10 @@ function($,
                     type : 'danger',
                     callback : $.proxy(function(e, $prompt) {
                         if (this.cellToDelete !== undefined && this.cellToDelete !== null) {
-                            var cell = IPython.notebook.get_cell(this.cellToDelete);
+                            var cell = Jupyter.notebook.get_cell(this.cellToDelete);
                             var removeId = $(cell.element).find('[id^=kb-cell-]').attr('id');
                             this.trigger('cancelJobCell.Narrative', removeId, false);
-                            IPython.notebook.delete_cell(this.cellToDelete);
+                            Jupyter.notebook.delete_cell(this.cellToDelete);
                             this.cellToDelete = null;
                         }
                         $prompt.closePrompt();
@@ -314,7 +314,7 @@ function($,
          * @public
          */
         buildMethodCell: function(method) {
-            var cell = IPython.notebook.insert_cell_below('markdown');
+            var cell = Jupyter.notebook.insert_cell_below('markdown');
             // cell.celltoolbar.hide();
 
             // make this a function input cell, as opposed to an output cell
@@ -322,7 +322,7 @@ function($,
 
             // THIS IS WRONG! FIX THIS LATER!
             // But it should work for now... nothing broke up to this point, right?
-            var cellIndex = IPython.notebook.ncells() - 1;
+            var cellIndex = Jupyter.notebook.ncells() - 1;
             var cellId = 'kb-cell-' + cellIndex + '-' + StringUtil.uuid();
 
             // The various components are HTML STRINGS, not jQuery objects.
@@ -364,7 +364,7 @@ function($,
                 (data.method.behavior.script_module)) {
                 showOutput = false;
             }
-            // old, pre-njs style where the methods were all living in IPython-land
+            // old, pre-njs style where the methods were all living in Jupyter-land
             if (data.method.behavior.python_class && data.method.behavior.python_function) {
                 code = this.buildRunCommand(data.method.behavior.python_class, data.method.behavior.python_function, data.parameters);
             }
@@ -415,11 +415,11 @@ function($,
             };
 
             $(data.cell.element).find('#kb-func-progress').css({'display': 'block'});
-            IPython.notebook.kernel.execute(code, callbacks, executeOptions);
+            Jupyter.notebook.kernel.execute(code, callbacks, executeOptions);
         },
 
         buildAppCell: function(appSpec) {
-            var cell = IPython.notebook.insert_cell_below('markdown');
+            var cell = Jupyter.notebook.insert_cell_below('markdown');
             // cell.celltoolbar.hide();
             this.removeCellEditFunction(cell);
 
@@ -429,7 +429,7 @@ function($,
             cell.render();
 
             this.setAppCell(cell, appSpec);
-            var cellIndex = IPython.notebook.ncells() - 1;
+            var cellIndex = Jupyter.notebook.ncells() - 1;
             var cellId = 'kb-cell-' + cellIndex + '-' + StringUtil.uuid();
 
             // The various components are HTML STRINGS, not jQuery objects.
@@ -482,7 +482,7 @@ function($,
             // };
 
             var code = this.buildAppCommand(data.appSpec, data.methodSpecs, data.parameters);
-            IPython.notebook.kernel.execute(code, callbacks, executeOptions);
+            Jupyter.notebook.kernel.execute(code, callbacks, executeOptions);
         },
 
         buildAppCommand: function(appSpec, methodSpecs, parameters) {
@@ -551,8 +551,8 @@ function($,
          * @private
          */
         refreshFunctionInputs: function(fullRender) {
-            if (IPython && IPython.notebook) {
-                var cells = IPython.notebook.get_cells();
+            if (Jupyter && Jupyter.notebook) {
+                var cells = Jupyter.notebook.get_cells();
                 for (var i=0; i<cells.length; i++) {
                     var cell = cells[i];
                     if (this.isFunctionCell(cell)) {
@@ -625,14 +625,14 @@ function($,
             // remove its double-click and return functions. sneaky!
             $(cell.element).off('dblclick');
             $(cell.element).off('keydown');
-            $(cell.element).on('click', function() { IPython.narrative.disableKeyboardManager(); });
+            $(cell.element).on('click', function() { Jupyter.narrative.disableKeyboardManager(); });
         },
 
         /**
          * @method bindActionButtons
          * Binds the action (delete and run) buttons of a function cell.
          * This requires the cell to have {'kb-cell' : 'function'} in its metadata, otherwise it's ignored.
-         * @param cell - the IPython Notebook cell with buttons to be bound.
+         * @param cell - the Jupyter Notebook cell with buttons to be bound.
          * @private
          */
         bindActionButtons: function(cell) {
@@ -747,7 +747,7 @@ function($,
                     '#kb-ipy-menu',                         // kernel
                     '.kb-app-panel .pull-right',            // app icons
                     '.kb-func-panel .pull-right',           // method icons
-                    '.celltoolbar .button_container',       // ipython icons
+                    '.celltoolbar .button_container',       // Jupyter icons
                     '.kb-title .btn-toolbar .btn .fa-arrow-right', // data panel slideout
             ];
         },
@@ -905,8 +905,8 @@ function($,
                 $('.navbar-right > button')[0].remove();
                 // re-enable clicking on narrative name
                 $('#name').click(function (e) {
-                    if (IPython && IPython.save_widget) {
-                        IPython.save_widget.rename_notebook("Rename your Narrative.", true);
+                    if (Jupyter && Jupyter.save_widget) {
+                        Jupyter.save_widget.rename_notebook("Rename your Narrative.", true);
                     }
                 });
                 // re-enable auto-save status
@@ -1019,7 +1019,7 @@ function($,
          * @private
          */
         hideGeneratedCodeCells: function() {
-            var cells = IPython.notebook.get_cells();
+            var cells = Jupyter.notebook.get_cells();
             for (var i=0; i<cells.length; i++) {
                 var cell = cells[i];
                 if (this.isFunctionCodeCell(cell))
@@ -1231,7 +1231,7 @@ function($,
          * @public
          */
         getNarrativeDependencies: function() {
-            var cells = IPython.notebook.get_cells();
+            var cells = Jupyter.notebook.get_cells();
             var deps = {};
             // For each cell in the Notebook
             $.each(cells, $.proxy(function(idx, cell) {
@@ -1260,7 +1260,7 @@ function($,
          */
         updateNarrativeDependencies: function() {
             var deps = this.getNarrativeDependencies();
-            IPython.notebook.metadata.data_dependencies = deps;
+            Jupyter.notebook.metadata.data_dependencies = deps;
         },
 
         /**
@@ -1410,7 +1410,7 @@ function($,
          * @public
          */
         saveAllCellStates: function() {
-            var cells = IPython.notebook.get_cells();
+            var cells = Jupyter.notebook.get_cells();
             $.each(cells, $.proxy(function(idx, cell) {
                 this.saveCellState(cell);
             }, this));
@@ -1421,7 +1421,7 @@ function($,
          * @public
          */
         loadAllRecentCellStates: function() {
-            var cells = IPython.notebook.get_cells();
+            var cells = Jupyter.notebook.get_cells();
             $.each(cells, $.proxy(function(idx, cell) {
                 this.loadRecentCellState(cell);
             }, this));
@@ -1455,7 +1455,7 @@ function($,
                 function(event) {
                     event.preventDefault();
                     // get the cell
-                    var cell = IPython.notebook.get_selected_cell();
+                    var cell = Jupyter.notebook.get_selected_cell();
 
                     // get a 'handle' (really just the invocable name) of the input widget
                     var inputWidget = cell.metadata[self.KB_CELL].method.properties.widgets.input || self.defaultInputWidget;
@@ -1482,7 +1482,7 @@ function($,
          */
         deleteCell: function(index) {
             if (index !== undefined && index !== null) {
-                var cell = IPython.notebook.get_cell(index);
+                var cell = Jupyter.notebook.get_cell(index);
                 if (cell) {
                     // if it's a kbase method or app cell, trigger a popup
                     if (cell.metadata[this.KB_CELL]) {
@@ -1498,7 +1498,7 @@ function($,
                         }
 
                         if (state === 'input') {
-                            IPython.notebook.delete_cell(index);
+                            Jupyter.notebook.delete_cell(index);
                             return;
                         }
                         else {
@@ -1536,7 +1536,7 @@ function($,
                             // }
                         }
                     } else {
-                        IPython.notebook.delete_cell(index);
+                        Jupyter.notebook.delete_cell(index);
                     }
                 }
             }
@@ -1551,8 +1551,8 @@ function($,
             return(
                 function(event) {
                     event.preventDefault();
-                    var idx = IPython.notebook.get_selected_index();
-                    IPython.notebook.delete_cell(idx);
+                    var idx = Jupyter.notebook.get_selected_index();
+                    Jupyter.notebook.delete_cell(idx);
                 }
             );
         },
@@ -1567,13 +1567,13 @@ function($,
          * @public
          */
         rebindActionButtons: function() {
-            if (!(IPython && IPython.notebook))
+            if (!(Jupyter && Jupyter.notebook))
                 return;
 
-            // Rewrite the following to iterate using the IPython cell
+            // Rewrite the following to iterate using the Jupyter cell
             // based methods instead of DOM objects
 
-            var cells = IPython.notebook.get_cells();
+            var cells = Jupyter.notebook.get_cells();
 
             // not using $.each because its namespacing kinda screws things up.
             for (var i=0; i<cells.length; i++) {
@@ -1602,7 +1602,7 @@ function($,
         runCell: function() {
             var self = this;
             return function(cell, service, method, params) {
-                var nb = IPython.notebook;
+                var nb = Jupyter.notebook;
                 var currentIndex = nb.get_selected_index();
 
                 // var callbacks = {
@@ -1659,12 +1659,12 @@ function($,
         },
 
         /**
-         * Stitches together the command needed to run a method in the IPython kernel.
+         * Stitches together the command needed to run a method in the Jupyter kernel.
          * It is assumed that params is a list, with all values in the right order.
          * @param {String} service - the registered service name
          * @param {String} method - the registered method name
          * @param {Array} params - a list of parameter values
-         * @returns {String} the constructed IPython kernel command
+         * @returns {String} the constructed Jupyter kernel command
          * @private
          */
         buildRunCommand: function(service, method, params) {
@@ -1773,7 +1773,7 @@ function($,
             }
             this.showCellProgress(cell, "DONE", 0, 0);
             //this.set_input_prompt(content.execution_count);
-            $([IPython.events]).trigger('set_dirty.Notebook', {value: true});
+            $([Jupyter.events]).trigger('set_dirty.Notebook', {value: true});
         },
         /**
          * @method _handle_set_next_input
@@ -1781,7 +1781,7 @@ function($,
          */
         handleSetNextInput: function (cell, text) {
             var data = {'cell': this, 'text': text}
-            $([IPython.events]).trigger('set_next_input.Notebook', data);
+            $([Jupyter.events]).trigger('set_next_input.Notebook', data);
         },
         /**
          * @method _handle_input_request
@@ -2059,8 +2059,8 @@ function($,
                 outputType = 'error';
             }
 
-            var outputCell = isError ? this.addErrorCell(IPython.notebook.find_cell_index(cell), widget) :
-                                       this.addOutputCell(IPython.notebook.find_cell_index(cell), widget);
+            var outputCell = isError ? this.addErrorCell(Jupyter.notebook.find_cell_index(cell), widget) :
+                                       this.addOutputCell(Jupyter.notebook.find_cell_index(cell), widget);
 
             var uuid = StringUtil.uuid();
             var outCellId = 'kb-cell-out-' + uuid;
@@ -2086,8 +2086,8 @@ function($,
                 }
             }
             this.resetProgress(cell);
-            if (IPython && IPython.narrative)
-                IPython.narrative.saveNarrative();
+            if (Jupyter && Jupyter.narrative)
+                Jupyter.narrative.saveNarrative();
             this.trigger('updateData.Narrative');
             return outCellId;
         },
@@ -2152,7 +2152,7 @@ function($,
          * @method resetProgress
          * @private
          * Resets the progress bar in the given cell to not show any progress or progress message.
-         * @param cell - the IPython notebook cell to reset.
+         * @param cell - the Jupyter notebook cell to reset.
          */
         resetProgress: function(cell) {
             var $progressBar = $(cell.element).find("#kb-func-progress .kb-cell-progressbar .progress-bar");
@@ -2165,7 +2165,7 @@ function($,
         /**
          * @method showCellProgress
          *
-         * Shows current progress in a running IPython function.
+         * Shows current progress in a running Jupyter function.
          * @param cell - the cell being run
          * @param name - the text of the progress to set
          * @param done - the number of steps finished.
@@ -2206,11 +2206,11 @@ function($,
             var cell;
             switch (placement) {
                 case 'above':
-                    cell = IPython.notebook.insert_cell_above('markdown', currentIndex);
+                    cell = Jupyter.notebook.insert_cell_above('markdown', currentIndex);
                     break;
                 case 'below':
                 default: 
-                    var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
+                    var cell = Jupyter.notebook.insert_cell_below('markdown', currentIndex);
             }
             // cell.celltoolbar.hide();
             this.setOutputCell(cell, widget);
@@ -2220,7 +2220,7 @@ function($,
         },
 
         addErrorCell: function(currentIndex) {
-            var cell = IPython.notebook.insert_cell_below('markdown', currentIndex);
+            var cell = Jupyter.notebook.insert_cell_below('markdown', currentIndex);
             // cell.celltoolbar.hide();
             this.setErrorCell(cell);
             this.removeCellEditFunction(cell);
@@ -2295,7 +2295,7 @@ function($,
         render: function() {
             this.rebindActionButtons();
             this.hideGeneratedCodeCells();
-            var cells = IPython.notebook.get_cells();
+            var cells = Jupyter.notebook.get_cells();
             for (var i=0; i<cells.length; i++) {
                 this.checkCellMetadata(cells[i]);
             }
@@ -2385,7 +2385,7 @@ function($,
          * 2. More to come!
          */
         scanAndUpdateCells: function() {
-            var cells = IPython.notebook.get_cells();
+            var cells = Jupyter.notebook.get_cells();
             for (var i=0; i<cells.length; i++) {
                 var cell = cells[i];
                 if (this.isFunctionCell(cell)) {

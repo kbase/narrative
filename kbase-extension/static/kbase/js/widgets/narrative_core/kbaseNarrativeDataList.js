@@ -90,10 +90,10 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             this.$controllerDiv = $('<div>');
             this.$elem.append(this.$controllerDiv);
             this.renderController();
-            this.$loadingDiv = $('<div>').addClass('kb-data-loading')
-                .append('<img src="' + this.options.loadingImage + '">')
-                .hide();
-            this.$elem.append(this.$loadingDiv);
+            // this.$loadingDiv = $('<div>').addClass('kb-data-loading')
+            //     .append('<img src="' + this.options.loadingImage + '">')
+            //     .hide();
+            // this.$elem.append(this.$loadingDiv);
             this.mainListId = StringUtil.uuid();
             this.$mainListDiv = $('<div id=' + this.mainListId + '>')
                 .css({'overflow-x': 'hidden', 'overflow-y': 'auto', 'height': this.mainListPanelHeight})
@@ -966,7 +966,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 'widget': 'kbaseNarrativeDataCell',
                 'info': info
             });
-
         },
         renderMore: function () {
             var self = this;

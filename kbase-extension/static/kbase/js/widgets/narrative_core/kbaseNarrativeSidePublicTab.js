@@ -327,6 +327,9 @@ function($, Config) {
         	jQuery.ajax(url, {
         		success: function (data) {
         			ret(query, data);
+                    console.log('SEARCH');
+                    console.log(query);
+                    console.log(data);
         			promise.resolve();
         		},
         		error: function(jqXHR, error){

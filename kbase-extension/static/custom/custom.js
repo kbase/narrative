@@ -506,9 +506,9 @@ define(['jquery',
                     //$(cell.element)
                      //   .trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
                     
-                    if (cell.getCellState('selected')) {
-                        cell.select();
-                    }
+                    // if (cell.getCellState('selected')) {
+                    //     cell.select();
+                    // }
                     
                     cell.renderToggleState();
                 }

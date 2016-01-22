@@ -18,7 +18,7 @@
         "profile_page": "/functional-site/#/people/", 
         "protein_info": "", 
         "reset_password": "https://gologin.kbase.us/ResetPassword", 
-        "search": "https://kbase.us/services/search/getResults", 
+        "search": "https://ci.kbase.us/services/search/getResults", 
         "shock": "https://ci.kbase.us/services/shock-api", 
         "status_page": "http://kbase.us/internal/status/", 
         "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=Narrative%20version", 

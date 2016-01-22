@@ -24,11 +24,9 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             ws_name: null, // must be the WS name, not the WS Numeric ID
 
             ws_url: Config.url('workspace'),
-            landing_page_url: "/functional-site/#/", // !! always include trailing slash
             lp_url: Config.url('landing_pages'),
             profile_page_url: Config.url('profile_page'),
 
-            user_name_fetch_url: "https://kbase.us/services/genome_comparison/users?usernames=",
             loadingImage: Config.get('loading_gif'),
             methodStoreURL: Config.url('narrative_method_store'), 
 
@@ -133,12 +131,12 @@ function ($, _, Config, StringUtil, DisplayUtil) {
 
             return this;
         },
-        setWorkspace: function (ws_name) {
-            this.ws_name = ws_name;
-            // this.ws_name = "janakacore"; // for testing a bigish workspace
-            //this.ws_name = "KBasePublicGenomesV4"; // for testing a very big workspace
-            this.refresh();
-        },
+        // setWorkspace: function (ws_name) {
+        //     this.ws_name = ws_name;
+        //     // this.ws_name = "janakacore"; // for testing a bigish workspace
+        //     //this.ws_name = "KBasePublicGenomesV4"; // for testing a very big workspace
+        //     this.refresh();
+        // },
         refresh: function (showError) {
             var self = this;
 
@@ -187,13 +185,13 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                             self.$mainListDiv.append($('<div>').css({'color': '#F44336', 'margin': '10px'})
                                 .append('Error: Unable to connect to KBase data.'));
                         }
-                        self.hideLoading();
+                        // self.hideLoading();
                     });
             } else {
                 console.error('DataList: missing variable(s)');
                 console.error('ws_name: ' + self.ws_name);
                 console.error('ws: ' + self.ws);
-                self.hideLoading();
+                // self.hideLoading();
                 /*Not really an error yet because we don't know what order things are being called
                  var where = "kbaseNarrativeDataList.refresh";
                  if (!self.ws) {
@@ -329,7 +327,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
 
                     self.populateAvailableTypes();
                     self.renderList();
-                    self.hideLoading();
+                    // self.hideLoading();
                 },
                 function (error) {
                     console.error(error);
@@ -339,7 +337,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                     self.$mainListDiv.empty();
                     self.$mainListDiv.append($('<div>').css({'color': '#F44336', 'margin': '10px'})
                         .append('Error: ' + error.error.message));
-                    self.hideLoading();
+                    // self.hideLoading();
                 });
 
         },
@@ -545,7 +543,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 .click(function (e) {
                     e.stopPropagation();
                     $alertContainer.empty();
-                    window.open(self.options.landing_page_url + 'objgraphview/' + object_info[7] + '/' + object_info[1]);
+                    window.open('/#objgraphview/' + object_info[7] + '/' + object_info[1]);
                 });
             var $download = $('<span>')
                 .addClass(btnClasses).css(css)
@@ -740,7 +738,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 $byUser.append(' by ' + object_info[5])
                     .click(function (e) {
                         e.stopPropagation();
-                        window.open(self.options.landing_page_url + 'people/' + object_info[5]);
+                        window.open('/#people/' + object_info[5]);
                     });
             }
             var metadata = object_info[10];
@@ -760,8 +758,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             DisplayUtil.displayRealName(object_info[5], $savedByUserSpan);
 
             var $alertDiv = $('<div>').css({'text-align': 'center', 'margin': '10px 0px'});
-            var typeLink = '<a href="' + this.options.landing_page_url + 'spec/module/' + type_module + '" target="_blank">' + type_module + "</a>.<wbr>" +
-                '<a href="' + this.options.landing_page_url + 'spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
+            var typeLink = '<a href="/#spec/module/' + type_module + '" target="_blank">' + type_module + "</a>.<wbr>" +
+                '<a href="/#spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
             var $moreRow = $('<div>').addClass("kb-data-list-more-div").hide()
                 .append($('<div>').css({'text-align': 'center', 'margin': '5pt'})
                     .append(self.addDataControls(object_info, $alertDiv)).append($alertDiv))
@@ -1063,7 +1061,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         renderList: function () {
             var self = this;
-            self.showLoading();
+            // self.showLoading();
 
             self.detachAllRows();
 
@@ -1100,7 +1098,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 self.$mainListDiv.append($noDataDiv);
             }
 
-            self.hideLoading();
+            // self.hideLoading();
         },
         renderController: function () {
             var self = this;
@@ -1355,7 +1353,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             self.renderList();
             self.search();
 
-            self.hideLoading();
+            // self.hideLoading();
         },
         sortData: function (sortfunction) {
             var self = this;
@@ -1363,13 +1361,13 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 return;
             }
             //should add spinning wait bar ....
-            self.showLoading();
+            // self.showLoading();
 
             self.objectList.sort(sortfunction);
             self.renderList();
             self.search();  // always refilter on the search term search if there is something there
 
-            self.hideLoading();
+            // self.hideLoading();
 
             // go back to the top on sort
             self.$mainListDiv.animate({
@@ -1501,14 +1499,14 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             var $usernameTd = $moreRow.find(".kb-data-list-username-td");
             DisplayUtil.displayRealName(object_info[5], $usernameTd);
         },
-        showLoading: function () {
-            this.$loadingDiv.show();
-            this.$mainListDiv.hide();
-        },
-        hideLoading: function () {
-            this.$loadingDiv.hide();
-            this.$mainListDiv.show();
-        },
+        // showLoading: function () {
+        //     this.$loadingDiv.show();
+        //     this.$mainListDiv.hide();
+        // },
+        // hideLoading: function () {
+        //     this.$loadingDiv.hide();
+        //     this.$mainListDiv.show();
+        // },
 
         /**
          * @method loggedInCallback

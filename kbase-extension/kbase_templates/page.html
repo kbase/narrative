@@ -54,6 +54,7 @@
     <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
       require.config({
+          waitSeconds: 60,
           {% if version_hash %}
           urlArgs: "v={{version_hash}}",
           {% endif %}

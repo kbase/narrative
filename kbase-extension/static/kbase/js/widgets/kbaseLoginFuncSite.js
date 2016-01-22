@@ -52,7 +52,7 @@ define([
     'jquery',
     'narrativeConfig',
     'kbase-client-api',
-    'jquery_cookie',
+    'jqueryCookie',
     'kbwidget',
     'kbasePrompt',
     'bootstrap'

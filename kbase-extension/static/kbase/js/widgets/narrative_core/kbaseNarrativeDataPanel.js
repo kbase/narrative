@@ -1062,7 +1062,7 @@ function($, _, Config) {
                 });
 
 
-                var $refreshBtnDiv = $('<div>').addClass('col-sm-1').append(
+                var $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align':'center'}).append(
                                         $('<button>')
                                             .css({'margin-top':'12px'})
                                             .addClass('btn btn-xs btn-default')

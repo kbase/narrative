@@ -678,7 +678,6 @@ function($,
                     // from the workspace, make the narrative visible!
                     if (this.first_readonly) {
                         // show narrative by removing overlay
-                        $('#kb-wait-for-ws').remove();
                         this.first_readonly = false;
                     }
                 }

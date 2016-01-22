@@ -423,6 +423,7 @@ function($,
         else {
             KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');
         }
+        $('#kb-wait-for-ws').remove();
     };
 
     /**

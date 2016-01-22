@@ -17,7 +17,8 @@ Last updated 1/14/2016, 2:36pm
   * Narrative panel: buttons in "corrupted" narratives still exist on mouseover, but have no function or icon
   * Narrative panel: clicking the "link" button doesn't dismiss tooltip.
   * Narrative panel: "My Narratives" and "Shared with Me" headings should be collapsible.
-  * 404 on Safari's "Click to enter narrative" space in the loading page.
+  * ~~404 on Safari's "Click to enter narrative" space in the loading page.~~
   * .ver.## in URL seems to be ignored (probably for the best right now)
-  * Data Panel: Shared With Me refresh button has bad offset
+  * ~~Data Panel: Shared With Me refresh button has bad offset~~
   * Method outputs can be inserted in seemingly random places
+  * Data viewer with unknown type needs some TLC.

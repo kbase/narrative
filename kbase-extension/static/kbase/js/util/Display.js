@@ -7,7 +7,7 @@
  */
 define(['jquery',
         'narrativeConfig',
-        'Util/TimeFormat',
+        'util/timeFormat',
         'kbase-client-api'],
 function($,
          Config,

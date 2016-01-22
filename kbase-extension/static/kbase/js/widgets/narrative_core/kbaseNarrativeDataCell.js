@@ -12,7 +12,7 @@
 define(['jquery',
     'underscore',
     'narrativeConfig',
-    'NarrativeViewers',
+    'narrativeViewers',
     'kbwidget',
     'kbaseNarrativeCell'
 ], function ($, _, Config, Viewers) {

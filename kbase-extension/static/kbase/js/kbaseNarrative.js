@@ -19,7 +19,7 @@ define([
     'ipythonCellMenu',
     'base/js/events',
     'notebook/js/notebook',
-    'Util/Display'
+    'util/display'
 ], 
 function($,
          Config,

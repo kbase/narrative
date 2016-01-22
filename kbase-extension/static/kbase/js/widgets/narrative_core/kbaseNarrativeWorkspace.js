@@ -21,8 +21,8 @@
 define(['jquery', 
         'underscore',
         'narrativeConfig',
-        'Util/BootstrapDialog',
-        'Util/String',
+        'util/bootstrapDialog',
+        'util/string',
         'jquery-nearest',
         'kbwidget', 
         'bootstrap', 
@@ -192,7 +192,7 @@ function($,
                 $.proxy(function(event, data) {
                     var cellIndex = $('#'+data.cellId).nearest('.cell').index();
                     var params = {'embed' : true,
-                                  'data': this.safeJSONStringify(data.result)};
+                                  'data': StringUtil.safeJSONStringify(data.result)};
                     if (data.next_steps) {
                       // console.debug("adding next steps in create");
                       params.next_steps = data.next_steps;
@@ -330,7 +330,7 @@ function($,
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + this.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
+                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
                               "</script>";
 
             cell.set_text(cellContent);
@@ -437,7 +437,7 @@ function($,
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                              "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + this.safeJSONStringify(appSpec) + "', 'cellId' : '" + cellId + "'});" +
+                              "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + StringUtil.safeJSONStringify(appSpec) + "', 'cellId' : '" + cellId + "'});" +
                               "</script>";
             cell.set_text(cellContent);
             cell.rendered = false;
@@ -487,9 +487,9 @@ function($,
 
         buildAppCommand: function(appSpec, methodSpecs, parameters) {
             console.log([appSpec, methodSpecs, parameters]);
-            var appSpecJSON = this.safeJSONStringify(appSpec);
-            var methodSpecJSON = this.safeJSONStringify(methodSpecs);
-            var paramsJSON = this.safeJSONStringify(parameters);
+            var appSpecJSON = StringUtil.safeJSONStringify(appSpec);
+            var methodSpecJSON = StringUtil.safeJSONStringify(methodSpecs);
+            var paramsJSON = StringUtil.safeJSONStringify(parameters);
 
             return "import biokbase.narrative.common.service as Service\n" +
                    "method = Service.get_service('app_service').get_method('app_call')\n" +
@@ -539,31 +539,6 @@ function($,
                     }
                 }
             }
-        },
-
-        /**
-         * Escape chars like single quotes in descriptions and titles,
-         * before rendering as a JSON string.
-         *
-         *
-         *  THIS IS NOT SAFE BECAUSE THERE ARE HARD CODED KEYS THAT ARE CHECKED!!!! -mike
-         *  It should be more safe now - **all** strings should have their quotes escaped before JSONifying them.
-         *
-         * @post This does not modify the input object.
-         * @return {string} JSON string
-         */
-        safeJSONStringify: function(method) {
-            var esc = function(s) {
-                return s.replace(/'/g, "&apos;")
-                        .replace(/"/g, "&quot;");
-            };
-            return JSON.stringify(method, function(key, value) {
-                return (typeof(value) === 'string') ? esc(value) : value;
-                // this seems not safe, since we can have many keys in the spec that are not these... -mike
-                // return (typeof(value) == "string" &&
-                //         (key == "description" || key == "title" || key=="header" || key=="tooltip" || key=="name" || key=="subtitle")) ?
-                //     esc(value) : value;
-            });
         },
 
         /**
@@ -1675,8 +1650,8 @@ function($,
         },
 
         buildGenericRunCommand: function(data) {
-            var methodJSON = this.safeJSONStringify(data.method);
-            var paramsJSON = this.safeJSONStringify(data.parameters);
+            var methodJSON = StringUtil.safeJSONStringify(data.method);
+            var paramsJSON = StringUtil.safeJSONStringify(data.parameters);
 
             return "import biokbase.narrative.common.service as Service\n" +
                    "method = Service.get_service('generic_service').get_method('method_call')\n" +
@@ -1990,7 +1965,7 @@ function($,
 
             var uuid = StringUtil.uuid();
             var outCellId = 'kb-cell-out-' + uuid;
-            var outputData = '{"data":' + this.safeJSONStringify(data) + ', ' +
+            var outputData = '{"data":' + StringUtil.safeJSONStringify(data) + ', ' +
                                '"type":"' + type + '", ' +
                                '"widget":"' + widget + '", ' +
                                '"cellId":"' + outCellId + '", ' +

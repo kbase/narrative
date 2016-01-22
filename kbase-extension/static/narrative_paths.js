@@ -5,9 +5,9 @@ require.config({
     // with this one (kbase-profile/static)
     paths : {
         plotly                                  : 'ext_components/plotly.js/dist/plotly.min',
-        Util                                    : 'kbase/js/util/',
+        util                                    : 'kbase/js/util/',
         configPath                              : 'kbase',
-        NarrativeViewers                        : 'kbase/js/widgets/narrative_core/NarrativeViewers',
+        narrativeViewers                        : 'kbase/js/widgets/narrative_core/NarrativeViewers',
         'domReady'                              : 'ext_components/requirejs/domReady',
         'json'                                  : 'ext_components/requirejs-json/json',
         'text'                                  : 'ext_components/requirejs-text/text',
@@ -70,7 +70,7 @@ require.config({
         'kbaseNarrativeParameterFileInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterFileInput',
         'kbaseNarrativeParameterTextSubdataInput' : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterTextSubdataInput',
         'kbaseNarrativeError'                   : 'kbase/js/widgets/function_output/kbaseNarrativeError',
-        'NarrativeManager'                      : 'kbase/js/api/NarrativeManager',
+        'narrativeManager'                      : 'kbase/js/api/NarrativeManager',
         'ipythonCellMenu'                       : 'kbase/js/widgets/narrative_core/ipythonCellMenu',
 
         // not yet ADMs, but still load with Require

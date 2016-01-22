@@ -5,8 +5,8 @@
  */
 define(['jquery', 
         'narrativeConfig',
-        'NarrativeManager',
-        'Util/Display',
+        'narrativeManager',
+        'util/display',
         'narrativeConfig',
         'kbwidget', 
         'kbaseNarrativeControlPanel'],

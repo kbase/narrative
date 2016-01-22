@@ -12,7 +12,7 @@
 (function( $, undefined ) {
 require(['jquery',
          'narrativeConfig',
-         'Util/String',
+         'util/string',
          'handlebars', 
          'kbwidget', 
          'kbaseAuthenticatedWidget',

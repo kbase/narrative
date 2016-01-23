@@ -135,6 +135,7 @@ function($,
             ws_name_or_id: this.getWorkspaceName()
         });
         $('#kb-share-btn').popover({
+            trigger: 'click',
             html : true,
             placement : "bottom",
             content: function() {

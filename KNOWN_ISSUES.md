@@ -20,5 +20,6 @@ Last updated 1/14/2016, 2:36pm
   * ~~404 on Safari's "Click to enter narrative" space in the loading page.~~
   * .ver.## in URL seems to be ignored (probably for the best right now)
   * ~~Data Panel: Shared With Me refresh button has bad offset~~
+  * Data panel: no placeholder text in search bar ("Search in your data" or something).
   * Method outputs can be inserted in seemingly random places
   * Data viewer with unknown type needs some TLC.

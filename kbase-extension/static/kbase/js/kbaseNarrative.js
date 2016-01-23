@@ -142,7 +142,7 @@ function($,
                 if (Jupyter && Jupyter.notebook) {
                     var narrName = Jupyter.notebook.notebook_name;
                     if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
-                        Jupyter.save_widget.rename_notebook({notebook: Jupyter.notebook}); //"Your Narrative must be named before you can share it with others.", false);
+                        // Jupyter.save_widget.rename_notebook({notebook: Jupyter.notebook}); //"Your Narrative must be named before you can share it with others.", false);
                         return "<br><br>Please name your Narrative before sharing.<br><br>"
                     }
                     Jupyter.narrative.disableKeyboardManager();

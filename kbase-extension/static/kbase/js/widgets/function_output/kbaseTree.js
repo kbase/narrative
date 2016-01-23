@@ -4,9 +4,14 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 
-        'knhx', 'widgetMaxWidthCorrection'], 
-        function($) {
+define(['jquery', 
+        'narrativeConfig',
+        'kbwidget', 
+        'kbaseAuthenticatedWidget', 
+        'knhx', 
+        'widgetMaxWidthCorrection'], 
+function($,
+         Config) {
     $.KBWidget({
         name: 'kbaseTree',
         parent: 'kbaseAuthenticatedWidget',
@@ -16,14 +21,14 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget',
             workspaceID: null,
             treeObjVer: null,
             kbCache: null,
-            workspaceURL: window.kbconfig.urls.workspace,
-            loadingImage: window.kbconfig.loading_gif,
+            workspaceURL: Config.url('workspace'),
+            loadingImage: Config.get('loading_gif'),
             height: null,
         },
 
         pref: null,
         timer: null,
-        loadingImage: window.kbconfig.loading_gif,
+        loadingImage: this.options.loadingImage,
         token: null,
 
         init: function(options) {

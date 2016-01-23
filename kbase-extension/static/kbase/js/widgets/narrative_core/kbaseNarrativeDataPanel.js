@@ -48,7 +48,6 @@ function($, _, Config) {
             loadingImage: Config.get('loading_gif'),
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: Config.url('workspace'),
-            landing_page_url: "/functional-site/#/", // !! always include trailing slash
             lp_url: Config.url('landing_pages'), 
             container: null,
             ws_name: null,
@@ -1161,7 +1160,7 @@ function($, _, Config) {
                                         .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
                                         .click(function(e) {
                                             e.stopPropagation();
-                                            window.open(self.options.landing_page_url+'objgraphview/'+object_info[7]+'/'+object_info[1]);
+                                            window.open('/#objgraphview/'+object_info[7]+'/'+object_info[1]);
                                         });
                 $btnToolbar.append($openLandingPage).append($openProvenance);
 

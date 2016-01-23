@@ -4,14 +4,18 @@
  * @public
  */
 
-define(['jquery', 
+define(['jquery',
+        'narrativeConfig',
+        'util/string',
         'kbwidget', 
         'kbaseAuthenticatedWidget', 
         'kbaseTabs', 
         'kbasePrompt',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap'], 
-        function($) {
+function($,
+         Config,
+         StringUtil) {
     $.KBWidget({
         name: "kbasePanGenome",
         parent: "kbaseAuthenticatedWidget",
@@ -19,12 +23,12 @@ define(['jquery',
         options: {
         	ws: null,
         	name: null,
-            loadingImage: window.kbconfig.loading_gif,
+            loadingImage: Config.get('loading_gif'),
             withExport: false
         },
 
         pref: null,
-        wsUrl: window.kbconfig.urls.workspace,
+        wsUrl: Config.url('workspace'),
         token: null,
         kbws: null,
         geneIndex: {},   // {genome_ref -> {feature_id -> feature_index}}
@@ -34,7 +38,7 @@ define(['jquery',
         	
         init: function(options) {
             this._super(options);
-            this.pref = this.genUUID();
+            this.pref = StringUtil.uuid();
             this.token = this.authToken();
             this.geneIndex = {};
             this.genomeNames = {};
@@ -353,7 +357,7 @@ define(['jquery',
         },
 
         buildOrthoTableLoaded: function(orth_id, genes, tab) {
-        	var pref2 = this.genUUID();
+        	var pref2 = StringUtil.uuid();
         	var self = this;
         	tab.empty();
     		var table = $('<table cellpadding="0" cellspacing="0" border="0" class="table table-bordered ' +
@@ -458,13 +462,6 @@ define(['jquery',
         	this.token = null;
         	this.render();
         	return this;
-        },
-        
-        genUUID: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);
-            });
         },
         
         showInfo: function(message) {

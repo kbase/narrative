@@ -18,7 +18,6 @@ function($, Config) {
             loadingImage: Config.get('loading_gif'),
             autorender: true,
             workspaceURL: Config.url('workspace'),
-            landingPageURL: "/functional-site/#/", // used for data importer
         },
         $dataWidget: null,
         $methodsWidget: null,

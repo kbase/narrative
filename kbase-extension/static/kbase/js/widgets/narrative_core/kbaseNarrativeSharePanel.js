@@ -20,7 +20,7 @@ function($, Config) {
             ws_url: Config.url('workspace'),
             user_profile_url: Config.url('user_profile'),
             loadingImage: Config.get('loading_gif'),
-            user_page_link:"/functional-site/#/people/",
+            user_page_link: Config.url('profile_page'),
             ws_name_or_id: null,
             max_name_length: 35,
             max_list_height: '250px',

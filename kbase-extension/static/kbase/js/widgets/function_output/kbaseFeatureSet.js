@@ -6,13 +6,15 @@
 'use strict';
 
 define(['jquery',
+        'narrativeConfig',
         'kbwidget',
         'kbaseAuthenticatedWidget', 
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',
         'knhx', 
         'widgetMaxWidthCorrection'], 
-        function($) {
+function($, 
+         Config) {
     $.KBWidget({
         name: 'kbaseFeatureSet',
         parent: 'kbaseAuthenticatedWidget',
@@ -20,11 +22,9 @@ define(['jquery',
         options: {
             featureset_name: null,
             workspaceName: null,
-            wsURL: window.kbconfig.urls.workspace,
-            loadingImage: "static/kbase/images/ajax-loader.gif"
+            wsURL: Config.url('workspace'),
+            loadingImage: Config.get('loading_gif'),
         },
-
-        loadingImage: "static/kbase/images/ajax-loader.gif",
 
         init: function(options) {
             this._super(options);
@@ -151,11 +151,11 @@ define(['jquery',
 
                                     self.featureTableData.push(
                                             {
-                                                fid: '<a href="functional-site/#/dataview/'+
+                                                fid: '<a href="/#dataview/'+
                                                             featureData[0].info[6]+'/'+featureData[0].info[1]+
                                                             '?sub=Feature&subid='+g.features[f].id + '" target="_blank">'+
                                                             g.features[f].id+'</a>',
-                                                gid: '<a href="functional-site/#/dataview/'+
+                                                gid: '<a href="/#dataview/'+
                                                         featureData[0].info[6]+'/'+featureData[0].info[1]+
                                                         '" target="_blank">'+featureData[0].info[1]+"</a>",
                                                 ali: aliases,
@@ -275,14 +275,6 @@ define(['jquery',
         hideMessage: function() {
             this.$messagePane.hide();
             this.$messagePane.empty();
-        },
-
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
         },
 
         loggedInCallback: function(event, auth) {

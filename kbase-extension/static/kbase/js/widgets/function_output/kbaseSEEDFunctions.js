@@ -7,19 +7,25 @@
  * will adapt this to work with the KBase SEED annotations
  */
 
- (function( $, undefined ) {
+define(['jquery',
+        'narrativeConfig',
+        'kbwidget',
+        'd3'],
+function($,
+         Config) {
+
     $.KBWidget({
         name: "KBaseSEEDFunctions",
         parent: "kbaseAuthenticatedWidget",
         version: "1.0.0",
 
-        wsUrl:window.kbconfig.urls.workspace,
+        wsUrl: Config.url('workspace'),
 
         options: {
             objNameOrId: null,
             wsNameOrId: null,
             objVer: null,
-            loadingImage: "assets/img/loading.gif",
+            loadingImage: Config.get('loading_gif'),
             kbCache:null,         
             width:900         
         },
@@ -93,7 +99,7 @@
 
             //d3.text("assets/data/subsys.txt", function(text) {
             //d3.text("/static/subsys.txt", function(text) {
-            d3.text("/functional-site/assets/data/subsys.txt", function(text) {
+            d3.text("/modules/plugins/dataview/resources/data/subsys.txt", function(text) {
                 var data = d3.tsv.parseRows(text);
                 var totalGenesWithFunctionalRoles = 0;
 
@@ -274,7 +280,7 @@
 
         // open window with gene landing page
         if (d.children === undefined || (d._children === null && d.children === null)) {
-        var winPop = window.open("/functional-site/#/genes/" + this.options.wsNameOrId + "/" + this.options.objNameOrId + "/" + d.name);
+        var winPop = window.open("/#genes/" + this.options.wsNameOrId + "/" + this.options.objNameOrId + "/" + d.name);
         }
         
         // expand tree
@@ -381,4 +387,4 @@
         }
 
     });
-})( jQuery );
+});

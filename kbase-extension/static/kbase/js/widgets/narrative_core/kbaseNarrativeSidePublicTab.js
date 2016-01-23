@@ -22,7 +22,6 @@ function($,
             $importStatus:$('<div>'),
         	addToNarrativeButton: null,
         	selectedItems: null,
-        	landing_page_url: "/functional-site/#/", // !! always include trailing slash
         	lp_url: Config.url('landing_pages'),
 		    ws_name: null
         },
@@ -389,7 +388,7 @@ function($,
                                         .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
                                         .click(function(e) {
                                             e.stopPropagation();
-                                            window.open(self.options.landing_page_url+'objgraphview/'+object.ws+'/'+object.id);
+                                            window.open('/#objgraphview/'+object.ws+'/'+object.id);
                                         });
             $btnToolbar.append($openLandingPage).append($openProvenance);
 

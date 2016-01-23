@@ -31,7 +31,7 @@ function($,
         options: {
             method: null,
             cellId: null,
-            methodHelpLink: '/functional-site/#/narrativestore/method/'
+            methodHelpLink: '/#/narrativestore/method/'
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -95,7 +95,7 @@ function($,
                     this.submittedText = '&nbsp;&nbsp; submitted on ' + this.readableTimestamp();
                     if(this.auth()) {
                         if(this.auth().user_id)
-                            this.submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
+                            this.submittedText += ' by <a href="/#people/'+this.auth().user_id
                                 +'" target="_blank">' + this.auth().user_id + "</a>";
                     }
                     console.log('** submitted' + (new Date()).getTime());

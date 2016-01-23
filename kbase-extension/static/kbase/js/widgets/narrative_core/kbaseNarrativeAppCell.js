@@ -13,13 +13,16 @@
 
 (function( $, undefined ) {
   require(['jquery',
-           'narrativeConfig', 
+           'narrativeConfig',
+           'util/string',
            'kbwidget',
            'kbaseAuthenticatedWidget',
            'kbaseAccordion',
            'kbaseNarrativeOutputCell'
            ], 
-           function($, Config) {
+  function($, 
+           Config,
+           StringUtil) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeAppCell",
@@ -31,8 +34,8 @@
             loadingImage: Config.get('loading_gif'),
             methodStoreURL: Config.url('narrative_method_store'),
 
-            appHelpLink: '/functional-site/#/narrativestore/app/',
-            methodHelpLink: '/functional-site/#/narrativestore/method/'
+            appHelpLink: '/#narrativestore/app/',
+            methodHelpLink: '/#narrativestore/method/'
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -186,7 +189,7 @@
                                       var submittedText = "&nbsp;&nbsp; submitted on "+this.readableTimestamp(new Date().getTime());
                                       if(this.auth()) {
                                           if(this.auth().user_id)
-                                              submittedText += ' by <a href="/functional-site/#/people/'+this.auth().user_id
+                                              submittedText += ' by <a href="/#people/'+this.auth().user_id
                                                                       +'" target="_blank">' + this.auth().user_id + "</a>";
                                       }
                                       this.$submitted.html(submittedText);
@@ -385,7 +388,7 @@
 
             // First setup the Input widget header
             var $inputWidgetDiv = $("<div>");
-            var methodId = stepSpec.info.id + '-step-details-' + this.genUUID();
+            var methodId = stepSpec.info.id + '-step-details-' + StringUtil.uuid();
             var buttonLabel = 'details';
             var methodDesc = stepSpec.info.subtitle;
             var $header = $('<div>').css({'margin-top':'4px'})
@@ -1020,8 +1023,8 @@
 
         initErrorModal: function() {
             var self=this;
-            var errorModalId = "app-error-modal-"+ self.genUUID();
-            var modalLabel = "app-error-modal-lablel-"+ self.genUUID();
+            var errorModalId = "app-error-modal-"+ StringUtil.uuid();
+            var modalLabel = "app-error-modal-lablel-"+ StringUtil.uuid();
             self.$errorModalContent = $('<div>');
             self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true">').addClass("modal fade");
             self.$errorModal.append(
@@ -1047,13 +1050,6 @@
                     this.inputSteps[i].widget.refresh();
                 }
             }
-        },
-
-        genUUID: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);
-            });
         },
 
          /**

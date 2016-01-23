@@ -6,10 +6,12 @@
  * @author Bill Riehl wjriehl@lbl.gov
  */
 define(['jquery',
+        'bluebird',
         'narrativeConfig',
         'util/timeFormat',
         'kbase-client-api'],
 function($,
+         Promise,
          Config,
          TimeFormat) {
     'use strict';
@@ -20,7 +22,7 @@ function($,
 
     function lookupUserProfile (username) {
         if (!cachedUserIds[username]) {
-            cachedUserIds[username] = profileClient.get_user_profile([username]);
+            cachedUserIds[username] = Promise.resolve(profileClient.get_user_profile([username]));
         }
         return cachedUserIds[username];
     }
@@ -30,7 +32,7 @@ function($,
      * displayRealName
      */
     function displayRealName (username, $target) {
-        lookupUserProfile(username).always(function(profile) {
+        lookupUserProfile(username).then(function(profile) {
             var usernameLink = '<a href="' + profilePageUrl + username + '" target="_blank">' + username + '</a>';
 
             if (profile && profile[0] && profile[0].user) {
@@ -39,7 +41,8 @@ function($,
                     usernameLink = name + ' (' + usernameLink + ')';
             }
             $target.html(usernameLink);
-        });
+        })
+        .catch(function(err) { console.log(err); });
     }
 
     /**

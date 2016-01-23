@@ -6,10 +6,13 @@
  * @public
  */
 define(['jquery',
+        'bluebird',
         'narrativeConfig',
         'kbwidget',
         'kbaseAuthenticatedWidget'],
-function($, Config) {
+function($, 
+         Promise, 
+         Config) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeSidePublicTab",
@@ -323,25 +326,16 @@ function($, Config) {
         	var escapedQ = this.escapeSearchQuery(query);
         	var url = this.searchUrlPrefix + '?itemsPerPage=' + itemsPerPage + '&' +
         		'page=' + pageNum + '&q=' + encodeURIComponent(escapedQ) + '&category=' + category;
-        	var promise = jQuery.Deferred();
-        	jQuery.ajax(url, {
-        		success: function (data) {
-        			ret(query, data);
-                    console.log('SEARCH');
-                    console.log(query);
-                    console.log(data);
-        			promise.resolve();
-        		},
-        		error: function(jqXHR, error){
-        			if (errorCallback)
-    					errorCallback(error);
-        			promise.resolve();
-        		},
-        		headers: {},
-        		type: "GET"
-        	});
 
-        	return promise;
+            return Promise.resolve($.get(url))
+                .then(function(data) {
+                    ret(query, data);
+                })
+                .catch(function(error) {
+                    if(errorCallback) {
+                        errorCallback(error);
+                    }
+                });
         },
 
         renderObjectRowDiv: function(object) {

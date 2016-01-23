@@ -571,13 +571,13 @@ function($,
                             .addClass('form-control')
                             .val(ws_info[8].narrative_nice_name + ' - Copy')
                             .on('focus', function () {
-                                if (IPython && IPython.narrative) {
-                                    IPython.narrative.disableKeyboardManager();
+                                if (Jupyter && Jupyter.narrative) {
+                                    Jupyter.narrative.disableKeyboardManager();
                                 }
                             })
                             .on('blur', function () {
-                                if (IPython && IPython.narrative) {
-                                    IPython.narrative.enableKeyboardManager();
+                                if (Jupyter && Jupyter.narrative) {
+                                    Jupyter.narrative.enableKeyboardManager();
                                 }
                             });
 

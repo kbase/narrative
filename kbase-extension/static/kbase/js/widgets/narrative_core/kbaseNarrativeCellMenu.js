@@ -32,7 +32,7 @@ function($, Config) {
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
                 .append($('<span class="fa fa-trash-o" style="font-size:14pt; padding-left: 5px;">'))
                 .click($.proxy(function () {
-                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
+                    this.trigger('deleteCell.Narrative', Jupyter.notebook.get_selected_index());
                 }, this)),
                 $menuBtn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
                 .append($('<span class="fa fa-cog" style="font-size:14pt">')),
@@ -71,16 +71,16 @@ function($, Config) {
                     icon: 'fa fa-code',
                     text: 'View Job Submission',
                     action: function () {
-                        var metadata = IPython.notebook.get_selected_cell().metadata,
+                        var metadata = Jupyter.notebook.get_selected_cell().metadata,
                             stackTrace = [],
-                            cell = IPython.notebook.insert_cell_below('code');
+                            cell = Jupyter.notebook.insert_cell_below('code');
                         if (metadata['kb-cell'] && metadata['kb-cell'].stackTrace) {
                             stackTrace = metadata['kb-cell'].stackTrace;
                         }
                         console.log(stackTrace);
                         if (stackTrace instanceof Array) {
                             cell.set_text('job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info');
-                            IPython.notebook.get_selected_cell().execute();
+                            Jupyter.notebook.get_selected_cell().execute();
                         } else {
                             cell.set_text('job_info=' + stackTrace);
                         }
@@ -92,7 +92,7 @@ function($, Config) {
                 icon: 'fa fa-arrow-up',
                 text: 'Move Cell Up',
                 action: function () {
-                    IPython.notebook.move_cell_up();
+                    Jupyter.notebook.move_cell_up();
                 }
             });
 
@@ -100,7 +100,7 @@ function($, Config) {
                 icon: 'fa fa-arrow-down',
                 text: 'Move Cell Down',
                 action: function () {
-                    IPython.notebook.move_cell_down();
+                    Jupyter.notebook.move_cell_down();
                 }
             });
 
@@ -108,7 +108,7 @@ function($, Config) {
                 icon: 'fa fa-caret-square-o-up',
                 text: 'Insert Cell Above',
                 action: function () {
-                    IPython.notebook.insert_cell_above('markdown');
+                    Jupyter.notebook.insert_cell_above('markdown');
                 }
             });
 
@@ -116,7 +116,7 @@ function($, Config) {
                 icon: 'fa fa-caret-square-o-down',
                 text: 'Insert Cell Below',
                 action: function () {
-                    IPython.notebook.insert_cell_below('markdown');
+                    Jupyter.notebook.insert_cell_below('markdown');
                 }
             });
 
@@ -135,7 +135,7 @@ function($, Config) {
 
                             // the method initializes an internal method input widget, but in an async way
                             // so we have to wait and check when that is done.  When it is, we can update state
-                            var newCell = IPython.notebook.get_selected_cell();
+                            var newCell = Jupyter.notebook.get_selected_cell();
                             var newWidget = $('#' + $(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
                             var updateState = function (state) {
                                 if (newWidget.$inputWidget) {
@@ -158,7 +158,7 @@ function($, Config) {
             //         text: 'Toggle Cell Type',
             //         action: function() {
             //             if (this.options.cell.cell_type === "markdown") {
-            //                 IPython.notebook.to_code();
+            //                 Jupyter.notebook.to_code();
             //             }
             //             else {
 
@@ -172,7 +172,7 @@ function($, Config) {
 //                icon: 'fa fa-trash-o',
 //                text: 'Delete Cell',
 //                action: $.proxy(function () {
-//                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
+//                    this.trigger('deleteCell.Narrative', Jupyter.notebook.get_selected_index());
 //                }, this)
 //            });
 

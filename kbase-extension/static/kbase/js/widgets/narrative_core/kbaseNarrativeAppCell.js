@@ -3,7 +3,7 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
- * This is a generalized class for an input cell that sits in an IPython markdown cell.
+ * This is a generalized class for an input cell that sits in an Jupyter markdown cell.
  * It handles all of its rendering here (no longer in HTML in markdown), and invokes
  * an input widget passed to it.
  *
@@ -133,7 +133,7 @@
                 $errorPanel.append($('<div>').append(error));
             }
 
-            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            // If it's an object, expect an error object as returned by the execute_reply callback from the Jupyter kernel.
             else if (typeof error === 'object') {
                 var $details = $('<div>');
                 $details.append($('<div>')
@@ -195,7 +195,7 @@
 
                                       event.preventDefault();
                                       this.trigger('runApp.Narrative', {
-                                          cell: IPython.notebook.get_selected_cell(),
+                                          cell: Jupyter.notebook.get_selected_cell(),
                                           appSpec: this.appSpec,
                                           methodSpecs: this.methodSpecs,
                                           parameters: this.getParameters()
@@ -993,8 +993,8 @@
                         output: objCopy
                     };
 
-                    if (IPython && IPython.narrative && !preventSave)
-                        IPython.narrative.saveNarrative();
+                    if (Jupyter && Jupyter.narrative && !preventSave)
+                        Jupyter.narrative.saveNarrative();
                 }
             }
         },
@@ -1010,8 +1010,8 @@
                         showMenu: false,
                         time: new Date().getTime()
                     });
-                    if (IPython && IPython.narrative)
-                        IPython.narrative.saveNarrative();
+                    if (Jupyter && Jupyter.narrative)
+                        Jupyter.narrative.saveNarrative();
                 }
             }
         },

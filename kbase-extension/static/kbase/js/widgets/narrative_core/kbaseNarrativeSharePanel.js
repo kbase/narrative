@@ -215,13 +215,13 @@ function($, Config) {
                         .attr('type', 'text')
                         .css({'width': self.options.add_user_input_width})
                         .on('select2-focus', function () {
-                            if (IPython && IPython.narrative) {
-                                IPython.narrative.disableKeyboardManager();
+                            if (Jupyter && Jupyter.narrative) {
+                                Jupyter.narrative.disableKeyboardManager();
                             }
                         })
                         .on('select2-blur', function () {
-                            if (IPython && IPython.narrative) {
-                                IPython.narrative.enableKeyboardManager();
+                            if (Jupyter && Jupyter.narrative) {
+                                Jupyter.narrative.enableKeyboardManager();
                             }
                         });
 

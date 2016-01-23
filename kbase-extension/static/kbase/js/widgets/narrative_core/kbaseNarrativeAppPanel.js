@@ -249,7 +249,7 @@
                 this.$errorPanel.append($('<div>').append(error));
             }
 
-            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            // If it's an object, expect an error object as returned by the execute_reply callback from the Jupyter kernel.
             else if (typeof error === 'object') {
                 var $details = $('<div>');
                 $details.append($('<div>').append('<b>Type:</b> ' + error.ename))

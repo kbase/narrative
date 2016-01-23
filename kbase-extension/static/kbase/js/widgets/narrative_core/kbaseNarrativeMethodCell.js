@@ -1,7 +1,7 @@
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
- * This is a generalized class for an input cell that sits in an IPython markdown cell.
+ * This is a generalized class for an input cell that sits in an Jupyter markdown cell.
  * It handles all of its rendering here (no longer in HTML in markdown), and invokes
  * an input widget passed to it.
  *
@@ -102,7 +102,7 @@ function($,
                     this.changeState('submitted');
                     this.minimizeView();
                     this.trigger('runCell.Narrative', {
-                        cell: IPython.notebook.get_selected_cell(),
+                        cell: Jupyter.notebook.get_selected_cell(),
                         method: this.method,
                         parameters: this.getParameters(),
                         widget: this

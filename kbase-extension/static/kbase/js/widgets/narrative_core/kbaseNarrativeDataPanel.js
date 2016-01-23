@@ -390,7 +390,7 @@ function($, _, Config) {
 
             // hack to keep search on top
 
-            this.$myDataHeader = $('<div/>');
+            this.$myDataHeader = $('<div>');
             minePanel.append(this.$myDataHeader);
             var $mineFilterRow = $('<div class="row">');
             minePanel.append($mineFilterRow);
@@ -416,6 +416,10 @@ function($, _, Config) {
             var closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin':'10px'});
 
             // Setup the panels that are defined by widgets
+
+            // minePanel.kbaseNarrativeMyDataTab({ws_name: this.ws_name});
+            // sharedPanel.kbaseNarrativeSharedDataTab({ws_name: this.ws_name});
+
             publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus, ws_name: this.ws_name});
             importPanel.kbaseNarrativeSideImportTab({ws_name: this.ws_name});
             examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus, ws_name: this.ws_name});

@@ -200,9 +200,16 @@ function($, Config) {
             var pVal = this.fileName.val();
 
 	    var valid = pVal != "";
-	    self.updateValidCheckbox(valid);
 
-            return {isValid: valid, errormssgs:errorMessages};
+	    var required = self.required;
+	    self.updateValidCheckbox(valid, required);
+
+	    /*
+	     * For the purposes of the validity check here, an invalid
+	     * but not required parameter is valid.
+	     */
+
+            return {isValid: valid || !required, errormssgs:errorMessages};
         },
 
 	cancelImport: function() {
@@ -221,6 +228,21 @@ function($, Config) {
 		 */
 		
 		var file = self.fakeButton.fb.files[0];
+
+		if (!file)
+		{
+		    if (!self.required)
+		    {
+			console.log("Not uploading " + self.spec.id " as it is not required and was not specified");
+			resolve("not_required");
+			return;
+		    }
+		    else
+		    {
+			reject("File not defined for parameter " + self.spec.id);
+			return;
+		    }
+		}
 
 		console.log("start upload on " + file.name);
 		
@@ -268,11 +290,11 @@ function($, Config) {
 	    return p;
 	},
 
-	updateValidCheckbox: function(valid) {
+	updateValidCheckbox: function(valid, required) {
 	    var self = this;
             if (valid) {
             	self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
-            } else {
+            } else if (required) {
             	self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
             }
             self.rowDivs[0].$feedback.show();

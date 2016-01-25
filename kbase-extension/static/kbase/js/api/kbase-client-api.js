@@ -12657,8 +12657,7 @@ function ShockClient(params) {
 
     self.url = "https://kbase.us/services/shock-api/";
     self.auth_header = {};
-    self.chunkSize = 4194304;
-    //self.chunkSize = 2097152;
+    self.chunkSize = 2097152;
     
 	if (params.url)
 	    self.url = params.url;

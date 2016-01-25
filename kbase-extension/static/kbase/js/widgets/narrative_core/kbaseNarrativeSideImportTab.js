@@ -622,11 +622,11 @@ function($,
 
 	    self.fileUploadInProgress = true;
 	    var promise = this.getInputWidget().runImport();
-	    self.showInfo("Awaiting file transfers to complete");
+	    self.showInfo("Transferring files...", true);
 	    promise.then(function(value) {
 
 		self.fileUploadInProgress = false;
-		self.showInfo("Files transferred. Creating transform job.");
+		self.showInfo("Files transferred. Creating transform job.", true);
 
 		var paramValueArray = self.getInputWidget().getParameters();
 		var params = {};
@@ -647,7 +647,7 @@ function($,
 			console.log("Data to be sent to transform service:");
 			console.log(args);
 
-			self.showInfo("Sending data...", true);
+			self.showInfo("Submitting transform request...", true);
 			uploaderClient.upload(args,
 					      $.proxy(function(data) {
 						  console.log(data);

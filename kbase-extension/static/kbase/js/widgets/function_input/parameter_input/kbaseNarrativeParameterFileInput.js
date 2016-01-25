@@ -233,7 +233,7 @@ function($, Config) {
 		{
 		    if (!self.required)
 		    {
-			console.log("Not uploading " + self.spec.id " as it is not required and was not specified");
+			console.log("Not uploading " + self.spec.id + " as it is not required and was not specified");
 			resolve("not_required");
 			return;
 		    }

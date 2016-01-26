@@ -58,18 +58,18 @@ class KBaseWSManagerMixin(object):
     """
 
     ws_uri = service.URLS.workspace
-    nar_type = 'KBaseNarrative.Narrative'
-    nar_version = '4.0'
-    old_version = '3.0'
+    nar_type = u'KBaseNarrative.Narrative'
+    nar_version = u'4.0'
+    old_version = u'3.0'
 
     def __init__(self, *args, **kwargs):
         if not self.ws_uri:
-            raise HTTPError(412, 'Missing KBase workspace service endpoint URI')
+            raise HTTPError(412, u'Missing KBase workspace service endpoint URI')
 
         try:
             v = self.ws_client().ver()
         except Exception as e:
-            raise HTTPError(500, 'Unable to connect to workspace service at {}: {}'.format(self.ws_uri, e))
+            raise HTTPError(500, u'Unable to connect to workspace service at {}: {}'.format(self.ws_uri, e))
 
     def ws_client(self):
         return WorkspaceClient.Workspace(self.ws_uri)
@@ -77,7 +77,7 @@ class KBaseWSManagerMixin(object):
     def _test_obj_ref(self, obj_ref):
         m = obj_ref_regex.match(obj_ref)
         if m is None:
-            raise ValueError('Narrative object references must be of the format wsid/objid/ver')        
+            raise ValueError(u'Narrative object references must be of the format wsid/objid/ver')        
 
     def _ws_err_to_perm_err(self, err):
         if PermissionsError.is_permissions_error(err.message):
@@ -139,8 +139,8 @@ class KBaseWSManagerMixin(object):
                     return nar_data[0]
             else:
                 nar_data = self.ws_client().get_object_info_new({
-                    'objects':[{'ref':obj_ref}],
-                    'includeMetadata': 1 if include_metadata else 0
+                    u'objects':[{'ref':obj_ref}],
+                    u'includeMetadata': 1 if include_metadata else 0
                 })
                 if nar_data:
                     return {'info': nar_data[0]}
@@ -158,7 +158,7 @@ class KBaseWSManagerMixin(object):
         """
         parsed_ref = self._parse_obj_ref(obj_ref)
         if parsed_ref is None:
-            raise HTTPError(500, 'Unable to parse incorrect obj_ref "{}"'.format(obj_ref))
+            raise HTTPError(500, u'Unable to parse incorrect obj_ref "{}"'.format(obj_ref))
         ws_id = parsed_ref['wsid']
         obj_id = parsed_ref['objid']
 
@@ -166,41 +166,41 @@ class KBaseWSManagerMixin(object):
         try:
             meta = nb['metadata']
             if 'name' not in meta:
-                meta['name'] = u'Untitled'
+                meta[u'name'] = u'Untitled'
             if 'ws_name' not in meta:
-                meta['ws_name'] = util.kbase_env.workspace or self._ws_id_to_name(ws_id)
+                meta[u'ws_name'] = util.kbase_env.workspace or self._ws_id_to_name(ws_id)
             if 'creator' not in meta:
-                meta['creator'] = cur_user
+                meta[u'creator'] = cur_user
             if 'type' not in meta:
-                meta['type'] = self.nar_type
+                meta[u'type'] = self.nar_type
             if 'description' not in meta:
-                meta['description'] = ''
+                meta[u'description'] = ''
             if 'data_dependencies' not in meta:
-                meta['data_dependencies'] = list()
+                meta[u'data_dependencies'] = list()
             if 'job_ids' not in meta:
-                meta['job_ids'] = {u'methods' : [], u'apps' : [], u'job_usage': {u'queue_time': 0, u'run_time': 0}}
-            if 'methods' not in meta['job_ids']:
-                meta['job_ids']['methods'] = list()
-            if 'apps' not in meta['job_ids']:
-                meta['job_ids']['apps'] = list()
-            if 'job_usage' not in meta['job_ids']:
-                meta['job_ids']['job_usage'] = {u'queue_time': 0, u'run_time': 0}
-            meta['format'] = u'ipynb'
+                meta[u'job_ids'] = {u'methods' : [], u'apps' : [], u'job_usage': {u'queue_time': 0, u'run_time': 0}}
+            if 'methods' not in meta[u'job_ids']:
+                meta[u'job_ids'][u'methods'] = list()
+            if 'apps' not in meta[u'job_ids']:
+                meta[u'job_ids'][u'apps'] = list()
+            if 'job_usage' not in meta[u'job_ids']:
+                meta[u'job_ids'][u'job_usage'] = {u'queue_time': 0, u'run_time': 0}
+            meta[u'format'] = u'ipynb'
 
-            if len(meta['name'].encode('utf-8')) > MAX_METADATA_STRING_BYTES - len(u'name'.encode('utf-8')):
-                meta['name'] = meta['name'][0:MAX_METADATA_STRING_BYTES - len(u'name'.encode('utf-8'))]
+            if len(meta[u'name']) > MAX_METADATA_STRING_BYTES - len(u'name'):
+                meta[u'name'] = meta[u'name'][0:MAX_METADATA_STRING_BYTES - len(u'name')]
 
-            nb['metadata'] = meta
+            nb[u'metadata'] = meta
         except Exception as e:
             raise HTTPError(400, u'Unexpected error setting Narrative attributes: %s' %e)
 
         # With that set, update the workspace metadata with the new info.
         try:
             updated_metadata = {
-                'is_temporary': 'false',
-                'narrative_nice_name': nb['metadata']['name']
+                u'is_temporary': u'false',
+                u'narrative_nice_name': nb[u'metadata'][u'name']
             }
-            self.ws_client().alter_workspace_metadata({'wsi': {'id': ws_id}, 'new':updated_metadata})
+            self.ws_client().alter_workspace_metadata({u'wsi': {u'id': ws_id}, u'new':updated_metadata})
         except WorkspaceClient.ServerError, err:
             pass
 #            raise self._ws_err_to_perm_err(err)
@@ -217,7 +217,7 @@ class KBaseWSManagerMixin(object):
                 'type': self.nar_type + '-' + nar_version,
                 'data': nb,
                 'objid': obj_id,
-                'meta': nb['metadata'].copy(),
+                'meta': nb[u'metadata'].copy(),
                 'provenance': [{
                     'service': u'narrative',
                     'description': u'Saved by KBase Narrative Interface',
@@ -229,16 +229,16 @@ class KBaseWSManagerMixin(object):
 
             # Sort out job info we want to keep
             # Gonna look like this, so init it that way
-            nb_job_usage = nb['metadata']['job_ids'].get('job_usage', {'queue_time':0, 'run_time':0})
+            nb_job_usage = nb['metadata']['job_ids'].get('job_usage', {u'queue_time':0, u'run_time':0})
             job_info = {
-                'queue_time': nb_job_usage.get('queue_time', 0),
-                'run_time': nb_job_usage.get('run_time', 0),
-                'running': 0,
-                'completed': 0,
-                'error': 0
+                u'queue_time': nb_job_usage.get('queue_time', 0),
+                u'run_time': nb_job_usage.get('run_time', 0),
+                u'running': 0,
+                u'completed': 0,
+                u'error': 0
             }
             for job in nb['metadata']['job_ids']['methods'] + nb['metadata']['job_ids']['apps']:
-                status = job.get('status', 'running')
+                status = job.get('status', u'running')
                 if status.startswith('complete'):
                     job_info['completed'] += 1
                 elif 'error' in status:
@@ -305,16 +305,16 @@ class KBaseWSManagerMixin(object):
                     cell_info['viewer'] += 1
                 else:
                     if 'app' in meta['kb-cell']:
-                        app_info['app.' + meta['kb-cell']['app']['info']['id']] += 1
+                        app_info[u'app.' + meta['kb-cell']['app']['info']['id']] += 1
                         num_apps += 1
                     elif 'method' in meta['kb-cell']:
-                        method_info['method.' + meta['kb-cell']['method']['info']['id']] += 1
+                        method_info[u'method.' + meta['kb-cell']['method']['info']['id']] += 1
                         num_methods += 1
                     else:
                         # covers the cases we care about
                         continue
             else:
-                cell_info['jupyter.' + cell['cell_type']] += 1
+                cell_info[u'jupyter.' + cell['cell_type']] += 1
 
         # Now we have all cell types like this:
         #
@@ -328,8 +328,8 @@ class KBaseWSManagerMixin(object):
         # 255 bytes. Don't even care.
         # But we do need the totals anyway, in case we blow over the max metadata size.
 
-        # final pass - trim out methods and apps if cell_kvp_len > total allowable size
-        kvp_size = lambda(x): sum([len(k.encode('utf-8')) + len(str(x[k]).encode('utf-8')) for k in x])
+        # final pass - trim out methods and apps if cell_kvp_size > total allowable size
+        kvp_size = lambda(x): sum([len(k) + len(unicode(x[k])) for k in x])
 
         metadata_size = kvp_size(metadata)
         method_size = kvp_size(method_info)
@@ -343,7 +343,7 @@ class KBaseWSManagerMixin(object):
             # if we can make it under the limit by removing all methods, then we can likely
             # do so by removing some. So pop them out one at a time, and keep track of the lengths chopped.
             # otherwise, remove them all.
-            if total_size - method_size + len(meth_overflow_key.encode('utf-8')) + len(str(num_methods).encode('utf-8')) < MAX_METADATA_SIZE_BYTES:
+            if total_size - method_size + len(meth_overflow_key) + len(unicode(num_methods)) < MAX_METADATA_SIZE_BYTES:
                 # filter them.
                 method_info = _filter_app_methods(total_size, meth_overflow_key, method_info)
             else:
@@ -357,7 +357,7 @@ class KBaseWSManagerMixin(object):
             app_overflow_key = u'app.overflow'
 
             # same for apps now.
-            if total_size - app_size + len(app_overflow_key.encode('utf-8')) + len(str(num_apps).encode('utf-8')) < MAX_METADATA_SIZE_BYTES:
+            if total_size - app_size + len(app_overflow_key) + len(unicode(num_apps)) < MAX_METADATA_SIZE_BYTES:
                 app_info = _filter_app_methods(total_size, app_overflow_key, app_info)
             else:
                 app_info = Counter({app_overflow_key : num_apps})
@@ -375,10 +375,11 @@ class KBaseWSManagerMixin(object):
 
     def _filter_app_methods(self, total_len, overflow_key, filter_dict):
         overflow_count = 0
-        while total_len + len(overflow_key.encode('utf-8')) + len(str(overflow_count).encode('utf-8')) > MAX_METADATA_SIZE_BYTES:
+        overflow_key_size = len(overflow_key)
+        while total_len + overflow_key_size + len(unicode(overflow_count)) > MAX_METADATA_SIZE_BYTES:
             key, val = filter_dict.popitem()
             overflow_count += val
-            total_len = total_len - len(key.encode('utf-8')) - len(str(val).encode('utf-8'))
+            total_len = total_len - len(key) - len(unicode(val))
         filter_dict[overflow_key] = overflow_count
         return filter_dict
 

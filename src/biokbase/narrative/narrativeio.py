@@ -22,6 +22,7 @@ from traitlets import (
 )
 import re
 import json
+from collections import Counter
 
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching
@@ -31,6 +32,9 @@ list_objects_fields = ['objid', 'name', 'type', 'save_date', 'ver', 'saved_by',
 obj_field = dict(zip(list_objects_fields,range(len(list_objects_fields))))
 
 obj_ref_regex = re.compile('^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$')
+
+MAX_METADATA_STRING_LEN = 900
+MAX_METADATA_SIZE = 16000
 
 class PermissionsError(WorkspaceClient.ServerError):
     """Raised if user does not have permission to
@@ -163,6 +167,8 @@ class KBaseWSManagerMixin(object):
             meta = nb['metadata']
             if 'name' not in meta:
                 meta['name'] = 'Untitled'
+            else:
+                meta['name'] = meta['name'][0:MAX_METADATA_STRING_LEN-len('name')]
             if 'ws_name' not in meta:
                 meta['ws_name'] = util.kbase_env.workspace or self._ws_id_to_name(ws_id)
             if 'creator' not in meta:
@@ -219,7 +225,6 @@ class KBaseWSManagerMixin(object):
             }
             # no non-strings allowed in metadata!
             ws_save_obj['meta']['data_dependencies'] = json.dumps(ws_save_obj['meta']['data_dependencies'])
-            ws_save_obj['meta']['methods'] = json.dumps(self._extract_cell_info(nb))
 
             # Sort out job info we want to keep
             # Gonna look like this, so init it that way
@@ -246,6 +251,8 @@ class KBaseWSManagerMixin(object):
             # This flushes things from IPython that we don't need as KBase object metadata
             ws_save_obj['meta'] = {key: value for key, value in ws_save_obj['meta'].items() if isinstance(value, str) or isinstance(value, unicode)}
 
+            ws_save_obj['meta'] = self._process_cell_usage(nb, ws_save_obj['meta'])
+
             # Actually do the save now!
             obj_info = self.ws_client().save_objects({'id': ws_id,
                                                       'objects': [ws_save_obj]})[0]
@@ -257,67 +264,122 @@ class KBaseWSManagerMixin(object):
         except Exception as e:
             raise HTTPError(500, u'%s saving Narrative: %s' % (type(e),e))
 
-    def _extract_cell_info(self, nb):
+    def _process_cell_usage(self, nb, metadata):
         """
-        This is an internal method that returns, as a dict, how many kb-method,
-        kb-app, and IPython cells exist in the notebook object.
+        A shiny new version of _extract_cell_info that tallies up the methods
+        and apps in a Narrative. The Workspace has two limits built into it,
+        that the old way could easily violate:
+        1. The total size of each key/value in the metadata must be less than
+        900 bytes
+        2. The total metadata size must be less than 16KB.
 
-        For app and method cells, it counts them based on their method/app ids
-
-        In the end, it returns a dict like this:
-        {
-            'method': {
-                'my_method' : 2,
-                'your_method' : 1
-            },
-            'app': {
-                'my app' : 3
-            },
-            'ipython': {
-                'code' : 5,
-                'markdown' : 6
-            }
-        }
+        This is intended to be the last step of the save process before pushing
+        to the workspace. As such, it will do a few things.
+        1. Go through all KBase cells and identify how many of each app and 
+        method is being used.
+        2. Enforce limits on length of each key and value in the metadata
+        3. Enforce the overall size of metadata by reducing the number of
+        key/value pairs allowed (just among apps and methods - pre-existing
+        keys are ignored.)
         """
-        # Support for old versions!
+
         cells = []
-        if 'cells' in nb:        # ipynb v4+
+        if 'cells' in nb: #ipynb v4+
             cells = nb['cells']
-        elif 'worksheets' in nb: # ipynb v3
+        elif 'worksheets' in nb: #ipynb v3
             cells = nb['worksheets'][0]['cells']
 
-        cell_types = {'method' : {},
-                      'app' : {},
-                      'output': 0,
-                      'ipython' : {'markdown': 0, 'code': 0}}
+        method_info = Counter()
+        app_info = Counter()
+
+        num_methods = 0
+        num_apps = 0
+
+        cell_info = Counter()
         for cell in cells:
             meta = cell['metadata']
             if 'kb-cell' in meta:
-                t = None
-                # It's a KBase cell! So, either an app or method.
+                # It's a KBase cell! So either an app, method, or viewer
                 if 'type' in meta['kb-cell'] and meta['kb-cell']['type'] == 'function_output':
-                    cell_types['output'] = cell_types['output'] + 1
+                    cell_info['viewer'] += 1
                 else:
                     if 'app' in meta['kb-cell']:
-                        t = 'app'
+                        app_info['app.' + meta['kb-cell']['app']['info']['id']] += 1
+                        num_apps += 1
                     elif 'method' in meta['kb-cell']:
-                        t = 'method'
+                        method_info['method.' + meta['kb-cell']['method']['info']['id']] += 1
+                        num_methods += 1
                     else:
-                        # that should cover our cases
+                        # covers the cases we care about
                         continue
-                    if t is not None:
-                        try:
-                            count = 1
-                            app_id = meta['kb-cell'][t]['info']['id']
-                            if app_id in cell_types[t]:
-                                count = cell_types[t][app_id] + 1
-                            cell_types[t][app_id] = count
-                        except KeyError:
-                            continue
             else:
-                t = cell['cell_type']
-                cell_types['ipython'][t] = cell_types['ipython'][t] + 1
-        return cell_types
+                cell_info['jupyter.' + cell['cell_type']] += 1
+
+        # Now we have all cell types like this:
+        #
+        # app.id
+        # method.id
+        # jupyter.code
+        # jupyter.markdown
+        # 
+        # method and path names are limited by their file system, since they're methods. on extFS, Mac,
+        # and many others that we care about (like those probably where the Catalog service lives), that's
+        # 255 bytes. Don't even care.
+        # But we do need the totals anyway, in case we blow over the max metadata size.
+
+        # final pass - trim out methods and apps if cell_kvp_len > total allowable size
+        kvp_len = lambda(x): sum([len(k) + len(str(x[k])) for k in x])
+
+        metadata_len = kvp_len(metadata)
+        method_len = kvp_len(method_info)
+        app_len = kvp_len(app_info)
+        cell_len = kvp_len(cell_info)
+
+        total_len = metadata_len + cell_len + app_len + method_len
+        if total_len > MAX_METADATA_SIZE:
+            meth_overflow_key = 'method.overflow'
+
+            # if we can make it under the limit by removing all methods, then we can likely
+            # do so by removing some. So pop them out one at a time, and keep track of the lengths chopped.
+            # otherwise, remove them all.
+            if total_len - method_len + len(meth_overflow_key) + len(str(num_methods)) < MAX_METADATA_SIZE:
+                # filter them.
+                method_info = _filter_app_methods(total_len, meth_overflow_key, method_info)
+            else:
+                method_info = Counter({meth_overflow_key : num_methods})
+            total_len -= method_len
+            method_len = kvp_len(method_info)
+            total_len += method_len
+
+        # test again, now focus on apps
+        if total_len > MAX_METADATA_SIZE:
+            app_overflow_key = 'app.overflow'
+
+            # same for apps now.
+            if total_len - app_len + len(app_overflow_key) + len(str(num_apps)) < MAX_METADATA_SIZE:
+                app_info = _filter_app_methods(total_len, app_overflow_key, app_info)
+            else:
+                app_info = Counter({app_overflow_key : num_apps})
+            total_len -= app_len
+            app_len = kvp_len(app_info)
+            total_len += app_len
+
+        # Now the total of everything must be under MAX_METADATA_SIZE. Smoosh them together into the
+        # proper metadata object.
+        metadata.update(method_info)
+        metadata.update(app_info)
+        metadata.update(cell_info)
+
+        return metadata
+
+    def _filter_app_methods(self, total_len, overflow_key, filter_dict):
+        overflow_count = 0
+        while total_len + len(overflow_key) + len(str(overflow_count)) > MAX_METADATA_SIZE:
+            key, val = filter_dict.popitem()
+            overflow_count += val
+            total_len = total_len - len(key) - len(str(val))
+        filter_dict[overflow_key] = overflow_count
+        return filter_dict
 
     def rename_narrative(self, obj_ref, cur_user, new_name):
         """
@@ -412,7 +474,16 @@ class KBaseWSManagerMixin(object):
 
     def narrative_writable(self, obj_ref, user):
         """
-        Returns True if the user can write to the narrative, False otherwise.
+        Returns True if the logged in user can know if the given user can write to this narrative.
+        E.g. user A is logged in. If A can see user B's permissions, and user B can write to this
+        narrative, True is returned.
+
+        Another e.g. nobody is logged in, and cannot see any permissions. False is returned.
+
+        This is intended to be a quick check for kbwsmanager to flag the narrative as writable for the
+        currently logged in user. A logged in user can see their own permissions, always, if they exist
+        on that narrative.
+
         Throws a WorkspaceClient.ServerError if not logged in, or 
         if the narrative doesn't exist.
         """

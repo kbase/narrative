@@ -140,6 +140,7 @@ require.config({
         'modelSeedVizConfig'                    : 'kbase/js/revised-widgets/src/widgets/modeling/modelSeedVizConfig',
         'msPathway'                             : 'kbase/js/revised-widgets/src/widgets/modeling/msPathway',
         'kbasePathways'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbasePathways',
+        'kbaseExpressionAnalysis'               : 'kbase/js/widgets/function_output/kbaseExpressionAnalysis',
         // another implementation of kbaseTabs needed for kbaseTabTable
         'kbaseTabTableTabs'                     : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabs',
         'knhx'                                  : 'ext_components/knhxtree/js/knhx',

@@ -198,7 +198,7 @@
 
                                       event.preventDefault();
                                       this.trigger('runApp.Narrative', {
-                                          cell: Jupyter.notebook.get_selected_cell(),
+                                          cell: Jupyter.narrative.getCellByKbaseId(this.cellId),
                                           appSpec: this.appSpec,
                                           methodSpecs: this.methodSpecs,
                                           parameters: this.getParameters()

@@ -22,6 +22,9 @@ function($, Config) {
             var self = this;
             this._super(options);
 
+            this.$elem.on('mousedown', function () {
+                Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
+            }.bind(this));
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
                 .append($('<span class="fa fa-trash-o" style="font-size:14pt; padding-left: 5px;">'))
@@ -66,21 +69,21 @@ function($, Config) {
                     icon: 'fa fa-code',
                     text: 'View Job Submission',
                     action: function () {
-                        var metadata = Jupyter.notebook.get_selected_cell().metadata,
+                        var metadata = this.options.cell.metadata,
                             stackTrace = [],
-                            cell = Jupyter.notebook.insert_cell_below('code');
+                            newCell = Jupyter.notebook.insert_cell_below('code', Jupyter.notebook.find_cell_index(this.options.cell));
                         if (metadata['kb-cell'] && metadata['kb-cell'].stackTrace) {
                             stackTrace = metadata['kb-cell'].stackTrace;
                         }
                         console.log(stackTrace);
                         if (stackTrace instanceof Array) {
-                            cell.set_text('job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info');
-                            Jupyter.notebook.get_selected_cell().execute();
+                            newCell.set_text('job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info');
+                            newCell.execute();
                         } else {
-                            cell.set_text('job_info=' + stackTrace);
+                            newCell.set_text('job_info=' + stackTrace);
                         }
                     }
-                });
+                }.bind(this));
             }
 
             this.addMenuItem({
@@ -147,29 +150,20 @@ function($, Config) {
                 });
             }
 
-            // if (this.options.cell && this.options.cell.metadata['kb-cell'] === undefined) {
-            //     this.addMenuItem({
-            //         icon: 'fa fa-terminal',
-            //         text: 'Toggle Cell Type',
-            //         action: function() {
-            //             if (this.options.cell.cell_type === "markdown") {
-            //                 Jupyter.notebook.to_code();
-            //             }
-            //             else {
-
-            //             }
-            //         },
-            //         disable: true
-            //     });
-            // }
-//
-//            this.addMenuItem({
-//                icon: 'fa fa-trash-o',
-//                text: 'Delete Cell',
-//                action: $.proxy(function () {
-//                    this.trigger('deleteCell.Narrative', Jupyter.notebook.get_selected_index());
-//                }, this)
-//            });
+            if (this.options.cell && this.options.cell.metadata['kb-cell'] === undefined) {
+                this.addMenuItem({
+                    icon: 'fa fa-terminal',
+                    text: 'Toggle Cell Type',
+                    action: function() {
+                        if (this.options.cell.cell_type === "markdown") {
+                            Jupyter.notebook.to_code();
+                        }
+                        else {
+                            Jupyter.notebook.to_markdown();
+                        }
+                    }.bind(this),
+                });
+            }
 
             var self = this;
             

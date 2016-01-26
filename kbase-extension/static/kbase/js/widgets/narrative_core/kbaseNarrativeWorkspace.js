@@ -190,15 +190,14 @@ function($,
 
             $(document).on('createOutputCell.Narrative',
                 $.proxy(function(event, data) {
-                    var cellIndex = $('#'+data.cellId).nearest('.cell').index();
+                    var cell = Jupyter.narrative.getCellByKbaseId(data.cellId);
                     var params = {'embed' : true,
                                   'data': StringUtil.safeJSONStringify(data.result)};
                     if (data.next_steps) {
                       // console.debug("adding next steps in create");
                       params.next_steps = data.next_steps;
                     }
-                    this.createOutputCell(Jupyter.notebook.get_cell(cellIndex),
-                                          params);
+                    this.createOutputCell(cell, params);
                 }, this)
             );
 

@@ -24,3 +24,4 @@ Last updated 1/14/2016, 2:36pm
   * Data viewer with unknown type needs some TLC.
   * Inserting new cells on click has changed due to cell selection changes / cell multi-select [NAR-835](https://atlassian.kbase.us/browse/NAR-835)
   * Method/app cells should be drag/droppable like data cells.
+  * Name change doesn't seem to change temporary state (should actually use temporary state instead of "Untitled" name)

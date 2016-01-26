@@ -22,22 +22,17 @@ function($, Config) {
             var self = this;
             this._super(options);
 
-            // console.log(['cell menu', this.options.cell]);
-//            var outputPane = this.$elem.closest('.cell').find('.inner_cell > div:nth-child(2)').get(0);
-//            if (!outputPane.id) {
-//                outputPane.id = this.genId();
-//            }
-//            this.$elem.data('ouputPaneId', outputPane.id);
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
                 .append($('<span class="fa fa-trash-o" style="font-size:14pt; padding-left: 5px;">'))
                 .click($.proxy(function () {
-                    this.trigger('deleteCell.Narrative', Jupyter.notebook.get_selected_index());
-                }, this)),
-                $menuBtn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
-                .append($('<span class="fa fa-cog" style="font-size:14pt">')),
-                // $collapseBtn = $('<button class="btn btn-default" role="button" data-toggle="collapse" href="#' + outputPane.id + '" aria-controls="' + $outputPane.id + '">Open</button>'),
-                $collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle"><span class="fa fa-chevron-down"></button>')
+                    this.trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(this.options.cell));
+                }, this));
+
+            var $menuBtn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
+                .append($('<span class="fa fa-cog" style="font-size:14pt">'));
+
+            var $collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle"><span class="fa fa-chevron-down"></button>')
                 .on('click', function () {
                     self.$elem.trigger('toggle.toolbar');                    
                 });
@@ -48,9 +43,9 @@ function($, Config) {
              * Each cell type unfortunately has a different top level layout.
              * Not that it matters, but I don't see why there isn't a uniform layout 
              * for the primary layout areas - prompt, toolbar, body, as they exist
-             * now, and another nice one would be a message/notification are
+             * now, and another nice one would be a message/notification area.
              */
-            this.$elem.on('toggle.toolbar', function () {                
+            this.$elem.on('toggle.toolbar', function () {
                 var $cellNode = self.$elem.closest('.cell');
                 $cellNode
                     .trigger('toggle.cell');

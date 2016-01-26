@@ -33,8 +33,8 @@ obj_field = dict(zip(list_objects_fields,range(len(list_objects_fields))))
 
 obj_ref_regex = re.compile('^(?P<wsid>\d+)\/(?P<objid>\d+)(\/(?P<ver>\d+))?$')
 
-MAX_METADATA_STRING_LEN = 900
-MAX_METADATA_SIZE = 16000
+MAX_METADATA_STRING_BYTES = 900
+MAX_METADATA_SIZE_BYTES = 16000
 
 class PermissionsError(WorkspaceClient.ServerError):
     """Raised if user does not have permission to
@@ -166,9 +166,7 @@ class KBaseWSManagerMixin(object):
         try:
             meta = nb['metadata']
             if 'name' not in meta:
-                meta['name'] = 'Untitled'
-            else:
-                meta['name'] = meta['name'][0:MAX_METADATA_STRING_LEN-len('name')]
+                meta['name'] = u'Untitled'
             if 'ws_name' not in meta:
                 meta['ws_name'] = util.kbase_env.workspace or self._ws_id_to_name(ws_id)
             if 'creator' not in meta:
@@ -180,14 +178,17 @@ class KBaseWSManagerMixin(object):
             if 'data_dependencies' not in meta:
                 meta['data_dependencies'] = list()
             if 'job_ids' not in meta:
-                meta['job_ids'] = {'methods' : [], 'apps' : [], 'job_usage': {'queue_time': 0, 'run_time': 0}}
+                meta['job_ids'] = {u'methods' : [], u'apps' : [], u'job_usage': {u'queue_time': 0, u'run_time': 0}}
             if 'methods' not in meta['job_ids']:
                 meta['job_ids']['methods'] = list()
             if 'apps' not in meta['job_ids']:
                 meta['job_ids']['apps'] = list()
             if 'job_usage' not in meta['job_ids']:
-                meta['job_ids']['job_usage'] = {'queue_time': 0, 'run_time': 0}
+                meta['job_ids']['job_usage'] = {u'queue_time': 0, u'run_time': 0}
             meta['format'] = u'ipynb'
+
+            if len(meta['name'].encode('utf-8')) > MAX_METADATA_STRING_BYTES - len(u'name'.encode('utf-8')):
+                meta['name'] = meta['name'][0:MAX_METADATA_STRING_BYTES - len(u'name'.encode('utf-8'))]
 
             nb['metadata'] = meta
         except Exception as e:
@@ -328,43 +329,43 @@ class KBaseWSManagerMixin(object):
         # But we do need the totals anyway, in case we blow over the max metadata size.
 
         # final pass - trim out methods and apps if cell_kvp_len > total allowable size
-        kvp_len = lambda(x): sum([len(k) + len(str(x[k])) for k in x])
+        kvp_size = lambda(x): sum([len(k.encode('utf-8')) + len(str(x[k]).encode('utf-8')) for k in x])
 
-        metadata_len = kvp_len(metadata)
-        method_len = kvp_len(method_info)
-        app_len = kvp_len(app_info)
-        cell_len = kvp_len(cell_info)
+        metadata_size = kvp_size(metadata)
+        method_size = kvp_size(method_info)
+        app_size = kvp_size(app_info)
+        cell_size = kvp_size(cell_info)
 
-        total_len = metadata_len + cell_len + app_len + method_len
-        if total_len > MAX_METADATA_SIZE:
-            meth_overflow_key = 'method.overflow'
+        total_size = metadata_size + cell_size + app_size + method_size
+        if total_size > MAX_METADATA_SIZE_BYTES:
+            meth_overflow_key = u'method.overflow'
 
             # if we can make it under the limit by removing all methods, then we can likely
             # do so by removing some. So pop them out one at a time, and keep track of the lengths chopped.
             # otherwise, remove them all.
-            if total_len - method_len + len(meth_overflow_key) + len(str(num_methods)) < MAX_METADATA_SIZE:
+            if total_size - method_size + len(meth_overflow_key.encode('utf-8')) + len(str(num_methods).encode('utf-8')) < MAX_METADATA_SIZE_BYTES:
                 # filter them.
-                method_info = _filter_app_methods(total_len, meth_overflow_key, method_info)
+                method_info = _filter_app_methods(total_size, meth_overflow_key, method_info)
             else:
                 method_info = Counter({meth_overflow_key : num_methods})
-            total_len -= method_len
-            method_len = kvp_len(method_info)
-            total_len += method_len
+            total_size -= method_size
+            method_size = kvp_size(method_info)
+            total_size += method_size
 
         # test again, now focus on apps
-        if total_len > MAX_METADATA_SIZE:
-            app_overflow_key = 'app.overflow'
+        if total_size > MAX_METADATA_SIZE_BYTES:
+            app_overflow_key = u'app.overflow'
 
             # same for apps now.
-            if total_len - app_len + len(app_overflow_key) + len(str(num_apps)) < MAX_METADATA_SIZE:
-                app_info = _filter_app_methods(total_len, app_overflow_key, app_info)
+            if total_size - app_size + len(app_overflow_key.encode('utf-8')) + len(str(num_apps).encode('utf-8')) < MAX_METADATA_SIZE_BYTES:
+                app_info = _filter_app_methods(total_size, app_overflow_key, app_info)
             else:
                 app_info = Counter({app_overflow_key : num_apps})
-            total_len -= app_len
-            app_len = kvp_len(app_info)
-            total_len += app_len
+            total_size -= app_size
+            app_size = kvp_size(app_info)
+            total_size += app_size
 
-        # Now the total of everything must be under MAX_METADATA_SIZE. Smoosh them together into the
+        # Now the total of everything must be under MAX_METADATA_SIZE_BYTES. Smoosh them together into the
         # proper metadata object.
         metadata.update(method_info)
         metadata.update(app_info)
@@ -374,10 +375,10 @@ class KBaseWSManagerMixin(object):
 
     def _filter_app_methods(self, total_len, overflow_key, filter_dict):
         overflow_count = 0
-        while total_len + len(overflow_key) + len(str(overflow_count)) > MAX_METADATA_SIZE:
+        while total_len + len(overflow_key.encode('utf-8')) + len(str(overflow_count).encode('utf-8')) > MAX_METADATA_SIZE_BYTES:
             key, val = filter_dict.popitem()
             overflow_count += val
-            total_len = total_len - len(key) - len(str(val))
+            total_len = total_len - len(key.encode('utf-8')) - len(str(val).encode('utf-8'))
         filter_dict[overflow_key] = overflow_count
         return filter_dict
 

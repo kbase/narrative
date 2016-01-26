@@ -129,7 +129,7 @@ function($, Plotly) {
                 var data = [trace1, trace2, trace3, trace4, trace5]
 
                 var layout = {
-                    title: 'Flux Balace Analysis Against Gene Expression',
+                    title: 'Flux Balanace Analysis Against Gene Expression',
                     barmode: 'stack',
                     margin: {
                        l: 350

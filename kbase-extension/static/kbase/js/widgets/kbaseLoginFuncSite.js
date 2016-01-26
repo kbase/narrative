@@ -52,7 +52,7 @@ define([
     'jquery',
     'narrativeConfig',
     'kbase-client-api',
-    'jquery_cookie',
+    'jqueryCookie',
     'kbwidget',
     'kbasePrompt',
     'bootstrap'
@@ -320,7 +320,7 @@ define([
                 function (args) {
                     var setUsernameField = function(name, id) {
                         this.data('loggedinuser_id').text(name)
-                            .attr('href', '/functional-site/#/people/' + id)
+                            .attr('href', '/#people/' + id)
                             .click();
                     }.bind(this);
 

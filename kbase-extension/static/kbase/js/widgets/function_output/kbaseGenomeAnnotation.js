@@ -5,13 +5,16 @@
  */
 
 define(['jquery', 
+        'narrativeConfig',
         'ContigBrowserPanel', 
         'kbwidget', 
         'kbaseAuthenticatedWidget', 
         'kbaseTabs',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap'], 
-    function($, ContigBrowserPanel) {
+function($, 
+         Config,
+         ContigBrowserPanel) {
     $.KBWidget({
         name: "kbaseGenomeView",
         parent: "kbaseAuthenticatedWidget",
@@ -24,8 +27,8 @@ define(['jquery',
             ws_id: null,
             ws_name: null
         },
-        loadingImage: window.kbconfig.loading_gif,
-        wsUrl: window.kbconfig.urls.workspace,
+        loadingImage: Config.get('loading_gif'),
+        wsUrl: Config.url('workspace'),
         timer: null,
         lastElemTabNum: 0,
 

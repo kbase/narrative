@@ -4,7 +4,7 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['NarrativeViewers'], function(Viewers) {
+define(['narrativeViewers'], function(Viewers) {
     'use strict';
     describe('Test the NarrativeViewers module', function() {
         it('should load viewer info as a promise', function(done) {

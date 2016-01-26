@@ -7,8 +7,8 @@
 define(['jquery',
         'underscore',
         'narrativeConfig',
-        'Util/String',
-        'Util/Display',
+        'util/string',
+        'util/display',
         'kbase-client-api',
         'jquery-nearest',
         'kbwidget',
@@ -24,11 +24,9 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             ws_name: null, // must be the WS name, not the WS Numeric ID
 
             ws_url: Config.url('workspace'),
-            landing_page_url: "/functional-site/#/", // !! always include trailing slash
             lp_url: Config.url('landing_pages'),
             profile_page_url: Config.url('profile_page'),
 
-            user_name_fetch_url: "https://kbase.us/services/genome_comparison/users?usernames=",
             loadingImage: Config.get('loading_gif'),
             methodStoreURL: Config.url('narrative_method_store'), 
 
@@ -92,10 +90,10 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             this.$controllerDiv = $('<div>');
             this.$elem.append(this.$controllerDiv);
             this.renderController();
-            this.$loadingDiv = $('<div>').addClass('kb-data-loading')
-                .append('<img src="' + this.options.loadingImage + '">')
-                .hide();
-            this.$elem.append(this.$loadingDiv);
+            // this.$loadingDiv = $('<div>').addClass('kb-data-loading')
+            //     .append('<img src="' + this.options.loadingImage + '">')
+            //     .hide();
+            // this.$elem.append(this.$loadingDiv);
             this.mainListId = StringUtil.uuid();
             this.$mainListDiv = $('<div id=' + this.mainListId + '>')
                 .css({'overflow-x': 'hidden', 'overflow-y': 'auto', 'height': this.mainListPanelHeight})
@@ -133,16 +131,9 @@ function ($, _, Config, StringUtil, DisplayUtil) {
 
             return this;
         },
-        setWorkspace: function (ws_name) {
-            this.ws_name = ws_name;
-            // this.ws_name = "janakacore"; // for testing a bigish workspace
-            //this.ws_name = "KBasePublicGenomesV4"; // for testing a very big workspace
-            this.refresh();
-        },
         refresh: function (showError) {
             var self = this;
 
-            console.log('DataList: refresh -- ' + self.ws_name);
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (self.refreshTimer === null) {
@@ -158,7 +149,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                         //[0] ws_id id, [1] ws_name workspace, [2] username owner, [3] timestamp moddate,
                         //[4] int object, [5] permission user_permission, [6] permission globalread,
                         //[7] lock_status lockstat, [8] usermeta metadata
-                        //console.log('I have: '+self.ws_last_update_timestamp+ " remote has: "+workspace_info[3]);
 
                         // Update RO or RW mode
                         self.trigger("updateReadOnlyMode.Narrative",
@@ -170,7 +160,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                                 self.ws_obj_count = workspace_info[4];
                                 self.reloadWsData();
                             } else {
-                                //console.log('updating times');
                                 self.refreshTimeStrings();
                             }
                         } else {
@@ -187,13 +176,12 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                             self.$mainListDiv.append($('<div>').css({'color': '#F44336', 'margin': '10px'})
                                 .append('Error: Unable to connect to KBase data.'));
                         }
-                        self.hideLoading();
                     });
             } else {
                 console.error('DataList: missing variable(s)');
                 console.error('ws_name: ' + self.ws_name);
                 console.error('ws: ' + self.ws);
-                self.hideLoading();
+
                 /*Not really an error yet because we don't know what order things are being called
                  var where = "kbaseNarrativeDataList.refresh";
                  if (!self.ws) {
@@ -225,7 +213,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         reloadWsData: function () {
             var self = this;
-            console.log('DataList: reloadWsData');
             if (self.ws_name && self.ws) {
                 // empty the existing object list first
                 self.objectList = [];
@@ -237,7 +224,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         getNextDataChunk: function (skip) {
             var self = this;
-            console.log('DataList: getNextDataChunk - ' + skip);
             self.ws.list_objects({
                 workspaces: [self.ws_name],
                 includeMetadata: 1,
@@ -245,8 +231,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 limit: self.options.ws_chunk_size
             },
                 function (infoList) {
-                    console.log('DataList: getNextDataChunk return');
-                    console.log(infoList);
                     // object_info:
                     // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
                     // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
@@ -329,7 +313,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
 
                     self.populateAvailableTypes();
                     self.renderList();
-                    self.hideLoading();
                 },
                 function (error) {
                     console.error(error);
@@ -339,7 +322,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                     self.$mainListDiv.empty();
                     self.$mainListDiv.append($('<div>').css({'color': '#F44336', 'margin': '10px'})
                         .append('Error: ' + error.error.message));
-                    self.hideLoading();
                 });
 
         },
@@ -545,7 +527,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 .click(function (e) {
                     e.stopPropagation();
                     $alertContainer.empty();
-                    window.open(self.options.landing_page_url + 'objgraphview/' + object_info[7] + '/' + object_info[1]);
+                    window.open('/#objgraphview/' + object_info[7] + '/' + object_info[1]);
                 });
             var $download = $('<span>')
                 .addClass(btnClasses).css(css)
@@ -740,7 +722,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 $byUser.append(' by ' + object_info[5])
                     .click(function (e) {
                         e.stopPropagation();
-                        window.open(self.options.landing_page_url + 'people/' + object_info[5]);
+                        window.open('/#people/' + object_info[5]);
                     });
             }
             var metadata = object_info[10];
@@ -760,8 +742,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             DisplayUtil.displayRealName(object_info[5], $savedByUserSpan);
 
             var $alertDiv = $('<div>').css({'text-align': 'center', 'margin': '10px 0px'});
-            var typeLink = '<a href="' + this.options.landing_page_url + 'spec/module/' + type_module + '" target="_blank">' + type_module + "</a>.<wbr>" +
-                '<a href="' + this.options.landing_page_url + 'spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
+            var typeLink = '<a href="/#spec/module/' + type_module + '" target="_blank">' + type_module + "</a>.<wbr>" +
+                '<a href="/#spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
             var $moreRow = $('<div>').addClass("kb-data-list-more-div").hide()
                 .append($('<div>').css({'text-align': 'center', 'margin': '5pt'})
                     .append(self.addDataControls(object_info, $alertDiv)).append($alertDiv))
@@ -921,7 +903,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 }
             });
             node.addEventListener('dragend', function (e) {
-                console.log('drag ended...');
                 var container = document.querySelector('#notebook-container'),
                     targetCells = document.querySelectorAll('#notebook-container .kb-data-list-drag-target');
                 for (var i = 0; i < targetCells.length; i += 1) {
@@ -970,7 +951,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 $(cell.element).off('dblclick');
                 $(cell.element).off('keydown');
             }
-            //console.log(cell, near_idx);
 
             //var cell_id = StringUtil.uuid();
             //cell.rendered = false;
@@ -986,7 +966,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 'widget': 'kbaseNarrativeDataCell',
                 'info': info
             });
-
         },
         renderMore: function () {
             var self = this;
@@ -1001,7 +980,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                         }
                         self.attachRow(i);
                     }
-                    //console.log('showing '+ self.n_objs_rendered + ' of ' + self.objectList.length);
                 } else {
                     // search filter is on, so we have to base this on what is currently filtered
                     var start = self.n_filteredObjsRendered;
@@ -1013,7 +991,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                         self.attachRowElement(self.currentMatch[i]);
                         self.n_filteredObjsRendered++;
                     }
-                    //console.log('showing '+ self.n_filteredObjsRendered + ' of ' + self.currentMatch.length + ' objs matching search filter');
                 }
             }
         },
@@ -1063,7 +1040,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         renderList: function () {
             var self = this;
-            self.showLoading();
 
             self.detachAllRows();
 
@@ -1099,8 +1075,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 }
                 self.$mainListDiv.append($noDataDiv);
             }
-
-            self.hideLoading();
         },
         renderController: function () {
             var self = this;
@@ -1354,22 +1328,16 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             self.objectList.reverse();
             self.renderList();
             self.search();
-
-            self.hideLoading();
         },
         sortData: function (sortfunction) {
             var self = this;
             if (!self.objectList) {
                 return;
             }
-            //should add spinning wait bar ....
-            self.showLoading();
 
             self.objectList.sort(sortfunction);
             self.renderList();
             self.search();  // always refilter on the search term search if there is something there
-
-            self.hideLoading();
 
             // go back to the top on sort
             self.$mainListDiv.animate({
@@ -1501,14 +1469,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             var $usernameTd = $moreRow.find(".kb-data-list-username-td");
             DisplayUtil.displayRealName(object_info[5], $usernameTd);
         },
-        showLoading: function () {
-            this.$loadingDiv.show();
-            this.$mainListDiv.hide();
-        },
-        hideLoading: function () {
-            this.$loadingDiv.hide();
-            this.$mainListDiv.show();
-        },
 
         /**
          * @method loggedInCallback
@@ -1518,7 +1478,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
          * @private
          */
         loggedInCallback: function (event, auth) {
-            console.log('DataList: loggedInCallback');
             this.ws = new Workspace(this.options.ws_url, auth);
             this.my_user_id = auth.user_id;
             this.isLoggedIn = true;

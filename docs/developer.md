@@ -29,7 +29,7 @@ the Narrative work.
 
     If you want to use a virtual environment when installing your local narrative, you'll need virtualenv. You can get that pretty easily with
 
-    `> pip install virtualenv`
+    `> pip install virtualenv --upgrade`
 
     More details on WHY you'd want to do this below.
 

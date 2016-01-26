@@ -20,6 +20,7 @@ bower install
 
 3. Create a virtual environment with virtualenv. This creates a directory that encapsulates a complete environment that is separate from others on your system, and protects your system from module and version conflicts.
 ```
+pip install virtualenv --upgrade   # vanilla Ubuntu 14.04 images come with a very old version of virtualenv that might be problematic
 virtualenv my_narrative_venv
 ```
 

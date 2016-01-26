@@ -18,7 +18,6 @@ function($, Config) {
         options: {
             ws_name: null, // must be the WS name, not the WS Numeric ID
             ws_url: Config.url('workspace'),
-            landing_page_url: "/functional-site/#/", // !! always include trailing slash
             loadingImage: Config.get('loading_gif'),
             exampleWsName: 'KBaseExampleData', // designed to be a workspace with just a handful of objects
 	    $importStatus:$('<div>'),
@@ -271,31 +270,6 @@ function($, Config) {
                     $type.html('Genome: '+metadata['Name']);
                 }
             }
-            /*
-            
-            var $moreRow  = $('<div>').addClass("kb-data-list-more-div").hide()
-                                .append($('<div>').css({'text-align':'center','margin':'5pt'})
-                                            .append('<a href="'+landingPageLink+'" target="_blank">'+
-                                                        'explore data</a>&nbsp&nbsp|&nbsp&nbsp')
-                                            .append('<a href="'+this.options.landing_page_url+'objgraphview/'+object_info[7] +'/'+object_info[1] +'" target="_blank">'+
-                                                        'view provenance</a><br>'))
-                                .append(
-                                    $('<table style="width=100%">')
-                                        .append("<tr><th>Permament Id</th><td>" +object_info[6]+ "/" +object_info[0]+ "/" +object_info[4] + '</td></tr>')
-                                        .append(metadataText));
-
-            var $toggleAdvancedViewBtn = $('<span>').addClass('btn btn-default btn-xs kb-data-list-more-btn')
-                .html('<span class="fa fa-plus" style="color:#999" aria-hidden="true"/>')
-                .on('click',function() {
-                        var $more = $(this).closest(".kb-data-list-obj-row").find(".kb-data-list-more-div");
-                        if ($more.is(':visible')) {
-                            $more.slideToggle('fast');
-                            $(this).html('<span class="fa fa-plus" style="color:#999" aria-hidden="true" />');
-                        } else {
-                            $more.slideToggle('fast');
-                            $(this).html('<span class="fa fa-minus" style="color:#999" aria-hidden="true" />');
-                        }
-                    });*/
             var icons = this.data_icons;
             var icon = _.has(icons, type) ? icons[type] : icons['DEFAULT'];
             var $logo = $('<span>');

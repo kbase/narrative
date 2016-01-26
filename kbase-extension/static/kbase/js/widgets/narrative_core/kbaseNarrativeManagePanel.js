@@ -5,8 +5,8 @@
  */
 define(['jquery', 
         'narrativeConfig',
-        'NarrativeManager',
-        'Util/Display',
+        'narrativeManager',
+        'util/display',
         'narrativeConfig',
         'kbwidget', 
         'kbaseNarrativeControlPanel'],
@@ -34,12 +34,10 @@ function($,
             loadingImage: Config.get('loading_gif'),
             ws_url: Config.url('workspace'),
             nms_url: Config.url('narrative_method_store'),
-            user_name_fetch_url:"https://kbase.us/services/genome_comparison/users?usernames=",
-            landing_page_url: "/functional-site/#/", // !! always include trailing slash
             profile_page_url: Config.url('profile_page'),
             ws_name: null,
             nar_name: null,
-            new_narrative_link: "/functional-site/#/narrativemanager/new"
+            new_narrative_link: "/#narrativemanager/new"
         },
         ws: null,
         manager: null,
@@ -175,8 +173,8 @@ function($,
                                     if (objList[i] !== null && objList[i][2].indexOf('KBaseNarrative.Narrative') === 0) {
                                         self.allNarData[i].nar_info = objList[i];
                                     } else {
-                                        console.error('Corrupted Workspace: ');
-                                        console.error('Searching for narrative: ', narRefsToLookup[i], ' but got: ', objList[i]);
+                                        // console.error('Corrupted Workspace: ');
+                                        // console.error('Searching for narrative: ', narRefsToLookup[i], ' but got: ', objList[i]);
                                         self.allNarData[i].error = true;
                                         (function (errorIndex) {
                                             self.ws.get_object_info_new({objects: [narRefsToLookup[errorIndex]], includeMetadata: 1, ignoreErrors: 0},
@@ -202,7 +200,7 @@ function($,
                                 self.renderPanel();
                             },
                             function (error) {
-                                console.error(error);
+                                // console.error(error);
                             });
                     },
                     function (error) {
@@ -532,23 +530,6 @@ function($,
                     });
             }
 
-            /*var $openProvenance = $('<span>')
-             .addClass(btnClasses).css(css)
-             .tooltip({title:'View data provenance and relationships', 'container':'body'})
-             .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
-             .click(function(e) {
-             e.stopPropagation(); $alertContainer.empty();
-             window.open(self.options.landing_page_url+'objgraphview/'+object_info[7]+'/'+object_info[1]);
-             });*/
-            /*var $download = $('<span>')
-             .addClass(btnClasses).css(css)
-             .tooltip({title:'Export / Download data', 'container':'body'})
-             .append($('<span>').addClass('fa fa-download').css(css))
-             .click(function(e) {
-             e.stopPropagation(); $alertContainer.empty();
-             $alertContainer.append('Coming soon');
-             });*/
-
             var $copy = $('<button>');
             if (!isError) {
                 $copy
@@ -571,13 +552,13 @@ function($,
                             .addClass('form-control')
                             .val(ws_info[8].narrative_nice_name + ' - Copy')
                             .on('focus', function () {
-                                if (IPython && IPython.narrative) {
-                                    IPython.narrative.disableKeyboardManager();
+                                if (Jupyter && Jupyter.narrative) {
+                                    Jupyter.narrative.disableKeyboardManager();
                                 }
                             })
                             .on('blur', function () {
-                                if (IPython && IPython.narrative) {
-                                    IPython.narrative.enableKeyboardManager();
+                                if (Jupyter && Jupyter.narrative) {
+                                    Jupyter.narrative.enableKeyboardManager();
                                 }
                             });
 
@@ -708,7 +689,7 @@ function($,
                                         self.ws.delete_workspace({id: ws_info[0]},
                                             function () {
                                                 if (isCurrent) {
-                                                    window.location.replace(self.options.landing_page_url + 'narrativemanager/start');
+                                                    window.location.replace('/#narrativemanager/start');
                                                 } else {
                                                     self.refresh();
                                                 }
@@ -1217,9 +1198,9 @@ function($,
                             $container.append('<br><b>Apps</b><br>');
                             var $apptbl = $('<table>').css({'width': '100%'});
                             for (var k = 0; k < apps.length; k++) {
-                                var link = '<a href="' + self.options.landing_page_url + 'narrativestore/app/' + apps[k].name + '" target="_blank">' + apps[k].name + '</a>';
+                                var link = '<a href="/#narrativestore/app/' + apps[k].name + '" target="_blank">' + apps[k].name + '</a>';
                                 if (specLookup.apps[apps[k].name]) {
-                                    link = '<a href="' + self.options.landing_page_url + 'narrativestore/app/' + apps[k].name + '" target="_blank">' + specLookup.apps[apps[k].name].info.name + '</a>';
+                                    link = '<a href="/#narrativestore/app/' + apps[k].name + '" target="_blank">' + specLookup.apps[apps[k].name].info.name + '</a>';
                                 }
                                 $apptbl.append($('<tr>')
                                     .append($('<td>').append(link))
@@ -1232,9 +1213,9 @@ function($,
                             $container.append('<br><b>Methods</b><br>');
                             var $methodtbl = $('<table>').css({'width': '100%'});
                             for (var k = 0; k < methods.length; k++) {
-                                var link = '<a href="' + self.options.landing_page_url + 'narrativestore/method/' + methods[k].name + '" target="_blank">' + methods[k].name + '</a>';
+                                var link = '<a href="/#narrativestore/method/' + methods[k].name + '" target="_blank">' + methods[k].name + '</a>';
                                 if (specLookup.methods[methods[k].name]) {
-                                    link = '<a href="' + self.options.landing_page_url + 'narrativestore/method/' + methods[k].name + '" target="_blank">' + specLookup.methods[methods[k].name].info.name + '</a>';
+                                    link = '<a href="/#narrativestore/method/' + methods[k].name + '" target="_blank">' + specLookup.methods[methods[k].name].info.name + '</a>';
                                 }
                                 $methodtbl.append($('<tr>')
                                     .append($('<td>').append(link))

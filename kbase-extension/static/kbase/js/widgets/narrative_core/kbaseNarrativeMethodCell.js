@@ -1,7 +1,7 @@
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
- * This is a generalized class for an input cell that sits in an IPython markdown cell.
+ * This is a generalized class for an input cell that sits in an Jupyter markdown cell.
  * It handles all of its rendering here (no longer in HTML in markdown), and invokes
  * an input widget passed to it.
  *
@@ -12,7 +12,7 @@
 (function( $, undefined ) {
 require(['jquery',
          'narrativeConfig',
-         'Util/String',
+         'util/string',
          'handlebars', 
          'kbwidget', 
          'kbaseAuthenticatedWidget',
@@ -31,7 +31,7 @@ function($,
         options: {
             method: null,
             cellId: null,
-            methodHelpLink: '/functional-site/#/narrativestore/method/'
+            methodHelpLink: '/#/narrativestore/method/'
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -95,14 +95,14 @@ function($,
                     this.submittedText = '&nbsp;&nbsp; submitted on ' + this.readableTimestamp();
                     if(this.auth()) {
                         if(this.auth().user_id)
-                            this.submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
+                            this.submittedText += ' by <a href="/#people/'+this.auth().user_id
                                 +'" target="_blank">' + this.auth().user_id + "</a>";
                     }
                     console.log('** submitted' + (new Date()).getTime());
                     this.changeState('submitted');
                     this.minimizeView();
                     this.trigger('runCell.Narrative', {
-                        cell: IPython.notebook.get_selected_cell(),
+                        cell: Jupyter.notebook.get_selected_cell(),
                         method: this.method,
                         parameters: this.getParameters(),
                         widget: this

@@ -3,7 +3,7 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
- * This is a generalized class for an input cell that sits in an IPython markdown cell.
+ * This is a generalized class for an input cell that sits in an Jupyter markdown cell.
  * It handles all of its rendering here (no longer in HTML in markdown), and invokes
  * an input widget passed to it.
  *
@@ -13,13 +13,16 @@
 
 (function( $, undefined ) {
   require(['jquery',
-           'narrativeConfig', 
+           'narrativeConfig',
+           'util/string',
            'kbwidget',
            'kbaseAuthenticatedWidget',
            'kbaseAccordion',
            'kbaseNarrativeOutputCell'
            ], 
-           function($, Config) {
+  function($, 
+           Config,
+           StringUtil) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeAppCell",
@@ -31,8 +34,8 @@
             loadingImage: Config.get('loading_gif'),
             methodStoreURL: Config.url('narrative_method_store'),
 
-            appHelpLink: '/functional-site/#/narrativestore/app/',
-            methodHelpLink: '/functional-site/#/narrativestore/method/'
+            appHelpLink: '/#narrativestore/app/',
+            methodHelpLink: '/#narrativestore/method/'
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -133,7 +136,7 @@
                 $errorPanel.append($('<div>').append(error));
             }
 
-            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            // If it's an object, expect an error object as returned by the execute_reply callback from the Jupyter kernel.
             else if (typeof error === 'object') {
                 var $details = $('<div>');
                 $details.append($('<div>')
@@ -186,7 +189,7 @@
                                       var submittedText = "&nbsp;&nbsp; submitted on "+this.readableTimestamp(new Date().getTime());
                                       if(this.auth()) {
                                           if(this.auth().user_id)
-                                              submittedText += ' by <a href="/functional-site/#/people/'+this.auth().user_id
+                                              submittedText += ' by <a href="/#people/'+this.auth().user_id
                                                                       +'" target="_blank">' + this.auth().user_id + "</a>";
                                       }
                                       this.$submitted.html(submittedText);
@@ -195,7 +198,7 @@
 
                                       event.preventDefault();
                                       this.trigger('runApp.Narrative', {
-                                          cell: IPython.notebook.get_selected_cell(),
+                                          cell: Jupyter.notebook.get_selected_cell(),
                                           appSpec: this.appSpec,
                                           methodSpecs: this.methodSpecs,
                                           parameters: this.getParameters()
@@ -385,7 +388,7 @@
 
             // First setup the Input widget header
             var $inputWidgetDiv = $("<div>");
-            var methodId = stepSpec.info.id + '-step-details-' + this.genUUID();
+            var methodId = stepSpec.info.id + '-step-details-' + StringUtil.uuid();
             var buttonLabel = 'details';
             var methodDesc = stepSpec.info.subtitle;
             var $header = $('<div>').css({'margin-top':'4px'})
@@ -993,8 +996,8 @@
                         output: objCopy
                     };
 
-                    if (IPython && IPython.narrative && !preventSave)
-                        IPython.narrative.saveNarrative();
+                    if (Jupyter && Jupyter.narrative && !preventSave)
+                        Jupyter.narrative.saveNarrative();
                 }
             }
         },
@@ -1010,8 +1013,8 @@
                         showMenu: false,
                         time: new Date().getTime()
                     });
-                    if (IPython && IPython.narrative)
-                        IPython.narrative.saveNarrative();
+                    if (Jupyter && Jupyter.narrative)
+                        Jupyter.narrative.saveNarrative();
                 }
             }
         },
@@ -1020,8 +1023,8 @@
 
         initErrorModal: function() {
             var self=this;
-            var errorModalId = "app-error-modal-"+ self.genUUID();
-            var modalLabel = "app-error-modal-lablel-"+ self.genUUID();
+            var errorModalId = "app-error-modal-"+ StringUtil.uuid();
+            var modalLabel = "app-error-modal-lablel-"+ StringUtil.uuid();
             self.$errorModalContent = $('<div>');
             self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true">').addClass("modal fade");
             self.$errorModal.append(
@@ -1047,13 +1050,6 @@
                     this.inputSteps[i].widget.refresh();
                 }
             }
-        },
-
-        genUUID: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);
-            });
         },
 
          /**

@@ -17,7 +17,6 @@
  * @public
  */
 define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
-//(function($, undefined) {
     $.KBWidget({
         name: 'kbaseNarrativeControlPanel', 
         parent: 'kbaseAuthenticatedWidget',
@@ -43,7 +42,6 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
             this._super(options);
 
             this.render();
-            /** commenting out the overlay panel for now **/
             return this;
         },
 
@@ -105,7 +103,6 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
                               .append($('<div>')
                                       .addClass('kb-narr-panel-body')
                                       .css({ 
-//                                          'max-height' : this.options.maxHeight,
                                           'overflow-y' : 'auto'
                                       })
                                       .append(this.$bodyDiv)));

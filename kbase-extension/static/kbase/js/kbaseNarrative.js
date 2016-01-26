@@ -8,6 +8,7 @@
  */
 define([
     'jquery', 
+    'bluebird',
     'narrativeConfig',
     'kbaseNarrativeSidePanel', 
     'kbaseNarrativeOutputCell', 
@@ -19,9 +20,10 @@ define([
     'ipythonCellMenu',
     'base/js/events',
     'notebook/js/notebook',
-    'Util/Display'
+    'util/display'
 ], 
 function($,
+         Promise,
          Config,
          kbaseNarrativeSidePanel,
          kbaseNarrativeOutputCell,
@@ -133,6 +135,7 @@ function($,
             ws_name_or_id: this.getWorkspaceName()
         });
         $('#kb-share-btn').popover({
+            trigger: 'click',
             html : true,
             placement : "bottom",
             content: function() {
@@ -213,23 +216,21 @@ function($,
     Narrative.prototype.checkVersion = function($newVersion) {
         // look up new version here.
         var self = this;
-        $.ajax({
+        Promise.resolve($.ajax({
             url: Config.url('version_check'),
             async: true,
             dataType: 'text',
             crossDomain: true,
-            cache: false,
-            success: function(ver) {
-                ver = $.parseJSON(ver);
-                if (self.currentVersion !== ver.version) {
-                    $newVersion.empty().append('<b>' + ver.version + '</b>');
-                    $('#kb-update-btn').fadeIn('fast'); 
-                }
-            },
-            error: function(err) {
-                console.log('Error while checking for a version update: ' + err.statusText);
-                KBError('Narrative.checkVersion', 'Unable to check for a version update!');
-            },
+            cache: false
+        })).then(function(ver) {
+            ver = $.parseJSON(ver);
+            if (self.currentVersion !== ver.version) {
+                $newVersion.empty().append('<b>' + ver.version + '</b>');
+                $('#kb-update-btn').fadeIn('fast'); 
+            }
+        }).catch(function(error) {
+            console.error('Error while checking for a version update: ' + error.statusText);
+            KBError('Narrative.checkVersion', 'Unable to check for a version update!');
         });
     };
 
@@ -423,6 +424,7 @@ function($,
         else {
             KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');
         }
+        $('#kb-wait-for-ws').remove();
     };
 
     /**
@@ -433,17 +435,17 @@ function($,
      */
     Narrative.prototype.updateVersion = function() {
         var user = $('#signin-button').kbaseLogin('session', 'user_id');
-        var prom = $.ajax({
+        Promise.resolve($.ajax({
             contentType: 'application/json',
             url: '/narrative_shutdown/' + user,
             type: 'DELETE',
             crossDomain: true
-        });
-        prom.done(function(jqXHR, response, status) {
+        }))
+        .then(function() {
             setTimeout(function() { location.reload(true); }, 200);
-        });
-        prom.fail(function(jqXHR, response, error) {
-            alert('Unable to update your Narrative session\nError: ' + jqXHR.status + ' ' + error);
+        })
+        .catch(function(error) {
+            alert('Unable to update your Narrative session\nError: ' + error.statusText + ' ' + error);
         });
     };
 

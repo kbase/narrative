@@ -18,7 +18,6 @@ function($, Config) {
             loadingImage: Config.get('loading_gif'),
             autorender: true,
             workspaceURL: Config.url('workspace'),
-            landingPageURL: "/functional-site/#/", // used for data importer
         },
         $dataWidget: null,
         $methodsWidget: null,
@@ -251,7 +250,7 @@ function($, Config) {
                     this.$overlay.append(panel);
                     this.currentPanel = panel;
                 }
-                IPython.narrative.disableKeyboardManager();
+                Jupyter.narrative.disableKeyboardManager();
                 this.$narrativeDimmer.show();
                 this.$elem.find('.kb-side-header').addClass('overlay-active');
                 this.$overlay.show('slide', 'fast', $.proxy(function() {
@@ -261,7 +260,7 @@ function($, Config) {
 
         hideOverlay: function() {
             if (this.$overlay) {
-                IPython.narrative.enableKeyboardManager();
+                Jupyter.narrative.enableKeyboardManager();
                 this.$narrativeDimmer.hide();
                 this.$elem.find('.kb-side-header').removeClass('overlay-active');
                 this.$overlay.hide('slide', 'fast', $.proxy(function() {

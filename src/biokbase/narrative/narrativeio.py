@@ -412,7 +412,16 @@ class KBaseWSManagerMixin(object):
 
     def narrative_writable(self, obj_ref, user):
         """
-        Returns True if the user can write to the narrative, False otherwise.
+        Returns True if the logged in user can know if the given user can write to this narrative.
+        E.g. user A is logged in. If A can see user B's permissions, and user B can write to this
+        narrative, True is returned.
+
+        Another e.g. nobody is logged in, and cannot see any permissions. False is returned.
+
+        This is intended to be a quick check for kbwsmanager to flag the narrative as writable for the
+        currently logged in user. A logged in user can see their own permissions, always, if they exist
+        on that narrative.
+
         Throws a WorkspaceClient.ServerError if not logged in, or 
         if the narrative doesn't exist.
         """

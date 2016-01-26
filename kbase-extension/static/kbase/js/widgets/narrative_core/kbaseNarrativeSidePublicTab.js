@@ -6,10 +6,13 @@
  * @public
  */
 define(['jquery',
+        'bluebird',
         'narrativeConfig',
         'kbwidget',
         'kbaseAuthenticatedWidget'],
-function($, Config) {
+function($, 
+         Promise, 
+         Config) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeSidePublicTab",
@@ -19,7 +22,6 @@ function($, Config) {
             $importStatus:$('<div>'),
         	addToNarrativeButton: null,
         	selectedItems: null,
-        	landing_page_url: "/functional-site/#/", // !! always include trailing slash
         	lp_url: Config.url('landing_pages'),
 		    ws_name: null
         },
@@ -323,22 +325,16 @@ function($, Config) {
         	var escapedQ = this.escapeSearchQuery(query);
         	var url = this.searchUrlPrefix + '?itemsPerPage=' + itemsPerPage + '&' +
         		'page=' + pageNum + '&q=' + encodeURIComponent(escapedQ) + '&category=' + category;
-        	var promise = jQuery.Deferred();
-        	jQuery.ajax(url, {
-        		success: function (data) {
-        			ret(query, data);
-        			promise.resolve();
-        		},
-        		error: function(jqXHR, error){
-        			if (errorCallback)
-    					errorCallback(error);
-        			promise.resolve();
-        		},
-        		headers: {},
-        		type: "GET"
-        	});
 
-        	return promise;
+            return Promise.resolve($.get(url))
+                .then(function(data) {
+                    ret(query, data);
+                })
+                .catch(function(error) {
+                    if(errorCallback) {
+                        errorCallback(error);
+                    }
+                });
         },
 
         renderObjectRowDiv: function(object) {
@@ -392,7 +388,7 @@ function($, Config) {
                                         .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
                                         .click(function(e) {
                                             e.stopPropagation();
-                                            window.open(self.options.landing_page_url+'objgraphview/'+object.ws+'/'+object.id);
+                                            window.open('/#objgraphview/'+object.ws+'/'+object.id);
                                         });
             $btnToolbar.append($openLandingPage).append($openProvenance);
 

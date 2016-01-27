@@ -10,7 +10,8 @@ define(['jquery',
         'bluebird',
         'narrativeConfig',
         'kbwidget', 
-        'kbaseNarrativeControlPanel'],
+        'kbaseNarrativeControlPanel',
+        'api/NewWorkspace'],
 function($, 
          Config, 
          NarrativeManager,
@@ -75,6 +76,7 @@ function($,
         my_user_id: null,
         loggedInCallback: function (event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
+
             this.manager = new NarrativeManager({ws_url: this.options.ws_url, nms_url: this.options.nms_url}, auth);
             this.my_user_id = auth.user_id;
             this.refresh();
@@ -103,8 +105,47 @@ function($,
                 return;
             this.narData = null;
             var narRefsToLookup = [];
+            var wsPermsToLookup = [];
             this.showLoading();
-            Promise.resolve(this.ws.list_workspace_info({excludeGlobal: 1}))
+            var wsInfoProm = Promise.resolve(this.ws.list_workspace_info({excludeGlobal: 1}));
+
+            // var wsPermissionsProm = wsInfoProm
+            // .then(function (wsList) {
+            //     // Make a new call for each 1000 workspaces in the list.
+            //     var permProms = [];
+
+            //     /*WORKSPACE INFO
+            //      0: ws_id id
+            //      1: ws_name workspace
+            //      2: username owner
+            //      3: timestamp moddate,
+            //      4: int object
+            //      5: permission user_permission
+            //      6: permission globalread,
+            //      7: lock_status lockstat
+            //      8: usermeta metadata*/
+
+            //     for (var i=0; i<wsList.length; i+=1000) {
+            //         var chunk = wsList.slice(i, i+1000);
+            //         var permParams = [];
+            //         for (var j=0; j<chunk.length; j++) {
+            //             if (!chunk[j][8] || chunk[j][8].is_temporary === 'true' || !chunk[j][8].narrative)
+            //                 continue;
+            //             permParams.push({'id' : chunk[j][0]});
+            //         }
+            //         permProms.push(Promise.resolve(this.ws.get_permissions))
+            //     }
+            //     return Promise.resolve(this.ws.get_permissions_mass({'workspaces': [{'id': 4664}]}));
+            // }.bind(this))
+            // .then(function (perms) {
+            //     console.log('GET_PERMISSIONS_MASS');
+            //     console.log(perms);
+            // }.bind(this))
+            // .catch(function (error) {
+            //     console.log(error);
+            // });
+
+            var narDataProm = wsInfoProm
             .then(function (wsList) {
                 this.narData = {
                     mine: [],
@@ -146,10 +187,12 @@ function($,
                                 this.allNarData.push(info);
                                 this.narData.mine.push(info);
                                 narRefsToLookup.push({ref: info.ws_info[0] + "/" + wsList[i][8].narrative});
+                                wsPermsToLookup.push({id: info.ws_info[0]});
                             } else if (wsList[i][5] === 'a' || wsList[i][5] === 'w' || wsList[i][5] === 'r') {
                                 this.allNarData.push(info);
                                 this.narData.shared.push(info);
                                 narRefsToLookup.push({ref: info.ws_info[0] + "/" + wsList[i][8].narrative});
+                                wsPermsToLookup.push({id: info.ws_info[0]});
                             }
                         }
                         if (wsList[i][5] === 'a' || wsList[i][5] === 'w') {
@@ -159,15 +202,31 @@ function($,
                         }
                     }
                 }
-                if (narRefsToLookup.length > 0)
-                    return Promise.resolve(this.ws.get_object_info_new({objects: narRefsToLookup, includeMetadata: 1, ignoreErrors: 1}));
+                var newProms = []
+                if (narRefsToLookup.length > 0) {
+                    var objInfoProm = Promise.resolve(this.ws.get_object_info_new({objects: narRefsToLookup, includeMetadata: 1, ignoreErrors: 1}));
+                    newProms.push(objInfoProm);
+
+                    for (var i=0; i<wsPermsToLookup.length; i+=5) {
+                        newProms.push(Promise.resolve(this.ws.get_permissions_mass({workspaces: wsPermsToLookup.slice(i, i+5)})));
+                    }
+                }
+                return Promise.all(newProms);
             }.bind(this))
-            .then(function(objList) {
+            .then(function(results) {//objList, rest are permList) {
+                var objList = results.shift();
+                var permList = [];
+                for (var i=0; i<results.length; i++) {
+                    permList = permList.concat(results[i].perms);
+                }
                 if (!objList)
                     return;
-
+                // console.log('PERMS!');
+                // console.log(permList);
+                // console.log(objList);
                 var errorProms = [];
                 for (var i = 0; i < objList.length; i++) {
+                    this.allNarData[i].perms = permList[i];
                     if (objList[i] !== null && objList[i][2].indexOf('KBaseNarrative.Narrative') === 0) {
                         this.allNarData[i].nar_info = objList[i];
                     } else {
@@ -203,6 +262,9 @@ function($,
             .catch(function(error) {
                 console.error(error);
             });
+
+            // Promise.join(narDataProm, wsPermissionsProm, function() { console.log('wat'); this.renderPanel(); }.bind(this));
+
         },
         showLoading: function () {
             this.$narPanel.html('<br><center><img src="' + this.options.loadingImage + '"/></center><br>');
@@ -242,6 +304,7 @@ function($,
         },
         renderPanel: function () {
             console.log('rendering panel');
+            console.log(this.narData);
             var self = this,
                 divider = '<hr class="kb-data-list-row-hr">';
 
@@ -788,7 +851,7 @@ function($,
             $nameLink.append(nameText).append($version).append($priv);
             $dataCol.append($('<div>').addClass('kb-data-list-name').css({'white-space': 'normal', 'cursor': 'pointer'}).append($nameLink));
 
-            // only disply the rest if there was no error
+            // only display the rest if there was no error
             if (!data.error) {
                 var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
                 if (data.ws_info[2] === this._attributes.auth.user_id) {
@@ -836,45 +899,38 @@ function($,
 
 
                 console.log('Getting permissions for ' + data.ws_info[0]);
-                this.ws.get_permissions({id: data.ws_info[0]},
-                    function (perm) {
-                        var shareCount = 0;
-                        for (var usr in perm) {
-                            if (perm.hasOwnProperty(usr)) {
-                                if (usr === '*') {
-                                    continue;
-                                }
-                                shareCount++;
-                            }
+                var shareCount = 0;
+                for (var usr in data.perms) {
+                    if (data.perms.hasOwnProperty(usr)) {
+                        if (usr === '*') {
+                            continue;
                         }
-                        // should really put this in the addDatacontrols; so refactor at some point!
-                        $shareToolbarGroup.append(
-                            $('<button>')
-                            .addClass('btn btn-subtle btn-default')
-                            .attr('data-button', 'share')
-                            .tooltip({title: 'View share settings', 'container': 'body'})
-                            .append($('<span>')
-                                .addClass('fa fa-share-alt'))
-                            .append(' ' + shareCount)
-                            .on('click', function () {
-                                if (!self.toggleInteractionPanel($interactionPanel, 'share')) {
-                                    return;
-                                }
+                        shareCount++;
+                    }
+                }
+                // should really put this in the addDatacontrols; so refactor at some point!
+                $shareToolbarGroup.append(
+                    $('<button>')
+                    .addClass('btn btn-subtle btn-default')
+                    .attr('data-button', 'share')
+                    .tooltip({title: 'View share settings', 'container': 'body'})
+                    .append($('<span>')
+                        .addClass('fa fa-share-alt'))
+                    .append(' ' + shareCount)
+                    .on('click', function () {
+                        if (!self.toggleInteractionPanel($interactionPanel, 'share')) {
+                            return;
+                        }
 
-                                var $sharingDiv = $('<div>');
-                                self.setInteractionPanel($interactionPanel, 'Share Settings', $sharingDiv);
-                                $sharingDiv.kbaseNarrativeSharePanel({
-                                    ws_name_or_id: data.ws_info[0],
-                                    max_list_height: 'none',
-                                    add_user_input_width: '280px'
-                                });
-                            })
-                            );
-                    },
-                    function (error) {
-                        console.error('error getting permissions for manage panel');
-                        console.error(error);
-                    });
+                        var $sharingDiv = $('<div>');
+                        self.setInteractionPanel($interactionPanel, 'Share Settings', $sharingDiv);
+                        $sharingDiv.kbaseNarrativeSharePanel({
+                            ws_name_or_id: data.ws_info[0],
+                            max_list_height: 'none',
+                            add_user_input_width: '280px'
+                        });
+                    })
+                );
             } else if (data.error) {
                 isError = true;
                 var errorMessage;

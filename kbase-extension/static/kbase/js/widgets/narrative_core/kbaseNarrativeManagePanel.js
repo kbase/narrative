@@ -89,7 +89,6 @@ function($,
             return this;
         },
         refresh: function () {
-            console.log('NARRATIVE PANEL: refresh');
             if (!self.$narPanel) {
                 this.renderHeader();
             }
@@ -108,42 +107,6 @@ function($,
             var wsPermsToLookup = [];
             this.showLoading();
             var wsInfoProm = Promise.resolve(this.ws.list_workspace_info({excludeGlobal: 1}));
-
-            // var wsPermissionsProm = wsInfoProm
-            // .then(function (wsList) {
-            //     // Make a new call for each 1000 workspaces in the list.
-            //     var permProms = [];
-
-            //     /*WORKSPACE INFO
-            //      0: ws_id id
-            //      1: ws_name workspace
-            //      2: username owner
-            //      3: timestamp moddate,
-            //      4: int object
-            //      5: permission user_permission
-            //      6: permission globalread,
-            //      7: lock_status lockstat
-            //      8: usermeta metadata*/
-
-            //     for (var i=0; i<wsList.length; i+=1000) {
-            //         var chunk = wsList.slice(i, i+1000);
-            //         var permParams = [];
-            //         for (var j=0; j<chunk.length; j++) {
-            //             if (!chunk[j][8] || chunk[j][8].is_temporary === 'true' || !chunk[j][8].narrative)
-            //                 continue;
-            //             permParams.push({'id' : chunk[j][0]});
-            //         }
-            //         permProms.push(Promise.resolve(this.ws.get_permissions))
-            //     }
-            //     return Promise.resolve(this.ws.get_permissions_mass({'workspaces': [{'id': 4664}]}));
-            // }.bind(this))
-            // .then(function (perms) {
-            //     console.log('GET_PERMISSIONS_MASS');
-            //     console.log(perms);
-            // }.bind(this))
-            // .catch(function (error) {
-            //     console.log(error);
-            // });
 
             var narDataProm = wsInfoProm
             .then(function (wsList) {
@@ -213,7 +176,7 @@ function($,
                 }
                 return Promise.all(newProms);
             }.bind(this))
-            .then(function(results) {//objList, rest are permList) {
+            .then(function(results) { //objList = results[0], rest are permList chunks
                 var objList = results.shift();
                 var permList = [];
                 for (var i=0; i<results.length; i++) {
@@ -221,9 +184,7 @@ function($,
                 }
                 if (!objList)
                     return;
-                // console.log('PERMS!');
-                // console.log(permList);
-                // console.log(objList);
+
                 var errorProms = [];
                 for (var i = 0; i < objList.length; i++) {
                     this.allNarData[i].perms = permList[i];
@@ -263,8 +224,6 @@ function($,
                 console.error(error);
             });
 
-            // Promise.join(narDataProm, wsPermissionsProm, function() { console.log('wat'); this.renderPanel(); }.bind(this));
-
         },
         showLoading: function () {
             this.$narPanel.html('<br><center><img src="' + this.options.loadingImage + '"/></center><br>');
@@ -303,8 +262,6 @@ function($,
             return 0;
         },
         renderPanel: function () {
-            console.log('rendering panel');
-            console.log(this.narData);
             var self = this,
                 divider = '<hr class="kb-data-list-row-hr">';
 
@@ -897,8 +854,6 @@ function($,
                     .append($shareToolbarGroup);
                 $ctrContent.append($shareToolbar);
 
-
-                console.log('Getting permissions for ' + data.ws_info[0]);
                 var shareCount = 0;
                 for (var usr in data.perms) {
                     if (data.perms.hasOwnProperty(usr)) {

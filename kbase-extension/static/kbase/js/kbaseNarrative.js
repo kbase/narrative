@@ -20,7 +20,8 @@ define([
     'ipythonCellMenu',
     'base/js/events',
     'notebook/js/notebook',
-    'util/display'
+    'util/display',
+    'jquery-nearest'
 ], 
 function($,
          Promise,
@@ -87,11 +88,11 @@ function($,
      * code and markdown cells).
      * Updates the currently selected cell to be the one passed in.
      */
-    Narrative.prototype.showJupyterCellToolbar = function(cell) {
-        // tell the toolbar that it is selected. For now, the toolbar is in 
-        // charge.
-        $(cell.element).trigger('select.toolbar');
-    };
+    // Narrative.prototype.showJupyterCellToolbar = function(cell) {
+    //     // tell the toolbar that it is selected. For now, the toolbar is in 
+    //     // charge.
+    //     $(cell.element).trigger('select.toolbar');
+    // };
 
     /**
      * Registers Narrative responses to a few Jupyter events - mainly some
@@ -107,19 +108,11 @@ function($,
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
         });
 
-        $([Jupyter.events]).on('select.Cell', function(event, data) {
-            this.showJupyterCellToolbar(data.cell);
-            if (data.cell.metadata['kb-cell']) {
-                this.disableKeyboardManager();
-            }
-        }.bind(this));
-
         $([Jupyter.events]).on('create.Cell', function(event, data) {
-            this.showJupyterCellToolbar(data.cell);
+            // this.showJupyterCellToolbar(data.cell);
         }.bind(this));
 
         $([Jupyter.events]).on('delete.Cell', function(event, data) {
-            this.showJupyterCellToolbar(Jupyter.notebook.get_selected_cell());
             this.enableKeyboardManager();
         }.bind(this));
 
@@ -513,6 +506,21 @@ function($,
 
     Narrative.prototype.lookupUserProfile = function(username) {
         return displayUtil.lookupUserProfile(username);
+    };
+
+    /**
+     * A little bit of a riff on the Jupyter "find_cell_index". 
+     * Every KBase-ified cell (App, Method, Output) has a unique identifier.
+     * This can be used to find the closest cell element - its index is the 
+     * Jupyter cell index (inferred somewhat from find_cell_index which calls 
+     * get_cell_elements, which does this searching).
+     */
+    Narrative.prototype.getCellIndexByKbaseId = function(id) {
+        return $('#' + id).nearest('.cell').not('.cell .cell').index();
+    };
+
+    Narrative.prototype.getCellByKbaseId = function(id) {
+        return Jupyter.notebook.get_cell(this.getCellIndexByKbaseId(id));
     };
 
     return Narrative;

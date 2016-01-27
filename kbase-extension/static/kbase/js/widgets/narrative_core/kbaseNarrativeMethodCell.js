@@ -87,7 +87,6 @@ function($,
             this.$runButton.click(
                 $.proxy(function(event) {
                     console.log('** clicked' + (new Date()).getTime());
-                    event.preventDefault();
 
                     if (!this.checkMethodRun())
                         return;
@@ -102,7 +101,7 @@ function($,
                     this.changeState('submitted');
                     this.minimizeView();
                     this.trigger('runCell.Narrative', {
-                        cell: Jupyter.notebook.get_selected_cell(),
+                        cell: Jupyter.narrative.getCellByKbaseId(this.cellId),
                         method: this.method,
                         parameters: this.getParameters(),
                         widget: this

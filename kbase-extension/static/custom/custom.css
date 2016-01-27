@@ -69,6 +69,8 @@ div.cell {
 div.cell.selected {
     border: 1px solid #4BB856;
     border-left: 5px solid #4BB856;
+    padding: 6px 0 6px 0;
+    background: none;
 }
 
 input.raw_input {

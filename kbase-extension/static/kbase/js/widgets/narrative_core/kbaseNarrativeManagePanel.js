@@ -170,8 +170,8 @@ function($,
                     var objInfoProm = Promise.resolve(this.ws.get_object_info_new({objects: narRefsToLookup, includeMetadata: 1, ignoreErrors: 1}));
                     newProms.push(objInfoProm);
 
-                    for (var i=0; i<wsPermsToLookup.length; i+=5) {
-                        newProms.push(Promise.resolve(this.ws.get_permissions_mass({workspaces: wsPermsToLookup.slice(i, i+5)})));
+                    for (var i=0; i<wsPermsToLookup.length; i+=1000) {
+                        newProms.push(Promise.resolve(this.ws.get_permissions_mass({workspaces: wsPermsToLookup.slice(i, i+1000)})));
                     }
                 }
                 return Promise.all(newProms);

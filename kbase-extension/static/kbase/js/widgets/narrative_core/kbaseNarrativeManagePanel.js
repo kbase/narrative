@@ -190,10 +190,6 @@ function($,
                             }                                
                         }.bind(this))
                         .catch(function(error) {
-                            console.log('NARRATIVE PANEL: error lookup');
-                            console.log(error);
-                            console.log(this.allNarData);
-                            console.log(errorIndex);
                             this.allNarData[errorIndex].error_msg = error.error.message;
                             this.allNarData[errorIndex].$div = null;                                
                         }.bind(this)));
@@ -719,7 +715,6 @@ function($,
             return $btnToolbar;
         },
         renderNarrativeDiv: function (data) {
-            console.log('rendering narrative div' + data);
             var self = this,
                 isError = false;
 
@@ -895,17 +890,19 @@ function($,
             }
             var $btnToolbar = self.addDataControls(data.nar_info, $interactionPanel, data.ws_info, isError);
 
-            // Set up basic interactivity -- hide and show controls with mouseover.
-            $ctrContent.append($btnToolbar.hide());
-            $narDiv
-                .mouseenter(function () {
-                    $btnToolbar.show();
-                })
-                .mouseleave(function () {
-                    if ($interactionPanel.data('mode') === 'inactive') {
-                        $btnToolbar.hide();
-                    }
-                });
+            if (!isError) {
+                // Set up basic interactivity -- hide and show controls with mouseover.
+                $ctrContent.append($btnToolbar.hide());
+                $narDiv
+                    .mouseenter(function () {
+                        $btnToolbar.show();
+                    })
+                    .mouseleave(function () {
+                        if ($interactionPanel.data('mode') === 'inactive') {
+                            $btnToolbar.hide();
+                        }
+                    });
+            }
 
             $narDiv
                 .append($('<table>')

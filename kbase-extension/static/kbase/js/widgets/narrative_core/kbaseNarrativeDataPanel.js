@@ -13,7 +13,6 @@
  *
  * Triggers events:
  * dataUpdated.Narrative - when the loaded data table gets updated.
- * workspaceUpdated.Narrative - when the current workspace ID gets updated
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
@@ -49,7 +48,6 @@ function($, _, Config) {
             loadingImage: Config.get('loading_gif'),
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: Config.url('workspace'),
-            landing_page_url: "/functional-site/#/", // !! always include trailing slash
             lp_url: Config.url('landing_pages'), 
             container: null,
             ws_name: null,
@@ -124,9 +122,6 @@ function($, _, Config) {
                 },
                 this)
             );
-
-            if (this.ws_name)
-                this.trigger('workspaceUpdated.Narrative', this.ws_name);
 
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
@@ -209,7 +204,6 @@ function($, _, Config) {
          * @public
          */
         refresh: function() {
-//            this.dataListWidget.refresh();
             return;
         },
 
@@ -395,7 +389,7 @@ function($, _, Config) {
 
             // hack to keep search on top
 
-            this.$myDataHeader = $('<div/>');
+            this.$myDataHeader = $('<div>');
             minePanel.append(this.$myDataHeader);
             var $mineFilterRow = $('<div class="row">');
             minePanel.append($mineFilterRow);
@@ -421,6 +415,10 @@ function($, _, Config) {
             var closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin':'10px'});
 
             // Setup the panels that are defined by widgets
+
+            // minePanel.kbaseNarrativeMyDataTab({ws_name: this.ws_name});
+            // sharedPanel.kbaseNarrativeSharedDataTab({ws_name: this.ws_name});
+
             publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus, ws_name: this.ws_name});
             importPanel.kbaseNarrativeSideImportTab({ws_name: this.ws_name});
             examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus, ws_name: this.ws_name});
@@ -1067,7 +1065,7 @@ function($, _, Config) {
                 });
 
 
-                var $refreshBtnDiv = $('<div>').addClass('col-sm-1').append(
+                var $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align':'center'}).append(
                                         $('<button>')
                                             .css({'margin-top':'12px'})
                                             .addClass('btn btn-xs btn-default')
@@ -1162,7 +1160,7 @@ function($, _, Config) {
                                         .append($('<span>').addClass('fa fa-sitemap fa-rotate-90').css(css))
                                         .click(function(e) {
                                             e.stopPropagation();
-                                            window.open(self.options.landing_page_url+'objgraphview/'+object_info[7]+'/'+object_info[1]);
+                                            window.open('/#objgraphview/'+object_info[7]+'/'+object_info[1]);
                                         });
                 $btnToolbar.append($openLandingPage).append($openProvenance);
 
@@ -1270,10 +1268,6 @@ function($, _, Config) {
                 return self.options.lp_url+ws+'/'+name;
             }
 
-            function wsURL(ws) {
-                return ''; // no more links to WS Browser
-            }
-
             var monthLookup = ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"];
             // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
             function getTimeStampStr(objInfoTimeStamp) {
@@ -1322,16 +1316,16 @@ function($, _, Config) {
             };
         },
 
-        isCustomIcon: function (icon_list) {
-            return (icon_list.length > 0 && icon_list[0].length > 4 &&
-            icon_list[0].substring(0, 4) == 'icon');
-        },
+        // isCustomIcon: function (icon_list) {
+        //     return (icon_list.length > 0 && icon_list[0].length > 4 &&
+        //     icon_list[0].substring(0, 4) == 'icon');
+        // },
 
-        logoColorLookup:function(type) {
-            var code = 0;
-            for (var i=0; i < type.length; code += type.charCodeAt(i++));
-            return this.icon_colors[ code % this.icon_colors.length ];
-        },
+        // logoColorLookup:function(type) {
+        //     var code = 0;
+        //     for (var i=0; i < type.length; code += type.charCodeAt(i++));
+        //     return this.icon_colors[ code % this.icon_colors.length ];
+        // },
 
         currentWsIsTemp: function() {
             this.$myDataHeader.empty();

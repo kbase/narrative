@@ -22,22 +22,20 @@ function($, Config) {
             var self = this;
             this._super(options);
 
-            // console.log(['cell menu', this.options.cell]);
-//            var outputPane = this.$elem.closest('.cell').find('.inner_cell > div:nth-child(2)').get(0);
-//            if (!outputPane.id) {
-//                outputPane.id = this.genId();
-//            }
-//            this.$elem.data('ouputPaneId', outputPane.id);
+            this.$elem.on('mousedown', function () {
+                Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
+            }.bind(this));
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
                 .append($('<span class="fa fa-trash-o" style="font-size:14pt; padding-left: 5px;">'))
                 .click($.proxy(function () {
-                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
-                }, this)),
-                $menuBtn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
-                .append($('<span class="fa fa-cog" style="font-size:14pt">')),
-                // $collapseBtn = $('<button class="btn btn-default" role="button" data-toggle="collapse" href="#' + outputPane.id + '" aria-controls="' + $outputPane.id + '">Open</button>'),
-                $collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle"><span class="fa fa-chevron-down"></button>')
+                    this.trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(this.options.cell));
+                }, this));
+
+            var $menuBtn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
+                .append($('<span class="fa fa-cog" style="font-size:14pt">'));
+
+            var $collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle"><span class="fa fa-chevron-down"></button>')
                 .on('click', function () {
                     self.$elem.trigger('toggle.toolbar');                    
                 });
@@ -48,9 +46,9 @@ function($, Config) {
              * Each cell type unfortunately has a different top level layout.
              * Not that it matters, but I don't see why there isn't a uniform layout 
              * for the primary layout areas - prompt, toolbar, body, as they exist
-             * now, and another nice one would be a message/notification are
+             * now, and another nice one would be a message/notification area.
              */
-            this.$elem.on('toggle.toolbar', function () {                
+            this.$elem.on('toggle.toolbar', function () {
                 var $cellNode = self.$elem.closest('.cell');
                 $cellNode
                     .trigger('toggle.cell');
@@ -71,28 +69,28 @@ function($, Config) {
                     icon: 'fa fa-code',
                     text: 'View Job Submission',
                     action: function () {
-                        var metadata = IPython.notebook.get_selected_cell().metadata,
+                        var metadata = this.options.cell.metadata,
                             stackTrace = [],
-                            cell = IPython.notebook.insert_cell_below('code');
+                            newCell = Jupyter.notebook.insert_cell_below('code', Jupyter.notebook.find_cell_index(this.options.cell));
                         if (metadata['kb-cell'] && metadata['kb-cell'].stackTrace) {
                             stackTrace = metadata['kb-cell'].stackTrace;
                         }
                         console.log(stackTrace);
                         if (stackTrace instanceof Array) {
-                            cell.set_text('job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info');
-                            IPython.notebook.get_selected_cell().execute();
+                            newCell.set_text('job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info');
+                            newCell.execute();
                         } else {
-                            cell.set_text('job_info=' + stackTrace);
+                            newCell.set_text('job_info=' + stackTrace);
                         }
                     }
-                });
+                }.bind(this));
             }
 
             this.addMenuItem({
                 icon: 'fa fa-arrow-up',
                 text: 'Move Cell Up',
                 action: function () {
-                    IPython.notebook.move_cell_up();
+                    Jupyter.notebook.move_cell_up();
                 }
             });
 
@@ -100,7 +98,7 @@ function($, Config) {
                 icon: 'fa fa-arrow-down',
                 text: 'Move Cell Down',
                 action: function () {
-                    IPython.notebook.move_cell_down();
+                    Jupyter.notebook.move_cell_down();
                 }
             });
 
@@ -108,7 +106,7 @@ function($, Config) {
                 icon: 'fa fa-caret-square-o-up',
                 text: 'Insert Cell Above',
                 action: function () {
-                    IPython.notebook.insert_cell_above('markdown');
+                    Jupyter.notebook.insert_cell_above('markdown');
                 }
             });
 
@@ -116,7 +114,7 @@ function($, Config) {
                 icon: 'fa fa-caret-square-o-down',
                 text: 'Insert Cell Below',
                 action: function () {
-                    IPython.notebook.insert_cell_below('markdown');
+                    Jupyter.notebook.insert_cell_below('markdown');
                 }
             });
 
@@ -135,7 +133,7 @@ function($, Config) {
 
                             // the method initializes an internal method input widget, but in an async way
                             // so we have to wait and check when that is done.  When it is, we can update state
-                            var newCell = IPython.notebook.get_selected_cell();
+                            var newCell = Jupyter.notebook.get_selected_cell();
                             var newWidget = $('#' + $(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
                             var updateState = function (state) {
                                 if (newWidget.$inputWidget) {
@@ -152,29 +150,20 @@ function($, Config) {
                 });
             }
 
-            // if (this.options.cell && this.options.cell.metadata['kb-cell'] === undefined) {
-            //     this.addMenuItem({
-            //         icon: 'fa fa-terminal',
-            //         text: 'Toggle Cell Type',
-            //         action: function() {
-            //             if (this.options.cell.cell_type === "markdown") {
-            //                 IPython.notebook.to_code();
-            //             }
-            //             else {
-
-            //             }
-            //         },
-            //         disable: true
-            //     });
-            // }
-//
-//            this.addMenuItem({
-//                icon: 'fa fa-trash-o',
-//                text: 'Delete Cell',
-//                action: $.proxy(function () {
-//                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
-//                }, this)
-//            });
+            if (this.options.cell && this.options.cell.metadata['kb-cell'] === undefined) {
+                this.addMenuItem({
+                    icon: 'fa fa-terminal',
+                    text: 'Toggle Cell Type',
+                    action: function() {
+                        if (this.options.cell.cell_type === "markdown") {
+                            Jupyter.notebook.to_code();
+                        }
+                        else {
+                            Jupyter.notebook.to_markdown();
+                        }
+                    }.bind(this),
+                });
+            }
 
             var self = this;
             

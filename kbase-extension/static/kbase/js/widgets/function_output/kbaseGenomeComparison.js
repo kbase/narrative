@@ -4,7 +4,14 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
+define(['jquery', 
+        'narrativeConfig',
+        'util/string',
+        'kbwidget',
+        'kbaseAuthenticatedWidget'], 
+function($,
+         Config,
+         StringUtil) {
 $.KBWidget({
     name: "GenomeComparisonWidget",
     parent: "kbaseAuthenticatedWidget",
@@ -16,10 +23,10 @@ $.KBWidget({
     	ws_id: null
     },
 
-    wsUrl: window.kbconfig.urls.workspace,
-    jobSrvUrl: window.kbconfig.urls.user_and_job_state,
-    cmpImgUrl: window.kbconfig.urls.genomeCmp.replace('jsonrpc', 'image'),
-    loadingImage: window.kbconfig.loading_gif,
+    wsUrl: Config.url('workspace'),
+    jobSrvUrl: Config.url('user_and_job_state'),
+    cmpImgUrl: Config.url('genomeCmp').replace('jsonrpc', 'image'),
+    loadingImage: Config.get('loading_gif'),
     timer: null,
     geneRows: 21,
     geneRowH: 21,
@@ -45,7 +52,7 @@ $.KBWidget({
         this._super(options);
         this.ws_name = options.ws_name;
         this.ws_id = options.ws_id;
-    	this.pref = this.uuid();
+    	this.pref = StringUtil.uuid();
         return this;
     },
     
@@ -105,9 +112,9 @@ $.KBWidget({
     					count2hits++;
     			}
             	table.append(createTableRow("Comparison object", self.ws_id));
-            	table.append(createTableRow("Genome1 (x-axis)", '<a href="/functional-site/#/dataview/'+self.genome1wsName+'/'+self.genome1objName+'" target="_blank">' + genome1id + '</a>' +
+            	table.append(createTableRow("Genome1 (x-axis)", '<a href="/#dataview/'+self.genome1wsName+'/'+self.genome1objName+'" target="_blank">' + genome1id + '</a>' +
             			" (" + self.cmp.proteome1names.length + " genes, " + count1hits + " have hits)"));
-            	table.append(createTableRow("Genome2 (y-axis)", '<a href="/functional-site/#/dataview/'+self.genome2wsName+'/'+self.genome2objName+'" target="_blank">' + genome2id + '</a>' + 
+            	table.append(createTableRow("Genome2 (y-axis)", '<a href="/#dataview/'+self.genome2wsName+'/'+self.genome2objName+'" target="_blank">' + genome2id + '</a>' + 
             			" (" + self.cmp.proteome2names.length + " genes, " + count2hits + " have hits)"));
             	if (self.scale == null)
             		self.scale = self.size * 100 / Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length);
@@ -377,10 +384,10 @@ $.KBWidget({
 				labelJ = '<font color="red">' + labelJ + '</font>';
 			}
 			var tdSt = ' style="border: 0px; margin: 0px; padding: 0px; font-size: 12px; height: '+self.geneRowH+'px; text-align: center; vertical-align: middle;"';
-			var tds = '<td '+tdSt+'>' + '<a href="/functional-site/#/genes/'+self.genome1wsName+'/'+self.genome1objName+'/'+self.cmp.proteome1names[i]+'" target="_blank">' + labelI + '</a>' + '</td>';
+			var tds = '<td '+tdSt+'>' + '<a href="/#genes/'+self.genome1wsName+'/'+self.genome1objName+'/'+self.cmp.proteome1names[i]+'" target="_blank">' + labelI + '</a>' + '</td>';
 			if (rowPos == 0)
 				tds += '<td id="'+self.pref+'glinks" rowspan="'+self.geneRows+'" width="30"'+sr+'/>';
-			tds += '<td '+tdSt+'>' + '<a href="/functional-site/#/genes/'+self.genome2wsName+'/'+self.genome2objName+'/'+self.cmp.proteome2names[j]+'" target="_blank">' + labelJ + '</a>' + '</td>';
+			tds += '<td '+tdSt+'>' + '<a href="/#genes/'+self.genome2wsName+'/'+self.genome2objName+'/'+self.cmp.proteome2names[j]+'" target="_blank">' + labelJ + '</a>' + '</td>';
 			tbl.append('<tr'+sr+'>'+tds+'</tr>');
 			var y1 = rowPos * (self.geneRowH + 0.2) + rowHalf;
 			for (var tuplePos in self.cmp.data1[i]) {
@@ -538,13 +545,5 @@ $.KBWidget({
     		self.refreshGenes();
     	}
     },
-    
-    uuid: function() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-            function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);
-            });
-    }
 })
 });

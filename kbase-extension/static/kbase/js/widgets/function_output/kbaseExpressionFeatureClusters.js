@@ -5,6 +5,8 @@
  */
 
 define(['jquery', 
+        'narrativeConfig',
+        'util/string',
 		'kbwidget', 
 		'kbaseAuthenticatedWidget', 
 		'kbaseTabs',
@@ -13,7 +15,10 @@ define(['jquery',
 		'kbaseTreechart',
 		'knhx'
 //        ,'jquery-dataScroller'
-		], function($) {
+		],
+function($,
+         Config,
+         StringUtil) {
 	$.KBWidget({
 		name: 'kbaseExpressionFeatureClusters',
 		parent: 'kbaseAuthenticatedWidget',
@@ -21,8 +26,8 @@ define(['jquery',
 		options: {
 			clusterSetID: null,
 			workspaceID: null,
-			workspaceURL: window.kbconfig.urls.workspace,
-			loadingImage: "static/kbase/images/ajax-loader.gif",
+			workspaceURL: Config.url('workspace'),
+			loadingImage: Config.get('loading_gif'),
 		},
 
 		// Extracted data for vizualization
@@ -129,7 +134,7 @@ define(['jquery',
 		render: function(){
 			var self = this;
             var $container = this.$elem;
-			var pref = this.uuid();
+			var pref = StringUtil.uuid();
 			self.pref = pref;
 
 
@@ -392,7 +397,7 @@ define(['jquery',
 		        var genomeRef = null;
 		        if (self.genomeRef) {
 		            genomeRef = self.genomeRef.split('/')[0] + "/" + self.genomeID;
-		            gid = '<a href="/functional-site/#/dataview/'+genomeRef+'" target="_blank">'+
+		            gid = '<a href="/#dataview/'+genomeRef+'" target="_blank">'+
 		            self.genomeName+"</a>";
 		        }
                 var aliases = "-";
@@ -406,7 +411,7 @@ define(['jquery',
                     func = feature['function'];
 		        }
                 if (genomeRef) {
-                    fid = '<a href="/functional-site/#/dataview/'+genomeRef+'?sub=Feature&subid='+fid + 
+                    fid = '<a href="/#dataview/'+genomeRef+'?sub=Feature&subid='+fid + 
                     '" target="_blank">'+fid+'</a>';
                 }
 		        tableData.push(
@@ -481,14 +486,6 @@ define(['jquery',
 		hideMessage: function() {
 			this.$messagePane.hide();
 			this.$messagePane.empty();
-		},
-
-		uuid: function() {
-			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-				function(c) {
-					var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-					return v.toString(16);
-				});
 		},
 
 		buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {

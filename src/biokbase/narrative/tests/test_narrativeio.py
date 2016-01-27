@@ -355,9 +355,8 @@ class NarrIOTestCase(unittest.TestCase):
     #    None, specific
     # login state
     def test_narrative_permissions_anon(self):
-        with self.assertRaises(ServerError) as err:
-            self.mixin.narrative_permissions(self.public_nar['ref'])
-        self.assertIsNotNone(err)
+        ret = self.mixin.narrative_permissions(self.public_nar['ref'])
+        self.assertTrue(isinstance(ret, dict) and ret['*'] == 'r')
 
     def test_narrative_permissions_valid_login(self):
         self.login()
@@ -386,9 +385,8 @@ class NarrIOTestCase(unittest.TestCase):
     ##### test KBaseWSManagerMixin.narrative_writable #####
 
     def test_narrative_writable_anon(self):
-        with self.assertRaises(ServerError) as err:
-            self.mixin.narrative_writable(self.public_nar['ref'], self.test_user)
-        self.assertIsNotNone(err)
+        ret = self.mixin.narrative_writable(self.public_nar['ref'], self.test_user)
+        self.assertFalse(ret)
 
     def test_narrative_writable_valid_login_nouser(self):
         self.login()

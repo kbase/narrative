@@ -6,10 +6,12 @@
  * @author Bill Riehl wjriehl@lbl.gov
  */
 define(['jquery',
+        'bluebird',
         'narrativeConfig',
-        'Util/TimeFormat',
+        'util/timeFormat',
         'kbase-client-api'],
 function($,
+         Promise,
          Config,
          TimeFormat) {
     'use strict';
@@ -20,25 +22,43 @@ function($,
 
     function lookupUserProfile (username) {
         if (!cachedUserIds[username]) {
-            cachedUserIds[username] = profileClient.get_user_profile([username]);
+            cachedUserIds[username] = Promise.resolve(profileClient.get_user_profile([username]));
         }
         return cachedUserIds[username];
     }
 
     /**
      * @method
-     * insertRealName
+     * displayRealName
      */
     function displayRealName (username, $target) {
-        lookupUserProfile(username).always(function(profile) {
+        lookupUserProfile(username).then(function(profile) {
             var usernameLink = '<a href="' + profilePageUrl + username + '" target="_blank">' + username + '</a>';
 
-            if (profile && profile[0]) {
+            if (profile && profile[0] && profile[0].user) {
                 var name = profile[0].user.realname;
-                usernameLink = name + ' (' + usernameLink + ')';
+                if (name !== undefined)
+                    usernameLink = name + ' (' + usernameLink + ')';
             }
             $target.html(usernameLink);
         })
+        .catch(function(err) { console.log(err); });
+    }
+
+    /**
+     * @method
+     * loadingSpinner
+     * creates and returns a loading spinner DOM element with optional caption.
+     * This node is a div with the usual loading gif centered, with the (optional)
+     * caption centered below.
+     */
+    function loadingSpinner (caption) {
+        var spinner = '<span class="fa fa-spinner fa-pulse fa-2x fa-fw">';
+        if (caption) {
+            spinner += caption + '... &nbsp; &nbsp;'
+        }
+        spinner += '</span>';
+        return spinner;
     }
 
     return {

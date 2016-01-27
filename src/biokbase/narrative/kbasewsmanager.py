@@ -245,6 +245,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 if content:
                     model['format'] = 'json'
                     model['content'] = nbformat.reads(json.dumps(nar_obj['data']), 4)
+                    model['content']['metadata'].pop('orig_nbformat', None)
                     model['name'] = nar_obj['data']['metadata'].get('name', 'Untitled')
                     util.kbase_env.narrative = 'ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid'])
                     util.kbase_env.workspace = model['content'].metadata.ws_name

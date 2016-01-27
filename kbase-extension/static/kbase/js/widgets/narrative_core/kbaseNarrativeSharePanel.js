@@ -20,7 +20,7 @@ function($, Config) {
             ws_url: Config.url('workspace'),
             user_profile_url: Config.url('user_profile'),
             loadingImage: Config.get('loading_gif'),
-            user_page_link:"/functional-site/#/people/",
+            user_page_link: Config.url('profile_page'),
             ws_name_or_id: null,
             max_name_length: 35,
             max_list_height: '250px',
@@ -215,13 +215,13 @@ function($, Config) {
                         .attr('type', 'text')
                         .css({'width': self.options.add_user_input_width})
                         .on('select2-focus', function () {
-                            if (IPython && IPython.narrative) {
-                                IPython.narrative.disableKeyboardManager();
+                            if (Jupyter && Jupyter.narrative) {
+                                Jupyter.narrative.disableKeyboardManager();
                             }
                         })
                         .on('select2-blur', function () {
-                            if (IPython && IPython.narrative) {
-                                IPython.narrative.enableKeyboardManager();
+                            if (Jupyter && Jupyter.narrative) {
+                                Jupyter.narrative.enableKeyboardManager();
                             }
                         });
 

@@ -134,6 +134,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         refresh: function (showError) {
             var self = this;
 
+            console.log('DATA LIST: refresh');
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (self.refreshTimer === null) {
@@ -142,6 +143,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 }, this.options.refresh_interval); // check if there is new data every X ms
             }
             if (self.ws_name && self.ws) {
+                console.log('DATA LIST REFRESH: get_workpace_info');
                 self.ws.get_workspace_info({
                     workspace: this.ws_name
                 },
@@ -224,6 +226,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         getNextDataChunk: function (skip) {
             var self = this;
+            console.log('DATA LIST: getNextDataChunk ws.list_objects');
             self.ws.list_objects({
                 workspaces: [self.ws_name],
                 includeMetadata: 1,

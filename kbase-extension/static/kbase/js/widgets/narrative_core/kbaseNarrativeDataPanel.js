@@ -161,7 +161,7 @@ function($, _, Config) {
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
             this.isLoggedIn = true;
             if (this.ws_name) {
-                this.dataImporter(this.ws_name);
+                // this.dataImporter(this.ws_name);
             } else {
                 //console.error("ws_name is not defined");
             }

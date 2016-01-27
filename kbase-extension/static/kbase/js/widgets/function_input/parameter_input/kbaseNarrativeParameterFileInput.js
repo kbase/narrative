@@ -14,7 +14,7 @@ function($, Config) {
         parent: "kbaseNarrativeParameterInput",
         version: '1.0.0',
         options: {
-        	isInSidePanel: false,
+            isInSidePanel: false,
             shockUrl: Config.url('shock'),
             ujsUrl: Config.url('user_and_job_state'),
             fullShockSearchToResume: false,
@@ -39,10 +39,10 @@ function($, Config) {
         changeFuncs: [],
 
         render: function() {
-        	if (!this.token) {
-        		this.wrongToken = true;
-        		return;
-        	}
+            if (!this.token) {
+        	this.wrongToken = true;
+        	return;
+            }
             var self = this;
             var spec = self.spec;
 
@@ -52,16 +52,15 @@ function($, Config) {
                 self.required = false;
             }
 
-        	var pref = this.uuid();
-            //var div = this.$elem;
-        	
+            var pref = this.uuid();
+            
             var tbl = $('<table style="border: 0px; margin: 0px; cellpadding: 0px; cellspacing: 0px; width: 100%;"/>');
-            //div.append(tbl);
+
             var tr = $('<tr/>');
             var cellCss = { 'border' : 'none', 'vertical-align' : 'middle' };
             tr.css(cellCss);
             tbl.append(tr);
-            			
+            
             this.fileName = $('<input readonly>')
             	.addClass('form-control')
             	.css({'width' : '100%'})
@@ -81,13 +80,11 @@ function($, Config) {
             realButton.addEventListener('change', function() { 
             	var fileName = $(realButton).val();
             	if (fileName && fileName.length > 0)
-            		self.fileSelected(self.fileName, self.percentText, realButton);
+            	    self.fileSelected(self.fileName, self.percentText, realButton);
             });
             realButton.uploader = this;
             //this.fileBrowse = realButton;
             this.$elem.append(realButton);
-            
-            
             
             // create the visible upload button
             this.fakeButton = document.createElement('button');
@@ -96,12 +93,12 @@ function($, Config) {
             this.fakeButton.fb = realButton;
             this.fakeButton.addEventListener('click', function() {
             	if (self.locked || !self.enabled)
-            		return;
+            	    return;
             	if (self.inSelectFileMode) {
-            		$(this.fb).val("");
-            		this.fb.click();
+            	    $(this.fb).val("");
+            	    this.fb.click();
             	} else {
-            		self.cancelUpload = true;
+            	    self.cancelUpload = true;
                     self.selectFileMode(true);
                     self.uploadWasStarted = false;
             	}
@@ -151,7 +148,7 @@ function($, Config) {
             	.append(spec.short_hint);
 	    if (spec.description && spec.short_hint !== spec.description) {
                 $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
-                                    .tooltip({title:spec.description, html:true}));
+                                .tooltip({title:spec.description, html:true}));
             }
             $row.append($nameCol).append($inputCol).append($hintCol);
 
@@ -172,126 +169,13 @@ function($, Config) {
         },
         
         fileSelected: function (nameText, prcText, realButton) {
-        	if (realButton.files.length != 1)
-        		return;
+            if (realButton.files.length != 1)
+        	return;
             var self = this;
-            var prevShockNodeId = self.shockNodeId;
-            self.shockNodeId = null;
-            self.uploadIsReady = false;
-            self.uploadWasStarted = true;
-    		self.isValid();
-        	// get the selected file
-        	var file = realButton.files[0];
-        	self.fileName.val(file.name);
-    		prcText.val("?..%");
-    		self.onChange();
-    		console.log("kbaseNarrativeParameterFileInput.fileSelected: after self.onChange()");
-            var curTime = new Date().getTime();
-    		var ujsKey = "File:"+file.size+":"+file.lastModifiedDate.getTime()+":"+file.name+":"+self.getUser();
-            var ujsClient = new UserAndJobState(self.options.ujsUrl, {'token': self.token});
-        	var shockClient = new ShockClient({url: self.options.shockUrl, token: self.token});
-            /*ujsClient.list_state(self.options.serviceNameInUJS, 0, function(data) {
-            	if (data.length >= self.options.maxFileStatesInUJS) {
-            		for (var keyPos in data) {
-            			removeFileState(data[keyPos]);
-            		}
-            	}
-    		}, function(error) {
-    			console.log(error);
-    		});*/
-            ujsClient.get_has_state(self.options.serviceNameInUJS, ujsKey, 0, function(data) {
-                console.log("kbaseNarrativeParameterFileInput.fileSelected, in ujsClient.get_has_state: ", data);
-    			var value = data[1];
-    			if (value != null)
-    				value = value.split(" ")[0];
-    			processAfterNodeCheck(value != null ? value : prevShockNodeId);
-    		}, function(error) {
-                console.error("kbaseNarrativeParameterFileInput.fileSelected, in ujsClient.get_has_state: ", error);
-    			processAfterNodeCheck(prevShockNodeId);
-    		});
-    		
-            /*function removeFileState(key) {
-                ujsClient.get_state(self.options.serviceNameInUJS, key, 0, function(value) {
-        			var parts = value.split(" ");
-        			var nodeId = parts[0];
-        			var nodeTime = parts.length < 2 ? 0 : parseInt(parts[1]);
-        			var timeDif = curTime - nodeTime;
-        			if (timeDif > self.options.maxFileStateTime) {
-                    	shockClient.delete_node(nodeId, function(info) {
-                			console.log("Shock node for file [" + key + "] was deleted: " + nodeId);                            		
-                    	}, function(error) {
-                    		console.log(error);
-                    	});
-                        ujsClient.remove_state(self.options.serviceNameInUJS, key, function(data) {
-                			console.log("UJS file [" + key + "] state was removed");
-                        }, function(error) {
-                			console.log(error);
-                		});
-        			}
-        		}, function(error) {
-        			console.log(error);
-        		});
-            }*/
-            
-            function processAfterNodeCheck(storedShockNodeId) {
-                console.log("kbaseNarrativeParameterFileInput.fileSelected, in processAfterNodeCheck: storedShockNodeId=", storedShockNodeId);
-            	self.selectFileMode(false);
-            	self.cancelUpload = false;
-            	shockClient.upload_node(file, storedShockNodeId, self.options.fullShockSearchToResume, function(info) {
-                    console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.upload_node: self.shockNodeId=", self.shockNodeId, info);
-            		if (info.uploaded_size) {
-            			var shockNodeWasntDefined = self.shockNodeId == null || self.shockNodeId !== info['node_id'];
-            			if (shockNodeWasntDefined) {
-            				self.shockNodeId = info['node_id'];
-            				var fileState = self.shockNodeId + " " + curTime;
-            				ujsClient.set_state(self.options.serviceNameInUJS, ujsKey, fileState, function(data) {
-                                console.log("kbaseNarrativeParameterFileInput.fileSelected, in ujsClient.set_state: ", data);
-            					console.log("UJS file state saved: " + fileState);
-            	    		}, function(error) {
-            	            	console.log("Error saving shock node " + self.shockNodeId + " into UJS:");
-            	    			console.log(error);
-            	    		});
-            			}
-            			if (info.uploaded_size >= info.file_size) {
-            				self.uploadIsReady = true;
-            				self.isValid();
-            				self.selectFileMode(true);
-                            self.uploadWasStarted = false;
-                            self.onChange();
-            				shockClient.change_node_file_name(self.shockNodeId, file.name, function(info) {
-                                console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.change_node_file_name: ", info);
-            					//showShockInfo(self.shockNodeId);
-            				}, function(error) {
-            	            	console.log("Error changing file name for shock node " + self.shockNodeId);
-            	    			console.log(error);
-            	    		});
-            			}
-            			var percent = "" + (Math.floor(info.uploaded_size * 1000 / info.file_size) / 10);
-            			if (percent.indexOf('.') < 0)
-            				percent += ".0";
-            			prcText.val(percent + "%");
-            			self.isValid();
-            	        self.onChange();
-            		}
-            	}, function(error) {
-                    console.error("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.upload_node: ", error);
-            		self.selectFileMode(true);
-                    self.uploadWasStarted = false;
-            		alert("Error: " + error);
-            	}, function() {
-                    console.log("kbaseNarrativeParameterFileInput.fileSelected, in shockClient.upload_node: check was-upload-cancelled=" + self.cancelUpload);
-            		return self.cancelUpload;
-            	});
-            }
-            
-            function showShockInfo(shockNode) {
-            	shockClient.get_node(shockNode, function(data) {
-            		console.log("Info about node [" + shockNode + "]:");
-            		console.log(data);
-        		}, function(error) {
-        			console.log(error);
-        		});
-            }
+
+            var file = realButton.files[0];
+            self.fileName.val(file.name);
+    	    self.onChange();
         },
         
         getShockNodeId: function() {
@@ -306,30 +190,118 @@ function($, Config) {
             var self = this;
             var errorDetected = false;
             var errorMessages = [];
-            var pVal = self.getParameterValue();
-            if (self.enabled && (self.required || self.uploadWasStarted) && !pVal) {
-            	self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
-            	self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
-            	self.rowDivs[0].$feedback.show();
-            	self.rowDivs[0].$error.hide();
-            	if (self.uploadWasStarted) {
-            		errorMessages.push("required field "+self.spec.ui_name+" is not 100% ready.");
-            	} else {
-            		errorMessages.push("required field "+self.spec.ui_name+" missing.");
-            	}
-            	errorDetected = true;
-            } else {
-            	self.rowDivs[0].$row.removeClass("kb-method-parameter-row-error");
-            	self.rowDivs[0].$error.hide();
-            	self.rowDivs[0].$feedback.removeClass();
-            	if (pVal)
-            		self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
-            }
-            return {isValid: !errorDetected, errormssgs:errorMessages};
+
+	    /*
+	     * We're valid if we have a filename chosen. The upload
+	     * does not have to have been completed which is why we
+	     * are not looking at getParameterValue.
+	     */
+	     
+            var pVal = this.fileName.val();
+
+	    var valid = pVal != "";
+
+	    var required = self.required;
+	    self.updateValidCheckbox(valid, required);
+
+	    /*
+	     * For the purposes of the validity check here, an invalid
+	     * but not required parameter is valid.
+	     */
+
+            return {isValid: valid || !required, errormssgs:errorMessages};
         },
+
+	cancelImport: function() {
+	    var self = this;
+	    self.cancelUpload = true;
+	},
+
+	runImport: function() {
+	    var self = this;
+	    self.cancelUpload = false;
+            var shockClient = new ShockClient({url: self.options.shockUrl, token: self.token});
+	    var p = new Promise(function(resolve, reject) {
+
+		/*
+		 * Start the upload.
+		 */
+		
+		var file = self.fakeButton.fb.files[0];
+
+		if (!file)
+		{
+		    if (!self.required)
+		    {
+			console.log("Not uploading " + self.spec.id + " as it is not required and was not specified");
+			resolve("not_required");
+			return;
+		    }
+		    else
+		    {
+			reject("File not defined for parameter " + self.spec.id);
+			return;
+		    }
+		}
+
+		console.log("start upload on " + file.name);
+		
+		self.percentText.val("0.0 %");
+
+		var ret_cb = function(retInfo) {
+		    if (retInfo.uploaded_size)
+		    {
+			self.shockNodeId = retInfo['node_id'];
+			if (retInfo.uploaded_size >= retInfo.file_size)
+			{
+			    self.percentText.val("100.0 %");
+			    self.uploadIsReady = true;
+			    self.uploadWasStarted = false;
+			    self.onChange();
+			    shockClient.change_node_file_name(self.shockNodeId, file.name, function(info) {},
+							      function (error) {
+								  console.log("error changing file name for shock node " + self.shockNodeId);
+								  });
+			    console.log("upload finished");
+			    console.log(retInfo);
+			    resolve(1);
+			}
+			else
+			{
+			    var percent = "" + (Math.floor(retInfo.uploaded_size * 1000 / retInfo.file_size) / 10);
+            		    if (percent.indexOf('.') < 0)
+            			percent += ".0";
+			    self.percentText.val(percent + " %");
+			}
+			
+		    }
+		};
+		var error_cb = function(errorInfo) {
+		    console.log("upload error");
+		    console.log(errorInfo);
+		    reject(errorInfo);
+		};
+		var cancel_cb = function() {
+		    return self.cancelUpload;
+		};
+		shockClient.upload_node(file, null, false, ret_cb, error_cb, cancel_cb);
+
+	    });
+	    return p;
+	},
+
+	updateValidCheckbox: function(valid, required) {
+	    var self = this;
+            if (valid) {
+            	self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
+            } else if (required) {
+            	self.rowDivs[0].$feedback.removeClass().addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left').prop("title","required field");
+            }
+            self.rowDivs[0].$feedback.show();
+	},
         
         getParameterValue: function() {
-            var ret = this.uploadIsReady ? this.shockNodeId : null;
+            var ret = this.shockNodeId ? this.shockNodeId : ""
             return ret ? ret : "";
         },
 

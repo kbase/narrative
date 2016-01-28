@@ -98,10 +98,11 @@ function ($,
             this.$controllerDiv = $('<div>');
             this.$elem.append(this.$controllerDiv);
             this.renderController();
-            // this.$loadingDiv = $('<div>').addClass('kb-data-loading')
-            //     .append('<img src="' + this.options.loadingImage + '">')
-            //     .hide();
-            // this.$elem.append(this.$loadingDiv);
+
+            this.loadingDiv = DisplayUtil.loadingDiv();
+            this.loadingDiv.div.hide();
+            this.loadingDiv.div.css({'top': '0', 'bottom': '0'});
+
             this.mainListId = StringUtil.uuid();
             this.$mainListDiv = $('<div id=' + this.mainListId + '>')
                 .css({'overflow-x': 'hidden', 'overflow-y': 'auto', 'height': this.mainListPanelHeight})
@@ -118,6 +119,7 @@ function ($,
                     self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);
                 });
             var $mainListDivContainer = $('<div>').css({'position': 'relative'})
+                .append(this.loadingDiv.div)
                 .append(this.$mainListDiv)
                 .append(this.$addDataButton.hide());
             this.$elem.append($mainListDivContainer);
@@ -168,6 +170,17 @@ function ($,
             return this;
         },
 
+        showLoading: function(caption) {
+            this.$mainListDiv.hide();
+            this.loadingDiv.setText(caption || '');
+            this.loadingDiv.div.show();
+        },
+
+        hideLoading: function() {
+            this.loadingDiv.div.hide();
+            this.$mainListDiv.show();
+        },
+
         refresh: function (showError) {
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
@@ -183,6 +196,7 @@ function ($,
                 console.error('ws: ' + this.ws);
                 return;
             }
+
             Promise.resolve(this.ws.get_workspace_info({
                 workspace: this.ws_name
             }))
@@ -190,10 +204,12 @@ function ($,
                 if (this.wsLastUpdateTimestamp !== wsInfo[3]) {
                     this.wsLastUpdateTimestamp = wsInfo[3];
                     this.wsObjCount = wsInfo[4];
+                    this.showLoading('Fetching data...');
                     this.reloadWsData();
                 }
                 else {
                     this.refreshTimeStrings();
+                    this.hideLoading();
                 }
             }.bind(this))
             .catch(function(error) {
@@ -226,6 +242,7 @@ function ($,
 
             this.fetchWorkspaceData()
             .then(function() {
+                this.showLoading('Rendering data...');
                 if (this.objectList.length > this.options.maxObjsToPreventFilterAsYouTypeInSearch) {
                     this.$searchInput.off('input');
                 }
@@ -244,6 +261,7 @@ function ($,
 
                 this.populateAvailableTypes();
                 this.renderList();
+                this.hideLoading();
             }.bind(this));
         },
 
@@ -256,17 +274,20 @@ function ($,
          * Used mainly when lookups fail.
          */
         showBlockingError: function(error) {
-            this.$mainListDiv.show();
             this.$mainListDiv.empty();
             this.$mainListDiv.append(
                 $('<div>').css({'color': '#F44336', 'margin': '10px'})
                           .append(error)
             );
+            this.loadingDiv.div.hide();
+            this.$mainListDiv.show();
         },
 
         fetchWorkspaceData: function () {
+            var dataChunkNum = 1;
             return new Promise(function(resolve, reject) {
                 var getDataChunk = function(skip) {
+                    this.showLoading('Fetching data chunk ' + dataChunkNum + '...');
                     return Promise.resolve(this.ws.list_objects({
                         workspaces: [this.ws_name],
                         includeMetadata: 1,
@@ -319,6 +340,7 @@ function ($,
                         if (this.objectList.length < this.wsObjCount
                             && this.objectList.length < this.options.ws_max_objs_to_fetch
                             && infoList.length > 0) {
+                            dataChunkNum++;
                             return getDataChunk(skip + this.options.ws_chunk_size);
                         }
                     }.bind(this));

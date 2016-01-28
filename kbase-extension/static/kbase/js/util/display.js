@@ -61,8 +61,28 @@ function($,
         return spinner;
     }
 
+    function loadingDiv (caption) {
+        var $caption = $('<span>');
+        var $loader = $('<div>').addClass('kb-data-loading')
+                                .append('<img src="' + Config.get('loading_gif') + '">')
+                                .append('<br>')
+                                .append($caption);
+        if (caption)
+            setText(caption);
+
+        function setText(caption) {
+            $caption.text(caption);
+        }
+
+        return {
+            div: $loader,
+            setText: setText
+        };
+    }
+
     return {
         lookupUserProfile: lookupUserProfile,
-        displayRealName: displayRealName
+        displayRealName: displayRealName,
+        loadingDiv: loadingDiv
     };
 });

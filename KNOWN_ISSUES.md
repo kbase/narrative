@@ -14,7 +14,7 @@ Last updated 1/14/2016, 2:36pm
   * ~~Entering a narrative can be started with multiple cells already selected (should be just the first one or none. probably none.)~~
   * Select2 input boxes don't have a cursor or other context clue that you can type in them
   * Method panel: search area's X button has no border
-  * Narrative panel: buttons in "corrupted" narratives still exist on mouseover, but have no function or icon
+  * ~~Narrative panel: buttons in "corrupted" narratives still exist on mouseover, but have no function or icon~~
   * Narrative panel: clicking the "link" button doesn't dismiss tooltip.
   * Narrative panel: "My Narratives" and "Shared with Me" headings should be collapsible.
   * ~~404 on Safari's "Click to enter narrative" space in the loading page.~~
@@ -25,3 +25,4 @@ Last updated 1/14/2016, 2:36pm
   * ~~Inserting new cells on click has changed due to cell selection changes / cell multi-select [NAR-835](https://atlassian.kbase.us/browse/NAR-835)~~
   * Method/app cells should be drag/droppable like data cells.
   * Name change doesn't seem to change temporary state (should actually use temporary state instead of "Untitled" name)
+  * Extra copy of workspace client - needs to migrate to the right repo.

@@ -7,13 +7,16 @@ define(['jquery',
         'narrativeConfig',
         'narrativeManager',
         'util/display',
+        'bluebird',
         'narrativeConfig',
         'kbwidget', 
-        'kbaseNarrativeControlPanel'],
+        'kbaseNarrativeControlPanel',
+        'api/NewWorkspace'],
 function($, 
          Config, 
          NarrativeManager,
-         DisplayUtil) {
+         DisplayUtil,
+         Promise) {
     'use strict',
     $.KBWidget({
         name: "kbaseNarrativeManagePanel",
@@ -35,7 +38,6 @@ function($,
             ws_url: Config.url('workspace'),
             nms_url: Config.url('narrative_method_store'),
             profile_page_url: Config.url('profile_page'),
-            ws_name: null,
             nar_name: null,
             new_narrative_link: "/#narrativemanager/new"
         },
@@ -49,10 +51,6 @@ function($,
         init: function (options) {
             this._super(options);
 
-            if (this.options.ws_name) {
-                this.ws_name = options.ws_name;
-            }
-
             this.$mainPanel = $('<div>')//.css({'height':'600px'});
             this.body().append(this.$mainPanel);
 
@@ -64,7 +62,7 @@ function($,
                         {panel: panel, active: active, jump: jump});
                     this.copyThisNarrative(panel, active, jump);
                 }, this)
-                );
+            );
 
             $([Jupyter.events]).on(
                 'notebook_saved.Notebook', $.proxy(function (e) {
@@ -72,25 +70,22 @@ function($,
                 }, this)
             );
             
-            if (this.ws_name && this.ws) {
-                this.refresh();
-            }
             return this;
         },
+
         my_user_id: null,
         loggedInCallback: function (event, auth) {
             this.ws = new Workspace(this.options.ws_url, auth);
+
             this.manager = new NarrativeManager({ws_url: this.options.ws_url, nms_url: this.options.nms_url}, auth);
             this.my_user_id = auth.user_id;
-            if (this.ws_name)
-                this.refresh();
+            this.refresh();
             return this;
         },
         loggedOutCallback: function (event, auth) {
             this.ws = null;
             this.manager = null;
             this.my_user_id = null;
-//            this.refresh();
             return this;
         },
         refresh: function () {
@@ -99,115 +94,136 @@ function($,
             }
             this.loadDataAndRenderPanel();
         },
+
         narData: null,
         allNarInfo: null,
         tempNars: null,
         oldStyleWs: null,
         loadDataAndRenderPanel: function () {
-            var self = this;
-            if (self.ws) {
-                self.narData = null;
-                self.showLoading();
-                self.ws.list_workspace_info(
-                    {excludeGlobal: 1},
-                    function (wsList) {
-                        self.narData = {
-                            mine: [],
-                            shared: [],
-                            pub: [],
-                            temp: [],
-                            allWs: []
-                        };
-                        self.allNarData = [];
-                        /*WORKSPACE INFO
-                         0: ws_id id
-                         1: ws_name workspace
-                         2: username owner
-                         3: timestamp moddate,
-                         4: int object
-                         5: permission user_permission
-                         6: permission globalread,
-                         7: lock_status lockstat
-                         8: usermeta metadata*/
-                        var narRefsToLookup = [];
-                        var allNarInfo = [];
-                        for (var i = 0; i < wsList.length; i++) {
-                            if (wsList[i][8]) { // must have metadata or else we skip
+            if (!this.ws)
+                return;
+            this.narData = null;
+            var narRefsToLookup = [];
+            var wsPermsToLookup = [];
+            this.showLoading();
+            var wsInfoProm = Promise.resolve(this.ws.list_workspace_info({excludeGlobal: 1}));
 
-                                // if it is temporary, we skip
-                                if (wsList[i][8].is_temporary) {
-                                    if (wsList[i][8].is_temporary === 'true') {
-                                        self.narData.temp.push({ws_info: wsList[i]});
-                                        continue;
-                                    }
-                                }
-                                //must have the new narrative tag, or else we skip
-                                if (wsList[i][8].narrative) {
-                                    var info = {
-                                        ws_info: wsList[i],
-                                        nar_info: null,
-                                        $div: null
-                                    };
-                                    if (wsList[i][2] === self._attributes.auth.user_id) {
-                                        self.allNarData.push(info);
-                                        self.narData.mine.push(info);
-                                        narRefsToLookup.push({ref: info.ws_info[0] + "/" + wsList[i][8].narrative});
-                                    } else if (wsList[i][5] === 'a' || wsList[i][5] === 'w' || wsList[i][5] === 'r') {
-                                        self.allNarData.push(info);
-                                        self.narData.shared.push(info);
-                                        narRefsToLookup.push({ref: info.ws_info[0] + "/" + wsList[i][8].narrative});
-                                    }
-                                }
-                                if (wsList[i][5] === 'a' || wsList[i][5] === 'w') {
-                                    // allWs is used for advanced management options, which we only
-                                    // have if we have admin or write access
-                                    self.narData.allWs.push({ws_info: wsList[i]});
-                                }
+            var narDataProm = wsInfoProm
+            .then(function (wsList) {
+                this.narData = {
+                    mine: [],
+                    shared: [],
+                    pub: [],
+                    temp: [],
+                    allWs: []
+                };
+                this.allNarData = [];
+                /*WORKSPACE INFO
+                 0: ws_id id
+                 1: ws_name workspace
+                 2: username owner
+                 3: timestamp moddate,
+                 4: int object
+                 5: permission user_permission
+                 6: permission globalread,
+                 7: lock_status lockstat
+                 8: usermeta metadata*/
+                var allNarInfo = [];
+                for (var i = 0; i < wsList.length; i++) {
+                    if (wsList[i][8]) { // must have metadata or else we skip
+
+                        // if it is temporary, we skip
+                        if (wsList[i][8].is_temporary) {
+                            if (wsList[i][8].is_temporary === 'true') {
+                                this.narData.temp.push({ws_info: wsList[i]});
+                                continue;
                             }
                         }
-                        if (narRefsToLookup.length === 0)
-                            return self.renderPanel();
-                        self.ws.get_object_info_new({objects: narRefsToLookup, includeMetadata: 1, ignoreErrors: 1},
-                            function (objList) {
-                                for (var i = 0; i < objList.length; i++) {
-                                    if (objList[i] !== null && objList[i][2].indexOf('KBaseNarrative.Narrative') === 0) {
-                                        self.allNarData[i].nar_info = objList[i];
-                                    } else {
-                                        // console.error('Corrupted Workspace: ');
-                                        // console.error('Searching for narrative: ', narRefsToLookup[i], ' but got: ', objList[i]);
-                                        self.allNarData[i].error = true;
-                                        (function (errorIndex) {
-                                            self.ws.get_object_info_new({objects: [narRefsToLookup[errorIndex]], includeMetadata: 1, ignoreErrors: 0},
-                                                function (error_obj_info) {
-                                                    if (error_obj_info[0][2].indexOf('KBaseNarrative.Narrative') === 0) {
-                                                        // this should not work!! but if it does, fine, remove the error and save the info
-                                                        self.allNarData[errorIndex].error = false;
-                                                        self.allNarData[errorIndex].nar_info = error_obj_info[0];
-                                                    } else {
-                                                        // could give an error message here stating that the workspace is pointing to a non-narrative object
-                                                        //self.allNarData[errorIndex].error_msg = error.error.message;
-                                                    }
-                                                },
-                                                function (error) {
-                                                    // this shouldn't happen often, so if it does, just take the time to refresh
-                                                    self.allNarData[errorIndex].error_msg = error.error.message;
-                                                    self.allNarData[errorIndex].$div = null;
-                                                    self.renderPanel();
-                                                });
-                                        })(i);
-                                    }
-                                }
-                                self.renderPanel();
-                            },
-                            function (error) {
-                                // console.error(error);
-                            });
-                    },
-                    function (error) {
-                        console.error(error);
+                        //must have the new narrative tag, or else we skip
+                        if (wsList[i][8].narrative) {
+                            var info = {
+                                ws_info: wsList[i],
+                                nar_info: null,
+                                $div: null
+                            };
+                            if (wsList[i][2] === this._attributes.auth.user_id) {
+                                this.allNarData.push(info);
+                                this.narData.mine.push(info);
+                                narRefsToLookup.push({ref: info.ws_info[0] + "/" + wsList[i][8].narrative});
+                                wsPermsToLookup.push({id: info.ws_info[0]});
+                            } else if (wsList[i][5] === 'a' || wsList[i][5] === 'w' || wsList[i][5] === 'r') {
+                                this.allNarData.push(info);
+                                this.narData.shared.push(info);
+                                narRefsToLookup.push({ref: info.ws_info[0] + "/" + wsList[i][8].narrative});
+                                wsPermsToLookup.push({id: info.ws_info[0]});
+                            }
+                        }
+                        if (wsList[i][5] === 'a' || wsList[i][5] === 'w') {
+                            // allWs is used for advanced management options, which we only
+                            // have if we have admin or write access
+                            this.narData.allWs.push({ws_info: wsList[i]});
+                        }
                     }
-                )
-            }
+                }
+                var newProms = []
+                if (narRefsToLookup.length > 0) {
+                    var objInfoProm = Promise.resolve(this.ws.get_object_info_new({objects: narRefsToLookup, includeMetadata: 1, ignoreErrors: 1}));
+                    newProms.push(objInfoProm);
+
+                    for (var i=0; i<wsPermsToLookup.length; i+=1000) {
+                        newProms.push(Promise.resolve(this.ws.get_permissions_mass({workspaces: wsPermsToLookup.slice(i, i+1000)})));
+                    }
+                }
+                return Promise.all(newProms);
+            }.bind(this))
+            .then(function(results) { //objList = results[0], rest are permList chunks
+                var objList = results.shift();
+                var permList = [];
+                for (var i=0; i<results.length; i++) {
+                    permList = permList.concat(results[i].perms);
+                }
+                if (!objList)
+                    return;
+
+                var errorProms = [];
+                for (var i = 0; i < objList.length; i++) {
+                    this.allNarData[i].perms = permList[i];
+                    if (objList[i] !== null && objList[i][2].indexOf('KBaseNarrative.Narrative') === 0) {
+                        this.allNarData[i].nar_info = objList[i];
+                    } else {
+                        this.allNarData[i].error = true;
+                        var errorIndex = i;
+
+                        errorProms.push(Promise.resolve(this.ws.get_object_info_new({
+                            objects: [narRefsToLookup[errorIndex]], 
+                            includeMetadata: 1, 
+                            ignoreErrors: 0
+                        }))
+                        .then(function(error_obj_info) {
+                            if (error_obj_info[0][2].indexOf('KBaseNarrative.Narrative') === 0) {
+                                // this should not work!! but if it does, fine, remove the error and save the info
+                                this.allNarData[errorIndex].error = false;
+                                this.allNarData[errorIndex].nar_info = error_obj_info[0];
+                            } else {
+                                // could give an error message here stating that the workspace is pointing to a non-narrative object
+                                //this.allNarData[errorIndex].error_msg = error.error.message;
+                            }                                
+                        }.bind(this))
+                        .catch(function(error) {
+                            this.allNarData[errorIndex].error_msg = error.error.message;
+                            this.allNarData[errorIndex].$div = null;                                
+                        }.bind(this)));
+                    }
+                }
+                return Promise.all(errorProms);
+            }.bind(this))
+            .then(function() {
+                this.renderPanel();
+            }.bind(this))
+            .catch(function(error) {
+                console.error(error);
+            });
+
         },
         showLoading: function () {
             this.$narPanel.html('<br><center><img src="' + this.options.loadingImage + '"/></center><br>');
@@ -713,8 +729,6 @@ function($,
 
             $btnToolbarGroup
                 .append($openHistory)
-                //.append($openProvenance)
-                //.append($download)
                 .append($copy)
                 .append($delete);
 
@@ -736,11 +750,6 @@ function($,
             var $ctrCol = $('<td>').css({'text-align': 'right', 'vertical-align': 'top', 'width': '80px'});
             var $ctrContent = $('<div>').css({'min-height': '60px'});
             $ctrCol.append($ctrContent);
-
-//            var $alertContainer = $('<div>')
-//                .addClass('kb-data-list-more-div')
-//                .css({'text-align': 'center', 'margin': '5px'})
-//                .hide();
 
             var $interactionPanel = $('<div>')
                 .addClass('panel panel-default')
@@ -799,7 +808,7 @@ function($,
             $nameLink.append(nameText).append($version).append($priv);
             $dataCol.append($('<div>').addClass('kb-data-list-name').css({'white-space': 'normal', 'cursor': 'pointer'}).append($nameLink));
 
-            // only disply the rest if there was no error
+            // only display the rest if there was no error
             if (!data.error) {
                 var $usrNameSpan = $('<span>').addClass('kb-data-list-type').append(data.ws_info[2]);
                 if (data.ws_info[2] === this._attributes.auth.user_id) {
@@ -845,46 +854,38 @@ function($,
                     .append($shareToolbarGroup);
                 $ctrContent.append($shareToolbar);
 
-
-                this.ws.get_permissions({id: data.ws_info[0]},
-                    function (perm) {
-                        var shareCount = 0;
-                        for (var usr in perm) {
-                            if (perm.hasOwnProperty(usr)) {
-                                if (usr === '*') {
-                                    continue;
-                                }
-                                shareCount++;
-                            }
+                var shareCount = 0;
+                for (var usr in data.perms) {
+                    if (data.perms.hasOwnProperty(usr)) {
+                        if (usr === '*') {
+                            continue;
                         }
-                        // should really put this in the addDatacontrols; so refactor at some point!
-                        $shareToolbarGroup.append(
-                            $('<button>')
-                            .addClass('btn btn-subtle btn-default')
-                            .attr('data-button', 'share')
-                            .tooltip({title: 'View share settings', 'container': 'body'})
-                            .append($('<span>')
-                                .addClass('fa fa-share-alt'))
-                            .append(' ' + shareCount)
-                            .on('click', function () {
-                                if (!self.toggleInteractionPanel($interactionPanel, 'share')) {
-                                    return;
-                                }
+                        shareCount++;
+                    }
+                }
+                // should really put this in the addDatacontrols; so refactor at some point!
+                $shareToolbarGroup.append(
+                    $('<button>')
+                    .addClass('btn btn-subtle btn-default')
+                    .attr('data-button', 'share')
+                    .tooltip({title: 'View share settings', 'container': 'body'})
+                    .append($('<span>')
+                        .addClass('fa fa-share-alt'))
+                    .append(' ' + shareCount)
+                    .on('click', function () {
+                        if (!self.toggleInteractionPanel($interactionPanel, 'share')) {
+                            return;
+                        }
 
-                                var $sharingDiv = $('<div>');
-                                self.setInteractionPanel($interactionPanel, 'Share Settings', $sharingDiv);
-                                $sharingDiv.kbaseNarrativeSharePanel({
-                                    ws_name_or_id: data.ws_info[0],
-                                    max_list_height: 'none',
-                                    add_user_input_width: '280px'
-                                });
-                            })
-                            );
-                    },
-                    function (error) {
-                        console.error('error getting permissions for manage panel');
-                        console.error(error);
-                    });
+                        var $sharingDiv = $('<div>');
+                        self.setInteractionPanel($interactionPanel, 'Share Settings', $sharingDiv);
+                        $sharingDiv.kbaseNarrativeSharePanel({
+                            ws_name_or_id: data.ws_info[0],
+                            max_list_height: 'none',
+                            add_user_input_width: '280px'
+                        });
+                    })
+                );
             } else if (data.error) {
                 isError = true;
                 var errorMessage;
@@ -900,17 +901,19 @@ function($,
             }
             var $btnToolbar = self.addDataControls(data.nar_info, $interactionPanel, data.ws_info, isError);
 
-            // Set up basic interactivity -- hide and show controls with mouseover.
-            $ctrContent.append($btnToolbar.hide());
-            $narDiv
-                .mouseenter(function () {
-                    $btnToolbar.show();
-                })
-                .mouseleave(function () {
-                    if ($interactionPanel.data('mode') === 'inactive') {
-                        $btnToolbar.hide();
-                    }
-                });
+            if (!isError) {
+                // Set up basic interactivity -- hide and show controls with mouseover.
+                $ctrContent.append($btnToolbar.hide());
+                $narDiv
+                    .mouseenter(function () {
+                        $btnToolbar.show();
+                    })
+                    .mouseleave(function () {
+                        if ($interactionPanel.data('mode') === 'inactive') {
+                            $btnToolbar.hide();
+                        }
+                    });
+            }
 
             $narDiv
                 .append($('<table>')
@@ -1085,9 +1088,6 @@ function($,
         makeNewNarrativeBtn: function () {
             var self = this;
             var active = '<span class="fa fa-plus"></span> New Narrative';
-            // !!! Putting text inside the span with font awesome classes will 
-            // cause the browser to use its default font.
-//            var $active = $('<span>').addClass('fa fa-plus').append(" New Narrative");
             var $working = $('<span>').append("Building Narrative...");
             var $btn =
                 $('<button>').addClass('kb-primary-btn').append(active)
@@ -1254,5 +1254,4 @@ function($,
         /* we really need to stop all this copy pasting */
 
     });
-
 });

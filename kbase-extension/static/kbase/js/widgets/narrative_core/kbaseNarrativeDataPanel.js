@@ -57,12 +57,13 @@ function($, _, Config) {
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
         token: null,
-        dataImporterStarted: false,
         dataListWidget: null,
         $myDataHeader: null,
         myDataTempNarrativeMsg: 'Warning! This Narrative is temporary (untitled). '+
             'Data of temporary Narratives is not visible on this tab. Please change '+
             'the name of the Narrative to make it permanent.',
+
+        renderedTabs: [false, false, false, false, false],
 
         init: function(options) {
             this._super(options);
@@ -123,6 +124,14 @@ function($, _, Config) {
                 this)
             );
 
+            $(document).on(
+                'sidePanelOverlayShown.Narrative', function(e) {
+                    // find the index of what tab is being shown.
+                    var idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
+                    this.updateSlideoutRendering(idx);
+                }.bind(this)
+            );
+
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
@@ -161,7 +170,23 @@ function($, _, Config) {
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
             this.isLoggedIn = true;
             if (this.ws_name) {
-                this.dataImporter(this.ws_name);
+                this.importerThing = this.dataImporter(this.ws_name);
+                this.renderFn = [
+                    function() {
+                        this.importerThing.updateView('mine');
+                    }.bind(this),
+                    function() {
+                        this.importerThing.updateView('shared');
+                    }.bind(this),
+                    function() {
+                        this.publicTab.render();
+                    }.bind(this),
+                    function() {
+                        this.exampleTab.getExampleDataAndRender();
+                    }.bind(this),
+                    function() {
+                    }.bind(this)
+                ];
             } else {
                 //console.error("ws_name is not defined");
             }
@@ -273,6 +298,15 @@ function($, _, Config) {
                     $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
                     if (isOuter)
                         this.hideOverlay();
+
+                    this.updateSlideoutRendering(idx);
+                    // // quick and dirty hack to lazy load My and Shared data panels
+                    // if (idx === 0 && !this.mineLoaded) {
+                    //     this.importerThing.updateView('mine');
+                    // }
+                    // else if (idx === 1 && !this.sharedLoaded) {
+                    //     this.importerThing.updateView('shared');
+                    // }
                 }
             }, this));
 
@@ -285,15 +319,19 @@ function($, _, Config) {
             };
         },
 
+        updateSlideoutRendering: function(panelIdx) {
+            if (!this.renderedTabs[panelIdx]) {
+                this.renderFn[panelIdx]();
+                this.renderedTabs[panelIdx] = true;
+            }
+        },
+
         /**
          * Renders the data importer panel
          * I'm throwing this here because I have no idea how to
          * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
         dataImporter: function(narWSName) {
-            if (this.dataImporterStarted)
-                return;
-            this.dataImporterStarted = true;
             var self = this;
             var maxObjFetch = 300000;
 
@@ -410,7 +448,7 @@ function($, _, Config) {
 
             // add footer status container and buttons
             var importStatus = $('<div class="pull-left kb-import-status">');
-            footer.append(importStatus)
+            footer.append(importStatus);
             var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>').css({'margin':'10px'});
             var closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin':'10px'});
 
@@ -419,12 +457,12 @@ function($, _, Config) {
             // minePanel.kbaseNarrativeMyDataTab({ws_name: this.ws_name});
             // sharedPanel.kbaseNarrativeSharedDataTab({ws_name: this.ws_name});
 
-            publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus, ws_name: this.ws_name});
-            importPanel.kbaseNarrativeSideImportTab({ws_name: this.ws_name});
-            examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus, ws_name: this.ws_name});
+            this.publicTab = publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus, ws_name: this.ws_name});
+            this.importTab = importPanel.kbaseNarrativeSideImportTab({ws_name: this.ws_name});
+            this.exampleTab = examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus, ws_name: this.ws_name});
 
             // It is silly to invoke a new object for each widget
-            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
+            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')};
             var ws = new Workspace(this.options.workspaceURL, auth);
 
 
@@ -436,9 +474,10 @@ function($, _, Config) {
             // start with my data, then fetch other data
             // this is because data sets can be large and
             // makes things more fluid
-            updateView('mine').done(function() {
-                updateView('shared')
-            });
+
+            // updateView('mine').done(function() {
+            //     updateView('shared')
+            // });
 
             var narrativeNameLookup={};
             this.$overlayPanel = body.append(footer);
@@ -447,8 +486,10 @@ function($, _, Config) {
                 var p;
                 if (view == 'mine') {
                     p = getMyWS();
+                    self.mineLoaded = true;
                 } else if (view == 'shared') {
                     p = getSharedWS();
+                    self.sharedLoaded = true;
                 }
 
                 return $.when(p).done(function(workspaces) {
@@ -1313,6 +1354,10 @@ function($, _, Config) {
                     return interval + " minutes ago";
                 }
                 return Math.floor(seconds) + " seconds ago";
+            };
+
+            return {
+                updateView: updateView
             };
         },
 

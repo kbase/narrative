@@ -169,7 +169,6 @@ function ($,
         },
 
         refresh: function (showError) {
-            console.log('DATA LIST: refresh');
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
             if (this.refreshTimer === null) {
@@ -184,13 +183,10 @@ function ($,
                 console.error('ws: ' + this.ws);
                 return;
             }
-            console.log('DATA LIST REFRESH: get_workpace_info');
-
             Promise.resolve(this.ws.get_workspace_info({
                 workspace: this.ws_name
             }))
             .then(function(wsInfo) {
-                console.log('updating!', wsInfo);
                 if (this.wsLastUpdateTimestamp !== wsInfo[3]) {
                     this.wsLastUpdateTimestamp = wsInfo[3];
                     this.wsObjCount = wsInfo[4];
@@ -230,7 +226,6 @@ function ($,
 
             this.fetchWorkspaceData()
             .then(function() {
-                console.log('DATA LIST: and then?');
                 if (this.objectList.length > this.options.maxObjsToPreventFilterAsYouTypeInSearch) {
                     this.$searchInput.off('input');
                 }
@@ -247,7 +242,6 @@ function ($,
                     this.$elem.find('#nar-data-list-default-sort-option').attr('checked');
                 }
 
-                console.log('DATA LIST rendering!');
                 this.populateAvailableTypes();
                 this.renderList();
             }.bind(this));
@@ -272,8 +266,6 @@ function ($,
 
         fetchWorkspaceData: function () {
             return new Promise(function(resolve, reject) {
-                console.log('DATA LIST: getNextDataChunk ws.list_objects - ' + this.options.ws_chunk_size);
-
                 var getDataChunk = function(skip) {
                     return Promise.resolve(this.ws.list_objects({
                         workspaces: [this.ws_name],
@@ -324,16 +316,11 @@ function ($,
                             this.availableTypes[typeName].count++;
                         }
 
-                        console.log('DATA LIST: here?');
                         if (this.objectList.length < this.wsObjCount
                             && this.objectList.length < this.options.ws_max_objs_to_fetch
                             && infoList.length > 0) {
-                            console.log('DATA LIST: DO IT AGAIN');
                             return getDataChunk(skip + this.options.ws_chunk_size);
                         }
-                        // else {
-                        //     console.log('DATA LIST: resolving!');
-                        // }
                     }.bind(this));
                 }.bind(this);
 

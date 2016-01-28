@@ -254,6 +254,7 @@ function($, Config) {
                 this.$narrativeDimmer.show();
                 this.$elem.find('.kb-side-header').addClass('overlay-active');
                 this.$overlay.show('slide', 'fast', $.proxy(function() {
+                    this.trigger('sidePanelOverlayShown.Narrative');
                 }, this));
             }
         },
@@ -264,6 +265,7 @@ function($, Config) {
                 this.$narrativeDimmer.hide();
                 this.$elem.find('.kb-side-header').removeClass('overlay-active');
                 this.$overlay.hide('slide', 'fast', $.proxy(function() {
+                    this.trigger('sidePanelOverlayHidden.Narrative');
                 }, this));
             }
         },

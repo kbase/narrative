@@ -27,3 +27,4 @@ simplegeneric
 qgrid
 bokeh
 markupsafe
+plotly

@@ -547,7 +547,8 @@ function($, _, Config) {
                 var proms = [];
                 proms.push( ws.list_objects(params) );
                 for (var i=1; i < req_count; i++) {
-                    params.skip = 10000 * i;
+                    params.minObjectID = 10000 * i + 1;
+                    params.maxObjectID = 10000 * (i+1);
                     proms.push( ws.list_objects(params) );
                 }
                 
@@ -598,7 +599,8 @@ function($, _, Config) {
                 var proms = [];
                 proms.push( ws.list_objects(params) );
                 for (var i=1; i < req_count; i++) {
-                    params.skip = 10000 * i;
+                    params.minObjectID = 10000 * i + 1;
+                    params.maxObjectID = 10000 * (i+1);
                     proms.push( ws.list_objects(params) );
                 }
 

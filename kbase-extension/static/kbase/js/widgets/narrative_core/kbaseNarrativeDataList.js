@@ -63,7 +63,7 @@ function ($,
         ws_name: null,
         ws: null,
         wsLastUpdateTimestamp: null,
-        wsObjCount: null,
+        maxWsObjId: null,
         n_objs_rendered: 0,
         real_name_lookup: {},
         $searchInput: null,
@@ -203,7 +203,7 @@ function ($,
             .then(function(wsInfo) {
                 if (this.wsLastUpdateTimestamp !== wsInfo[3]) {
                     this.wsLastUpdateTimestamp = wsInfo[3];
-                    this.wsObjCount = wsInfo[4];
+                    this.maxWsObjId = wsInfo[4];
                     this.showLoading('Fetching data...');
                     this.reloadWsData();
                 }
@@ -286,13 +286,13 @@ function ($,
         fetchWorkspaceData: function () {
             var dataChunkNum = 1;
             return new Promise(function(resolve, reject) {
-                var getDataChunk = function(skip) {
+                var getDataChunk = function(minId) {
                     this.showLoading('Fetching data chunk ' + dataChunkNum + '...');
                     return Promise.resolve(this.ws.list_objects({
                         workspaces: [this.ws_name],
                         includeMetadata: 1,
-                        skip: skip,
-                        limit: this.options.ws_chunk_size
+                        minObjectID: minId,
+                        maxObjectID: minId + this.options.ws_chunk_size
                     }))
                     .then(function(infoList) {
                         // object_info:
@@ -337,11 +337,20 @@ function ($,
                             this.availableTypes[typeName].count++;
                         }
 
-                        if (this.objectList.length < this.wsObjCount
-                            && this.objectList.length < this.options.ws_max_objs_to_fetch
-                            && infoList.length > 0) {
+                        /* Do another lookup if all of these conditions are met:
+                         * 1. total object list length < max objs allowed to fetch/render
+                         * 2. theres > 0 objects seen.
+                         * 3. our search space hasn't hit the max object id.
+                         * There's no guarantee that we'll ever see the object with
+                         * max id (it could have been deleted), so keep rolling until
+                         * we either meet how many we're allowed to fetch, or we get
+                         * a query with no objects.
+                         */
+                        if (minId + this.options.ws_chunk_size < this.maxWsObjId &&
+                            this.objectList.length < this.options.ws_max_objs_to_fetch &&
+                            infoList.length > 0) {
                             dataChunkNum++;
-                            return getDataChunk(skip + this.options.ws_chunk_size);
+                            return getDataChunk(minId + 1 + this.options.ws_chunk_size);
                         }
                     }.bind(this));
                 }.bind(this);

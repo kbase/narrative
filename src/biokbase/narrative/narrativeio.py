@@ -55,8 +55,6 @@ class KBaseWSManagerMixin(object):
 
     ws_uri = service.URLS.workspace
     nar_type = 'KBaseNarrative.Narrative'
-    nar_version = '4.0'
-    old_version = '3.0'
 
     def __init__(self, *args, **kwargs):
         if not self.ws_uri:
@@ -202,12 +200,8 @@ class KBaseWSManagerMixin(object):
 
         # Now we can save the Narrative object.
         try:
-            # Simple version check - if the 'worksheets' key exist, then it's the older version.
-            nar_version = self.nar_version
-            if 'worksheets' in nb:
-                nar_version = self.old_version
             ws_save_obj = {
-                'type': self.nar_type + '-' + nar_version,
+                'type': self.nar_type,
                 'data': nb,
                 'objid': obj_id,
                 'meta': nb['metadata'].copy(),

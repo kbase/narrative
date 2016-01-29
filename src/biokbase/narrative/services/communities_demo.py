@@ -31,7 +31,6 @@ from biokbase.mglib import tab_to_matrix, sparse_to_dense
 ## Globals
 VERSION = (0, 0, 1)
 NAME = "Communities Services"
-default_ws = 'communitiesdemo:home'
 ec_re = re.compile(r'[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
 mg_re = re.compile(r'mgm[0-9]{7}\.[0-9]')
 TAXA  = ['domain', 'phylum', 'class', 'order', 'family', 'genus', 'species']
@@ -196,13 +195,13 @@ emirgeWF = """{
 # Initialize
 init_service(name=NAME, desc="Demo workflow communities service", version=VERSION)
 
-def _get_wsname(meth, ws):
-    if ws:
-        return ws
-    elif meth.workspace_id and (meth.workspace_id != 'null'):
+def _get_wsname(meth):
+    if meth.workspace_id and (meth.workspace_id != 'null'):
         return meth.workspace_id
+    elif 'KB_WORKSPACE_ID' in os.environ:
+        return os.environ['KB_WORKSPACE_ID']
     else:
-        return default_ws
+        return None
 
 def _submit_awe(wf):
     headers = {'Datatoken': os.environ['KB_AUTH_TOKEN']}
@@ -286,12 +285,9 @@ def _get_colors(num):
     return num_colors
 
 @method(name="Abundance Profile 2 Annotation Table")
-def _abundanceProfile2annotationTable(meth, workspace, abundance_profile):
+def _abundanceProfile2annotationTable(meth, abundance_profile):
     """Transform a metagenomic abundance profile into an annotation table object. The annotation table can be used as input for metabolic modeling modeling.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param abundance_profile: ID for input abundance profile
     :type abundance_profile: kbtypes.Communities.Profile
     :ui_name abundance_profile: Abundance Profile
@@ -305,19 +301,16 @@ def _abundanceProfile2annotationTable(meth, workspace, abundance_profile):
         raise Exception("Metagenome List object name is not set.")
     print "TEST DEBUG LINE"
     # print STDERR "TEST DEBUG LINE (STDERR)"
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     profile = _get_ws(workspace, abundance_profile , CWS.profile)
 
     meth.debug(profile)
     return json.dumps({'ws': workspace, 'id': abundance_profile , 'header' : profile })
 
 @method(name="Import Metagenome List")
-def _import_metagenome_list(meth, workspace, metagenome_list_id):
+def _import_metagenome_list(meth, metagenome_list_id):
     """Import metagenome list object into workspace.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param metagenome_list_id: name of metagenome list object
     :type metagenome_list_id: kbtypes.Unicode
     :ui_name metagenome_list_id: Metagenome List Name
@@ -328,16 +321,13 @@ def _import_metagenome_list(meth, workspace, metagenome_list_id):
     meth.stages = 1
     if not metagenome_list_id:
         raise Exception("Metagenome List object name is not set.")
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     return json.dumps({'ws': workspace, 'id': metagenome_list_id})
 
 @method(name="Export Functional Profile for Modeling")
-def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, length, rest):
+def _get_annot(meth, mgid, out_name, top, level, evalue, identity, length, rest):
     """Retrieve all SEED/Subsystems functional annotations for a given metagenome ID. Alternatively, filter annotations for specific taxa. For input into modeling service.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param mgid: Communities.Metagenome object name
     :type mgid: kbtypes.Communities.Metagenome
     :ui_name mgid: Metagenome
@@ -378,7 +368,7 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     # validate
     if not (mgid and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     # set defaults since unfilled options are empty strings
     if top == '':
         top = 10
@@ -414,12 +404,9 @@ def _get_annot(meth, workspace, mgid, out_name, top, level, evalue, identity, le
     return json.dumps({'header': text})
 
 @method(name="EMIRGE 16S Extraction")
-def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
+def _run_emirge(meth, in_seq1, in_seq2, out_seq):
     """EMIRGE (Miller et al., Genome Biol. 2011) extracts 16S sequences from a WGS metagenome and reconstructs full-length small subunit gene sequences. It also provides estimates of relative taxon abundances.
     
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_seq1: Communities.SequenceFile object name, fastq mate pair 1
     :type in_seq1: kbtypes.Communities.SequenceFile
     :ui_name in_seq1: Input FASTQ Pair 1
@@ -439,7 +426,7 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     # validate
     if not (in_seq1 and in_seq2 and out_seq):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     #time.sleep(2)
     
     meth.advance("Retrieve Data from Workspace")
@@ -457,12 +444,9 @@ def _run_emirge(meth, workspace, in_seq1, in_seq2, out_seq):
     
 
 @method(name="PICRUSt Predicted Abundance Profile")
-def _run_picrust(meth, workspace, in_biom, out_name):
+def _run_picrust(meth, in_biom, out_name):
     """Create a KEGG annotated functional abundance profile for 16S data in BIOM format using PICRUSt. The input OTUs are created by QIIME using a closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_biom: object name of OTU table
     :type in_biom: kbtypes.Communities.Profile
     :ui_name in_biom: Input BIOM
@@ -481,7 +465,7 @@ def _run_picrust(meth, workspace, in_biom, out_name):
     # validate
     if not (in_biom and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
 
     meth.advance("Retrieve Data from Workspace")
     #seq_obj = _get_ws(workspace, in_seq, CWS.profile)
@@ -533,12 +517,9 @@ def _run_picrust(meth, workspace, in_biom, out_name):
 
 
 @method(name="QIIME OTU picking")
-def _run_qiime_otu_picking(meth, workspace, in_seq, in_metagenome , out_name):
+def _run_qiime_otu_picking(meth, in_seq, in_metagenome , out_name):
     """Closed-reference OTU picking against the Greengenes database (pre-clustered at 97% identity).
         
-        :param workspace: name of workspace, default is current
-        :type workspace: kbtypes.Unicode
-        :ui_name workspace: Workspace
         :param in_seq: object name of input sequence file
         :type in_seq: kbtypes.Communities.SequenceFile
         :ui_name in_seq: Input Sequence
@@ -560,7 +541,7 @@ def _run_qiime_otu_picking(meth, workspace, in_seq, in_metagenome , out_name):
     # validate
     if not ( (in_seq or in_metagenome) and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     
     meth.advance("Retrieve Data from Workspace")
     
@@ -605,12 +586,9 @@ def _run_qiime_otu_picking(meth, workspace, in_seq, in_metagenome , out_name):
 
 
 @method(name="Transform Abundance Profile to Functional Profile for Modeling")
-def _map_annot(meth, workspace, in_name, out_name):
+def _map_annot(meth, in_name, out_name):
     """Create SEED/Subsystems functional annotations from a KEGG metagenome abundance profile. For input into modeling service.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
@@ -627,7 +605,7 @@ def _map_annot(meth, workspace, in_name, out_name):
     # validate
     if not (in_name and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     
     meth.advance("Retrieve Data from Workspace")
     biom = _get_ws(workspace, in_name, CWS.profile)
@@ -654,12 +632,9 @@ def _map_annot(meth, workspace, in_name, out_name):
     return json.dumps({'header': text})
 
 @method(name="Create Metabolic Model")
-def _make_model(meth, workspace, in_name, out_name):
+def _make_model(meth, in_name, out_name):
     """Create a draft metabolic model from metagenome Subsystems annotations.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of Communities.ProfileTable
     :type in_name: kbtypes.Communities.ProfileTable
     :ui_name in_name: Input Name
@@ -676,7 +651,7 @@ def _make_model(meth, workspace, in_name, out_name):
     # validate
     if not (in_name and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     
     meth.advance("Retrieve Data from Workspace")
     _put_invo(in_name, _get_ws(workspace, in_name, CWS.annot))
@@ -704,12 +679,9 @@ def _make_model(meth, workspace, in_name, out_name):
     return json.dumps({'header': '\n'.join(lines)})
 
 @method(name="Gapfill Metabolic Model")
-def _gapfill_model(meth, workspace, in_name):
+def _gapfill_model(meth, in_name):
     """Fill in missing core metabolism functions in a draft model.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of model
     :type in_name: kbtypes.KBaseFBA.FBAModel
     :ui_name in_name: Model Name
@@ -723,7 +695,7 @@ def _gapfill_model(meth, workspace, in_name):
     # validate
     if not in_name:
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     
     meth.advance("Gapfill Model Starting")
     cmd = "kbfba-gapfill %s --numsol 1 --timepersol 3600 --intsol -w %s"%(in_name, workspace)
@@ -734,12 +706,9 @@ def _gapfill_model(meth, workspace, in_name):
     return json.dumps({'header': stdout})
 
 @method(name="Compare Metabolic Model")
-def _compare_model(meth, workspace, model1, model2):
+def _compare_model(meth, model1, model2):
     """Compare two or more metabolic models with appropriate statistical tests.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param model1: object name of first KBaseFBA.FBAModel
     :type model1: kbtypes.KBaseFBA.FBAModel
     :ui_name model1: Model 1 Name
@@ -754,7 +723,7 @@ def _compare_model(meth, workspace, model1, model2):
     meth.stages = 2
     meth.advance("Processing inputs")
     # validate
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     if not (model1 and model2):
         return json.dumps({'header': 'ERROR:\nmissing model 1 and model 2'})
     
@@ -766,12 +735,9 @@ def _compare_model(meth, workspace, model1, model2):
     return json.dumps({'header': stdout})
 
 @method(name="KEGG Mapper")
-def _kegg_map(meth, workspace, input1, input2):
+def _kegg_map(meth, input1, input2):
     """Compare two or more metabolic networks via overlay on graphical KEGG Map.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param input1: object name of first KBaseFBA.FBAModel
     :type input1: kbtypes.KBaseFBA.FBAModel
     :ui_name input1: Model 1 Name
@@ -786,7 +752,7 @@ def _kegg_map(meth, workspace, input1, input2):
     meth.stages = 4
     meth.advance("Processing inputs")
     # validate
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     if not (input1 and input2):
         return json.dumps({'header': 'ERROR:\nmissing profile 1 and profile 2'})
     
@@ -811,12 +777,9 @@ def _kegg_map(meth, workspace, input1, input2):
     return json.dumps({'header': text, 'data': kgdata, 'width': 800})
 
 @method(name="Retrieve Annotation Abundance Profile")
-def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, int_level, int_source, evalue, identity, length, norm):
+def _get_matrix(meth, ids, out_name, annot, level, source, int_name, int_level, int_source, evalue, identity, length, norm):
     """Retrieve annotation abundance data for selected metagenomes.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param ids: object name of Communities.Collection
     :type ids: kbtypes.Communities.Collection
     :ui_name ids: Metagenome List
@@ -870,7 +833,7 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     # validate
     if not (ids and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     # set defaults since unfilled options are empty strings
     if annot == '':
         annot = 'taxa'
@@ -915,12 +878,9 @@ def _get_matrix(meth, workspace, ids, out_name, annot, level, source, int_name, 
     return json.dumps({'header': text})
 
 @method(name="Statistical Significance Test")
-def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order, direction):
+def _group_matrix(meth, in_name, out_name, metadata, stat_test, order, direction):
     """Apply matR-based statistical tests to abundance profile data.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
@@ -951,7 +911,7 @@ def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order
     # validate
     if not (in_name and metadata and out_name):
         return json.dumps({'header': 'ERROR:\nmissing input or output object names'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     # set defaults since unfilled options are empty strings
     if stat_test == '':
         stat_test = 'Kruskal-Wallis'
@@ -977,12 +937,9 @@ def _group_matrix(meth, workspace, in_name, out_name, metadata, stat_test, order
     return json.dumps({'header': text})
 
 @method(name="Sub-select Abundance Profile")
-def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, rows, alist):
+def _select_matrix(meth, in_name, out_name, order, direction, cols, rows, alist):
     """Sort and/or subselect annotation abundance data and outputs from statistical analyses.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
@@ -1013,7 +970,7 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     
     meth.stages = 4
     meth.advance("Processing inputs")
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     # set defaults since unfilled options are empty strings
     if direction == '':
         direction = 'desc'
@@ -1057,12 +1014,9 @@ def _select_matrix(meth, workspace, in_name, out_name, order, direction, cols, r
     return json.dumps({'header': txt})
 
 @method(name="Add Metadata to Abundance Profile")
-def _add_metadata(meth, workspace, ids, in_name, key, value):
+def _add_metadata(meth, ids, in_name, key, value):
     """Add given key-value metadata to inputed abundace profile for inputed metagenome list.
     
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param ids: object name of Communities.Collection
     :type ids: kbtypes.Communities.Collection
     :ui_name ids: Metagenome List
@@ -1082,7 +1036,7 @@ def _add_metadata(meth, workspace, ids, in_name, key, value):
     
     meth.stages = 4
     meth.advance("Processing inputs")
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     if not (ids and in_name):
         return json.dumps({'header': 'ERROR:\nmissing input object names'})
     if not (key and value):
@@ -1109,12 +1063,9 @@ def _add_metadata(meth, workspace, ids, in_name, key, value):
     return json.dumps({'header': text})
 
 @method(name="View Abundance Profile Metadata")
-def _view_metadata(meth, workspace, in_name):
+def _view_metadata(meth, in_name):
     """View metadata from an abundance profile as a table
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
@@ -1125,7 +1076,7 @@ def _view_metadata(meth, workspace, in_name):
     
     meth.stages = 4
     meth.advance("Processing inputs")
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     
     meth.advance("Retrieve Data from Workspace")
     biom = json.loads( _get_ws(workspace, in_name, CWS.profile) )
@@ -1160,12 +1111,9 @@ def _view_metadata(meth, workspace, in_name):
     return json.dumps({'table': table})
 
 @method(name="View Abundance Profile Values")
-def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_end, stats):
+def _view_matrix(meth, in_name, row_start, row_end, col_start, col_end, stats):
     """View a slice of a BIOM format abundance profile as a table
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
@@ -1192,7 +1140,7 @@ def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_en
     
     meth.stages = 4
     meth.advance("Processing inputs")
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     # set defaults since unfilled options are empty strings
     if stats == '':
         stats = 'yes'
@@ -1221,12 +1169,9 @@ def _view_matrix(meth, workspace, in_name, row_start, row_end, col_start, col_en
     return json.dumps({'table': table})
 
 @method(name="Merge Abundance Profiles")
-def _view_matrix(meth, workspace, ab1, ab2, ab3, ab4, out_name):
+def _view_matrix(meth, ab1, ab2, ab3, ab4, out_name):
     """Merge two or more BIOM format abundance profiles
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param ab1: object name of Communities.Profile required
     :type ab1: kbtypes.Communities.Profile
     :ui_name ab1: First Profile
@@ -1249,7 +1194,7 @@ def _view_matrix(meth, workspace, ab1, ab2, ab3, ab4, out_name):
 
     meth.stages = 4
     meth.advance("Processing inputs")
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     # validate
     if not (ab1 and ab2):
         return json.dumps({'header': 'ERROR:\nmissing required input abundance profiles'})
@@ -1286,12 +1231,9 @@ def _view_matrix(meth, workspace, ab1, ab2, ab3, ab4, out_name):
     return json.dumps({'header': text})
 
 @method(name="Rank Abundance from Abundance Profile")
-def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
+def _plot_rank_abund(meth, in_name, level, use_name, top, order_by):
     """Generate rank abundance profile from annotation abundance data.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
@@ -1320,7 +1262,7 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
     # validate
     if not in_name:
         json.dumps({'header': 'ERROR:\nmissing input'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     # set defaults since unfilled options are empty strings
     annot = None
     hpos  = -1
@@ -1420,12 +1362,9 @@ def _plot_rank_abund(meth, workspace, in_name, level, use_name, top, order_by):
     return json.dumps(graphdata)
 
 @method(name="Boxplots from Abundance Profile")
-def _plot_boxplot(meth, workspace, in_name, use_name):
+def _plot_boxplot(meth, in_name, use_name):
     """Generate boxplots from annotation abundance data.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
@@ -1443,7 +1382,7 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     # validate
     if not in_name:
         json.dumps({'header': 'ERROR:\nmissing input'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     # set defaults since unfilled options are empty strings
     if use_name == '':
         use_name = 'no'
@@ -1466,12 +1405,9 @@ def _plot_boxplot(meth, workspace, in_name, use_name):
     return json.dumps({'header': text, 'type': 'png', 'width': '650', 'data': b64png})
 
 @method(name="Heatmap from Abundance Profile")
-def _plot_r_heatmap(meth, workspace, in_name, use_name, distance, cluster, order, label):
+def _plot_r_heatmap(meth, in_name, use_name, distance, cluster, order, label):
     """Generate a heatmap-dendrogram from annotation abundance data.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
@@ -1505,7 +1441,7 @@ def _plot_r_heatmap(meth, workspace, in_name, use_name, distance, cluster, order
     # validate
     if not in_name:
         json.dumps({'header': 'ERROR:\nmissing input'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     # set defaults since unfilled options are empty strings
     if use_name == '':
         use_name = 'no'
@@ -1540,12 +1476,9 @@ def _plot_r_heatmap(meth, workspace, in_name, use_name, distance, cluster, order
     return json.dumps({'header': text, 'type': 'png', 'width': '600', 'data': b64png})
 
 @method(name="Interactive Heatmap from Abundance Profile")
-def _plot_retina_heatmap(meth, workspace, in_name, use_name, label):
+def _plot_retina_heatmap(meth, in_name, use_name, label):
     """Generate an interactive heatmap-dendrogram from annotation abundance data.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
@@ -1567,7 +1500,7 @@ def _plot_retina_heatmap(meth, workspace, in_name, use_name, label):
     # validate
     if not in_name:
         json.dumps({'header': 'ERROR:\nmissing input'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     # set defaults since unfilled options are empty strings
     if use_name == '':
         use_name = 'no'
@@ -1605,12 +1538,9 @@ def _plot_retina_heatmap(meth, workspace, in_name, use_name, label):
     return json.dumps({'data': data, 'legend_width': lwidth})
 
 @method(name="PCoA from Abundance Profile")
-def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
+def _plot_pcoa(meth, in_name, metadata, distance, three):
     """Generate a PCoA from annotation abundance data.
 
-    :param workspace: name of workspace, default is current
-    :type workspace: kbtypes.Unicode
-    :ui_name workspace: Workspace
     :param in_name: object name of Communities.Profile
     :type in_name: kbtypes.Communities.Profile
     :ui_name in_name: Input Name
@@ -1635,7 +1565,7 @@ def _plot_pcoa(meth, workspace, in_name, metadata, distance, three):
     # validate
     if not in_name:
         return json.dumps({'header': 'ERROR:\nmissing input'})
-    workspace = _get_wsname(meth, workspace)
+    workspace = _get_wsname(meth)
     # set defaults since unfilled options are empty strings
     if distance == '':
         distance = 'euclidean'
@@ -1687,7 +1617,7 @@ def _view_mg(meth, mgid):
     return json.dumps({'mgid': mgid})
 
 @method(name="Profile to OTU annotations")
-def _profile_to_otu_annotations(meth,profile_id,metaanno_id):
+def _profile_to_otu_annotations(meth, profile_id, metaanno_id):
     """Translates metagenome profile into an OTU annotation object for modeling.
         
         :param profile_id: ID of the metagenome profile
@@ -1750,7 +1680,7 @@ def _profile_to_otu_annotations(meth,profile_id,metaanno_id):
     return json.dumps(output)
 
 @method(name="OTU annotations to Models")
-def _otu_annotations_to_models(meth,metaanno_id,max_otu_models,min_abundance,min_reactions):
+def _otu_annotations_to_models(meth, metaanno_id, max_otu_models, min_abundance, min_reactions):
     """Constructs models for abundant OTUs in metagenome based on functions of reference genome hits.
         
         :param metaanno_id: name of OTU annotation object
@@ -1807,7 +1737,7 @@ def _otu_annotations_to_models(meth,metaanno_id,max_otu_models,min_abundance,min
     return json.dumps(finaloutput)
 
 @method(name="Merge to Community Model")
-def _merge_to_community_model(meth,model_ids,species_abundance,output_id):
+def _merge_to_community_model(meth, model_ids, species_abundance, output_id):
     """Constructs models for abundant OTUs in metagenome based on functions of reference genome hits.
         
         :param models_ids: list of species model ids (; seperated)

@@ -13,18 +13,18 @@ def main():
     for fname in filenames:
         f = sys.stdin if fname == '-' else open(fname, 'r')
         for line in f:
-            m = re.match('(.*)\[(.*)\]\[\](.*)', line)
+            #m = re.match('(.*)\[(.*)\]\[\](.*)', line)
+            #if m:
+            #    println(''.join(m.groups()),'\n')
+            #else:
+            m = re.search('\{\{(.*)\}\}', line)
             if m:
-                println(''.join(m.groups()),'\n')
+                f2 = open(m.group(1), 'r')
+                println('\n')
+                for line2 in f2:
+                    println(line2)
             else:
-                m = re.search('\{\{(.*)\}\}', line)
-                if m:
-                    f2 = open(m.group(1), 'r')
-                    println('\n')
-                    for line2 in f2:
-                        println(line2)
-                else:
-                    println(line)
+                println(line)
 
 if __name__ == '__main__':
     main()

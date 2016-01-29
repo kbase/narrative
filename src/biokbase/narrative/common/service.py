@@ -14,20 +14,25 @@ from collections import deque
 import json
 import logging
 import os
+import re
 import sys
 import time
 import traceback
 # Third-party
-import IPython.utils.traitlets as trt
-from IPython.core.application import Application
+import traitlets as trt
+# from IPython.core.application import Application
 # Local
 from biokbase.narrative.common import kbtypes, kblogging
 from biokbase.narrative.common.log_common import EVENT_MSG_SEP
 from biokbase.narrative.common.url_config import URLS
 from biokbase.narrative.common import util
+from biokbase.narrative.common.kbjob_manager import KBjobManager
 
 # Logging
 _log = logging.getLogger(__name__)
+
+# Init job manager
+job_manager = KBjobManager()
 
 ## Exceptions
 
@@ -175,13 +180,13 @@ def get_func_info(fn):
             typeobj = eval(desc.strip())
             return_['type'] = typeobj
 
-        # :input_widget - the default visualization widget for this method. 
+        # :input_widget - the default visualization widget for this method.
         # Should be the name as it's invoked in Javascript.
         elif line.startswith(":input_widget"):
             _1, _2, widget = line.split(":", 2)
             return_['input_widget'] = widget.strip()
 
-        # :output_widget - the visualization widget for this method. 
+        # :output_widget - the visualization widget for this method.
         # Should be the name as it's invoked in Javascript.
         elif line.startswith(":output_widget"):
             _1, _2, widget = line.split(":", 2)
@@ -220,6 +225,25 @@ def get_func_info(fn):
 
 _services = {}
 
+# def register_job(job_id):
+#     """Register a long-running job by id.
+
+#     This takes a job id from the User and Job Service, and registers it in
+#     the Narrative interface. This registration process does two things:
+#     1. Shares that job with NarrativeJobViewer account on behalf of the current user.
+#     2. Sends that job id forward to the Narrative front-end to be stored in the
+#     Narrative object and made visible to any querying front-end widget.
+
+#     :param str job_id: Unique identifier for the long-running job.
+#     """
+#     pass
+
+# def poll_job(job_id):
+#     """Fetch a job from the User and Job Service.
+
+#     :param str job_id: Unique identifier for the job.
+#     """
+#     pass
 
 def register_service(svc, name=None):
     """Register a service.
@@ -379,7 +403,7 @@ class Service(trt.HasTraits):
 
 class LifecycleSubject(object):
     """Contains the current status of a running process.
-    
+
     The basic model is that a process is in a 'stage', which is
     an integer starting at 1 and less than or equal to the total
     number of stages. Stages and total numbers of stages can
@@ -430,7 +454,7 @@ class LifecycleSubject(object):
         if not self._done:
             self._done = True
             self._event('done')
-        
+
     def error(self, code, err):
         """Done with process due to an error.
         Idempotent.
@@ -444,8 +468,37 @@ class LifecycleSubject(object):
         """
         self._event('debug', msg)
 
+    def register_job(self, job_id):
+        """Register a new long-running job.
+        """
+        global job_manager
+        if job_id is not None:
+            if job_manager is None:
+                job_manager = KBjobManager()
+
+            self._event('debug', job_id)
+            # njs jobs start with either
+            # 'njs:' or 'method:' - either way
+            # they're the only ones with a colon
+            if job_id.find(':') == -1:
+                job_manager.register_job(job_id)
+            self._event('register_job', job_id)
+
+    def register_app(self, app_id):
+        """Register a new long-running app process.
+        """
+        global job_manager
+        if app_id is not None:
+            if job_manager is None:
+                job_manager = KBjobManager()
+
+            self._event('debug', app_id)
+            if app_id.find(':') == -1:
+                job_manager.register_job(app_id)
+            self._event('register_app', app_id)
+
     # get/set 'stage' property
-    
+
     @property
     def stage(self):
         return self._stage
@@ -461,13 +514,13 @@ class LifecycleSubject(object):
                              .format(value, self._stages))
         self._stage = value
         self._event('stage', self._stage, self._stages, '')
-        
+
     # get/set 'stages' (number of stages) property
 
     @property
     def stages(self):
         return self._stages
-        
+
     @stages.setter
     def stages(self, value):
         if not isinstance(value, int):
@@ -482,28 +535,36 @@ class LifecycleSubject(object):
 
 class LifecycleObserver(object):
     """Interface that defines the lifecycle events of a service,
-    in terms of callbacks. These callbacks will be used by the 
+    in terms of callbacks. These callbacks will be used by the
     :class:`IpService` to communicate with the IPython kernel,
-    but they can also be extended to perform service-specific actions.    
+    but they can also be extended to perform service-specific actions.
     """
     def started(self, params):
         """Called before execution starts"""
         pass
-        
+
     def stage(self, num, total, name):
         """Called for stage changes"""
         pass
-        
+
     def done(self):
         """Called on successful completion"""
         pass
-        
+
     def error(self, code, err):
         """Called on fatal error"""
         pass
 
     def debug(self, msg):
         """Debugging message"""
+        pass
+
+    def register_job(self, job_id):
+        """Register a long-running job"""
+        pass
+
+    def register_app(self, app_id):
+        """Register a an app job that's composed of several subjobs"""
         pass
 
 
@@ -544,7 +605,7 @@ class LifecycleHistory(LifecycleObserver):
         self._hist.append(tuple(self._t + [dur, self._p]))
         if len(self._hist) > self._maxlen:
             self._hist.popleft()
-    
+
     def error(self, code, err):
         """Called on fatal error"""
         pass
@@ -611,6 +672,12 @@ class LifecyclePrinter(LifecycleObserver):
     def debug(self, msg):
         self._write('G' + msg)
 
+    def register_job(self, job_id):
+        self._write('J' + job_id)
+
+    def register_app(self, app_id):
+        self._write('A' + app_id)
+
 
 class LifecycleLogger(LifecycleObserver):
     """Log lifecycle messages in a simple but structured format,
@@ -644,8 +711,13 @@ class LifecycleLogger(LifecycleObserver):
 
     def started(self, params):
         # note: quote params so the logging can handle spaces inside them
-        pstr = str(params).replace('"', '\\"')  # escape embedded quotes
-        self._write(logging.INFO, "func.begin", {'params': pstr})
+        #pstr = str(params).replace('"', '\\"')  # escape embedded quotes
+        pstr = str(params).replace('"', "'")  # change dbl to single quotes
+        pstr = pstr.replace('\\','') # eliminate dbl-backslashes
+        pstr = pstr.replace("\'", "'") # and so on? yeesh!
+        # now extract actual params
+        psets = ','.join(re.findall('{\s*\'stepId\'.*?\]', pstr))
+        self._write(logging.INFO, "func.begin", {'params': psets})
         self._start_time = time.time()
 
     def done(self):
@@ -662,18 +734,24 @@ class LifecycleLogger(LifecycleObserver):
                     {'num': n, 'total': total})
 
     def error(self, code, err):
-        if len(err) > self.MAX_MSG_LEN:
-            err = err[self.MAX_MSG_LEN] + '[..]'
+        if len(str(err)) > self.MAX_MSG_LEN:
+            err = str(err[:self.MAX_MSG_LEN]) + '[..]'
         self._write(logging.ERROR, "func.error", {'errcode': code, 'errmsg':err})
 
     def debug(self, msg):
         if self._is_debug:
             self._write(logging.DEBUG, "func.debug", {'dbgmsg': msg})
 
+    def register_job(self, job_id):
+        self._write(logging.INFO, "start job", {'jobid': "id={}".format(job_id)})
+
+    def register_app(self, app_id):
+        self._write(logging.INFO, "start app", {'jobid': "id={}".format(app_id)})
+
 
 class ServiceMethod(trt.HasTraits, LifecycleSubject):
     """A method of a service.
-    
+
     Defines some metadata and a function, using :meth:`set_func`,
     to run the service. Call the class instance like a function
     to execute the service in its wrapped mode.
@@ -878,6 +956,14 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
         """
         return os.environ['KB_WORKSPACE_ID']
 
+    def poll_job(self, job_id):
+        global job_manager
+        if job_manager is None:
+            job_manager = KBjobManager()
+
+        return job_manager.poll_job(job_id)
+
+
     ## JSON serialization
 
     def as_json(self, formatted=False, **kw):
@@ -902,7 +988,7 @@ class ServiceMethod(trt.HasTraits, LifecycleSubject):
                      'a dict or None': 'object',
                      'a float': 'number',
                      'a boolean': 'boolean'}
-                             
+
     def as_json_schema(self, formatted=False, **kw):
         d = {
             'title': self.name,
@@ -958,7 +1044,7 @@ def method(name=None):
     """Decorator function for creating new services.
 
     Example usage::
-    
+
         @method(name="MyMethod")
         def my_service(method, arg1, arg2, etc.):
             pass # method body goes here

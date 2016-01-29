@@ -9,8 +9,8 @@ __date__ = '11/15/13'
 import json
 import re
 # Third-party
-from IPython.utils.traitlets import HasTraits, TraitType, TraitError
-from IPython.utils import traitlets as tls
+from traitlets import HasTraits, TraitType, TraitError
+import traitlets as tls
 
 
 class TypeMeta(object):
@@ -134,6 +134,12 @@ class KBaseGenome1(tls.Unicode, TypeMeta):
     def __str__(self):
         return "KBaseGenomes.Genome-1.0"
 
+class KBaseGenomeAnnotation1(tls.Unicode, TypeMeta):
+    info_text = "KBaseGenomes.GenomeAnnotation-1.0"
+
+    def __str__(self):
+        return "KBaseGenomes.GenomeAnnotation-1.0"
+
 class KBaseGenome3(tls.Unicode, TypeMeta):
     info_text = "KBaseGenomes.Genome-3.0"
 
@@ -145,6 +151,12 @@ class KBaseGenomesContigSet1(tls.Unicode, TypeMeta):
 
     def __str__(self):
         return "KBaseGenomes.ContigSet-1.0"
+
+class KBaseGenomesAssembly1(tls.Unicode, TypeMeta):
+    info_text = "KBaseGenomes.Assembly-1.0"
+
+    def __str__(self):
+        return "KBaseGenomes.Assembly-1.0"
 
 class KBaseBiochem_Media(tls.Unicode, TypeMeta):
     info_text = "KBaseBiochem.Media-1.0"
@@ -174,6 +186,8 @@ class KBaseBiochem_Media(tls.Unicode, TypeMeta):
 class Genome(tls.Unicode, TypeMeta):
     info_text = "a genome"
 
+class GenomeAnnotation(tls.Unicode, TypeMeta):
+    info_text = "a genome annotation"
 
 class Media(tls.Unicode, TypeMeta):
     info_text = "some media"
@@ -185,6 +199,9 @@ class Model(tls.Unicode, TypeMeta):
 
 class ContigSet(tls.Unicode, TypeMeta):
     info_text = "a ContigSet"
+
+class Aseembly(tls.Unicode, TypeMeta):
+    info_text = "an Assembly"
 
 
 class FBAResult(tls.Unicode, TypeMeta):
@@ -384,6 +401,12 @@ class KBaseGenomes(object):
         class v2_0(tls.Unicode, TypeMeta):
             """Type spec for the "ContigSet" object"""
             info_text = "KBaseGenomes.ContigSet-2.0"
+    class Assembly(tls.Unicode, TypeMeta):
+        """Assembly type"""
+        info_text = "KBaseGenomes.Assembly"
+        class v2_0(tls.Unicode, TypeMeta):
+            """Type spec for the "Assembly" object"""
+            info_text = "KBaseGenomes.Assembly-1.0"
     class MetagenomeAnnotation(tls.Unicode, TypeMeta):
         """MetagenomeAnnotation type"""
         info_text = "KBaseGenomes.MetagenomeAnnotation"
@@ -396,6 +419,12 @@ class KBaseGenomes(object):
         class v6_0(tls.Unicode, TypeMeta):
             """Genome object holds much of the data relevant for a genome in KBase"""
             info_text = "KBaseGenomes.Genome-6.0"
+    class GenomeAnnotation(tls.Unicode, TypeMeta):
+        """GenomeAnnotation type"""
+        info_text = "KBaseGenomes.GenomeAnnotation"
+        class v6_0(tls.Unicode, TypeMeta):
+            """GenomeAnnotation object holds much of the data relevant for a genome in KBase"""
+            info_text = "KBaseGenomes.GenomeAnnotation-1.0"
     class GenomeDomainData(tls.Unicode, TypeMeta):
         """GenomeDomainData type"""
         info_text = "KBaseGenomes.GenomeDomainData"

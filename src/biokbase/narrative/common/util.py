@@ -10,8 +10,10 @@ import re
 import requests
 from setuptools import Command
 import time
+from .kvp import KVP_EXPR, parse_kvp
 from biokbase.workspace.client import Workspace as WS2
-from biokbase.workspace.client import ServerError, URLError
+from biokbase.workspace.client import ServerError
+from urllib2 import URLError
 
 def kbase_debug_mode():
     return bool(os.environ.get('KBASE_DEBUG', None))
@@ -30,13 +32,15 @@ class _KBaseEnv(object):
     env_narrative  = "KB_NARRATIVE"
     env_session    = "KB_SESSION"
     env_client_ip  = "KB_CLIENT_IP"
+    env_workspace  = "KB_WORKSPACE_ID"
     env_user       = None
 
     _defaults = {'auth_token': 'none',
                  'narrative': 'none',
                  'session': 'none',
                  'client_ip': '0.0.0.0',
-                 'user': 'anonymous'}
+                 'user': 'anonymous',
+                 'workspace': 'none'}
 
     def __getattr__(self, name):
         ename = "env_" + name
@@ -392,39 +396,3 @@ class BuildDocumentation(Command):
         doc = top + self.doc_dir
         os.chdir(doc)
         os.system("make html")
-
-## Key=value pair parser
-
-KVP_EXPR = re.compile(r"""
-    (?:
-        \s*                        # leading whitespace
-        ([0-9a-zA-Z_.\-]+)         # Name
-        =
-        (?:                        # Value:
-          ([^"\s]+) |              # - simple value
-          "((?:[^"] | (?<=\\)")*)" # - quoted string
-        )
-        \s*
-    ) |
-    ([^= ]+)                        # Text w/o key=value
-    """, flags=re.X)
-
-def parse_kvp(msg, record, text_sep=' '):
-    """
-    Parse key-value pairs, adding to record in-place.
-
-    :param msg: Input string
-    :param record: In/out dict
-    :param text_sep: Separator for output text pieces
-    :return: All non-KVP as a string, joined by `text_sep`
-    """
-    text = []
-    for n, v, vq, txt in KVP_EXPR.findall(msg):
-        if n:
-            if vq:
-                v = vq.replace('\\"', '"')
-            # add this KVP to output dict
-            record[n] = v
-        else:
-            text.append(txt)
-    return text_sep.join(text)

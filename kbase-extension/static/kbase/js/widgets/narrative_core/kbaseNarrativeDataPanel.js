@@ -470,13 +470,13 @@ function($,
                                    });
 
                 var $loadingDiv = $('<div>')
-                                  .addClass('kb-data-list-type')
+                                  .addClass('row')
                                   .css({margin:'15px', 'margin-left':'35px', 'height':'550px'})
                                   .append($('<div class="progress">').append($progressBar))
                                   .hide();
 
                 var setValue = function(value) {
-                    if (value > minValue) {
+                    if (value >= minValue) {
                         $progressBar.css('width', value + '%')
                                     .attr('aria-valuenow', value);
                     }
@@ -791,6 +791,7 @@ function($,
 
                 if (data.length == 0){
                     container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
+                    setLoading(view, false);
                     return;
                 } else if (data.length-1 < end)
                     end = data.length;
@@ -801,6 +802,7 @@ function($,
 
                 if (rows.children().length==0) {
                     container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
+                    setLoading(view, false);
                     return;
                 }
 

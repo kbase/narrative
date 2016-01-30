@@ -1185,10 +1185,14 @@ function($,
             }
 
             // the existing .loading() .rmLoading() puts the loading icon in the wrong place
-            function setLoading($container) {
-                $container.empty();
-                $container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'})
-                                  .append('<img src="' + self.options.loadingImage + '">'));
+            function setLoading($container, message) {
+                var $loader = $('<div>')
+                              .addClass("kb-data-list-type")
+                              .css({margin:'15px', 'margin-left':'35px'})
+                              .append('<img src="' + self.options.loadingImage + '">');
+                if (message)
+                    $loader.append(' ' + message);
+                $container.empty().append($loader);
             }
 
             function objURL(module, type, ws, name) {

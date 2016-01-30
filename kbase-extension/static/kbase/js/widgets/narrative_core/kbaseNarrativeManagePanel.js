@@ -598,6 +598,17 @@ function($,
                                         var id = new Date().getTime();
                                         var ws_name = self.my_user_id + ":" + id;
 
+                                        Promise.resolve(this.ws.clone_workspace({
+                                            wsi: {id: ws_info[0]},
+                                            workspace: ws_name,
+                                            meta: newMeta
+                                        }))
+                                        .then(function(newWsInfo) {
+                                            var newNarrativeRef = newWsInfo[0] + '/' + objectInfo[1];
+
+
+                                        }.bind(this))
+
                                         self.ws.clone_workspace({
                                             wsi: {id: ws_info[0]},
                                             workspace: ws_name,
@@ -619,27 +630,27 @@ function($,
                                                             wsi: {id: new_ws_info[0]},
                                                             new : {'narrative': String(data.info[0])}
                                                         },
-                                                            function () {
-                                                                // so much work just to update this name!
-                                                                self.ws.save_objects({id: new_ws_info[0], objects: [
-                                                                        {
-                                                                            type: data.info[2],
-                                                                            data: data.data,
-                                                                            provenance: data.provenance,
-                                                                            name: data.info[1],
-                                                                            meta: new_nar_metadata
-                                                                        }
-                                                                    ]},
-                                                                    function (info) {
-                                                                        console.log('copying complete', info);
-                                                                        self.refresh();
-                                                                    },
-                                                                    function (error) {
-                                                                        var errorMessage = "Error! Copied successfully, but error on rename." + error.error.message;
-                                                                        console.log(errorMessage);
-                                                                        console.error(error);
-                                                                        self.setInteractionError($interactionPanel, errorMessage);
-                                                                    });
+                                                        function () {
+                                                            // so much work just to update this name!
+                                                            self.ws.save_objects({id: new_ws_info[0], objects: [
+                                                                    {
+                                                                        type: data.info[2],
+                                                                        data: data.data,
+                                                                        provenance: data.provenance,
+                                                                        name: data.info[1],
+                                                                        meta: new_nar_metadata
+                                                                    }
+                                                                ]},
+                                                                function (info) {
+                                                                    console.log('copying complete', info);
+                                                                    self.refresh();
+                                                                },
+                                                                function (error) {
+                                                                    var errorMessage = "Error! Copied successfully, but error on rename." + error.error.message;
+                                                                    console.log(errorMessage);
+                                                                    console.error(error);
+                                                                    self.setInteractionError($interactionPanel, errorMessage);
+                                                                });
 
                                                             },
                                                             function (error) {
@@ -976,7 +987,7 @@ function($,
                                     .append('Copy')
                                     .click(function () {
                                         var $thisBtn = $(this);
-                                        $thisBtn.prop("disabled", true);
+                                        $thisBtn.prop('disabled', true);
                                         var newMeta = ws_info[8];
                                         newMeta['narrative_nice_name'] = $newNameInput.val();
 
@@ -997,7 +1008,9 @@ function($,
                                                         data = data[0]; // only one thing should be returned
                                                         var new_nar_metadata = data.info[10];
                                                         new_nar_metadata.name = newMeta['narrative_nice_name'];
+                                                        new_nar_metadata.ws_name = ws_name;
                                                         data.data.metadata.name = newMeta['narrative_nice_name'];
+                                                        data.data.metadata.ws_name = ws_name;
 
                                                         // set workspace metadata to point to the correct object id since they can change on clone!!
                                                         self.ws.alter_workspace_metadata({

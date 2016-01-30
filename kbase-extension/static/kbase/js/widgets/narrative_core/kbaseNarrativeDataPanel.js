@@ -263,19 +263,6 @@ function($,
             }
         },
 
-        /**
-         * Shows the loading panel and hides all others
-         * @private
-         */
-        showLoadingMessage: function(message) {
-            this.$loadingPanel.find('#message').empty();
-            if (message)
-                this.$loadingPanel.find('#message').html(message);
-            this.$dataPanel.hide();
-            this.$errorPanel.hide();
-            this.$loadingPanel.show();
-        },
-
         buildTabs: function(tabs, isOuter) {
             var $header = $('<div>');
             var $body = $('<div>');
@@ -332,7 +319,7 @@ function($,
          */
         dataImporter: function(narWSName) {
             var self = this;
-            var maxObjFetch = 300000;
+            var maxObjFetch = 100000;
 
             var self = this;
             var user = $("#signin-button").kbaseLogin('session', 'user_id');
@@ -415,8 +402,6 @@ function($,
                 importPanel = $('<div class="kb-import-content kb-import-import">'),
                 examplePanel = $('<div class="kb-import-content">');
 
-
-
             // add tabs
             var $tabs = this.buildTabs([
                     {tabName: '<small>My Data</small>', content: minePanel},
@@ -427,21 +412,35 @@ function($,
                 ]);
 
 
-            // hack to keep search on top
-
-            this.$myDataHeader = $('<div>');
-            minePanel.append(this.$myDataHeader);
+            // (Bill - 1/29/2016)
+            // Gotta keep this stuff separate for now. Should be factored into 3 widgets:
+            // a parent that maintains structure and data calls, and children that
+            // extend the data calls with different options.
+            //
+            // Honestly, no time. This is ugly, but we have to triage to get to the end of the sprint...
+            var $mineMessageHeader = $('<div>').addClass('alert alert-warning').hide();
+            var $mineContentPanel = $('<div>').css({'overflow-x':'hidden','height':'550px'});
+            var mineLoadingDiv = createLoadingDiv();
             var $mineFilterRow = $('<div class="row">');
-            minePanel.append($mineFilterRow);
-            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
-            setLoading($mineScrollPanel);
-            minePanel.append($mineScrollPanel);
+            var $mineScrollPanel = $('<div>').css({'overflow-y': 'auto'});
+            minePanel.append(mineLoadingDiv.loader)
+                     .append($mineContentPanel
+                             .append($mineFilterRow)
+                             .append($mineMessageHeader)
+                             .append($mineScrollPanel));
+            setLoading('mine', true);
 
+            var $sharedMessageHeader = $('<div>').addClass('alert alert-warning').hide();
+            var $sharedContentPanel = $('<div>').css({'overflow-x':'hidden','height':'550px'});
+            var sharedLoadingDiv = createLoadingDiv();
             var $sharedFilterRow = $('<div class="row">');
-            sharedPanel.append($sharedFilterRow);
-            var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
-            setLoading($sharedScrollPanel);
-            sharedPanel.append($sharedScrollPanel);
+            var $sharedScrollPanel = $('<div>').css({'overflow-y': 'auto'});
+            sharedPanel.append(sharedLoadingDiv.loader)
+                       .append($sharedContentPanel
+                               .append($sharedFilterRow)
+                               .append($sharedMessageHeader)
+                               .append($sharedScrollPanel));
+            setLoading('shared', true);
 
             var body = $('<div>');
             var footer = $('<div>');
@@ -454,8 +453,45 @@ function($,
             var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>').css({'margin':'10px'});
             var closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin':'10px'});
 
-            // Setup the panels that are defined by widgets
 
+            function createLoadingDiv () {
+                var $progressBar = $('<div>')
+                                   .addClass('progress-bar progress-bar-striped active')
+                                   .attr({
+                                    'role': 'progressbar',
+                                    'aria-valuenow': '0',
+                                    'aria-valuemin': '0',
+                                    'aria-valuemax': '100',
+                                   })
+                                   .css({
+                                    'width': '0',
+                                    'transition': 'none'
+                                   });
+
+                var $loadingDiv = $('<div>')
+                                  .addClass('kb-data-list-type')
+                                  .css({margin:'15px', 'margin-left':'35px', 'height':'550px'})
+                                  .append($('<div class="progress">').append($progressBar))
+                                  .hide();
+
+                var setValue = function(value) {
+                    $progressBar.css('width', value + '%')
+                                .attr('aria-valuenow', value);
+                }
+
+                var reset = function() {
+                    setValue(0);
+                }
+
+                return {
+                    loader: $loadingDiv,
+                    progressBar: $progressBar,
+                    setValue: setValue,
+                    reset: reset
+                };
+            }
+
+            // Setup the panels that are defined by widgets
             // minePanel.kbaseNarrativeMyDataTab({ws_name: this.ws_name});
             // sharedPanel.kbaseNarrativeSharedDataTab({ws_name: this.ws_name});
 
@@ -466,7 +502,6 @@ function($,
             // It is silly to invoke a new object for each widget
             var auth = {token: $("#signin-button").kbaseLogin('session', 'token')};
             var ws = new Workspace(this.options.workspaceURL, auth);
-
 
             closeBtn.click(function() {
                 self.trigger('hideSidePanelOverlay.Narrative');
@@ -483,24 +518,24 @@ function($,
             var self = this;
             function cleanupData(data, view) {
                 return Promise.try(function() {
-                    data = [].concat.apply([], data);
+                    // data = [].concat.apply([], data);
                     data.sort(function(a, b) {
                         if (a[3] > b[3]) return -1;
                         return 1;
                     });
                     if (view === 'mine') {
                         myData = data;
-                        render(myData, $mineScrollPanel, mineSelected);
+                        render(view, myData, $mineScrollPanel, mineSelected);
                     }
                     else {
                         sharedData = data;
-                        render(sharedData, $sharedScrollPanel, sharedSelected);
+                        render(view, sharedData, $sharedScrollPanel, sharedSelected);
                     }
                 });
             }
 
             function getAndRenderData(view, workspaces, type, specWs, ignoreWs) {
-                return getData(workspaces, type, specWs, ignoreWs)
+                return getData(view, workspaces, type, specWs, ignoreWs)
                 .then(function(data) {
                     return cleanupData(data, view);
                 })
@@ -604,7 +639,7 @@ function($,
              * or just the one named wsName.
              * Also returns only data of the given type, if not undefined
              */
-            function getData(workspaces, type, wsName, ignoreWs) {
+            function getData(view, workspaces, type, wsName, ignoreWs) {
                 if (workspaces.length === 0) {
                     return Promise.try(function() {
                         return [];
@@ -667,9 +702,15 @@ function($,
                 var paramsList = [],
                     curParam = newParamSet({type: type}),
                     curTotal = 0,
-                    maxRequest = 10000;
+                    maxRequest = 10000,
+                    totalFetch = 0;
                 for (var i=0; i<wsIdsToCounts.length; i++) {
+                    if (totalFetch > maxObjFetch)
+                        break;
+
                     var thisWs = wsIdsToCounts[i];
+                    totalFetch += thisWs.count;
+
                     // if there's room in the request for this
                     // ws, put it there, and boost the total
                     if (curTotal + thisWs.count < maxRequest) {
@@ -682,7 +723,7 @@ function($,
                     // this ws
                     else if (thisWs.count < maxRequest) {
                         paramsList.push(curParam);
-                        curParam = newParamSet({type: type}, {id: thisWs.id});
+                        curParam = newParamSet({type: type, id: thisWs.id});
                         curTotal = thisWs.count;
                     }
                     // if there isn't room because that's one big
@@ -699,34 +740,47 @@ function($,
                     }
                 }
                 // at the tail end, push that last completed param set
-                paramsList.push(curParam);
+                if (curParam.ids.length > 0)
+                    paramsList.push(curParam);
 
                 if (objCount > maxObjFetch)
                     console.error("User's object count for owned workspaces was", objCount);
 
-                var proms = [];
-                for (var i=0; i<paramsList.length; i++) {
-                    proms.push(Promise.resolve(ws.list_objects(paramsList[i])));
-                }
+                console.log(paramsList);
 
-                return Promise.all(proms);
+                var headerMessage = '';
+                if (totalFetch > maxObjFetch) {
+                    headerMessage = "You have access to over <b>" + maxObjFetch + "</b> data objects, so we're only showing a sample. Please use the Types or Narratives selectors above to filter.";
+                }
+                setHeaderMessage(view, headerMessage);
+                console.log(totalFetch);
+                return Promise.reduce(paramsList, function (dataList, param) {
+                    return Promise.resolve(ws.list_objects(param))
+                        .then(function (data) {
+                            dataList = dataList.concat(data);
+                            var progress = Math.floor(dataList.length / totalFetch * 100);
+                            updateProgress(view, progress);
+                            return dataList;
+                        }
+                    );
+                }, []);
             }
 
             // This function takes data to render and
             // a container to put data in.
             // It produces a scrollable dataset
-            function render(data, container, selected, template) {
+            function render(view, data, container, selected, template) {
                 var setDataIconTrigger = $._data($(document)[0], "events")["setDataIcon"];
                 if (setDataIconTrigger) {
-                    renderOnIconsReady(data, container, selected, template);
+                    renderOnIconsReady(view, data, container, selected, template);
                 } else {
                     setTimeout(function(){
-                        renderOnIconsReady(data, container, selected, template);
+                        renderOnIconsReady(view, data, container, selected, template);
                     }, 100);
                 }
             }
             
-            function renderOnIconsReady(data, container, selected, template) {
+            function renderOnIconsReady(view, data, container, selected, template) {
                 var start = 0, end = 30;
 
                 // remove items from only current container being rendered
@@ -758,6 +812,7 @@ function($,
                     }
                     events(container, selected);
                 });
+                setLoading(view, false);
             }
 
             function typeList(data) {
@@ -962,7 +1017,7 @@ function($,
                     ws = $(this).children('option:selected').data('name');
                     filterInput.val('');
                     // request again with filted type
-                    setLoading(container);
+                    setLoading(view, true);
 
                     getAndRenderData(view, workspaces, type, ws);
                 });
@@ -983,16 +1038,16 @@ function($,
                     filterInput.val('');
 
                     // request again with filted type
-                    setLoading(container);
+                    setLoading(view, true);
                     getAndRenderData(view, workspaces, type, ws);
                 });
 
                 // event for filter (search)
                 filterInput.keyup(function(e) {
                     query = $(this).val();
-                    setLoading(container);
+                    setLoading(view, true);
                     var filtered = filterData(data, {type: type, ws:ws, query:query})
-                    render(filtered, container, []);
+                    render(view, filtered, container, []);
                 });
 
                 var $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align':'center'}).append(
@@ -1001,7 +1056,7 @@ function($,
                                             .addClass('btn btn-xs btn-default')
                                             .click(function(event) {
                                                 container.empty();
-                                                setLoading(container);
+                                                setLoading(view, true);
                                                 updateView(view);
                                             })
                                             .append($('<span>')
@@ -1184,15 +1239,44 @@ function($,
                 return $rowWithHr;
             }
 
+            function setHeaderMessage(view, message) {
+                var messageHeader = $sharedMessageHeader;
+                if (view === 'mine') {
+                    messageHeader = $mineMessageHeader;
+                }
+                if (message) {
+                    messageHeader.html(message).show();
+                }
+                else {
+                    messageHeader.hide();
+                }
+            }
+
+            function updateProgress(view, progress) {
+                if (view === 'mine')
+                    mineLoadingDiv.setValue(progress);
+                else
+                    sharedLoadingDiv.setValue(progress);
+            }
+
             // the existing .loading() .rmLoading() puts the loading icon in the wrong place
-            function setLoading($container, message) {
-                var $loader = $('<div>')
-                              .addClass("kb-data-list-type")
-                              .css({margin:'15px', 'margin-left':'35px'})
-                              .append('<img src="' + self.options.loadingImage + '">');
-                if (message)
-                    $loader.append(' ' + message);
-                $container.empty().append($loader);
+            function setLoading(view, show) {
+                var container = $sharedContentPanel,
+                    loader = sharedLoadingDiv;
+                if (view === 'mine') {
+                    container = $mineContentPanel;
+                    loader = mineLoadingDiv;
+                }
+
+                if (show) {
+                    container.hide();
+                    loader.loader.show();
+                }
+                else {
+                    loader.loader.hide();
+                    loader.reset();
+                    container.show();
+                }
             }
 
             function objURL(module, type, ws, name) {

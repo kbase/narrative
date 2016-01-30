@@ -455,16 +455,17 @@ function($,
 
 
             function createLoadingDiv () {
+                var minValue = 5;
                 var $progressBar = $('<div>')
                                    .addClass('progress-bar progress-bar-striped active')
                                    .attr({
                                     'role': 'progressbar',
-                                    'aria-valuenow': '0',
+                                    'aria-valuenow': minValue,
                                     'aria-valuemin': '0',
                                     'aria-valuemax': '100',
                                    })
                                    .css({
-                                    'width': '0',
+                                    'width': minValue + '%',
                                     'transition': 'none'
                                    });
 
@@ -475,12 +476,14 @@ function($,
                                   .hide();
 
                 var setValue = function(value) {
-                    $progressBar.css('width', value + '%')
-                                .attr('aria-valuenow', value);
+                    if (value > minValue) {
+                        $progressBar.css('width', value + '%')
+                                    .attr('aria-valuenow', value);
+                    }
                 }
 
                 var reset = function() {
-                    setValue(0);
+                    setValue(minValue);
                 }
 
                 return {

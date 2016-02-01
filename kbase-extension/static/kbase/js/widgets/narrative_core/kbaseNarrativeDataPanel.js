@@ -319,7 +319,7 @@ function($,
          */
         dataImporter: function(narWSName) {
             var self = this;
-            var maxObjFetch = 50;
+            var maxObjFetch = 100000;
 
             var self = this;
             var user = $("#signin-button").kbaseLogin('session', 'user_id');
@@ -418,7 +418,18 @@ function($,
             // extend the data calls with different options.
             //
             // Honestly, no time. This is ugly, but we have to triage to get to the end of the sprint...
-            var $mineMessageHeader = $('<div>').addClass('alert alert-warning').hide();
+            var $mineMessageHeader = $('<div>').addClass('alert alert-warning alert-dismissable')
+                                               .append($('<button>')
+                                                       .attr({'type': 'button',
+                                                              'aria-label': 'close',
+                                                       })
+                                                       .addClass('close')
+                                                       .append($('<span aria-hidden="true">&times;</span>'))
+                                                       .click(function() {
+                                                          $mineMessageHeader.slideUp(400);
+                                                       }))
+                                               .append($('<span id="kb-data-panel-msg">'))
+                                               .hide();
             var $mineContentPanel = $('<div>');
             var mineLoadingDiv = createLoadingDiv();
             var $mineFilterRow = $('<div class="row">');
@@ -430,7 +441,7 @@ function($,
                              .append($mineScrollPanel));
             setLoading('mine', true);
 
-            var $sharedMessageHeader = $('<div>').addClass('alert alert-warning').hide();
+            var $sharedMessageHeader = $('<div>').addClass('alert alert-warning alert-dismissable').hide();
             var $sharedContentPanel = $('<div>');
             var sharedLoadingDiv = createLoadingDiv();
             var $sharedFilterRow = $('<div class="row">');
@@ -537,8 +548,8 @@ function($,
                 });
             }
 
-            function getAndRenderData(view, workspaces, type, specWs, ignoreWs) {
-                return getData(view, workspaces, type, specWs, ignoreWs)
+            function getAndRenderData(view, workspaces, type, specWs, ignoreWs, nameFilter) {
+                return getData(view, workspaces, type, specWs, ignoreWs, nameFilter)
                 .then(function(data) {
                     return cleanupData(data, view);
                 })
@@ -554,15 +565,13 @@ function($,
                         myWorkspaces = workspaces;
                     else
                         sharedWorkspaces = workspaces;
-                    return getAndRenderData(view, workspaces, undefined, undefined, ignoreWs);
+                    return getAndRenderData(view, workspaces, undefined, undefined, ignoreWs, undefined);
                 })
                 .then(function() {
                     if (view === 'mine')
                         addFilters(view, myWorkspaces, myData, $mineScrollPanel, $mineFilterRow);
-                        // addMyFilters();
                     else
                         addFilters(view, sharedWorkspaces, sharedData, $sharedScrollPanel, $sharedFilterRow);
-                        // addSharedFilters();
                 })
                 .catch(function(error) {
                     console.log('ERROR ', error);
@@ -642,7 +651,7 @@ function($,
              * or just the one named wsName.
              * Also returns only data of the given type, if not undefined
              */
-            function getData(view, workspaces, type, wsName, ignoreWs) {
+            function getData(view, workspaces, type, wsName, ignoreWs, nameFilter) {
                 if (workspaces.length === 0) {
                     return Promise.try(function() {
                         return [];
@@ -939,6 +948,12 @@ function($,
 
             function filterData(data, f) {
                 if (data.length == 0) return [];
+                
+                // if we're at our limit for what to load,
+                // then the filter should go against list_objects.
+                // send the filter there and re-render.
+                // ...actually, that won't work because it only 
+                // returns names. no-op for now.
 
                 var filteredData = [];
                 // add each item to view
@@ -1268,7 +1283,8 @@ function($,
                     messageHeader = $mineMessageHeader;
                 }
                 if (message) {
-                    messageHeader.html(message).show();
+                    messageHeader.find('#kb-data-panel-msg').html(message);
+                    messageHeader.show();
                 }
                 else {
                     messageHeader.hide();

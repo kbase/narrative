@@ -319,7 +319,7 @@ function($,
          */
         dataImporter: function(narWSName) {
             var self = this;
-            var maxObjFetch = 100000;
+            var maxObjFetch = 50;
 
             var self = this;
             var user = $("#signin-button").kbaseLogin('session', 'user_id');
@@ -419,10 +419,10 @@ function($,
             //
             // Honestly, no time. This is ugly, but we have to triage to get to the end of the sprint...
             var $mineMessageHeader = $('<div>').addClass('alert alert-warning').hide();
-            var $mineContentPanel = $('<div>').css({'overflow-x':'hidden','height':'550px'});
+            var $mineContentPanel = $('<div>');
             var mineLoadingDiv = createLoadingDiv();
             var $mineFilterRow = $('<div class="row">');
-            var $mineScrollPanel = $('<div>').css({'overflow-y': 'auto'});
+            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','height':'550px','overflow-y': 'auto'});
             minePanel.append(mineLoadingDiv.loader)
                      .append($mineContentPanel
                              .append($mineFilterRow)
@@ -431,10 +431,10 @@ function($,
             setLoading('mine', true);
 
             var $sharedMessageHeader = $('<div>').addClass('alert alert-warning').hide();
-            var $sharedContentPanel = $('<div>').css({'overflow-x':'hidden','height':'550px'});
+            var $sharedContentPanel = $('<div>');
             var sharedLoadingDiv = createLoadingDiv();
             var $sharedFilterRow = $('<div class="row">');
-            var $sharedScrollPanel = $('<div>').css({'overflow-y': 'auto'});
+            var $sharedScrollPanel = $('<div>').css({'overflow-x': 'hidden', 'height': '550px', 'overflow-y': 'auto'});
             sharedPanel.append(sharedLoadingDiv.loader)
                        .append($sharedContentPanel
                                .append($sharedFilterRow)
@@ -707,10 +707,10 @@ function($,
                     curTotal = 0,
                     maxRequest = 10000,
                     totalFetch = 0;
-                for (var i=0; i<wsIdsToCounts.length; i++) {
-                    if (totalFetch > maxObjFetch)
-                        break;
 
+                // Set up all possible requests. We'll break out of 
+                // the request loop in below
+                for (var i=0; i<wsIdsToCounts.length; i++) {
                     var thisWs = wsIdsToCounts[i];
                     totalFetch += thisWs.count;
 
@@ -752,20 +752,31 @@ function($,
                 console.log(paramsList);
 
                 var headerMessage = '';
-                if (totalFetch > maxObjFetch) {
-                    headerMessage = "You have access to over <b>" + maxObjFetch + "</b> data objects, so we're only showing a sample. Please use the Types or Narratives selectors above to filter.";
-                }
-                setHeaderMessage(view, headerMessage);
-                console.log(totalFetch);
+                var requestCounter = 0;
                 return Promise.reduce(paramsList, function (dataList, param) {
-                    return Promise.resolve(ws.list_objects(param))
-                        .then(function (data) {
-                            dataList = dataList.concat(data);
-                            var progress = Math.floor(dataList.length / totalFetch * 100);
-                            updateProgress(view, progress);
+                    requestCounter++;
+                    var progress = Math.floor(requestCounter / paramsList.length * 100);
+                    updateProgress(view, progress);
+                    if (dataList.length >= maxObjFetch) {
+                        return Promise.try(function() {
                             return dataList;
-                        }
-                    );
+                            updateProgress(view, 100);
+                        });
+                    }
+                    else {
+                        return Promise.resolve(ws.list_objects(param))
+                            .then(function (data) {
+                                // filter out Narrative objects.
+                                for (var i=0; i<data.length && dataList.length<maxObjFetch; i++) {
+                                    if (data[i][2].startsWith('KBaseNarrative'))
+                                        continue;
+                                    else
+                                        dataList.push(data[i]);
+                                }
+                                return dataList;
+                            }
+                        );
+                    }
                 }, []);
             }
 
@@ -784,7 +795,13 @@ function($,
             }
             
             function renderOnIconsReady(view, data, container, selected, template) {
-                var start = 0, end = 30;
+                var headerMessage = '';
+                if (data.length >= maxObjFetch) {
+                    headerMessage = "You have access to over <b>" + maxObjFetch + "</b> data objects, so we're only showing a sample. Please use the Types or Narratives selectors above to filter.";
+                }
+                setHeaderMessage(view, headerMessage);
+
+                var start = 0, numRows = 30;
 
                 // remove items from only current container being rendered
                 container.empty();
@@ -793,10 +810,11 @@ function($,
                     container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
                     setLoading(view, false);
                     return;
-                } else if (data.length-1 < end)
-                    end = data.length;
+                }
+                // } else if (data.length-1 < numRows)
+                //     end = data.length;
 
-                var rows = buildMyRows(data, start, end, template);
+                var rows = buildMyRows(data, start, numRows, template);
                 container.append(rows);
                 events(container, selected);
 
@@ -807,13 +825,13 @@ function($,
                 }
 
                 // infinite scroll
-                var currentPos = end;
+                var currentPos = numRows;
                 container.unbind('scroll');
                 container.on('scroll', function() {
-                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
-                        currentPos = currentPos+end;
-                        var rows = buildMyRows(data, currentPos, end, template);
+                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight && currentPos < data.length) {
+                        var rows = buildMyRows(data, currentPos, numRows, template);
                         container.append(rows);
+                        currentPos += numRows;
                     }
                     events(container, selected);
                 });
@@ -963,16 +981,16 @@ function($,
             }
 
 
-            function buildMyRows(data, start, end, template) {
+            function buildMyRows(data, start, numRows, template) {
                 // add each set of items to container to be added to DOM
                 var rows = $('<div class="kb-import-items">');
 
-                for (var i=start; i< (start+end); i++) {
+                for (var i=start; i<Math.min(start+numRows, data.length); i++) {
                     var obj = data[i];
                     // some logic is not right
-                    if (!obj) {
-                        continue;
-                    }
+                    // if (!obj) {
+                    //     continue;
+                    // }
                     var mod_type = obj[2].split('-')[0];
                     var item = {id: obj[0],
                                 name: obj[1],
@@ -985,9 +1003,9 @@ function($,
                                 info: obj, // we need to have this all on hand!
                                 relativeTime: TimeFormat.getTimeStampStr(obj[3])} //use the same one as in data list for consistencey  kb.ui.relativeTime( Date.parse(obj[3]) ) }
 
-                    if (item.module=='KBaseNarrative') {
-                        continue;
-                    }
+                    // if (item.module=='KBaseNarrative') {
+                    //     continue;
+                    // }
                     if (template)
                         var item = template(item);
                     else

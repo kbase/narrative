@@ -537,6 +537,16 @@ function($,
                         if (a[3] > b[3]) return -1;
                         return 1;
                     });
+                    return data;
+                });
+            }
+
+            function getAndRenderData(view, workspaces, type, specWs, ignoreWs, nameFilter) {
+                return getData(view, workspaces, type, specWs, ignoreWs, nameFilter)
+                .then(function(data) {
+                    return cleanupData(data, view);
+                })
+                .then(function(data) {
                     if (view === 'mine') {
                         myData = data;
                         render(view, myData, $mineScrollPanel, mineSelected);
@@ -545,13 +555,6 @@ function($,
                         sharedData = data;
                         render(view, sharedData, $sharedScrollPanel, sharedSelected);
                     }
-                });
-            }
-
-            function getAndRenderData(view, workspaces, type, specWs, ignoreWs, nameFilter) {
-                return getData(view, workspaces, type, specWs, ignoreWs, nameFilter)
-                .then(function(data) {
-                    return cleanupData(data, view);
                 })
                 .catch(function(error) {
                     console.error("ERROR while rendering data...", error);
@@ -815,13 +818,11 @@ function($,
                 // remove items from only current container being rendered
                 container.empty();
 
-                if (data.length == 0){
+                if (data.length == 0) {
                     container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
                     setLoading(view, false);
                     return;
                 }
-                // } else if (data.length-1 < numRows)
-                //     end = data.length;
 
                 var rows = buildMyRows(data, start, numRows, template);
                 container.append(rows);
@@ -1084,7 +1085,10 @@ function($,
                 filterInput.keyup(function(e) {
                     query = $(this).val();
                     setLoading(view, true);
-                    var filtered = filterData(data, {type: type, ws:ws, query:query})
+                    var dataToFilter = sharedData;
+                    if (view === 'mine') 
+                        dataToFilter = myData;
+                    var filtered = filterData(dataToFilter, {type: type, ws:ws, query:query})
                     render(view, filtered, container, []);
                 });
 

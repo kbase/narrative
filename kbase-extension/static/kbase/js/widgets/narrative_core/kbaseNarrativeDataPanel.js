@@ -761,8 +761,6 @@ function($,
                 if (objCount > maxObjFetch)
                     console.error("User's object count for owned workspaces was", objCount);
 
-                console.log(paramsList);
-
                 var headerMessage = '';
                 var requestCounter = 0;
                 return Promise.reduce(paramsList, function (dataList, param) {

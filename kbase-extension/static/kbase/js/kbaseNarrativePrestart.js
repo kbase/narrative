@@ -101,13 +101,8 @@ window.KBFail = function(is_fatal, where, what) {
     }
     code += ")\n";
     // Log the failure
-    try {
+    if (Jupyter.notebook.kernel.is_connected()) {
         Jupyter.notebook.kernel.execute(code, null, {store_history: false});        
-    }
-    catch (err) {
-        // wait half a second and try one more time.
-        console.log(err);
-        setTimeout( function() { Jupyter.notebook.kernel.execute(code, null, {store_history: false}); }, 500 );
     }    
     return true;
 }

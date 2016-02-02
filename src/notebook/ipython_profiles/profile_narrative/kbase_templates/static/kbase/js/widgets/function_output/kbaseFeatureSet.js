@@ -21,6 +21,7 @@ define(['jquery',
             featureset_name: null,
             workspaceName: null,
             wsURL: window.kbconfig.urls.workspace,
+            lpURL: window.kbconfig.urls.landing_pages,
             loadingImage: "static/kbase/images/ajax-loader.gif"
         },
 
@@ -177,11 +178,11 @@ define(['jquery',
 
                                             self.featureTableData.push(
                                                     {
-                                                        fid: '<a href="functional-site/#/dataview/'+
+                                                        fid: '<a href="' + self.options.lpURL +
                                                                     featureData[0].info[6]+'/'+featureData[0].info[1]+
                                                                     '?sub=Feature&subid='+g.features[f].id + '" target="_blank">'+
                                                                     g.features[f].id+'</a>',
-                                                        gid: '<a href="functional-site/#/dataview/'+
+                                                        gid: '<a href="' + self.options.lpURL +
                                                                 featureData[0].info[6]+'/'+featureData[0].info[1]+
                                                                 '" target="_blank">'+featureData[0].info[1]+"</a>",
                                                         ali: aliases,

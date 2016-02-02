@@ -89,16 +89,16 @@ function ($, Config) {
                                 .on('focus',
                                     function() {
                                         console.log('focus');
-                                        if (IPython && IPython.narrative) {
-                                            IPython.narrative.disableKeyboardManager();
+                                        if (Jupyter && Jupyter.narrative) {
+                                            Jupyter.narrative.disableKeyboardManager();
                                         }
                                     }
                                 )
                                 .on('blur',
                                     function() {
                                         console.log('blur');
-                                        if (IPython && IPython.narrative) {
-                                            IPython.narrative.enableKeyboardManager();
+                                        if (Jupyter && Jupyter.narrative) {
+                                            Jupyter.narrative.enableKeyboardManager();
                                         }
                                     }
                                 );

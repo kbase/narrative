@@ -235,12 +235,9 @@ define(['jquery'], function( $ ) {
                     
                     var narrativeObject = {
                         nbformat_minor: 0,
-                        worksheets: [ {
-                            cells: cell_data,
-                            metadata: {}
-                        }],
+                        cells: cell_data,
                         metadata: metadata,
-                        nbformat:3
+                        nbformat: 4
                     };
                     
                     // setup external string to string metadata for the WS object

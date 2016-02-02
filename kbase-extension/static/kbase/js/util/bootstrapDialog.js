@@ -6,7 +6,8 @@ function ($) {
 
     /**
      * options:
-     * { title: string,
+     * { 
+         title: string,
      *   body: jquery node
      *   buttons: array of jquery nodes
      *   closeButton: boolean, default false

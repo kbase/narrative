@@ -313,7 +313,7 @@ function($,
         $('#notebook').append($versionModal);
     };
 
-    Narrative.prototype.saveFailed = function() {
+    Narrative.prototype.saveFailed = function(event, data) {
         Jupyter.save_widget.set_save_status('Narrative save failed!');
         console.log(event);
         console.log(data);

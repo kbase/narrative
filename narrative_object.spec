@@ -86,14 +86,6 @@ module KBaseNarrative {
     } Cell;
 
     /*
-    A Notebook Worksheet contains one or more Cells.
-    */
-    typedef structure {
-        list<Cell> cells;
-        UnspecifiedObject metadata;
-    } Worksheet;
-
-    /*
     A set of (mostly optional) metadata that needs to be included as part of the 
     Narrative object. The data_dependencies list is required, but can be empty.
     @optional creator
@@ -121,7 +113,7 @@ module KBaseNarrative {
     typedef structure {
         int nbformat;
         int nbformat_minor;
-        list<Worksheet> worksheets;
+        list<Cell> cells;
         Metadata metadata;
     } Narrative;
 };

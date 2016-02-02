@@ -374,7 +374,7 @@ function ($, Config) {
                 filterParams['tag'] = versionTag;
             }
 
-            var methodProm = this.methClient.list_methods_spec({},
+            var methodProm = this.methClient.list_methods_spec(filterParams,
                 $.proxy(function(methods) {
                     this.methodSpecs = {};
                     for (var i=0; i<methods.length; i++) {

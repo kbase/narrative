@@ -6,15 +6,15 @@
  *
  * Placeholder for custom user javascript
  * mainly to be overridden in profile/static/custom/custom.js
- * This will always be an empty file in IPython
+ * This will always be an empty file in Jupyter
  *
  * User could add any javascript in the `profile/static/custom/custom.js` file.
- * It will be executed by the ipython notebook at load time.
+ * It will be executed by the Jupyter notebook at load time.
  *
  * Same thing with `profile/static/custom/custom.css` to inject custom css into the notebook.
  *
  *
- * The object available at load time depend on the version of IPython in use.
+ * The object available at load time depend on the version of Jupyter in use.
  * there is no guaranties of API stability.
  *
  * The example below explain the principle, and might not be valid.
@@ -23,9 +23,9 @@
  *     define([
  *        'base/js/namespace',
  *        'base/js/events'
- *     ], function(IPython, events) {
+ *     ], function(Jupyter, events) {
  *         events.on("app_initialized.NotebookApp", function () {
- *             IPython.keyboard_manager....
+ *             Jupyter.keyboard_manager....
  *         });
  *     });
  *
@@ -37,14 +37,14 @@
  *    define([
  *        'base/js/namespace',
  *        'base/js/events'
- *    ], function(IPython, events) {
+ *    ], function(Jupyter, events) {
  *        events.on('app_initialized.NotebookApp', function(){
- *            IPython.toolbar.add_buttons_group([
+ *            Jupyter.toolbar.add_buttons_group([
  *                {
  *                    'label'   : 'run qtconsole',
  *                    'icon'    : 'icon-terminal', // select your icon from http://fortawesome.github.io/Font-Awesome/icons
  *                    'callback': function () {
- *                        IPython.notebook.kernel.execute('%qtconsole')
+ *                        Jupyter.notebook.kernel.execute('%qtconsole')
  *                    }
  *                }
  *                // add more button here if needed.
@@ -77,8 +77,8 @@
  *    $.getScript('/static/notebook/js/celltoolbarpresets/slideshow.js');
  *
  *
- * @module IPython
- * @namespace IPython
+ * @module Jupyter
+ * @namespace Jupyter
  * @class customjs
  * @static
  */
@@ -102,7 +102,7 @@ define(['jquery',
     'narrative_paths'
 ],
     function ($,
-        IPython,
+        Jupyter,
         security,
         utils,
         page,
@@ -246,7 +246,6 @@ define(['jquery',
             return wasSelected;
         };
         
-        
         cell.Cell.prototype.getCellState = function (name, defaultValue) {
             if (!this.metadata.kbstate) {
                 this.metadata.kbstate = {};
@@ -258,6 +257,7 @@ define(['jquery',
                 return value;
             }
         };
+
         cell.Cell.prototype.setCellState = function (name, value) {
             if (!this.metadata.kbstate) {
                 this.metadata.kbstate = {};
@@ -714,10 +714,13 @@ define(['jquery',
         };
 
         // Kickstart the Narrative loading routine once the notebook is loaded.
-        $([IPython.events]).on('notebook_loaded.Notebook', function () {
+        $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
             require(['kbaseNarrative'], function (Narrative) {
-                IPython.narrative = new Narrative();
-                IPython.narrative.init();
+                Jupyter.narrative = new Narrative();
+
+                $([Jupyter.events]).one('kernel_connected.Kernel', function() {
+                    Jupyter.narrative.init();
+                });
 
                 /*
                  * Override the move-cursor-down-or-next-cell and 
@@ -733,7 +736,7 @@ define(['jquery',
                  * check if the next cell is a KBase cell, and doesn't enable
                  * edit mode if so.
                  */
-                IPython.keyboard_manager.actions.register(
+                Jupyter.keyboard_manager.actions.register(
                     {
                         handler: function(env, event) {
                             var index = env.notebook.get_selected_index();
@@ -757,7 +760,7 @@ define(['jquery',
                     'jupyter-notebook'
                 );
 
-                IPython.keyboard_manager.actions.register(
+                Jupyter.keyboard_manager.actions.register(
                     {
                         handler: function(env, event) {
                             var index = env.notebook.get_selected_index();

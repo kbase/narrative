@@ -83,28 +83,16 @@ function($,
     };
 
     /**
-     * @method
-     * Shows the cell toolbar above the given non-KBase cell (e.g. only
-     * code and markdown cells).
-     * Updates the currently selected cell to be the one passed in.
-     */
-    // Narrative.prototype.showJupyterCellToolbar = function(cell) {
-    //     // tell the toolbar that it is selected. For now, the toolbar is in 
-    //     // charge.
-    //     $(cell.element).trigger('select.toolbar');
-    // };
-
-    /**
      * Registers Narrative responses to a few Jupyter events - mainly some
      * visual effects for managing when the cell toolbar should be shown, 
      * but it also disables the keyboard manager when KBase cells are selected.
      */
     Narrative.prototype.registerEvents = function() {
-        $([Jupyter.events]).on('status_idle.Kernel',function () {
+        $([Jupyter.events]).on('kernel_idle.Kernel',function () {
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle-o');
         });
 
-        $([Jupyter.events]).on('status_busy.Kernel',function () {
+        $([Jupyter.events]).on('kernel_busy.Kernel',function () {
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
         });
 

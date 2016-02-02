@@ -86,13 +86,16 @@ function($,
             this._super(options);
             this.ws_id = this.options.ws_id;
 
-            this.is_readonly = null; // null => unset, force a check
+            this.isReadOnly = !Jupyter.notebook.writable;
+
             this.first_readonly = true; // still trying for first check?
             this.last_readonly_check = null; // avoid frequent checks
             this.user_readonly = false; // user-defined override
             this.readonly_buttons = []; // list of buttons toggled
             this.readonly_params = []; // list of params toggled
             this.first_show_controls = true; // 1st panel show
+
+            console.log(this.isReadOnly);
 
             var icons = Config.get('icons');
             this.data_icons = icons.data;
@@ -104,14 +107,14 @@ function($,
             // Whenever the notebook gets loaded, it should rebind things.
             // This *should* only happen once, but I'm putting it here anyway.
             $([Jupyter.events]).on('notebook_loaded.Notebook',
-                $.proxy(function() {
+                function() {
                     this.rebindActionButtons();
                     this.hideGeneratedCodeCells();
-                }, this)
+                }.bind(this)
             );
 
             $(document).on('dataUpdated.Narrative',
-                $.proxy(function(event) {
+                function(event) {
                     if (Jupyter && Jupyter.notebook) {
                         // XXX: This is a hell of a hack. I hate
                         // using the 'first time' bit like this,
@@ -126,18 +129,16 @@ function($,
 
                         this.inputsRendered = true;
                     }
-                },
-                this)
+                }.bind(this)
             );
 
             $(document).on('narrativeDataQuery.Narrative',
-                $.proxy(function(e, callback) {
+                function(e, callback) {
                     var objList = this.getNarrativeDependencies();
                     if (callback) {
                         callback(objList);
                     }
-                },
-                this)
+                }.bind(this)
             );
 
             // When a user clicks on a function, this event gets fired with
@@ -154,42 +155,37 @@ function($,
             // );
 
             $(document).on('methodClicked.Narrative',
-                $.proxy(function(event, method) {
+                function(event, method) {
                     this.buildMethodCell(method);
-                },
-                this)
+                }.bind(this)
             );
 
             $(document).on('appClicked.Narrative',
-                $.proxy(function(event, appInfo) {
+                function(event, appInfo) {
                     this.buildAppCell(appInfo);
-                },
-                this)
+                }.bind(this)
             );
 
             $(document).on('deleteCell.Narrative',
-                $.proxy(function(event, index) {
+                function(event, index) {
                     this.deleteCell(index);
-                },
-                this)
+                }.bind(this)
             );
 
             $(document).on('runCell.Narrative',
-                $.proxy(function(event, data) {
+                function(event, data) {
                     this.runMethodCell(data);
-                },
-                this)
+                }.bind(this)
             );
 
             $(document).on('runApp.Narrative',
-                $.proxy(function(event, data) {
+                function(event, data) {
                     this.runAppCell(data);
-                },
-                this)
+                }.bind(this)
             );
 
             $(document).on('createOutputCell.Narrative',
-                $.proxy(function(event, data) {
+                function(event, data) {
                     var cell = Jupyter.narrative.getCellByKbaseId(data.cellId);
                     var params = {'embed' : true,
                                   'data': StringUtil.safeJSONStringify(data.result)};
@@ -198,67 +194,54 @@ function($,
                       params.next_steps = data.next_steps;
                     }
                     this.createOutputCell(cell, params);
-                }, this)
+                }.bind(this)
             );
 
             $(document).on('showNextSteps.Narrative',
-                $.proxy(function(event, obj) {
+                function(event, obj) {
                     this.showNextSteps(obj);
-                }, this)
+                }.bind(this)
             );
 
             $(document).on('createViewerCell.Narrative',
-                $.proxy(function(event, data) {
+                function(event, data) {
                     this.createViewerCell(data.nearCellIdx, data, data.widget);
-                }, this)
+                }.bind(this)
             );
 
             // Global functions for setting icons
             $(document).on('setDataIcon.Narrative',
-              $.proxy(function (e, param) {
+                function (e, param) {
                     this.setDataIcon(param.elt, param.type);
-                },
-                this));
+                }.bind(this)
+            );
             $(document).on('setMethodIcon.Narrative',
-              $.proxy(function (e, param) {
+                function (e, param) {
                     this.setMethodIcon(param.elt, param.is_app);
-                },
-                this));
+                }.bind(this)
+            );
 
             // Refresh the read-only or View-only mode
             $(document).on('updateReadOnlyMode.Narrative',
-              $.proxy(function (e, ws, name, callback) {
+                function (e, ws, name, callback) {
                     this.updateReadOnlyMode(ws, name, callback);
-                },
-                this)
+                }.bind(this)
             );
             // related: click on edit-mode toggles state
-            $('#kb-view-mode').click($.proxy(function() {
-                if (this.is_readonly == false) {
-                    this.user_readonly = !this.user_readonly;
-                    if (this.user_readonly) {
-                        this.readOnlyMode(true);
-                    }
-                    else {
-                        this.readWriteMode(true);
-                    }
-                    var icon = $('#kb-view-mode span');
-                    icon.toggleClass('fa-eye', this.user_readonly);
-                    icon.toggleClass('fa-pencil', !this.user_readonly);
-                }
-            }, this));
-            $('#kb-view-mode').tooltip({
-              title: 'Toggle view-only mode',
-              container: 'body',
-              delay: {
-                show: Config.get('tooltip').showDelay, 
-                hide: Config.get('tooltip').hideDelay
-              },
-              placement: 'bottom'
+            $('#kb-view-mode').click(function() {
+                this.toggleReadOnlyMode();
+            }.bind(this))
+            .tooltip({
+                title: 'Toggle view-only mode',
+                container: 'body',
+                delay: {
+                    show: Config.get('tooltip').showDelay, 
+                    hide: Config.get('tooltip').hideDelay
+                },
+                placement: 'bottom'
             });
 
             this.initDeleteCellModal();
-            // Initialize the data table.
             this.render();
             return this;
         },
@@ -646,6 +629,21 @@ function($,
             }
         },
 
+        toggleReadOnlyMode: function() {
+            if (!this.isReadOnly) {
+                this.user_readonly = !this.user_readonly;
+                if (this.user_readonly) {
+                    this.readOnlyMode(true);
+                }
+                else {
+                    this.readWriteMode(true);
+                }
+                var icon = $('#kb-view-mode span');
+                icon.toggleClass('fa-eye', this.user_readonly);
+                icon.toggleClass('fa-pencil', !this.user_readonly);
+            }
+        },
+
         /**
          * If read-only status has changed (or this is the
          * first time checking it) then update the read-only
@@ -654,13 +652,13 @@ function($,
          * @param ws Workspace client
          * @param name Workspace name
          *
-         * Side-effects: modifies this.is_readonly to reflect current value.
+         * Side-effects: modifies this.isReadOnly to reflect current value.
          */
         updateReadOnlyMode: function (ws, name, callback) {
             this.checkReadOnly(ws, name, $.proxy(function (readonly) {
                 if (readonly != null) {
-                    if (this.is_readonly != readonly) {
-                        if (this.is_readonly == null && readonly == false) {
+                    if (this.isReadOnly != readonly) {
+                        if (this.isReadOnly == null && readonly == false) {
                             // pass: first time, and it is the default read/write
                         }
                         else if (readonly == true) {
@@ -671,7 +669,7 @@ function($,
                             this.readWriteMode();
                             $('#kb-view-mode').css({display: 'inline-block'});
                         }
-                        this.is_readonly = readonly;
+                        this.isReadOnly = readonly;
                     }
                     // if this is the first time we got a yes/no answer
                     // from the workspace, make the narrative visible!
@@ -681,9 +679,9 @@ function($,
                     }
                 }
                 if (callback)
-                    callback(this.is_readonly);
+                    callback(this.isReadOnly);
             }, this));
-            return this.is_readonly;
+            return this.isReadOnly;
         },
 
         /** Check if narrative is read-only.
@@ -826,7 +824,6 @@ function($,
             }
             else {
                 // Add copy button
-
                 if (!this.copyModal) {
                     this.copyModal = new BootstrapDialog({
                         title: 'Copy a narrative',
@@ -835,6 +832,8 @@ function($,
                         // buttons: modalButtons
                     });
                 }
+
+                $('#kb-view-mode').hide();
 
                 $('.navbar-right').prepend(
                   $('<button>').addClass('btn btn-default navbar-btn kb-nav-btn')
@@ -2299,7 +2298,10 @@ function($,
             }
             this.loadAllRecentCellStates();
 
-            this.updateReadOnlyMode(this.ws_client, this.ws_id);
+            if (this.isReadOnly) {
+                this.readOnlyMode(false);
+            }
+            // this.updateReadOnlyMode(this.ws_client, this.ws_id);
 
             return this;
         },

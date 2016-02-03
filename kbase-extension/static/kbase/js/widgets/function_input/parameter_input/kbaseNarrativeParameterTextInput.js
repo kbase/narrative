@@ -304,6 +304,7 @@ function($, Config) {
         
         /* private method - note: if placeholder is empty, then users cannot cancel a selection*/
         setupSelect2: function ($input, placeholder, defaultValue) {
+            console.debug('setting up select2 for parameter text input');
             var self = this;
             var noMatchesFoundStr = "No matching data found.";
             if (self.isOutputName) {
@@ -312,7 +313,7 @@ function($, Config) {
             $input.select2({
                 matcher: self.select2Matcher,
                 formatNoMatches: noMatchesFoundStr,
-                placeholder:placeholder,
+                placeholder: placeholder,
                 allowClear: true,
                 selectOnBlur: true,
                 query: function (query) {
@@ -376,6 +377,7 @@ function($, Config) {
                     var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
                     return display;
                 },
+                
                 formatResult: function(object, container, query) {
                     var display = '<span style="word-wrap:break-word;"><b>'+object.text+"</b></span>";
                     if (object.info) {
@@ -392,7 +394,16 @@ function($, Config) {
             .on("select2-selecting",
                 function(e) {
                     $input.data('select2').kbaseHackLastSelection = e.choice;
-                });
+                }
+            )
+            .on("select2-focus",
+                function(e) {
+                    console.debug('FOCUSED!');
+                    if (Jupyter && Jupyter.notebook) {
+                        Jupyter.narrative.disableKeyboardManager();
+                    }
+                }
+            );
             
             if (defaultValue) {
                 $input.select2("data",{id:defaultValue, text:defaultValue});

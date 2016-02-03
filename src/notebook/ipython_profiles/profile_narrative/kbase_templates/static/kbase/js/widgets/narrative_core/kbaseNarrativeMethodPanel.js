@@ -230,20 +230,20 @@ define(['jquery', 'kbwidget', 'kbaseAccordion', 'kbaseNarrativeControlPanel'], f
                                 this.refreshFromService(version_tag);
                            }.bind(this)));
 
-            this.$toggleVersionBtn = $('<button>')
-                                        .addClass('btn btn-xs btn-default')
-                                        .tooltip({title:'Toggle between Release/Beta/Dev versions', 'container':'body', delay: { "show": 400, "hide": 50 }})
-                                        .append('R')
-            this.versionState = 'R';
-            this.addButton(this.$toggleVersionBtn 
-                                   .click(function(e) {
-                                        var version_tag = 'release';
-                                        if(this.versionState=='R') { this.versionState='B'; version_tag='beta'; }
-                                        else if(this.versionState=='B') { this.versionState='D'; version_tag='dev'; }
-                                        else if(this.versionState=='D') { this.versionState='R'; version_tag='release'; }
-                                        this.$toggleVersionBtn.html(this.versionState);
-                                        this.refreshFromService(version_tag);
-                                   }.bind(this)));
+            // this.$toggleVersionBtn = $('<button>')
+            //                             .addClass('btn btn-xs btn-default')
+            //                             .tooltip({title:'Toggle between Release/Beta/Dev versions', 'container':'body', delay: { "show": 400, "hide": 50 }})
+            //                             .append('R')
+            // this.versionState = 'R';
+            // this.addButton(this.$toggleVersionBtn 
+            //                        .click(function(e) {
+            //                             var version_tag = 'release';
+            //                             if(this.versionState=='R') { this.versionState='B'; version_tag='beta'; }
+            //                             else if(this.versionState=='B') { this.versionState='D'; version_tag='dev'; }
+            //                             else if(this.versionState=='D') { this.versionState='R'; version_tag='release'; }
+            //                             this.$toggleVersionBtn.html(this.versionState);
+            //                             this.refreshFromService(version_tag);
+            //                        }.bind(this)));
 
             // this.addButton($('<button>')
             //                .addClass('btn btn-xs btn-default')

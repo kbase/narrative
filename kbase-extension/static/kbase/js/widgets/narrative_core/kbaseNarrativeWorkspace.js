@@ -241,6 +241,10 @@ function($,
                 placement: 'bottom'
             });
 
+            if (this.isReadOnly) {
+                this.readOnlyMode(false);
+            }
+
             this.initDeleteCellModal();
             this.render();
             return this;
@@ -810,19 +814,29 @@ function($,
         readOnlyMode: function(from_user) {
             // console.debug('set_readonly_mode.begin from-user=' + from_user);
             // Hide side-panel
-            $('#left-column').hide();
+            console.log('is from user', from_user);
+            $('#left-column').hide('slide', {direction: 'left', easing: 'linear'}, from_user ? 500 : 0);
             // Move content flush left-ish
-            $('#content-column').css({'margin-left': '120px'});
+            $('#notebook-container').animate({left: 0}, {easing: 'linear', duration: (from_user ? 500 : 0)});
+
+            var $viewOnlyMsg = $('<div>').addClass('label label-warning').text('View-only mode');
             // Hide things
             _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
             this.toggleRunButtons(false);
             this.toggleSelectBoxes(false);
-            if (from_user == true) {
-                $('.navbar-right').prepend(
-                  $('<div>').addClass("label label-warning")
-                    .text('View-only mode'));
-            }
-            else {
+            $('.navbar-right').prepend($viewOnlyMsg);
+
+            if (!from_user) {
+                $viewOnlyMsg.popover({
+                    html: true,
+                    placement: 'bottom',
+                    trigger: 'hover',
+                    content: 'You do not have permissions to modify ' +
+                    'this narrative. If you want to make your own ' +
+                    'copy that can be modified, use the ' +
+                    '"Copy" button.'
+                });
+
                 // Add copy button
                 if (!this.copyModal) {
                     this.copyModal = new BootstrapDialog({
@@ -853,23 +867,24 @@ function($,
                     }.bind(this))
                 );
                 // Add view-only info/badge
-                $('.navbar-right').prepend(
-                    $('<div>').addClass("label label-warning")
-                      .attr({'id': 'kb-ro-btn'})
-                      .text('View-only mode')
-                      .popover({
-                        html: true,
-                        placement: "bottom",
-                        trigger: 'hover',
-                        content: 'You do not have permissions to modify ' +
-                        'this narrative. If you want to make your own ' +
-                        'copy that can be modified, use the ' +
-                        '"Copy" button.'
-                    }));
+                // $('.navbar-right').prepend(
+                //     $('<div>').addClass("label label-warning")
+                //       .attr({'id': 'kb-ro-btn'})
+                //       .text('View-only mode')
+                //       .popover({
+                //         html: true,
+                //         placement: "bottom",
+                //         trigger: 'hover',
+                //         content: 'You do not have permissions to modify ' +
+                //         'this narrative. If you want to make your own ' +
+                //         'copy that can be modified, use the ' +
+                //         '"Copy" button.'
+                //     }));
                 // Add button to unhide the controls
+
                 $('#main-container').prepend(
                   $('<div>').attr({'id': 'kb-view-mode-narr'})
-                    .append($('<div>').css({cursor: 'pointer'})
+                    .append($('<div>').css({cursor: 'pointer', position: 'fixed', left:'0', top:'0'})
                       .append($('<span>')
                         .css({'padding-left':'1em'})
                         .text('Controls'))
@@ -911,9 +926,9 @@ function($,
             }
             $('.navbar-right > div')[0].remove();
             // Restore side-panel
-            $('#left-column').show();
             // Restore margin for content
-            $('#content-column').css({'margin-left': '380px'});
+            $('#notebook-container').animate({left: '380'}, {duration: 500, easing: 'linear'});
+            $('#left-column').show('slide', {'direction': 'left', 'easing': 'linear'}, 500);
             // Show hidden things
             _.map(this.getReadOnlySelectors(), function (id) {
                 $(id).show();
@@ -2297,11 +2312,6 @@ function($,
                 this.checkCellMetadata(cells[i]);
             }
             this.loadAllRecentCellStates();
-
-            if (this.isReadOnly) {
-                this.readOnlyMode(false);
-            }
-            // this.updateReadOnlyMode(this.ws_client, this.ws_id);
 
             return this;
         },

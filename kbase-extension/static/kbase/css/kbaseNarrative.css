@@ -254,20 +254,10 @@ p.clear{
     clear: both;
 }
 
-/*div#header {
-    border-bottom: 1px solid #AAA;
-    position: relative;
-    padding: 0 0 0 20px;
-    height: 56px;
-}*/
-
 body > #header {
-    position:fixed;
     display: block;
     box-sizing: border-box;
 }
-
-
 
 p#site-title {
     height: 46px;
@@ -2744,9 +2734,9 @@ div[class="tooltip-inner"] {
 }
 
 /* Override the default max-width of the narrative box */
-.container {
-    max-width: 2000px !important;
-}
+/*.container {*/
+    /*max-width: 2000px !important;*/
+/*}*/
 
 /* Styles for KNHX trees to remove its document.write nonsense that breaks asynchronous loading */
 #popdiv {

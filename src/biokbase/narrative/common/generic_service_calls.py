@@ -120,7 +120,7 @@ def app_state_output_into_method_output(workspace, token, wsClient, methodSpec, 
             try:
                 rpcOut = json.loads(rpcOut)
             except Exception as err:
-                ##raise ValueError("Error parsing: " + rpcOut)
+                raise ValueError("Error parsing: " + rpcOut)
                 pass
         tempArgs = []
         prepare_njs_method_input(token, wsClient, workspace, methodSpec, methodInputValues, input);
@@ -376,7 +376,7 @@ def is_script_method(methodSpec):
     return False
 
 def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, stepId, scriptStep):
-    step = { 'step_id' : stepId }
+    step = { 'step_id' : stepId, 'method_spec_id' : methodSpec['info']['id'] }
     if methodInputValues is not None:
         behavior = methodSpec['behavior']
         if 'kb_service_input_mapping' in behavior or 'script_input_mapping' in behavior:

@@ -228,7 +228,7 @@ function($, Config) {
         
         refresh: function() {
             var self = this;
-            
+
             var needToMakeCall = false;
             var lookupTypes = [];
             var foundTypes = {};

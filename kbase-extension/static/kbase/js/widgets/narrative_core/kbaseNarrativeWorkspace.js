@@ -20,6 +20,7 @@
 
 define(['jquery', 
         'underscore',
+        'bluebird',
         'narrativeConfig',
         'util/bootstrapDialog',
         'util/string',
@@ -35,6 +36,7 @@ define(['jquery',
         'kbaseNarrativeDataPanel'],
 function($, 
          _,
+         Promise,
          Config,
          BootstrapDialog,
          StringUtil) {
@@ -112,6 +114,7 @@ function($,
                 }.bind(this)
             );
 
+            console.log('WORKSPACE: setting up dataUpdated.Narrative response');
             $(document).on('dataUpdated.Narrative',
                 function(event) {
                     if (Jupyter && Jupyter.notebook) {
@@ -130,6 +133,7 @@ function($,
                     }
                 }.bind(this)
             );
+            console.log('WORKSPACE: done setting up dataUpdated.Narrative response');
 
             $(document).on('narrativeDataQuery.Narrative',
                 function(e, callback) {
@@ -236,7 +240,6 @@ function($,
             }
 
             this.initDeleteCellModal();
-            this.render();
             return this;
         },
 
@@ -2264,15 +2267,15 @@ function($,
          * @returns this
          */
         render: function() {
-            this.rebindActionButtons();
-            this.hideGeneratedCodeCells();
-            var cells = Jupyter.notebook.get_cells();
-            for (var i=0; i<cells.length; i++) {
-                this.checkCellMetadata(cells[i]);
-            }
-            this.loadAllRecentCellStates();
-
-            return this;
+            return Promise.try(function() {
+                this.rebindActionButtons();
+                this.hideGeneratedCodeCells();
+                var cells = Jupyter.notebook.get_cells();
+                for (var i=0; i<cells.length; i++) {
+                    this.checkCellMetadata(cells[i]);
+                }
+                this.loadAllRecentCellStates();
+            }.bind(this));
         },
 
 

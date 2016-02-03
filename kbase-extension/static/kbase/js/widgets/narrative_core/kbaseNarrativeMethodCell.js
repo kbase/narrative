@@ -864,17 +864,13 @@ function($,
          * each of the possible apps/methods.
          */
         getNextSteps: function(render_cb) {
-          //console.debug("Find next steps for method",this.method);
           // fetch full info, which contains suggested next steps
           var params = {ids: [this.method.info.id]};
           var result = {};
           this.methClient.get_method_full_info(params,
             $.proxy(function(info_list) {
-              //console.debug("Full info for method: ", info_list);
               var sugg = info_list[0].suggestions;
-              //console.debug("Suggestions for next methods: ", sugg);
               var params = {apps: sugg.next_apps, methods: sugg.next_methods};
-              //console.debug("Getting function specs, params=", params);
               this.trigger('getFunctionSpecs.Narrative', [params,
                 function(specs) { render_cb(specs); }]);
             }, this),

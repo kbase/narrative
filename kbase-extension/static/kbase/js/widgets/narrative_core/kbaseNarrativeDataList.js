@@ -259,6 +259,7 @@ function ($,
                 this.populateAvailableTypes();
                 this.renderList();
                 this.hideLoading();
+                this.trigger('dataUpdated.Narrative');
             }.bind(this));
         },
 

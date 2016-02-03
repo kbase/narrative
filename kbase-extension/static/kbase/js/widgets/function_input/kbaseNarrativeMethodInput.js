@@ -257,8 +257,6 @@ function( $, Config ) {
 		    if (typeof w.runImport == "function")
 		    {
 			var promise = w.runImport();
-			console.log("added promise");
-			console.log(promise);
 			promises.push(promise);
 		    }
                 }

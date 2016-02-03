@@ -303,8 +303,6 @@ function($,
 
     Narrative.prototype.saveFailed = function(event, data) {
         Jupyter.save_widget.set_save_status('Narrative save failed!');
-        console.log(event);
-        console.log(data);
 
         var errorText;
         // 413 means that the Narrative is too large to be saved.
@@ -382,14 +380,11 @@ function($,
         Jupyter.CellToolbar.global_show();
 
         if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
-            $.each(Jupyter.notebook.get_cells(), function(idx, cell) {
-                cell.celltoolbar.hide();
-            });
+            // $.each(Jupyter.notebook.get_cells(), function(idx, cell) {
+            //     cell.celltoolbar.hide();
+            // });
 
-            var creatorId = Jupyter.notebook.metadata.creator;
-
-            $('.kb-narr-namestamp').css({'display':'block'});
-
+            var creatorId = Jupyter.notebook.metadata.creator || 'KBase User';
             DisplayUtil.displayRealName(creatorId, $('#kb-narr-creator'));
 
             // This puts the cell menu in the right place.
@@ -400,12 +395,15 @@ function($,
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
                 ws_id: this.getWorkspaceName()
             });
-            $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
+            this.narrController.render().finally(function() {
+                $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
+                $('#kb-wait-for-ws').remove();
+            });
         }
         else {
             KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');
+            $('#kb-wait-for-ws').remove();
         }
-        $('#kb-wait-for-ws').remove();
     };
 
     /**

@@ -376,7 +376,7 @@ def is_script_method(methodSpec):
     return False
 
 def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, stepId, scriptStep):
-    step = { 'step_id' : stepId }
+    step = { 'step_id' : stepId, 'method_spec_id' : methodSpec['info']['id'] }
     if methodInputValues is not None:
         behavior = methodSpec['behavior']
         if 'kb_service_input_mapping' in behavior or 'script_input_mapping' in behavior:

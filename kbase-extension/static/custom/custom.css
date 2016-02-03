@@ -94,11 +94,6 @@ span#notebook_name:hover {
     background-color: #e0e0e0;    
 }
 
-
-body {
-    padding-top: 70px !important;
-}
-
 .prompt {
     min-width: 10ex;
 }

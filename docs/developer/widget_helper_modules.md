@@ -1,6 +1,6 @@
 # Narrative widget helper modules
 ### Bill Riehl <wjriehl@lbl.gov>
-### Last update - February 3, 2015
+### Last update - February 3, 2016
 
 ### Narrative Config
 Usage:
@@ -79,8 +79,8 @@ This will make an HTML-safe stringified object. It escapes single and double quo
 ### util/display
 Usage:
 ```Javascript
-define(['util/display'],
-  function(DisplayUtil) {
+define(['jquery', 'util/display'],
+  function($, DisplayUtil) {
     DisplayUtil.displayRealName(username, $target);
 
     var profilePromise = DisplayUtil.lookupUserProfile(username);
@@ -115,4 +115,44 @@ This returns a tiny object with a `div` key and `setText` method. `div` returns 
 the `setText` method changes the caption text to the given string - note this is NOT HTML.
 
 
-### Boostrap Dialog
+### Bootstrap Dialog
+Usage:
+```Javascript
+define(['jquery', 'bootstrap', 'util/bootstrapDialog'],
+  function($, BootstrapDialog) {
+    var $okButton = $('<button>')
+      .addClass('btn btn-default')
+      .attr('data-dismiss', 'modal')
+      .append('OK');
+      
+    var dialog = new BootstrapDialog({
+      title: 'My New Dialog',
+      body: $('<div>').append('A simple body.'),
+      buttons: [$okButton],
+      closeButton: false
+    });
+    
+    dialog.show();
+  }
+);
+```
+
+This is a really really simple Bootstrap modal dialog. The benefit here is that it doesn't require a jQuery node to hang onto - that is all handled by the module. It takes an object with four optional keys as inputs:
+* `title` - string - This appears in the title area, or left blank if not defined
+* `body` - jquery node - This gets appended to the body area of the dialog, if defined
+* `buttons` - list of jquery nodes - These are expected to be `$('<button>')` nodes, any event handling they do is up to the user.
+* `closeButton` - boolean (default `false`) - if true, add a little close button X to the right side of the title bar - this closes the modal dialog without triggering any buttons
+
+Calling `new BootstrapDialog(options)` returns an object with two functions:
+* `.show()` = show the dialog
+* `.hide()` = hide the dialog
+
+...and several getters and setters:
+* `.getTitle()` = returns the title as a string. Empty string if none was given on instantiation
+* `.getBody()` = returns the body as a jQuery node. Empty if none was given.
+* `.getButtons()` = no-op right now (2/3/2016)
+* `.getElement()` = get the jQuery node representing the whole modal dialog
+
+* `.setTitle(string)` = set a new title
+* `.setBody($newBody)` = set a new jQuery node as the body
+* `.setButtons(listOfButtons)` = put a new list of buttons in the footer

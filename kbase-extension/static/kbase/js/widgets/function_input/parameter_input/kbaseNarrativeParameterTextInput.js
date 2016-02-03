@@ -398,12 +398,19 @@ function($, Config) {
             )
             .on("select2-focus",
                 function(e) {
-                    console.debug('FOCUSED!');
                     if (Jupyter && Jupyter.notebook) {
                         Jupyter.narrative.disableKeyboardManager();
                     }
                 }
+            )
+            .on("select2-blur",
+                function(e) {
+                    if (Jupyter && Jupyter.notebook) {
+                        Jupyter.narrative.enableKeyboardManager();
+                    }
+                }
             );
+
             
             if (defaultValue) {
                 $input.select2("data",{id:defaultValue, text:defaultValue});

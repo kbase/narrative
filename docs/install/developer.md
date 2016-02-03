@@ -1,4 +1,4 @@
-## Narrative development
+## Narrative developer installation
 
 Last updated: Bill Riehl <wjriehl@lbl.gov> 12/21/2015
 

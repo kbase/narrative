@@ -77,7 +77,6 @@ function ($,
         $mainListDiv: null,
         mainListId: null,
         $loadingDiv: null,
-        methClient: null,
         objList: [],
         objData: {}, // old style - type_name : info
 
@@ -136,8 +135,6 @@ function ($,
             if (this.options.ws_name) {
                 this.ws_name = this.options.ws_name;
             }
-
-            this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
 
             return this;
         },

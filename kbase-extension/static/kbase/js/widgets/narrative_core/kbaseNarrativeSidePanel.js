@@ -122,17 +122,7 @@ function($, Config) {
             // toggle off the jobs header
             // omg this is a hack, but i'm out of time.
             this.$tabs.header.find('div:nth-child(3).kb-side-header').toggle(!readOnly);
-            this.$tabs.header.find('div.kb-side-header').css({'width': (readOnly ? '48%' : '33.333%')});
-
-            var $hide_btn = $('<div>')
-                            .attr({id: 'kb-view-mode-narr-hide'})
-                            .append($('<span>')
-                                    .addClass('fa fa-caret-up'))
-                            .css({'width':'4%'})
-                            .click(function() {
-                                minimizeFn();
-                            });
-            this.$tabs.header.prepend($hide_btn);
+            this.$tabs.header.find('div.kb-side-header').css({'width': (readOnly ? '50%' : '33.333%')});
         },
 
         /**

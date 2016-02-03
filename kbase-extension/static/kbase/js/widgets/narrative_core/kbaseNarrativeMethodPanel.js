@@ -88,7 +88,6 @@ function ($, Config) {
                                 )
                                 .on('focus',
                                     function() {
-                                        console.log('focus');
                                         if (Jupyter && Jupyter.narrative) {
                                             Jupyter.narrative.disableKeyboardManager();
                                         }
@@ -96,18 +95,17 @@ function ($, Config) {
                                 )
                                 .on('blur',
                                     function() {
-                                        console.log('blur');
                                         if (Jupyter && Jupyter.narrative) {
                                             Jupyter.narrative.enableKeyboardManager();
                                         }
                                     }
                                 );
 
-            self.$searchInput.on('keyup', function (e) {
+            this.$searchInput.on('keyup', function (e) {
                 if (e.keyCode == 27) {
-                    self.$searchDiv.hide();
+                    this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
                 }
-            });
+            }.bind(this));
 
             this.$numHiddenSpan = $('<span>0</span>');
             this.$showHideSpan = $('<span>show</span>');
@@ -125,19 +123,15 @@ function ($, Config) {
                                     }, this));
 
             var $clearSearchBtn = $('<span>')
-                                  .addClass('input-group-btn')
-                                  .append($('<button>')
-                                          .addClass('btn btn-default')
-                                          .css({'border-left' : 'none'})
-                                          .attr('type', 'button')
-                                          .append($('<span>')
-                                                  .append('X'))
-                                          .click(
-                                            $.proxy(function(event) {
-                                                this.$searchInput.val('');
-                                                this.$searchInput.trigger('input');
-                                            }, this)
-                                          ));
+                                  .addClass('input-group-addon btn btn-default kb-method-search-clear')
+                                  .attr('type', 'button')
+                                  .append($('<span class="glyphicon glyphicon-remove">'))
+                                  .click(
+                                    $.proxy(function(event) {
+                                        this.$searchInput.val('');
+                                        this.$searchInput.trigger('input');
+                                    }, this)
+                                  );
 
             this.$searchDiv.append(this.$searchInput)
                            .append($clearSearchBtn);
@@ -178,7 +172,7 @@ function ($, Config) {
             $(document).on('filterMethods.Narrative',
                 $.proxy(function(e, filterString) {
                     if (filterString) {
-                        this.$searchDiv.show();
+                        this.$searchDiv.show({effect: 'blind', duration: 'fast'});
                         this.$searchInput.val(filterString);
                         this.$searchInput.trigger('input');
                     }
@@ -187,7 +181,7 @@ function ($, Config) {
 
             $(document).on('removeFilterMethods.Narrative',
                 $.proxy(function(e) {
-                    this.$searchDiv.hide();
+                    this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
                     this.$searchInput.val('');
                     this.$searchInput.trigger('input');
                 }, this)
@@ -246,10 +240,10 @@ function ($, Config) {
                                     hide: Config.get('tooltip').hideDelay
                                 }
                             })
-                           .click($.proxy(function(event) {
-                               this.$searchDiv.slideToggle(400);
+                           .click(function(event) {
+                               this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
                                this.$searchInput.focus();
-                           }, this)));
+                           }.bind(this)));
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-refresh">')

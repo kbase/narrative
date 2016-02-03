@@ -837,6 +837,7 @@ function($,
          */
         readOnlyMode: function(delay) {
             // Hide side-panel
+            this.trigger('hideSidePanelOverlay.Narrative');
             if (!delay)
                 delay = 0;
             $('#left-column').hide('slide', {direction: 'left', easing: 'swing'}, delay);

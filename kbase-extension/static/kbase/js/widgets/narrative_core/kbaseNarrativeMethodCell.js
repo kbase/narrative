@@ -33,7 +33,7 @@ function($,
         options: {
             method: null,
             cellId: null,
-            methodHelpLink: '/#/narrativestore/method/'
+            methodHelpLink: '/#/appcatalog/app/'
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',

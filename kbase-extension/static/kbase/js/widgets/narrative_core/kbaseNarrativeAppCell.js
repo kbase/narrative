@@ -36,8 +36,8 @@
             loadingImage: Config.get('loading_gif'),
             methodStoreURL: Config.url('narrative_method_store'),
 
-            appHelpLink: '/#narrativestore/app/',
-            methodHelpLink: '/#narrativestore/method/'
+            appHelpLink: '/#appcatalog/app/l.a/',
+            methodHelpLink: '/#appcatalog/app/'
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',

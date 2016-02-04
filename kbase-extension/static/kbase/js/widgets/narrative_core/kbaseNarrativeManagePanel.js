@@ -832,7 +832,8 @@ function($,
                     $dataCol.append($('<span>')
                         .addClass('kb-data-list-narinfo')
                         .append(summary)
-                        .click(
+                        // REMOVE MORE INFO: needs a rethink, because these methods have versions now....
+                        /*.click(
                             function () {
                                 var opened = self.toggleInteractionPanel($interactionPanel, 'info');
                                 if (!opened) {
@@ -845,7 +846,7 @@ function($,
 
                                 // var $infoDiv = self.getNarContent(data.nar_info);
                                 self.setInteractionPanel($interactionPanel, 'Narrative Info', $infoDiv);
-                            })
+                            })*/
                         .append('<br>'));
                 }
                 $dataCol.append($('<span>').addClass('kb-data-list-type').append(this.getTimeStampStr(data.nar_info[3])));

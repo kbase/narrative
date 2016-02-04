@@ -4,6 +4,7 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths : {
+        kbaseInputTest                          : 'kbase/js/widgets/function_input/kbaseInputTest',
         api                                     : 'kbase/js/api',
         bluebird                                : 'ext_components/bluebird/js/browser/bluebird.min',
         plotly                                  : 'ext_components/plotly.js/dist/plotly.min',

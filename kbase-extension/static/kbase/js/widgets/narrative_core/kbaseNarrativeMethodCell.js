@@ -867,6 +867,7 @@ function($,
           // fetch full info, which contains suggested next steps
           var params = {ids: [this.method.info.id]};
           var result = {};
+          var self = this;
           this.methClient.get_method_full_info(params,
             $.proxy(function(info_list) {
               var sugg = info_list[0].suggestions;
@@ -874,9 +875,11 @@ function($,
               this.trigger('getFunctionSpecs.Narrative', [params,
                 function(specs) { render_cb(specs); }]);
             }, this),
-            function() {
+            function(error) {
+              console.error(error, "method=", self.method);
               KBError("kbaseNarrativeMethodCell.getNextSteps",
                        "Could not get full info for method: " + self.method.info.id);
+              render_cb();
             });
         },
 

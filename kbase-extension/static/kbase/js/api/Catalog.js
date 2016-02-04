@@ -117,6 +117,71 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             [params], 1, _callback, _errorCallback);
     };
  
+     this.add_favorite = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Catalog.add_favorite",
+            [params], 0, _callback, _errorCallback);
+    };
+ 
+     this.remove_favorite = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Catalog.remove_favorite",
+            [params], 0, _callback, _errorCallback);
+    };
+ 
+     this.list_favorites = function (username, _callback, _errorCallback) {
+        if (typeof username === 'function')
+            throw 'Argument username can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Catalog.list_favorites",
+            [username], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_app_favorites = function (item, _callback, _errorCallback) {
+        if (typeof item === 'function')
+            throw 'Argument item can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Catalog.list_app_favorites",
+            [item], 1, _callback, _errorCallback);
+    };
+ 
+     this.list_favorite_counts = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Catalog.list_favorite_counts",
+            [params], 1, _callback, _errorCallback);
+    };
+ 
      this.get_module_info = function (selection, _callback, _errorCallback) {
         if (typeof selection === 'function')
             throw 'Argument selection can not be a function';
@@ -321,6 +386,32 @@ function Catalog(url, auth, auth_cb, timeout, async_job_check_time_ms) {
             throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
         return json_call_ajax("Catalog.revoke_developer",
             [username], 0, _callback, _errorCallback);
+    };
+ 
+     this.log_exec_stats = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Catalog.log_exec_stats",
+            [params], 0, _callback, _errorCallback);
+    };
+ 
+     this.get_exec_aggr_stats = function (params, _callback, _errorCallback) {
+        if (typeof params === 'function')
+            throw 'Argument params can not be a function';
+        if (_callback && typeof _callback !== 'function')
+            throw 'Argument _callback must be a function if defined';
+        if (_errorCallback && typeof _errorCallback !== 'function')
+            throw 'Argument _errorCallback must be a function if defined';
+        if (typeof arguments === 'function' && arguments.length > 1+2)
+            throw 'Too many arguments ('+arguments.length+' instead of '+(1+2)+')';
+        return json_call_ajax("Catalog.get_exec_aggr_stats",
+            [params], 1, _callback, _errorCallback);
     };
   
 

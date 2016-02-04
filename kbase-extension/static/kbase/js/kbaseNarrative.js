@@ -519,5 +519,29 @@ function($,
         return Jupyter.notebook.get_cell(this.getCellIndexByKbaseId(id));
     };
 
+    /**
+     * Jupyter doesn't auto select cells on creation, so this
+     * is a helper that does so. It then returns the cell object
+     * that gets created.
+     */
+    Narrative.prototype.insertAndSelectCellBelow = function(cellType) {
+        return this.insertAndSelectCell(cellType, 'below');
+    };
+
+    Narrative.prototype.insertAndSelectCellAbove = function(cellType) {
+        return this.insertAndSelectCell(cellType, 'above');
+    };
+
+    Narrative.prototype.insertAndSelectCell = function(cellType, direction) {
+        var newCell;
+        if (direction === 'below')
+            newCell = Jupyter.notebook.insert_cell_below(cellType);
+        else
+            newCell = Jupyter.notebook.insert_cell_above(cellType);
+        Jupyter.notebook.focus_cell(newCell);
+        Jupyter.notebook.select(Jupyter.notebook.find_cell_index(newCell));
+        return newCell;
+    };
+
     return Narrative;
 });

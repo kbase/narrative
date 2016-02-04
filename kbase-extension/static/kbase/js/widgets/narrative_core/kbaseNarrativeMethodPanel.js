@@ -11,15 +11,19 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define(['jquery',
+define([
+        'jquery', 
+        'underscore',
+        'bluebird',
         'narrativeConfig',
+        'util/display',
         'kbwidget',
         'kbaseAccordion',
         'kbaseNarrativeControlPanel',
         'kbaseNarrative',
         'catalog-client-api',
         'bootstrap'], 
-function ($, Config) {
+function ($, _, Promise, Config, Display) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
@@ -64,8 +68,6 @@ function ($, Config) {
             var self = this;
             // DOM structure setup here.
             // After this, just need to update the function list
-
-            console.debug(options);
 
             this.currentTag = 'release';
 
@@ -382,7 +384,6 @@ function ($, Config) {
 
             var methodProm = this.methClient.list_methods(filterParams,
                 $.proxy(function(methods) {
-                    console.log(methods);
                     this.methodSpecs = {};
                     this.methodInfo = {};
                     for (var i=0; i<methods.length; i++) {
@@ -490,8 +491,17 @@ function ($, Config) {
         buildMethod: function(icon, method, triggerFn) {
             // add icon (logo)
             var $logo = $('<div>');
-            this.trigger('setMethodIcon.Narrative',
-                         {elt: $logo, is_app: icon == 'A'});
+
+            if(icon=='A') {
+                $logo.append( Display.getAppIcon({ isApp: true , cursor: 'pointer', setColor:true }) );
+            } else {
+                if(method.info.icon && method.info.icon.url) {
+                    var url = this.options.methodStoreURL.slice(0, -3) + method.info.icon.url;
+                    $logo.append( Display.getAppIcon({ url: url , cursor: 'pointer' , setColor:true}) );
+                } else {
+                    $logo.append( Display.getAppIcon({ cursor: 'pointer' , setColor:true}) );
+                }
+            }
             // add behavior
             $logo.click($.proxy(
                 function(e) {

@@ -323,10 +323,9 @@
                 .closest('.cell')
                 .trigger('set-title.cell', [appTitle]);             
             
-            var appIcon = '<div class="fa-stack fa-2x"><i  class="fa fa-square fa-stack-2x app-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cubes"></i></div>';
             this.$elem
                 .closest('.cell')
-                .trigger('set-icon.cell', [appIcon]);
+                .trigger('set-icon.cell', [Display.getAppIcon({isApp:true}).html()]);
             
             //require(['kbaseNarrativeCellMenu'], $.proxy(function() {
             //    this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();

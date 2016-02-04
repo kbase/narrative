@@ -14,6 +14,7 @@ require(['jquery',
          'narrativeConfig',
          'util/string',
          'util/bootstrapDialog',
+         'util/display',
          'handlebars', 
          'kbwidget', 
          'kbaseAuthenticatedWidget',
@@ -24,7 +25,8 @@ require(['jquery',
 function($, 
          Config,
          StringUtil,
-         BootstrapDialog) {
+         BootstrapDialog,
+         Display) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",
@@ -33,7 +35,8 @@ function($,
         options: {
             method: null,
             cellId: null,
-            methodHelpLink: '/#/appcatalog/app/'
+            methodHelpLink: '/#/appcatalog/app/',
+            methodStoreURL: Config.url('narrative_method_store')
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -231,11 +234,17 @@ function($,
                 .closest('.cell')
                 .trigger('set-title.cell', [self.method.info.name]); 
             
-            var methodIcon = '<div class="fa-stack fa-2x"><i class="fa fa-square fa-stack-2x method-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cube"></i></div>';
-            
+            var $logo = $('<div>');
+            if(this.method.info.icon && this.method.info.icon.url) {
+                var url = this.options.methodStoreURL.slice(0, -3) + this.method.info.icon.url;
+                $logo.append( Display.getAppIcon({url: url}) );
+            } else {
+                $logo.append( Display.getAppIcon({}) );
+            }
+
             this.$elem
                 .closest('.cell')
-                .trigger('set-icon.cell', [methodIcon]);
+                .trigger('set-icon.cell', [$logo.html()]);
 
             require([inputWidgetName], 
               $.proxy(function() {

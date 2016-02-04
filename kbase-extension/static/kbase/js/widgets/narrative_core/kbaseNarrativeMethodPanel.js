@@ -29,7 +29,9 @@ function ($, Config) {
             autopopulate: true,
             title: 'Apps & Methods',
             methodStoreURL: Config.url('narrative_method_store'),
-            methodHelpLink: '/#narrativestore/method/'
+            moduleLink: '/#appcatalog/module/',
+            methodHelpLink: '/#appcatalog/app/',
+            appHelpLink: '/#appcatalog/app/l.a/'
         },
         ignoreCategories: {
             inactive : 1,
@@ -40,6 +42,8 @@ function ($, Config) {
         methodSpecs: {},  // id -> spec
         appSpecs: {},     // id -> spec
         categories: {},   // id -> category info
+
+        currentTag: null, // release/dev/beta; which version of the method spec to fetch.  default is release
 
         /**
          * This private method is automatically called when the widget is initialized.
@@ -58,6 +62,8 @@ function ($, Config) {
             var self = this;
             // DOM structure setup here.
             // After this, just need to update the function list
+
+            this.currentTag = 'release';
 
             this.icon_colors = Config.get('icons').colors;
 
@@ -215,7 +221,7 @@ function ($, Config) {
                     //console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
                     if (callback) {
                         //console.debug("Trigger: specSet=",specSet);
-                        callback(this.getFunctionSpecs(specSet));
+                        this.getFunctionSpecs(specSet, callback);
                     }
                 }, this)
             );
@@ -366,13 +372,16 @@ function ($, Config) {
             var filterParams = {};
             if (versionTag) {
                 filterParams['tag'] = versionTag;
+                this.currentTag = versionTag;
             }
 
-            var methodProm = this.methClient.list_methods_spec(filterParams,
+            var methodProm = this.methClient.list_methods(filterParams,
                 $.proxy(function(methods) {
+                    console.log(methods);
                     this.methodSpecs = {};
+                    this.methodInfo = {};
                     for (var i=0; i<methods.length; i++) {
-                        this.methodSpecs[methods[i].info.id] = methods[i];
+                        this.methodSpecs[methods[i].id] = {info:methods[i]};
                     }
                 }, this)
             );
@@ -406,7 +415,15 @@ function ($, Config) {
         parseMethodsAndApps: function(catSet, methSet, appSet) {
             var self = this;
             var triggerMethod = function(method) {
-                self.trigger('methodClicked.Narrative', method);
+                if(!method['spec']) {
+                    self.methClient.get_method_spec({ids:[method.info.id],tag:self.currentTag})
+                        .then(function(spec){
+                            // todo: cache this sped into the methods list
+                            self.trigger('methodClicked.Narrative', spec);
+                        });
+                } else {
+                    self.trigger('methodClicked.Narrative', method);
+                }
             };
 
             var triggerApp = function(app) {
@@ -450,7 +467,7 @@ function ($, Config) {
             var $appPanel = appRender[0];
             this.id2Elem['app'] = appRender[1];
 
-            this.$methodList.empty().append($appPanel).append($methodPanel);
+            this.$methodList.empty().append($methodPanel).append($appPanel);
             //console.log([Object.keys(this.appSpecs).length, Object.keys(this.methodSpecs).length]);
         },
 
@@ -490,6 +507,16 @@ function ($, Config) {
                 versionStr = '[' + method.info.namespace + '] ' + versionStr;
             var $version = $('<span>').addClass("kb-data-list-type").append(versionStr); // use type because it is a new line
 
+            var moreLink = '';
+            if(icon==='M') {
+                if(method.info.module_name) {
+                    moreLink = this.options.methodHelpLink + method.info.id + '/' + this.currentTag;
+                } else {
+                    moreLink = this.options.methodHelpLink + 'l.m/' + method.info.id;
+                }
+            } else if(icon==='A') {
+                moreLink = this.options.appHelpLink + method.info.id;
+            }
             var $more = $('<div>')
                         .addClass('kb-method-list-more-div')
                         .append($('<div>')
@@ -498,7 +525,7 @@ function ($, Config) {
                                 .append($('<a>')
                                         .append('more...')
                                         .attr('target', '_blank')
-                                        .attr('href', this.options.methodHelpLink + method.info.id)));
+                                        .attr('href', moreLink)));
 
             var $moreBtn =
                     $('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
@@ -566,9 +593,10 @@ function ($, Config) {
          *
          * If a spec isn't found, then it won't appear in the return values.
          */
-        getFunctionSpecs: function(specSet) {
+        getFunctionSpecs: function(specSet, callback) {
             //console.debug("getFunctionSpecs(specSet=",specSet,")");
             var results = {};
+            // handle legacy apps; we already have the specs
             if (specSet.apps && specSet.apps instanceof Array) {
                 results.apps = {};
                 for (var i=0; i<specSet.apps.length; i++) {
@@ -576,8 +604,21 @@ function ($, Config) {
                         results.apps[specSet.apps[i]] = this.appSpecs[specSet.apps[i]];
                 }
             }
+            // handle methods, we now have to fetch the specs if we don't have them yet
             if (specSet.methods && specSet.methods instanceof Array) {
-              results.methods = _.pick(this.methodSpecs, specSet.methods);
+
+                console.log('HERE',specSet.methods)
+                var requests = [];
+                var specs = [];
+                for(var i=0; i<specSet.methods.length; i++) {
+                    requests.push(this.methClient.list_methods({tag:this.currentTag})
+                        .then(function(spec){
+                            console.log('got method spec',spec);
+                            specs.push(spec);
+                        }));
+                }
+
+              //results.methods = _.pick(this.methodSpecs, specSet.methods);
               /*
                 results.methods = {};
                 for (var i=0; i < specSet.methods.length; i++) {
@@ -587,7 +628,7 @@ function ($, Config) {
               */
             }
             //console.debug("getFunctionSpecs returning:",results);
-            return results;
+            callback(results);
         },
 
         logoColorLookup:function(type) {

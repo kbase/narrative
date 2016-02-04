@@ -17,6 +17,7 @@ define(['jquery',
         'kbaseAccordion',
         'kbaseNarrativeControlPanel',
         'kbaseNarrative',
+        'catalog-client-api',
         'bootstrap'], 
 function ($, Config) {
     'use strict';
@@ -29,6 +30,7 @@ function ($, Config) {
             autopopulate: true,
             title: 'Apps & Methods',
             methodStoreURL: Config.url('narrative_method_store'),
+            catalogURL: Config.url('catalog'),
             moduleLink: '/#appcatalog/module/',
             methodHelpLink: '/#appcatalog/app/',
             appHelpLink: '/#appcatalog/app/l.a/'
@@ -62,6 +64,8 @@ function ($, Config) {
             var self = this;
             // DOM structure setup here.
             // After this, just need to update the function list
+
+            console.debug(options);
 
             this.currentTag = 'release';
 
@@ -291,12 +295,13 @@ function ($, Config) {
                                     this.refreshFromService(versionTag);
                                 }.bind(this)));
 
-            if (!NarrativeMethodStore) {
-                this.showError('Unable to connect to KBase Method Store!');
+            if (!NarrativeMethodStore || !Catalog) {
+                this.showError('Unable to connect to the Catalog or NMS!');
                 return this;
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
+            this.catalog = new Catalog(this.options.catalogURL);
 
             if (this.options.autopopulate === true) {
                 this.refresh();
@@ -502,9 +507,11 @@ function ($, Config) {
                                         e.stopPropagation();
                                         triggerFn(method);
                                     }, this)));
-            var versionStr = 'v'+method.info.ver;
-            if (method.info.namespace)
-                versionStr = '[' + method.info.namespace + '] ' + versionStr;
+            var versionStr = 'v'+method.info.ver; // note that method versions are meaningless right now; need to update!
+            if (method.info.module_name) {
+                versionStr = '<a href="'+this.options.moduleLink+'/'+method.info.module_name+'" target="_blank">' + 
+                                method.info.namespace + '</a> ' + versionStr;
+            }
             var $version = $('<span>').addClass("kb-data-list-type").append(versionStr); // use type because it is a new line
 
             var moreLink = '';
@@ -604,31 +611,27 @@ function ($, Config) {
                         results.apps[specSet.apps[i]] = this.appSpecs[specSet.apps[i]];
                 }
             }
-            // handle methods, we now have to fetch the specs if we don't have them yet
+            // handle methods, we now have to fetch the specs since we don't keep them around
             if (specSet.methods && specSet.methods instanceof Array) {
-
-                console.log('HERE',specSet.methods)
-                var requests = [];
-                var specs = [];
-                for(var i=0; i<specSet.methods.length; i++) {
-                    requests.push(this.methClient.list_methods({tag:this.currentTag})
-                        .then(function(spec){
-                            console.log('got method spec',spec);
-                            specs.push(spec);
-                        }));
-                }
-
-              //results.methods = _.pick(this.methodSpecs, specSet.methods);
-              /*
                 results.methods = {};
-                for (var i=0; i < specSet.methods.length; i++) {
-                    if (this.methodSpecs[specSet.methods[i]])
-                        results.methods[specSet.methods[i]] = this.methodSpecs[specSet.methods[i]];
-                }
-              */
+                // we need to fetch some methods, so don't 
+                this.methClient.get_method_spec({ids: specSet.methods, tag:this.currentTag},
+                        function(specs){
+                            for(var k=0; k<specs.length; k++) {
+                                results.methods[specs[k].info.id] = specs[k];
+                            }
+                            callback(results);
+                        },
+                        function(err) {
+                            console.error("Error in method panel on 'getFunctionSpecs' when contacting NMS");
+                            console.error(err);
+                            callback(results); // still return even if we couldn't get the methods
+                        });
+
+            } else {
+                // there were no methods to fetch, so return
+                callback(results);
             }
-            //console.debug("getFunctionSpecs returning:",results);
-            callback(results);
         },
 
         logoColorLookup:function(type) {
@@ -824,15 +827,15 @@ function ($, Config) {
          */
         textFilter: function(pattern, method) {
             var lcName = method.info.name.toLowerCase();
-            var namespace = '';
-            if (method.info.namespace) {
-                namespace = method.info.namespace.toLowerCase();
+            var module_name = '';
+            if (method.info.module_name) {
+                module_name = method.info.module_name.toLowerCase();
             }
             // match any token in the query, not the full string
             var tokens = pattern.toLowerCase().split(' ');
             for(var k=0; k<tokens.length; k++) {
                 if(lcName.indexOf(tokens[k]) < 0 &&
-                   namespace.indexOf(tokens[k]) < 0) {
+                   module_name.indexOf(tokens[k]) < 0) {
                     // token not found, so we return false
                     return false;
                 }

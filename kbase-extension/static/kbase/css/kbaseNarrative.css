@@ -2345,6 +2345,27 @@ div[class="tooltip-inner"] {
 
 /* end data list*/
 
+
+/* favorites style */
+
+.kbcb-star {
+}
+.kbcb-star-favorite {
+    cursor:pointer;
+    color:orange;
+}
+
+.kbcb-star-nonfavorite {
+    cursor:pointer;
+}
+.kbcb-star-nonfavorite:hover {
+    color:red;
+}
+
+
+
+
+
 /* share panel styles */
 .kb-share-user-permissions-dropdown {
     border-style:none;

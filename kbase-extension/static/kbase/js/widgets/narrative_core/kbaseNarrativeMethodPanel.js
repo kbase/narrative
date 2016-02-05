@@ -83,19 +83,7 @@ function ($, _, Promise, Config, DisplayUtil) {
                                 .attr('Placeholder', 'Search methods')
                                 .on('input',
                                     $.proxy(function(e) {
-                                        var txt = this.$searchInput.val().trim().toLowerCase();
-                                        if (txt.indexOf("type:") === 0) {
-                                            this.visualFilter(this.objectTypeFilter, txt.substring(5));
-                                        }
-                                        else if (txt.indexOf("in_type:") === 0) {
-                                            this.visualFilter(this.inputTypeFilter, txt.substring(8));
-                                        }
-                                        else if (txt.indexOf("out_type:") === 0) {
-                                            this.visualFilter(this.outputTypeFilter, txt.substring(9));
-                                        }
-                                        else {
-                                            this.visualFilter(this.textFilter, txt);
-                                        }
+                                        this.filterList();
                                     }, this)
                                 )
                                 .on('focus',
@@ -303,7 +291,7 @@ function ($, _, Promise, Config, DisplayUtil) {
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-            this.catalog = new Catalog(this.options.catalogURL);
+            this.catalog = new Catalog(this.options.catalogURL, { token: this.auth().token });
 
             if (this.options.autopopulate === true) {
                 this.refresh();
@@ -311,6 +299,25 @@ function ($, _, Promise, Config, DisplayUtil) {
 
             return this;
         },
+
+
+        filterList: function() {
+            var txt = this.$searchInput.val().trim().toLowerCase();
+            if (txt.indexOf("type:") === 0) {
+                this.visualFilter(this.objectTypeFilter, txt.substring(5));
+            }
+            else if (txt.indexOf("in_type:") === 0) {
+                this.visualFilter(this.inputTypeFilter, txt.substring(8));
+            }
+            else if (txt.indexOf("out_type:") === 0) {
+                this.visualFilter(this.outputTypeFilter, txt.substring(9));
+            }
+            else {
+                this.visualFilter(this.textFilter, txt);
+            }
+        },
+
+
 
         initMethodTooltip: function() {
             this.help = {};
@@ -374,6 +381,7 @@ function ($, _, Promise, Config, DisplayUtil) {
         // },
 
         refreshFromService: function(versionTag) {
+            var self = this;
             this.showLoadingMessage("Loading KBase Methods from service...");
 
             var filterParams = {};
@@ -382,40 +390,65 @@ function ($, _, Promise, Config, DisplayUtil) {
                 this.currentTag = versionTag;
             }
 
-            var methodProm = this.methClient.list_methods(filterParams,
-                $.proxy(function(methods) {
-                    this.methodSpecs = {};
-                    this.methodInfo = {};
-                    for (var i=0; i<methods.length; i++) {
-                        this.methodSpecs[methods[i].id] = {info:methods[i]};
-                    }
-                }, this)
-            );
-            var appProm = this.methClient.list_apps_spec({},
-                $.proxy(function(apps) {
-                    this.appSpecs = {};
-                    for (var i=0; i<apps.length; i++) {
-                        this.appSpecs[apps[i].info.id] = apps[i];
-                    }
-                }, this)
-            );
-            var catProm = this.methClient.list_categories({},
-                $.proxy(function(categories) {
-                    this.categories = categories[0];
-                }, this)
-            );
+            var loadingCalls = [];
+            loadingCalls.push(self.methClient.list_methods(filterParams)
+                                .then(function(methods) {
+                                    self.methodSpecs = {};
+                                    self.methodInfo = {};
+                                    for (var i=0; i<methods.length; i++) {
+                                        // key should have LC module name if an SDK method
+                                        if(methods[i].module_name) {
+                                            var idTokens = methods[i].id.split('/');
+                                            self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = {info:methods[i]};
+                                        } else {
+                                            self.methodSpecs[methods[i].id] = {info:methods[i]};
+                                        }
+                                    }
+                                }));
 
-            $.when(methodProm, appProm, catProm).done($.proxy(function(a, b, c) {
-                // console.log([this.appSpecs, this.methodSpecs, this.categories]);
-                this.parseMethodsAndApps(this.categories, this.methodSpecs, this.appSpecs);
-                this.showFunctionPanel();
-            }, this));
+            loadingCalls.push(self.methClient.list_apps_spec({})
+                                .then(function(apps) {
+                                    self.appSpecs = {};
+                                    for (var i=0; i<apps.length; i++) {
+                                        self.appSpecs[apps[i].info.id] = apps[i];
+                                    }
+                                }));
+            loadingCalls.push(self.methClient.list_categories({})
+                                .then(function(categories) {
+                                    self.categories = categories[0];
+                                }));
 
-            $.when(methodProm, appProm).fail($.proxy(function(error) {
-                console.log("error'd!")
-                console.log(error);
-                this.showError(error);
-            }, this));
+            Promise.all(loadingCalls)
+                .then(function() {
+                    return self.catalog.list_favorites(self.auth().user_id)
+                                .then(function(favs) {
+                                    for(var k=0; k<favs.length; k++) {
+                                        var fav = favs[k];
+                                        var lookup = fav.id;
+                                        if(fav.module_name_lc != 'nms.legacy') {
+                                            lookup = fav.module_name_lc + '/' + lookup
+                                        }
+                                        if(self.methodSpecs[lookup]) {
+                                            self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
+                                        }
+                                        console.log(fav)
+                                    }
+                                    self.parseMethodsAndApps(self.categories, self.methodSpecs, self.appSpecs);
+                                    self.showFunctionPanel();
+                                    self.filterList(); // keep the filters
+                                })
+                                .catch(function(error) {
+                                    console.log('error getting favorites, but probably we can still try and proceed')
+                                    self.parseMethodsAndApps(self.categories, self.methodSpecs, self.appSpecs);
+                                    self.showFunctionPanel();
+                                    self.filterList(); // keep the filters
+                                });
+                })
+                .catch(function(error) {
+                    console.log("error'd!")
+                    console.log(error);
+                    self.showError(error);
+                });
         },
 
         parseMethodsAndApps: function(catSet, methSet, appSet) {
@@ -447,12 +480,22 @@ function ($, _, Promise, Config, DisplayUtil) {
                             ignoreFlag = true;
                         }
                     }
+
                     if (ignoreFlag)
                         delete fnSet[fn];
                     else
                         fnList.push(fnSet[fn]);
                 }
                 fnList.sort(function(a, b) {
+                    if(a.favorite && b.favorite) {
+                        console.log(a.info.name, a.info.id, a.favorite)
+                        console.log(b.info.name, b.info.id, b.favorite)
+                        if(a.favorite<b.favorite) return 1;
+                        if(a.favorite>b.favorite) return -1;
+                    }
+                    if(a.favorite) return -1;
+                    if(b.favorite) return 1;
+
                     return a.info.name.localeCompare(b.info.name);
                 });
                 for (var i=0; i<fnList.length; i++) {
@@ -464,7 +507,6 @@ function ($, _, Promise, Config, DisplayUtil) {
             };
 
             this.methodSet = {};
-
             var methodRender = generatePanel(catSet, methSet, 'M', triggerMethod);
             var $methodPanel = methodRender[0];
             this.id2Elem['method'] = methodRender[1];
@@ -489,6 +531,7 @@ function ($, _, Promise, Config, DisplayUtil) {
          * @private
          */
         buildMethod: function(icon, method, triggerFn) {
+            var self = this;
             // add icon (logo)
             var $logo = $('<div>');
 
@@ -497,7 +540,8 @@ function ($, _, Promise, Config, DisplayUtil) {
             } else {
                 if(method.info.icon && method.info.icon.url) {
                     var url = this.options.methodStoreURL.slice(0, -3) + method.info.icon.url;
-                    $logo.append( DisplayUtil.getAppIcon({ url: url , cursor: 'pointer' , setColor:true}) );
+                    $logo.append( DisplayUtil.getAppIcon({ url: url , cursor: 'pointer' , setColor:true, size:'50px'}) )
+                        .css('padding', '3px');
                 } else {
                     $logo.append( DisplayUtil.getAppIcon({ cursor: 'pointer' , setColor:true}) );
                 }
@@ -508,6 +552,45 @@ function ($, _, Promise, Config, DisplayUtil) {
                     e.stopPropagation();
                     triggerFn(method);
                 }, this));
+
+            var $star = $('<i>');
+            if(icon=='M') {
+                if(method.favorite) {
+                    $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;')
+                } else {
+                    $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
+                }
+                $star.on('click', function() {
+                    event.stopPropagation();
+                    var params = {};
+                    if(method.info.module_name) {
+                        params['module_name'] = method.info.module_name;
+                        params['id'] = method.info.id.split('/')[1]
+                    } else {
+                        params['id'] = method.info.id;
+                    }
+
+                    if(method.favorite) {
+                        // remove favorite
+                        self.catalog.remove_favorite(params)
+                            .then(function() {
+                                console.log('removed favorite!  woot!')
+                                $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
+                                method.favorite = null; // important to set this if we don't refresh the panel
+                            });
+                    } else {
+                        // add favorite
+                        self.catalog.add_favorite(params)
+                            .then(function() {
+                                console.log('added favorite!  woot!')
+                                $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
+                                method.favorite =  new Date().getTime(); // important to set this if we don't refresh the panel
+                            });
+                    }
+                    //refresh?
+                    //self.refreshFromService(self.currentTag);
+                });
+            }
 
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
@@ -522,7 +605,7 @@ function ($, _, Promise, Config, DisplayUtil) {
                 versionStr = '<a href="'+this.options.moduleLink+'/'+method.info.module_name+'" target="_blank">' + 
                                 method.info.namespace + '</a> ' + versionStr;
             }
-            var $version = $('<span>').addClass("kb-data-list-type").append(versionStr); // use type because it is a new line
+            var $version = $('<span>').addClass("kb-data-list-type").append($star).append(versionStr); // use type because it is a new line
 
             var moreLink = '';
             if(icon==='M') {
@@ -909,7 +992,7 @@ function ($, _, Promise, Config, DisplayUtil) {
             if (spec.steps) {
                 // ignoring apps right now
                 for (var i=0; i<spec.steps.length; i++) {
-                    var methodSpec = this.methodSpecs[spec.steps[i].method_id];
+                    var methodSpec = this.methodSpecs[spec.steps[i].method_id];  // don't need to make module LC, because this is for apps only
                     if (!methodSpec || methodSpec === undefined || methodSpec === null) {
                     }
                     else if (methodFilter(type, methodSpec))

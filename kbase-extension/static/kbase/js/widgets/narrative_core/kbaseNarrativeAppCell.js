@@ -39,7 +39,7 @@
             methodStoreURL: Config.url('narrative_method_store'),
 
             appHelpLink: '/#appcatalog/app/l.a/',
-            methodHelpLink: '/#appcatalog/app/'
+            methodHelpLink: '/#appcatalog/app/l.m/' // apps cannot have SDK methods, so always add the legacy module id
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',

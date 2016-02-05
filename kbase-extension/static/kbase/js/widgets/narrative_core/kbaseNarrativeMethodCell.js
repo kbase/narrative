@@ -35,7 +35,7 @@ function($,
         options: {
             method: null,
             cellId: null,
-            methodHelpLink: '/#/appcatalog/app/',
+            methodHelpLink: '/#appcatalog/app/',
             methodStoreURL: Config.url('narrative_method_store')
         },
         IGNORE_VERSION: true,
@@ -172,6 +172,14 @@ function($,
             var methodId = this.options.cellId + '-method-details-'+StringUtil.uuid();
             var buttonLabel = 'details';
             var methodDesc = this.method.info.tooltip;
+
+            var link = this.options.methodHelpLink;
+            if(this.method.info.module_name) {
+                link = link + this.method.info.id; // TODO: add version here, but we don't have the info stored yet
+            } else {
+                link = link + 'l.m/' + this.method.info.id;
+            }
+
             this.$header = $('<div>').css({'margin-top':'4px'})
                            .addClass('kb-func-desc');
             this.$staticMethodInfo = $('<div>')
@@ -179,7 +187,7 @@ function($,
                               .append($('<h2>')
                                       .attr('id', methodId)
                                       .append(methodDesc +
-                                            ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + this.method.info.id +
+                                            ' &nbsp&nbsp<a href="'+ link +
                                                 '" target="_blank">more...</a>'
                                       ));
              

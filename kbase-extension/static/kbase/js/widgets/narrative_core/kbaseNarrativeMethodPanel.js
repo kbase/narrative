@@ -1006,11 +1006,28 @@ function ($, _, Promise, Config, DisplayUtil) {
                 }
                 return false;
             } else {
-
-                // this is a method
-                console.log(spec)
-
-                return true;
+                // this is a method-- things are easy now because this info is returned by the NMS!
+                // if style==object => check both input and output
+                if(style=='input' || style=='object') {
+                    if(spec.info.input_types) {
+                        for(var k=0; k<spec.info.input_types.length; k++) {
+                            console.log(spec.info.input_types[k].toLowerCase().indexOf(type));
+                            if(spec.info.input_types[k].toLowerCase().indexOf(type) >=0) {
+                                return true;
+                            }
+                        }
+                    }
+                } else if (style=='output' || style=='object') {
+                    if(spec.info.output_types) {
+                        for(var k=0; k<spec.info.output_types.length; k++) {
+                            if(spec.info.output_types[k].toLowerCase().indexOf(type) >=0) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                // not found
+                return false;
             }
         },
 

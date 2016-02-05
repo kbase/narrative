@@ -591,6 +591,15 @@ function ($, _, Promise, Config, DisplayUtil) {
                     }
                     //refresh?
                     //self.refreshFromService(self.currentTag);
+                })
+                .tooltip({
+                    title: 'Add or remove from your favorites',
+                    container: 'body',
+                    placement: 'bottom',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
                 });
             }
 

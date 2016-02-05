@@ -15,6 +15,7 @@
   require(['jquery',
            'narrativeConfig',
            'util/string',
+           'util/display',
            'util/bootstrapDialog',
            'kbwidget',
            'kbaseAuthenticatedWidget',
@@ -24,6 +25,7 @@
   function($, 
            Config,
            StringUtil,
+           DisplayUtil,
            BootstrapDialog) {
     'use strict';
     $.KBWidget({
@@ -323,9 +325,10 @@
                 .closest('.cell')
                 .trigger('set-title.cell', [appTitle]);             
             
+            var $logo = $('<div>').append(DisplayUtil.getAppIcon({isApp:true}));
             this.$elem
                 .closest('.cell')
-                .trigger('set-icon.cell', [Display.getAppIcon({isApp:true}).html()]);
+                .trigger('set-icon.cell', [$logo.html()]);
             
             //require(['kbaseNarrativeCellMenu'], $.proxy(function() {
             //    this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();

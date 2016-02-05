@@ -23,7 +23,7 @@ define([
         'kbaseNarrative',
         'catalog-client-api',
         'bootstrap'], 
-function ($, _, Promise, Config, Display) {
+function ($, _, Promise, Config, DisplayUtil) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
@@ -493,13 +493,13 @@ function ($, _, Promise, Config, Display) {
             var $logo = $('<div>');
 
             if(icon=='A') {
-                $logo.append( Display.getAppIcon({ isApp: true , cursor: 'pointer', setColor:true }) );
+                $logo.append( DisplayUtil.getAppIcon({ isApp: true , cursor: 'pointer', setColor:true }) );
             } else {
                 if(method.info.icon && method.info.icon.url) {
                     var url = this.options.methodStoreURL.slice(0, -3) + method.info.icon.url;
-                    $logo.append( Display.getAppIcon({ url: url , cursor: 'pointer' , setColor:true}) );
+                    $logo.append( DisplayUtil.getAppIcon({ url: url , cursor: 'pointer' , setColor:true}) );
                 } else {
-                    $logo.append( Display.getAppIcon({ cursor: 'pointer' , setColor:true}) );
+                    $logo.append( DisplayUtil.getAppIcon({ cursor: 'pointer' , setColor:true}) );
                 }
             }
             // add behavior
@@ -625,14 +625,14 @@ function ($, _, Promise, Config, Display) {
             if (specSet.methods && specSet.methods instanceof Array) {
                 results.methods = {};
                 // we need to fetch some methods, so don't 
-                this.methClient.get_method_spec({ids: specSet.methods, tag:this.currentTag},
-                        function(specs){
+                this.methClient.get_method_spec({ids: specSet.methods, tag:this.currentTag})
+                        .then(function(specs){
                             for(var k=0; k<specs.length; k++) {
                                 results.methods[specs[k].info.id] = specs[k];
                             }
                             callback(results);
-                        },
-                        function(err) {
+                        })
+                        .catch(function(err) {
                             console.error("Error in method panel on 'getFunctionSpecs' when contacting NMS");
                             console.error(err);
                             callback(results); // still return even if we couldn't get the methods

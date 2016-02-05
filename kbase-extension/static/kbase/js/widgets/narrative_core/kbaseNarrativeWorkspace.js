@@ -328,7 +328,7 @@ function($,
          * @public
          */
         buildMethodCell: function(method) {
-            var cell = Jupyter.notebook.insert_cell_below('markdown');
+            var cell = Jupyter.narrative.insertAndSelectCellBelow('markdown');
             // cell.celltoolbar.hide();
 
             // make this a function input cell, as opposed to an output cell
@@ -336,6 +336,8 @@ function($,
 
             // THIS IS WRONG! FIX THIS LATER!
             // But it should work for now... nothing broke up to this point, right?
+            // basically, we need a count of which cell id this should be.
+            // but since we're using uuids, it should be safe.
             var cellIndex = Jupyter.notebook.ncells() - 1;
             var cellId = 'kb-cell-' + cellIndex + '-' + StringUtil.uuid();
 
@@ -433,7 +435,7 @@ function($,
         },
 
         buildAppCell: function(appSpec) {
-            var cell = Jupyter.notebook.insert_cell_below('markdown');
+            var cell = Jupyter.narrative.insertAndSelectCellBelow('markdown');
             // cell.celltoolbar.hide();
             this.removeCellEditFunction(cell);
 
@@ -2129,11 +2131,10 @@ function($,
          * @param cell - the Jupyter notebook cell to reset.
          */
         resetProgress: function(cell) {
-            var $progressBar = $(cell.element).find("#kb-func-progress .kb-cell-progressbar .progress-bar");
-            $progressBar.css('width', '0%');
-
-            var $progressMsg = $(cell.element).find("#kb-func-progress .text-success");
-            $progressMsg.text("");
+            $(cell.element).find('#kb-func-progress .kb-cell-progressbar .progress-bar')
+                           .css('width', '0%');
+            $(cell.element).find('#kb-func-progress .text-success')
+                           .text('');
         },
 
         /**

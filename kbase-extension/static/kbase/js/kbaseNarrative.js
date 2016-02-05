@@ -524,23 +524,30 @@ function($,
      * is a helper that does so. It then returns the cell object
      * that gets created.
      */
-    Narrative.prototype.insertAndSelectCellBelow = function(cellType) {
+    Narrative.prototype.insertAndSelectCellBelow = function(cellType, index) {
         return this.insertAndSelectCell(cellType, 'below');
     };
 
-    Narrative.prototype.insertAndSelectCellAbove = function(cellType) {
+    Narrative.prototype.insertAndSelectCellAbove = function(cellType, index) {
         return this.insertAndSelectCell(cellType, 'above');
     };
 
-    Narrative.prototype.insertAndSelectCell = function(cellType, direction) {
+    Narrative.prototype.insertAndSelectCell = function(cellType, direction, index) {
         var newCell;
         if (direction === 'below')
-            newCell = Jupyter.notebook.insert_cell_below(cellType);
+            newCell = Jupyter.notebook.insert_cell_below(cellType, index);
         else
-            newCell = Jupyter.notebook.insert_cell_above(cellType);
+            newCell = Jupyter.notebook.insert_cell_above(cellType, index);
         Jupyter.notebook.focus_cell(newCell);
         Jupyter.notebook.select(Jupyter.notebook.find_cell_index(newCell));
+        this.scrollToCell(newCell);
+
         return newCell;
+    };
+
+    Narrative.prototype.scrollToCell = function(cell) {
+        var $elem = $('#notebook-container');
+        $elem.animate({ scrollTop: cell.element.offset().top + $elem.scrollTop() - $elem.offset().top }, 400);
     };
 
     return Narrative;

@@ -71,7 +71,7 @@ function($, Config) {
                     action: function () {
                         var metadata = this.options.cell.metadata,
                             stackTrace = [],
-                            newCell = Jupyter.notebook.insert_cell_below('code', Jupyter.notebook.find_cell_index(this.options.cell));
+                            newCell = Jupyter.narrative.insertAndSelectCell('code', 'below', Jupyter.notebook.find_cell_index(this.options.cell));
                         if (metadata['kb-cell'] && metadata['kb-cell'].stackTrace) {
                             stackTrace = metadata['kb-cell'].stackTrace;
                         }
@@ -106,7 +106,7 @@ function($, Config) {
                 icon: 'fa fa-caret-square-o-up',
                 text: 'Insert Cell Above',
                 action: function () {
-                    Jupyter.notebook.insert_cell_above('markdown');
+                    Jupyter.narrative.insertAndSelectCellAbove('markdown');
                 }
             });
 
@@ -114,7 +114,7 @@ function($, Config) {
                 icon: 'fa fa-caret-square-o-down',
                 text: 'Insert Cell Below',
                 action: function () {
-                    Jupyter.notebook.insert_cell_below('markdown');
+                    Jupyter.narrative.insertAndSelectCellBelow('markdown');
                 }
             });
 

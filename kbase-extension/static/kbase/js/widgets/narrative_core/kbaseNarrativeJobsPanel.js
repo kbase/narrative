@@ -1177,7 +1177,8 @@ function($,
                    .css({'cursor':'pointer'})
                    .click(function(e) {
                        if (sourceId) {
-                           $('html, body').animate({ scrollTop: $('#' + sourceId).offset().top-85 }, 1000);
+                           var cell = Jupyter.narrative.getCellByKbaseId(sourceId);
+                           Jupyter.narrative.scrollToCell(cell);
                            $('#' + sourceId).click();
                        }
                    })

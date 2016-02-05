@@ -578,7 +578,6 @@ function ($, _, Promise, Config, DisplayUtil) {
                         // remove favorite
                         self.catalog.remove_favorite(params)
                             .then(function() {
-                                console.log('removed favorite!  woot!')
                                 $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
                                 method.favorite = null; // important to set this if we don't refresh the panel
                             });
@@ -586,7 +585,6 @@ function ($, _, Promise, Config, DisplayUtil) {
                         // add favorite
                         self.catalog.add_favorite(params)
                             .then(function() {
-                                console.log('added favorite!  woot!')
                                 $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
                                 method.favorite =  new Date().getTime(); // important to set this if we don't refresh the panel
                             });
@@ -1011,7 +1009,6 @@ function ($, _, Promise, Config, DisplayUtil) {
                 if(style=='input' || style=='object') {
                     if(spec.info.input_types) {
                         for(var k=0; k<spec.info.input_types.length; k++) {
-                            console.log(spec.info.input_types[k].toLowerCase().indexOf(type));
                             if(spec.info.input_types[k].toLowerCase().indexOf(type) >=0) {
                                 return true;
                             }

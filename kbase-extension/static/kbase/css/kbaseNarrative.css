@@ -40,7 +40,7 @@
     margin-top: 5px;
     padding-left: 20px;
     border-left: 2px solid #CECECE;
-    display: none;
+    display: block;
 }
 
 .ui-draggable.kb-data-inflight {
@@ -639,6 +639,12 @@ ul.pane-list li {
 
 .kb-method-list-more-div > div:nth-child(2) {
 	text-align: right;
+}
+
+.kb-method-search-clear {
+    cursor: pointer;
+    border: 1px solid #CECECE;
+    border-left: none;
 }
 
 /* A function in the function pane */

@@ -259,6 +259,7 @@ function ($,
                 this.populateAvailableTypes();
                 this.renderList();
                 this.hideLoading();
+                this.trigger('dataUpdated.Narrative');
             }.bind(this));
         },
 
@@ -1189,12 +1190,12 @@ function ($,
                 .append('<span class="fa fa-search"></span>')
                 .on('click', function () {
                     if (!self.$searchDiv.is(':visible')) {
-                        self.$searchDiv.show();
-                        self.$sortByDiv.hide();
-                        self.$filterTypeDiv.hide();
+                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$searchDiv.show({effect: 'blind', duration: 'fast'});
                         self.$searchInput.focus();
                     } else {
-                        self.$searchDiv.hide();
+                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
                     }
                 });
 
@@ -1211,11 +1212,11 @@ function ($,
                 .append('<span class="fa fa-sort-amount-asc"></span>')
                 .on('click', function () {
                     if (!self.$sortByDiv.is(':visible')) {
-                        self.$sortByDiv.show();
-                        self.$searchDiv.hide();
-                        self.$filterTypeDiv.hide();
+                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$sortByDiv.show({effect: 'blind', duration: 'fast'});
                     } else {
-                        self.$sortByDiv.hide();
+                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
                     }
                 });
 
@@ -1232,11 +1233,11 @@ function ($,
                 .append('<span class="fa fa-filter"></span>')
                 .on('click', function () {
                     if (!self.$filterTypeDiv.is(':visible')) {
-                        self.$filterTypeDiv.show();
-                        self.$sortByDiv.hide();
-                        self.$searchDiv.hide();
+                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$filterTypeDiv.show({effect: 'blind', duration: 'fast'});
                     } else {
-                        self.$filterTypeDiv.hide();
+                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
                     }
                 });
             var $refreshBtn = $('<span>')
@@ -1254,6 +1255,7 @@ function ($,
                     self.refresh();
                 });
             self.$searchInput = $('<input type="text">')
+                .attr('Placeholder', 'Search in your data')
                 .addClass('form-control')
                 .on('focus', function () {
                     if (Jupyter && Jupyter.narrative) {
@@ -1284,12 +1286,13 @@ function ($,
                             self.search();
                         })));
 
-            self.$sortByDiv = $('<div>').css({'margin': '3px', 'margin-left': '5px', 'margin-bottom': '10px'})
-                .append("<small>sort by: </small>")
+            self.$sortByDiv = $('<div>').css('text-align', 'center')
+                .append('<small>sort by: </small>')
                 .append($sortByGroup)
                 .append($upOrDown);
 
             self.$filterTypeSelect = $('<select>').addClass("form-control")
+                .css('margin', 'inherit')
                 .append($('<option value="">'))
                 .change(function () {
                     var optionSelected = $(this).find("option:selected");
@@ -1302,7 +1305,7 @@ function ($,
                     self.filterByType(typeSelected);
                 });
 
-            self.$filterTypeDiv = $('<div>').css({'margin': '3px', 'margin-left': '5px', 'margin-bottom': '10px'})
+            self.$filterTypeDiv = $('<div>')
                 .append(self.$filterTypeSelect);
 
             var $header = $('<div>');

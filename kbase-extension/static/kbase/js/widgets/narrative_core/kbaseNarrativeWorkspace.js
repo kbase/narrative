@@ -776,7 +776,7 @@ function($,
                     '#kb-ipy-menu',                         // kernel
                     '.kb-app-panel .pull-right',            // app icons
                     '.kb-func-panel .pull-right',           // method icons
-                    '.celltoolbar .button_container',       // Jupyter icons
+                    '.kb-cell-toolbar .buttons.pull-right',       // Jupyter icons
                     '.kb-title .btn-toolbar .btn .fa-arrow-right', // data panel slideout
             ];
         },

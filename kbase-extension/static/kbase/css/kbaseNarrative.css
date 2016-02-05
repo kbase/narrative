@@ -1264,13 +1264,13 @@ div#notebook_panel {
 }
 
 .kb-function-dim {
-    background-color: #aaa !important;
-    border-color: #aaa !important;
+    background-color: #eee !important;
+    /* border-color: #ddd !important; */
 }
 
 .kb-function-dim .panel-heading {
-    background-color: #444 !important;
-    border-color: #000 !important;
+    background-color: #eee !important;
+    /*border-color: #000 !important; */
 }
 
 .kb-function-cat-dim {
@@ -2262,10 +2262,11 @@ div[class="tooltip-inner"] {
     font-size: 10pt;
     margin: 2px;
     margin-left: 10px;
-    cursor: pointer;
+    /* Not a link anymore, so we disable for now
+    cursor: pointer;*/
 }
 .kb-data-list-narinfo:hover {
-    color:#444;
+    /*color:#444;*/
 }
 
 .kb-data-list-narrative-error {
@@ -2343,6 +2344,27 @@ div[class="tooltip-inner"] {
 
 
 /* end data list*/
+
+
+/* favorites style */
+
+.kbcb-star {
+}
+.kbcb-star-favorite {
+    cursor:pointer;
+    color:orange;
+}
+
+.kbcb-star-nonfavorite {
+    cursor:pointer;
+}
+.kbcb-star-nonfavorite:hover {
+    color:red;
+}
+
+
+
+
 
 /* share panel styles */
 .kb-share-user-permissions-dropdown {

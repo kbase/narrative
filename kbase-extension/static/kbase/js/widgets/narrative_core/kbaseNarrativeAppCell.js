@@ -279,15 +279,15 @@
 
             var $appSubtitleDiv = $("<div>")
                                         .addClass('kb-app-panel-description')
-                                        .append('&nbsp;&nbsp;&nbsp;&nbsp;' + this.appSpec.info.subtitle)
+                                        .append(this.appSpec.info.subtitle)
                                         .append('&nbsp;&nbsp;<a href="'+this.options.appHelpLink+this.appSpec.info.id+'" target="_blank">more...</a>');
             var $appSubmittedStamp = $("<div>");
 
 
             var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, '"')
             var $appHeaderDiv = $("<div>")
-                                        .addClass('kb-app-panel-header')
-                                        .html(headerCleaned);
+                                // .addClass('kb-app-panel-header')
+                                .html(headerCleaned);
 
             // var $menuSpan = $('<div class="pull-right">');
 

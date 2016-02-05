@@ -1660,11 +1660,11 @@ control with padding, and then scooting the icon back into its column.
 
 /* -- App/method panel styling --*/
 
-.kb-app-panel {
-    border:0;
-    border-top: 1px solid #CECECE;
-    border-radius: 1px;
-}
+/*.kb-app-panel {*/
+    /*border:0;*/
+    /*border-top: 1px solid #CECECE;*/
+    /*border-radius: 1px;*/
+/*}*/
 
 .kb-app-error {
     background-color: #F2DEDE;
@@ -1701,7 +1701,6 @@ control with padding, and then scooting the icon back into its column.
     font-size: 12pt;
     line-height: 15px;
     color: #2E618D;
-    margin: 3px;
 }
 .kb-app-step-error-mssg {
    font-family: sans-serif;

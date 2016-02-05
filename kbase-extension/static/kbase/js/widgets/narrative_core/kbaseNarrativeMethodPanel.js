@@ -431,18 +431,18 @@ function ($, _, Promise, Config, DisplayUtil) {
                                         if(self.methodSpecs[lookup]) {
                                             self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
                                         }
-                                        console.log(fav)
                                     }
                                     self.parseMethodsAndApps(self.categories, self.methodSpecs, self.appSpecs);
                                     self.showFunctionPanel();
                                     self.filterList(); // keep the filters
                                 })
+                                /* For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
                                 .catch(function(error) {
                                     console.log('error getting favorites, but probably we can still try and proceed')
                                     self.parseMethodsAndApps(self.categories, self.methodSpecs, self.appSpecs);
                                     self.showFunctionPanel();
                                     self.filterList(); // keep the filters
-                                });
+                                });*/
                 })
                 .catch(function(error) {
                     console.log("error'd!")
@@ -488,8 +488,6 @@ function ($, _, Promise, Config, DisplayUtil) {
                 }
                 fnList.sort(function(a, b) {
                     if(a.favorite && b.favorite) {
-                        console.log(a.info.name, a.info.id, a.favorite)
-                        console.log(b.info.name, b.info.id, b.favorite)
                         if(a.favorite<b.favorite) return 1;
                         if(a.favorite>b.favorite) return -1;
                     }
@@ -501,7 +499,13 @@ function ($, _, Promise, Config, DisplayUtil) {
                 for (var i=0; i<fnList.length; i++) {
                     var $fnElem = self.buildMethod(icon, fnList[i], callback);
                     $fnPanel.append($fnElem);
-                    id2Elem[fnList[i].info.id] = $fnElem;
+                    // need the module name IDs to be lower case in the lookup table
+                    var id = fnList[i].info.id;
+                    if(fnList[i].info.module_name) {
+                        var idTokens = fnList[i].info.id.split('/');
+                        id = idTokens[0].toLowerCase() + '/' + idTokens[1];
+                    }
+                    id2Elem[id] = $fnElem;
                 }
                 return [$fnPanel, id2Elem];
             };
@@ -958,6 +962,7 @@ function ($, _, Promise, Config, DisplayUtil) {
             }
 
             var methodFilter = function(type, spec) {
+                if(!spec.parameters) return false;
                 for (var i=0; i<spec.parameters.length; i++) {
                     var p = spec.parameters[i];
 
@@ -992,7 +997,8 @@ function ($, _, Promise, Config, DisplayUtil) {
             if (spec.steps) {
                 // ignoring apps right now
                 for (var i=0; i<spec.steps.length; i++) {
-                    var methodSpec = this.methodSpecs[spec.steps[i].method_id];  // don't need to make module LC, because this is for apps only
+                    var methodSpec = this.methodSpecs[spec.steps[i].method_id]; // don't need to make module LC, because this is for 
+                                                                                // apps only so specs cannot be in an SDK module
                     if (!methodSpec || methodSpec === undefined || methodSpec === null) {
                     }
                     else if (methodFilter(type, methodSpec))
@@ -1000,7 +1006,11 @@ function ($, _, Promise, Config, DisplayUtil) {
                 }
                 return false;
             } else {
-                return methodFilter(type, spec);
+
+                // this is a method
+                console.log(spec)
+
+                return true;
             }
         },
 
@@ -1032,8 +1042,14 @@ function ($, _, Promise, Config, DisplayUtil) {
             var self = this;
             filterFn = $.proxy(filterFn, this);
             var filterSet = function(set, type) {
+
                 var numHidden = 0;
                 for (var id in set) {
+                    // have to make sure module names are in LC, annoying, I know!
+                    var idTokens = id.split('/');
+                    if(idTokens.length==2) { // has a module name
+                        id = idTokens[0].toLowerCase() + '/' + idTokens[1];
+                    }
                     if (!filterFn(fnInput, set[id])) {
                         self.id2Elem[type][id].hide();
                         self.id2Elem[type][id].addClass('kb-function-dim');

@@ -1264,13 +1264,13 @@ div#notebook_panel {
 }
 
 .kb-function-dim {
-    background-color: #aaa !important;
-    border-color: #aaa !important;
+    background-color: #eee !important;
+    /* border-color: #ddd !important; */
 }
 
 .kb-function-dim .panel-heading {
-    background-color: #444 !important;
-    border-color: #000 !important;
+    background-color: #eee !important;
+    /*border-color: #000 !important; */
 }
 
 .kb-function-cat-dim {

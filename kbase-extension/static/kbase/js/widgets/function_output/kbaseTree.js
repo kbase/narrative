@@ -6,12 +6,14 @@
 
 define(['jquery', 
         'narrativeConfig',
+        'util/string',
         'kbwidget', 
         'kbaseAuthenticatedWidget', 
         'knhx', 
         'widgetMaxWidthCorrection'], 
 function($,
-         Config) {
+         Config,
+         StringUtil) {
     $.KBWidget({
         name: 'kbaseTree',
         parent: 'kbaseAuthenticatedWidget',
@@ -28,12 +30,11 @@ function($,
 
         pref: null,
         timer: null,
-        loadingImage: this.options.loadingImage,
         token: null,
 
         init: function(options) {
             this._super(options);
-            this.pref = this.uuid();
+            this.pref = StringUtil.uuid();
 
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
@@ -198,14 +199,6 @@ function($,
         hideMessage: function() {
             this.$messagePane.hide();
             this.$messagePane.empty();
-        },
-
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
         },
 
         loggedInCallback: function(event, auth) {

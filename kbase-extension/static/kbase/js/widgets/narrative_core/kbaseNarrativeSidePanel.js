@@ -58,7 +58,7 @@ function($, Config) {
             var jobsWidget = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeJobsPanel',
-                    params : { autopopulate: false }
+                    params : { autopopulate: true }
                 }
             ]);
             this.$jobsWidget = jobsWidget['kbaseNarrativeJobsPanel'];
@@ -122,17 +122,7 @@ function($, Config) {
             // toggle off the jobs header
             // omg this is a hack, but i'm out of time.
             this.$tabs.header.find('div:nth-child(3).kb-side-header').toggle(!readOnly);
-            this.$tabs.header.find('div.kb-side-header').css({'width': (readOnly ? '48%' : '33.333%')});
-
-            var $hide_btn = $('<div>')
-                            .attr({id: 'kb-view-mode-narr-hide'})
-                            .append($('<span>')
-                                    .addClass('fa fa-caret-up'))
-                            .css({'width':'4%'})
-                            .click(function() {
-                                minimizeFn();
-                            });
-            this.$tabs.header.prepend($hide_btn);
+            this.$tabs.header.find('div.kb-side-header').css({'width': (readOnly ? '50%' : '33.333%')});
         },
 
         /**
@@ -254,6 +244,7 @@ function($, Config) {
                 this.$narrativeDimmer.show();
                 this.$elem.find('.kb-side-header').addClass('overlay-active');
                 this.$overlay.show('slide', 'fast', $.proxy(function() {
+                    this.trigger('sidePanelOverlayShown.Narrative');
                 }, this));
             }
         },
@@ -264,6 +255,7 @@ function($, Config) {
                 this.$narrativeDimmer.hide();
                 this.$elem.find('.kb-side-header').removeClass('overlay-active');
                 this.$overlay.hide('slide', 'fast', $.proxy(function() {
+                    this.trigger('sidePanelOverlayHidden.Narrative');
                 }, this));
             }
         },

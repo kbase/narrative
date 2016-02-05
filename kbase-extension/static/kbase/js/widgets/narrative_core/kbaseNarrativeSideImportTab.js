@@ -46,6 +46,7 @@ function($,
         infoPanel: null,
         inputWidget: null,      // {methodId -> widget for selected type}
         tabs: null,             // mapping {methodId -> div}
+	fileUploadInProgress: false,
         
         init: function(options) {
             this._super(options);
@@ -256,6 +257,10 @@ function($,
                              .addClass('kb-primary-btn')
                              .append('Cancel');
 
+	    /*
+	     * Invoke btnImport(true) to show the import buttoon and hide cancel,
+	     * or btnImport(false) to show the cancel button and hide import.
+	     */
             var btnImport = function(show) {
                 if (show) {
                     $importButton.show();
@@ -293,6 +298,11 @@ function($,
             
             $cancelButton.click(function() {
                 self.stopTimer();
+		if (self.fileUploadInProgress)
+		{
+		    self.getInputWidget().cancelImport();
+		}
+		    
                 btnImport(true);
                 self.showInfo("Import job was cancelled");
             });
@@ -407,8 +417,10 @@ function($,
                     }
                 }, this));
             }
+            // var w1 = $inputDiv[inputWidgetName];
+            // var wig = w1({ method: methodJson, isInSidePanel: true });
             var wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
-            this.inputWidget[methodId] = wig;
+	    this.inputWidget[methodId] = wig;
             
             var onChange = function() {
                 var w = self.getInputWidget();
@@ -599,286 +611,64 @@ function($,
 
         runImport: function(callback) {
             var self = this;
-            var paramValueArray = this.getInputWidget().getParameters();
-            var params = {};
             var methodId = self.getSelectedTabId();
             var methodSpec = self.methods[methodId];
-            for (var i in methodSpec.parameters) {
-                var paramId = methodSpec.parameters[i].id;
-                var paramValue = paramValueArray[i];
-                params[paramId] = paramValue;
-            }
 
-            var args = null;
+	    /*
+	     * Invoke the runImport method on all parameters that have it.
+	     * Each returns a promise; when all are resolved, proceed to
+	     * process the import transform.
+	     */
 
-            try {
-                var args = this.buildTransformParameters(self.selectedType, methodId, params);
-                var uploaderClient = new Transform(this.uploaderURL, {'token': self.token});
+	    self.fileUploadInProgress = true;
+	    var promise = this.getInputWidget().runImport();
+	    self.showInfo("Transferring files...", true);
+	    promise.then(function(value) {
 
-                if (args) {
-                    console.log("Data to be sent to transform service:");
-                    console.log(args);
+		self.fileUploadInProgress = false;
+		self.showInfo("Files transferred. Creating transform job.", true);
 
-                    self.showInfo("Sending data...", true);
-                    uploaderClient.upload(args,
-                        $.proxy(function(data) {
-                            self.waitForJob(data[1], callback);
-                        }, this),
-                        $.proxy(function(error) {
-                            self.showError(error);
-                            callback(false);
-                        }, this)
-                    );
-                } else {
-                    callback(false);
-                }
-            }
-            catch (error) {
-                self.showError(error);
-            }
-            console.log('test args for import');
-            console.log(testArgs);
+		var paramValueArray = self.getInputWidget().getParameters();
+		var params = {};
+		
+		for (var i in methodSpec.parameters) {
+                    var paramId = methodSpec.parameters[i].id;
+                    var paramValue = paramValueArray[i];
+                    params[paramId] = paramValue;
+		}
 
-            // if (self.selectedType === 'KBaseGenomes.Genome') {
-            //     var url = null;
-            //     if (methodId === 'import_genome_gbk_file') {
-            //         url = self.shockURL + '/node/' + params['gbkFile'];
-            //     } else if (methodId === 'import_genome_gbk_ftp') {
-            //         url = params['ftpFolder'];
-            //     }
-            //     if (url) {
-            //         var options = {};
-            //         if (params['contigObject'] && params['contigObject'].length > 0) {
-            //             options['contigset_object_name'] = params['contigObject'];
-            //         } else {
-            //             options['contigset_object_name'] = params['outputObject'] + '.contigset';
-            //         }
-            //         args = {'external_type': 'Genbank.Genome', 
-            //                 'kbase_type': 'KBaseGenomes.Genome', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':options},
-            //                 'url_mapping': {'Genbank.Genome': url}};
-            //     } else {
-            //         self.showError(methodId + " import mode for Genome type is not supported yet");
-            //     }
-            // } else if (self.selectedType === 'Transcript') {
-            //     if (methodId === 'import_transcript_file') {
-            //         var options = {'dna':self.asInt(params['dna']),
-            //                 "output_file_name": "transcripts.json"};
-            //         var genomeId = params['genomeId'];
-            //         if (genomeId)
-            //             options['genome_id'] = genomeId;
-            //         args = {'external_type': 'FASTA.Transcripts', 
-            //                 'kbase_type': 'KBaseGenomes.Genome', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':options},
-            //                 'url_mapping': {'FASTA.Transcripts': self.shockURL + '/node/' + params['fastaFile']}};
-            //     } else {
-            //         self.showError(methodId + " import mode for Genome type is not supported yet");
-            //     }
-            // } else if (self.selectedType === 'KBaseGenomes.ContigSet') {
-            //     var url = null;
-            //     if (methodId === 'import_contigset_fasta_file') {
-            //         url = self.shockURL + '/node/' + params['fastaFile'];
-            //     } else if (methodId === 'import_contigset_fasta_ftp') {
-            //         url = params['ftpFolder'];
-            //     }
-            //     if (url) {
-            //         args = {'external_type': 'FASTA.DNA.Assembly', 
-            //                 'kbase_type': 'KBaseGenomes.ContigSet', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':
-            //                         {"fasta_reference_only":self.asBool(params['fastaReferenceOnly'])}},
-            //                 'url_mapping': {'FASTA.DNA.Assembly': url}};
-            //     } else {
-            //         self.showError(methodId + " import mode for ContigSet type is not supported yet");
-            //     }
-            // } else if (self.selectedType === 'ShortReads') {
-            //     if (methodId === 'import_reads_fasta_file') {
-            //         var options = {'output_file_name': 'reflib.fasta.json'};
-            //         var refName = params['refname'];
-            //         if (refName)
-            //             options['refname'] = refName;
-            //         args = {'external_type': 'FASTA.DNA.Assembly', 
-            //                 'kbase_type': 'KBaseAssembly.ReferenceAssembly', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':options},
-            //                 'url_mapping': {'FASTA.DNA.Assembly': self.shockURL + '/node/' + params['fastaFile']}};
-            //     } else if (methodId === 'import_reads_pe_fastq_file') {
-            //         var urlMapping = {
-            //             'SequenceReads.1': self.shockURL + '/node/' + params['fastqFile1']
-            //         };
-            //         if (params['fastqFile2'] && params['fastqFile2'].length > 0)
-            //             urlMapping['SequenceReads.2'] = self.shockURL + '/node/' + params['fastqFile2'];
-            //         var options = {
-            //             'outward':self.asInt(params['readOrientationOutward']),
-            //             'output_file_name': 'pelib.fastq.json'
-            //         };
-            //         var optInsert = params['insertSizeMean'];
-            //         if (optInsert)
-            //             options['insert'] = optInsert;
-            //         var optStdev = params['insertSizeStDev'];
-            //         if (optStdev)
-            //             options['stdev'] = optStdev;
-            //         args = {'external_type': 'SequenceReads', 
-            //                 'kbase_type': 'KBaseAssembly.PairedEndLibrary', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':options},
-            //                 'url_mapping': urlMapping};
-            //     } else if (methodId === 'import_reads_se_fastq_file') {
-            //         args = {'external_type': 'SequenceReads', 
-            //                 'kbase_type': 'KBaseAssembly.SingleEndLibrary', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {
-            //                     'validate':{},
-            //                     'transform':{
-            //                         'output_file_name': 'selib.fastq.json'
-            //                     }
-            //                 },
-            //                 'url_mapping': {'SequenceReads': self.shockURL + '/node/' + params['fastqFile']}};
-            //     } else {
-            //         self.showError(methodId + " import mode for ShortReads type is not supported yet");
-            //     }
-            // } else if (self.selectedType === 'KBaseFBA.FBAModel') {
-            //     if (methodId === 'import_fbamodel_csv_file') {
-            //         var options = {};
-            //         var genome = params['genomeObject'];
-            //         if (genome)
-            //             options['genome'] = genome;
-            //         var biomass = params['biomass'];
-            //         if (biomass)
-            //             options['biomass'] = biomass;
-            //         args = {'external_type': 'TSV.FBAModel', 
-            //                 'kbase_type': 'KBaseFBA.FBAModel', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':options},
-            //                 'url_mapping': {
-            //                     'TSV.FBAModel': self.shockURL + '/node/' + params['reactionFile'],
-            //                     'TSV.Compounds': self.shockURL + '/node/' + params['compoundFile']
-            //                 }
-            //         };
-            //     } else if (methodId === 'import_fbamodel_sbml_file') {
-            //         var urlMapping = {'SBML.FBAModel': self.shockURL + '/node/' + params['reactionFile']};
-            //         var compoundFile = params['compoundFile'];
-            //         if (compoundFile)
-            //             urlMapping['TSV.Compounds'] = self.shockURL + '/node/' + compoundFile;
-            //         var options = {};
-            //         var genome = params['genomeObject'];
-            //         if (genome)
-            //             options['genome'] = genome;
-            //         var biomass = params['biomass'];
-            //         if (biomass)
-            //             options['biomass'] = biomass;
-            //         args = {'external_type': 'SBML.FBAModel', 
-            //                 'kbase_type': 'KBaseFBA.FBAModel', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':options},
-            //                 'url_mapping': urlMapping};
-            //     } else if (methodId === 'import_fbamodel_excel_file') {
-            //         var urlMapping = {'Excel.FBAModel': self.shockURL + '/node/' + params['inputFile']};
-            //         var options = {};
-            //         var genome = params['genomeObject'];
-            //         if (genome)
-            //             options['genome'] = genome;
-            //         var biomass = params['biomass'];
-            //         if (biomass)
-            //             options['biomass'] = biomass;
-            //         args = {'external_type': 'Excel.FBAModel', 
-            //                 'kbase_type': 'KBaseFBA.FBAModel', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':options},
-            //                 'url_mapping': urlMapping};
-            //     } else {
-            //         self.showError(methodId + " import mode for FBAModel type is not supported yet");
-            //     }
-            // } else if (self.selectedType === 'KBaseBiochem.Media') {
-            //     if (methodId === 'import_media_csv_file') {
-            //         args = {'external_type': 'TSV.Media', 
-            //                 'kbase_type': 'KBaseBiochem.Media', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':{}},
-            //                 'url_mapping': {'TSV.Media': self.shockURL + '/node/' + params['csvFile']}};
-            //     } else if (methodId === 'import_media_excel_file') {
-            //         args = {'external_type': 'Excel.Media', 
-            //                 'kbase_type': 'KBaseBiochem.Media', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':{}},
-            //                 'url_mapping': {'Excel.Media': self.shockURL + '/node/' + params['inputFile']}};
-            //     } else {
-            //         self.showError(methodId + " import mode for Media type is not supported yet");
-            //     }
-            // } else if (self.selectedType === 'KBasePhenotypes.PhenotypeSet') {
-            //     if (methodId === 'import_phenotypeset_csv_file') {
-            //         var options = {};
-            //         var genome = params['genomeObject'];
-            //         if (genome)
-            //             options['genome'] = genome;
-            //         args = {'external_type': 'TSV.PhenotypeSet', 
-            //                 'kbase_type': 'KBasePhenotypes.PhenotypeSet', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':options},
-            //                 'url_mapping': {'TSV.PhenotypeSet': self.shockURL + '/node/' + params['csvFile']}};
-            //     } else {
-            //         self.showError(methodId + " import mode for PhenotypeSet type is not supported yet");
-            //     }
-            // } else if (self.selectedType === 'KBaseFeatureValues.ExpressionMatrix') {
-            //     if (methodId === 'import_expression_tsv_file') {
-            //         var options = {
-            //                 'format_type': 'Simple',
-            //                 'fill_missing_values': self.asInt(params['fillMissingValues']),
-            //                 'data_type': params['dataType']
-            //         };
-            //         var genome = params['genomeObject'];
-            //         if (genome)
-            //             options['genome_object_name'] = genome;
-            //         var dataScale = params['dataScale'];
-            //         if (dataScale)
-            //             options['data_scale'] = dataScale;
-            //         args = {'external_type': 'TSV.Expression', 
-            //                 'kbase_type': 'KBaseFeatureValues.ExpressionMatrix', 
-            //                 'workspace_name': self.wsName, 
-            //                 'object_name': params['outputObject'],
-            //                 'optional_arguments': {'validate':{},'transform':options},
-            //                 'url_mapping': {'TSV.Expression': self.shockURL + '/node/' + params['expressionFile']}};
-            //     } else {
-            //         self.showError(methodId + " import mode for ExpressionMatrix type is not supported yet");
-            //     }
-            // } else {
-            //     self.showError("Import for [" + self.selectedType + "] type is not supported yet.");
-            // }
-            // if (args) {
-            //     console.log("Data to be sent to transform service:");
-            //     console.log(args);
+		var args = null;
 
-            //     return;
+		try {
+                    var args = self.buildTransformParameters(self.selectedType, methodId, params);
+                    var uploaderClient = new Transform(self.uploaderURL, {'token': self.token});
 
+                    if (args) {
+			console.log("Data to be sent to transform service:");
+			console.log(args);
 
-            //     self.showInfo("Sending data...", true);
-            //     uploaderClient.upload(args,
-            //         $.proxy(function(data) {
-            //             console.log(data);
-            //             self.waitForJob(data[1], callback);
-            //         }, this),
-            //         $.proxy(function(error) {
-            //             self.showError(error);
-            //             callback(false);
-            //         }, this)
-            //     );
-            // } else {
-            //     callback(false);
-            // }
+			self.showInfo("Submitting transform request...", true);
+			uploaderClient.upload(args,
+					      $.proxy(function(data) {
+						  console.log(data);
+						  self.waitForJob(data[1], callback);
+					      }, self),
+					      $.proxy(function(error) {
+						  self.showError(error);
+						  callback(false);
+					      }, self)
+					     );
+                    } else {
+			callback(false);
+                    }
+		}
+		catch (error) {
+                    self.showError(error);
+		}
+	    }, function (reason) {
+		self.showError("File transfer failed: " + reason);
+		self.fileUploadInProgress = false;
+	    });
         },
         
         asBool: function(val) {

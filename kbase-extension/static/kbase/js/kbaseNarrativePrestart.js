@@ -40,8 +40,8 @@ $('#kb-del-btn').click(function(e) {
         Jupyter.notebook.delete_cell();
     }
 });
-$('#kb-jira-btn').attr('href', window.kbconfig.urls.submit_jira_ticket + '%20' + window.kbconfig.version);
-$('#kb-status-btn').attr('href', window.kbconfig.urls.status_page);
+$('#kb-jira-btn').attr('href', Config.url('submit_jira_ticket') + '%20' + Config.get('version'));
+$('#kb-status-btn').attr('href', Config.url('status_page'));
 
 
 
@@ -101,13 +101,8 @@ window.KBFail = function(is_fatal, where, what) {
     }
     code += ")\n";
     // Log the failure
-    try {
+    if (Jupyter.notebook.kernel.is_connected()) {
         Jupyter.notebook.kernel.execute(code, null, {store_history: false});        
-    }
-    catch (err) {
-        // wait half a second and try one more time.
-        console.log(err);
-        setTimeout( function() { Jupyter.notebook.kernel.execute(code, null, {store_history: false}); }, 500 );
     }    
     return true;
 }
@@ -134,16 +129,8 @@ window.KBFatal = function(where, what) {
   'use strict';
   var res = KBFail(true, where, what);
 
-  var version = 'unknown';
-  if (window.kbconfig !== undefined &&
-      window.kbconfig.version !== undefined) {
-    version = window.kbconfig.version;
-  }
-  var hash = 'unkown';
-  if (window.kbconfig !== undefined &&
-    window.kbconfig.git_commit_hash !== undefined) {
-    hash = window.kbconfig.git_commit_hash;
-  }
+  var version = Config.get('version') || 'unknown';
+  var hash = Config.get('git_commit_hash') || 'unknown';
   var full_version = 'unknown';
   if (version != 'unknown') {
     if (hash == 'unknown') {

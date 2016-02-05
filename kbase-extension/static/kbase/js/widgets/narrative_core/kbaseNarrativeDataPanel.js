@@ -19,7 +19,9 @@
  */
 define(['jquery',
         'underscore',
+        'bluebird',
         'narrativeConfig',
+        'util/timeFormat',
         'kbwidget',
         'kbaseNarrative',
         'kbaseNarrativeControlPanel',
@@ -27,7 +29,11 @@ define(['jquery',
         'kbaseNarrativeSidePublicTab',
         'kbaseNarrativeSideImportTab',
         'kbaseNarrativeExampleDataTab'],
-function($, _, Config) {
+function($,
+         _,
+         Promise,
+         Config,
+         TimeFormat) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeDataPanel",
@@ -57,12 +63,13 @@ function($, _, Config) {
         WS_NAME_KEY: 'ws_name', // workspace name, in notebook metadata
         WS_META_KEY: 'ws_meta', // workspace meta (dict), in notebook metadata
         token: null,
-        dataImporterStarted: false,
         dataListWidget: null,
         $myDataHeader: null,
         myDataTempNarrativeMsg: 'Warning! This Narrative is temporary (untitled). '+
             'Data of temporary Narratives is not visible on this tab. Please change '+
             'the name of the Narrative to make it permanent.',
+
+        renderedTabs: [false, false, false, false, false],
 
         init: function(options) {
             this._super(options);
@@ -123,6 +130,14 @@ function($, _, Config) {
                 this)
             );
 
+            $(document).on(
+                'sidePanelOverlayShown.Narrative', function(e) {
+                    // find the index of what tab is being shown.
+                    var idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
+                    this.updateSlideoutRendering(idx);
+                }.bind(this)
+            );
+
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
@@ -161,7 +176,23 @@ function($, _, Config) {
             this.wsClient = new Workspace(this.options.workspaceURL, auth);
             this.isLoggedIn = true;
             if (this.ws_name) {
-                this.dataImporter(this.ws_name);
+                this.importerThing = this.dataImporter(this.ws_name);
+                this.renderFn = [
+                    function() {
+                        this.importerThing.updateView('mine', this.ws_name);
+                    }.bind(this),
+                    function() {
+                        this.importerThing.updateView('shared', this.ws_name);
+                    }.bind(this),
+                    function() {
+                        this.publicTab.render();
+                    }.bind(this),
+                    function() {
+                        this.exampleTab.getExampleDataAndRender();
+                    }.bind(this),
+                    function() {
+                    }.bind(this)
+                ];
             } else {
                 //console.error("ws_name is not defined");
             }
@@ -232,19 +263,6 @@ function($, _, Config) {
             }
         },
 
-        /**
-         * Shows the loading panel and hides all others
-         * @private
-         */
-        showLoadingMessage: function(message) {
-            this.$loadingPanel.find('#message').empty();
-            if (message)
-                this.$loadingPanel.find('#message').html(message);
-            this.$dataPanel.hide();
-            this.$errorPanel.hide();
-            this.$loadingPanel.show();
-        },
-
         buildTabs: function(tabs, isOuter) {
             var $header = $('<div>');
             var $body = $('<div>');
@@ -273,6 +291,8 @@ function($, _, Config) {
                     $body.find('div:nth-child(' + (idx+1) + ').kb-side-tab').addClass('active');
                     if (isOuter)
                         this.hideOverlay();
+
+                    this.updateSlideoutRendering(idx);
                 }
             }, this));
 
@@ -285,17 +305,21 @@ function($, _, Config) {
             };
         },
 
+        updateSlideoutRendering: function(panelIdx) {
+            if (!this.renderedTabs[panelIdx]) {
+                this.renderFn[panelIdx]();
+                this.renderedTabs[panelIdx] = true;
+            }
+        },
+
         /**
          * Renders the data importer panel
          * I'm throwing this here because I have no idea how to
          * bind a sidepanel to a specific widget, since all the other panels "inherit" these widgets.
          */
         dataImporter: function(narWSName) {
-            if (this.dataImporterStarted)
-                return;
-            this.dataImporterStarted = true;
             var self = this;
-            var maxObjFetch = 300000;
+            var maxObjFetch = 100000;
 
             var self = this;
             var user = $("#signin-button").kbaseLogin('session', 'user_id');
@@ -310,12 +334,15 @@ function($, _, Config) {
             }
 
             // models
-            var myData = [], sharedData = [];
+            var myData = [],
+                sharedData = [];
 
-            var myWorkspaces = [], sharedWorkspaces = [];
+            var myWorkspaces = [], 
+                sharedWorkspaces = [];
 
             // model for selected objects to import
-            var mineSelected = [], sharedSelected = [];
+            var mineSelected = [], 
+                sharedSelected = [];
 
             var types = ["KBaseGenomes.Genome",
                          "KBaseGenomes.GenomeAnnotation",
@@ -375,8 +402,6 @@ function($, _, Config) {
                 importPanel = $('<div class="kb-import-content kb-import-import">'),
                 examplePanel = $('<div class="kb-import-content">');
 
-
-
             // add tabs
             var $tabs = this.buildTabs([
                     {tabName: '<small>My Data</small>', content: minePanel},
@@ -387,21 +412,46 @@ function($, _, Config) {
                 ]);
 
 
-            // hack to keep search on top
-
-            this.$myDataHeader = $('<div>');
-            minePanel.append(this.$myDataHeader);
+            // (Bill - 1/29/2016)
+            // Gotta keep this stuff separate for now. Should be factored into 3 widgets:
+            // a parent that maintains structure and data calls, and children that
+            // extend the data calls with different options.
+            //
+            // Honestly, no time. This is ugly, but we have to triage to get to the end of the sprint...
+            var $mineMessageHeader = $('<div>').addClass('alert alert-warning alert-dismissable')
+                                               .append($('<button>')
+                                                       .attr({'type': 'button',
+                                                              'aria-label': 'close',
+                                                       })
+                                                       .addClass('close')
+                                                       .append($('<span aria-hidden="true">&times;</span>'))
+                                                       .click(function() {
+                                                          $mineMessageHeader.slideUp(400);
+                                                       }))
+                                               .append($('<span id="kb-data-panel-msg">'))
+                                               .hide();
+            var $mineContentPanel = $('<div>');
+            var mineLoadingDiv = createLoadingDiv();
             var $mineFilterRow = $('<div class="row">');
-            minePanel.append($mineFilterRow);
-            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
-            setLoading($mineScrollPanel);
-            minePanel.append($mineScrollPanel);
+            var $mineScrollPanel = $('<div>').css({'overflow-x':'hidden','height':'550px','overflow-y': 'auto'});
+            minePanel.append(mineLoadingDiv.loader)
+                     .append($mineContentPanel
+                             .append($mineFilterRow)
+                             .append($mineMessageHeader)
+                             .append($mineScrollPanel));
+            setLoading('mine', true);
 
+            var $sharedMessageHeader = $('<div>').addClass('alert alert-warning alert-dismissable').hide();
+            var $sharedContentPanel = $('<div>');
+            var sharedLoadingDiv = createLoadingDiv();
             var $sharedFilterRow = $('<div class="row">');
-            sharedPanel.append($sharedFilterRow);
-            var $sharedScrollPanel = $('<div>').css({'overflow-x':'hidden','overflow-y':'auto','height':'550px'});
-            setLoading($sharedScrollPanel);
-            sharedPanel.append($sharedScrollPanel);
+            var $sharedScrollPanel = $('<div>').css({'overflow-x': 'hidden', 'height': '550px', 'overflow-y': 'auto'});
+            sharedPanel.append(sharedLoadingDiv.loader)
+                       .append($sharedContentPanel
+                               .append($sharedFilterRow)
+                               .append($sharedMessageHeader)
+                               .append($sharedScrollPanel));
+            setLoading('shared', true);
 
             var body = $('<div>');
             var footer = $('<div>');
@@ -410,337 +460,390 @@ function($, _, Config) {
 
             // add footer status container and buttons
             var importStatus = $('<div class="pull-left kb-import-status">');
-            footer.append(importStatus)
+            footer.append(importStatus);
             var btn = $('<button class="btn btn-primary pull-right" disabled>Add to Narrative</button>').css({'margin':'10px'});
             var closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin':'10px'});
 
-            // Setup the panels that are defined by widgets
 
+            function createLoadingDiv () {
+                var minValue = 5;
+                var $progressBar = $('<div>')
+                                   .addClass('progress-bar progress-bar-striped active')
+                                   .attr({
+                                    'role': 'progressbar',
+                                    'aria-valuenow': minValue,
+                                    'aria-valuemin': '0',
+                                    'aria-valuemax': '100',
+                                   })
+                                   .css({
+                                    'width': minValue + '%',
+                                    'transition': 'none'
+                                   });
+
+                var $loadingDiv = $('<div>')
+                                  .addClass('row')
+                                  .css({margin:'15px', 'margin-left':'35px', 'height':'550px'})
+                                  .append($('<div class="progress">').append($progressBar))
+                                  .hide();
+
+                var setValue = function(value) {
+                    if (value >= minValue) {
+                        $progressBar.css('width', value + '%')
+                                    .attr('aria-valuenow', value);
+                    }
+                }
+
+                var reset = function() {
+                    setValue(minValue);
+                }
+
+                return {
+                    loader: $loadingDiv,
+                    progressBar: $progressBar,
+                    setValue: setValue,
+                    reset: reset
+                };
+            }
+
+            // Setup the panels that are defined by widgets
             // minePanel.kbaseNarrativeMyDataTab({ws_name: this.ws_name});
             // sharedPanel.kbaseNarrativeSharedDataTab({ws_name: this.ws_name});
 
-            publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus, ws_name: this.ws_name});
-            importPanel.kbaseNarrativeSideImportTab({ws_name: this.ws_name});
-            examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus, ws_name: this.ws_name});
+            this.publicTab = publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus, ws_name: this.ws_name});
+            this.importTab = importPanel.kbaseNarrativeSideImportTab({ws_name: this.ws_name});
+            this.exampleTab = examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus, ws_name: this.ws_name});
 
             // It is silly to invoke a new object for each widget
-            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')}
+            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')};
             var ws = new Workspace(this.options.workspaceURL, auth);
-
 
             closeBtn.click(function() {
                 self.trigger('hideSidePanelOverlay.Narrative');
-            })
+            });
             footer.append(closeBtn);
 
             // start with my data, then fetch other data
             // this is because data sets can be large and
             // makes things more fluid
-            updateView('mine').done(function() {
-                updateView('shared')
-            });
 
             var narrativeNameLookup={};
             this.$overlayPanel = body.append(footer);
 
-            function updateView(view) {
-                var p;
-                if (view == 'mine') {
-                    p = getMyWS();
-                } else if (view == 'shared') {
-                    p = getSharedWS();
-                }
-
-                return $.when(p).done(function(workspaces) {
-                    var prom;
-                    if (view == 'mine') {
-                        prom = getMyData(workspaces);
-                    } else if (view == 'shared') {
-                        prom = getSharedData(workspaces);
-                    }
-                    $.when(prom).done(function() {
-                        if (view == 'mine') {
-                           // minePanel.detach();  // arg!! why isn't the filter bar it's own div?
-                           // minePanel.append($mineScrollPanel);
-                            addMyFilters();
-                        } else if(view == 'shared') {
-                          //  minePanel.detach();  // arg!! why isn't the filter bar it's own div?
-                          //  minePanel.append($mineScrollPanel);
-                            addSharedFilters();
-                        }
+            var self = this;
+            function cleanupData(data, view) {
+                return Promise.try(function() {
+                    // data = [].concat.apply([], data);
+                    data.sort(function(a, b) {
+                        if (a[3] > b[3]) return -1;
+                        return 1;
                     });
+                    return data;
                 });
             }
 
-            // function used to update my data list
-            function getMyData(workspaces, type, ws_name) {
-                if (workspaces.length==0) {
-                    render([], $mineScrollPanel, {});
-                    return [];
-                }
-                var params = {includeMetadata:1};
-                var ws_ids = [], obj_count = 0;
-                for (var i in workspaces) {
-                    if ((!ws_name) || (workspaces[i].name === ws_name)) {
-                        if (workspaces[i].id > 0) {
-                            ws_ids.push(workspaces[i].id);
-                            obj_count = workspaces[i].count + obj_count;
-                        } else if (workspaces[i].legacy) {
-                            for (var n in workspaces[i].legacy) {
-                                var w = workspaces[i].legacy[n];
-                                ws_ids.push(w.id);
-                                obj_count = w.count + obj_count;
-                            }
-                        }
-                    }
-                }
-                params.ids = ws_ids;
-
-                if (type) params.type = type;
-
-                if (obj_count > maxObjFetch)
-                    console.error("user's object count for owned workspaces was", obj_count);
-
-                var req_count = Math.ceil(obj_count/10000);
-                
-                var proms = [];
-                proms.push( ws.list_objects(params) );
-                for (var i=1; i < req_count; i++) {
-                    params.skip = 10000 * i;
-                    proms.push( ws.list_objects(params) );
-                }
-                
-                return $.when.apply($, proms).then(function() {
-                    // update model
-                    myData = [].concat.apply([], arguments);
-                    myData.sort(function(a,b) {
-                            if (a[3] > b[3]) return -1; // sort by name
-                            if (a[3] < b[3]) return 1;
-                            return 0;
-                        });
-                    render(myData, $mineScrollPanel, mineSelected);
-                });
-            }
-
-
-            // function used to update shared with me data list
-            function getSharedData(workspaces, type, ws_name) {
-                if (workspaces.length==0) {
-                    render([], $sharedScrollPanel, {});
-                    return null;
-                }
-                var params = {includeMetadata:1};
-                var ws_ids = [], obj_count = 0;
-                for (var i in workspaces) {
-                    if ((!ws_name) || (workspaces[i].name === ws_name)) {
-                        if (workspaces[i].id > 0) {
-                            ws_ids.push(workspaces[i].id);
-                            obj_count = workspaces[i].count + obj_count;
-                        } else if (workspaces[i].legacy) {
-                            for (var n in workspaces[i].legacy) {
-                                var w = workspaces[i].legacy[n];
-                                ws_ids.push(w.id);
-                                obj_count = w.count + obj_count;
-                            }
-                        }
-                    }
-                }
-                params.ids = ws_ids;
-
-                if (type) params.type = type;
-
-                if (obj_count > maxObjFetch)
-                    console.error("user's object count for shared workspaces was", obj_count);
-
-                var req_count = Math.ceil(obj_count/10000);
-
-                var proms = [];
-                proms.push( ws.list_objects(params) );
-                for (var i=1; i < req_count; i++) {
-                    params.skip = 10000 * i;
-                    proms.push( ws.list_objects(params) );
-                }
-
-                return $.when.apply($, proms).then(function() {
-                    // update model
-                    sharedData = [].concat.apply([], arguments);
-
-                    sharedData.sort(function(a,b) {
-                            if (a[3] > b[3]) return -1; // sort by name
-                            if (a[3] < b[3]) return 1;
-                            return 0;
-                        });
-
-                    render(sharedData, $sharedScrollPanel, sharedSelected);
+            function getAndRenderData(view, workspaces, type, specWs, ignoreWs, nameFilter) {
+                return getData(view, workspaces, type, specWs, ignoreWs, nameFilter)
+                .then(function(data) {
+                    return cleanupData(data, view);
                 })
+                .then(function(data) {
+                    if (view === 'mine') {
+                        myData = data;
+                        render(view, myData, $mineScrollPanel, mineSelected);
+                    }
+                    else {
+                        sharedData = data;
+                        render(view, sharedData, $sharedScrollPanel, sharedSelected);
+                    }
+                })
+                .catch(function(error) {
+                    console.error("ERROR while rendering data...", error);
+                });
+            }
+
+            function updateView(view, ignoreWs) {
+                getWorkspaces(view, ignoreWs)
+                .then(function(workspaces) {
+                    if (view === 'mine')
+                        myWorkspaces = workspaces;
+                    else
+                        sharedWorkspaces = workspaces;
+                    return getAndRenderData(view, workspaces, undefined, undefined, ignoreWs, undefined);
+                })
+                .then(function() {
+                    if (view === 'mine')
+                        addFilters(view, myWorkspaces, myData, $mineScrollPanel, $mineFilterRow);
+                    else
+                        addFilters(view, sharedWorkspaces, sharedData, $sharedScrollPanel, $sharedFilterRow);
+                })
+                .catch(function(error) {
+                    console.log('ERROR ', error);
+                });
+            }
+
+            function getWorkspaces(view, ignoreWs) {
+                var getWsInfoParams = {};
+                if (view === 'mine') 
+                    getWsInfoParams.owners = [user];
+                else
+                    getWsInfoParams.excludeGlobal = 1;
+
+                return Promise.resolve(ws.list_workspace_info(getWsInfoParams))
+                .then(function(d) {
+                    var workspaces = [];
+                    var legacyItems = []; // {id:..., name:..., count:...}
+
+                    for (var i in d) {
+                        if ((view === 'shared' && d[i][2] === user) ||
+                            (ignoreWs && d[i][1] === ignoreWs))
+                            continue;
+
+                        // check if current or temporary ws - skip if so.
+                        var isLegacy = false;
+                        if (d[i][8].is_temporary && 
+                            d[i][8].is_temporary === 'true') {
+                            if (d[i][1] === ignoreWs) {
+                                self.currentWsIsTemp();
+                            }
+                            continue;
+                        }
+                        var displayName = d[i][1];
+                        if (d[i][8].narrative && 
+                            d[i][8].narrative_nice_name) {
+                            displayName = d[i][8].narrative_nice_name;
+                        }
+                        else if (d[i][8].show_in_narrative_data_panel &&
+                                 d[i][8].show_in_narrative_data_panel === '1') {
+                            displayName = '(data only) ' + displayName;
+                        }
+                        else {
+                            displayName = 'Legacy (' + displayName + ')';
+                            legacyItems.push({
+                                id: d[i][0],
+                                name: d[i][1],
+                                count: d[i][4]
+                            });
+                            isLegacy = true;
+                        }
+                        if (!isLegacy) {
+                            workspaces.push({
+                                id: d[i][0],
+                                name: d[i][1],
+                                displayName: displayName,
+                                count: d[i][4]
+                            });
+                        }
+
+                        narrativeNameLookup[d[i][1]] = displayName;
+                    }
+                    workspaces.sort(function(a, b) {
+                        // don't really care if they're equal...
+                        if (a.displayName.toUpperCase() < b.displayName.toUpperCase()) return -1;
+                        return 1;
+                    });
+                    if (legacyItems.length > 0) {
+                        workspaces.push({id: -1, name: '#legacy#', displayName: 'Legacy (old version)', count: 0, legacy: legacyItems});
+                    }
+                    return workspaces;
+                }.bind(this));
+            }
+
+            /**
+             * Returns a set of data.
+             * Either uses all workspaces in workspaces array, 
+             * or just the one named wsName.
+             * Also returns only data of the given type, if not undefined
+             */
+            function getData(view, workspaces, type, wsName, ignoreWs, nameFilter) {
+                if (workspaces.length === 0) {
+                    return Promise.try(function() {
+                        return [];
+                    });
+                }
+                var params = { includeMetadata: 1 },
+                    wsIds = [],
+                    objCount = 0,
+                    maxObjCount = 0;
+
+                // first pass, get set of wsids and their counts
+                var wsIdsToCounts = [];
+                for (var i=0; i<workspaces.length; i++) {
+                    var thisWs = workspaces[i];
+
+                    if ((wsName && workspaces[i].name !== wsName) ||
+                        (ignoreWs && workspaces[i].name === ignoreWs))
+                        continue;
+                    // go through the list and add all workspaces to the params
+                    if (thisWs.id > 0 && thisWs.count > 0) {
+                        wsIdsToCounts.push({id: thisWs.id, count: thisWs.count});
+                    }
+                    // go through the legacy list and add those, too
+                    else if (thisWs.legacy) {
+                        for (var n=0; n<thisWs.legacy.length; n++) {
+                            var w = thisWs.legacy[n];
+                            if (w.count > 0) {
+                                wsIdsToCounts.push({id: w.id, count: w.count});
+                            }
+                        }
+                    }
+                }
+
+                if (wsIdsToCounts.length === 0) {
+                    return Promise.try(function() {
+                        return [];
+                    });
+                }
+
+                // sort wsids by their counts in ascending order
+                wsIdsToCounts.sort(function(a, b) {
+                    return a.count - b.count;
+                });
+
+                var newParamSet = function(start) {
+                    var param = {
+                        includeMetadata: 1,
+                        ids: []
+                    };
+                    if (start.type)
+                        param.type = start.type;
+                    if (start.id)
+                        param.ids.push(start.id);
+                    return param;
+                }
+
+                // Construct all data requests below.
+                // This grabs everything into the client for now,
+                // until we have some server-side searching.
+                var paramsList = [],
+                    curParam = newParamSet({type: type}),
+                    curTotal = 0,
+                    maxRequest = 10000,
+                    totalFetch = 0;
+
+                // Set up all possible requests. We'll break out of 
+                // the request loop in below
+                for (var i=0; i<wsIdsToCounts.length; i++) {
+                    var thisWs = wsIdsToCounts[i];
+                    totalFetch += thisWs.count;
+
+                    // if there's room in the request for this
+                    // ws, put it there, and boost the total
+                    if (curTotal + thisWs.count < maxRequest) {
+                        curParam.ids.push(thisWs.id);
+                        curTotal += thisWs.count;
+                    }
+                    // if there isn't room, but ws isn't gonna
+                    // blow over another request size, then
+                    // finish this request and start a new one with
+                    // this ws
+                    else if (thisWs.count < maxRequest) {
+                        paramsList.push(curParam);
+                        curParam = newParamSet({type: type, id: thisWs.id});
+                        curTotal = thisWs.count;
+                    }
+                    // if there isn't room because that's one big
+                    // honker of a workspace, then it gets its
+                    // own set of requests. Yes, this is probably
+                    // kinda inefficient. Don't care.
+                    else if (thisWs.count > maxRequest) {
+                        for (var j=0; j<thisWs.count; j+=maxRequest) {
+                            var newParam = newParamSet({type: type, id: thisWs.id});
+                            newParam.minObjectID = j+1;
+                            newParam.maxObjectID = j+maxRequest;
+                            paramsList.push(newParam);
+                        }
+                    }
+                }
+                // at the tail end, push that last completed param set
+                if (curParam.ids.length > 0)
+                    paramsList.push(curParam);
+
+                if (objCount > maxObjFetch)
+                    console.error("User's object count for owned workspaces was", objCount);
+
+                var headerMessage = '';
+                var requestCounter = 0;
+                return Promise.reduce(paramsList, function (dataList, param) {
+                    requestCounter++;
+                    var progress = Math.floor(requestCounter / paramsList.length * 100);
+                    updateProgress(view, progress);
+                    if (dataList.length >= maxObjFetch) {
+                        return Promise.try(function() {
+                            return dataList;
+                            updateProgress(view, 100);
+                        });
+                    }
+                    else {
+                        return Promise.resolve(ws.list_objects(param))
+                            .then(function (data) {
+                                // filter out Narrative objects.
+                                for (var i=0; i<data.length && dataList.length<maxObjFetch; i++) {
+                                    if (data[i][2].startsWith('KBaseNarrative'))
+                                        continue;
+                                    else
+                                        dataList.push(data[i]);
+                                }
+                                return dataList;
+                            }
+                        );
+                    }
+                }, []);
             }
 
             // This function takes data to render and
             // a container to put data in.
             // It produces a scrollable dataset
-            function render(data, container, selected, template) {
+            function render(view, data, container, selected, template) {
                 var setDataIconTrigger = $._data($(document)[0], "events")["setDataIcon"];
                 if (setDataIconTrigger) {
-                    renderOnIconsReady(data, container, selected, template);
+                    renderOnIconsReady(view, data, container, selected, template);
                 } else {
                     setTimeout(function(){
-                        renderOnIconsReady(data, container, selected, template);
+                        renderOnIconsReady(view, data, container, selected, template);
                     }, 100);
                 }
             }
             
-            function renderOnIconsReady(data, container, selected, template) {
-                var start = 0, end = 30;
+            function renderOnIconsReady(view, data, container, selected, template) {
+                var headerMessage = '';
+                if (data.length >= maxObjFetch) {
+                    headerMessage = "You have access to over <b>" + maxObjFetch + "</b> data objects, so we're only showing a sample. Please use the Types or Narratives selectors above to filter.";
+                }
+                setHeaderMessage(view, headerMessage);
+
+                var start = 0, numRows = 30;
 
                 // remove items from only current container being rendered
                 container.empty();
 
-                if (data.length == 0){
+                if (data.length == 0) {
                     container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
+                    setLoading(view, false);
                     return;
-                } else if (data.length-1 < end)
-                    end = data.length;
+                }
 
-                var rows = buildMyRows(data, start, end, template);
+                var rows = buildMyRows(data, start, numRows, template);
                 container.append(rows);
                 events(container, selected);
 
                 if (rows.children().length==0) {
                     container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'}).append('No data found'));
+                    setLoading(view, false);
                     return;
                 }
 
                 // infinite scroll
-                var currentPos = end;
+                var currentPos = numRows;
                 container.unbind('scroll');
                 container.on('scroll', function() {
-                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight) {
-                        currentPos = currentPos+end;
-                        var rows = buildMyRows(data, currentPos, end, template);
+                    if($(this).scrollTop() + $(this).innerHeight() >= this.scrollHeight && currentPos < data.length) {
+                        var rows = buildMyRows(data, currentPos, numRows, template);
                         container.append(rows);
+                        currentPos += numRows;
                     }
                     events(container, selected);
                 });
-            }
-
-            function getMyWS() {
-                return ws.list_workspace_info({owners: [user]})
-                        .then(function(d) {
-                            var workspaces = [];
-                            var legacyItems = []; // {id:..., name:..., count:...}
-                            for (var i in d) {
-                                if (d[i][8].is_temporary) {
-                                    if (d[i][8].is_temporary === 'true') { 
-                                        if (d[i][1] === self.ws_name) {
-                                            self.currentWsIsTemp();
-                                        }
-                                        continue; 
-                                    }
-                                }
-                                var displayName = d[i][1];
-                                if (d[i][8].narrative) {
-                                    if (d[i][8].narrative_nice_name) {
-                                        displayName = d[i][8].narrative_nice_name;
-                                        // todo: should skip temporary narratives
-                                        workspaces.push({id: d[i][0],
-                                                         name: d[i][1],
-                                                         displayName: displayName,
-                                                         count: d[i][4]});
-                                        narrativeNameLookup[d[i][1]] = displayName;
-                                        continue;
-                                    }
-                                }
-
-                                if (d[i][8].show_in_narrative_data_panel) {
-                                    if(d[i][8].show_in_narrative_data_panel==='1') {
-                                        displayName = "(data only) "+d[i][1];
-                                        workspaces.push({id: d[i][0],
-                                                     name: d[i][1],
-                                                     displayName:displayName,
-                                                     count: d[i][4]});
-                                        narrativeNameLookup[d[i][1]] = displayName;
-                                        continue;
-                                    }
-                                }
-                                
-                                legacyItems.push({id: d[i][0], name: d[i][1], count: d[i][4]});
-                                narrativeNameLookup[d[i][1]] = 'Legacy (' + d[i][1] + ')';
-                            }
-
-                            // add to model for filter
-                            myWorkspaces = workspaces;
-
-                            // sort by name
-                            myWorkspaces.sort(function(a,b) {
-                                    if (a.displayName.toUpperCase() < b.displayName.toUpperCase()) return -1; // sort by name
-                                    if (a.displayName.toUpperCase() > b.displayName.toUpperCase()) return 1;
-                                    return 0;
-                                });
-                            
-                            if (legacyItems.length > 0) {
-                                myWorkspaces.push({id: -1, name: '#legacy#', displayName: 'Legacy (old version)', count: 0, legacy: legacyItems})
-                            }
-                            return workspaces;
-                        })
-            }
-
-            function getSharedWS() {
-                return ws.list_workspace_info({excludeGlobal: 1})
-                        .then(function(d) {
-                            var workspaces = [];
-                            var legacyItems = []; // {id:..., name:..., count:...}
-                            for (var i in d) {
-                                // skip owned workspaced
-                                if (d[i][2] == user) {
-                                    continue;
-                                }
-
-                                if (d[i][8].is_temporary) {
-                                    if (d[i][8].is_temporary === 'true') { continue; }
-                                }
-                                var displayName = d[i][1];
-                                if (d[i][8].narrative) {
-                                    if (d[i][8].narrative_nice_name) {
-                                        displayName = d[i][8].narrative_nice_name;
-                                        // todo: should skip temporary narratives
-                                        workspaces.push({id: d[i][0],
-                                                         name: d[i][1],
-                                                         displayName: displayName,
-                                                         count: d[i][4]});
-                                        narrativeNameLookup[d[i][1]] = displayName;
-                                        continue;
-                                    }
-                                }
-
-                                if (d[i][8].show_in_narrative_data_panel) {
-                                    if(d[i][8].show_in_narrative_data_panel==='1') {
-                                        displayName = "(data only) "+d[i][1];
-                                        workspaces.push({id: d[i][0],
-                                                     name: d[i][1],
-                                                     displayName:displayName,
-                                                     count: d[i][4]});
-                                        narrativeNameLookup[d[i][1]] = displayName;
-                                        continue;
-                                    }
-                                }
-                                
-                                legacyItems.push({id: d[i][0], name: d[i][1], count: d[i][4]});
-                                narrativeNameLookup[d[i][1]] = 'Legacy (' + d[i][1] + ')';
-                            }
-
-                            // add to model for filter
-                            sharedWorkspaces = workspaces;
-                            sharedWorkspaces.sort(function(a,b) {
-                                    if (a.displayName.toUpperCase() < b.displayName.toUpperCase()) return -1; // sort by name
-                                    if (a.displayName.toUpperCase() > b.displayName.toUpperCase()) return 1;
-                                    return 0;
-                                });
-
-                            if (legacyItems.length > 0) {
-                                sharedWorkspaces.push({id: -1, name: '#legacy#', displayName: 'Legacy (old version)', count: 0, legacy: legacyItems})
-                            }
-                            return workspaces;
-                        })
+                setLoading(view, false);
             }
 
             function typeList(data) {
@@ -771,7 +874,7 @@ function($, _, Config) {
 
             function events(panel, selected) {
                 panel.find('.kb-import-item').unbind('click');
-                panel.find('.kb-import-item').click(function(){
+                panel.find('.kb-import-item').click(function() {
                     var item = $(this);
                     var ref = item.data('ref').replace(/\./g, '/');
                     var name = item.data('obj-name');
@@ -819,7 +922,7 @@ function($, _, Config) {
                         selected = [];
 
                         // um... reset events until my rendering issues are solved
-                        events(panel, selected)
+                        events(panel, selected);
                     });
                 });
 
@@ -832,18 +935,24 @@ function($, _, Config) {
                     $(this).find('hr').css('visibility', 'visible');
                     $(this).prev('.kb-import-item').find('hr').css('visibility', 'visible');
                     $(this).find('.kb-import-checkbox').css('opacity', '.4');
-                })
+                });
 
                 // prevent checking when clicking link
                 panel.find('.kb-import-item a').unbind('click');
                 panel.find('.kb-import-item a').click(function(e) {
                     e.stopPropagation();
-                })
+                });
 
             }
 
             function filterData(data, f) {
                 if (data.length == 0) return [];
+                
+                // if we're at our limit for what to load,
+                // then the filter should go against list_objects.
+                // send the filter there and re-render.
+                // ...actually, that won't work because it only 
+                // returns names. no-op for now.
 
                 var filteredData = [];
                 // add each item to view
@@ -886,17 +995,16 @@ function($, _, Config) {
             }
 
 
-            function buildMyRows(data, start, end, template) {
-
+            function buildMyRows(data, start, numRows, template) {
                 // add each set of items to container to be added to DOM
                 var rows = $('<div class="kb-import-items">');
 
-                for (var i=start; i< (start+end); i++) {
+                for (var i=start; i<Math.min(start+numRows, data.length); i++) {
                     var obj = data[i];
                     // some logic is not right
-                    if (!obj) {
-                        continue;
-                    }
+                    // if (!obj) {
+                    //     continue;
+                    // }
                     var mod_type = obj[2].split('-')[0];
                     var item = {id: obj[0],
                                 name: obj[1],
@@ -907,11 +1015,11 @@ function($, _, Config) {
                                 wsID: obj[6],
                                 ws: obj[7],
                                 info: obj, // we need to have this all on hand!
-                                relativeTime: getTimeStampStr(obj[3])} //use the same one as in data list for consistencey  kb.ui.relativeTime( Date.parse(obj[3]) ) }
+                                relativeTime: TimeFormat.getTimeStampStr(obj[3])} //use the same one as in data list for consistencey  kb.ui.relativeTime( Date.parse(obj[3]) ) }
 
-                    if (item.module=='KBaseNarrative') {
-                        continue;
-                    }
+                    // if (item.module=='KBaseNarrative') {
+                    //     continue;
+                    // }
                     if (template)
                         var item = template(item);
                     else
@@ -919,16 +1027,12 @@ function($, _, Config) {
 
                     rows.append(item);
                 }
-
                 return rows;
             }
 
-
-            function addMyFilters() {
-                //var types = typeList(myData);
-                var wsList = myWorkspaces;
-
-                // possible filters via input
+            function addFilters(view, workspaces, data, container, filterContainer) {
+                var wsList = workspaces;
+                // possible filter inputs
                 var type, ws, query;
 
                 // create filter (search)
@@ -945,95 +1049,15 @@ function($, _, Config) {
                 }
                 var wsFilter = $('<div class="col-sm-4">').append(wsInput);
 
-                // event for type dropdown
+                // event for ws dropdown
                 wsInput.change(function() {
                     ws = $(this).children('option:selected').data('name');
                     filterInput.val('');
                     // request again with filted type
-                    setLoading($mineScrollPanel);
-                    getMyData(myWorkspaces, type, ws);
-                })
+                    setLoading(view, true);
 
-                // create type filter
-                var typeInput = $('<select class="form-control kb-import-filter">');
-                typeInput.append('<option>All types...</option>');
-                for (var i=0; i < types.length; i++) {
-                    typeInput.append('<option data-type="'+types[i]+'">'+
-                                          types[i].split('.')[1]+
-                                     '</option>');
-                }
-                var typeFilter = $('<div class="col-sm-3">').append(typeInput);
-
-                // event for type dropdown
-                typeInput.change(function() {
-                    type = $(this).children('option:selected').data('type');
-                    filterInput.val('');
-                    // request again with filted type
-                    //minePanel.loading(); // loading puts the loading image in the wrong place..
-                    setLoading($mineScrollPanel);
-                    getMyData(myWorkspaces, type, ws);
-                })
-
-
-                // event for filter (search)
-                filterInput.keyup(function(e){
-                    query = $(this).val();
-                    setLoading($mineScrollPanel);
-                    var filtered = filterData(myData, {type: type, ws:ws, query:query})
-                    render(filtered, $mineScrollPanel, mineSelected);
+                    getAndRenderData(view, workspaces, type, ws);
                 });
-
-
-                var $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align':'center'}).append(
-                                        $('<button>')
-                                            .css({'margin-top':'12px'})
-                                            .addClass('btn btn-xs btn-default')
-                                            .click(function(event) {
-                                                $mineScrollPanel.empty();
-                                                setLoading($mineScrollPanel);
-                                                updateView('mine').done(function() {
-                                                    updateView('shared'); });
-                                                })
-                                            .append($('<span>')
-                                                .addClass('glyphicon glyphicon-refresh')));
-
-
-                // add search, type, ws filter to dom
-                $mineFilterRow.empty();
-                $mineFilterRow.append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
-                //minePanel.prepend(row);
-            }
-
-            function addSharedFilters() {
-                //var types = typeList(sharedData);
-                var wsList = sharedWorkspaces
-
-                // possible filters via input
-                var type, ws, query;
-
-                // create filter (search)
-                var filterInput = $('<input type="text" class="form-control kb-import-search" placeholder="Search data...">');
-                var searchFilter = $('<div class="col-sm-4">').append(filterInput);
-
-                // create workspace filter
-                var wsInput = $('<select class="form-control kb-import-filter">');
-                wsInput.append('<option>All Narratives...</option>');
-                for (var i=0; i < wsList.length; i++) {
-                    wsInput.append('<option data-id="'+wsList[i].id+'" data-name="'+wsList[i].name+'">'+
-                                          wsList[i].displayName+
-                                    '</option>');
-                }
-                var wsFilter = $('<div class="col-sm-4">').append(wsInput);
-
-                // event for type dropdown
-                wsInput.change(function() {
-                    filterInput.val('');
-                    ws = $(this).children('option:selected').data('name');
-                    // request again with filted type
-                    setLoading($sharedScrollPanel);
-                    getSharedData(sharedWorkspaces, type, ws);
-                })
-
 
                 // create type filter
                 var typeInput = $('<select class="form-control kb-import-filter">');
@@ -1051,38 +1075,36 @@ function($, _, Config) {
                     filterInput.val('');
 
                     // request again with filted type
-                    setLoading($sharedScrollPanel);
-                    getSharedData(sharedWorkspaces, type, ws);
-                })
-
-
-
-                // event for filter (search)
-                filterInput.keyup(function(e){
-                    query = $(this).val();
-                    var filtered = filterData(sharedData, {type: type, ws:ws, query:query})
-                    render(filtered, $sharedScrollPanel, sharedSelected);
+                    setLoading(view, true);
+                    getAndRenderData(view, workspaces, type, ws);
                 });
 
+                // event for filter (search)
+                filterInput.keyup(function(e) {
+                    query = $(this).val();
+                    setLoading(view, true);
+                    var dataToFilter = sharedData;
+                    if (view === 'mine') 
+                        dataToFilter = myData;
+                    var filtered = filterData(dataToFilter, {type: type, ws:ws, query:query})
+                    render(view, filtered, container, []);
+                });
 
                 var $refreshBtnDiv = $('<div>').addClass('col-sm-1').css({'text-align':'center'}).append(
                                         $('<button>')
                                             .css({'margin-top':'12px'})
                                             .addClass('btn btn-xs btn-default')
                                             .click(function(event) {
-                                                $sharedScrollPanel.empty();
-                                                setLoading($sharedScrollPanel);
-                                                updateView('shared').done(function() {
-                                                    updateView('mine'); });
-                                                })
+                                                container.empty();
+                                                setLoading(view, true);
+                                                updateView(view);
+                                            })
                                             .append($('<span>')
                                                 .addClass('glyphicon glyphicon-refresh')));
-
-                // add search, type, ws filter to dom
-                $sharedFilterRow.empty();
-                $sharedFilterRow.append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
-                //sharedPanel.prepend(row);
+                filterContainer.empty()
+                               .append(searchFilter, typeFilter, wsFilter, $refreshBtnDiv);
             }
+
 
             function rowTemplate(obj) {
                 var object_info = obj.info;
@@ -1112,7 +1134,7 @@ function($, _, Config) {
                 var $version = $('<span>').addClass("kb-data-list-version").append('v'+object_info[4]);
                 var $type = $('<span>').addClass("kb-data-list-type").append(type);
 
-                var $date = $('<span>').addClass("kb-data-list-date").append(getTimeStampStr(object_info[3]));
+                var $date = $('<span>').addClass("kb-data-list-date").append(TimeFormat.getTimeStampStr(object_info[3]));
                 var $byUser = $('<span>').addClass("kb-data-list-edit-by");
                 if (object_info[5] !== self.my_user_id) {
                     $byUser.append(' by '+object_info[5])
@@ -1257,75 +1279,55 @@ function($, _, Config) {
                 return $rowWithHr;
             }
 
+            function setHeaderMessage(view, message) {
+                var messageHeader = $sharedMessageHeader;
+                if (view === 'mine') {
+                    messageHeader = $mineMessageHeader;
+                }
+                if (message) {
+                    messageHeader.find('#kb-data-panel-msg').html(message);
+                    messageHeader.show();
+                }
+                else {
+                    messageHeader.hide();
+                }
+            }
+
+            function updateProgress(view, progress) {
+                if (view === 'mine')
+                    mineLoadingDiv.setValue(progress);
+                else
+                    sharedLoadingDiv.setValue(progress);
+            }
+
             // the existing .loading() .rmLoading() puts the loading icon in the wrong place
-            function setLoading($container) {
-                $container.empty();
-                $container.append($('<div>').addClass("kb-data-list-type").css({margin:'15px', 'margin-left':'35px'})
-                                  .append('<img src="' + self.options.loadingImage + '">'));
+            function setLoading(view, show) {
+                var container = $sharedContentPanel,
+                    loader = sharedLoadingDiv;
+                if (view === 'mine') {
+                    container = $mineContentPanel;
+                    loader = mineLoadingDiv;
+                }
+
+                if (show) {
+                    container.hide();
+                    loader.loader.show();
+                }
+                else {
+                    loader.loader.hide();
+                    loader.reset();
+                    container.show();
+                }
             }
 
             function objURL(module, type, ws, name) {
                 return self.options.lp_url+ws+'/'+name;
             }
 
-            var monthLookup = ["Jan", "Feb", "Mar","Apr", "May", "Jun", "Jul", "Aug", "Sep","Oct", "Nov", "Dec"];
-            // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
-            function getTimeStampStr(objInfoTimeStamp) {
-                var date = new Date(objInfoTimeStamp);
-                var seconds = Math.floor((new Date() - date) / 1000);
-
-                // f-ing safari, need to add extra ':' delimiter to parse the timestamp
-                if (isNaN(seconds)) {
-                    var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
-                    var newTimestamp = tokens[0] + '+'+tokens[0].substr(0,2) + ":" + tokens[1].substr(2,2);
-                    date = new Date(newTimestamp);
-                    seconds = Math.floor((new Date() - date) / 1000);
-                    if (isNaN(seconds)) {
-                        // just in case that didn't work either, then parse without the timezone offset, but
-                        // then just show the day and forget the fancy stuff...
-                        date = new Date(tokens[0]);
-                        return monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
-                    }
-                }
-
-                var interval = Math.floor(seconds / 31536000);
-                if (interval > 1) {
-                    return monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
-                }
-                interval = Math.floor(seconds / 2592000);
-                if (interval > 1) {
-                    if (interval<4) {
-                        return interval + " months ago";
-                    } else {
-                        return monthLookup[date.getMonth()]+" "+date.getDate()+", "+date.getFullYear();
-                    }
-                }
-                interval = Math.floor(seconds / 86400);
-                if (interval > 1) {
-                    return interval + " days ago";
-                }
-                interval = Math.floor(seconds / 3600);
-                if (interval > 1) {
-                    return interval + " hours ago";
-                }
-                interval = Math.floor(seconds / 60);
-                if (interval > 1) {
-                    return interval + " minutes ago";
-                }
-                return Math.floor(seconds) + " seconds ago";
+            return {
+                updateView: updateView
             };
         },
-
-        // isCustomIcon: function (icon_list) {
-        //     return (icon_list.length > 0 && icon_list[0].length > 4 &&
-        //     icon_list[0].substring(0, 4) == 'icon');
-        // },
-
-        // logoColorLookup:function(type) {
-        //     var code = 0;
-        //     for (var i=0; i < type.length; code += type.charCodeAt(i++));
-        //     return this.icon_colors[ code % this.icon_colors.length ];
-        // },
 
         currentWsIsTemp: function() {
             this.$myDataHeader.empty();

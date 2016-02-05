@@ -11,7 +11,7 @@ There are four main steps that occur over this whole app/method running process:
   3. Narrative checks job status
   4. Narrative displays results
 
-**General overview of possible points of failure**: ![Narrative failure diagram](./narrative_app_sequence.png)
+**General overview of possible points of failure**: ![Narrative failure diagram](../images/narrative_app_sequence.png)
 
 Most errors that we've come across so far have been in the specs themselves, so I'll start with describing that process.
 
@@ -35,10 +35,10 @@ Now, you can fetch your method or app spec directly:
 This should return a JSON object with your app spec, or an error with a (hopefully!) useful message.
 
 **working example**:
-![Fetch Method spec](./nms_example.png)
+![Fetch Method spec](../images/nms_example.png)
 
 **error example**:
-![Error with Narrative Method](./nms_error.png)
+![Error with Narrative Method](../images/nms_error.png)
 
 
 Most of the rest of the potential errors should show themselves in the Narrative itself as either error cells that occur at App/Method runtime, or as errors in running jobs. I'll outline these below.
@@ -63,7 +63,7 @@ At this point, a developer can also get the document that was sent to the job se
   - 'job_id' is the job id that's registered with the Narrative (a prefix is used to tell the source of that job, since we're not consolidated yet)
 
 **View Job Info example**:
-![Job submission example](./job_info.png)
+![Job submission example](../images/job_info.png)
 
 **3. Narrative checks job status**
 

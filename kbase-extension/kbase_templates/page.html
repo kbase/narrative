@@ -132,7 +132,7 @@
     </div>
     {% endblock %}
 
-    <nav class="navbar-kbase navbar-fixed-top" id="header">
+    <nav class="navbar-kbase navbar-static-top" id="header">
         <div class="container-fluid">
             <div class="navbar-header">
                 <div style="display:inline-block">
@@ -161,7 +161,7 @@
                         <span id="autosave_status"></span>
                     </span>
                 </div>
-                <div>Created by: <span id="kb-narr-creator">KBase User</span>
+                <div>Created by: <span id="kb-narr-creator"></span>
                     <span id="kb-view-mode">
                         <span class="fa fa-pencil"></span>
                     </span>
@@ -171,6 +171,18 @@
             <div class="navbar-right">
                 <span class="kb-navbar-buttons">
                     <div id="kb-notify-area"><div id="notification_area"></div></div>
+
+
+                    <button id="kb-view-only-ctrl" class="btn btn-default navbar-btn kb-nav-btn hidden">
+                        <div class="fa fa-gear"></div>
+                        <div class="kb-nav-btn-txt">controls</div>
+                    </button>
+                    <button id="kb-view-only-copy" class="btn btn-default navbar-btn kb-nav-btn hidden">
+                        <div class="fa fa-copy"></div>
+                        <div class="kb-nav-btn-txt">copy</div>
+                    </button>
+                    <div id="kb-view-only-msg" class="label label-warning hidden">View-only mode</div>
+
                     <button id="kb-update-btn" class="btn btn-default navbar-btn kb-nav-btn kb-nav-btn-upgrade">
                         <div class="fa fa-refresh fa-spin"></div>
                         <div class="kb-nav-btn-txt">Get new version!</div>

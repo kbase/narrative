@@ -4,6 +4,8 @@ require.config({
     // Jupyter does some magic where it merges its /static/ directory
     // with this one (kbase-profile/static)
     paths : {
+        kbaseInputTest                          : 'kbase/js/widgets/function_input/kbaseInputTest',
+        api                                     : 'kbase/js/api',
         bluebird                                : 'ext_components/bluebird/js/browser/bluebird.min',
         plotly                                  : 'ext_components/plotly.js/dist/plotly.min',
         util                                    : 'kbase/js/util/',
@@ -34,7 +36,7 @@ require.config({
         // Non-AMD, still load with Require
         widgetMaxWidthCorrection                : 'kbase/js/widgetMaxWidthCorrection',
         kbapi                                   : 'kbase/js/widgets/kbapi',
-        'kbase-client-api'                      : 'kbase/js/api/kbase-client-api.min',
+        'kbase-client-api'                      : 'kbase/js/api/kbase-client-api',
         'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
         'catalog-client-api'                    : 'kbase/js/api/Catalog',
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
@@ -133,6 +135,8 @@ require.config({
         'KBaseFBA.FBAModelSet'                  : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModelSet',
         'KBaseFBA.FBA'                          : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBA',
         'KBaseFBA.FBAComparison'                : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAComparison',
+        'KBaseFBA.ModelComparison'              : 'kbase/js/widgets/function_output/kbaseFbaModelComparisonNew',
+        'kbaseFbaModelComparisonNew'            : 'kbase/js/widgets/function_output/kbaseFbaModelComparisonNew',
         'KBaseBiochem.Media'                    : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseBiochem.Media',
         'KBasePhenotypes.PhenotypeSet'          : 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSet',
         'KBasePhenotypes.PhenotypeSimulationSet': 'kbase/js/revised-widgets/src/widgets/modeling/KBasePhenotypes.PhenotypeSimulationSet',

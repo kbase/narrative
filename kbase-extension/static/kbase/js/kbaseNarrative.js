@@ -20,7 +20,8 @@ define([
     'ipythonCellMenu',
     'base/js/events',
     'notebook/js/notebook',
-    'util/display'
+    'util/display',
+    'jquery-nearest'
 ], 
 function($,
          Promise,
@@ -82,48 +83,37 @@ function($,
     };
 
     /**
-     * @method
-     * Shows the cell toolbar above the given non-KBase cell (e.g. only
-     * code and markdown cells).
-     * Updates the currently selected cell to be the one passed in.
-     */
-    Narrative.prototype.showJupyterCellToolbar = function(cell) {
-        // tell the toolbar that it is selected. For now, the toolbar is in 
-        // charge.
-        $(cell.element).trigger('select.toolbar');
-    };
-
-    /**
      * Registers Narrative responses to a few Jupyter events - mainly some
      * visual effects for managing when the cell toolbar should be shown, 
      * but it also disables the keyboard manager when KBase cells are selected.
      */
     Narrative.prototype.registerEvents = function() {
-        $([Jupyter.events]).on('status_idle.Kernel',function () {
+        $([Jupyter.events]).on('before_save.Notebook', function() {
+            console.debug('saving');
+            $('#kb-save-btn').find('div.fa-save').addClass('fa-spin');
+        });
+        $([Jupyter.events]).on('notebook_saved.Notebook', function() {
+            console.debug('saved');
+            $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
+        });
+        $([Jupyter.events]).on('kernel_idle.Kernel',function () {
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle-o');
         });
 
-        $([Jupyter.events]).on('status_busy.Kernel',function () {
+        $([Jupyter.events]).on('kernel_busy.Kernel',function () {
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
         });
 
-        $([Jupyter.events]).on('select.Cell', function(event, data) {
-            this.showJupyterCellToolbar(data.cell);
-            if (data.cell.metadata['kb-cell']) {
-                this.disableKeyboardManager();
-            }
-        }.bind(this));
-
         $([Jupyter.events]).on('create.Cell', function(event, data) {
-            this.showJupyterCellToolbar(data.cell);
+            // this.showJupyterCellToolbar(data.cell);
         }.bind(this));
 
         $([Jupyter.events]).on('delete.Cell', function(event, data) {
-            this.showJupyterCellToolbar(Jupyter.notebook.get_selected_cell());
             this.enableKeyboardManager();
         }.bind(this));
 
         $([Jupyter.events]).on('notebook_save_failed.Notebook', function(event, data) {
+            $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
             this.saveFailed(event, data);
         }.bind(this));
 
@@ -320,10 +310,9 @@ function($,
         $('#notebook').append($versionModal);
     };
 
-    Narrative.prototype.saveFailed = function() {
+    Narrative.prototype.saveFailed = function(event, data) {
+        $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
         Jupyter.save_widget.set_save_status('Narrative save failed!');
-        console.log(event);
-        console.log(data);
 
         var errorText;
         // 413 means that the Narrative is too large to be saved.
@@ -401,14 +390,11 @@ function($,
         Jupyter.CellToolbar.global_show();
 
         if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
-            $.each(Jupyter.notebook.get_cells(), function(idx, cell) {
-                cell.celltoolbar.hide();
-            });
+            // $.each(Jupyter.notebook.get_cells(), function(idx, cell) {
+            //     cell.celltoolbar.hide();
+            // });
 
-            var creatorId = Jupyter.notebook.metadata.creator;
-
-            $('.kb-narr-namestamp').css({'display':'block'});
-
+            var creatorId = Jupyter.notebook.metadata.creator || 'KBase User';
             DisplayUtil.displayRealName(creatorId, $('#kb-narr-creator'));
 
             // This puts the cell menu in the right place.
@@ -419,12 +405,15 @@ function($,
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
                 ws_id: this.getWorkspaceName()
             });
-            $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
+            this.narrController.render().finally(function() {
+                $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
+                $('#kb-wait-for-ws').remove();
+            });
         }
         else {
             KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');
+            $('#kb-wait-for-ws').remove();
         }
-        $('#kb-wait-for-ws').remove();
     };
 
     /**
@@ -513,6 +502,21 @@ function($,
 
     Narrative.prototype.lookupUserProfile = function(username) {
         return displayUtil.lookupUserProfile(username);
+    };
+
+    /**
+     * A little bit of a riff on the Jupyter "find_cell_index". 
+     * Every KBase-ified cell (App, Method, Output) has a unique identifier.
+     * This can be used to find the closest cell element - its index is the 
+     * Jupyter cell index (inferred somewhat from find_cell_index which calls 
+     * get_cell_elements, which does this searching).
+     */
+    Narrative.prototype.getCellIndexByKbaseId = function(id) {
+        return $('#' + id).nearest('.cell').not('.cell .cell').index();
+    };
+
+    Narrative.prototype.getCellByKbaseId = function(id) {
+        return Jupyter.notebook.get_cell(this.getCellIndexByKbaseId(id));
     };
 
     return Narrative;

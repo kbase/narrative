@@ -15,6 +15,7 @@
   require(['jquery',
            'narrativeConfig',
            'util/string',
+           'util/bootstrapDialog',
            'kbwidget',
            'kbaseAuthenticatedWidget',
            'kbaseAccordion',
@@ -22,7 +23,8 @@
            ], 
   function($, 
            Config,
-           StringUtil) {
+           StringUtil,
+           BootstrapDialog) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeAppCell",
@@ -49,8 +51,7 @@
         $runButton: null,
         $stopButton: null,
 
-        $errorModal: null,
-        $errorModalContent:null,
+        errorDialog: null,
 
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
 
@@ -72,6 +73,11 @@
             this._super(options);
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
+            this.errorDialog = new BootstrapDialog({
+                title: 'Problems exist in your parameter settings.',
+                buttons: [$('<button type="button" data-dismiss="modal">').addClass('btn btn-default').append('Dismiss')],
+                closeButton: true
+            });
 
             this.options.appSpec = this.options.appSpec.replace(/\n/g, '');
             this.appSpec = JSON.parse(this.options.appSpec);
@@ -88,7 +94,6 @@
                 },
                 step: { }
             };
-            this.initErrorModal();
 
             this.fetchMethodInfo();
 
@@ -198,7 +203,7 @@
 
                                       event.preventDefault();
                                       this.trigger('runApp.Narrative', {
-                                          cell: Jupyter.notebook.get_selected_cell(),
+                                          cell: Jupyter.narrative.getCellByKbaseId(this.cellId),
                                           appSpec: this.appSpec,
                                           methodSpecs: this.methodSpecs,
                                           parameters: this.getParameters()
@@ -595,15 +600,15 @@
          * returns true if everything is valid and we can start, false if there were errors
          */
         startAppRun: function(ignoreValidCheck) {
-            var self = this;
             if (ignoreValidCheck) {
                 //code
             } else {
-                var v = self.validateParameters();
+                var v = this.validateParameters();
                 // Take these action if the app input is not valid?
                 if (!v.isValid) {
                     var errorCount = 1;
-                    self.$errorModalContent.empty();
+                    var $errorDiv = $('<div>');
+
                     for(var k=0; k<v.stepErrors.length; k++) {
                         var $errorStep = $('<div>');
                         $errorStep.append($('<div>').addClass("kb-app-step-error-heading").append('Errors in Step '+v.stepErrors[k].stepNum+':'));
@@ -611,17 +616,18 @@
                             $errorStep.append($('<div>').addClass("kb-app-step-error-mssg").append('['+errorCount+']: ' + v.stepErrors[k].errormssgs[e]));
                             errorCount = errorCount+1;
                         }
-                        self.$errorModalContent.append($errorStep);
+                        $errorDiv.append($errorStep);
                         KBError("App::" + this.appSpec.info.name, "errors=" + errorCount);
                     }
-                    self.$errorModal.modal('show');
+                    this.errorDialog.setBody($errorDiv);
+                    this.errorDialog.show();
                     return false;
                 }
             }
-            self.prepareDataBeforeRun();
-            self.$submitted.show();
-            self.$runButton.hide();
-            self.$stopButton.show();
+            this.prepareDataBeforeRun();
+            this.$submitted.show();
+            this.$runButton.hide();
+            this.$stopButton.show();
             if (this.inputSteps) {
                 for(var i=0; i<this.inputSteps.length; i++) {
                     this.inputSteps[i].widget.lockInputs();
@@ -1021,25 +1027,6 @@
 
         /** end methods for setting the app state based on the job status **/
 
-        initErrorModal: function() {
-            var self=this;
-            var errorModalId = "app-error-modal-"+ StringUtil.uuid();
-            var modalLabel = "app-error-modal-lablel-"+ StringUtil.uuid();
-            self.$errorModalContent = $('<div>');
-            self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true">').addClass("modal fade");
-            self.$errorModal.append(
-                $('<div>').addClass('modal-dialog').append(
-                    $('<div>').addClass('modal-content').append(
-                        $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" id="'+modalLabel+'">Problems exist in your parameter settings.</h4>')
-                    ).append(
-                       $('<div>').addClass('modal-body').append(self.$errorModalContent)
-                    ).append(
-                        $('<div>').addClass('modal-footer').append(
-                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
-                    )
-                ));
-            self.$elem.append(self.$errorModal);
-        },
 
         /**
          * Refreshes the input widget according to its own method.

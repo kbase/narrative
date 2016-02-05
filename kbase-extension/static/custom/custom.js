@@ -710,7 +710,6 @@ define(['jquery',
                     d.find('input[type="text"]').focus().select();
                 }
             });
-
         };
 
         // Kickstart the Narrative loading routine once the notebook is loaded.

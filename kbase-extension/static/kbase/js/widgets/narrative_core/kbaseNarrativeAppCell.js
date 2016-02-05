@@ -289,23 +289,23 @@
                                         .addClass('kb-app-panel-header')
                                         .html(headerCleaned);
 
-            var $menuSpan = $('<div class="pull-right">');
+            // var $menuSpan = $('<div class="pull-right">');
 
             // Controls (minimize)
-            var $controlsSpan = $('<div>').addClass("pull-left");
-            var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
-                        .css({color: "#888", fontSize: "14pt", cursor:'pointer', paddingTop: "7px", margin: "5px"});
-            $controlsSpan.append($minimizeControl);
+            // var $controlsSpan = $('<div>').addClass("pull-left");
+            // var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
+            //             .css({color: "#888", fontSize: "14pt", cursor:'pointer', paddingTop: "7px", margin: "5px"});
+            // $controlsSpan.append($minimizeControl);
 
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
-                             .append($controlsSpan)
-                             .append($menuSpan)
+                             // .append($controlsSpan)
+                             // .append($menuSpan)
                              .append($('<div>')
                                         .addClass('panel-heading')
                                         .append($('<div>').addClass('app-panel-heading')
-                                                   .append($('<div>')
-                                                           .append($('<h1><b>' + appTitle + '</b></h1>')))
+                                                   // .append($('<div>')
+                                                           // .append($('<h1><b>' + appTitle + '</b></h1>')))
                                                    .append($appSubtitleDiv)
                                                    .append($appSubmittedStamp)))
                              .append($('<div>')

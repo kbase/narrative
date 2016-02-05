@@ -37,7 +37,7 @@ function($, Config) {
 
             var $collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle"><span class="fa fa-chevron-down"></button>')
                 .on('click', function () {
-                    self.$elem.trigger('toggle.toolbar');                    
+                    self.$elem.trigger('toggle.toolbar');
                 });
 
             var cell = this.options.cell;
@@ -283,17 +283,15 @@ function($, Config) {
             this.$elem.append(
                 $('<div class="kb-cell-toolbar container-fluid">')
                 .append($('<div class="row">')
-                    .append($('<div class="col-md-1">')
+                    .append($('<div class="col-sm-8">')
                         .append($('<div class="buttons pull-left">')
                             .append($collapseBtn)
                         )
-                    )
-                    .append($('<div class="col-md-7">')
-                        .append($('<div class="title pull-left">')
+                        .append($('<div class="title">')
                             .append('<span data-element="title" class="title"></span>') // title here
                         )
                     )
-                    .append($('<div class="col-md-4">')
+                    .append($('<div class="col-sm-4">')
                         .append($('<div class="buttons pull-right">')
                             .append(this.$runningIcon)
                             .append(this.$errorIcon)

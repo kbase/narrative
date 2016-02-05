@@ -545,9 +545,13 @@ function($,
         return newCell;
     };
 
-    Narrative.prototype.scrollToCell = function(cell) {
+    Narrative.prototype.scrollToCell = function(cell, select) {
         var $elem = $('#notebook-container');
         $elem.animate({ scrollTop: cell.element.offset().top + $elem.scrollTop() - $elem.offset().top }, 400);
+        if (select) {
+            Jupyter.notebook.focus_cell(cell);
+            Jupyter.notebook.select(Jupyter.notebook.find_cell_index(cell));
+        }
     };
 
     return Narrative;

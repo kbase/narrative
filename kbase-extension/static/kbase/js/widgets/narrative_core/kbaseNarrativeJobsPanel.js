@@ -1178,8 +1178,7 @@ function($,
                    .click(function(e) {
                        if (sourceId) {
                            var cell = Jupyter.narrative.getCellByKbaseId(sourceId);
-                           Jupyter.narrative.scrollToCell(cell);
-                           $('#' + sourceId).click();
+                           Jupyter.narrative.scrollToCell(cell, true);
                        }
                    })
                    .tooltip();

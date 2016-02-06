@@ -391,20 +391,23 @@ function($, Config) {
                         var type = this.options.cell.metadata['kb-cell']['type'];
                         var $kbCell = $(this.options.cell.element).find('[id^=kb-cell]');
                         if ($kbCell) {
-                            console.log("got a kbase cell");
-                            console.log($kbCell);
                             switch(type) {
                                 case 'kb_app':
                                     this.$subtitle.html($kbCell.kbaseNarrativeAppCell('getSubtitle'));
                                     break;
                                 case 'kb_error':
-                                    this.$subtitle.html('ERROR!');
+                                    this.$subtitle.html('An error has occurred in this cell!');
                                     break;
                                 case 'function_output':
                                     this.$subtitle.html($kbCell.kbaseNarrativeOutputCell('getSubtitle'));
                                     break;
                                 case 'function_input':
-                                    this.$subtitle.html($kbCell.kbaseNarrativeMethodCell('getSubtitle'));
+                                    // console.log($kbCell.kbaseNarrativeMethodCell('getSubtitle'));
+                                    console.log($kbCell);
+                                    console.log('getting method cell subtitle');
+                                    $kbCell.trigger('get_cell_subtitle.Narrative', function(text) {
+                                        this.$subtitle.html(text);
+                                    }.bind(this));
                                     break;
                                 default:
                                     break;

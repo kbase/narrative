@@ -62,9 +62,14 @@ function($,
         init: function(options) {
             this._super(options);
 
+            console.log("INITIALIZING METHOD CELL");
+            console.log(options);
+
             this.options.method = this.options.method.replace(/\n/g, '');
             this.method = JSON.parse(this.options.method);
             this.cellId = this.options.cellId;
+
+            this.$dynamicMethodSummary = $('<div>');
 
             this.errorDialog = new BootstrapDialog({
                 title: 'Problems exist in your parameter settings.',
@@ -73,6 +78,9 @@ function($,
             });
 
             this.methClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
+            this.on('get_cell_subtitle.Narrative', function(e, callback) {
+                callback(this.getSubtitle());
+            }.bind(this));
             this.render();
             return this;
         },
@@ -81,6 +89,7 @@ function($,
          * Renders this cell and its contained input widget.
          */
         render: function() {
+            console.log("I'ma go head and render.");
             self = this;
             this.$inputDiv = $('<div>');
             this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
@@ -99,7 +108,7 @@ function($,
                     if (!this.checkMethodRun())
                         return;
 
-                    this.submittedText = '&nbsp;&nbsp; submitted on ' + this.readableTimestamp();
+                    this.submittedText = 'submitted on ' + this.readableTimestamp();
                     if(this.auth()) {
                         if(this.auth().user_id)
                             this.submittedText += ' by <a href="/#people/'+this.auth().user_id
@@ -182,7 +191,6 @@ function($,
              
             this.$header.append(this.$staticMethodInfo);
 
-            this.$dynamicMethodSummary = $('<div>');
             this.$header.append(this.$dynamicMethodSummary);
 
             // Controls (minimize)
@@ -207,8 +215,6 @@ function($,
                                       .css({'overflow' : 'hidden'})
                                       .append($buttons));
 
-//             this.cellMenu = $menuSpan.kbaseNarrativeCellMenu({'kbWidget':this, 'kbWidgetType':'method'});
-            var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
             this.$elem.append(this.$cellPanel);
 
             // Add minimize/restore actions.
@@ -351,6 +357,7 @@ function($,
             }
             else
                 this.$inputWidget.loadState(state);
+            this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', this.getSubtitle());
         },
 
         /* Show/hide running icon */
@@ -800,6 +807,12 @@ function($,
             this.changeState('complete', null, data.result);
         },
 
+        getSubtitle: function () {
+            if (this.submittedText && !this.isAwaitingInput()) {
+                return this.submittedText;
+            }
+            return "Not yet submitted.";
+        },
 
         updateDynamicMethodSummaryHeader: function() {
             var self = this;

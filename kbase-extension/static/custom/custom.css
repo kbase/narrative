@@ -78,6 +78,10 @@ div.cell.selected {
     -webkit-box-shadow: 3px 3px 3px #aaa;
 }
 
+div.cell.selected.kb-error {
+    border: 1px solid #d9534f;
+    border-left: 5px solid #d9534f;
+}
 input.raw_input {
     /*height:auto;*/
 }

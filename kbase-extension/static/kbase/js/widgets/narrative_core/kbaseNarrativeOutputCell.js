@@ -81,6 +81,7 @@
                     this.renderCell('kb-cell-error', 'panel-danger', 'kb-err-desc', $label);
                     var $cell = this.$elem.closest('.cell');
                     $cell.trigger('set-icon.cell', ['<i class="fa fa-2x fa-exclamation-triangle error-icon"></i>']);
+                    $cell.addClass('kb-error');
                 }, this));
             },
             renderCell: function (baseClass, panelClass, headerClass, $label, titleSuffix) {

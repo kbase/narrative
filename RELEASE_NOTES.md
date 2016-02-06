@@ -5,6 +5,7 @@ This is built on the IPython Notebook (more notes will follow).
 
 ### Version 1.1.0
 __Changes__
+- Added "Edit and Re-Run" button to method cells that have already been run.
 - Updated 'filtered' in method panel to 'filtered out'.
 - Added uploaders for Feature-Value pair data.
 - Added viewers for BLAST output.

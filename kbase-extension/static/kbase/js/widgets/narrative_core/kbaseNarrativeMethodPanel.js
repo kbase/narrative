@@ -11,14 +11,19 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define(['jquery',
+define([
+        'jquery', 
+        'underscore',
+        'bluebird',
         'narrativeConfig',
+        'util/display',
         'kbwidget',
         'kbaseAccordion',
         'kbaseNarrativeControlPanel',
         'kbaseNarrative',
+        'catalog-client-api',
         'bootstrap'], 
-function ($, Config) {
+function ($, _, Promise, Config, DisplayUtil) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
@@ -29,7 +34,10 @@ function ($, Config) {
             autopopulate: true,
             title: 'Apps & Methods',
             methodStoreURL: Config.url('narrative_method_store'),
-            methodHelpLink: '/#narrativestore/method/'
+            catalogURL: Config.url('catalog'),
+            moduleLink: '/#appcatalog/module/',
+            methodHelpLink: '/#appcatalog/app/',
+            appHelpLink: '/#appcatalog/app/l.a/'
         },
         ignoreCategories: {
             inactive : 1,
@@ -40,6 +48,8 @@ function ($, Config) {
         methodSpecs: {},  // id -> spec
         appSpecs: {},     // id -> spec
         categories: {},   // id -> category info
+
+        currentTag: null, // release/dev/beta; which version of the method spec to fetch.  default is release
 
         /**
          * This private method is automatically called when the widget is initialized.
@@ -59,6 +69,8 @@ function ($, Config) {
             // DOM structure setup here.
             // After this, just need to update the function list
 
+            this.currentTag = 'release';
+
             this.icon_colors = Config.get('icons').colors;
 
             this.$searchDiv = $('<div>')
@@ -71,19 +83,7 @@ function ($, Config) {
                                 .attr('Placeholder', 'Search methods')
                                 .on('input',
                                     $.proxy(function(e) {
-                                        var txt = this.$searchInput.val().trim().toLowerCase();
-                                        if (txt.indexOf("type:") === 0) {
-                                            this.visualFilter(this.objectTypeFilter, txt.substring(5));
-                                        }
-                                        else if (txt.indexOf("in_type:") === 0) {
-                                            this.visualFilter(this.inputTypeFilter, txt.substring(8));
-                                        }
-                                        else if (txt.indexOf("out_type:") === 0) {
-                                            this.visualFilter(this.outputTypeFilter, txt.substring(9));
-                                        }
-                                        else {
-                                            this.visualFilter(this.textFilter, txt);
-                                        }
+                                        this.filterList();
                                     }, this)
                                 )
                                 .on('focus',
@@ -215,7 +215,7 @@ function ($, Config) {
                     //console.debug("Trigger proxy: specSet=", specSet, "callback=", callback);
                     if (callback) {
                         //console.debug("Trigger: specSet=",specSet);
-                        callback(this.getFunctionSpecs(specSet));
+                        this.getFunctionSpecs(specSet, callback);
                     }
                 }, this)
             );
@@ -285,12 +285,13 @@ function ($, Config) {
                                     this.refreshFromService(versionTag);
                                 }.bind(this)));
 
-            if (!NarrativeMethodStore) {
-                this.showError('Unable to connect to KBase Method Store!');
+            if (!NarrativeMethodStore || !Catalog) {
+                this.showError('Unable to connect to the Catalog or NMS!');
                 return this;
             }
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
+            this.catalog = new Catalog(this.options.catalogURL, { token: this.auth().token });
 
             if (this.options.autopopulate === true) {
                 this.refresh();
@@ -298,6 +299,25 @@ function ($, Config) {
 
             return this;
         },
+
+
+        filterList: function() {
+            var txt = this.$searchInput.val().trim().toLowerCase();
+            if (txt.indexOf("type:") === 0) {
+                this.visualFilter(this.objectTypeFilter, txt.substring(5));
+            }
+            else if (txt.indexOf("in_type:") === 0) {
+                this.visualFilter(this.inputTypeFilter, txt.substring(8));
+            }
+            else if (txt.indexOf("out_type:") === 0) {
+                this.visualFilter(this.outputTypeFilter, txt.substring(9));
+            }
+            else {
+                this.visualFilter(this.textFilter, txt);
+            }
+        },
+
+
 
         initMethodTooltip: function() {
             this.help = {};
@@ -361,52 +381,88 @@ function ($, Config) {
         // },
 
         refreshFromService: function(versionTag) {
+            var self = this;
             this.showLoadingMessage("Loading KBase Methods from service...");
 
             var filterParams = {};
             if (versionTag) {
                 filterParams['tag'] = versionTag;
+                this.currentTag = versionTag;
             }
 
-            var methodProm = this.methClient.list_methods_spec(filterParams,
-                $.proxy(function(methods) {
-                    this.methodSpecs = {};
-                    for (var i=0; i<methods.length; i++) {
-                        this.methodSpecs[methods[i].info.id] = methods[i];
-                    }
-                }, this)
-            );
-            var appProm = this.methClient.list_apps_spec({},
-                $.proxy(function(apps) {
-                    this.appSpecs = {};
-                    for (var i=0; i<apps.length; i++) {
-                        this.appSpecs[apps[i].info.id] = apps[i];
-                    }
-                }, this)
-            );
-            var catProm = this.methClient.list_categories({},
-                $.proxy(function(categories) {
-                    this.categories = categories[0];
-                }, this)
-            );
+            var loadingCalls = [];
+            loadingCalls.push(self.methClient.list_methods(filterParams)
+                                .then(function(methods) {
+                                    self.methodSpecs = {};
+                                    self.methodInfo = {};
+                                    for (var i=0; i<methods.length; i++) {
+                                        // key should have LC module name if an SDK method
+                                        if(methods[i].module_name) {
+                                            var idTokens = methods[i].id.split('/');
+                                            self.methodSpecs[idTokens[0].toLowerCase() + '/' + idTokens[1]] = {info:methods[i]};
+                                        } else {
+                                            self.methodSpecs[methods[i].id] = {info:methods[i]};
+                                        }
+                                    }
+                                }));
 
-            $.when(methodProm, appProm, catProm).done($.proxy(function(a, b, c) {
-                // console.log([this.appSpecs, this.methodSpecs, this.categories]);
-                this.parseMethodsAndApps(this.categories, this.methodSpecs, this.appSpecs);
-                this.showFunctionPanel();
-            }, this));
+            loadingCalls.push(self.methClient.list_apps_spec({})
+                                .then(function(apps) {
+                                    self.appSpecs = {};
+                                    for (var i=0; i<apps.length; i++) {
+                                        self.appSpecs[apps[i].info.id] = apps[i];
+                                    }
+                                }));
+            loadingCalls.push(self.methClient.list_categories({})
+                                .then(function(categories) {
+                                    self.categories = categories[0];
+                                }));
 
-            $.when(methodProm, appProm).fail($.proxy(function(error) {
-                console.log("error'd!")
-                console.log(error);
-                this.showError(error);
-            }, this));
+            Promise.all(loadingCalls)
+                .then(function() {
+                    return self.catalog.list_favorites(self.auth().user_id)
+                                .then(function(favs) {
+                                    for(var k=0; k<favs.length; k++) {
+                                        var fav = favs[k];
+                                        var lookup = fav.id;
+                                        if(fav.module_name_lc != 'nms.legacy') {
+                                            lookup = fav.module_name_lc + '/' + lookup
+                                        }
+                                        if(self.methodSpecs[lookup]) {
+                                            self.methodSpecs[lookup]['favorite'] = fav.timestamp; // this is when this was added as a favorite
+                                        }
+                                    }
+                                    self.parseMethodsAndApps(self.categories, self.methodSpecs, self.appSpecs);
+                                    self.showFunctionPanel();
+                                    self.filterList(); // keep the filters
+                                })
+                                /* For some reason this is throwing a Bluebird error to include this error handler, but I don't know why right now -mike
+                                .catch(function(error) {
+                                    console.log('error getting favorites, but probably we can still try and proceed')
+                                    self.parseMethodsAndApps(self.categories, self.methodSpecs, self.appSpecs);
+                                    self.showFunctionPanel();
+                                    self.filterList(); // keep the filters
+                                });*/
+                })
+                .catch(function(error) {
+                    console.log("error'd!")
+                    console.log(error);
+                    self.showError(error);
+                });
         },
 
         parseMethodsAndApps: function(catSet, methSet, appSet) {
             var self = this;
             var triggerMethod = function(method) {
-                self.trigger('methodClicked.Narrative', method);
+                if(!method['spec']) {
+                    self.methClient.get_method_spec({ids:[method.info.id],tag:self.currentTag})
+                        .then(function(spec){
+                            // todo: cache this sped into the methods list
+                            self.trigger('methodClicked.Narrative', spec);
+                        });
+                } else {
+                    self.trigger('methodClicked.Narrative', method);
+                }
             };
 
             var triggerApp = function(app) {
@@ -424,24 +480,37 @@ function ($, Config) {
                             ignoreFlag = true;
                         }
                     }
+
                     if (ignoreFlag)
                         delete fnSet[fn];
                     else
                         fnList.push(fnSet[fn]);
                 }
                 fnList.sort(function(a, b) {
+                    if(a.favorite && b.favorite) {
+                        if(a.favorite<b.favorite) return 1;
+                        if(a.favorite>b.favorite) return -1;
+                    }
+                    if(a.favorite) return -1;
+                    if(b.favorite) return 1;
+
                     return a.info.name.localeCompare(b.info.name);
                 });
                 for (var i=0; i<fnList.length; i++) {
                     var $fnElem = self.buildMethod(icon, fnList[i], callback);
                     $fnPanel.append($fnElem);
-                    id2Elem[fnList[i].info.id] = $fnElem;
+                    // need the module name IDs to be lower case in the lookup table
+                    var id = fnList[i].info.id;
+                    if(fnList[i].info.module_name) {
+                        var idTokens = fnList[i].info.id.split('/');
+                        id = idTokens[0].toLowerCase() + '/' + idTokens[1];
+                    }
+                    id2Elem[id] = $fnElem;
                 }
                 return [$fnPanel, id2Elem];
             };
 
             this.methodSet = {};
-
             var methodRender = generatePanel(catSet, methSet, 'M', triggerMethod);
             var $methodPanel = methodRender[0];
             this.id2Elem['method'] = methodRender[1];
@@ -450,7 +519,7 @@ function ($, Config) {
             var $appPanel = appRender[0];
             this.id2Elem['app'] = appRender[1];
 
-            this.$methodList.empty().append($appPanel).append($methodPanel);
+            this.$methodList.empty().append($methodPanel).append($appPanel);
             //console.log([Object.keys(this.appSpecs).length, Object.keys(this.methodSpecs).length]);
         },
 
@@ -466,16 +535,73 @@ function ($, Config) {
          * @private
          */
         buildMethod: function(icon, method, triggerFn) {
+            var self = this;
             // add icon (logo)
             var $logo = $('<div>');
-            this.trigger('setMethodIcon.Narrative',
-                         {elt: $logo, is_app: icon == 'A'});
+
+            if(icon=='A') {
+                $logo.append( DisplayUtil.getAppIcon({ isApp: true , cursor: 'pointer', setColor:true }) );
+            } else {
+                if(method.info.icon && method.info.icon.url) {
+                    var url = this.options.methodStoreURL.slice(0, -3) + method.info.icon.url;
+                    $logo.append( DisplayUtil.getAppIcon({ url: url , cursor: 'pointer' , setColor:true, size:'50px'}) )
+                        .css('padding', '3px');
+                } else {
+                    $logo.append( DisplayUtil.getAppIcon({ cursor: 'pointer' , setColor:true}) );
+                }
+            }
             // add behavior
             $logo.click($.proxy(
                 function(e) {
                     e.stopPropagation();
                     triggerFn(method);
                 }, this));
+
+            var $star = $('<i>');
+            if(icon=='M') {
+                if(method.favorite) {
+                    $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;')
+                } else {
+                    $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
+                }
+                $star.on('click', function() {
+                    event.stopPropagation();
+                    var params = {};
+                    if(method.info.module_name) {
+                        params['module_name'] = method.info.module_name;
+                        params['id'] = method.info.id.split('/')[1]
+                    } else {
+                        params['id'] = method.info.id;
+                    }
+
+                    if(method.favorite) {
+                        // remove favorite
+                        self.catalog.remove_favorite(params)
+                            .then(function() {
+                                $star.removeClass('kbcb-star-favorite').addClass('kbcb-star-nonfavorite');
+                                method.favorite = null; // important to set this if we don't refresh the panel
+                            });
+                    } else {
+                        // add favorite
+                        self.catalog.add_favorite(params)
+                            .then(function() {
+                                $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite');
+                                method.favorite =  new Date().getTime(); // important to set this if we don't refresh the panel
+                            });
+                    }
+                    //refresh?
+                    //self.refreshFromService(self.currentTag);
+                })
+                .tooltip({
+                    title: 'Add or remove from your favorites',
+                    container: 'body',
+                    placement: 'bottom',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                });
+            }
 
             var $name = $('<div>')
                         .addClass('kb-data-list-name')
@@ -485,11 +611,23 @@ function ($, Config) {
                                         e.stopPropagation();
                                         triggerFn(method);
                                     }, this)));
-            var versionStr = 'v'+method.info.ver;
-            if (method.info.namespace)
-                versionStr = '[' + method.info.namespace + '] ' + versionStr;
-            var $version = $('<span>').addClass("kb-data-list-type").append(versionStr); // use type because it is a new line
+            var versionStr = 'v'+method.info.ver; // note that method versions are meaningless right now; need to update!
+            if (method.info.module_name) {
+                versionStr = '<a href="'+this.options.moduleLink+'/'+method.info.module_name+'" target="_blank">' + 
+                                method.info.namespace + '</a> ' + versionStr;
+            }
+            var $version = $('<span>').addClass("kb-data-list-type").append($star).append(versionStr); // use type because it is a new line
 
+            var moreLink = '';
+            if(icon==='M') {
+                if(method.info.module_name) {
+                    moreLink = this.options.methodHelpLink + method.info.id + '/' + this.currentTag;
+                } else {
+                    moreLink = this.options.methodHelpLink + 'l.m/' + method.info.id;
+                }
+            } else if(icon==='A') {
+                moreLink = this.options.appHelpLink + method.info.id;
+            }
             var $more = $('<div>')
                         .addClass('kb-method-list-more-div')
                         .append($('<div>')
@@ -498,7 +636,7 @@ function ($, Config) {
                                 .append($('<a>')
                                         .append('more...')
                                         .attr('target', '_blank')
-                                        .attr('href', this.options.methodHelpLink + method.info.id)));
+                                        .attr('href', moreLink)));
 
             var $moreBtn =
                     $('<button class="btn btn-xs btn-default pull-right" aria-hidden="true">')
@@ -566,9 +704,10 @@ function ($, Config) {
          *
          * If a spec isn't found, then it won't appear in the return values.
          */
-        getFunctionSpecs: function(specSet) {
+        getFunctionSpecs: function(specSet, callback) {
             //console.debug("getFunctionSpecs(specSet=",specSet,")");
             var results = {};
+            // handle legacy apps; we already have the specs
             if (specSet.apps && specSet.apps instanceof Array) {
                 results.apps = {};
                 for (var i=0; i<specSet.apps.length; i++) {
@@ -576,18 +715,27 @@ function ($, Config) {
                         results.apps[specSet.apps[i]] = this.appSpecs[specSet.apps[i]];
                 }
             }
+            // handle methods, we now have to fetch the specs since we don't keep them around
             if (specSet.methods && specSet.methods instanceof Array) {
-              results.methods = _.pick(this.methodSpecs, specSet.methods);
-              /*
                 results.methods = {};
-                for (var i=0; i < specSet.methods.length; i++) {
-                    if (this.methodSpecs[specSet.methods[i]])
-                        results.methods[specSet.methods[i]] = this.methodSpecs[specSet.methods[i]];
-                }
-              */
+                // we need to fetch some methods, so don't 
+                this.methClient.get_method_spec({ids: specSet.methods, tag:this.currentTag})
+                        .then(function(specs){
+                            for(var k=0; k<specs.length; k++) {
+                                results.methods[specs[k].info.id] = specs[k];
+                            }
+                            callback(results);
+                        })
+                        .catch(function(err) {
+                            console.error("Error in method panel on 'getFunctionSpecs' when contacting NMS");
+                            console.error(err);
+                            callback(results); // still return even if we couldn't get the methods
+                        });
+
+            } else {
+                // there were no methods to fetch, so return
+                callback(results);
             }
-            //console.debug("getFunctionSpecs returning:",results);
-            return results;
         },
 
         logoColorLookup:function(type) {
@@ -783,15 +931,15 @@ function ($, Config) {
          */
         textFilter: function(pattern, method) {
             var lcName = method.info.name.toLowerCase();
-            var namespace = '';
-            if (method.info.namespace) {
-                namespace = method.info.namespace.toLowerCase();
+            var module_name = '';
+            if (method.info.module_name) {
+                module_name = method.info.module_name.toLowerCase();
             }
             // match any token in the query, not the full string
             var tokens = pattern.toLowerCase().split(' ');
             for(var k=0; k<tokens.length; k++) {
                 if(lcName.indexOf(tokens[k]) < 0 &&
-                   namespace.indexOf(tokens[k]) < 0) {
+                   module_name.indexOf(tokens[k]) < 0) {
                     // token not found, so we return false
                     return false;
                 }
@@ -821,6 +969,7 @@ function ($, Config) {
             }
 
             var methodFilter = function(type, spec) {
+                if(!spec.parameters) return false;
                 for (var i=0; i<spec.parameters.length; i++) {
                     var p = spec.parameters[i];
 
@@ -855,7 +1004,8 @@ function ($, Config) {
             if (spec.steps) {
                 // ignoring apps right now
                 for (var i=0; i<spec.steps.length; i++) {
-                    var methodSpec = this.methodSpecs[spec.steps[i].method_id];
+                    var methodSpec = this.methodSpecs[spec.steps[i].method_id]; // don't need to make module LC, because this is for 
+                                                                                // apps only so specs cannot be in an SDK module
                     if (!methodSpec || methodSpec === undefined || methodSpec === null) {
                     }
                     else if (methodFilter(type, methodSpec))
@@ -863,7 +1013,27 @@ function ($, Config) {
                 }
                 return false;
             } else {
-                return methodFilter(type, spec);
+                // this is a method-- things are easy now because this info is returned by the NMS!
+                // if style==object => check both input and output
+                if(style=='input' || style=='object') {
+                    if(spec.info.input_types) {
+                        for(var k=0; k<spec.info.input_types.length; k++) {
+                            if(spec.info.input_types[k].toLowerCase().indexOf(type) >=0) {
+                                return true;
+                            }
+                        }
+                    }
+                } else if (style=='output' || style=='object') {
+                    if(spec.info.output_types) {
+                        for(var k=0; k<spec.info.output_types.length; k++) {
+                            if(spec.info.output_types[k].toLowerCase().indexOf(type) >=0) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                // not found
+                return false;
             }
         },
 
@@ -895,8 +1065,14 @@ function ($, Config) {
             var self = this;
             filterFn = $.proxy(filterFn, this);
             var filterSet = function(set, type) {
+
                 var numHidden = 0;
                 for (var id in set) {
+                    // have to make sure module names are in LC, annoying, I know!
+                    var idTokens = id.split('/');
+                    if(idTokens.length==2) { // has a module name
+                        id = idTokens[0].toLowerCase() + '/' + idTokens[1];
+                    }
                     if (!filterFn(fnInput, set[id])) {
                         self.id2Elem[type][id].hide();
                         self.id2Elem[type][id].addClass('kb-function-dim');

@@ -15,6 +15,7 @@
   require(['jquery',
            'narrativeConfig',
            'util/string',
+           'util/display',
            'util/bootstrapDialog',
            'kbwidget',
            'kbaseAuthenticatedWidget',
@@ -24,6 +25,7 @@
   function($, 
            Config,
            StringUtil,
+           DisplayUtil,
            BootstrapDialog) {
     'use strict';
     $.KBWidget({
@@ -36,8 +38,8 @@
             loadingImage: Config.get('loading_gif'),
             methodStoreURL: Config.url('narrative_method_store'),
 
-            appHelpLink: '/#narrativestore/app/',
-            methodHelpLink: '/#narrativestore/method/'
+            appHelpLink: '/#appcatalog/app/l.a/',
+            methodHelpLink: '/#appcatalog/app/l.m/' // apps cannot have SDK methods, so always add the legacy module id
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -333,10 +335,10 @@
                 .closest('.cell')
                 .trigger('set-title.cell', [appTitle]);             
             
-            var appIcon = '<div class="fa-stack fa-2x"><i class="fa fa-square fa-stack-2x app-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cubes"></i></div>';
+            var $logo = $('<div>').append(DisplayUtil.getAppIcon({isApp:true}));
             this.$elem
                 .closest('.cell')
-                .trigger('set-icon.cell', [appIcon]);
+                .trigger('set-icon.cell', [$logo.html()]);
             
             //require(['kbaseNarrativeCellMenu'], $.proxy(function() {
             //    this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();

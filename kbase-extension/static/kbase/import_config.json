@@ -54,6 +54,61 @@
         },        
     },
 
+    "KBaseGenomeAnnotations.GenomeAnnotation" : {
+        "import_genomeaannotation_gbk_file" : {
+            "external_type" : "Genbank.Genome",
+            "kbase_type" : "KBaseGenomeAnnotations.GenomeAnnotation",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {
+                    "contigset_object_name" : {
+                        "type" : "string",
+                        "param" : "contigObject",
+                        "optional" : false,
+                        "default" : {
+                            "param" : "outputObject",
+                            "suffix" : ".contigset"
+                        }
+                    }
+                }
+            },
+            "url_mapping" : {
+                "Genbank.Genome" : {
+                    "type" : "shock",
+                    "param" : "gbkFile",
+                    "optional" : false
+                }
+            }
+        },
+        "import_genomeannotation_gbk_ftp" : {
+            "external_type" : "Genbank.Genome",
+            "kbase_type" : "KBaseGenomeAnnotations.GenomeAnnotation",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {
+                    "contigset_object_name" : {
+                        "type" : "string",
+                        "param" : "contigObject",
+                        "optional" : false,
+                        "default" : {
+                            "param" : "outputObject",
+                            "suffix" : ".contigset"
+                        }
+                    }
+                }
+            },
+            "url_mapping" : {
+                "Genbank.Genome" : {
+                    "type" : "string",
+                    "param" : "ftpFolder",
+                    "optional" : false
+                }
+            }
+        },        
+    },
+
     "Transcript" : {
         "import_transcript_file" : {
             "external_type" : "FASTA.Transcripts",
@@ -89,6 +144,53 @@
         }
     },
     
+    "KBaseGenomeAnnotations.Assembly" : {
+        "import_assembly_fasta_file" : {
+            "external_type" : "FASTA.DNA.Assembly",
+            "kbase_type" : "KKBaseGenomeAnnotations.Assembly",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {
+                    "fasta_reference_only" : {
+                        "type" : "boolean",
+                        "param" : "fastaReferenceOnly",
+                        "optional" : false
+                    }
+                }
+            },
+            "url_mapping" : {
+                "FASTA.DNA.Assembly" : {
+                    "type" : "shock",
+                    "param" : "fastaFile",
+                    "optional" : false
+                }
+            }
+        },
+        "import_assembly_fasta_ftp" : {
+            "external_type" : "FASTA.DNA.Assembly",
+            "kbase_type" : "KBaseGenomeAnnotations.Assembly",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {
+                    "fasta_reference_only" : {
+                        "type" : "boolean",
+                        "param" : "fastaReferenceOnly",
+                        "optional" : false
+                    }
+                }
+            },
+            "url_mapping" : {
+                "FASTA.DNA.Assembly" : {
+                    "type" : "string",
+                    "param" : "ftpFolder",
+                    "optional" : false
+                }
+            }
+        }
+    },
+
     "KBaseGenomes.ContigSet" : {
         "import_contigset_fasta_file" : {
             "external_type" : "FASTA.DNA.Assembly",

@@ -14,6 +14,7 @@ require(['jquery',
          'narrativeConfig',
          'util/string',
          'util/bootstrapDialog',
+         'util/display',
          'handlebars', 
          'kbwidget', 
          'kbaseAuthenticatedWidget',
@@ -24,7 +25,8 @@ require(['jquery',
 function($, 
          Config,
          StringUtil,
-         BootstrapDialog) {
+         BootstrapDialog,
+         Display) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",
@@ -33,7 +35,8 @@ function($,
         options: {
             method: null,
             cellId: null,
-            methodHelpLink: '/#/narrativestore/method/'
+            methodHelpLink: '/#appcatalog/app/',
+            methodStoreURL: Config.url('narrative_method_store')
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -174,6 +177,14 @@ function($,
             var methodId = this.options.cellId + '-method-details-'+StringUtil.uuid();
             var buttonLabel = 'details';
             var methodDesc = this.method.info.tooltip;
+
+            var link = this.options.methodHelpLink;
+            if(this.method.info.module_name) {
+                link = link + this.method.info.id; // TODO: add version here, but we don't have the info stored yet
+            } else {
+                link = link + 'l.m/' + this.method.info.id;
+            }
+
             this.$header = $('<div>').css({'margin-top':'4px'})
                            .addClass('kb-func-desc');
             this.$staticMethodInfo = $('<div>')
@@ -181,7 +192,7 @@ function($,
                               .append($('<h2>')
                                       .attr('id', methodId)
                                       .append(methodDesc +
-                                            ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + this.method.info.id +
+                                            ' &nbsp&nbsp<a href="'+ link +
                                                 '" target="_blank">more...</a>'
                                       ));
              
@@ -233,11 +244,17 @@ function($,
                 .closest('.cell')
                 .trigger('set-title.cell', [self.method.info.name]); 
             
-            var methodIcon = '<div class="fa-stack fa-2x"><i class="fa fa-square fa-stack-2x method-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cube"></i></div>';
-            
+            var $logo = $('<div>');
+            if(this.method.info.icon && this.method.info.icon.url) {
+                var url = this.options.methodStoreURL.slice(0, -3) + this.method.info.icon.url;
+                $logo.append( Display.getAppIcon({url: url}) );
+            } else {
+                $logo.append( Display.getAppIcon({}) );
+            }
+
             this.$elem
                 .closest('.cell')
-                .trigger('set-icon.cell', [methodIcon]);
+                .trigger('set-icon.cell', [$logo.html()]);
 
             require([inputWidgetName], 
               $.proxy(function() {
@@ -591,15 +608,40 @@ function($,
             var $infoTable = $('<table class="table table-bordered">')
                     .append(makeInfoRow('Job Id', jobId))
                     .append(makeInfoRow('Status', statusText));
+            if (jobState && jobState.state) {
+                var state = jobState.state;
+                var creationTime = state.start_timestamp;
+                var execStartTime = null;
+                var finishTime = null;
+                var posInQueue = null;
+                console.log(state.step_stats);
+                if (state.step_stats) {
+                    for (var key in state.step_stats) {
+                        if (state.step_stats.hasOwnProperty(key)) {
+                            var stats = state.step_stats[key];
+                            console.log(key, stats);
+                            if (stats['creation_time'])
+                                creationTime = stats['creation_time'];
+                            execStartTime = stats['exec_start_time'];
+                            finishTime = stats['finish_time'];
+                            posInQueue = stats['pos_in_queue'];
+                        }
+                    }
+                }
+                if (creationTime)
+                    $infoTable.append(makeInfoRow('Submitted', this.readableTimestamp(creationTime)));
+                if (creationTime && execStartTime)
+                    $infoTable.append(makeInfoRow('Time in queue', ((execStartTime - creationTime) / 1000.0) + " sec."));
+                if (posInQueue)
+                    $infoTable.append(makeInfoRow('Position in queue', posInQueue));
+                if (execStartTime)
+                    $infoTable.append(makeInfoRow('Execution Started', this.readableTimestamp(execStartTime)));
+                if (finishTime)
+                    $infoTable.append(makeInfoRow('Execution Finished', this.readableTimestamp(finishTime)));
+                if (execStartTime && finishTime)
+                    $infoTable.append(makeInfoRow('Execution Time', ((finishTime - execStartTime) / 1000.0) + " sec."));
+            }
             
-            if (jobState && jobState.state && jobState.state.start_timestamp)
-                $infoTable.append(makeInfoRow('Submitted', this.readableTimestamp(jobState.state.start_timestamp)));
-            
-            $infoTable.append(makeInfoRow('Time in queue', 'Unknown'))
-                    .append(makeInfoRow('Position in queue', 'Unknown'))
-                    .append(makeInfoRow('Execution Started', 'Unknown'))
-                    .append(makeInfoRow('Execution Finished', 'Unknown'))
-                    .append(makeInfoRow('Execution Time', 'Unknown'));
 
             return $infoTable;
         },
@@ -859,6 +901,7 @@ function($,
           // fetch full info, which contains suggested next steps
           var params = {ids: [this.method.info.id]};
           var result = {};
+          var self = this;
           this.methClient.get_method_full_info(params,
             $.proxy(function(info_list) {
               var sugg = info_list[0].suggestions;
@@ -866,9 +909,11 @@ function($,
               this.trigger('getFunctionSpecs.Narrative', [params,
                 function(specs) { render_cb(specs); }]);
             }, this),
-            function() {
+            function(error) {
+              console.error(error, "method=", self.method);
               KBError("kbaseNarrativeMethodCell.getNextSteps",
                        "Could not get full info for method: " + self.method.info.id);
+              render_cb();
             });
         },
 

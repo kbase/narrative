@@ -62,9 +62,6 @@ function($,
         init: function(options) {
             this._super(options);
 
-            console.log("INITIALIZING METHOD CELL");
-            console.log(options);
-
             this.options.method = this.options.method.replace(/\n/g, '');
             this.method = JSON.parse(this.options.method);
             this.cellId = this.options.cellId;
@@ -89,7 +86,6 @@ function($,
          * Renders this cell and its contained input widget.
          */
         render: function() {
-            console.log("I'ma go head and render.");
             self = this;
             this.$inputDiv = $('<div>');
             this.$submitted = $('<span>').addClass("kb-func-timestamp").hide();
@@ -181,7 +177,7 @@ function($,
             this.$header = $('<div>').css({'margin-top':'4px'})
                            .addClass('kb-func-desc');
             this.$staticMethodInfo = $('<div>')
-                              .append('<h1><b>OOOOHHH YEEEAAAHHH!! ' + this.method.info.name + '</b></h1>')
+                              .append('<h1><b>' + this.method.info.name + '</b></h1>')
                               .append($('<h2>')
                                       .attr('id', methodId)
                                       .append(methodDesc +
@@ -364,15 +360,8 @@ function($,
         displayRunning: function(is_running, had_error) {
             var $cellMenu = this.$elem.closest('.cell').find('.button_container');
             if (is_running) {
-                // var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
                 $cellMenu.trigger('runningIndicator.toolbar', {enabled: true});
                 $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
-                //console.log('displayRunning: ');
-                //console.log(cellMenu);
-                
-                //this.cellMenu.$runningIcon.show();
-                // never show error icon while running
-                // this.cellMenu.$errorIcon.hide();
             } else {
                 $cellMenu.trigger('runningIndicator.toolbar', {enabled: false});
                 if (had_error) {
@@ -381,16 +370,6 @@ function($,
                     $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
 
                 }
-
-                
-                
-//                var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
-//                console.log('displayRunning: ');
-//                console.log(cellMenu);
-//                this.cellMenu.$runningIcon.hide();
-//                // only display error when not running
-//                if (had_error) { this.cellMenu.$errorIcon.show(); }
-//                else { this.cellMenu.$errorIcon.hide(); }
             }
         },
 

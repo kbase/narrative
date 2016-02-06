@@ -19,7 +19,6 @@ function($, Config) {
             return 'kbaseNarrativeCellMenu_' + this.lastId;
         },
         init: function (options) {
-            console.debug('initing cell menu');
             var self = this;
             this._super(options);
 
@@ -399,12 +398,11 @@ function($, Config) {
                                     this.$subtitle.html('An error has occurred in this cell!');
                                     break;
                                 case 'function_output':
-                                    this.$subtitle.html($kbCell.kbaseNarrativeOutputCell('getSubtitle'));
+                                    // this.$subtitle.html($kbCell.kbaseNarrativeOutputCell('getSubtitle'));
                                     break;
                                 case 'function_input':
-                                    // console.log($kbCell.kbaseNarrativeMethodCell('getSubtitle'));
-                                    console.log($kbCell);
-                                    console.log('getting method cell subtitle');
+                                    // doing this more declarative causes some funky rendering issues.
+                                    // we need some better message passing, I think.
                                     $kbCell.trigger('get_cell_subtitle.Narrative', function(text) {
                                         this.$subtitle.html(text);
                                     }.bind(this));

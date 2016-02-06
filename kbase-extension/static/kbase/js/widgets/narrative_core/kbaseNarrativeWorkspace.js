@@ -218,11 +218,6 @@ function($,
                     this.setDataIcon(param.elt, param.type);
                 }.bind(this)
             );
-            $(document).on('setMethodIcon.Narrative',
-                function (e, param) {
-                    this.setMethodIcon(param.elt, param.is_app);
-                }.bind(this)
-            );
 
             // Refresh the read-only or View-only mode
             $(document).on('updateReadOnlyMode.Narrative',
@@ -2405,28 +2400,6 @@ function($,
                       .addClass("fa fa-inverse fa-stack-1x " + cls));
                 });
             }
-        },
-
-        /**
-         * Set the visual icon for a method or app.
-         *
-         * @param $logo - Target element
-         * @param is_app - Boolean for app or method
-         */
-        setMethodIcon: function ($logo, is_app) {
-            var name = is_app ? "app" : "method";
-            var ci = is_app ? 9 : 5; // color index
-            var icon = this.meth_icons[name];
-            // background
-            $logo.addClass("fa-stack fa-2x").css({'cursor': 'pointer'})
-              .append($('<i>')
-                .addClass("fa fa-square fa-stack-2x")
-                .css({'color': this.icon_colors[ci]}));
-            // add stack of font-awesome icons
-            _.each(icon, function (cls) {
-                $logo.append($('<i>')
-                  .addClass("fa fa-inverse fa-stack-1x " + cls));
-            });
         },
 
         /**

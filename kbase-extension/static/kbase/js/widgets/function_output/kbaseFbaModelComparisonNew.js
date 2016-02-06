@@ -64,80 +64,107 @@ $.KBWidget({
             var tableStats = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-stats"/>');
             tabStats.append(tableStats);
-            tableStats.append('<tr><td><b>'+self.fba_model1.id+'</b> genome</td><td>'+self.fba_model1.genome_ref+'<br>('+self.fba_model1.name+')</td></tr>');
-            tableStats.append('<tr><td><b>'+self.fba_model2.id+'</b> genome</td><td>'+self.fba_model2.genome_ref+'<br>('+self.fba_model2.name+')</td></tr>');
-            tableStats.append('<tr><td>Reactions in <b>'+self.fba_model1.id+'</b></td><td>'+self.fba_model1.reactions+'</td></tr>');
-            tableStats.append('<tr><td>Reactions in <b>'+self.fba_model2.id+'</b></td><td>'+self.fba_model2.reactions+'</td></tr>');
-            tableStats.append('<tr><td>Common reactions</td><td>'+modelComp.core_reactions+'</td></tr>');
-            //////////////////////////////////////////// Common tab /////////////////////////////////////////////
-            var tabCommon = $("<div/>");
-            tabPane.kbaseTabs('addTab', {tab: 'Common reactions', content: tabCommon, canDelete : false, show: false});
-            var tableCommon = $('<table class="table table-striped table-bordered" '+
+	    for (var i = 0; i < modelComp.models.length; i++) {
+		tableStats.append('<tr><td><b>'+modelComp.models[i].id+'</b> genome</td><td>'+modelComp.models[i].name+'</td></tr>');
+	    }
+	    if (modelComp.pangenome_ref) {
+		tableStats.append('<tr><td>Pangenome</td><td>'+modelComp.pangenome_ref+'</td></tr>');		
+	    }
+	    if (modelComp.protcomp_ref) {
+		tableStats.append('<tr><td>Proteome Comparison</td><td>'+modelComp.protcomp_ref+'</td></tr>');		
+	    }
+            tableStats.append('<tr><td>Core reactions</td><td>'+modelComp.core_reactions+'</td></tr>');
+            tableStats.append('<tr><td>Core compounds</td><td>'+modelComp.core_compounds+'</td></tr>');
+            tableStats.append('<tr><td>Core biomass compounds</td><td>'+modelComp.core_biomass_compounds+'</td></tr>');
+            tableStats.append('<tr><td>Core protein families</td><td>'+modelComp.core_families+'</td></tr>');
+            //////////////////////////////////////////// Reactions tab /////////////////////////////////////////////
+            var tabReactions = $("<div/>");
+            tabPane.kbaseTabs('addTab', {tab: 'Reactions', content: tabReactions, canDelete : false, show: false});
+            var tableReactions = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-common"/>');
-            tabCommon.append(tableCommon);
-            tableCommon.dataTable({
+            tabReactions.append(tableReactions);
+            tableReactions.dataTable({
                     "sPaginationType": "full_numbers",
                     "iDisplayLength": 10,
-                    "aaData": [],
+                    "aaData": modelComp.reactions,
                     "aaSorting": [[ 2, "desc" ], [0, "asc"]],
                     "aoColumns": [
-                                  { "sTitle": "Reaction", 'mData': 'model1rxn.dispid'},
-                                  { "sTitle": "Equation&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'model1rxn.equation'},
-                                  { "sTitle": "<b>"+self.fba_model1.id+"</b> features", 'mData': 'model1features'},
-                                  { "sTitle": "<b>"+self.fba_model2.id+"</b> features", 'mData': 'model2features'},
-                                  { "sTitle": "Name", 'mData': 'model1rxn.name'},
-                                  { "sTitle": "Exact", 'mData': 'exact'},
-                    ],
+                                  { "sTitle": "Reaction", 'mData': 'id'},
+                                  { "sTitle": "Equation&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'equation'},
+                                  { "sTitle": "Number Models", 'mData': 'number_models'},
+                                  { "sTitle": "Core", 'mData': 'core'},
+				  ],
                     "oLanguage": {
-                                "sEmptyTable": "No functions found!",
+                                "sEmptyTable": "No reactions found!",
                                 "sSearch": "Search: "
                     },
                     'fnDrawCallback': events
             });
-            tabCommon.append($('<table><tr><td>(*) color legend: sub-best bidirectional hits are marked<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;by <font color="blue">blue</font>, '+
-                    'orphan features are marked by <font color="red">red</font>.</td></tr></table>'));
-            //////////////////////////////////////////// Model1 only tab /////////////////////////////////////////////
-            var tabModel1 = $("<div/>");
-            tabPane.kbaseTabs('addTab', {tab: self.fba_model1.id+" only", content: tabModel1, canDelete : false, show: false});
-            var tableModel1 = $('<table class="table table-striped table-bordered" '+
-                    'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-model1"/>');
-            tabModel1.append(tableModel1);
-            tableModel1.dataTable({
+            //////////////////////////////////////////// Compounds tab /////////////////////////////////////////////
+            var tabCompounds = $("<div/>");
+            tabPane.kbaseTabs('addTab', {tab: 'Compounds', content: tabCompounds, canDelete : false, show: false});
+            var tableCompounds = $('<table class="table table-striped table-bordered" '+
+                    'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-common"/>');
+            tabCompounds.append(tableCompounds);
+            tableCompounds.dataTable({
                     "sPaginationType": "full_numbers",
                     "iDisplayLength": 10,
-                    "aaData": [],
+                    "aaData": modelComp.compounds,
                     "aaSorting": [[ 2, "desc" ], [0, "asc"]],
                     "aoColumns": [
-                                  { "sTitle": "Reaction", 'mData': 'dispid'},
-                                  { "sTitle": "Equation&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'equation'},
-                                  { "sTitle": "<b>"+self.fba_model1.id+"</b> features", 'mData': 'dispfeatures'},
-                                  { "sTitle": "Name", 'mData': 'name'},
-                    ],
+                                  { "sTitle": "Compound", 'mData': 'id'},
+                                  { "sTitle": "Name&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'name'},
+                                  { "sTitle": "Number Models", 'mData': 'number_models'},
+                                  { "sTitle": "Core", 'mData': 'core'},
+				  ],
                     "oLanguage": {
-                                "sEmptyTable": "No functions found!",
+                                "sEmptyTable": "No compounds found!",
                                 "sSearch": "Search: "
                     },
                     'fnDrawCallback': events
             });
-            //////////////////////////////////////////// Model2 only tab /////////////////////////////////////////////
-            var tabModel2 = $("<div/>");
-            tabPane.kbaseTabs('addTab', {tab: self.fba_model2.id+" only", content: tabModel2, canDelete : false, show: false});
-            var tableModel2 = $('<table class="table table-striped table-bordered" '+
-                    'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-model2"/>');
-            tabModel2.append(tableModel2);
-            tableModel2.dataTable({
+            //////////////////////////////////////////// Biomass tab /////////////////////////////////////////////
+            var tabBiomass = $("<div/>");
+            tabPane.kbaseTabs('addTab', {tab: 'Biomass compounds', content: tabBiomass, canDelete : false, show: false});
+            var tableBiomass = $('<table class="table table-striped table-bordered" '+
+                    'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-common"/>');
+            tabBiomass.append(tableBiomass);
+            tableBiomass.dataTable({
                     "sPaginationType": "full_numbers",
                     "iDisplayLength": 10,
-                    "aaData": [],
+                    "aaData": modelComp.biomasscpds,
                     "aaSorting": [[ 2, "desc" ], [0, "asc"]],
                     "aoColumns": [
-                                  { "sTitle": "Reaction", 'mData': 'dispid'},
-                                  { "sTitle": "Equation&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'equation'},
-                                  { "sTitle": "<b>"+self.fba_model2.id+"</b> features", 'mData': 'dispfeatures'},
-                                  { "sTitle": "Name", 'mData': 'name'},
-                    ],
+                                  { "sTitle": "Compound", 'mData': 'id'},
+                                  { "sTitle": "Name&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'name'},
+                                  { "sTitle": "Number Models", 'mData': 'number_models'},
+                                  { "sTitle": "Core", 'mData': 'core'},
+				  ],
                     "oLanguage": {
-                                "sEmptyTable": "No functions found!",
+                                "sEmptyTable": "No biomass found!",
+                                "sSearch": "Search: "
+                    },
+                    'fnDrawCallback': events
+            });
+            //////////////////////////////////////////// Families tab /////////////////////////////////////////////
+            var tabFamilies = $("<div/>");
+            tabPane.kbaseTabs('addTab', {tab: 'Families', content: tabFamilies, canDelete : false, show: false});
+            var tableFamilies = $('<table class="table table-striped table-bordered" '+
+                    'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-common"/>');
+            tabFamilies.append(tableFamilies);
+            tableFamilies.dataTable({
+                    "sPaginationType": "full_numbers",
+                    "iDisplayLength": 10,
+                    "aaData": modelComp.families,
+                    "aaSorting": [[ 2, "desc" ], [0, "asc"]],
+                    "aoColumns": [
+                                  { "sTitle": "Family", 'mData': 'family_id'},
+                                  { "sTitle": "Function&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'function'},
+                                  { "sTitle": "Number Models", 'mData': 'number_models'},
+                                  { "sTitle": "Core", 'mData': 'core'},
+				  ],
+                    "oLanguage": {
+                                "sEmptyTable": "No families found!",
                                 "sSearch": "Search: "
                     },
                     'fnDrawCallback': events

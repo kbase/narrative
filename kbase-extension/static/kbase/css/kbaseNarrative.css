@@ -890,10 +890,6 @@ p span.notification{
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
-/*.btn-group {
-    margin-right: 5px;
-}*/
-
 #menus {
     padding-left: 0px;
 }
@@ -1289,6 +1285,22 @@ div#notebook_panel {
     cursor: pointer;
 }
 
+.kb-cell-toolbar .buttons {
+    font-weight: bold;
+    color: #CECECE !important;
+}
+.kb-cell-toolbar .title {
+    font-weight: normal;
+    font-size: 130%;
+    font-family: "OxygenBold", Arial, sans-serif;
+    color: #2e618d;
+}
+
+.kb-cell-toolbar .subtitle {
+    font-family: "Roboto", Arial, sans-serif;
+    font-size: 90%;
+    color: #666;
+}
 
 /* ------------------------------------------------- */
 /* IPython cells */
@@ -1670,11 +1682,11 @@ control with padding, and then scooting the icon back into its column.
     background-color: #F2DEDE;
 }
 
-.app-panel-heading {
+/*.app-panel-heading {
     padding-top: 10px;
 }
-
-.app-panel-heading h1 {
+*/
+/*.app-panel-heading h1 {
     font-family: 'Roboto';
     font-weight: normal;
     font-size: 16pt;
@@ -1684,6 +1696,7 @@ control with padding, and then scooting the icon back into its column.
     opacity: inherit;
     display: inline;
 }
+*/
 .kb-app-step-container {
     margin-top: 6px;
 }

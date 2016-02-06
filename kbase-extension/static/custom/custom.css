@@ -61,7 +61,7 @@ div.text_cell_input {
 div.cell {
     /*padding: 5px 0px 0 0;*/
     margin: 6px 0 6px 0px;
-    padding: 6px 0 6px 5px;
+    padding: 6px 0 6px 4px;
     border: 1px solid #CCC;
     /*border-left: 5px solid  #CCC;*/
     border-radius: 0;
@@ -154,11 +154,11 @@ span#notebook_name:hover {
     overflow: visible;
     margin-right: 4px;
 }
-.notebook_app .cell.selected .inner_cell > div:nth-child(2),
+/*.notebook_app .cell.selected .inner_cell > div:nth-child(2),
 .notebook_app .cell.selected .inner_cell > div:nth-child(3) {
     background-color: #FFF;
 }
-
+*/
 .notebook_app .celltoolbar > .button_container {
     width: 100%;
 }
@@ -169,15 +169,15 @@ span#notebook_name:hover {
     width: 75px;
 }
 
-.notebook_app .code_cell {
+/*.notebook_app .code_cell {
     background-color: #FFF;
 }
-
+*/
 .notebook_app .cell.unselected div.text_cell_render {
     border: 1px solid transparent;
 }
 .notebook_app .cell.selected div.text_cell_render {
-    border: 1px solid #CFCFCF;
+    border: 1px solid transparent;
 }
 
 .notebook_app .buttons .dropdown-menu {
@@ -190,19 +190,8 @@ span#notebook_name:hover {
     color: #E8E8E8;
 }
 
-.notebook_app .cell .btn {
+.notebook_app .cell .celltoolbar .btn {
     background-color: transparent;
-}
-
-.notebook_app .kb-cell-toolbar .buttons {
-    font-weight: bold;
-    color: #CECECE !important;
-}
-.notebook_app .kb-cell-toolbar .title {
-    font-weight: normal;
-    font-size: 130%;
-    font-family: "OxygenBold", Arial, sans-serif;
-    color: #2e618d;
 }
 
 

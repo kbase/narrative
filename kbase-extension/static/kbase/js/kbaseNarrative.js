@@ -89,11 +89,9 @@ function($,
      */
     Narrative.prototype.registerEvents = function() {
         $([Jupyter.events]).on('before_save.Notebook', function() {
-            console.debug('saving');
             $('#kb-save-btn').find('div.fa-save').addClass('fa-spin');
         });
         $([Jupyter.events]).on('notebook_saved.Notebook', function() {
-            console.debug('saved');
             $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
         });
         $([Jupyter.events]).on('kernel_idle.Kernel',function () {

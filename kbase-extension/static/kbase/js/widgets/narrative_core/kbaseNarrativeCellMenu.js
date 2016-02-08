@@ -395,7 +395,7 @@ function($, Config, TimeFormat) {
                 case 'closed':
                     $icon.removeClass('fa-chevron-down');
                     $icon.addClass('fa-chevron-right');
-                    this.$elem.removeClass('kb-toolbar-open');
+                    this.$elem.parent().removeClass('kb-toolbar-open');
                     if (this.options.cell.metadata['kb-cell'] && this.$subtitle) {
                         var type = this.options.cell.metadata['kb-cell']['type'];
                         var $kbCell = $(this.options.cell.element).find('[id^=kb-cell]');
@@ -427,7 +427,7 @@ function($, Config, TimeFormat) {
                 default:
                     $icon.removeClass('fa-chevron-right');
                     $icon.addClass('fa-chevron-down');
-                    this.$elem.addClass('kb-toolbar-open');
+                    this.$elem.parent().addClass('kb-toolbar-open');
                     this.$subtitle.hide();
                     break;
             }

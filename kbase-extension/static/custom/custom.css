@@ -78,6 +78,12 @@ div.cell.selected {
     -webkit-box-shadow: 3px 3px 3px #aaa;
 }
 
+.edit_mode div.cell.selected {
+    border-left: 5px solid #66BB6A;
+    background: none;
+    padding-left: 0px;
+}
+
 div.cell.selected.kb-error {
     border: 1px solid #d9534f;
     border-left: 5px solid #d9534f;

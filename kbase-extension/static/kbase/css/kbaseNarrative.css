@@ -1302,6 +1302,18 @@ div#notebook_panel {
     color: #666;
 }
 
+.kb-toolbar-open {
+    border-bottom: 1px solid black;
+}
+
+.unselected .kb-toolbar-open {
+    border-color: #EAEAEA;
+}
+
+.selected.kb-error .kb-toolbar-open {
+    border-color: #D9534F;
+}
+
 /* ------------------------------------------------- */
 /* IPython cells */
 
@@ -1428,6 +1440,11 @@ div#notebook_panel {
     font-size: 10pt;
     font-family: 'Roboto';
     margin-top: -3px;
+    padding-right: 1em;
+}
+
+.unselected .kb-func-timestamp {
+    color: #EAEAEA;
 }
 
 .kb-func-panel {

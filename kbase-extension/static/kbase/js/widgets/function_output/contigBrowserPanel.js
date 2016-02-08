@@ -1,4 +1,4 @@
-define(['jquery', 'kbwidget', 'kbaseContigBrowserButtons'], function($) {
+define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
     return function() {
         this.data = {
             name: "ContigBrowserPanel", 

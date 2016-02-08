@@ -45,11 +45,6 @@
                         this.renderErrorOutputCell();
                         break;
                 }
-                                
-//                this.$elem
-//                .closest('.cell')
-//                .trigger('set-title.cell', [appTitle]);             
-            
 
             },
             renderViewerCell: function () {
@@ -110,8 +105,10 @@
                     .addClass('pull-right kb-func-timestamp');
 
                 if (this.options.time) {
+                    console.log('setting time');
                     this.$timestamp.append($('<span>')
                         .append(this.readableTimestamp(this.options.time)));
+                    this.$elem.closest('.cell').find('.button_container').trigger('set-timestamp.toolbar', this.options.time);
                 }
                 //if (this.options.showMenu) {
                 //    var $menuSpan = $('<span style="margin-left:5px">');
@@ -128,23 +125,27 @@
                     .append($('<b>').append(methodName))
                     .append(this.$timestamp);
 
-                var $body = $('<div>')
-                    .addClass(baseClass)
-                    .append($('<div>')
-                        .addClass('panel ' + panelClass)
-                        .append($('<div>')
-                            .addClass('panel-heading')
-                            .append($label)
-                            .append($headerInfo))
-                        .append($('<div>')
-                            .addClass('panel-body')
-                            .append($('<div class="kb-cell-output-content">'))));
+                var $body = $('<div class="kb-cell-output-content">');
+
+
+                // var $body = $('<div>')
+                //     .addClass(baseClass)
+                //     .append($('<div>')
+                //         .addClass('panel ' + panelClass)
+                //         .append($('<div>')
+                //             .addClass('panel-heading')
+                //             .append($label)
+                //             .append($headerInfo))
+                //         .append($('<div>')
+                //             .addClass('panel-body')
+                //             .append($('<div class="kb-cell-output-content">'))));
                         
                 try {
                     require([widget],
                         // If we successfully Require the widget code, render it:
                         $.proxy(function () {
-                            this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
+                            this.$outWidget = $body[widget](widgetData);
+                            // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
                             this.$elem.append($body);
                         }, this),
                         // If we fail, render the error widget and log the error.

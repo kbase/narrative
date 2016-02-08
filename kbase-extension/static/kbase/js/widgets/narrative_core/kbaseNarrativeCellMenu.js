@@ -2,9 +2,10 @@
 /*jslint white: true*/
 define(['jquery', 
         'narrativeConfig',
+        'util/timeFormat',
         'kbwidget', 
         'bootstrap'], 
-function($, Config) {
+function($, Config, TimeFormat) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeCellMenu',
@@ -28,8 +29,10 @@ function($, Config) {
                 Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
             }.bind(this));
 
+            this.$timestamp = $('<span class="kb-func-timestamp">');
+
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
-                .append($('<span class="fa fa-trash-o" style="font-size:14pt; padding-left: 5px;">'))
+                .append($('<span class="fa fa-trash-o" style="font-size:14pt;">'))
                 .click(function () {
                     this.trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(this.options.cell));
                 }.bind(this));
@@ -250,6 +253,11 @@ function($, Config) {
                 }
             });
 
+            this.$elem.on('set-timestamp.toolbar', function (e, time) {
+                console.log('setting time ', TimeFormat.readableTimestamp(time));
+                this.$timestamp.text(TimeFormat.readableTimestamp(time));
+            }.bind(this));
+
             // this shows on error
             this.$errorIcon = $("<span>")
                 .addClass("fa fa-exclamation-triangle")
@@ -288,6 +296,7 @@ function($, Config) {
                     )
                     .append($('<div class="col-sm-4">')
                         .append($('<div class="buttons pull-right">')
+                            .append(this.$timestamp)
                             .append(this.$runningIcon)
                             .append(this.$errorIcon)
                             .append(this.$jobStateIcon)
@@ -386,6 +395,7 @@ function($, Config) {
                 case 'closed':
                     $icon.removeClass('fa-chevron-down');
                     $icon.addClass('fa-chevron-right');
+                    this.$elem.removeClass('kb-toolbar-open');
                     if (this.options.cell.metadata['kb-cell'] && this.$subtitle) {
                         var type = this.options.cell.metadata['kb-cell']['type'];
                         var $kbCell = $(this.options.cell.element).find('[id^=kb-cell]');
@@ -417,6 +427,7 @@ function($, Config) {
                 default:
                     $icon.removeClass('fa-chevron-right');
                     $icon.addClass('fa-chevron-down');
+                    this.$elem.addClass('kb-toolbar-open');
                     this.$subtitle.hide();
                     break;
             }

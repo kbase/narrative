@@ -141,7 +141,7 @@ define(['jquery',
         };
         
         // disable hiding of the toolbar
-        cellToolbar.CellToolbar.prototype.hide  = function () {
+        cellToolbar.CellToolbar.prototype.hide = function () {
             return;
         }
 

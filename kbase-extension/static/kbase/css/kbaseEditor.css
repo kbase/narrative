@@ -34,12 +34,12 @@
     border-color: #d43f3a !important;
 }
 
-/* overwride icon stylings in button that were removed */
+/* override icon stylings in button that were removed */
 .kb-editor .btn i {
     color: #fff;
 }
 
-/* overwride table border styling */
+/* override table border styling */
 .kb-editor table {
     border: 1px solid #bbb;
 }

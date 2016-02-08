@@ -7,14 +7,17 @@
  */
 define([
     'jquery',
-    'kb/service/client/narrativeMethodStore',
-    'kb/service/client/catalog',
-    './catalog_util',
-    './app_card',
-    'kb/widget/legacy/authenticatedWidget',
+    'bluebird',
+    'narrativeConfig',
+    'narrative_core/catalog/catalog_util',
+    'narrative_core/catalog/app_card',
+    'catalog-client-api',
+    'kbase-client-api',
+    'kbwidget',
+    'kbaseAuthenticatedWidget', 
     'bootstrap',
 ],
-    function ($, NarrativeMethodStore, Catalog, CatalogUtil, AppCard) {
+    function ($, Promise, Config, CatalogUtil, AppCard) {
         $.KBWidget({
             name: "KBaseCatalogBrowser",
             parent: "kbaseAuthenticatedWidget",  // todo: do we still need th
@@ -79,7 +82,7 @@ define([
                 self.setupClients();
 
                 // initialize and add the control bar
-                var $container = $('<div>').addClass('container');
+                var $container = $('<div>').addClass('container').css('width','100%');
                 self.$elem.append($container);
                 var ctrElements = this.renderControlToolbar();
                 self.$controlToolbar = ctrElements[0];
@@ -94,7 +97,33 @@ define([
                 self.$appListPanel = mainPanelElements[1];
                 self.$moduleListPanel = mainPanelElements[2];
                 $container.append(self.$mainPanel);
+
+
+                var $footer = $('<div>')
+                var $closeBtn = $('<button class="kb-default-btn pull-right">Close</button>').css({'margin':'10px'});
+                $closeBtn.click(function() {
+                    self.trigger('hideSidePanelOverlay.Narrative');
+                });
+                $footer.append($closeBtn);
+                $container.append($footer);
+
+
+
                 self.showLoading();
+
+
+                // when we have it all, then render the list
+                self.refreshAndRender();
+
+                return this;
+            },
+
+
+            refreshAndRender: function() {
+                var self = this;
+
+                self.showLoading();
+                self.$appListPanel.empty();
 
                 // get the list of apps and modules
                 var loadingCalls = [];
@@ -103,11 +132,11 @@ define([
                 loadingCalls.push(self.populateAppListWithApps());
                 loadingCalls.push(self.populateModuleList());
 
+
                 // when we have it all, then render the list
                 Promise.all(loadingCalls).then(function() {
 
                     self.processData();
-
 
                     self.updateFavoritesCounts()
                         .then(function() {
@@ -115,7 +144,9 @@ define([
                             self.renderAppList('favorites');
                             self.updateRunStats();
                             return self.updateMyFavorites();
-                        }).catch(function (err) {
+
+                        // [NARRATIVE_EDIT] - catch to fail
+                        }).fail(function (err) {
                             self.hideLoading();
                             self.renderAppList('name_az');
                             self.updateRunStats();
@@ -125,31 +156,65 @@ define([
 
                 });
 
-                return this;
             },
 
 
             setupClients: function() {
+
+                // [NARRATIVE_EDIT] - use Narrative style config, not KBase UI config
                 this.catalog = new Catalog(
-                    this.runtime.getConfig('services.catalog.url'),
-                    { token: this.runtime.service('session').getAuthToken() }
+                    Config.url('catalog'),
+                    { token: this.auth().token }
                 );
                 this.nms = new NarrativeMethodStore(
-                    this.runtime.getConfig('services.narrative_method_store.url'),
-                    { token: this.runtime.service('session').getAuthToken() }
+                    Config.url('narrative_method_store'),
+                    { token: this.auth().token }
                 );
-                this.nms_base_url = this.runtime.getConfig('services.narrative_method_store.url');
+                this.nms_base_url =  Config.url('narrative_method_store');
                 this.nms_base_url = this.nms_base_url.substring(0,this.nms_base_url.length-3)
             },
 
 
+
+            // [NARRATIVE-EDIT] : allow an outside widget to update the tag
+            setTag: function(newTag) {
+                var self = this;
+                // only update and refresh if the tag changed
+                if(self.options.tag === newTag) { return; }
+                self.options.tag = newTag;
+                if(newTag!=='dev' && newTag!=='beta' && newTag!=='release') {
+                    console.warn('tag '+tag+ ' is not valid! Use: dev/beta/release.  defaulting to release.');
+                    self.options.tag='release';
+                }
+                self.refreshAndRender();
+            },
+
+            // Used to trigger
+            clickCallback: function(appCard) {
+                var self = this;
+                if(appCard.type === 'method') {
+                    self.nms.get_method_spec({ids:[appCard.info.id],tag:self.options.tag})
+                            .then(function(spec){
+                                // todo: cache this sped into the methods list
+                                self.trigger('hideSidePanelOverlay.Narrative');
+                                self.trigger('methodClicked.Narrative', spec);
+                            });
+                } else if (appCard.type === 'app'){
+                    self.nms.get_app_spec({ids:[appCard.info.id],tag:self.options.tag})
+                            .then(function(spec){
+                                // todo: cache this sped into the methods list
+                                self.trigger('hideSidePanelOverlay.Narrative');
+                                self.trigger('appClicked.Narrative', spec);
+                            });
+                }
+            },
 
             renderControlToolbar: function () {
                 var self = this;
 
                 // CONTROL BAR CONTAINER
                 var $nav = $('<nav>').addClass('navbar navbar-default')
-                                .css({'border':'0', 'background-color':'#fff'});
+                                .css({'margin':'0.8em', 'border':'0', 'background-color':'#fff'});
                 var $container = $('<div>').addClass('container-fluid');
 
                 var $content = $('<div>').addClass('');
@@ -172,28 +237,31 @@ define([
                 $content.append($ctrList);
 
                 // ORGANIZE BY
+                var dropdownStyle = {'cursor':'pointer'}; // [NARRATIVE_EDIT] - have to do this because <a> does not have pointers in the narrative
                 var $obMyFavs = $('<a>');
-                if(self.runtime.service('session').isLoggedIn()) {
-                    $obMyFavs.append('My Favorites')
+                // [NARRATIVE_EDIT] - always logged in, so we don't / can't check session
+                //if(self.runtime.service('session').isLoggedIn()) {
+                    $obMyFavs.append('My Favorites').css(dropdownStyle)
                                     .on('click', function() {self.renderAppList('my_favorites')});
-                }
-                var $obFavs = $('<a>').append('Favorites Count')
+                //}
+
+                var $obFavs = $('<a>').append('Favorites Count').css(dropdownStyle)
                                     .on('click', function() {self.renderAppList('favorites')});
-                var $obRuns = $('<a>').append('Run Count')
+                var $obRuns = $('<a>').append('Run Count').css(dropdownStyle)
                                     .on('click', function() {self.renderAppList('runs')});
-                var $obNameAz = $('<a>').append('Name (a-z)')
+                var $obNameAz = $('<a>').append('Name (a-z)').css(dropdownStyle)
                                     .on('click', function() {self.renderAppList('name_az')});
-                var $obNameZa = $('<a>').append('Name (z-a)')
+                var $obNameZa = $('<a>').append('Name (z-a)').css(dropdownStyle)
                                     .on('click', function() {self.renderAppList('name_za')});
-                var $obCat = $('<a>').append('Category')
+                var $obCat = $('<a>').append('Category').css(dropdownStyle)
                                     .on('click', function() {self.renderAppList('category')});
-                var $obModule = $('<a>').append('Module')
+                var $obModule = $('<a>').append('Module').css(dropdownStyle)
                                     .on('click', function() {self.renderAppList('module')});
-                var $obOwner = $('<a>').append('Developer')
+                var $obOwner = $('<a>').append('Developer').css(dropdownStyle)
                                     .on('click', function() {self.renderAppList('developer')});
-                var $obInput = $('<a>').append('Input Types')
+                var $obInput = $('<a>').append('Input Types').css(dropdownStyle)
                                     .on('click', function() {self.renderAppList('input_types')});
-                var $obOutput = $('<a>').append('Output Types')
+                var $obOutput = $('<a>').append('Output Types').css(dropdownStyle)
                                     .on('click', function() {self.renderAppList('output_types')});
 
                 var $organizeBy = $('<li>').addClass('dropdown')
@@ -227,10 +295,10 @@ define([
                         );
 
 
-                // ORGANIZE BY
-                var $verR = $('<a href="#appcatalog/browse/release">').append('Released Modules');
-                var $verB = $('<a href="#appcatalog/browse/beta">').append('Beta Modules');
-                var $verD = $('<a href="#appcatalog/browse/dev">').append('Modules in Development');
+                // VERSION
+                /*var $verR = $('<a href="/#appcatalog/browse/release">').append('Released Modules');
+                var $verB = $('<a href="/#appcatalog/browse/beta">').append('Beta Modules');
+                var $verD = $('<a href="/#appcatalog/browse/dev">').append('Modules in Development');
 
                 var $version = $('<li>').addClass('dropdown')
                                     .append('<a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Version<span class="caret"></span></a>')
@@ -242,23 +310,25 @@ define([
                         .append($('<li>')
                             .append($verB))
                         .append($('<li>')
-                            .append($verD)));
+                            .append($verD)));*/
 
 
                 // NAV LINKS
-                var $statusLink = $('<li>').append($('<a href="#appcatalog/status">').append('Status'));
+                //[NARRATIVE-EDIT] : remove version and status and register links
+                //var $statusLink = $('<li>').append($('<a href="/#appcatalog/status">').append('Status'));
+                //var $registerLink = $('<li>').append($('<a href="/#appcatalog/register">').append('<i class="fa fa-plus-circle"></i> Add Module'));
 
-                var $registerLink = $('<li>').append($('<a href="#appcatalog/register">').append('<i class="fa fa-plus-circle"></i> Add Module'));
-
+                var $viewAppCatalog = $('<li>').append($('<a href="/#appcatalog" target="_blank">').append('View App Catalog'));
 
 
                 // PLACE CONTENT ON CONTROL BAR
                 $content
                     .append($ctrList
                         .append($organizeBy)
-                        .append($version)
-                        .append($statusLink)
-                        .append($registerLink));
+                        .append($viewAppCatalog));
+                        //.append($version)
+                        //.append($statusLink)
+                        //.append($registerLink));
 
                 $nav.append($container)
 
@@ -366,8 +436,8 @@ define([
 
 
             initMainPanel: function($appListPanel, $moduleListPanel) {
-                var $mainPanel = $('<div>').addClass('container');
-                var $appListPanel = $('<div>');
+                var $mainPanel = $('<div>').addClass('container').css({'width':'100%','overflow-x':'hidden','height':'550px','overflow-y': 'auto'});
+                var $appListPanel = $('<div>').css('padding', '0 1em 0 2em');
                 var $moduleListPanel = $('<div>');
                 $mainPanel.append($appListPanel);
                 $mainPanel.append($moduleListPanel);
@@ -408,7 +478,8 @@ define([
                             context.browserWidget.updateMyFavorites();
                             return context.browserWidget.updateFavoritesCounts();
                         })
-                        .catch(function (err) {
+                        // [NARRATIVE_EDIT] - catch to fail
+                        .fail(function (err) {
                             console.error('ERROR');
                             console.error(err);
                         });
@@ -420,7 +491,8 @@ define([
                             context.browserWidget.updateMyFavorites();
                             return context.browserWidget.updateFavoritesCounts();
                         })
-                        .catch(function (err) {
+                        // [NARRATIVE_EDIT] - catch to fail
+                        .fail(function (err) {
                             console.error('ERROR');
                             console.error(err);
                         });
@@ -451,13 +523,15 @@ define([
                             // logic to hide/show certain categories
                             if(self.util.skipApp(methods[k].categories)) continue;
 
+                            // [NARRATIVE_EDIT] - always logged in, so we don't / can't check session
                             var m = new AppCard('method',methods[k],tag,self.nms_base_url, 
                                 self.toggleFavorite, {catalog:self.catalog, browserWidget:self},
-                                self.runtime.service('session').isLoggedIn());
+                                true, function(card) { self.clickCallback(card); } ); //self.runtime.service('session').isLoggedIn());
                             self.appList.push(m);
                         }
                     })
-                    .catch(function (err) {
+                    // [NARRATIVE_EDIT] - catch renamed to fail
+                    .fail(function (err) {
                         console.error('ERROR');
                         console.error(err);
                     });
@@ -471,11 +545,12 @@ define([
                     .then(function (apps) {
                         //console.log(apps);
                         for(var k=0; k<apps.length; k++) {
-                            var a = new AppCard('app',apps[k],null,self.nms_base_url);
+                            var a = new AppCard('app',apps[k],null,self.nms_base_url, null, {}, 
+                                true, function(card) { self.clickCallback(card); });
                             self.appList.push(a);
                         }
                     })
-                    .catch(function (err) {
+                    .fail(function (err) {
                         console.error('ERROR');
                         console.error(err);
                     });
@@ -503,7 +578,8 @@ define([
                             self.moduleList.push(m);
                         }
                     })
-                    .catch(function (err) {
+                    // [NARRATIVE_EDIT] - catch to fail
+                    .fail(function (err) {
                         console.error('ERROR');
                         console.error(err);
                     });
@@ -529,7 +605,8 @@ define([
                             }
                         }
                     })
-                    .catch(function (err) {
+                    // [NARRATIVE_EDIT] - catch to fail
+                    .fail(function (err) {
                         console.error('ERROR');
                         console.error(err);
                     });
@@ -552,7 +629,8 @@ define([
                             }
                         }
                     })
-                    .catch(function (err) {
+                    // [NARRATIVE_EDIT] - catch to fail
+                    .fail(function (err) {
                         console.error('ERROR');
                         console.error(err);
                     });
@@ -561,8 +639,9 @@ define([
             // warning!  will not return a promise if the user is not logged in!
             updateMyFavorites: function() {
                 var self = this
-                if(self.runtime.service('session').isLoggedIn()) {
-                    return self.catalog.list_favorites(self.runtime.service('session').getUsername())
+
+                // [NARRATIVE_EDIT] - always logged in, so removed logged in check; get user name in narrative way
+                    return self.catalog.list_favorites(this.auth().user_id)
                         .then(function (favorites) {
                             self.favoritesList = favorites;
                             for(var k=0; k<self.favoritesList.length; k++) {
@@ -576,11 +655,11 @@ define([
                                 }
                             }
                         })
-                        .catch(function (err) {
+                        // [NARRATIVE_EDIT] - catch to fail
+                        .fail(function (err) {
                             console.error('ERROR');
                             console.error(err);
                         });
-                }
             },
 
 
@@ -655,6 +734,8 @@ define([
                 // no organization, so show all
                 if(!organizeBy) { return; }
 
+                var listContainerStyle = {'padding':'0 0 0em 0em'};
+
                 if(organizeBy=='name_az') {
                     // sort by method name, A to Z
                     self.appList.sort(function(a,b) {
@@ -662,7 +743,7 @@ define([
                         if(a.info.name.toLowerCase()>b.info.name.toLowerCase()) return 1;
                         return 0;
                     });
-                    var $listContainer = $('<div>').css({'overflow':'auto', 'padding':'0 0 2em 0'});
+                    var $listContainer = $('<div>').css(listContainerStyle);
                     for(var k=0; k<self.appList.length; k++) {
                         self.appList[k].clearCardsAddedCount();
                          $listContainer.append(self.appList[k].getNewCardDiv());
@@ -676,7 +757,7 @@ define([
                         if(a.info.name.toLowerCase()>b.info.name.toLowerCase()) return -1;
                         return 0;
                     });
-                    var $listContainer = $('<div>').css({'overflow':'auto', 'padding':'0 0 2em 0'});
+                    var $listContainer = $('<div>').css(listContainerStyle);
                     for(var k=0; k<self.appList.length; k++) {
                         self.appList[k].clearCardsAddedCount();
                         $listContainer.append(self.appList[k].getNewCardDiv());
@@ -713,7 +794,7 @@ define([
                             var $section = $('<div>').addClass('catalog-section');
                             $currentModuleDiv = $('<div>').addClass('kbcb-app-card-list-container');
                             $section.append($('<div>').css({'color':'#777'})
-                                    .append($('<h4>').append('<a href="#appcatalog/module/'+m+'">'+m+'</a>')));
+                                    .append($('<h4>').append('<a href="/#appcatalog/module/'+m+'" target="_blank">'+m+'</a>')));
                             $section.append($currentModuleDiv);
                             self.$appListPanel.append($section);
                         }
@@ -736,7 +817,7 @@ define([
                         $authorDivLookup[devs[k]] = $authorDiv;
                         $section.append(
                             $('<div>').css({'color':'#777'})
-                                .append($('<h4>').append('<a href="#people/'+devs[k]+'">'+devs[k]+'</a>')));
+                                .append($('<h4>').append('<a href="/#people/'+devs[k]+'" target="_blank">'+devs[k]+'</a>')));
                         $section.append($authorDiv)
                         self.$appListPanel.append($section);
                     }
@@ -863,7 +944,6 @@ define([
                         }
                     }
                     if(!hasFavorites) {
-                        console.log('here');
                         $myDiv.append($('<div>').css({'color':'#777'}).addClass('kbcb-app-card-list-element').append('You do not have any favorites yet.  Click on the stars to add to your favorites.'))
                     }
 
@@ -883,7 +963,7 @@ define([
                         if(aName>bName) return 1;
                         return 0;
                     });
-                    var $listContainer = $('<div>').css({'overflow':'auto', 'padding':'0 0 2em 0'});
+                    var $listContainer = $('<div>').css(listContainerStyle);
                     for(var k=0; k<self.appList.length; k++) {
                         self.appList[k].clearCardsAddedCount();
                         $listContainer.append(self.appList[k].getNewCardDiv());
@@ -907,7 +987,7 @@ define([
                         if(aName>bName) return 1;
                         return 0;
                     });
-                    var $listContainer = $('<div>').css({'overflow':'auto', 'padding':'0 0 2em 0'});
+                    var $listContainer = $('<div>').css(listContainerStyle);
                     for(var k=0; k<self.appList.length; k++) {
                         self.appList[k].clearCardsAddedCount();
                         $listContainer.append(self.appList[k].getNewCardDiv());
@@ -931,7 +1011,7 @@ define([
                         $typeDivLookup[types[k]] = $typeDiv;
                         $section.append(
                             $('<div>').css({'color':'#777'})
-                                .append($('<h4>').append($('<a href="#spec/type/'+types[k]+'">').append(types[k]))));
+                                .append($('<h4>').append($('<a href="/#spec/type/'+types[k]+'" target="_blank">').append(types[k]))));
                         $section.append($typeDiv)
                         self.$appListPanel.append($section);
                     }
@@ -965,7 +1045,7 @@ define([
                         $typeDivLookup[types[k]] = $typeDiv;
                         $section.append(
                             $('<div>').css({'color':'#777'})
-                                .append($('<h4>').append($('<a href="#spec/type/'+types[k]+'">').append(types[k]))));
+                                .append($('<h4>').append($('<a href="/#spec/type/'+types[k]+'"> target="_blank"').append(types[k]))));
                         $section.append($typeDiv)
                         self.$appListPanel.append($section);
                     }

@@ -2346,7 +2346,113 @@ div[class="tooltip-inner"] {
 /* end data list*/
 
 
-/* favorites style */
+
+/* APP CATALOG SLIDEOUT BROWSER STYLES */
+.kbcb-browser-container {
+    margin: 0 auto;
+    /*background: #eeeded;*/
+}
+
+.kbcb-back-link {
+    padding: 0.4em;
+}
+
+
+.kbcb-ctr-toolbar {
+    margin: 0.4em;
+}
+
+.kbcb-main-panel-div {
+    margin: 0em;
+}
+
+
+.kbcb-loading-panel-div {
+    margin: 0.1em;
+    text-align:center;
+    vertical-align:middle;
+}
+
+
+.method-icon {
+    color: rgb(103, 58, 183);
+}
+.app-icon {
+    color: rgb(0, 150, 136);
+}
+
+/* when the entire app card is a link, use this style */
+.kbcb-app-card-link {
+    text-decoration: none;
+}
+
+.kbcb-app-card-list-container {
+    overflow: auto;
+    padding: 0em 0.2em 1em 0.2em;
+}
+
+.kbcb-app-card-container {
+    margin: 0.4em;
+    width: 300px;
+    height:110px;
+    display: block;
+    position: relative;
+    float: left;
+}
+
+.kbcb-app-card {
+    background: #f1f1f5;
+    border-radius: 2px;
+    width: 100%;
+    height:100%;
+    overflow:hidden;
+    text-align:center;
+    vertical-align:middle;
+    color:#666;
+}
+.kbcb-app-card-header {
+    max-height:90px;
+    overflow:hidden;
+    text-align: left;
+}
+.kbcb-app-card-title-panel {
+    padding: 10px 5px 5px 5px;
+}
+
+
+.kbcb-app-card-title {
+    font-size:1.1em;
+    /*max-height: 2.6em;
+    overflow:hidden;*/
+}
+
+.kbcb-app-card-module {
+    font-size:0.8em;
+}
+.kbcb-app-card-authors {
+    font-size:0.8em;
+}
+.kbcb-app-card-subtitle {
+    padding: 10px 10px 10px 10px;
+    font-size:0.9em;
+    overflow:hidden;
+}
+
+.kbcb-app-card-footer {
+    font-size:0.9em;
+    position:absolute;
+    bottom:0;
+    left:0;
+    margin:0px 5px 5px 5px;
+    width:100%;
+    color:#888;
+}
+
+.kbcb-app-card-logo {
+    padding: 0px;
+    margin: 0px;
+    font-size: 0.9em;
+}
 
 .kbcb-star {
 }
@@ -2354,6 +2460,9 @@ div[class="tooltip-inner"] {
     cursor:pointer;
     color:orange;
 }
+/*.kbcb-star-favorite:hover {
+    color:inherit;
+}*/
 
 .kbcb-star-nonfavorite {
     cursor:pointer;
@@ -2361,6 +2470,84 @@ div[class="tooltip-inner"] {
 .kbcb-star-nonfavorite:hover {
     color:red;
 }
+
+.kbcb-star-count {
+    margin-left: 0.3em;
+    display: inline-block;
+}
+.kbcb-run-count {
+    margin-left: 0.3em;
+    display: inline-block;
+}
+
+.kbcb-info {
+}
+.kbcb-info:hover {
+    color:orange;
+}
+
+.kbcb-hover {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  transition: all 0.2s ease-in-out;
+}
+
+.kbcb-hover:hover {
+  box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+  cursor:pointer;
+}
+
+
+/* styles for App page */
+.kbcb-app-page {
+    background: #f1f1f5;
+    border-radius: 2px;
+    text-align:center;
+    color:#666;
+}
+.kbcb-app-page-header {
+    text-align: left;
+}
+.kbcb-app-page-title-panel {
+    padding: 10px 5px 5px 0px;
+}
+
+.kbcb-app-page-title {
+    font-size:2em;
+    /*max-height: 2.6em;
+    overflow:hidden;*/
+}
+
+.kbcb-app-page-module {
+    font-size:1.2em;
+}
+.kbcb-app-page-authors {
+    font-size:1em;
+    margin:0.3em 0 0 0;
+}
+.kbcb-app-page-subtitle {
+    padding: 1.5em 2em 0em 2em;
+    font-size:1.2em;
+}
+
+.kbcb-app-page-stats-bar {
+    font-size:1.2em;
+    padding:0em 2em 0.8em 3em;
+    width:100%;
+}
+
+.kbcb-app-page-logo {
+    padding: 0em;
+    margin: 1em;
+    text-align: center;
+}
+
+
+/* END CATALOG SLIDEOUT BROWSER STYLES */
+
+
+
+
+
 
 
 

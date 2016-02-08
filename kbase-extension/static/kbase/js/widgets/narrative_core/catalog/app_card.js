@@ -1,10 +1,7 @@
 define([
     'bluebird',
-    'jquery',
-    'kb/common/dom',
-    'kb/common/html',
-    'kb/widget/widgetSet'
-], function (Promise, $, DOM, html, WidgetSet) {
+    'jquery'
+], function (Promise, $) {
     'use strict';
 
     // favorites callback should accept:
@@ -15,7 +12,7 @@ define([
     //      module_name:
     //      ...
     //     
-    function AppCard(type, info, tag, nms_base_url, favoritesCallback, favoritesCallbackParams, isLoggedIn) {
+    function AppCard(type, info, tag, nms_base_url, favoritesCallback, callbackParams, isLoggedIn, clickedCallback) {
 
         this.$divs = [];
         this.info = info;
@@ -27,7 +24,9 @@ define([
         this.isLoggedIn = isLoggedIn;
 
         this.favoritesCallback = favoritesCallback;
-        this.favoritesCallbackParams = favoritesCallbackParams;
+        this.callbackParams = callbackParams;
+
+        this.clickedCallback = clickedCallback;
 
         // only an SDK module if it has a module name
         this.isSdk = false;
@@ -186,7 +185,7 @@ define([
             $titleSpan.append($('<div>').addClass('kbcb-app-card-title').append(info.name));
             if(info['module_name']) {
                 $titleSpan.append($('<div>').addClass('kbcb-app-card-module').append(
-                                        $('<a href="#appcatalog/module/'+info.module_name+'">')
+                                        $('<a href="/#appcatalog/module/'+info.module_name+'" target="_blank">')
                                             .append(info.module_name)
                                             .on('click',function() {
                                                 // have to stop propagation so we don't go to the app page first
@@ -205,7 +204,7 @@ define([
                             $authorDiv.append(' +'+(info.authors.length-2)+' more');
                             break;
                         }
-                        $authorDiv.append($('<a href="#people/'+info.authors[k]+'">')
+                        $authorDiv.append($('<a href="/#people/'+info.authors[k]+'" target="_blank">')
                                             .append(info.authors[k])
                                             .on('click',function() {
                                                 // have to stop propagation so we don't go to the app page first
@@ -239,7 +238,7 @@ define([
                     $star.on('click', function() {
                         event.stopPropagation();
                         if(!self.deactivatedStar && self.favoritesCallback) {
-                            self.favoritesCallback(self.info, self.favoritesCallbackParams)
+                            self.favoritesCallback(self.info, self.callbackParams)
                         }
                     });
                     $starDiv.tooltip({title:'Click on the star to add/remove from your favorites', placement:'bottom', container: 'body',
@@ -269,8 +268,30 @@ define([
                 $footer.append($('<div>').addClass('col-xs-3'))
             }
 
+
+
+            var moreLink = info.id;
+            if(type === 'method') {
+                if(info.module_name) {
+                    // module name right now is encoded in the ID
+                    //window.location.href = '#appcatalog/app/'.info.module_name+'/'+app.info.id;
+                    if(tag) {
+                        moreLink = '/#appcatalog/app/'+info.id + '/'+tag;
+                    } else {
+                        moreLink = '/#appcatalog/app/'+info.id;
+                    }
+                } else {
+                    // legacy method, encoded as l.m
+                    moreLink = '/#appcatalog/app/l.m/'+info.id;
+                }
+            } else {
+                // apps still go to old style page
+                moreLink = '/#narrativestore/app/'+info.id;
+            }
+
             // buffer
-            $footer.append($('<div>').addClass('col-xs-4').css('text-align','left'));
+            $footer.append($('<div>').addClass('col-xs-4').css('text-align','left')
+                            .append($('<a href="/#appcatalog/app/'+moreLink+'" target="_blank">').append('more...')));
 
             var $moreInfoDiv = $('<div>').addClass('col-xs-1').addClass('kbcb-info').css('text-align','right');
             $moreInfoDiv
@@ -281,29 +302,20 @@ define([
                 .on('mouseleave', function() {
                     $subtitle.hide();
                     $topDiv.fadeIn('fast');
+                })
+                .on('click', function() {
+                    // do this the JS way because wrapping just in <a> messes up the styles!
+                    event.stopPropagation();
+                    window.open(moreLink)
                 });
             $moreInfoDiv.append($('<span>').append('<i class="fa fa-info"></i>'));
             $footer.append($moreInfoDiv);
             $appDiv.append($footer);
 
-
+            var self = this;
             $appDiv.on('click', function() {
-                if(type === 'method') {
-                    if(info.module_name) {
-                        // module name right now is encoded in the ID
-                        //window.location.href = '#appcatalog/app/'.info.module_name+'/'+app.info.id;
-                        if(tag) {
-                            window.location.href = '#appcatalog/app/'+info.id + '/'+tag;
-                        } else {
-                            window.location.href = '#appcatalog/app/'+info.id;
-                        }
-                    } else {
-                        // legacy method, encoded as l.m
-                        window.location.href = '#appcatalog/app/l.m/'+info.id;
-                    }
-                } else {
-                    // apps still go to old style page
-                    window.location.href = '#narrativestore/app/'+info.id;
+                if(self.clickedCallback) {
+                    self.clickedCallback(self);
                 }
             });
 

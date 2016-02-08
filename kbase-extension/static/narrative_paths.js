@@ -212,6 +212,7 @@ require.config({
         'kbaseButtonControls'                        : 'kbase/js/ui-common/src/widgets/kbaseButtonControls',
         'kbaseSearchControls'                        : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
         'kbaseRNASeqHistogram'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqHistogram',
+        'kbaseExpressionMatrixHeatmap'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionMatrixHeatmap',
         'kbaseCummerbundPlot'                        : 'kbase/js/ui-common/src/widgets/kbaseCummerbundPlot',
         'kbaseExpressionSampleTable'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTable',
         'kbasePMIBarchart'                        : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePMIBarchart',

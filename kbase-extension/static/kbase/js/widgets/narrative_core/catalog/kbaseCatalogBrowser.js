@@ -205,18 +205,17 @@ define([
             // Used to trigger
             clickCallback: function(appCard) {
                 var self = this;
+                self.trigger('hideSidePanelOverlay.Narrative');
                 if(appCard.type === 'method') {
                     self.nms.get_method_spec({ids:[appCard.info.id],tag:self.options.tag})
                             .then(function(spec){
                                 // todo: cache this sped into the methods list
-                                self.trigger('hideSidePanelOverlay.Narrative');
                                 self.trigger('methodClicked.Narrative', spec);
                             });
                 } else if (appCard.type === 'app'){
                     self.nms.get_app_spec({ids:[appCard.info.id],tag:self.options.tag})
                             .then(function(spec){
                                 // todo: cache this sped into the methods list
-                                self.trigger('hideSidePanelOverlay.Narrative');
                                 self.trigger('appClicked.Narrative', spec);
                             });
                 }

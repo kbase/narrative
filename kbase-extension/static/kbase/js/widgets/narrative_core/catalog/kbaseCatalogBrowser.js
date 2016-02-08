@@ -56,6 +56,9 @@ define([
             $moduleListPanel: null,
             $loadingPanel: null,
 
+            // current state of organization
+            organizeBy: null,
+
 
             categories: {},
 
@@ -141,14 +144,24 @@ define([
                     self.updateFavoritesCounts()
                         .then(function() {
                             self.hideLoading();
-                            self.renderAppList('favorites');
+                            if(self.organizeBy) {
+                                self.renderAppList(self.organizeBy);
+                            } else {
+                                self.organizeBy = 'favorites';
+                                self.renderAppList('favorites');
+                            }
                             self.updateRunStats();
                             return self.updateMyFavorites();
 
                         // [NARRATIVE_EDIT] - catch to fail
                         }).fail(function (err) {
                             self.hideLoading();
-                            self.renderAppList('name_az');
+                            if(self.organizeBy) {
+                                self.renderAppList(self.organizeBy);
+                            } else {
+                                self.organizeBy = 'name_az';
+                                self.renderAppList('name_az');
+                            }
                             self.updateRunStats();
                             console.error('ERROR');
                             console.error(err);
@@ -246,23 +259,23 @@ define([
                 //}
 
                 var $obFavs = $('<a>').append('Favorites Count').css(dropdownStyle)
-                                    .on('click', function() {self.renderAppList('favorites')});
+                                    .on('click', function() {self.organizeBy = 'favorites'; self.renderAppList(self.organizeBy); });
                 var $obRuns = $('<a>').append('Run Count').css(dropdownStyle)
-                                    .on('click', function() {self.renderAppList('runs')});
+                                    .on('click', function() {self.organizeBy = 'runs'; self.renderAppList(self.organizeBy); });
                 var $obNameAz = $('<a>').append('Name (a-z)').css(dropdownStyle)
-                                    .on('click', function() {self.renderAppList('name_az')});
+                                    .on('click', function() {self.organizeBy = 'name_az'; self.renderAppList(self.organizeBy); });
                 var $obNameZa = $('<a>').append('Name (z-a)').css(dropdownStyle)
-                                    .on('click', function() {self.renderAppList('name_za')});
+                                    .on('click', function() {self.organizeBy = 'name_za'; self.renderAppList(self.organizeBy); });
                 var $obCat = $('<a>').append('Category').css(dropdownStyle)
-                                    .on('click', function() {self.renderAppList('category')});
+                                    .on('click', function() {self.organizeBy = 'category'; self.renderAppList(self.organizeBy); });
                 var $obModule = $('<a>').append('Module').css(dropdownStyle)
-                                    .on('click', function() {self.renderAppList('module')});
+                                    .on('click', function() {self.organizeBy = 'module'; self.renderAppList(self.organizeBy); });
                 var $obOwner = $('<a>').append('Developer').css(dropdownStyle)
-                                    .on('click', function() {self.renderAppList('developer')});
+                                    .on('click', function() {self.organizeBy = 'developer'; self.renderAppList(self.organizeBy); });
                 var $obInput = $('<a>').append('Input Types').css(dropdownStyle)
-                                    .on('click', function() {self.renderAppList('input_types')});
+                                    .on('click', function() {self.organizeBy = 'input_types'; self.renderAppList(self.organizeBy); });
                 var $obOutput = $('<a>').append('Output Types').css(dropdownStyle)
-                                    .on('click', function() {self.renderAppList('output_types')});
+                                    .on('click', function() {self.organizeBy = 'output_types'; self.renderAppList(self.organizeBy); });
 
                 var $organizeBy = $('<li>').addClass('dropdown')
                                     .append('<a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Organize by <span class="caret"></span></a>')

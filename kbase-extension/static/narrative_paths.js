@@ -128,8 +128,10 @@ require.config({
         'kbaseWellSampleHistogram'              : 'kbase/js/widgets/function_output/kbaseWellSampleHistogram',
         'kbaseWellSample2DPlot'                 : 'kbase/js/widgets/function_output/kbaseWellSample2DPlot',
         'kbaseChromatographyMatrix'             : 'kbase/js/widgets/function_output/kbaseChromatographyMatrix',
-
         'kbaseDefaultNarrativeOutput'           : 'kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput',
+
+        'ModelingAPI'                           : 'kbase/js/api/ModelingAPI',
+        'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling', // deprecated!
         'kbaseTabTable'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
         'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling',
         'KBaseFBA.FBAModel'                     : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModel',
@@ -146,6 +148,10 @@ require.config({
         'msPathway'                             : 'kbase/js/revised-widgets/src/widgets/modeling/msPathway',
         'kbasePathways'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbasePathways',
         'kbaseExpressionAnalysis'               : 'kbase/js/widgets/function_output/kbaseExpressionAnalysis',
+        'kbaseEditMedia'                        : 'kbase/js/widgets/function_input/kbaseEditMedia',
+        'kbaseMediaEditor'                      : 'kbase/js/widgets/function_input/editors/kbaseMediaEditor',
+        'kbaseModal'                            : 'kbase/js/widgets/narrative_core/kbaseModal',
+
         // another implementation of kbaseTabs needed for kbaseTabTable
         'kbaseTabTableTabs'                     : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabs',
         'knhx'                                  : 'ext_components/knhxtree/js/knhx',

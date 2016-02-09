@@ -9,7 +9,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="stylesheet" href="{{static_url("components/jquery-ui/themes/smoothness/jquery-ui.min.css") }}" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     {% block stylesheet %}
     <link rel="stylesheet" href="{{ static_url("style/style.min.css") }}" type="text/css"/>
     {% endblock %}
@@ -19,6 +19,8 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseIcons.css") }}"  type="text/css"/>
     <link rel="stylesheet" href="{{ static_url("components/font-awesome/css/font-awesome.min.css") }}" type="text/css" />
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseEditor.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNotify.css") }}" type="text/css" />
 
     <script src="{{ static_url("ext_components/bowser/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -39,7 +41,7 @@
             }
         }
         checkBrowser();
-    </script>    
+    </script>
     <script>
         /* Google Analaytics */
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -113,7 +115,7 @@
 </head>
 
 <body class="{% block bodyclasses %}{% endblock %}" {% block params %}{% endblock %}>
-    
+
     <noscript>
         <div id='noscript'>
           IPython Notebook requires JavaScript.<br>
@@ -197,7 +199,7 @@
                             <li><a id="kb-kernel-ref-btn"><span class="fa fa-refresh"></span> Restart</a></li>
                             <li><a id="kb-kernel-rec-btn"><span class="fa fa-power-off"></span> Reconnect</a></li>
                             <li class="divider"></li>
-                            
+
                             <li title="About Jupyter Notebook"><a id="notebook_about" href="#">About Jupyter</a></li>
                         </ul>
                     </div>

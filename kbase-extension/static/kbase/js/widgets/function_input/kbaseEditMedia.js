@@ -1,9 +1,20 @@
+/**
+ * Input widget to load edit media widget.  May also be used for new media, not sure yet.
+ *
+ * Responsible for loading the edit media widget.
+ *
+ * @param none.  This is an input widget, meant to be used with narrative_method_spec
+ * @author Bill Riehl <wjriehl@lbl.gov>, nconrad <nconrad@anl.gov>
+ * @public
+ */
+
 /*global define*/
 /*jslint white: true*/
 define(['jquery',
         'narrativeConfig',
         'bluebird',
         'kbwidget',
+        'kbaseMediaEditor',
         'kbaseNarrativeMethodInput',
         'kbaseNarrativeInput',
         'kbaseNarrativeParameterTextInput',
@@ -13,7 +24,7 @@ function ($,
           Promise) {
     'use strict';
     $.KBWidget({
-        name: 'kbaseInputTest',
+        name: 'kbaseEditMedia',
         parent: 'kbaseNarrativeMethodInput',
 
         mediaChooserWidget: null,
@@ -22,25 +33,35 @@ function ($,
 
         init: function (options) {
             this._super(options);
+
+            // change "Run" button to "Save"?
+            //var saveBtn = this.$elem.parents('.kb-func-panel').find('.kb-method-run').text('Save');
+
+            // remove footer
+            this.$elem.parents('.kb-func-panel').find('.panel-footer').remove();
+
             return this;
         },
 
         render: function (options) {
             this.wsClient = new Workspace(Config.url('workspace'), { token:this.authToken() });
 
-            var $mediaChooserPanel = $('<div>');
+            this.container = $('<div>');
+
+            this.$mediaChooserPanel = $('<div>');
             this.$mediaDisplayPanel = $('<div>');
 
-             this.$elem.append($mediaChooserPanel)
+            this.container.append(this.$mediaChooserPanel)
                      .append(this.$mediaDisplayPanel);
+            this.$elem.append(this.container);
 
             // For now, spit up the method spec to console.log so you can read it.
             // this.options.method is guaranteed to be there.
-            console.log(this.options.method);
+            //console.log(this.options.method);
 
             // Creates the media chooser widget, which is just a 'text' input
             // This was originally designed to deal with the parameter spec object.
-            this.mediaChooserWidget = $mediaChooserPanel.kbaseNarrativeParameterTextInput(
+            this.mediaChooserWidget = this.$mediaChooserPanel.kbaseNarrativeParameterTextInput(
                 {
                     loadingImage: Config.get('loading_gif'),
                     parsedParameterSpec: this.options.method.parameters[0],
@@ -51,43 +72,32 @@ function ($,
             // Simple listener that just plops the input value in this panel.
             // Listener gets triggered whenever anything in the chooser widget
             // changes.
+
             this.mediaChooserWidget.addInputListener(function() {
-                var mediaName = this.mediaChooserWidget.getParameterValue();
-                this.updateDisplayPanel(mediaName);
+                this.mediaName = this.mediaChooserWidget.getParameterValue();
+                this.updateDisplayPanel(this.mediaName);
             }.bind(this));
         },
 
         /**
-         * You'll spend most of your time here, I think.
+         * adds media widget (and a horizontal line above it)
          */
-        updateDisplayPanel: function(mediaObject) {
-            console.log('input value: ' + mediaObject);
+        updateDisplayPanel: function(mediaName) {
+            this.$mediaDisplayPanel.remove();
 
-            if (mediaObject) {
+            if (mediaName) {
+                this.$mediaDisplayPanel = $('<div>');
+                var mediaWidget = $('<div>');
 
-
-                // cram a div into the area.
-                // should probably get templated with Handlebars. An exercise for the reader.
-                this.$mediaDisplayPanel.append($('<div class="alert alert-warning alert-dismissible">' +
-                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                    '<span aria-hidden="true">&times;</span></button>' +
-                    mediaObject + '</div>'));
-
-                // Actually fetch the data object. Bluebird promises rock way harder than jquery.ajax.
-                // Seriously. Map and reduce among promises, being able to cancel running ones,
-                // pretty sweet.
-                //
-                // And they're easy to wrap any existing deferreds (or any code, really).
-                Promise.resolve(this.wsClient.get_objects([{
-                    workspace: Jupyter.narrative.getWorkspaceName(),  // sneaky fetch code I put in last week. look in the kbaseNarrative.js module for more
-                    name: mediaObject
-                }]))
-                .then(function(objects) {
-                    console.log(objects);
-                })
-                .catch(function(error) {
-                    console.error(error);
+                mediaWidget.kbaseMediaEditor({
+                    ws: Jupyter.narrative.getWorkspaceName(),
+                    obj: mediaName
                 });
+
+                this.$mediaDisplayPanel.append('<hr>');
+                this.$mediaDisplayPanel.append(mediaWidget)
+
+                this.container.append(this.$mediaDisplayPanel);
             }
         },
 
@@ -107,14 +117,16 @@ function ($,
          * data objects here.
          */
         getState: function () {
-            return {};
+            return {'media': this.mediaName};
         },
+
 
         /**
          * Should do something with the state that gets returned.
          */
         loadState: function (state) {
-
+            this.mediaChooserWidget.loadState(state.media);
+            this.updateDisplayPanel(state.media);
         },
 
         /**

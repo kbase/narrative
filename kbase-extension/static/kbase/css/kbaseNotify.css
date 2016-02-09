@@ -1,0 +1,14 @@
+
+.kb-notify {
+    position: relative;
+    bottom: 10px;
+    width: 300px;
+    padding: 15px;
+    color: #fff;
+    background-color: #000;
+    opacity: 0.8;
+}
+
+.kb-notify.kb-notify-success {
+    color: #00CC09;
+}

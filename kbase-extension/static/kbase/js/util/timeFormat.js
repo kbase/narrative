@@ -278,6 +278,32 @@ define([], function() {
         return Math.floor(seconds) + " seconds ago";
     }
 
+    /**
+     * Converts a timestamp to a simple string.
+     * Do this American style - HH:MM:SS MM/DD/YYYY
+     *
+     * @param {string} timestamp - a timestamp in number of milliseconds since the epoch.
+     * @return {string} a human readable timestamp
+     */
+    function readableTimestamp (timestamp) {
+        var format = function (x) {
+            if (x < 10)
+                x = '0' + x;
+            return x;
+        };
+
+        var d = new Date(timestamp);
+        var hours = format(d.getHours());
+        var minutes = format(d.getMinutes());
+        var seconds = format(d.getSeconds());
+        var month = d.getMonth() + 1;
+        var day = format(d.getDate());
+        var year = d.getFullYear();
+
+        return hours + ":" + minutes + ":" + seconds + ", " + month + "/" + day + "/" + year;
+    }
+
+
     return {
         parseDate: parseDate,
         prettyTimestamp: prettyTimestamp,
@@ -285,6 +311,7 @@ define([], function() {
         calcTimeDifference: calcTimeDifference,
         reformatDate: reformatDate,
         reformatISOTimeString: reformatISOTimeString,
-        getTimeStampStr: getTimeStampStr
+        getTimeStampStr: getTimeStampStr,
+        readableTimestamp: readableTimestamp
     };
 });

@@ -89,11 +89,9 @@ function($,
      */
     Narrative.prototype.registerEvents = function() {
         $([Jupyter.events]).on('before_save.Notebook', function() {
-            console.debug('saving');
             $('#kb-save-btn').find('div.fa-save').addClass('fa-spin');
         });
         $([Jupyter.events]).on('notebook_saved.Notebook', function() {
-            console.debug('saved');
             $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
         });
         $([Jupyter.events]).on('kernel_idle.Kernel',function () {
@@ -517,6 +515,41 @@ function($,
 
     Narrative.prototype.getCellByKbaseId = function(id) {
         return Jupyter.notebook.get_cell(this.getCellIndexByKbaseId(id));
+    };
+
+    /**
+     * Jupyter doesn't auto select cells on creation, so this
+     * is a helper that does so. It then returns the cell object
+     * that gets created.
+     */
+    Narrative.prototype.insertAndSelectCellBelow = function(cellType, index) {
+        return this.insertAndSelectCell(cellType, 'below');
+    };
+
+    Narrative.prototype.insertAndSelectCellAbove = function(cellType, index) {
+        return this.insertAndSelectCell(cellType, 'above');
+    };
+
+    Narrative.prototype.insertAndSelectCell = function(cellType, direction, index) {
+        var newCell;
+        if (direction === 'below')
+            newCell = Jupyter.notebook.insert_cell_below(cellType, index);
+        else
+            newCell = Jupyter.notebook.insert_cell_above(cellType, index);
+        Jupyter.notebook.focus_cell(newCell);
+        Jupyter.notebook.select(Jupyter.notebook.find_cell_index(newCell));
+        this.scrollToCell(newCell);
+
+        return newCell;
+    };
+
+    Narrative.prototype.scrollToCell = function(cell, select) {
+        var $elem = $('#notebook-container');
+        $elem.animate({ scrollTop: cell.element.offset().top + $elem.scrollTop() - $elem.offset().top }, 400);
+        if (select) {
+            Jupyter.notebook.focus_cell(cell);
+            Jupyter.notebook.select(Jupyter.notebook.find_cell_index(cell));
+        }
     };
 
     return Narrative;

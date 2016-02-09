@@ -20,8 +20,10 @@ define([
         'kbwidget',
         'kbaseAccordion',
         'kbaseNarrativeControlPanel',
+        'narrative_core/catalog/kbaseCatalogBrowser',
         'kbaseNarrative',
         'catalog-client-api',
+        'kbase-client-api',
         'bootstrap'], 
 function ($, _, Promise, Config, DisplayUtil) {
     'use strict';
@@ -220,14 +222,7 @@ function ($, _, Promise, Config, DisplayUtil) {
                 }, this)
             );
 
-            this.$methodGalleryBody = $('<div>');
-//            this.$methodGalleryBody.kbaseMethodGallery({sidePanel : this});
-            this.$methodGallery = $('<div>')
-                                  .append($('<div>')
-                                          .addClass('kb-side-header active')
-                                          .css({'width':'100%'})
-                                          .append('Methods'))
-                                  .append(this.$methodGalleryBody);
+
 
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
@@ -261,6 +256,10 @@ function ($, _, Promise, Config, DisplayUtil) {
                                 else if(this.versionState=='B') { versionTag='beta'; }
                                 else if(this.versionState=='D') { versionTag='dev'; }
                                 this.refreshFromService(versionTag);
+
+                                if(this.appCatalog) {
+                                    this.appCatalog.refreshAndRender();
+                                }
                            }.bind(this)));
 
             this.$toggleVersionBtn = $('<button>')
@@ -283,7 +282,48 @@ function ($, _, Promise, Config, DisplayUtil) {
                                     else if(this.versionState=='D') { this.versionState='R'; versionTag='release'; }
                                     this.$toggleVersionBtn.html(this.versionState);
                                     this.refreshFromService(versionTag);
+
+                                    if(this.appCatalog) {
+                                        this.appCatalog.setTag(versionTag);
+                                    }
                                 }.bind(this)));
+
+
+
+            this.$appCatalogBody = $('<div>');
+            this.appCatalog = null;
+            
+            this.$appCatalogContainer = $('<div>')
+                                  .append($('<div>')
+                                          .addClass('kb-side-header active')
+                                          .css({'width':'100%'})
+                                          .append('App Catalog'))
+                                  .append(this.$appCatalogBody);
+
+            this.$slideoutBtn = $('<button>')
+                .addClass('btn btn-xs btn-default')
+                .tooltip({
+                    title: 'Hide / Show App Catalog', 
+                    container: 'body', 
+                    delay: { 
+                        show: Config.get('tooltip').showDelay, 
+                        hide: Config.get('tooltip').hideDelay 
+                    }
+                })
+                .append('<span class="fa fa-arrow-right"></span>')
+                .click(function(event) {
+                    // only load the appCatalog on click
+                    if(!this.appCatalog) {
+                        this.appCatalog = this.$appCatalogBody.KBaseCatalogBrowser({ignoreCategories:this.ignoreCategories});
+                    }
+
+                    this.$slideoutBtn.tooltip('hide');
+                    this.trigger('hideGalleryPanelOverlay.Narrative');
+                    this.trigger('toggleSidePanelOverlay.Narrative', this.$appCatalogContainer);
+                }.bind(this));
+
+            this.addButton(this.$slideoutBtn);
+
 
             if (!NarrativeMethodStore || !Catalog) {
                 this.showError('Unable to connect to the Catalog or NMS!');

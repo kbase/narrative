@@ -1,6 +1,6 @@
 Last updated 2/2/2016, 9:00pm PST
 
-  * Markdown cells render a little different. Previously headers could be made by "###text" on its own line, now a space is needed: "### text" on that line.
+  * ~~Markdown cells render a little different. Previously headers could be made by "###text" on its own line, now a space is needed: "### text" on that line.~~
   * ~~The "view only" mode has a gigantic margin on the left side. [KBASE-3370](https://atlassian.kbase.us/browse/KBASE-3370)~~
   * All cells sit in a container that makes it easier to see what's selected or not, which brings up issues.
   * KBase cells (method, app, output, data viewer) appear as boxes in boxes with duplicated minimization. [KBASE-3335](https://atlassian.kbase.us/browse/KBASE-3335)
@@ -13,7 +13,7 @@ Last updated 2/2/2016, 9:00pm PST
   * ~~Missing the same hash file that should be inside the Narrative image.~~
   * ~~Entering a narrative can be started with multiple cells already selected (should be just the first one or none. probably none.)~~
   * Select2 input boxes don't have a cursor or other context clue that you can type in them
-  * Method panel: search area's X button has no border
+  * ~~Method panel: search area's X button has no border~~
   * ~~Narrative panel: buttons in "corrupted" narratives still exist on mouseover, but have no function or icon~~
   * Narrative panel: clicking the "link" button doesn't dismiss tooltip.
   * Narrative panel: "My Narratives" and "Shared with Me" headings should be collapsible.
@@ -26,3 +26,7 @@ Last updated 2/2/2016, 9:00pm PST
   * Method/app cells should be drag/droppable like data cells.
   * Name change doesn't seem to change temporary state (should actually use temporary state instead of "Untitled" name)
   * Extra copy of workspace client - needs to migrate to the right repo.
+
+- Update the viewers widget to behave better when it can't find a viewer
+- Finally sketch out and prototype a new cell layout that moves titles around.
+- Check in with the SDK team on the styling of their method cell addition with the console logging. It's pretty bare-bones.

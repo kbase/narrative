@@ -69,6 +69,8 @@ function($,
             this.method = JSON.parse(this.options.method);
             this.cellId = this.options.cellId;
 
+            this.$dynamicMethodSummary = $('<div>');
+
             this.errorDialog = new BootstrapDialog({
                 title: 'Problems exist in your parameter settings.',
                 buttons: [$('<button type="button" data-dismiss="modal">').addClass('btn btn-default').append('Dismiss')],
@@ -76,6 +78,9 @@ function($,
             });
 
             this.methClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
+            this.on('get_cell_subtitle.Narrative', function(e, callback) {
+                callback(this.getSubtitle());
+            }.bind(this));
             this.render();
             return this;
         },
@@ -102,7 +107,7 @@ function($,
                     if (!this.checkMethodRun())
                         return;
 
-                    this.submittedText = '&nbsp;&nbsp; submitted on ' + this.readableTimestamp();
+                    this.submittedText = 'submitted on ' + this.readableTimestamp();
                     if(this.auth()) {
                         if(this.auth().user_id)
                             this.submittedText += ' by <a href="/#people/'+this.auth().user_id
@@ -193,7 +198,6 @@ function($,
              
             this.$header.append(this.$staticMethodInfo);
 
-            this.$dynamicMethodSummary = $('<div>');
             this.$header.append(this.$dynamicMethodSummary);
 
             // Controls (minimize)
@@ -205,21 +209,26 @@ function($,
             this.panel_minimized = false;
 
             this.$cellPanel = $('<div>')
-                              .addClass('panel kb-func-panel kb-cell-run')
-                              .append($controlsSpan)
+                              .append(this.$inputDiv)
                               .append($('<div>')
-                                      .addClass('panel-heading')
-                                      .append(this.$header))
-                              .append($('<div>')
-                                      .addClass('panel-body')
-                                      .append(this.$inputDiv))
-                              .append($('<div>')
-                                      .addClass('panel-footer')
-                                      .css({'overflow' : 'hidden'})
+                                      .addClass('kb-method-footer')
+                                      .css({'overflow': 'hidden'})
                                       .append($buttons));
 
-//             this.cellMenu = $menuSpan.kbaseNarrativeCellMenu({'kbWidget':this, 'kbWidgetType':'method'});
-            var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
+            // this.$cellPanel = $('<div>')
+            //                   .addClass('panel kb-func-panel kb-cell-run')
+            //                   .append($controlsSpan)
+            //                   .append($('<div>')
+            //                           .addClass('panel-heading')
+            //                           .append(this.$header))
+            //                   .append($('<div>')
+            //                           .addClass('panel-body')
+            //                           .append(this.$inputDiv))
+            //                   .append($('<div>')
+            //                           .addClass('panel-footer')
+            //                           .css({'overflow' : 'hidden'})
+            //                           .append($buttons));
+
             this.$elem.append(this.$cellPanel);
 
             // Add minimize/restore actions.
@@ -328,7 +337,8 @@ function($,
                     submittedText : this.submittedText,
                     outputState : this.allowOutput
                 },
-                minimized : this.panel_minimized,
+                // hack for now to ignore state. this now gets managed outside the widget.
+                // minimized : this.panel_minimized,
                 params : this.$inputWidget.getState(),
                 jobDetails: this.jobDetails
             };
@@ -362,27 +372,21 @@ function($,
                         this.isJobStatusLoadedFromState = true;
                 }
                 this.changeState(state.runningState.runState);
-                if(state.minimized) {
-                    this.minimizeView(true); // true so that we don't show slide animation
-                }
+                // if(state.minimized) {
+                //     this.minimizeView(true); // true so that we don't show slide animation
+                // }
             }
             else
                 this.$inputWidget.loadState(state);
+            this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', this.getSubtitle());
         },
 
         /* Show/hide running icon */
         displayRunning: function(is_running, had_error) {
             var $cellMenu = this.$elem.closest('.cell').find('.button_container');
             if (is_running) {
-                // var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
                 $cellMenu.trigger('runningIndicator.toolbar', {enabled: true});
                 $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
-                //console.log('displayRunning: ');
-                //console.log(cellMenu);
-                
-                //this.cellMenu.$runningIcon.show();
-                // never show error icon while running
-                // this.cellMenu.$errorIcon.hide();
             } else {
                 $cellMenu.trigger('runningIndicator.toolbar', {enabled: false});
                 if (had_error) {
@@ -391,16 +395,6 @@ function($,
                     $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
 
                 }
-
-                
-                
-//                var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
-//                console.log('displayRunning: ');
-//                console.log(cellMenu);
-//                this.cellMenu.$runningIcon.hide();
-//                // only display error when not running
-//                if (had_error) { this.cellMenu.$errorIcon.show(); }
-//                else { this.cellMenu.$errorIcon.hide(); }
             }
         },
 
@@ -495,6 +489,16 @@ function($,
                         this.$inputWidget.lockInputs();
                         this.$elem.find('.kb-app-panel').addClass('kb-app-error');
                         this.displayRunning(false, true);
+                        break;
+                    case 'queued':
+                        this.$submitted.html(this.submittedText).show();
+                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
+                        this.$cellPanel.addClass('kb-app-step-running');
+                        this.$runButton.hide();
+                        this.$stopButton.show();
+                        this.$resetButton.hide();
+                        this.$inputWidget.lockInputs();
+                        this.displayRunning(true);
                         break;
                     default:
                         this.$cellPanel.removeClass('kb-app-step-running');
@@ -842,6 +846,12 @@ function($,
             this.changeState('complete', null, data.result);
         },
 
+        getSubtitle: function () {
+            if (this.submittedText && !this.isAwaitingInput()) {
+                return this.submittedText;
+            }
+            return "Not yet submitted.";
+        },
 
         updateDynamicMethodSummaryHeader: function() {
             var self = this;

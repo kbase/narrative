@@ -9,6 +9,7 @@ require.config({
         bluebird                                : 'ext_components/bluebird/js/browser/bluebird.min',
         plotly                                  : 'ext_components/plotly.js/dist/plotly.min',
         util                                    : 'kbase/js/util/',
+        narrative_core                          : 'kbase/js/widgets/narrative_core',
         configPath                              : 'kbase',
         narrativeViewers                        : 'kbase/js/widgets/narrative_core/narrativeViewers',
         domReady                                : 'ext_components/requirejs/domReady',

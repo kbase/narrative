@@ -211,7 +211,18 @@ span#notebook_name:hover {
     background-color: transparent;
 }
 
+.text_cell.opened.rendered.kb-cell .rendered_html {
+    padding: 0;
+    border: 0;
+}
 
+.text_cell.opened.rendered.selected.kb-cell .rendered_html {
+    border-left: 1px solid #4BB856;
+}
+
+.text_cell.opened.rendered.kb-cell {
+    padding-bottom: 0;
+}
 /* narrative cell icons */
 
 .cell.selected .prompt .method-icon {

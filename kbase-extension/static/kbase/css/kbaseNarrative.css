@@ -2410,8 +2410,15 @@ div[class="tooltip-inner"] {
 }
 
 
+.unselected .prompt .method-icon {
+    color: silver;
+}
 .method-icon {
     color: rgb(103, 58, 183);
+}
+
+.unselected .prompt .app-icon {
+    color: silver;
 }
 .app-icon {
     color: rgb(0, 150, 136);

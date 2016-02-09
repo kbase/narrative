@@ -158,12 +158,9 @@ span#notebook_name:hover {
     color: #888;
 }
 
-
 .notebook_app .btn.active {
     box-shadow: none;
 }
-
-
 
 /* Fooling around with the narrative cells */
 
@@ -219,7 +216,9 @@ span#notebook_name:hover {
 .text_cell.opened.rendered.selected.kb-cell .rendered_html {
     border-left: 1px solid #4BB856;
 }
-
+.text_cell.opened.rendered.selected.kb-cell.kb-error .rendered_html {
+    border-left: 1px solid #d9534f;
+}
 .text_cell.opened.rendered.kb-cell {
     padding-bottom: 0;
 }

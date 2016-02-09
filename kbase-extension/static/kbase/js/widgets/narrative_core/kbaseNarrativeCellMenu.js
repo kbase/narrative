@@ -261,7 +261,7 @@ function($, Config, TimeFormat) {
             // this shows on error
             this.$errorIcon = $("<span>")
                 .addClass("fa fa-exclamation-triangle")
-                .css({color: "red"})
+                .css({color: "red", 'font-size': '14pt'})
                 .hide();
             this.$elem.data('errorIcon', this.$errorIcon);
             this.$elem.on('show-error', function () {

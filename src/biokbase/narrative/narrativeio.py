@@ -150,6 +150,19 @@ class KBaseWSManagerMixin(object):
         4. Return any notebook changes as a list-
            (narrative, ws_id, obj_id)
         """
+
+        if (nb.has_key('worksheets')):
+            # it's an old version. update it by replacing the 'worksheets' key with
+            # the 'cells' subkey
+            # the old version only uses the first 'worksheet', so if it's there,
+            # copy it out
+            if (isinstance(nb['worksheets'], list) and len(nb['worksheets']) > 0 and nb['worksheets'][0].has_key('cells')):
+                nb['cells'] = nb['worksheets'][0]['cells']
+            else:
+                nb['cells'] = list()
+            del(nb['worksheets'])
+            nb['nbformat'] = 4
+
         parsed_ref = self._parse_obj_ref(obj_ref)
         if parsed_ref is None:
             raise HTTPError(500, 'Unable to parse incorrect obj_ref "{}"'.format(obj_ref))

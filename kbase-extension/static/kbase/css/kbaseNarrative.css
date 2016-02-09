@@ -1304,6 +1304,7 @@ div#notebook_panel {
 
 .kb-toolbar-open {
     padding-top: 7px;
+    border-bottom: 1px solid #CCC;
 }
 
 .selected .kb-toolbar-open {
@@ -1312,7 +1313,6 @@ div#notebook_panel {
 }
 
 .unselected .kb-toolbar-open {
-    border-color: #EAEAEA;
     background-color: none;
 }
 
@@ -1693,6 +1693,12 @@ control with padding, and then scooting the icon back into its column.
     color: #2a6496;
 }
 
+.kb-method-footer {
+    widget: 100%;
+    overflow: none;
+    background-color: #F5F5F5;
+    padding: 10px;
+}
 
 /* -- App/method panel styling --*/
 

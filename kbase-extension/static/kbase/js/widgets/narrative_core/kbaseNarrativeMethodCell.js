@@ -209,18 +209,25 @@ function($,
             this.panel_minimized = false;
 
             this.$cellPanel = $('<div>')
-                              .addClass('panel kb-func-panel kb-cell-run')
-                              .append($controlsSpan)
+                              .append(this.$inputDiv)
                               .append($('<div>')
-                                      .addClass('panel-heading')
-                                      .append(this.$header))
-                              .append($('<div>')
-                                      .addClass('panel-body')
-                                      .append(this.$inputDiv))
-                              .append($('<div>')
-                                      .addClass('panel-footer')
-                                      .css({'overflow' : 'hidden'})
+                                      .addClass('kb-method-footer')
+                                      .css({'overflow': 'hidden'})
                                       .append($buttons));
+
+            // this.$cellPanel = $('<div>')
+            //                   .addClass('panel kb-func-panel kb-cell-run')
+            //                   .append($controlsSpan)
+            //                   .append($('<div>')
+            //                           .addClass('panel-heading')
+            //                           .append(this.$header))
+            //                   .append($('<div>')
+            //                           .addClass('panel-body')
+            //                           .append(this.$inputDiv))
+            //                   .append($('<div>')
+            //                           .addClass('panel-footer')
+            //                           .css({'overflow' : 'hidden'})
+            //                           .append($buttons));
 
             this.$elem.append(this.$cellPanel);
 
@@ -330,7 +337,8 @@ function($,
                     submittedText : this.submittedText,
                     outputState : this.allowOutput
                 },
-                minimized : this.panel_minimized,
+                // hack for now to ignore state. this now gets managed outside the widget.
+                // minimized : this.panel_minimized,
                 params : this.$inputWidget.getState(),
                 jobDetails: this.jobDetails
             };
@@ -364,9 +372,9 @@ function($,
                         this.isJobStatusLoadedFromState = true;
                 }
                 this.changeState(state.runningState.runState);
-                if(state.minimized) {
-                    this.minimizeView(true); // true so that we don't show slide animation
-                }
+                // if(state.minimized) {
+                //     this.minimizeView(true); // true so that we don't show slide animation
+                // }
             }
             else
                 this.$inputWidget.loadState(state);
@@ -481,6 +489,16 @@ function($,
                         this.$inputWidget.lockInputs();
                         this.$elem.find('.kb-app-panel').addClass('kb-app-error');
                         this.displayRunning(false, true);
+                        break;
+                    case 'queued':
+                        this.$submitted.html(this.submittedText).show();
+                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
+                        this.$cellPanel.addClass('kb-app-step-running');
+                        this.$runButton.hide();
+                        this.$stopButton.show();
+                        this.$resetButton.hide();
+                        this.$inputWidget.lockInputs();
+                        this.displayRunning(true);
                         break;
                     default:
                         this.$cellPanel.removeClass('kb-app-step-running');

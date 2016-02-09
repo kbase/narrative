@@ -314,7 +314,7 @@ function ($, _, Promise, Config, DisplayUtil) {
                 .click(function(event) {
                     // only load the appCatalog on click
                     if(!this.appCatalog) {
-                        this.appCatalog = this.$appCatalogBody.KBaseCatalogBrowser({});
+                        this.appCatalog = this.$appCatalogBody.KBaseCatalogBrowser({ignoreCategories:this.ignoreCategories});
                     }
 
                     this.$slideoutBtn.tooltip('hide');

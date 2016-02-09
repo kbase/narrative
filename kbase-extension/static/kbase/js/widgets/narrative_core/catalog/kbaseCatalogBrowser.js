@@ -9,20 +9,21 @@ define([
     'jquery',
     'bluebird',
     'narrativeConfig',
-    'narrative_core/catalog/catalog_util',
     'narrative_core/catalog/app_card',
+    'util/display',
     'catalog-client-api',
     'kbase-client-api',
     'kbwidget',
     'kbaseAuthenticatedWidget', 
     'bootstrap',
 ],
-    function ($, Promise, Config, CatalogUtil, AppCard) {
+    function ($, Promise, Config, AppCard, DisplayUtil) {
         $.KBWidget({
             name: "KBaseCatalogBrowser",
             parent: "kbaseAuthenticatedWidget",  // todo: do we still need th
             options: {
                 tag: null,
+                ignoreCategories: {}
             },
             $mainPanel: null,
             $errorPanel: null,
@@ -77,11 +78,9 @@ define([
                     util : 'Utilities'
                 };
 
-
                 // new style we have a runtime object that gives us everything in the options
                 self.runtime = options.runtime;
                 //console.log(this.runtime.service('session').getUsername());
-                self.util = new CatalogUtil();
                 self.setupClients();
 
                 // initialize and add the control bar
@@ -93,8 +92,8 @@ define([
                 $container.append(this.$controlToolbar);
 
                 // initialize and add the main panel
-                self.$loadingPanel = self.util.initLoadingPanel();
-                self.$elem.append(self.$loadingPanel);
+                self.$loadingPanel = DisplayUtil.loadingDiv().div;
+                $container.append(self.$loadingPanel);
                 var mainPanelElements = self.initMainPanel();
                 self.$mainPanel = mainPanelElements[0];
                 self.$appListPanel = mainPanelElements[1];
@@ -533,7 +532,13 @@ define([
                         for(var k=0; k<methods.length; k++) {
 
                             // logic to hide/show certain categories
-                            if(self.util.skipApp(methods[k].categories)) continue;
+                            var skip = false;
+                            for(var i=0; i<methods[k].categories.length; i++) {
+                                if(self.options.ignoreCategories[methods[k].categories[i]]) {
+                                    skip = true;
+                                }
+                            }
+                            if(skip) continue;
 
                             // [NARRATIVE_EDIT] - always logged in, so we don't / can't check session
                             var m = new AppCard('method',methods[k],tag,self.nms_base_url, 

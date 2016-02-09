@@ -102,6 +102,13 @@
             return this;
         },
 
+        getSubtitle: function() {
+            if (this.state.runningState.submittedText && !this.isAwaitingInput()) {
+                return this.state.runningState.submittedText;
+            }
+            return "Not yet submitted.";
+        },
+
         fetchMethodInfo: function() {
             if (!this.appSpec.steps || this.appSpec.steps.length === 0) {
                 KBError("App::" + this.appSpec.info.name, "has no steps");
@@ -164,6 +171,7 @@
                 $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
             }
             this.$elem.empty().append($errorPanel);
+            this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', 'Error! Unable to load app information!');
         },
 
         /**
@@ -193,13 +201,14 @@
                               .append('Run')
                               .click(
                                   $.proxy(function(event) {
-                                      var submittedText = "&nbsp;&nbsp; submitted on "+this.readableTimestamp(new Date().getTime());
+                                      var submittedText = "submitted on "+this.readableTimestamp(new Date().getTime());
                                       if(this.auth()) {
                                           if(this.auth().user_id)
                                               submittedText += ' by <a href="/#people/'+this.auth().user_id
                                                                       +'" target="_blank">' + this.auth().user_id + "</a>";
                                       }
                                       this.$submitted.html(submittedText);
+                                      this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', submittedText);
                                       var isGood = self.startAppRun();
                                       if (!isGood) { return; }
 
@@ -281,35 +290,36 @@
 
             var $appSubtitleDiv = $("<div>")
                                         .addClass('kb-app-panel-description')
-                                        .append('&nbsp;&nbsp;&nbsp;&nbsp;' + this.appSpec.info.subtitle)
+                                        .append(this.appSpec.info.subtitle)
                                         .append('&nbsp;&nbsp;<a href="'+this.options.appHelpLink+this.appSpec.info.id+'" target="_blank">more...</a>');
             var $appSubmittedStamp = $("<div>");
 
 
             var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, '"')
             var $appHeaderDiv = $("<div>")
-                                        .addClass('kb-app-panel-header')
-                                        .html(headerCleaned);
+                                // .addClass('kb-app-panel-header')
+                                .html(headerCleaned);
 
-            var $menuSpan = $('<div class="pull-right">');
+            // var $menuSpan = $('<div class="pull-right">');
 
             // Controls (minimize)
-            var $controlsSpan = $('<div>').addClass("pull-left");
-            var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
-                        .css({color: "#888", fontSize: "14pt", cursor:'pointer', paddingTop: "7px", margin: "5px"});
-            $controlsSpan.append($minimizeControl);
+            // var $controlsSpan = $('<div>').addClass("pull-left");
+            // var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
+            //             .css({color: "#888", fontSize: "14pt", cursor:'pointer', paddingTop: "7px", margin: "5px"});
+            // $controlsSpan.append($minimizeControl);
 
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
-                             .append($controlsSpan)
-                             .append($menuSpan)
+                             // .append($controlsSpan)
+                             // .append($menuSpan)
                              .append($('<div>')
                                         .addClass('panel-heading')
-                                        .append($('<div>').addClass('app-panel-heading')
-                                                   .append($('<div>')
-                                                           .append($('<h1><b>' + appTitle + '</b></h1>')))
-                                                   .append($appSubtitleDiv)
-                                                   .append($appSubmittedStamp)))
+                                        .append($('<div>')
+                                                .append($appSubtitleDiv)
+                                                .append($appSubmittedStamp)))
+                                                   //.addClass('app-panel-heading')
+                                                   // .append($('<div>')
+                                                           // .append($('<h1><b>' + appTitle + '</b></h1>')))
                              .append($('<div>')
                                      .addClass('panel-body')
                                      .append($appHeaderDiv))
@@ -346,32 +356,36 @@
             var $mintarget = $cellPanel;
             this.panel_minimized = false;
             var self = this;
-            $controlsSpan.click(function() {
-                if (self.panel_minimized) {
-                    $appSubmittedStamp.hide();
-                    $appSubtitleDiv.show();
+            // $controlsSpan.click(function() {
+            //     if (self.panel_minimized) {
+            //         $appSubmittedStamp.hide();
+            //         $appSubtitleDiv.show();
+            //         $cellMenu.minimizeSubtext('');
 
-                    $mintarget.children(".panel-body").slideDown();
-                    $mintarget.children(".panel-footer").slideDown();
-                    $minimizeControl.removeClass("glyphicon-chevron-right")
-                                    .addClass("glyphicon-chevron-down");
-                    self.panel_minimized = false;
-                }
-                else {
-                    if(self.state.runningState.submittedText && !self.isAwaitingInput()) {
-                        $appSubmittedStamp.html($('<h2>').append("&nbsp;&nbsp;&nbsp;" +self.state.runningState.submittedText));
-                        $appSubmittedStamp.show();
-                        $appSubtitleDiv.hide();
-                    }
-                    $mintarget.children(".panel-footer").slideUp();
-                    $mintarget.children(".panel-body").slideUp();
-                    $minimizeControl.removeClass("glyphicon-chevron-down")
-                                    .addClass("glyphicon-chevron-right");
-                    self.panel_minimized = true;
-                }
-            });
+            //         $mintarget.children(".panel-body").slideDown();
+            //         $mintarget.children(".panel-footer").slideDown();
+            //         $minimizeControl.removeClass("glyphicon-chevron-right")
+            //                         .addClass("glyphicon-chevron-down");
+            //         self.panel_minimized = false;
+            //     }
+            //     else {
+            //         if(self.state.runningState.submittedText && !self.isAwaitingInput()) {
+            //             $appSubmittedStamp.html($('<h2>').append("&nbsp;&nbsp;&nbsp;" +self.state.runningState.submittedText));
+            //             $appSubmittedStamp.show();
+            //             $appSubtitleDiv.hide();
+            //         }
+            //         $cellMenu.minimizeSubtext('test');
+            //         $mintarget.children(".panel-footer").slideUp();
+            //         $mintarget.children(".panel-body").slideUp();
+            //         $minimizeControl.removeClass("glyphicon-chevron-down")
+            //                         .addClass("glyphicon-chevron-right");
+            //         self.panel_minimized = true;
+            //     }
+            // });
 
             // finally, we refresh so that our drop down or other boxes can be populated
+            console.log(this.$elem.closest('.cell').find('.button_container').data());
+            // this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', 'Not yet submitted.');
             this.refresh();
         },
 
@@ -814,6 +828,7 @@
                     if (state.runningState.submittedText) {
                         this.$submitted.html(state.runningState.submittedText);
                         this.state.runningState.submittedText = state.runningState.submittedText;
+                        this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', state.runningState.submittedText);
                     }
                     if (state.runningState.appRunState === "running") {
                         if (state.runningState.runningStep) {

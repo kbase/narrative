@@ -113,7 +113,7 @@ function( $, Config ) {
             var $advancedOptionsControllerRow = $("<div>").addClass("row").css({"margin":"5px"});
             if (hasAdvancedOption) {
                 $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12 kb-method-advanced-options-controller")
-                                                     .append("show advanced options"))
+                                                     .append("show advanced options")
                                                      .on('click',function() {
                                                         if (self.$advancedOptionsDiv.is(":visible")) {
                                                             self.$advancedOptionsDiv.hide();
@@ -122,7 +122,7 @@ function( $, Config ) {
                                                             self.$advancedOptionsDiv.show();
                                                             $(this).find(".kb-method-advanced-options-controller").html("hide advanced options");
                                                         }
-                                                     } );
+                                                     } ));
                 $inputParameterContainer.append($advancedOptionsControllerRow);
                 $inputParameterContainer.append(this.$advancedOptionsDiv.hide());
             } else {

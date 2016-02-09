@@ -890,10 +890,6 @@ p span.notification{
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
 }
 
-/*.btn-group {
-    margin-right: 5px;
-}*/
-
 #menus {
     padding-left: 0px;
 }
@@ -1289,6 +1285,41 @@ div#notebook_panel {
     cursor: pointer;
 }
 
+.kb-cell-toolbar .buttons {
+    font-weight: bold;
+    color: #CECECE !important;
+}
+.kb-cell-toolbar .title {
+    font-weight: normal;
+    font-size: 120%;
+    font-family: "OxygenBold", Arial, sans-serif;
+    color: #2e618d;
+}
+
+.kb-cell-toolbar .subtitle {
+    font-family: "Roboto", Arial, sans-serif;
+    font-size: 90%;
+    color: #666;
+}
+
+.kb-toolbar-open {
+    padding-top: 7px;
+    border-bottom: 1px solid #CCC;
+}
+
+.selected .kb-toolbar-open {
+    border-bottom: 1px solid #4BB856;
+    background-color: #dff0d8;
+}
+
+.unselected .kb-toolbar-open {
+    background-color: none;
+}
+
+.selected.kb-error .kb-toolbar-open {
+    border-color: #D9534F;
+    background-color: #F2DEDE;
+}
 
 /* ------------------------------------------------- */
 /* IPython cells */
@@ -1416,6 +1447,11 @@ div#notebook_panel {
     font-size: 10pt;
     font-family: 'Roboto';
     margin-top: -3px;
+    padding-right: 1em;
+}
+
+.unselected .kb-func-timestamp {
+    color: silver;
 }
 
 .kb-func-panel {
@@ -1657,24 +1693,30 @@ control with padding, and then scooting the icon back into its column.
     color: #2a6496;
 }
 
+.kb-method-footer {
+    widget: 100%;
+    overflow: none;
+    background-color: #F5F5F5;
+    padding: 10px;
+}
 
 /* -- App/method panel styling --*/
 
-.kb-app-panel {
-    border:0;
-    border-top: 1px solid #CECECE;
-    border-radius: 1px;
-}
+/*.kb-app-panel {*/
+    /*border:0;*/
+    /*border-top: 1px solid #CECECE;*/
+    /*border-radius: 1px;*/
+/*}*/
 
 .kb-app-error {
     background-color: #F2DEDE;
 }
 
-.app-panel-heading {
+/*.app-panel-heading {
     padding-top: 10px;
 }
-
-.app-panel-heading h1 {
+*/
+/*.app-panel-heading h1 {
     font-family: 'Roboto';
     font-weight: normal;
     font-size: 16pt;
@@ -1684,6 +1726,7 @@ control with padding, and then scooting the icon back into its column.
     opacity: inherit;
     display: inline;
 }
+*/
 .kb-app-step-container {
     margin-top: 6px;
 }
@@ -1701,7 +1744,6 @@ control with padding, and then scooting the icon back into its column.
     font-size: 12pt;
     line-height: 15px;
     color: #2E618D;
-    margin: 3px;
 }
 .kb-app-step-error-mssg {
    font-family: sans-serif;
@@ -2374,8 +2416,15 @@ div[class="tooltip-inner"] {
 }
 
 
+.unselected .prompt .method-icon {
+    color: silver;
+}
 .method-icon {
     color: rgb(103, 58, 183);
+}
+
+.unselected .prompt .app-icon {
+    color: silver;
 }
 .app-icon {
     color: rgb(0, 150, 136);
@@ -2971,131 +3020,3 @@ div[class="tooltip-inner"] {
 
 /* bootstrap sillines */
 
-/* margin left doesn't really seeem to play well */
-.btn-toolbar {
-    margin-left: 0;
-    padding-left: -5px;
-}
-
-.kb-narr-side-panel .btn-group .btn {
-    padding: 3px 4px 3px 4px;
-    font-size: 16px;
-}
-
-.btn-subtle {
-    color: #888;
-    margin: 0px
-}
-.btn-subtle .fa {
-    color: #888;
-}
-.btn-subtle .fa::before {
-    color: #888;
-}
-
-
-.notebook_app .btn.active {
-    box-shadow: none;
-}
-
-
-/* Fooling around with the narrative cells */
-
-.cell {
-}
-.notebook_app .cell.selected {
-    /* background-color: #EEFFE3;*/
-    background-color: #E8EFFF;
-}
-.notebook_app .inner_cell {
-    overflow: visible;
-    margin-right: 4px;
-}
-.notebook_app .cell.selected .inner_cell > div:nth-child(2),
-.notebook_app .cell.selected .inner_cell > div:nth-child(3) {
-    background-color: #FFF;
-}
-
-.notebook_app .celltoolbar > .button_container {
-    width: 100%;
-}
-
-.notebook_app .prompt {
-    font-size: 12px;
-    color: silver;
-    width: 75px;
-}
-
-.notebook_app .code_cell {
-    background-color: #FFF;
-}
-
-.notebook_app .cell.unselected div.text_cell_render {
-    border: 1px solid transparent;
-}
-.notebook_app .cell.selected div.text_cell_render {
-    border: 1px solid #CFCFCF;
-}
-
-.notebook_app .buttons .dropdown-menu {
-    height: auto !important;
-    overflow: visible !important;
-        
-}
-
-.notebook_app .btn.disabled .fa {
-    color: #E8E8E8;
-}
-
-.notebook_app .cell .btn {
-    background-color: transparent;
-}
-
-.notebook_app .kb-cell-toolbar .title {
-    font-weight: bold;
-    font-size: 110%;
-}
-
-
-/* narrative cell icons */
-
-.cell.selected .prompt .method-icon {
-    color: rgb(103, 58, 183);
-}
-.cell.selected .prompt .app-icon {
-    color: rgb(0, 150, 136);
-}
-.cell.selected .prompt .markdown-icon {
-    color: #000;
-}
-
-.cell.selected .prompt .app-output-icon {
-    color: #000;
-}
-
-.cell.selected .prompt .method-output-icon {
-    color: #000;
-}
-
-.cell.selected .prompt .data-viewer-icon {
-    color: #000;
-}
-
-.cell.selected .prompt .error-icon {
-    color: red;
-}
-
-.cell.selected .prompt 
-
-
-.cell > .inner_cell > .ctb_hideshow {
-    display: block;
-}
-
-.cell.selected .btn-default {
-    color: #000;
-}
-
-.cell.unselected .btn-default {
-    color: #CCC;
-}

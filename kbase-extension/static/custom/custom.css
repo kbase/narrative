@@ -60,19 +60,41 @@ div.text_cell_input {
 
 div.cell {
     /*padding: 5px 0px 0 0;*/
-    margin: 6px 0 6px 0;
-    padding: 6px 0 6px 0;
+    margin: 8px 0 8px 0px;
+    padding: 6px 0 6px 4px;
     border: 1px solid #CCC;
-    border-left: 5px solid  #CCC;
+    /*border-left: 5px solid  #CCC;*/
+    border-radius: 0;
 }
 
 div.cell.selected {
     border: 1px solid #4BB856;
     border-left: 5px solid #4BB856;
-    padding: 6px 0 6px 0;
+    padding-left: 0px;
+    background-color: #E8EFFF;
     background: none;
+    transition: box-shadow 0.2s ease-in-out;
+    -moz-transition: box-shadow 0.2s ease-in-out;
+    -webkit-transition: box-shadow 0.2s ease-in-out;
+    box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
+    -moz-box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
+    -webkit-box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
 }
 
+div.cell.opened {
+    padding-top: 0px;
+}
+
+.edit_mode div.cell.selected {
+    border-left: 5px solid #66BB6A;
+    background: none;
+    padding-left: 0px;
+}
+
+div.cell.selected.kb-error {
+    border: 1px solid #d9534f;
+    border-left: 5px solid #d9534f;
+}
 input.raw_input {
     /*height:auto;*/
 }
@@ -112,4 +134,128 @@ span#notebook_name:hover {
     bottom: 0;
     overflow: auto;
     padding-bottom: 100px;
+}
+
+/* margin left doesn't really seeem to play well */
+.btn-toolbar {
+    margin-left: 0;
+    padding-left: -5px;
+}
+
+.kb-narr-side-panel .btn-group .btn {
+    padding: 3px 4px 3px 4px;
+    font-size: 16px;
+}
+
+.btn-subtle {
+    color: #888;
+    margin: 0px
+}
+.btn-subtle .fa {
+    color: #888;
+}
+.btn-subtle .fa::before {
+    color: #888;
+}
+
+
+.notebook_app .btn.active {
+    box-shadow: none;
+}
+
+
+
+/* Fooling around with the narrative cells */
+
+.notebook_app .inner_cell {
+    overflow: visible;
+    /*margin-right: 4px;*/
+}
+/*.notebook_app .cell.selected .inner_cell > div:nth-child(2),
+.notebook_app .cell.selected .inner_cell > div:nth-child(3) {
+    background-color: #FFF;
+}
+*/
+.notebook_app .celltoolbar > .button_container {
+    width: 100%;
+}
+
+.notebook_app .prompt {
+    font-size: 12px;
+    color: silver;
+    width: 75px;
+}
+
+/*.notebook_app .code_cell {
+    background-color: #FFF;
+}
+*/
+.notebook_app .cell.unselected div.text_cell_render {
+    border: 1px solid transparent;
+}
+.notebook_app .cell.selected div.text_cell_render {
+    border: 1px solid transparent;
+}
+
+.notebook_app .buttons .dropdown-menu {
+    height: auto !important;
+    overflow: visible !important;
+        
+}
+
+.notebook_app .btn.disabled .fa {
+    color: silver;
+}
+
+.notebook_app .cell .celltoolbar .btn {
+    background-color: transparent;
+}
+
+
+/* narrative cell icons */
+
+.cell.selected .prompt .method-icon {
+    color: rgb(103, 58, 183);
+}
+.cell.selected .prompt .app-icon {
+    color: rgb(0, 150, 136);
+}
+.cell.selected .prompt .markdown-icon {
+    color: #000;
+}
+
+.cell.selected .prompt .app-output-icon {
+    color: #000;
+}
+
+.cell.selected .prompt .method-output-icon {
+    color: #000;
+}
+
+.cell.selected .prompt .data-viewer-icon {
+    color: #000;
+}
+
+.cell.selected .prompt .error-icon {
+    color: red;
+}
+
+.cell.selected .prompt.input_prompt {
+    color: #303F9F;
+}
+
+.cell.selected .prompt.output_prompt {
+    color: #D84315;
+}
+
+.cell > .inner_cell > .ctb_hideshow {
+    display: block;
+}
+
+.cell.selected .btn-default {
+    color: #000;
+}
+
+.cell.unselected .btn-default {
+    color: #CCC;
 }

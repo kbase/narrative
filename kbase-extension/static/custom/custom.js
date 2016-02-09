@@ -99,7 +99,8 @@ define(['jquery',
     'notebook/js/mathjaxutils',
     'components/marked/lib/marked',
     'components/requirejs/require',
-    'narrative_paths'
+    'narrative_paths',
+    'kbaseNarrativeCellMenu'
 ],
     function ($,
         Jupyter,
@@ -132,34 +133,15 @@ define(['jquery',
         };
 
         cellToolbar.CellToolbar.prototype.renderToggleState = function () {
-            var $kbToolbar = $(this.element).find('.kb-cell-toolbar'),
-                $icon = $kbToolbar.find('[data-button="toggle"] > span.fa'),
-                toggleState = this.cell.getCellState('toggleState', 'unknown');
-            switch (toggleState) {
-                case 'closed':
-                    if ($icon.hasClass('fa-chevron-down')) {
-                        $icon.removeClass('fa-chevron-down');
-                        $icon.addClass('fa-chevron-right');
-                    }
-                    break;
-                case 'open':
-                    if ($icon.hasClass('fa-chevron-right')) {
-                        $icon.removeClass('fa-chevron-right');
-                        $icon.addClass('fa-chevron-down');
-                    }
-                    break;
-                case 'unknown':
-                    if ($icon.hasClass('fa-chevron-right')) {
-                        $icon.removeClass('fa-chevron-right');
-                        $icon.addClass('fa-chevron-down');
-                    }
-                    break;
-
-            }
+            var toggleState = this.cell.getCellState('toggleState', 'unknown');
+            // Test to see if the kbaseNarrativeCellMenu is attached to this toolbar.
+            var elemData = $(this.inner_element).find('.button_container').data();
+            if (elemData && elemData['kbaseNarrativeCellMenu'])
+               $(this.inner_element).find('.button_container').kbaseNarrativeCellMenu('toggleState', toggleState);
         };
         
         // disable hiding of the toolbar
-        cellToolbar.CellToolbar.prototype.hide  = function () {
+        cellToolbar.CellToolbar.prototype.hide = function () {
             return;
         }
 
@@ -168,14 +150,17 @@ define(['jquery',
             var $cellNode = $(this.element);
             switch (this.getCellState('toggleState', 'unknown')) {
                 case 'closed':
+                    $cellNode.removeClass('opened');
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', 'none');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', 'none');
                     break;
                 case 'open':
+                    $cellNode.addClass('opened');
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
                     break;
                 case 'unknown':
+                    $cellNode.addClass('opened');
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
                     break;
@@ -311,7 +296,7 @@ define(['jquery',
                     return 'output';
                     break;
                 default:
-                    return 'Unknown: ' + type;                    
+                    return 'unknown';
             }
             
         }
@@ -339,7 +324,7 @@ define(['jquery',
             }
             cell.renderCount += 1;
             var kbCellType = cellType(this);
-            
+
             if (kbCellType) {
                 this.set_rendered(this.get_text());
                 this.typeset();
@@ -607,21 +592,21 @@ define(['jquery',
         codeCell.CodeCell.prototype.renderToggleState = function () {
             cell.Cell.prototype.renderToggleState.apply(this);
             var $cellNode = $(this.element);
+            var elemsToToggle = [
+                $cellNode.find('.input .input_area'),
+                $cellNode.find('.widget-area'),
+                $cellNode.find('.output_wrapper')
+            ];
             switch (this.getCellState('toggleState', 'unknown')) {
                 case 'closed':
-                    $cellNode.find('.input .input_area').hide();
-                    $cellNode.find('.widget-area').hide();
-                    $cellNode.find('.output_wrapper').hide();
+                    $.each(elemsToToggle, function(i, elem) {
+                        elem.hide();
+                    });
                     break;
-                case 'open':
-                    $cellNode.find('.input .input_area').show();
-                    $cellNode.find('.widget-area').show();
-                    $cellNode.find('.output_wrapper').show();
-                    break;
-                case 'unknown':
-                    $cellNode.find('.input .input_area').show();
-                    $cellNode.find('.widget-area').show();
-                    $cellNode.find('.output_wrapper').show();
+                default:
+                    $.each(elemsToToggle, function(i, elem) {
+                        elem.show();
+                    });
                     break;
             }
         };
@@ -710,7 +695,6 @@ define(['jquery',
                     d.find('input[type="text"]').focus().select();
                 }
             });
-
         };
 
         // Kickstart the Narrative loading routine once the notebook is loaded.

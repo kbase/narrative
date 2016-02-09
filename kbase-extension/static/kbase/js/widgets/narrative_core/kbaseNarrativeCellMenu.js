@@ -2,9 +2,10 @@
 /*jslint white: true*/
 define(['jquery', 
         'narrativeConfig',
+        'util/timeFormat',
         'kbwidget', 
         'bootstrap'], 
-function($, Config) {
+function($, Config, TimeFormat) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeCellMenu',
@@ -22,23 +23,27 @@ function($, Config) {
             var self = this;
             this._super(options);
 
+            this.$subtitle = $('<div class="subtitle">').hide();
+
             this.$elem.on('mousedown', function () {
                 Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
             }.bind(this));
 
+            this.$timestamp = $('<span class="kb-func-timestamp">');
+
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
-                .append($('<span class="fa fa-trash-o" style="font-size:14pt; padding-left: 5px;">'))
-                .click($.proxy(function () {
+                .append($('<span class="fa fa-trash-o" style="font-size:14pt;">'))
+                .click(function () {
                     this.trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(this.options.cell));
-                }, this));
+                }.bind(this));
 
             var $menuBtn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
                 .append($('<span class="fa fa-cog" style="font-size:14pt">'));
 
-            var $collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle"><span class="fa fa-chevron-down"></button>')
+            this.$collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle" style="width:20px"><span class="fa fa-chevron-down"></button>')
                 .on('click', function () {
-                    self.$elem.trigger('toggle.toolbar');                    
-                });
+                    this.$elem.trigger('toggle.toolbar');
+                }.bind(this));
 
             var cell = this.options.cell;
 
@@ -53,13 +58,6 @@ function($, Config) {
                 $cellNode
                     .trigger('toggle.cell');
             });
-            
-//            this.$elem.on('toggle-output-all', function () {
-//                self.$elem
-//                    .closest('.notebook')
-//                    .find('.cell .inner_cell > div:nth-child(3)')
-//                    .toggle();
-//            });
 
             this.$menu = $('<ul>')
                 .addClass('dropdown-menu dropdown-menu-right');
@@ -71,7 +69,7 @@ function($, Config) {
                     action: function () {
                         var metadata = this.options.cell.metadata,
                             stackTrace = [],
-                            newCell = Jupyter.notebook.insert_cell_below('code', Jupyter.notebook.find_cell_index(this.options.cell));
+                            newCell = Jupyter.narrative.insertAndSelectCell('code', 'below', Jupyter.notebook.find_cell_index(this.options.cell));
                         if (metadata['kb-cell'] && metadata['kb-cell'].stackTrace) {
                             stackTrace = metadata['kb-cell'].stackTrace;
                         }
@@ -106,7 +104,7 @@ function($, Config) {
                 icon: 'fa fa-caret-square-o-up',
                 text: 'Insert Cell Above',
                 action: function () {
-                    Jupyter.notebook.insert_cell_above('markdown');
+                    Jupyter.narrative.insertAndSelectCellAbove('markdown');
                 }
             });
 
@@ -114,7 +112,7 @@ function($, Config) {
                 icon: 'fa fa-caret-square-o-down',
                 text: 'Insert Cell Below',
                 action: function () {
-                    Jupyter.notebook.insert_cell_below('markdown');
+                    Jupyter.narrative.insertAndSelectCellBelow('markdown');
                 }
             });
 
@@ -255,6 +253,11 @@ function($, Config) {
                 }
             });
 
+            this.$elem.on('set-timestamp.toolbar', function (e, time) {
+                console.log('setting time ', TimeFormat.readableTimestamp(time));
+                this.$timestamp.text(TimeFormat.readableTimestamp(time));
+            }.bind(this));
+
             // this shows on error
             this.$errorIcon = $("<span>")
                 .addClass("fa fa-exclamation-triangle")
@@ -274,8 +277,7 @@ function($, Config) {
                     self.$errorIcon.hide();
                 }
             });
-            
-            
+
             var $dropdownMenu = $('<span class="btn-group">')
                 .append($menuBtn)
                 .append(this.$menu);
@@ -283,18 +285,18 @@ function($, Config) {
             this.$elem.append(
                 $('<div class="kb-cell-toolbar container-fluid">')
                 .append($('<div class="row">')
-                    .append($('<div class="col-md-1">')
+                    .append($('<div class="col-sm-8">')
                         .append($('<div class="buttons pull-left">')
-                            .append($collapseBtn)
+                            .append(this.$collapseBtn)
+                        )
+                        .append($('<div class="title" style="display:inline-block">')
+                            .append('<div data-element="title" class="title"></div>') // title here
+                            .append(this.$subtitle)
                         )
                     )
-                    .append($('<div class="col-md-7">')
-                        .append($('<div class="title pull-left">')
-                            .append('<span data-element="title" class="title"></span>') // title here
-                        )
-                    )
-                    .append($('<div class="col-md-4">')
+                    .append($('<div class="col-sm-4">')
                         .append($('<div class="buttons pull-right">')
+                            .append(this.$timestamp)
                             .append(this.$runningIcon)
                             .append(this.$errorIcon)
                             .append(this.$jobStateIcon)
@@ -385,6 +387,57 @@ function($, Config) {
 
             return this;
         },
+
+        toggleState: function(state) {
+            var $icon = this.$collapseBtn.find('span.fa');
+
+            switch (state) {
+                case 'closed':
+                    $icon.removeClass('fa-chevron-down');
+                    $icon.addClass('fa-chevron-right');
+                    this.$elem.parent().removeClass('kb-toolbar-open');
+                    if (this.options.cell.metadata['kb-cell'] && this.$subtitle) {
+                        var type = this.options.cell.metadata['kb-cell']['type'];
+                        var $kbCell = $(this.options.cell.element).find('[id^=kb-cell]');
+                        if ($kbCell) {
+                            switch(type) {
+                                case 'kb_app':
+                                    this.$subtitle.html($kbCell.kbaseNarrativeAppCell('getSubtitle'));
+                                    break;
+                                case 'kb_error':
+                                    this.$subtitle.html('An error has occurred in this cell!');
+                                    break;
+                                case 'function_output':
+                                    // this.$subtitle.html($kbCell.kbaseNarrativeOutputCell('getSubtitle'));
+                                    break;
+                                case 'function_input':
+                                    // doing this more declarative causes some funky rendering issues.
+                                    // we need some better message passing, I think.
+                                    $kbCell.trigger('get_cell_subtitle.Narrative', function(text) {
+                                        this.$subtitle.html(text);
+                                    }.bind(this));
+                                    break;
+                                default:
+                                    break;
+                            }
+                            this.$subtitle.show();
+                        }
+                    }
+                    break;
+                default:
+                    $icon.removeClass('fa-chevron-right');
+                    $icon.addClass('fa-chevron-down');
+                    this.$elem.parent().addClass('kb-toolbar-open');
+                    this.$subtitle.hide();
+                    break;
+            }
+        },
+
+        setSubtitle: function (value) {
+            if (this.$subtitle)
+                this.$subtitle.html(value);
+        },
+
         addMenuItem: function (item) {
             var label = '';
             if (item.icon) {

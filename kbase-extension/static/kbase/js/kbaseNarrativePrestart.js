@@ -46,7 +46,7 @@ $('#kb-status-btn').attr('href', Config.url('status_page'));
 
 
 $('#kb-add-code-cell').click(function() {
-    Jupyter.notebook.insert_cell_below('code'); 
+    Jupyter.narrative.insertAndSelectCellBelow('code');
 })
 .tooltip({
     delay: { 
@@ -55,8 +55,8 @@ $('#kb-add-code-cell').click(function() {
     }
 });
 
-$('#kb-add-md-cell').click(function() { 
-    Jupyter.notebook.insert_cell_below('markdown');
+$('#kb-add-md-cell').click(function() {
+    Jupyter.narrative.insertAndSelectCellBelow('markdown');
 })
 .tooltip({
     delay: { 

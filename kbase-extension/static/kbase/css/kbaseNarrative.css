@@ -1291,7 +1291,7 @@ div#notebook_panel {
 }
 .kb-cell-toolbar .title {
     font-weight: normal;
-    font-size: 130%;
+    font-size: 120%;
     font-family: "OxygenBold", Arial, sans-serif;
     color: #2e618d;
 }
@@ -1303,15 +1303,22 @@ div#notebook_panel {
 }
 
 .kb-toolbar-open {
-    border-bottom: 1px solid black;
+    padding-top: 7px;
+}
+
+.selected .kb-toolbar-open {
+    border-bottom: 1px solid #4BB856;
+    background-color: #dff0d8;
 }
 
 .unselected .kb-toolbar-open {
     border-color: #EAEAEA;
+    background-color: none;
 }
 
 .selected.kb-error .kb-toolbar-open {
     border-color: #D9534F;
+    background-color: #F2DEDE;
 }
 
 /* ------------------------------------------------- */
@@ -1444,7 +1451,7 @@ div#notebook_panel {
 }
 
 .unselected .kb-func-timestamp {
-    color: #EAEAEA;
+    color: silver;
 }
 
 .kb-func-panel {

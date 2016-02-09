@@ -150,14 +150,17 @@ define(['jquery',
             var $cellNode = $(this.element);
             switch (this.getCellState('toggleState', 'unknown')) {
                 case 'closed':
+                    $cellNode.removeClass('opened');
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', 'none');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', 'none');
                     break;
                 case 'open':
+                    $cellNode.addClass('opened');
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
                     break;
                 case 'unknown':
+                    $cellNode.addClass('opened');
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
                     break;

@@ -78,6 +78,10 @@ div.cell.selected {
     -webkit-box-shadow: 3px 3px 3px #aaa;
 }
 
+div.cell.opened {
+    padding-top: 0px;
+}
+
 .edit_mode div.cell.selected {
     border-left: 5px solid #66BB6A;
     background: none;
@@ -162,7 +166,7 @@ span#notebook_name:hover {
 
 .notebook_app .inner_cell {
     overflow: visible;
-    margin-right: 4px;
+    /*margin-right: 4px;*/
 }
 /*.notebook_app .cell.selected .inner_cell > div:nth-child(2),
 .notebook_app .cell.selected .inner_cell > div:nth-child(3) {
@@ -197,7 +201,7 @@ span#notebook_name:hover {
 }
 
 .notebook_app .btn.disabled .fa {
-    color: #E8E8E8;
+    color: silver;
 }
 
 .notebook_app .cell .celltoolbar .btn {

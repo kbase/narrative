@@ -326,6 +326,7 @@ define(['jquery',
             var kbCellType = cellType(this);
 
             if (kbCellType) {
+                $(this.element).addClass('kb-cell');
                 this.set_rendered(this.get_text());
                 this.typeset();
                 return needsToRender;

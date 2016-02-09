@@ -133,10 +133,15 @@ function($,
             $(document).on(
                 'sidePanelOverlayShown.Narrative', function(e) {
                     // find the index of what tab is being shown.
-                    var idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
-                    this.updateSlideoutRendering(idx);
+                    if (this.$overlayPanel.is(':visible')) {
+                        var idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
+                        console.log('UPDATING DATA PANEL RENDERING');
+                        this.updateSlideoutRendering(idx);
+                    }
                 }.bind(this)
             );
+
+            $(document).on()
 
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')

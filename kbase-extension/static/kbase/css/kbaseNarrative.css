@@ -1305,9 +1305,11 @@ div#notebook_panel {
 .kb-toolbar-open {
     padding-top: 7px;
     border-bottom: 1px solid #CCC;
+    border-radius: 0;
 }
 
 .selected .kb-toolbar-open {
+    border-left: 1px solid #4BB856;
     border-bottom: 1px solid #4BB856;
     background-color: #dff0d8;
 }
@@ -1495,6 +1497,7 @@ div#notebook_panel {
 
 .kb-cell-output-content {
     overflow-x: auto;
+    padding: 5px;
 }
 
 .kb-cell-output .panel .panel-heading {
@@ -1694,19 +1697,22 @@ control with padding, and then scooting the icon back into its column.
 }
 
 .kb-method-footer {
-    widget: 100%;
+    width: 100%;
     overflow: none;
     background-color: #F5F5F5;
     padding: 10px;
 }
 
+.kb-method-subtitle {
+    background-color: #F5F5F5;
+    padding: 3px 5px;
+}
+
 /* -- App/method panel styling --*/
 
-/*.kb-app-panel {*/
-    /*border:0;*/
-    /*border-top: 1px solid #CECECE;*/
-    /*border-radius: 1px;*/
-/*}*/
+.kb-app-panel {
+    border-radius: 0px;
+}
 
 .kb-app-error {
     background-color: #F2DEDE;
@@ -1715,7 +1721,7 @@ control with padding, and then scooting the icon back into its column.
 /*.app-panel-heading {
     padding-top: 10px;
 }
-*/
+
 /*.app-panel-heading h1 {
     font-family: 'Roboto';
     font-weight: normal;
@@ -1732,7 +1738,7 @@ control with padding, and then scooting the icon back into its column.
 }
 .kb-app-panel > .panel-footer {
     border: 0;
-    border-radius: 1px;
+    border-radius: 0px;
 }
 
 .kb-app-func-panel {
@@ -1776,13 +1782,11 @@ control with padding, and then scooting the icon back into its column.
 
 .kb-app-step-error {
     border: 3px solid #D14836;
-    border-radius: 5px;
     z-index: auto;
 }
 
 .kb-app-step-running {
     border: 3px solid #2196F3;
-    border-radius: 5px;
     z-index: auto;
     /*animation: pulse 1s ease infinite;
     -webkit-animation: pulse 1s ease infinite; */

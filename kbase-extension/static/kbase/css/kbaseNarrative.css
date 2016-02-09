@@ -1497,6 +1497,7 @@ div#notebook_panel {
 
 .kb-cell-output-content {
     overflow-x: auto;
+    padding: 5px;
 }
 
 .kb-cell-output .panel .panel-heading {

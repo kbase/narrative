@@ -70,6 +70,9 @@ function($,
                 }, this)
             );
             
+            // doesn't need a title, so just hide it to avoid padding.
+            // yes, it's a hack. mea culpa.
+            this.$elem.find('.kb-title').hide();
             return this;
         },
 

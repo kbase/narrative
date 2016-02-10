@@ -55,7 +55,9 @@ function ($,
 
             max_name_length: 33,
             refresh_interval: 30000,
-            parentControlPanel: null
+            parentControlPanel: null,
+
+            slideTime: 400
         },
         // private variables
         mainListPanelHeight: '340px',
@@ -137,6 +139,12 @@ function ($,
             }
 
             return this;
+        },
+
+        setListHeight: function(height) {
+            if(this.$mainListDiv) {
+                this.$mainListDiv.animate({'height':height},this.options.slideTime);
+            }
         },
 
         /**

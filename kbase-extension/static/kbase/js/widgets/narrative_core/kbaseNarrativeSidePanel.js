@@ -20,7 +20,9 @@ function($, Config) {
             workspaceURL: Config.url('workspace'),
         },
         $dataWidget: null,
+        dataWidgetListHeight: [340, 680], // [height with methods showing, max height]
         $methodsWidget: null,
+        methodsWidgetListHeight: [300, 600], // [height with data showing, max height]
         $narrativesWidget: null,
         $jobsWidget: null,
         $overlay: null,
@@ -34,11 +36,22 @@ function($, Config) {
             var analysisWidgets = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeDataPanel',
-                    params : {}
+                    params : {
+                        collapseCallback: $.proxy(function(isMinimized) { 
+                                this.handleMinimizedDataPanel(isMinimized);
+                            }
+                            ,this)
+                    }
                 },
                 {
                     name : 'kbaseNarrativeMethodPanel',
-                    params : { autopopulate: false }
+                    params : { 
+                        autopopulate: false , 
+                        collapseCallback: $.proxy(function(isMinimized) { 
+                                this.handleMinimizedMethodPanel(isMinimized);
+                            }
+                            ,this)
+                    }
                 }
             ]);
             this.$dataWidget = analysisWidgets['kbaseNarrativeDataPanel'];
@@ -296,6 +309,36 @@ function($, Config) {
             retObj['panelSet'] = $panelSet;
             return retObj;
         },
+
+
+        /**
+         * Specialized callback controlling heights of panels when data panel is minimized.
+         * Assumes data and method panel are on the same tab.
+         */
+        handleMinimizedDataPanel: function(isMinimized) {
+            if(isMinimized) {
+                // data panel was minimized
+                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[1]);
+            } else {
+                // data panel was maximized
+                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[0]);
+            }
+        },
+
+        /**
+         * Specialized callback controlling heights of panels when method panel is minimized.
+         * Assumes data and method panel are on the same tab.
+         */
+        handleMinimizedMethodPanel: function(isMinimized) {
+            if(isMinimized) {
+                // data panel was minimized
+                this.$dataWidget.setListHeight(this.dataWidgetListHeight[1]);
+            } else {
+                // data panel was maximized
+                this.$dataWidget.setListHeight(this.dataWidgetListHeight[0]);
+            }
+        },
+
 
         render: function() {
             this.initOverlay();

@@ -89,7 +89,8 @@ function($,
                 $dataList.kbaseNarrativeDataList(
                     {
                         ws_name: this.ws_name,
-                        parentControlPanel: this
+                        parentControlPanel: this,
+                        slideTime: this.slideTime
                     }
                 );
 
@@ -163,6 +164,12 @@ function($,
             this.addButton(this.$slideoutBtn);
             
             return this;
+        },
+
+        setListHeight: function(height) {
+            if(this.dataListWidget) {
+                this.dataListWidget.setListHeight(height);
+            }
         },
 
         addButtonToControlPanel: function($btn) {

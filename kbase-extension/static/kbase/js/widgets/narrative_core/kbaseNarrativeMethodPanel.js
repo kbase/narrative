@@ -341,6 +341,12 @@ function ($, _, Promise, Config, DisplayUtil) {
         },
 
 
+        setListHeight: function(height) {
+            if(this.$methodList) {
+                this.$methodList.animate({'height':height}, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
+            }
+        },
+
         filterList: function() {
             var txt = this.$searchInput.val().trim().toLowerCase();
             if (txt.indexOf("type:") === 0) {

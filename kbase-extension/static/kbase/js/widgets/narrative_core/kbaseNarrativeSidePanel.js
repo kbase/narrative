@@ -24,8 +24,10 @@ function($, Config) {
         $methodsWidget: null,
         methodsWidgetListHeight: [300, 600], // [height with data showing, max height]
 
-        heightOffset: 220, // in px, space taken up by titles, header bar, etc.  The rest of the real estate is divided
-                           // by half for for the method and data lists
+        heightListOffset: 220,  // in px, space taken up by titles, header bar, etc.  The rest of the real estate is divided
+                                // by half for for the method and data lists
+        heightPanelOffset: 110, // in px, space taken by just the header, the rest is for the full panel size, which is the
+                                // case for the narratives/jobs panels
 
         $narrativesWidget: null,
         $jobsWidget: null,
@@ -60,11 +62,6 @@ function($, Config) {
             ]);
             this.$dataWidget = analysisWidgets['kbaseNarrativeDataPanel'];
             this.$methodsWidget = analysisWidgets['kbaseNarrativeMethodPanel'];
-
-            // handle window size change in left panel, and call it once to set the correct size now
-            $(window).on('resize',$.proxy(function() { this.windowSizeChange(); }, this));
-            this.windowSizeChange();
-
 
             var $analysisPanel = analysisWidgets['panelSet'];
 
@@ -118,12 +115,17 @@ function($, Config) {
                 this.toggleOverlay(panel);
             }, this));
 
+            // handle window size change in left panel, and call it once to set the correct size now
+            $(window).on('resize',$.proxy(function() { this.windowSizeChange(); }, this));
+            this.windowSizeChange();
+
             if (this.autorender) {
                 this.render();
             }
             else {
 
             }
+
 
             return this;
         },
@@ -367,8 +369,8 @@ function($, Config) {
             if(h<300) { // below a height of 300px, don't trim anymore, just let the rest be clipped
                 h = 300;
             }
-            var max = h - this.heightOffset;
-            var min = (h-this.heightOffset)/2;
+            var max = h - this.heightListOffset;
+            var min = (h-this.heightListOffset)/2;
             this.methodsWidgetListHeight[0]=min;
             this.methodsWidgetListHeight[1]=max;
             this.dataWidgetListHeight[0]=min;
@@ -385,6 +387,10 @@ function($, Config) {
             } else {
                 this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[0]);
             }
+
+            var fullSize = h - this.heightPanelOffset;
+            this.$narrativesWidget.setHeight(fullSize);
+            this.$jobsWidget.setHeight(fullSize);
         },
 
 

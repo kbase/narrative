@@ -79,6 +79,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
 
             this.isMin = false;
             this.$elem.append($('<div>')
+                              .css({'overflow-y':'auto'})
                               .addClass('kb-narr-side-panel')
                                       .append($('<div>')
                                               .addClass('kb-title')
@@ -125,6 +126,11 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
          */
         isMinimized: function() {
           return this.isMin;
+        },
+
+        // allows the height of the entire panel to be dynamically set
+        setHeight: function(height) {
+          this.$elem.css({height:height});
         },
 
         /**

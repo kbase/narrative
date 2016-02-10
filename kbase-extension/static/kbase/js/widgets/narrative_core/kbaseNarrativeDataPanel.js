@@ -166,9 +166,9 @@ function($,
             return this;
         },
 
-        setListHeight: function(height) {
+        setListHeight: function(height, animate) {
             if(this.dataListWidget) {
-                this.dataListWidget.setListHeight(height);
+                this.dataListWidget.setListHeight(height, animate);
             }
         },
 

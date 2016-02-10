@@ -124,7 +124,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
          * @public
          */
         isMinimized: function() {
-          return isMin;
+          return this.isMin;
         },
 
         /**

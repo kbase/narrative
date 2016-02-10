@@ -341,9 +341,14 @@ function ($, _, Promise, Config, DisplayUtil) {
         },
 
 
-        setListHeight: function(height) {
+        setListHeight: function(height, animate) {
             if(this.$methodList) {
-                this.$methodList.animate({'height':height}, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
+                if(animate) {
+                    this.$methodList.animate({'height':height}, this.slideTime); // slideTime comes from kbaseNarrativeControlPanel
+                }
+                else {
+                    this.$methodList.css({'height':height});
+                }
             }
         },
 

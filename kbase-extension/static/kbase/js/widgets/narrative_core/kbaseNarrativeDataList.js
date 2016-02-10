@@ -141,9 +141,13 @@ function ($,
             return this;
         },
 
-        setListHeight: function(height) {
+        setListHeight: function(height, animate) {
             if(this.$mainListDiv) {
-                this.$mainListDiv.animate({'height':height},this.options.slideTime);
+                if(animate) {
+                    this.$mainListDiv.animate({'height':height},this.options.slideTime);
+                } else {
+                    this.$mainListDiv.css({'height':height});
+                }
             }
         },
 

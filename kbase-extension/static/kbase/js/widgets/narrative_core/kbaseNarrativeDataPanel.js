@@ -89,7 +89,8 @@ function($,
                 $dataList.kbaseNarrativeDataList(
                     {
                         ws_name: this.ws_name,
-                        parentControlPanel: this
+                        parentControlPanel: this,
+                        slideTime: this.slideTime
                     }
                 );
 
@@ -133,10 +134,15 @@ function($,
             $(document).on(
                 'sidePanelOverlayShown.Narrative', function(e) {
                     // find the index of what tab is being shown.
-                    var idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
-                    this.updateSlideoutRendering(idx);
+                    if (this.$overlayPanel.is(':visible')) {
+                        var idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
+                        console.log('UPDATING DATA PANEL RENDERING');
+                        this.updateSlideoutRendering(idx);
+                    }
                 }.bind(this)
             );
+
+            $(document).on()
 
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
@@ -158,6 +164,12 @@ function($,
             this.addButton(this.$slideoutBtn);
             
             return this;
+        },
+
+        setListHeight: function(height, animate) {
+            if(this.dataListWidget) {
+                this.dataListWidget.setListHeight(height, animate);
+            }
         },
 
         addButtonToControlPanel: function($btn) {

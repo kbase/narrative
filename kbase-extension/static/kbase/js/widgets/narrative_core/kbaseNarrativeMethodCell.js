@@ -115,7 +115,7 @@ function($,
                     }
                     console.log('** submitted' + (new Date()).getTime());
                     this.changeState('submitted');
-                    this.minimizeView();
+                    // this.minimizeView();
                     this.trigger('runCell.Narrative', {
                         cell: Jupyter.narrative.getCellByKbaseId(this.cellId),
                         method: this.method,
@@ -187,16 +187,10 @@ function($,
 
             this.$header = $('<div>').css({'margin-top':'4px'})
                            .addClass('kb-func-desc');
-            this.$staticMethodInfo = $('<div>')
-                              .append('<h1><b>' + this.method.info.name + '</b></h1>')
-                              .append($('<h2>')
-                                      .attr('id', methodId)
-                                      .append(methodDesc +
-                                            ' &nbsp&nbsp<a href="'+ link +
-                                                '" target="_blank">more...</a>'
-                                      ));
-             
-            this.$header.append(this.$staticMethodInfo);
+            this.$methodDesc = $('<div>')
+                               .attr('id', methodId)
+                               .addClass('kb-method-subtitle')
+                               .append(methodDesc + ' &nbsp;&nbsp;<a link="' + link + '" target="_blank">more...</a>');
 
             this.$header.append(this.$dynamicMethodSummary);
 
@@ -209,6 +203,7 @@ function($,
             this.panel_minimized = false;
 
             this.$cellPanel = $('<div>')
+                              .append(this.$methodDesc)
                               .append(this.$inputDiv)
                               .append($('<div>')
                                       .addClass('kb-method-footer')
@@ -879,8 +874,6 @@ function($,
             var self = this;
             var $mintarget = self.$cellPanel;
 
-            self.$staticMethodInfo.hide();
-
             // create the dynamic summary based on the run state
             self.updateDynamicMethodSummaryHeader()
             self.$dynamicMethodSummary.show();
@@ -905,7 +898,6 @@ function($,
                                 .addClass("glyphicon-chevron-down");
 
             self.$dynamicMethodSummary.hide();
-            self.$staticMethodInfo.show();
             self.panel_minimized = false;
         },
 

@@ -20,7 +20,15 @@ function($, Config) {
             workspaceURL: Config.url('workspace'),
         },
         $dataWidget: null,
+        dataWidgetListHeight: [340, 680], // [height with methods showing, max height], overwritten on window size change
         $methodsWidget: null,
+        methodsWidgetListHeight: [300, 600], // [height with data showing, max height]
+
+        heightListOffset: 220,  // in px, space taken up by titles, header bar, etc.  The rest of the real estate is divided
+                                // by half for for the method and data lists
+        heightPanelOffset: 110, // in px, space taken by just the header, the rest is for the full panel size, which is the
+                                // case for the narratives/jobs panels
+
         $narrativesWidget: null,
         $jobsWidget: null,
         $overlay: null,
@@ -34,21 +42,33 @@ function($, Config) {
             var analysisWidgets = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeDataPanel',
-                    params : {}
+                    params : {
+                        collapseCallback: $.proxy(function(isMinimized) { 
+                                this.handleMinimizedDataPanel(isMinimized);
+                            }
+                            ,this)
+                    }
                 },
                 {
                     name : 'kbaseNarrativeMethodPanel',
-                    params : { autopopulate: false }
+                    params : { 
+                        autopopulate: false , 
+                        collapseCallback: $.proxy(function(isMinimized) { 
+                                this.handleMinimizedMethodPanel(isMinimized);
+                            }
+                            ,this)
+                    }
                 }
             ]);
             this.$dataWidget = analysisWidgets['kbaseNarrativeDataPanel'];
             this.$methodsWidget = analysisWidgets['kbaseNarrativeMethodPanel'];
+
             var $analysisPanel = analysisWidgets['panelSet'];
 
             var manageWidgets = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeManagePanel',
-                    params : { autopopulate: true }
+                    params : { autopopulate: true, showTitle: false }
                 },
             ]);
 
@@ -58,7 +78,7 @@ function($, Config) {
             var jobsWidget = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeJobsPanel',
-                    params : { autopopulate: true }
+                    params : { autopopulate: true, showTitle: false }
                 }
             ]);
             this.$jobsWidget = jobsWidget['kbaseNarrativeJobsPanel'];
@@ -95,12 +115,17 @@ function($, Config) {
                 this.toggleOverlay(panel);
             }, this));
 
+            // handle window size change in left panel, and call it once to set the correct size now
+            $(window).on('resize',$.proxy(function() { this.windowSizeChange(); }, this));
+            this.windowSizeChange();
+
             if (this.autorender) {
                 this.render();
             }
             else {
 
             }
+
 
             return this;
         },
@@ -140,11 +165,19 @@ function($, Config) {
             var $header = $('<div>');
             var $body = $('<div>');
 
+            $header.append($('<div>')
+                           .addClass('kb-side-toggle')
+                           .css('width', '4%')
+                           .append($('<span>')
+                                   .addClass('fa fa-caret-left'))
+                           .click(function() {
+                               Jupyter.narrative.toggleSidePanel();
+                           }));
             for (var i=0; i<tabs.length; i++) {
                 var tab = tabs[i];
                 $header.append($('<div>')
                                .addClass('kb-side-header')
-                               .css('width', (100/tabs.length)+'%')
+                               .css('width', (96/tabs.length)+'%')
                                .append(tab.tabName)
                                .attr('kb-data-id', i));
                 $body.append($('<div>')
@@ -153,7 +186,7 @@ function($, Config) {
                              .attr('kb-data-id', i));
             }
 
-            $header.find('div').click($.proxy(function(event) {
+            $header.find('div[kb-data-id]').click($.proxy(function(event) {
                 event.preventDefault();
                 event.stopPropagation();
                 var $headerDiv = $(event.currentTarget);
@@ -170,7 +203,7 @@ function($, Config) {
                 }
             }, this));
 
-            $header.find('div:first-child').addClass('active');
+            $header.find('div:nth-child(2)').addClass('active');
             $body.find('div:first-child.kb-side-tab').addClass('active');
 
             return {
@@ -242,7 +275,7 @@ function($, Config) {
                 }
                 Jupyter.narrative.disableKeyboardManager();
                 this.$narrativeDimmer.show();
-                this.$elem.find('.kb-side-header').addClass('overlay-active');
+                this.$elem.find('.kb-side-header, .kb-side-toggle').addClass('kb-overlay-active');
                 this.$overlay.show('slide', 'fast', $.proxy(function() {
                     this.trigger('sidePanelOverlayShown.Narrative');
                 }, this));
@@ -253,7 +286,7 @@ function($, Config) {
             if (this.$overlay) {
                 Jupyter.narrative.enableKeyboardManager();
                 this.$narrativeDimmer.hide();
-                this.$elem.find('.kb-side-header').removeClass('overlay-active');
+                this.$elem.find('.kb-side-header, .kb-side-toggle').removeClass('kb-overlay-active');
                 this.$overlay.hide('slide', 'fast', $.proxy(function() {
                     this.trigger('sidePanelOverlayHidden.Narrative');
                 }, this));
@@ -296,6 +329,70 @@ function($, Config) {
             retObj['panelSet'] = $panelSet;
             return retObj;
         },
+
+
+        /**
+         * Specialized callback controlling heights of panels when data panel is minimized.
+         * Assumes data and method panel are on the same tab.
+         */
+        handleMinimizedDataPanel: function(isMinimized) {
+            if(isMinimized) {
+                // data panel was minimized
+                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[1], true);
+            } else {
+                // data panel was maximized
+                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[0], true);
+            }
+        },
+
+        /**
+         * Specialized callback controlling heights of panels when method panel is minimized.
+         * Assumes data and method panel are on the same tab.
+         */
+        handleMinimizedMethodPanel: function(isMinimized) {
+            if(isMinimized) {
+                // data panel was minimized
+                this.$dataWidget.setListHeight(this.dataWidgetListHeight[1], true);
+            } else {
+                // data panel was maximized
+                this.$dataWidget.setListHeight(this.dataWidgetListHeight[0], true);
+            }
+        },
+
+
+        windowSizeChange: function() {
+
+            // determine height of panels, and set the bounds
+            var $window = $(window);
+            var h = $window.height();
+
+            if(h<300) { // below a height of 300px, don't trim anymore, just let the rest be clipped
+                h = 300;
+            }
+            var max = h - this.heightListOffset;
+            var min = (h-this.heightListOffset)/2;
+            this.methodsWidgetListHeight[0]=min;
+            this.methodsWidgetListHeight[1]=max;
+            this.dataWidgetListHeight[0]=min;
+            this.dataWidgetListHeight[1]=max;
+
+            // actually update the sizes
+            if(this.$methodsWidget.isMinimized()) {
+                this.$dataWidget.setListHeight(this.dataWidgetListHeight[1]);
+            } else {
+                this.$dataWidget.setListHeight(this.dataWidgetListHeight[0]);
+            }
+            if(this.$dataWidget.isMinimized()) {
+                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[1]);
+            } else {
+                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[0]);
+            }
+
+            var fullSize = h - this.heightPanelOffset;
+            this.$narrativesWidget.setHeight(fullSize);
+            this.$jobsWidget.setHeight(fullSize);
+        },
+
 
         render: function() {
             this.initOverlay();

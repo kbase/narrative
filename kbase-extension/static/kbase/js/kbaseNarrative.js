@@ -584,10 +584,10 @@ function($,
                         direction: 'left', 
                         easing: 'swing'
                     }, delay);
+                    $('#notebook-container').animate({left: 380}, {easing: 'swing', duration: delay});
                 }
             }, delay);
             // Move content flush left-ish
-            $('#notebook-container').animate({left: 380}, {easing: 'swing', duration: delay});
         }
     };
 

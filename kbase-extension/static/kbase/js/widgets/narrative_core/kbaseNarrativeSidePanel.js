@@ -263,7 +263,7 @@ function($, Config) {
                 }
                 Jupyter.narrative.disableKeyboardManager();
                 this.$narrativeDimmer.show();
-                this.$elem.find('.kb-side-header').addClass('overlay-active');
+                this.$elem.find('.kb-side-header, .kb-side-toggle').addClass('kb-overlay-active');
                 this.$overlay.show('slide', 'fast', $.proxy(function() {
                     this.trigger('sidePanelOverlayShown.Narrative');
                 }, this));
@@ -274,7 +274,7 @@ function($, Config) {
             if (this.$overlay) {
                 Jupyter.narrative.enableKeyboardManager();
                 this.$narrativeDimmer.hide();
-                this.$elem.find('.kb-side-header').removeClass('overlay-active');
+                this.$elem.find('.kb-side-header, .kb-side-toggle').removeClass('kb-overlay-active');
                 this.$overlay.hide('slide', 'fast', $.proxy(function() {
                     this.trigger('sidePanelOverlayHidden.Narrative');
                 }, this));

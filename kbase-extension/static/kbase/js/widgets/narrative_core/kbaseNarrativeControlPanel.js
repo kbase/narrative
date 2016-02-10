@@ -24,7 +24,9 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
         options: {
             title: 'Control',
             collapsible: true,
-            maxHeight: '400px'
+            maxHeight: '400px',
+            collapseCallback: null,  // called when this panel is minimized/maximized
+            slideTime: 400           // set minimize/maximize animation time
         },
 
         /**
@@ -40,7 +42,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
          */
         init: function(options) {
             this._super(options);
-
+            this.slideTime = this.options.slideTime;
             this.render();
             return this;
         },
@@ -75,6 +77,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
                                 .attr('role', 'toolbar')
                                 .css({'margin-top' : '-2px'});
 
+            this.isMin = false;
             this.$elem.append($('<div>')
                               .addClass('kb-narr-side-panel')
                                       .append($('<div>')
@@ -87,12 +90,17 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
                                                               if ($(event.currentTarget.firstChild).hasClass('glyphicon-chevron-down')) {
                                                                   $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-down')
                                                                                                    .addClass('glyphicon-chevron-right');
-                                                                  this.$bodyDiv.parent().slideUp(400);
+                                                                  this.$bodyDiv.parent().slideUp(this.slideTime);
+                                                                  this.isMin = true;
                                                               }
                                                               else {
                                                                   $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-right')
                                                                                                    .addClass('glyphicon-chevron-down');
-                                                                  this.$bodyDiv.parent().slideDown(400);
+                                                                  this.$bodyDiv.parent().slideDown(this.slideTime);
+                                                                  this.isMin = false;
+                                                              }
+                                                              if(this.options.collapseCallback) {
+                                                                  this.options.collapseCallback(this.isMin);
                                                               }
                                                           }, this)
                                                       )
@@ -106,6 +114,17 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
                                           'overflow-y' : 'auto'
                                       })
                                       .append(this.$bodyDiv)));
+        },
+
+        // remember the minimization state
+        isMin: null,
+
+        /**
+         * Returns minimization state of the Panel, true if minimized, false otherwise
+         * @public
+         */
+        isMinimized: function() {
+          return isMin;
         },
 
         /**

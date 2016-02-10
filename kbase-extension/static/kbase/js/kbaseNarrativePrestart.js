@@ -65,6 +65,10 @@ $('#kb-add-md-cell').click(function() {
     }
 });
 
+$('#kb-side-toggle-in').click(function() {
+  Jupyter.narrative.toggleSidePanel();
+});
+
 /**
  * Error logging for detectable failure conditions.
  * Logs go through the kernel and thus are sent to the

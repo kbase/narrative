@@ -153,11 +153,19 @@ function($, Config) {
             var $header = $('<div>');
             var $body = $('<div>');
 
+            $header.append($('<div>')
+                           .addClass('kb-side-toggle')
+                           .css('width', '4%')
+                           .append($('<span>')
+                                   .addClass('fa fa-caret-left'))
+                           .click(function() {
+                               Jupyter.narrative.toggleSidePanel();
+                           }));
             for (var i=0; i<tabs.length; i++) {
                 var tab = tabs[i];
                 $header.append($('<div>')
                                .addClass('kb-side-header')
-                               .css('width', (100/tabs.length)+'%')
+                               .css('width', (96/tabs.length)+'%')
                                .append(tab.tabName)
                                .attr('kb-data-id', i));
                 $body.append($('<div>')
@@ -166,7 +174,7 @@ function($, Config) {
                              .attr('kb-data-id', i));
             }
 
-            $header.find('div').click($.proxy(function(event) {
+            $header.find('div[kb-data-id]').click($.proxy(function(event) {
                 event.preventDefault();
                 event.stopPropagation();
                 var $headerDiv = $(event.currentTarget);
@@ -183,7 +191,7 @@ function($, Config) {
                 }
             }, this));
 
-            $header.find('div:first-child').addClass('active');
+            $header.find('div:nth-child(2)').addClass('active');
             $body.find('div:first-child.kb-side-tab').addClass('active');
 
             return {
@@ -255,7 +263,7 @@ function($, Config) {
                 }
                 Jupyter.narrative.disableKeyboardManager();
                 this.$narrativeDimmer.show();
-                this.$elem.find('.kb-side-header').addClass('overlay-active');
+                this.$elem.find('.kb-side-header, .kb-side-toggle').addClass('kb-overlay-active');
                 this.$overlay.show('slide', 'fast', $.proxy(function() {
                     this.trigger('sidePanelOverlayShown.Narrative');
                 }, this));
@@ -266,7 +274,7 @@ function($, Config) {
             if (this.$overlay) {
                 Jupyter.narrative.enableKeyboardManager();
                 this.$narrativeDimmer.hide();
-                this.$elem.find('.kb-side-header').removeClass('overlay-active');
+                this.$elem.find('.kb-side-header, .kb-side-toggle').removeClass('kb-overlay-active');
                 this.$overlay.hide('slide', 'fast', $.proxy(function() {
                     this.trigger('sidePanelOverlayHidden.Narrative');
                 }, this));

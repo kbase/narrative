@@ -28,10 +28,11 @@ function($, Config) {
                                 // by half for for the method and data lists
         heightPanelOffset: 110, // in px, space taken by just the header, the rest is for the full panel size, which is the
                                 // case for the narratives/jobs panels
-
         $narrativesWidget: null,
         $jobsWidget: null,
         $overlay: null,
+
+        hideButtonSize: 4, //percent width
 
         /**
          * Does the initial panel layout - tabs and spots for each widget
@@ -136,18 +137,17 @@ function($, Config) {
          * A bit of a hack. Set a specific read-only mode where we don't see the jobs or methods panel,
          * only the data panel and narratives panel.
          * So we need to remove the 'Jobs' header all together, then hide the methods panel,
-         * and (maybe) expand the data panel to fill the screen
+         * and expand the data panel to fill the screen
          */
-        setReadOnlyMode: function(readOnly, minimizeFn) {
+        setReadOnlyMode: function(readOnly) {
             // toggle off the methods and jobs panels
             this.$methodsWidget.$elem.toggle(!readOnly);
             this.$jobsWidget.$elem.toggle(!readOnly);
             this.$dataWidget.$elem.css({'height': (readOnly ? '100%' : '50%')});
 
             // toggle off the jobs header
-            // omg this is a hack, but i'm out of time.
-            this.$tabs.header.find('div:nth-child(3).kb-side-header').toggle(!readOnly);
-            this.$tabs.header.find('div.kb-side-header').css({'width': (readOnly ? '50%' : '33.333%')});
+            this.$tabs.header.find('div:nth-child(4).kb-side-header').toggle(!readOnly); // hide the jobs header
+            this.$tabs.header.find('div.kb-side-header').css({'width': (readOnly ? ((100-this.hideButtonSize)/2)+'%' : ((100-this.hideButtonSize)/3)+'%')});
         },
 
         /**
@@ -167,7 +167,7 @@ function($, Config) {
 
             $header.append($('<div>')
                            .addClass('kb-side-toggle')
-                           .css('width', '4%')
+                           .css('width', this.hideButtonSize + '%')
                            .append($('<span>')
                                    .addClass('fa fa-caret-left'))
                            .click(function() {
@@ -177,7 +177,7 @@ function($, Config) {
                 var tab = tabs[i];
                 $header.append($('<div>')
                                .addClass('kb-side-header')
-                               .css('width', (96/tabs.length)+'%')
+                               .css('width', ((100-this.hideButtonSize)/tabs.length)+'%')
                                .append(tab.tabName)
                                .attr('kb-data-id', i));
                 $body.append($('<div>')

@@ -268,9 +268,9 @@ function($,
                 return '';
             }.bind(this));
 
-            $('#kb-view-only-ctrl').click(function () {
-                this.toggleReadOnlyMode(true);
-            }.bind(this));
+            // $('#kb-view-only-ctrl').click(function () {
+            //     this.toggleReadOnlyMode();
+            // }.bind(this));
         },
 
         initDeleteCellModal: function() {
@@ -837,7 +837,7 @@ function($,
          */
         readOnlyMode: function(delay) {
             // Hide side-panel
-            Jupyter.narrative.toggleSidePanel();
+            Jupyter.narrative.toggleSidePanel(true);
             // this.trigger('hideSidePanelOverlay.Narrative');
             // if (!delay)
             //     delay = 0;
@@ -860,9 +860,9 @@ function($,
                     'copy that can be modified, use the ' +
                     '"Copy" button.'
                 });
-
+                $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true);
                 $('#kb-view-only-copy').removeClass('hidden');
-                $('#kb-view-only-ctrl').removeClass('hidden');
+                // $('#kb-view-only-ctrl').removeClass('hidden');
                 $('#kb-view-mode').hide();
 
                 // Disable clicking on name of narrative
@@ -902,7 +902,7 @@ function($,
                 $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', false);
                 $('#kb-view-only-msg').addClass('hidden');
                 $('#kb-view-only-copy').addClass('hidden');
-                $('#kb-view-only-ctrl').addClass('hidden');
+                // $('#kb-view-only-ctrl').addClass('hidden');
 
                 // re-enable clicking on narrative name
                 $('#name').click(function (e) {
@@ -921,7 +921,7 @@ function($,
             }
             // Restore side-panel
             // Restore margin for content
-            Jupyter.narrative.toggleSidePanel();
+            Jupyter.narrative.toggleSidePanel(false);
             // $('#notebook-container').animate({left: '380'}, {duration: delay, easing: 'swing'});
             // $('#left-column').show('slide', {direction: 'left', easing: 'swing'}, delay);
             // Show hidden things

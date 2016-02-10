@@ -68,7 +68,7 @@ function($, Config) {
             var manageWidgets = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeManagePanel',
-                    params : { autopopulate: true }
+                    params : { autopopulate: true, showTitle: false }
                 },
             ]);
 
@@ -78,7 +78,7 @@ function($, Config) {
             var jobsWidget = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeJobsPanel',
-                    params : { autopopulate: true }
+                    params : { autopopulate: true, showTitle: false }
                 }
             ]);
             this.$jobsWidget = jobsWidget['kbaseNarrativeJobsPanel'];

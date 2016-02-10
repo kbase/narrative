@@ -119,9 +119,6 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
                                               .append($titleSpan))
                               .append($('<div>')
                                       .addClass('kb-narr-panel-body')
-                                      .css({ 
-                                          'overflow-y' : 'auto'
-                                      })
                                       .append(this.$bodyDiv)));
         },
 

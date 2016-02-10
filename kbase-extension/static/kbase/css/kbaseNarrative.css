@@ -1135,7 +1135,7 @@ div#notebook_panel {
 
 .kb-narr-panel-body {
     padding: 3px;
-    overflow-y: auto;
+    /*overflow-y: auto;*/
 }
 
 .kb-narr-panel-toggle {

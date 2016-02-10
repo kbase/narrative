@@ -140,11 +140,19 @@ function($, Config) {
             var $header = $('<div>');
             var $body = $('<div>');
 
+            $header.append($('<div>')
+                           .addClass('kb-side-toggle')
+                           .css('width', '4%')
+                           .append($('<span>')
+                                   .addClass('fa fa-caret-left'))
+                           .click(function() {
+                               Jupyter.narrative.toggleSidePanel();
+                           }));
             for (var i=0; i<tabs.length; i++) {
                 var tab = tabs[i];
                 $header.append($('<div>')
                                .addClass('kb-side-header')
-                               .css('width', (100/tabs.length)+'%')
+                               .css('width', (96/tabs.length)+'%')
                                .append(tab.tabName)
                                .attr('kb-data-id', i));
                 $body.append($('<div>')
@@ -153,7 +161,7 @@ function($, Config) {
                              .attr('kb-data-id', i));
             }
 
-            $header.find('div').click($.proxy(function(event) {
+            $header.find('div[kb-data-id]').click($.proxy(function(event) {
                 event.preventDefault();
                 event.stopPropagation();
                 var $headerDiv = $(event.currentTarget);
@@ -170,7 +178,7 @@ function($, Config) {
                 }
             }, this));
 
-            $header.find('div:first-child').addClass('active');
+            $header.find('div:nth-child(2)').addClass('active');
             $body.find('div:first-child.kb-side-tab').addClass('active');
 
             return {

@@ -420,6 +420,50 @@ p#site-title {
     overflow-y: auto;
 }
 
+#kb-side-toggle-in {
+    display: none;
+    top: 70px;
+    width: 22px;
+    border-bottom: 6px solid #CECECE;
+    border-right: 6px solid #CECECE;
+    font-size: 12pt;
+    text-align: center;
+    background-color: #2196F3;
+    padding: 12px 6px;
+    color: #BBDEFB;
+    font-weight: bold;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    cursor: pointer;
+    z-index: 1;
+    position: fixed;
+}
+
+#kb-side-toggle-in:hover {
+    color: #fff;
+}
+
+.kb-side-toggle {
+    display: inline-block;
+    font-size: 12pt;
+    text-align: center;
+    border-bottom: 6px solid #2196F3;
+    border-top: 6px solid #2196F3;
+    background-color: #2196F3;
+    padding: 6px;
+    color: #BBDEFB;
+    font-weight: bold;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    cursor: pointer;
+}
+
+.kb-side-toggle:hover {
+    color: #fff;
+}
+
 .kb-side-header {
     display: inline-block;
     font-size: 12pt;
@@ -904,10 +948,10 @@ div#notebook_panel {
     box-shadow: none; /* 0 -1px 0px rgba(0, 0, 0, 0.1); */
 }
 
-#notebook {
+/*#notebook {
     padding-top: 1em;
 }
-
+*/
 .version-stamp a {
     padding-right: 320px;
     text-align: right;

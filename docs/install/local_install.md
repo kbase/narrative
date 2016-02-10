@@ -31,7 +31,7 @@ source my_narrative_venv/bin/activate
 
 5. Run the installation script. With your virtual environment activated, any dependencies will be installed there. This'll take ~450MB in your virtualenv.
 ```
-sh scripts/install-narrative.sh
+sh scripts/install_narrative.sh
 ```
 
 6. With your virtualenv still active, you can now run the Narrative. This will automatically open a browser window and run the Narrative inside of it.

@@ -552,5 +552,44 @@ function($,
         }
     };
 
+    Narrative.prototype.toggleSidePanel = function() {
+        var delay = 'fast';
+        if ($('#left-column').is(':visible')) {
+            $('#left-column').trigger('hideSidePanelOverlay.Narrative');
+            $('#left-column').hide('slide', {
+                direction: 'left', 
+                easing: 'swing', 
+                complete: function() { 
+                    $('#kb-side-toggle-in').show('slide', {
+                        direction: 'left',
+                        easing: 'swing',
+                    }, delay);
+                }
+            }, delay);
+            // Move content flush left-ish
+            $('#notebook-container').animate(
+                {left: 0}, 
+                { 
+                  easing: 'swing', 
+                  duration: delay,
+                }
+            );
+        }
+        else {
+            $('#kb-side-toggle-in').hide('slide', {
+                direction: 'left',
+                easing: 'swing',
+                complete: function() {
+                    $('#left-column').show('slide', {
+                        direction: 'left', 
+                        easing: 'swing'
+                    }, delay);
+                    $('#notebook-container').animate({left: 380}, {easing: 'swing', duration: delay});
+                }
+            }, delay);
+            // Move content flush left-ish
+        }
+    };
+
     return Narrative;
 });

@@ -837,12 +837,13 @@ function($,
          */
         readOnlyMode: function(delay) {
             // Hide side-panel
-            this.trigger('hideSidePanelOverlay.Narrative');
-            if (!delay)
-                delay = 0;
-            $('#left-column').hide('slide', {direction: 'left', easing: 'swing'}, delay);
-            // Move content flush left-ish
-            $('#notebook-container').animate({left: 0}, {easing: 'swing', duration: delay});
+            Jupyter.narrative.toggleSidePanel();
+            // this.trigger('hideSidePanelOverlay.Narrative');
+            // if (!delay)
+            //     delay = 0;
+            // $('#left-column').hide('slide', {direction: 'left', easing: 'swing'}, delay);
+            // // Move content flush left-ish
+            // $('#notebook-container').animate({left: 0}, {easing: 'swing', duration: delay});
 
             // Hide things
             _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
@@ -920,8 +921,9 @@ function($,
             }
             // Restore side-panel
             // Restore margin for content
-            $('#notebook-container').animate({left: '380'}, {duration: delay, easing: 'swing'});
-            $('#left-column').show('slide', {direction: 'left', easing: 'swing'}, delay);
+            Jupyter.narrative.toggleSidePanel();
+            // $('#notebook-container').animate({left: '380'}, {duration: delay, easing: 'swing'});
+            // $('#left-column').show('slide', {direction: 'left', easing: 'swing'}, delay);
             // Show hidden things
             this.inReadOnlyMode = false;
         },

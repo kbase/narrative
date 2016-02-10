@@ -770,18 +770,18 @@ function ($, _, Promise, Config, DisplayUtil) {
             if (specSet.methods && specSet.methods instanceof Array) {
                 results.methods = {};
                 // we need to fetch some methods, so don't 
-                this.methClient.get_method_spec({ids: specSet.methods, tag:this.currentTag})
-                        .then(function(specs){
-                            for(var k=0; k<specs.length; k++) {
-                                results.methods[specs[k].info.id] = specs[k];
-                            }
-                            callback(results);
-                        })
-                        .catch(function(err) {
-                            console.error("Error in method panel on 'getFunctionSpecs' when contacting NMS");
-                            console.error(err);
-                            callback(results); // still return even if we couldn't get the methods
-                        });
+                Promise.resolve(this.methClient.get_method_spec({ids: specSet.methods, tag:this.currentTag}))
+                    .then(function(specs){
+                        for(var k=0; k<specs.length; k++) {
+                            results.methods[specs[k].info.id] = specs[k];
+                        }
+                        callback(results);
+                    })
+                    .catch(function(err) {
+                        console.error("Error in method panel on 'getFunctionSpecs' when contacting NMS");
+                        console.error(err);
+                        callback(results); // still return even if we couldn't get the methods
+                    });
 
             } else {
                 // there were no methods to fetch, so return

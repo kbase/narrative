@@ -267,10 +267,6 @@ function($,
                 $(document).trigger('copyThis.Narrative', [$panel, null, $jump]);
                 return '';
             }.bind(this));
-
-            // $('#kb-view-only-ctrl').click(function () {
-            //     this.toggleReadOnlyMode();
-            // }.bind(this));
         },
 
         initDeleteCellModal: function() {
@@ -838,12 +834,6 @@ function($,
         readOnlyMode: function(delay) {
             // Hide side-panel
             Jupyter.narrative.toggleSidePanel(true);
-            // this.trigger('hideSidePanelOverlay.Narrative');
-            // if (!delay)
-            //     delay = 0;
-            // $('#left-column').hide('slide', {direction: 'left', easing: 'swing'}, delay);
-            // // Move content flush left-ish
-            // $('#notebook-container').animate({left: 0}, {easing: 'swing', duration: delay});
 
             // Hide things
             _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
@@ -862,7 +852,6 @@ function($,
                 });
                 $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true);
                 $('#kb-view-only-copy').removeClass('hidden');
-                // $('#kb-view-only-ctrl').removeClass('hidden');
                 $('#kb-view-mode').hide();
 
                 // Disable clicking on name of narrative
@@ -902,7 +891,6 @@ function($,
                 $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', false);
                 $('#kb-view-only-msg').addClass('hidden');
                 $('#kb-view-only-copy').addClass('hidden');
-                // $('#kb-view-only-ctrl').addClass('hidden');
 
                 // re-enable clicking on narrative name
                 $('#name').click(function (e) {

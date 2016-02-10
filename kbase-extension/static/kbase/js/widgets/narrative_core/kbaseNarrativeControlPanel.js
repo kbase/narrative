@@ -23,6 +23,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
         version: '0.0.1',
         options: {
             title: 'Control',
+            showTitle: true,
             collapsible: true,
             maxHeight: '400px',
             collapseCallback: null,  // called when this panel is minimized/maximized
@@ -77,37 +78,45 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
                                 .attr('role', 'toolbar')
                                 .css({'margin-top' : '-2px'});
 
+            var $titleSpan = $('<span>');
+            if(this.options.showTitle) {
+              $titleSpan
+                .append($('<span>')
+                  .css({'cursor' : 'pointer'})
+                  .click(
+                      $.proxy(function(event) {
+                          event.preventDefault();
+                          if ($(event.currentTarget.firstChild).hasClass('glyphicon-chevron-down')) {
+                              $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-down')
+                                                               .addClass('glyphicon-chevron-right');
+                              this.$bodyDiv.parent().slideUp(this.slideTime);
+                              this.isMin = true;
+                          }
+                          else {
+                              $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-right')
+                                                               .addClass('glyphicon-chevron-down');
+                              this.$bodyDiv.parent().slideDown(this.slideTime);
+                              this.isMin = false;
+                          }
+                          if(this.options.collapseCallback) {
+                              this.options.collapseCallback(this.isMin);
+                          }
+                      }, this)
+                  )
+                  .append($('<span>')
+                          .addClass('glyphicon glyphicon-chevron-down kb-narr-panel-toggle'))
+                  .append(this.options.title))
+            }
+            $titleSpan.append(this.$buttonPanel);
+
+
             this.isMin = false;
             this.$elem.append($('<div>')
+                              .css({'height':'100%', 'overflow-y':'auto'})
                               .addClass('kb-narr-side-panel')
                                       .append($('<div>')
                                               .addClass('kb-title')
-                                              .append($('<span>')
-                                                      .css({'cursor' : 'pointer'})
-                                                      .click(
-                                                          $.proxy(function(event) {
-                                                              event.preventDefault();
-                                                              if ($(event.currentTarget.firstChild).hasClass('glyphicon-chevron-down')) {
-                                                                  $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-down')
-                                                                                                   .addClass('glyphicon-chevron-right');
-                                                                  this.$bodyDiv.parent().slideUp(this.slideTime);
-                                                                  this.isMin = true;
-                                                              }
-                                                              else {
-                                                                  $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-right')
-                                                                                                   .addClass('glyphicon-chevron-down');
-                                                                  this.$bodyDiv.parent().slideDown(this.slideTime);
-                                                                  this.isMin = false;
-                                                              }
-                                                              if(this.options.collapseCallback) {
-                                                                  this.options.collapseCallback(this.isMin);
-                                                              }
-                                                          }, this)
-                                                      )
-                                                      .append($('<span>')
-                                                              .addClass('glyphicon glyphicon-chevron-down kb-narr-panel-toggle'))
-                                                      .append(this.options.title))
-                                                      .append(this.$buttonPanel))
+                                              .append($titleSpan))
                               .append($('<div>')
                                       .addClass('kb-narr-panel-body')
                                       .css({ 
@@ -124,7 +133,12 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
          * @public
          */
         isMinimized: function() {
-          return isMin;
+          return this.isMin;
+        },
+
+        // allows the height of the entire panel to be dynamically set
+        setHeight: function(height) {
+          this.$elem.css({height:height});
         },
 
         /**

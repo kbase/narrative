@@ -20,9 +20,15 @@ function($, Config) {
             workspaceURL: Config.url('workspace'),
         },
         $dataWidget: null,
-        dataWidgetListHeight: [340, 680], // [height with methods showing, max height]
+        dataWidgetListHeight: [340, 680], // [height with methods showing, max height], overwritten on window size change
         $methodsWidget: null,
         methodsWidgetListHeight: [300, 600], // [height with data showing, max height]
+
+        heightListOffset: 220,  // in px, space taken up by titles, header bar, etc.  The rest of the real estate is divided
+                                // by half for for the method and data lists
+        heightPanelOffset: 110, // in px, space taken by just the header, the rest is for the full panel size, which is the
+                                // case for the narratives/jobs panels
+
         $narrativesWidget: null,
         $jobsWidget: null,
         $overlay: null,
@@ -56,12 +62,13 @@ function($, Config) {
             ]);
             this.$dataWidget = analysisWidgets['kbaseNarrativeDataPanel'];
             this.$methodsWidget = analysisWidgets['kbaseNarrativeMethodPanel'];
+
             var $analysisPanel = analysisWidgets['panelSet'];
 
             var manageWidgets = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeManagePanel',
-                    params : { autopopulate: true }
+                    params : { autopopulate: true, showTitle: false }
                 },
             ]);
 
@@ -71,7 +78,7 @@ function($, Config) {
             var jobsWidget = this.buildPanelSet([
                 {
                     name : 'kbaseNarrativeJobsPanel',
-                    params : { autopopulate: true }
+                    params : { autopopulate: true, showTitle: false }
                 }
             ]);
             this.$jobsWidget = jobsWidget['kbaseNarrativeJobsPanel'];
@@ -108,12 +115,17 @@ function($, Config) {
                 this.toggleOverlay(panel);
             }, this));
 
+            // handle window size change in left panel, and call it once to set the correct size now
+            $(window).on('resize',$.proxy(function() { this.windowSizeChange(); }, this));
+            this.windowSizeChange();
+
             if (this.autorender) {
                 this.render();
             }
             else {
 
             }
+
 
             return this;
         },
@@ -326,10 +338,10 @@ function($, Config) {
         handleMinimizedDataPanel: function(isMinimized) {
             if(isMinimized) {
                 // data panel was minimized
-                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[1]);
+                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[1], true);
             } else {
                 // data panel was maximized
-                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[0]);
+                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[0], true);
             }
         },
 
@@ -340,11 +352,45 @@ function($, Config) {
         handleMinimizedMethodPanel: function(isMinimized) {
             if(isMinimized) {
                 // data panel was minimized
-                this.$dataWidget.setListHeight(this.dataWidgetListHeight[1]);
+                this.$dataWidget.setListHeight(this.dataWidgetListHeight[1], true);
             } else {
                 // data panel was maximized
+                this.$dataWidget.setListHeight(this.dataWidgetListHeight[0], true);
+            }
+        },
+
+
+        windowSizeChange: function() {
+
+            // determine height of panels, and set the bounds
+            var $window = $(window);
+            var h = $window.height();
+
+            if(h<300) { // below a height of 300px, don't trim anymore, just let the rest be clipped
+                h = 300;
+            }
+            var max = h - this.heightListOffset;
+            var min = (h-this.heightListOffset)/2;
+            this.methodsWidgetListHeight[0]=min;
+            this.methodsWidgetListHeight[1]=max;
+            this.dataWidgetListHeight[0]=min;
+            this.dataWidgetListHeight[1]=max;
+
+            // actually update the sizes
+            if(this.$methodsWidget.isMinimized()) {
+                this.$dataWidget.setListHeight(this.dataWidgetListHeight[1]);
+            } else {
                 this.$dataWidget.setListHeight(this.dataWidgetListHeight[0]);
             }
+            if(this.$dataWidget.isMinimized()) {
+                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[1]);
+            } else {
+                this.$methodsWidget.setListHeight(this.methodsWidgetListHeight[0]);
+            }
+
+            var fullSize = h - this.heightPanelOffset;
+            this.$narrativesWidget.setHeight(fullSize);
+            this.$jobsWidget.setHeight(fullSize);
         },
 
 

@@ -70,6 +70,9 @@ function($,
                 }, this)
             );
             
+            // doesn't need a title, so just hide it to avoid padding.
+            // yes, it's a hack. mea culpa.
+            this.$elem.find('.kb-title').hide();
             return this;
         },
 
@@ -234,10 +237,11 @@ function($,
                 self.$mainPanel.empty();
 
                 var $msgPanel = $("<div>").css({'margin': '10px', 'text-align': 'center'});
+                self.$copyThisNarrBtn = self.makeCopyThisNarrativeBtn($msgPanel);
                 self.$mainPanel.append(
                     $('<div>').css({'margin': '15px', 'text-align': 'center'})
                     .append(self.makeNewNarrativeBtn())
-                    .append(self.makeCopyThisNarrativeBtn($msgPanel))
+                    .append(self.$copyThisNarrBtn)
                     .append($msgPanel));
 
                 self.$narPanel = $('<div>');
@@ -952,8 +956,7 @@ function($,
                 .append(active)
                 .on('click', function (e) {
                     e.stopPropagation();
-                    var $cpyBtn = $(this);
-                    $cpyBtn.prop('disabled', true).empty().append($working);
+                    $(this).prop('disabled', true).empty().append($working);
                     self.copyThisNarrative($alertContainer, active, null);
                 });
             return $btn;
@@ -979,11 +982,24 @@ function($,
                                         Jupyter.narrative.enableKeyboardManager();
                                     }
                                 });
-                            $dialog.append(
-                                $('<div>').append(
-                                $('<div>').append("Enter a name for the new Narrative"))
-                                .append($('<div>').append($newNameInput))
-                                .append($('<button>').addClass('btn btn-info')
+
+
+                            var $cancelBtn = $('<button>')
+                                             .addClass('kb-default-btn')
+                                             .append('Cancel')
+                                             .click(function () {
+                                                $copyNarButton.prop('disabled', false).empty().append(active);
+                                                self.$copyThisNarrBtn.prop('disabled', false).empty().append(active);
+                                                $dialog.empty();
+                                             });
+
+                            var $copyNarButton = $('<button>').addClass('kb-primary-btn')
+
+                            // $dialog.append(
+                            //     $('<div>').append(
+                            //     $('<div>').append("Enter a name for the new Narrative"))
+                            //     .append($('<div>').append($newNameInput))
+                            //     .append($('<button>').addClass('btn btn-info')
                                     .css({'margin-top': '10px'})
                                     .append('Copy')
                                     .click(function () {
@@ -1078,22 +1094,23 @@ function($,
                                                 $dialog.empty();
                                                 $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! " + error.error.message));
                                             });
-                                    }))
-                                .append(active ?
-                                    $('<button>').addClass('kb-data-list-cancel-btn')
-                                    .append('Cancel')
-                                    .click(function () {
-                                        $cpyBtn.prop('disabled', false).empty().append(active);
-                                        $dialog.empty();
-                                    }) : ''));
+                                    });
+                            $dialog.append(
+                                $('<div>').append(
+                                $('<div>').append("Enter a name for the new Narrative"))
+                                .append($('<div>').append($newNameInput))
+                                .append($copyNarButton)
+                                .append(active ? $cancelBtn : ''));
                         },
                         function (error) {
+                            // error with get_object_info_new
                             console.error(error);
                             $dialog.empty();
                             $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! " + error.error.message));
                         });
                 },
                 function (error) {
+                    // error with get_workspace_info
                     console.error(error);
                     $dialog.empty();
                     $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! " + error.error.message));

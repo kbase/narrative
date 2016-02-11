@@ -109,19 +109,15 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
             }
             $titleSpan.append(this.$buttonPanel);
 
-
             this.isMin = false;
             this.$elem.append($('<div>')
                               .css({'height':'100%', 'overflow-y':'auto'})
                               .addClass('kb-narr-side-panel')
-                                      .append($('<div>')
-                                              .addClass('kb-title')
-                                              .append($titleSpan))
+                              .append($('<div>')
+                                      .addClass('kb-title')
+                                      .append($titleSpan))
                               .append($('<div>')
                                       .addClass('kb-narr-panel-body')
-                                      .css({ 
-                                          'overflow-y' : 'auto'
-                                      })
                                       .append(this.$bodyDiv)));
         },
 

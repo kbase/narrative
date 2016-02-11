@@ -245,7 +245,7 @@ define([
                                         delay:{show: 400, hide: 40}});
                 }
                 var $starCount = $('<span>').addClass('kbcb-star-count');
-                if(this.starCount) { $starCount.html('&nbsp;' + this.starCount); }
+                if(this.starCount) { $starCount.html(this.starCount); }
                 $footer.append($starDiv.append($star).append($starCount));
                 
             } else {
@@ -291,7 +291,7 @@ define([
 
             // buffer
             $footer.append($('<div>').addClass('col-xs-4').css('text-align','left')
-                            .append($('<a href="/#appcatalog/app/'+moreLink+'" target="_blank">').append('more...')));
+                            .append($('<a href="'+moreLink+'" target="_blank">').append('more...')));
 
             var $moreInfoDiv = $('<div>').addClass('col-xs-1').addClass('kbcb-info').css('text-align','right');
             $moreInfoDiv

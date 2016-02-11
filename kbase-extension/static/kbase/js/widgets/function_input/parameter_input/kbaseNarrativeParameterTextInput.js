@@ -196,7 +196,7 @@ function($, Config) {
                 $hintCol.append(spec.short_hint);
                 if (spec.description && spec.short_hint !== spec.description) {
                     $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
-                                    .tooltip({title:spec.description, html:true}));
+                                    .tooltip({title:spec.description, html:true, container: 'body'}));
                 }
             } else {
                 $removalButton = $('<button>').addClass("kb-default-btn kb-btn-sm")

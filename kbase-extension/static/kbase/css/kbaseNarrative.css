@@ -1135,7 +1135,7 @@ div#notebook_panel {
 
 .kb-narr-panel-body {
     padding: 3px;
-    overflow-y: auto;
+    /*overflow-y: auto;*/
 }
 
 .kb-narr-panel-toggle {
@@ -1347,7 +1347,6 @@ div#notebook_panel {
 }
 
 .kb-toolbar-open {
-    padding-top: 7px;
     border-bottom: 1px solid #CCC;
     border-radius: 0;
 }
@@ -1652,6 +1651,7 @@ div#notebook_panel {
    margin-top:3px;
    padding-right:0px;
    padding-left:0px;
+   white-space: normal;
 }
 .kb-method-parameter-input {
    vertical-align:middle;

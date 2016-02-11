@@ -245,7 +245,7 @@ define([
                                         delay:{show: 400, hide: 40}});
                 }
                 var $starCount = $('<span>').addClass('kbcb-star-count');
-                if(this.starCount) { $starCount.html('&nbsp;' + this.starCount); }
+                if(this.starCount) { $starCount.html(this.starCount); }
                 $footer.append($starDiv.append($star).append($starCount));
                 
             } else {

@@ -1651,6 +1651,7 @@ div#notebook_panel {
    margin-top:3px;
    padding-right:0px;
    padding-left:0px;
+   white-space: normal;
 }
 .kb-method-parameter-input {
    vertical-align:middle;

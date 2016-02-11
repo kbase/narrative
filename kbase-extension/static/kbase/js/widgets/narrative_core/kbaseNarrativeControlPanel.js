@@ -115,10 +115,10 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
                               .addClass('kb-narr-side-panel')
                               .append($('<div>')
                                       .addClass('kb-title')
-                                      .append($titleSpan))
+                                      .append($titleSpan)
                               .append($('<div>')
                                       .addClass('kb-narr-panel-body')
-                                      .append(this.$bodyDiv)));
+                                      .append(this.$bodyDiv))));
         },
 
         // remember the minimization state

@@ -220,6 +220,7 @@ require.config({
         'kbaseSearchControls'                        : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
         'kbaseRNASeqHistogram'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqHistogram',
         'kbaseExpressionMatrixHeatmap'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionMatrixHeatmap',
+        'kbaseFigureObjectHeatmap'                        : 'kbase/js/ui-common/src/widgets/kbaseFigureObjectHeatmap',
         'kbaseCummerbundPlot'                        : 'kbase/js/ui-common/src/widgets/kbaseCummerbundPlot',
         'kbaseExpressionSampleTable'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTable',
         'kbasePValueHistogram'                        : 'kbase/js/ui-common/src/widgets/kbasePValueHistogram',

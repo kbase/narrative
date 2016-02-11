@@ -117,10 +117,10 @@ function( $, Config ) {
                                                      .on('click',function() {
                                                         if (self.$advancedOptionsDiv.is(":visible")) {
                                                             self.$advancedOptionsDiv.hide();
-                                                            $(this).find(".kb-method-advanced-options-controller").html("show advanced options");
+                                                            $(this).closest(".kb-method-advanced-options-controller").text("show advanced options");
                                                         } else {
                                                             self.$advancedOptionsDiv.show();
-                                                            $(this).find(".kb-method-advanced-options-controller").html("hide advanced options");
+                                                            $(this).closest(".kb-method-advanced-options-controller").text("hide advanced options");
                                                         }
                                                      } ));
                 $inputParameterContainer.append($advancedOptionsControllerRow);

@@ -400,11 +400,13 @@ function($,
         }
         if (this.getWorkspaceName() !== null) {
             this.initSharePanel();
+
+            $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
                 ws_id: this.getWorkspaceName()
             });
             this.narrController.render().finally(function() {
-                $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
+                // $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
                 $('#kb-wait-for-ws').remove();
             });
         }
@@ -552,9 +554,17 @@ function($,
         }
     };
 
-    Narrative.prototype.toggleSidePanel = function() {
+    /**
+     * if setHidden === true, then always hide
+     * if setHidden === false (not null or undefined), then always show
+     * if the setHidden variable isn't present, then just toggle
+     */
+    Narrative.prototype.toggleSidePanel = function(setHidden) {
         var delay = 'fast';
-        if ($('#left-column').is(':visible')) {
+        var hidePanel = setHidden;
+        if (hidePanel === null || hidePanel === undefined)
+            hidePanel = $('#left-column').is(':visible') ? true : false;
+        if (hidePanel) {
             $('#left-column').trigger('hideSidePanelOverlay.Narrative');
             $('#left-column').hide('slide', {
                 direction: 'left', 

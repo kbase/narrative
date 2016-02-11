@@ -98,7 +98,7 @@ function($, Config) {
                                 .append(spec.short_hint);
                 if (spec.description && spec.short_hint !== spec.description) {
                     $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
-                                    .tooltip({title:spec.description, html:true}));
+                                    .tooltip({title:spec.description, html:true, container: 'body'}));
                 }
                                 
                 $row.append($nameCol).append($inputCol).append($hintCol);

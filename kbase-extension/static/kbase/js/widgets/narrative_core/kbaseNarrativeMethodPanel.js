@@ -615,7 +615,7 @@ function ($, _, Promise, Config, DisplayUtil) {
                 } else {
                     $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
                 }
-                $star.on('click', function() {
+                $star.on('click', function(event) {
                     event.stopPropagation();
                     var params = {};
                     if(method.info.module_name) {

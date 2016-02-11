@@ -1383,9 +1383,9 @@ function($,
          */
         loadAllRecentCellStates: function() {
             var cells = Jupyter.notebook.get_cells();
-            $.each(cells, $.proxy(function(idx, cell) {
+            $.each(cells, function(idx, cell) {
                 this.loadRecentCellState(cell);
-            }, this));
+            }.bind(this));
         },
 
         /**

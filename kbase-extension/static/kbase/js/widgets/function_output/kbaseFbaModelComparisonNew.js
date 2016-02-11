@@ -55,14 +55,14 @@ $.KBWidget({
 
             ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
             container.empty();
-            var tabPane = $('<div id="'+self.pref+'tab-content">');
+            var tabPane = $('<div id="'+pref+'tab-content">');
             container.append(tabPane);
             tabPane.kbaseTabs({canDelete : true, tabs : []});
             //////////////////////////////////////////// Statistics tab /////////////////////////////////////////////
             var tabStats = $("<div/>");
             tabPane.kbaseTabs('addTab', {tab: 'Statistics', content: tabStats, canDelete : false, show: true});
             var tableStats = $('<table class="table table-striped table-bordered" '+
-                    'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-stats"/>');
+                    'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-stats"/>');
             tabStats.append(tableStats);
 	    for (var i = 0; i < modelComp.models.length; i++) {
 		tableStats.append('<tr><td><b>'+modelComp.models[i].id+'</b> genome</td><td>'+modelComp.models[i].name+'</td></tr>');
@@ -73,27 +73,50 @@ $.KBWidget({
 	    if (modelComp.protcomp_ref) {
 		tableStats.append('<tr><td>Proteome Comparison</td><td>'+modelComp.protcomp_ref+'</td></tr>');		
 	    }
-            tableStats.append('<tr><td>Core reactions</td><td>'+modelComp.core_reactions+'</td></tr>');
-            tableStats.append('<tr><td>Core compounds</td><td>'+modelComp.core_compounds+'</td></tr>');
-            tableStats.append('<tr><td>Core biomass compounds</td><td>'+modelComp.core_biomass_compounds+'</td></tr>');
-            tableStats.append('<tr><td>Core protein families</td><td>'+modelComp.core_families+'</td></tr>');
+            tableStats.append('<tr><td>Conserved reactions</td><td>'+modelComp.core_reactions+'</td></tr>');
+            tableStats.append('<tr><td>Conserved compounds</td><td>'+modelComp.core_compounds+'</td></tr>');
+            tableStats.append('<tr><td>Conserved biomass compounds</td><td>'+modelComp.core_biomass_compounds+'</td></tr>');
+            tableStats.append('<tr><td>Conserved protein families</td><td>'+modelComp.core_families+'</td></tr>');
             //////////////////////////////////////////// Reactions tab /////////////////////////////////////////////
             var tabReactions = $("<div/>");
             tabPane.kbaseTabs('addTab', {tab: 'Reactions', content: tabReactions, canDelete : false, show: false});
             var tableReactions = $('<table class="table table-striped table-bordered" '+
-                    'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-common"/>');
+                    'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabReactions.append(tableReactions);
+	    for (var i = 0; i < modelComp.reactions.length; i++) {
+		for (var j = 0; j < modelComp.models.length; j++) {
+		    var model_id = modelComp.models[j].id;
+		    if (modelComp.reactions[i].reaction_model_data.hasOwnProperty(model_id)) {
+			if (modelComp.reactions[i].reaction_model_data[model_id][3] !== "") {
+			    modelComp.reactions[i]["model"+j] = modelComp.reactions[i].reaction_model_data[model_id][3];
+			}
+			else if (modelComp.reactions[i].reaction_model_data[model_id][0] === 1) {
+			    modelComp.reactions[i]["model"+j] = "present";
+			}
+			else {
+			    modelComp.reactions[i]["model"+j] = "absent";
+			}
+		    }
+		    else {
+			modelComp.reactions[i]["model"+j] = "absent";
+		    }
+		}
+	    }
+	    var aoColumns = [
+                                  { "sTitle": "Reaction", 'mData': 'id'},
+                                  { "sTitle": "Equation&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'equation'},
+                                  { "sTitle": "Number Models", 'mData': 'number_models'},
+                                  { "sTitle": "Conserved", 'mData': 'core'},
+			     ];
+	    for (var i = 0; i < modelComp.models.length; i++) {
+		aoColumns.push({"sTitle": modelComp.models[i].id, 'mData':"model"+i });
+	    }
             tableReactions.dataTable({
                     "sPaginationType": "full_numbers",
                     "iDisplayLength": 10,
                     "aaData": modelComp.reactions,
                     "aaSorting": [[ 2, "desc" ], [0, "asc"]],
-                    "aoColumns": [
-                                  { "sTitle": "Reaction", 'mData': 'id'},
-                                  { "sTitle": "Equation&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'equation'},
-                                  { "sTitle": "Number Models", 'mData': 'number_models'},
-                                  { "sTitle": "Core", 'mData': 'core'},
-				  ],
+                    "aoColumns": aoColumns,
                     "oLanguage": {
                                 "sEmptyTable": "No reactions found!",
                                 "sSearch": "Search: "
@@ -104,19 +127,39 @@ $.KBWidget({
             var tabCompounds = $("<div/>");
             tabPane.kbaseTabs('addTab', {tab: 'Compounds', content: tabCompounds, canDelete : false, show: false});
             var tableCompounds = $('<table class="table table-striped table-bordered" '+
-                    'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-common"/>');
+                    'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabCompounds.append(tableCompounds);
+	    for (var i = 0; i < modelComp.compounds.length; i++) {
+		for (var j = 0; j < modelComp.models.length; j++) {
+		    var model_id = modelComp.models[j].id;
+		    if (modelComp.compounds[i].model_compound_compartments.hasOwnProperty(model_id)) {
+			if (modelComp.compounds[i].model_compound_compartments[model_id].length > 0) {
+			    modelComp.compounds[i]["model"+j] = "present";
+			}
+			else {
+			    modelComp.compounds[i]["model"+j] = "absent";
+			}
+		    }
+		    else {
+			modelComp.compounds[i]["model"+j] = "absent";
+		    }
+		}
+	    }
+	    aoColumns = [
+                                  { "sTitle": "Compound", 'mData': 'id'},
+                                  { "sTitle": "Name&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'name'},
+                                  { "sTitle": "Number Models", 'mData': 'number_models'},
+                                  { "sTitle": "Conserved", 'mData': 'core'},
+			     ];
+	    for (var i = 0; i < modelComp.models.length; i++) {
+		aoColumns.push({"sTitle": modelComp.models[i].id, 'mData':"model"+i });
+	    }
             tableCompounds.dataTable({
                     "sPaginationType": "full_numbers",
                     "iDisplayLength": 10,
                     "aaData": modelComp.compounds,
                     "aaSorting": [[ 2, "desc" ], [0, "asc"]],
-                    "aoColumns": [
-                                  { "sTitle": "Compound", 'mData': 'id'},
-                                  { "sTitle": "Name&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'name'},
-                                  { "sTitle": "Number Models", 'mData': 'number_models'},
-                                  { "sTitle": "Core", 'mData': 'core'},
-				  ],
+                    "aoColumns": aoColumns,
                     "oLanguage": {
                                 "sEmptyTable": "No compounds found!",
                                 "sSearch": "Search: "
@@ -127,19 +170,39 @@ $.KBWidget({
             var tabBiomass = $("<div/>");
             tabPane.kbaseTabs('addTab', {tab: 'Biomass compounds', content: tabBiomass, canDelete : false, show: false});
             var tableBiomass = $('<table class="table table-striped table-bordered" '+
-                    'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-common"/>');
+                    'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabBiomass.append(tableBiomass);
+	    for (var i = 0; i < modelComp.biomasscpds.length; i++) {
+		for (var j = 0; j < modelComp.models.length; j++) {
+		    var model_id = modelComp.models[j].id;
+		    if (modelComp.biomasscpds[i].model_biomass_compounds.hasOwnProperty(model_id)) {
+			if (modelComp.biomasscpds[i].model_biomass_compounds[model_id].length > 0) {
+			    modelComp.biomasscpds[i]["model"+j] = "present";
+			}
+			else {
+			    modelComp.biomasscpds[i]["model"+j] = "absent";
+			}
+		    }
+		    else {
+			modelComp.biomasscpds[i]["model"+j] = "absent";
+		    }
+		}
+	    }
+	    aoColumns = [
+                                  { "sTitle": "Compound", 'mData': 'id'},
+                                  { "sTitle": "Name&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'name'},
+                                  { "sTitle": "Number Models", 'mData': 'number_models'},
+                                  { "sTitle": "Conserved", 'mData': 'core'},
+			     ];
+	    for (var i = 0; i < modelComp.models.length; i++) {
+		aoColumns.push({"sTitle": modelComp.models[i].id, 'mData':"model"+i });
+	    }
             tableBiomass.dataTable({
                     "sPaginationType": "full_numbers",
                     "iDisplayLength": 10,
                     "aaData": modelComp.biomasscpds,
                     "aaSorting": [[ 2, "desc" ], [0, "asc"]],
-                    "aoColumns": [
-                                  { "sTitle": "Compound", 'mData': 'id'},
-                                  { "sTitle": "Name&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'name'},
-                                  { "sTitle": "Number Models", 'mData': 'number_models'},
-                                  { "sTitle": "Core", 'mData': 'core'},
-				  ],
+		    "aoColumns": aoColumns,
                     "oLanguage": {
                                 "sEmptyTable": "No biomass found!",
                                 "sSearch": "Search: "
@@ -150,19 +213,39 @@ $.KBWidget({
             var tabFamilies = $("<div/>");
             tabPane.kbaseTabs('addTab', {tab: 'Families', content: tabFamilies, canDelete : false, show: false});
             var tableFamilies = $('<table class="table table-striped table-bordered" '+
-                    'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-common"/>');
+                    'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabFamilies.append(tableFamilies);
+	    for (var i = 0; i < modelComp.families.length; i++) {
+		for (var j = 0; j < modelComp.models.length; j++) {
+		    var model_id = modelComp.models[j].id;
+		    if (modelComp.families[i].family_model_data.hasOwnProperty(model_id)) {
+			if (modelComp.families[i].family_model_data[model_id][0] === 1) {
+			    modelComp.families[i]["model"+j] = "present";
+			}
+			else {
+			    modelComp.families[i]["model"+j] = "absent";
+			}
+		    }
+		    else {
+			modelComp.families[i]["model"+j] = "absent";
+		    }
+		}
+	    }
+	    aoColumns = [
+                                  { "sTitle": "Family", 'mData': 'family_id'},
+                                  { "sTitle": "Function&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'function'},
+                                  { "sTitle": "Number Models", 'mData': 'number_models'},
+                                  { "sTitle": "Conserved", 'mData': 'core'},
+			     ];
+	    for (var i = 0; i < modelComp.models.length; i++) {
+		aoColumns.push({"sTitle": modelComp.models[i].id, 'mData':"model"+i });
+	    }
             tableFamilies.dataTable({
                     "sPaginationType": "full_numbers",
                     "iDisplayLength": 10,
                     "aaData": modelComp.families,
                     "aaSorting": [[ 2, "desc" ], [0, "asc"]],
-                    "aoColumns": [
-                                  { "sTitle": "Family", 'mData': 'family_id'},
-                                  { "sTitle": "Function&nbsp;&nbsp;&nbsp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", 'mData': 'function'},
-                                  { "sTitle": "Number Models", 'mData': 'number_models'},
-                                  { "sTitle": "Core", 'mData': 'core'},
-				  ],
+                    "aoColumns": aoColumns,
                     "oLanguage": {
                                 "sEmptyTable": "No families found!",
                                 "sSearch": "Search: "
@@ -172,8 +255,8 @@ $.KBWidget({
             ///////////////////////////////////// Event handling for links ///////////////////////////////////////////
             function events() {
                 // event for clicking on ortholog count
-                $('.show-reaction'+self.pref).unbind('click');
-                $('.show-reaction'+self.pref).click(function() {
+                $('.show-reaction'+pref).unbind('click');
+                $('.show-reaction'+pref).click(function() {
                     var id = $(this).data('id');
                     if (tabPane.kbaseTabs('hasTab', id)) {
                         tabPane.kbaseTabs('showTab', id);
@@ -181,8 +264,8 @@ $.KBWidget({
                     }           
                     tabPane.kbaseTabs('addTab', {tab: id, content: "Coming soon!", canDelete : true, show: true});
                 });
-                $('.show-gene'+self.pref).unbind('click');
-                $('.show-gene'+self.pref).click(function() {
+                $('.show-gene'+pref).unbind('click');
+                $('.show-gene'+pref).click(function() {
                     var id = $(this).data('id');
                     if (tabPane.kbaseTabs('hasTab', id)) {
                         tabPane.kbaseTabs('showTab', id);

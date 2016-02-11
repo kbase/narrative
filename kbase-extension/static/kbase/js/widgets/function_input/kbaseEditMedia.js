@@ -38,7 +38,7 @@ function ($,
             //var saveBtn = this.$elem.parents('.kb-func-panel').find('.kb-method-run').text('Save');
 
             // remove footer
-            this.$elem.parents('.kb-func-panel').find('.panel-footer').remove();
+            this.$elem.parents('.kb-cell').find('.kb-method-footer').remove();
 
             return this;
         },

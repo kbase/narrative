@@ -405,7 +405,9 @@ function($,
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
                 ws_id: this.getWorkspaceName()
             });
-            this.narrController.render().finally(function() {
+
+            this.narrController.render()
+            .finally(function() {
                 // $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
                 $('#kb-wait-for-ws').remove();
             });

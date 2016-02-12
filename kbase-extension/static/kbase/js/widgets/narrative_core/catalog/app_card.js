@@ -187,7 +187,7 @@ define([
                 $titleSpan.append($('<div>').addClass('kbcb-app-card-module').append(
                                         $('<a href="/#appcatalog/module/'+info.module_name+'" target="_blank">')
                                             .append(info.module_name)
-                                            .on('click',function() {
+                                            .on('click',function(event) {
                                                 // have to stop propagation so we don't go to the app page first
                                                 event.stopPropagation();
                                             })));
@@ -206,7 +206,7 @@ define([
                         }
                         $authorDiv.append($('<a href="/#people/'+info.authors[k]+'" target="_blank">')
                                             .append(info.authors[k])
-                                            .on('click',function() {
+                                            .on('click',function(event) {
                                                 // have to stop propagation so we don't go to the app page first
                                                 event.stopPropagation();
                                             }));
@@ -235,7 +235,7 @@ define([
                 var self = this;
                 if(self.isLoggedIn) {
                     $star.addClass('kbcb-star-nonfavorite');
-                    $star.on('click', function() {
+                    $star.on('click', function(event) {
                         event.stopPropagation();
                         if(!self.deactivatedStar && self.favoritesCallback) {
                             self.favoritesCallback(self.info, self.callbackParams)
@@ -245,7 +245,7 @@ define([
                                         delay:{show: 400, hide: 40}});
                 }
                 var $starCount = $('<span>').addClass('kbcb-star-count');
-                if(this.starCount) { $starCount.html('&nbsp;' + this.starCount); }
+                if(this.starCount) { $starCount.html(this.starCount); }
                 $footer.append($starDiv.append($star).append($starCount));
                 
             } else {
@@ -291,7 +291,7 @@ define([
 
             // buffer
             $footer.append($('<div>').addClass('col-xs-4').css('text-align','left')
-                            .append($('<a href="/#appcatalog/app/'+moreLink+'" target="_blank">').append('more...')));
+                            .append($('<a href="'+moreLink+'" target="_blank">').append('more...')));
 
             var $moreInfoDiv = $('<div>').addClass('col-xs-1').addClass('kbcb-info').css('text-align','right');
             $moreInfoDiv
@@ -303,7 +303,7 @@ define([
                     $subtitle.hide();
                     $topDiv.fadeIn('fast');
                 })
-                .on('click', function() {
+                .on('click', function(event) {
                     // do this the JS way because wrapping just in <a> messes up the styles!
                     event.stopPropagation();
                     window.open(moreLink)

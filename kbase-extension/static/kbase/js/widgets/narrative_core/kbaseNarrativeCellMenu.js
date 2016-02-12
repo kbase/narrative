@@ -25,16 +25,6 @@ function($, Config, TimeFormat) {
 
             this.$subtitle = $('<div class="subtitle">').hide();
 
-            this.$elem.on('mousedown', function () {
-                Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
-            }.bind(this));
-
-            this.$elem.dblclick(function(e) {
-                e.stopPropagation();
-                $(this).trigger('toggle.toolbar');
-                console.log('DOUBLE CLICKED TOOLBAR');
-            });
-
             this.$timestamp = $('<span class="kb-func-timestamp">');
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
@@ -53,17 +43,7 @@ function($, Config, TimeFormat) {
 
             var cell = this.options.cell;
 
-            /* 
-             * Each cell type unfortunately has a different top level layout.
-             * Not that it matters, but I don't see why there isn't a uniform layout 
-             * for the primary layout areas - prompt, toolbar, body, as they exist
-             * now, and another nice one would be a message/notification area.
-             */
-            this.$elem.on('toggle.toolbar', function () {
-                var $cellNode = self.$elem.closest('.cell');
-                $cellNode
-                    .trigger('toggle.cell');
-            });
+
 
             this.$menu = $('<ul>')
                 .addClass('dropdown-menu dropdown-menu-right');
@@ -180,12 +160,15 @@ function($, Config, TimeFormat) {
                 .css({color: "rgb(42,121,191)"})
                 .hide();
             this.$elem.data('runningIcon', this.$runningIcon);
+
             this.$elem.on('start-running', function () {
                 self.$runningIcon.show();
             });
+            
             this.$elem.on('stop-running', function () {
                 self.$runningIcon.hide();
             });
+            
             this.$elem.on('runningIndicator.toolbar', function (e, data) {
 //                if (data.enabled) {
 //                    self.$runningIcon.show();
@@ -202,6 +185,35 @@ function($, Config, TimeFormat) {
 //                }
             });
             
+            this.$elem.on('show-title.toolbar', function () {
+                this.$elem.find('div.title').css('display', 'inline-block');
+            }.bind(this));
+
+            this.$elem.on('hide-title.toolbar', function() {
+                this.$elem.find('div.title').css('display', 'none');
+            }.bind(this));
+
+            this.$elem.on('mousedown', function () {
+                Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
+            }.bind(this));
+
+            this.$elem.dblclick(function(e) {
+                e.stopPropagation();
+                $(this).trigger('toggle.toolbar');
+            });
+
+            /* 
+             * Each cell type unfortunately has a different top level layout.
+             * Not that it matters, but I don't see why there isn't a uniform layout 
+             * for the primary layout areas - prompt, toolbar, body, as they exist
+             * now, and another nice one would be a message/notification area.
+             */
+            this.$elem.on('toggle.toolbar', function () {
+                var $cellNode = self.$elem.closest('.cell');
+                $cellNode
+                    .trigger('toggle.cell');
+            });
+
             function makeIcon(icon) {
                 var spinClass = icon.spin ? 'fa-spin' : '',
                     label = icon.label ? icon.label + ' ' : '',
@@ -259,8 +271,23 @@ function($, Config, TimeFormat) {
                 }
             });
 
+            /*
+             * Events emitted by the cell to indicate that the toolbar should be
+             * selected or unselected. Or rather, that the cell has been selected
+             * or unselected.
+             */
+            this.$elem.on('selected.toolbar', function (e) {
+                e.stopPropagation();
+                $deleteBtn.removeClass('disabled');
+                $dropdownMenu.find('.btn').removeClass('disabled');
+            });
+            this.$elem.on('unselected.toolbar', function (e) {
+                e.stopPropagation();
+                $deleteBtn.addClass('disabled');
+                $dropdownMenu.find('.btn').addClass('disabled');
+            });
+
             this.$elem.on('set-timestamp.toolbar', function (e, time) {
-                console.log('setting time ', TimeFormat.readableTimestamp(time));
                 this.$timestamp.text(TimeFormat.readableTimestamp(time));
             }.bind(this));
 
@@ -314,23 +341,6 @@ function($, Config, TimeFormat) {
             );
             $deleteBtn.tooltip();
             
-            /*
-             * Events emitted by the cell to indicate that the toolbar should be
-             * selected or unselected. Or rather, that the cell has been selected
-             * or unselected.
-             */
-            this.$elem.on('selected.toolbar', function (e) {
-                e.stopPropagation();
-                $deleteBtn.removeClass('disabled');
-                $dropdownMenu.find('.btn').removeClass('disabled');
-            });
-            this.$elem.on('unselected.toolbar', function (e) {
-                e.stopPropagation();
-                $deleteBtn.addClass('disabled');
-                $dropdownMenu.find('.btn').addClass('disabled');
-            });
-
-
             /*
              * A workaround to provide the default state to buttons, et al.
              * jupyter should call select/unselect on each cell as they are added,

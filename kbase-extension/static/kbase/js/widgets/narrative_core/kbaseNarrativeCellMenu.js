@@ -29,6 +29,12 @@ function($, Config, TimeFormat) {
                 Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
             }.bind(this));
 
+            this.$elem.dblclick(function(e) {
+                e.stopPropagation();
+                $(this).trigger('toggle.toolbar');
+                console.log('DOUBLE CLICKED TOOLBAR');
+            });
+
             this.$timestamp = $('<span class="kb-func-timestamp">');
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')

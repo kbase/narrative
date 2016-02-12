@@ -182,31 +182,7 @@ define(['jquery',
                 "header will appear as the cell title." +
                 "-->"
         };
-//        textCell.MarkdownCell.prototype.toJSON = function () {
-//            var data = cell.Cell.prototype.toJSON.apply(this);
-//            data.source = this.get_text();
-//            console.log('to json');
-//            console.log(this.get_text());
-//            console.log(data.source);
-//            if (data.source == this.placeholder) {
-//                data.source = "";
-//            }
-//            return data;
-//        };
-//        textCell.MarkdownCell.prototype.unrender = function () {
-//            var cont = cell.Cell.prototype.unrender.apply(this);
-//            if (cont) {
-//                console.log('unrender');
-//                console.log(this.get_text());
-//                console.log(this.element);
-//                var text_cell = this.element;
-//                //if (this.get_text() === this.placeholder) {
-//                //    this.set_text('');
-//                //}
-//                this.refresh();
-//            }
-//            return cont;
-//        };
+
         var original_unselect = cell.Cell.prototype.unselect;
         cell.Cell.prototype.unselect = function (leave_selected) {
             var wasSelected = original_unselect.apply(this, [leave_selected]);
@@ -403,7 +379,6 @@ define(['jquery',
                 }
             });
 
-
             /*
              * This is the trick to get the markdown to render, and the edit area
              * to disappear, when the user clicks out of the edit area.
@@ -489,23 +464,9 @@ define(['jquery',
                     $(cell.element)
                         .trigger('set-icon.cell', [cell.getCellState('icon', '')]);
 
-                    //$(cell.element)
-                     //   .trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
-                    
-                    // if (cell.getCellState('selected')) {
-                    //     cell.select();
-                    // }
-                    
                     cell.renderToggleState();
                 }
             });
-
-//            this.element.click(function () {
-//                var cont = that.unrender();
-//                if (cont) {
-//                    that.focus_editor();
-//                }
-//            });
         };
 
         // Patch the MarkdownCell renderer to throw an error when failing to render Javascript we need.
@@ -533,17 +494,6 @@ define(['jquery',
                     // Alas, it has no discriminating attributes!
                     cell.toggle();
                 });
-            // Use another hook on double click to toggle the cell open if it 
-            // was closed.
-            // Note that the base Cell bind_events already has a default
-            // double click behavior
-            // $(this.element)
-            //     .on('dblclick', function (e) {
-            //         // if cell state is closed...
-            //         if (cell.getCellState('toggleState', 'unknown') === 'closed') {
-            //             cell.toggle();
-            //         }
-            //     });
         };
 
         /*

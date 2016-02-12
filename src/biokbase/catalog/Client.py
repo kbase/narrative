@@ -224,6 +224,39 @@ class Catalog(object):
                           [params], json_rpc_context)
         return resp[0]
   
+    def add_favorite(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method add_favorite: argument json_rpc_context is not type dict as required.')
+        self._call('Catalog.add_favorite',
+                   [params], json_rpc_context)
+  
+    def remove_favorite(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method remove_favorite: argument json_rpc_context is not type dict as required.')
+        self._call('Catalog.remove_favorite',
+                   [params], json_rpc_context)
+  
+    def list_favorites(self, username, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method list_favorites: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.list_favorites',
+                          [username], json_rpc_context)
+        return resp[0]
+  
+    def list_app_favorites(self, item, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method list_app_favorites: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.list_app_favorites',
+                          [item], json_rpc_context)
+        return resp[0]
+  
+    def list_favorite_counts(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method list_favorite_counts: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.list_favorite_counts',
+                          [params], json_rpc_context)
+        return resp[0]
+  
     def get_module_info(self, selection, json_rpc_context = None):
         if json_rpc_context and type(json_rpc_context) is not dict:
             raise ValueError('Method get_module_info: argument json_rpc_context is not type dict as required.')
@@ -328,4 +361,17 @@ class Catalog(object):
             raise ValueError('Method revoke_developer: argument json_rpc_context is not type dict as required.')
         self._call('Catalog.revoke_developer',
                    [username], json_rpc_context)
+  
+    def log_exec_stats(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method log_exec_stats: argument json_rpc_context is not type dict as required.')
+        self._call('Catalog.log_exec_stats',
+                   [params], json_rpc_context)
+  
+    def get_exec_aggr_stats(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method get_exec_aggr_stats: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.get_exec_aggr_stats',
+                          [params], json_rpc_context)
+        return resp[0]
  

@@ -401,14 +401,16 @@ function($,
         if (this.getWorkspaceName() !== null) {
             this.initSharePanel();
 
-            $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
+            // init the controller
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
                 ws_id: this.getWorkspaceName()
             });
 
+            // tell the controller to render itself. when that's done, render the
+            // side panels.
             this.narrController.render()
             .finally(function() {
-                // $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
+                $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
                 $('#kb-wait-for-ws').remove();
             });
         }

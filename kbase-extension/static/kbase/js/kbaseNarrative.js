@@ -516,7 +516,7 @@ function($,
      * get_cell_elements, which does this searching).
      */
     Narrative.prototype.getCellIndexByKbaseId = function(id) {
-        return $('#' + id).nearest('.cell').not('.cell .cell').index();
+        return $('#' + id).closest('.cell').not('.cell .cell').index();
     };
 
     Narrative.prototype.getCellByKbaseId = function(id) {

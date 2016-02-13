@@ -21,8 +21,8 @@ class Struct:
         return str(self._urls)
 
 try:
-    nar_path = os.environ["NARRATIVEDIR"]
-    config_json = open(os.path.join(nar_path, "config.json")).read()
+    nar_path = os.environ["NARRATIVE_DIR"]
+    config_json = open(os.path.join(nar_path, "src", "config.json")).read()
     config = json.loads(config_json)
     url_config = config[config['config']]  # fun, right?
 

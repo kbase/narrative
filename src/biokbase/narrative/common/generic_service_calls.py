@@ -36,8 +36,7 @@ import hashlib
 import re
 import sys
 # Third-party
-import IPython.utils.traitlets as trt
-from IPython.core.application import Application
+import traitlets as trt
 from biokbase.njs_mock.Client import NJSMock
 from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.workspace.client import Workspace as workspaceService
@@ -377,7 +376,7 @@ def is_script_method(methodSpec):
     return False
 
 def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, stepId, scriptStep):
-    step = { 'step_id' : stepId }
+    step = { 'step_id' : stepId, 'method_spec_id' : methodSpec['info']['id'] }
     if methodInputValues is not None:
         behavior = methodSpec['behavior']
         if 'kb_service_input_mapping' in behavior or 'script_input_mapping' in behavior:

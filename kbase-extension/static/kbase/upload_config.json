@@ -441,6 +441,11 @@
                         "type": "string",
                         "value": "Simple",
                         "optional": false
+                    },
+                    "has_replicates": {
+                        "type": "string",
+                        "param": "hasReplicates",
+                        "optional": false
                     }
                 }
             },
@@ -479,10 +484,10 @@
         }
     },
 
-    "KBaseEnigmaMetals.WellSampleMatrix": {
-        "import_wellsample_tsv_file": {
-            "external_type": "TSV.WellSample",
-            "kbase_type": "KBaseEnigmaMetals.WellSampleMatrix",
+    "KBaseEnigmaMetals.SamplePropertyMatrix": {
+        "import_sampleproperty_tsv_file": {
+            "external_type": "TSV.SampleProperty",
+            "kbase_type": "KBaseEnigmaMetals.SamplePropertyMatrix",
             "object_name": "outputObject",
             "optional_arguments": {
                 "validate": {},
@@ -491,13 +496,18 @@
                         "type": "string",
                         "value" : "Simple",
                         "optional": false
+                    },
+                    "has_replicates": {
+                        "type": "string",
+                        "param": "hasReplicates",
+                        "optional": false
                     }
                 }
             },
             "url_mapping": {
-                "TSV.WellSample": {
+                "TSV.SampleProperty": {
                     "type": "shock",
-                    "param": "wellSampleFile",
+                    "param": "samplePropertyFile",
                     "optional": false
                 }
             }

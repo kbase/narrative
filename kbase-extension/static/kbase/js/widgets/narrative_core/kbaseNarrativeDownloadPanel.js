@@ -87,8 +87,8 @@ function($, Config) {
                 name: "TSV", external_type: 'TSV.Chromatography', transform_options: {}
             }],
 
-            'KBaseEnigmaMetals.WellSampleMatrix':[{
-                name: "TSV", external_type: 'TSV.WellSample ', transform_options: {}
+            'KBaseEnigmaMetals.SamplePropertyMatrix':[{
+                name: "TSV", external_type: 'TSV.SampleProperty', transform_options: {}
             }],
 
             'KBaseFeatureValues.FeatureClusters':[{

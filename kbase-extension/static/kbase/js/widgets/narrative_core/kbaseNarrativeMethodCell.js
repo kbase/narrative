@@ -532,7 +532,7 @@ function($,
                 if (!this.$jobProcessTabs) {
                     this.$jobProcessTabs = $('<div>').addClass('panel-body').addClass('kb-cell-output');
                     var targetPanel = this.$elem;
-                    console.log(this.isJobStatusLoadedFromState, status, jobState, jobInfo);
+                    // console.log(this.isJobStatusLoadedFromState, status, jobState, jobInfo);
                     if (this.isJobStatusLoadedFromState && status) {
                         if ($.inArray(status.toLowerCase(), this.completedStatus) >= 0) {
                             // We move job status panel into cell panel rather than outside because when
@@ -627,12 +627,12 @@ function($,
                 var execStartTime = null;
                 var finishTime = null;
                 var posInQueue = null;
-                console.log(state.step_stats);
+                // console.log(state.step_stats);
                 if (state.step_stats) {
                     for (var key in state.step_stats) {
                         if (state.step_stats.hasOwnProperty(key)) {
                             var stats = state.step_stats[key];
-                            console.log(key, stats);
+                            // console.log(key, stats);
                             if (stats['creation_time'])
                                 creationTime = stats['creation_time'];
                             execStartTime = stats['exec_start_time'];

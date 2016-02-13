@@ -79,6 +79,18 @@ function($, Config) {
                 name: "TSV", external_type: 'TSV.Matrix', transform_options: {}
             }],
 
+            'KBaseEnigmaMetals.GrowthMatrix':[{
+                name: "TSV", external_type: 'TSV.Growth', transform_options: {}
+            }],
+
+            'KBaseEnigmaMetals.ChromatographyMatrix':[{
+                name: "TSV", external_type: 'TSV.Chromatography', transform_options: {}
+            }],
+
+            'KBaseEnigmaMetals.SamplePropertyMatrix':[{
+                name: "TSV", external_type: 'TSV.SampleProperty', transform_options: {}
+            }],
+
             'KBaseFeatureValues.FeatureClusters':[{
                 name: "TSV", external_type: 'TSV.FeatureClusters', transform_options: {}
             }, {

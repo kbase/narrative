@@ -403,6 +403,8 @@ define(['jquery',
                     cell.setCellState('title', title);
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
                     $menu.trigger('set-title.toolbar', [title || '']);
+                    if (cellType(cell) !== undefined)
+                        $(cell.element).trigger('show-title.cell');
                 });
 
             $cellNode

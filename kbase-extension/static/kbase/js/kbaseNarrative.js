@@ -401,16 +401,14 @@ function($,
         if (this.getWorkspaceName() !== null) {
             this.initSharePanel();
 
+            var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
             // init the controller
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
                 ws_id: this.getWorkspaceName()
             });
-
-            // tell the controller to render itself. when that's done, render the
-            // side panels.
             this.narrController.render()
             .finally(function() {
-                $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
+                $sidePanel.render();
                 $('#kb-wait-for-ws').remove();
             });
         }
@@ -516,7 +514,7 @@ function($,
      * get_cell_elements, which does this searching).
      */
     Narrative.prototype.getCellIndexByKbaseId = function(id) {
-        return $('#' + id).nearest('.cell').not('.cell .cell').index();
+        return $('#' + id).closest('.cell').not('.cell .cell').index();
     };
 
     Narrative.prototype.getCellByKbaseId = function(id) {

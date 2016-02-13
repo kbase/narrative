@@ -606,7 +606,7 @@ function($,
          */
         parseKernelResponse: function(content, jobInfo) {
             // if it's not a datastream, display some kind of error, and return.
-            if (content.msg_type != 'stream') {
+            if (content.msg_type !== 'stream') {
                 this.showError('Sorry, an error occurred while loading the job list.');
                 return;
             }
@@ -880,7 +880,7 @@ function($,
             var source = jobState.source;
             var jobType = this.jobTypeFromId(jobId);
 
-            // console.log(['UPDATE_CELL', job, jobInfo]);
+            // console.log(['UPDATE_CELL', jobId, jobInfo]);
             var status = '';
             if (jobState.status)
                 status = jobState.status.toLowerCase();
@@ -893,7 +893,7 @@ function($,
 
             var $cell = $('#' + source);
             // don't do anything if we know what the source should be, but we can't find it.
-            if (!$cell) {
+            if ($cell.length <= 0) {
                 console.error("Unable to find cell with source " + source + " for job id " + jobId + "! Exiting.");
                 return;
             }
@@ -929,6 +929,7 @@ function($,
                 }
                 else {
                     try {
+                        // console.log('setting method cell output for ', source, jobState.state.widget_outputs);
                         $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : jobState.state.widget_outputs });
                     }
                     catch (err) {

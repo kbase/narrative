@@ -148,19 +148,27 @@ define(['jquery',
         textCell.MarkdownCell.prototype.renderToggleState = function () {
             cell.Cell.prototype.renderToggleState.apply(this);
             var $cellNode = $(this.element);
+            var type = cellType(this) || 'unknown';
             switch (this.getCellState('toggleState', 'unknown')) {
                 case 'closed':
                     $cellNode.removeClass('opened');
+                    $cellNode.trigger('show-title.cell');
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', 'none');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', 'none');
                     break;
                 case 'open':
                     $cellNode.addClass('opened');
+                    if (type === 'unknown') {
+                        $cellNode.trigger('hide-title.cell');
+                    }
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
                     break;
                 case 'unknown':
                     $cellNode.addClass('opened');
+                    if (type === 'unknown') {
+                        $cellNode.trigger('hide-title.cell');
+                    }
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
                     break;
@@ -172,53 +180,22 @@ define(['jquery',
             cm_config: {
                 mode: 'ipythongfm'
             },
-            xplaceholder: "Type _Markdown_ and LaTeX: $\\alpha^2$" +
-                "<!-- " +
-                "The above text is Markdown and LaTeX markup.\n" +
-                "It is provided as a quick sample of what you can do in a Markdown cell.\n" +
-                "Markdown cells are marked with the paragraph icon.\n" +
-                "This is a comment, so it does not appear when rendered.\n" +
-                "Also note that the first item in the cell or the first first-level" +
-                "header will appear as the cell title." +
-                "-->"
+            placeholder: "_Markdown_ and LaTeX cell - double click here to edit."
+            // "Type _Markdown_ and LaTeX: $\\alpha^2$" +
+            //     "<!-- " +
+            //     "The above text is Markdown and LaTeX markup.\n" +
+            //     "It is provided as a quick sample of what you can do in a Markdown cell.\n" +
+            //     "Markdown cells are marked with the paragraph icon.\n" +
+            //     "This is a comment, so it does not appear when rendered.\n" +
+            //     "Also note that the first item in the cell or the first first-level" +
+            //     "header will appear as the cell title." +
+            //     "-->"
         };
-//        textCell.MarkdownCell.prototype.toJSON = function () {
-//            var data = cell.Cell.prototype.toJSON.apply(this);
-//            data.source = this.get_text();
-//            console.log('to json');
-//            console.log(this.get_text());
-//            console.log(data.source);
-//            if (data.source == this.placeholder) {
-//                data.source = "";
-//            }
-//            return data;
-//        };
-//        textCell.MarkdownCell.prototype.unrender = function () {
-//            var cont = cell.Cell.prototype.unrender.apply(this);
-//            if (cont) {
-//                console.log('unrender');
-//                console.log(this.get_text());
-//                console.log(this.element);
-//                var text_cell = this.element;
-//                //if (this.get_text() === this.placeholder) {
-//                //    this.set_text('');
-//                //}
-//                this.refresh();
-//            }
-//            return cont;
-//        };
+
         var original_unselect = cell.Cell.prototype.unselect;
         cell.Cell.prototype.unselect = function (leave_selected) {
             var wasSelected = original_unselect.apply(this, [leave_selected]);
-            // ignore the return value -- it represents the initial selected
-            // state of the cell. We don't really care, or do we? 
-            // in theory, if the cell was not initially selected, we don't need
-            // to issue an event.
-            //if (cont) {
-            // tell the toolbar we are unselected.
-            // this.events.trigger('unselected.cell');
             $(this.element).trigger('unselected.cell');
-            //}
             return wasSelected;
         };
         
@@ -393,8 +370,7 @@ define(['jquery',
             textCell.TextCell.prototype.bind_events.apply(this);
 
             var cell = this,
-                $cellNode = $(this.element),
-                $toolbar = $cellNode.find('.celltoolbar > .button_container');
+                $cellNode = $(this.element);
 
             this.element.dblclick(function () {
                 var cont = cell.unrender();
@@ -402,7 +378,6 @@ define(['jquery',
                     cell.focus_editor();
                 }
             });
-
 
             /*
              * This is the trick to get the markdown to render, and the edit area
@@ -428,6 +403,20 @@ define(['jquery',
                     cell.setCellState('title', title);
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
                     $menu.trigger('set-title.toolbar', [title || '']);
+                    if (cellType(cell) !== undefined)
+                        $(cell.element).trigger('show-title.cell');
+                });
+
+            $cellNode
+                .on('hide-title.cell', function (e) {
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    $menu.trigger('hide-title.toolbar');
+                });
+
+            $cellNode
+                .on('show-title.cell', function (e) {
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    $menu.trigger('show-title.toolbar');
                 });
 
             $cellNode
@@ -489,23 +478,9 @@ define(['jquery',
                     $(cell.element)
                         .trigger('set-icon.cell', [cell.getCellState('icon', '')]);
 
-                    //$(cell.element)
-                     //   .trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
-                    
-                    // if (cell.getCellState('selected')) {
-                    //     cell.select();
-                    // }
-                    
                     cell.renderToggleState();
                 }
             });
-
-//            this.element.click(function () {
-//                var cont = that.unrender();
-//                if (cont) {
-//                    that.focus_editor();
-//                }
-//            });
         };
 
         // Patch the MarkdownCell renderer to throw an error when failing to render Javascript we need.
@@ -533,17 +508,6 @@ define(['jquery',
                     // Alas, it has no discriminating attributes!
                     cell.toggle();
                 });
-            // Use another hook on double click to toggle the cell open if it 
-            // was closed.
-            // Note that the base Cell bind_events already has a default
-            // double click behavior
-            // $(this.element)
-            //     .on('dblclick', function (e) {
-            //         // if cell state is closed...
-            //         if (cell.getCellState('toggleState', 'unknown') === 'closed') {
-            //             cell.toggle();
-            //         }
-            //     });
         };
 
         /*

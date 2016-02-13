@@ -356,36 +356,6 @@
             var $mintarget = $cellPanel;
             this.panel_minimized = false;
             var self = this;
-            // $controlsSpan.click(function() {
-            //     if (self.panel_minimized) {
-            //         $appSubmittedStamp.hide();
-            //         $appSubtitleDiv.show();
-            //         $cellMenu.minimizeSubtext('');
-
-            //         $mintarget.children(".panel-body").slideDown();
-            //         $mintarget.children(".panel-footer").slideDown();
-            //         $minimizeControl.removeClass("glyphicon-chevron-right")
-            //                         .addClass("glyphicon-chevron-down");
-            //         self.panel_minimized = false;
-            //     }
-            //     else {
-            //         if(self.state.runningState.submittedText && !self.isAwaitingInput()) {
-            //             $appSubmittedStamp.html($('<h2>').append("&nbsp;&nbsp;&nbsp;" +self.state.runningState.submittedText));
-            //             $appSubmittedStamp.show();
-            //             $appSubtitleDiv.hide();
-            //         }
-            //         $cellMenu.minimizeSubtext('test');
-            //         $mintarget.children(".panel-footer").slideUp();
-            //         $mintarget.children(".panel-body").slideUp();
-            //         $minimizeControl.removeClass("glyphicon-chevron-down")
-            //                         .addClass("glyphicon-chevron-right");
-            //         self.panel_minimized = true;
-            //     }
-            // });
-
-            // finally, we refresh so that our drop down or other boxes can be populated
-            console.log(this.$elem.closest('.cell').find('.button_container').data());
-            // this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', 'Not yet submitted.');
             this.refresh();
         },
 

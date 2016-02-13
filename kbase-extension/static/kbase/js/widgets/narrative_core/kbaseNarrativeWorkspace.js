@@ -114,7 +114,6 @@ function($,
                 }.bind(this)
             );
 
-            console.log('WORKSPACE: setting up dataUpdated.Narrative response');
             $(document).on('dataUpdated.Narrative',
                 function(event) {
                     if (Jupyter && Jupyter.notebook) {
@@ -133,7 +132,6 @@ function($,
                     }
                 }.bind(this)
             );
-            console.log('WORKSPACE: done setting up dataUpdated.Narrative response');
 
             $(document).on('narrativeDataQuery.Narrative',
                 function(e, callback) {

@@ -4,9 +4,9 @@
  */
 
 define(['jquery',
-	'util/string',
-	'narrativeConfig',
-	'd3',
+        'util/string',
+        'narrativeConfig',
+        'd3',
         'kbwidget',
         'kbaseAuthenticatedWidget',
         'kbaseTabs',

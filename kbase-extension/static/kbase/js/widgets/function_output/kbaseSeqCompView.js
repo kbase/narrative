@@ -5,12 +5,13 @@
 
 define(['jquery',
 	'util/string',
+	'narrativeConfig',
 	'd3',
         'kbwidget',
         'kbaseAuthenticatedWidget',
         'kbaseTabs',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap'], function($, StringUtil) {
+        'jquery-dataTables-bootstrap'], function($, StringUtil, Config) {
     $.KBWidget({
         name: "kbaseSeqCompView",
         parent: "kbaseAuthenticatedWidget",
@@ -23,8 +24,8 @@ define(['jquery',
             ws_id: null,
             ws_name: null
         },
-        loadingImage: window.kbconfig.loading_gif,
-        wsUrl: window.kbconfig.urls.workspace,
+        loadingImage: Config.get('loading_gif'),
+        wsUrl: Config.url('workspace'),
         timer: null,
 
         init: function(options) {

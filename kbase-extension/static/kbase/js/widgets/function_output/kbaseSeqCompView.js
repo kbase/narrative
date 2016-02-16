@@ -4,13 +4,13 @@
  */
 
 define(['jquery',
+	'util/string',
 	'd3',
         'kbwidget',
         'kbaseAuthenticatedWidget',
         'kbaseTabs',
-	'util/string',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap'], function($) {
+        'jquery-dataTables-bootstrap'], function($, StringUtil) {
     $.KBWidget({
         name: "kbaseSeqCompView",
         parent: "kbaseAuthenticatedWidget",
@@ -47,7 +47,7 @@ define(['jquery',
 
         render: function() {
             var self = this;
-            var pref = this.uuid();
+            var pref = StringUtil.uuid();
 
             var container = this.$elem;
             if (self.token == null) {
@@ -182,12 +182,5 @@ style="margin-left: auto; margin-right: auto;" id="'+pref+'legend-table"/>');
             return this;
         },
 
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
-        }
     });
 });

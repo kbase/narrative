@@ -602,7 +602,7 @@ function($,
                                         var id = new Date().getTime();
                                         var ws_name = self.my_user_id + ":" + id;
 
-                                        Promise.resolve(this.ws.clone_workspace({
+                                        Promise.resolve(self.ws.clone_workspace({
                                             wsi: {id: ws_info[0]},
                                             workspace: ws_name,
                                             meta: newMeta

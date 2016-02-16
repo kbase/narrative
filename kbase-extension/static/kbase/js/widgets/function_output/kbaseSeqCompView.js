@@ -8,6 +8,7 @@ define(['jquery',
         'kbwidget',
         'kbaseAuthenticatedWidget',
         'kbaseTabs',
+	'util/string',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap'], function($) {
     $.KBWidget({
@@ -35,8 +36,8 @@ define(['jquery',
                   this.ws_id = options.report_name;
                   this.ws_name = options.workspace_name;
             }
-	    // this.ws_id = 'ecoli.dnadiff.output';
-	    // this.ws_name = 'fangfang:1454986986211';
+	    this.ws_id = 'ecoli.dnadiff.output';
+	    this.ws_name = 'fangfang:1454986986211';
 
 	    console.log("WS parameters:");
 	    console.log(this.ws_id);
@@ -167,15 +168,6 @@ style="margin-left: auto; margin-right: auto;" id="'+pref+'legend-table"/>');
             };
             ready();
             return this;
-        },
-
-        getData: function() {
-        	return {
-        		type: "NarrativeTempCard",
-        		id: this.ws_name + "." + this.ws_id,
-        		workspace: this.ws_name,
-        		title: "Temp Widget"
-        	};
         },
 
         loggedInCallback: function(event, auth) {

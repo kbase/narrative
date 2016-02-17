@@ -176,7 +176,7 @@ $.KBWidget({
 
                 var op = {op: 'rm', data: data, ids: ids};
                 editTable(op);
-                modeling.notice(container, 'Removed '+data.length+' compounds')
+                modeling.notice(container, 'Removed '+data.length+' reactions')
 
                 rmBtn.toggleClass('hide');
                 addBtn.toggleClass('hide');
@@ -191,7 +191,7 @@ $.KBWidget({
                 if (count > 0){
                     addBtn.addClass('hide');
                     rmBtn.html('<i class="fa fa-minus"></i> '+
-                        'Remove '+count+' compounds')
+                        'Remove '+count+' reactions')
                     rmBtn.removeClass('hide');
                 } else {
                     rmBtn.addClass('hide');
@@ -354,7 +354,7 @@ $.KBWidget({
                 if (['genes'].indexOf(key) !== -1)
                     config.className = 'editable-genes';
 
-                if ( key === 'genes' ) { // fixme: need not depend on spec
+                if ( key === 'genes' ) {
                     config.data = function(row) {
                         var items = [];
                         for (var i=0; i<row.genes.length; i++) {
@@ -375,27 +375,13 @@ $.KBWidget({
             return settings
         }
 
-
-        // takes media data, adds id key/value, and sorts it.
-        function sanitizeMedia(media) {
-            var i = media.length;
-            while (i--) {
-                media[i].id = media[i].compound_ref.split('/').pop();
-            }
-            return media.sort(function(a, b) {
-                if (a.id < b.id) return -1;
-                if (a.id > b.id) return 1;
-                return 0;
-            })
-        }
-
         function rxnModal() {
             var table = $('<table class="table table-bordered table-striped kb-editor-table'+
                 ' " style="width: 100% !important;">');
 
             var modal = $('<div>').kbaseModal({
                 title: 'Add Reactions',
-                subText: 'Select compounds below, then click "add".',
+                subText: 'Select reactions below, then click "add".',
                 body: table,
                 width: '75%'
             })
@@ -460,7 +446,7 @@ $.KBWidget({
                 }
             });
 
-            // add compounds on click, hide dialog, give notice
+            // add reactions on click, hide dialog, give notice
             addBtn.on('click' , function() {
                 var data = setRxnDefaults( selectedRows.getSelected() ),
                     ids = data.map(function(obj) { return obj.id }),
@@ -468,7 +454,7 @@ $.KBWidget({
                     op = {op: 'add', data: data, ids: ids};
                 editTable(op);
                 modal.hide();
-                modeling.notice(container, 'Added '+data.length+' compounds')
+                modeling.notice(container, 'Added '+data.length+' reactions')
             })
 
             modal.show();

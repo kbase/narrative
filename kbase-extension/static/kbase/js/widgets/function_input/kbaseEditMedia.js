@@ -89,9 +89,11 @@ function ($,
                 this.$mediaDisplayPanel = $('<div>');
                 var mediaWidget = $('<div>');
 
+                var self = this;
                 mediaWidget.kbaseMediaEditor({
                     ws: Jupyter.narrative.getWorkspaceName(),
-                    obj: mediaName
+                    obj: mediaName,
+                    onSave: function () { self.trigger('updateData.Narrative') }
                 });
 
                 this.$mediaDisplayPanel.append('<hr>');

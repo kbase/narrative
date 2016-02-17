@@ -37,8 +37,8 @@ define(['jquery',
                   this.ws_id = options.report_name;
                   this.ws_name = options.workspace_name;
             }
-	    this.ws_id = 'ecoli.dnadiff.output';
-	    this.ws_name = 'fangfang:1454986986211';
+	    // this.ws_id = 'ecoli.dnadiff.output';
+	    // this.ws_name = 'fangfang:1454986986211';
 
 	    console.log("WS parameters:");
 	    console.log(this.ws_id);

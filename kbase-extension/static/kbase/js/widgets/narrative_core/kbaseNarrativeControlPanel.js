@@ -17,15 +17,17 @@
  * @public
  */
 define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
-//(function($, undefined) {
     $.KBWidget({
         name: 'kbaseNarrativeControlPanel', 
         parent: 'kbaseAuthenticatedWidget',
         version: '0.0.1',
         options: {
             title: 'Control',
+            showTitle: true,
             collapsible: true,
-            maxHeight: '400px'
+            maxHeight: '400px',
+            collapseCallback: null,  // called when this panel is minimized/maximized
+            slideTime: 400           // set minimize/maximize animation time
         },
 
         /**
@@ -41,9 +43,8 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
          */
         init: function(options) {
             this._super(options);
-
+            this.slideTime = this.options.slideTime;
             this.render();
-            /** commenting out the overlay panel for now **/
             return this;
         },
 
@@ -77,38 +78,63 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
                                 .attr('role', 'toolbar')
                                 .css({'margin-top' : '-2px'});
 
+            var $titleSpan = $('<span>');
+            if(this.options.showTitle) {
+              $titleSpan
+                .append($('<span>')
+                  .css({'cursor' : 'pointer'})
+                  .click(
+                      $.proxy(function(event) {
+                          event.preventDefault();
+                          if ($(event.currentTarget.firstChild).hasClass('glyphicon-chevron-down')) {
+                              $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-down')
+                                                               .addClass('glyphicon-chevron-right');
+                              this.$bodyDiv.parent().slideUp(this.slideTime);
+                              this.isMin = true;
+                          }
+                          else {
+                              $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-right')
+                                                               .addClass('glyphicon-chevron-down');
+                              this.$bodyDiv.parent().slideDown(this.slideTime);
+                              this.isMin = false;
+                          }
+                          if(this.options.collapseCallback) {
+                              this.options.collapseCallback(this.isMin);
+                          }
+                      }, this)
+                  )
+                  .append($('<span>')
+                          .addClass('glyphicon glyphicon-chevron-down kb-narr-panel-toggle'))
+                  .append(this.options.title))
+            }
+            $titleSpan.append(this.$buttonPanel);
+
+            this.isMin = false;
             this.$elem.append($('<div>')
+                              .css({'height':'100%', 'overflow-y':'auto'})
                               .addClass('kb-narr-side-panel')
-                                      .append($('<div>')
-                                              .addClass('kb-title')
-                                              .append($('<span>')
-                                                      .css({'cursor' : 'pointer'})
-                                                      .click(
-                                                          $.proxy(function(event) {
-                                                              event.preventDefault();
-                                                              if ($(event.currentTarget.firstChild).hasClass('glyphicon-chevron-down')) {
-                                                                  $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-down')
-                                                                                                   .addClass('glyphicon-chevron-right');
-                                                                  this.$bodyDiv.parent().slideUp(400);
-                                                              }
-                                                              else {
-                                                                  $(event.currentTarget.firstChild).removeClass('glyphicon-chevron-right')
-                                                                                                   .addClass('glyphicon-chevron-down');
-                                                                  this.$bodyDiv.parent().slideDown(400);
-                                                              }
-                                                          }, this)
-                                                      )
-                                                      .append($('<span>')
-                                                              .addClass('glyphicon glyphicon-chevron-down kb-narr-panel-toggle'))
-                                                      .append(this.options.title))
-                                                      .append(this.$buttonPanel))
+                              .append($('<div>')
+                                      .addClass('kb-title')
+                                      .append($titleSpan))
                               .append($('<div>')
                                       .addClass('kb-narr-panel-body')
-                                      .css({ 
-//                                          'max-height' : this.options.maxHeight,
-                                          'overflow-y' : 'auto'
-                                      })
                                       .append(this.$bodyDiv)));
+        },
+
+        // remember the minimization state
+        isMin: null,
+
+        /**
+         * Returns minimization state of the Panel, true if minimized, false otherwise
+         * @public
+         */
+        isMinimized: function() {
+          return this.isMin;
+        },
+
+        // allows the height of the entire panel to be dynamically set
+        setHeight: function(height) {
+          this.$elem.css({height:height});
         },
 
         /**

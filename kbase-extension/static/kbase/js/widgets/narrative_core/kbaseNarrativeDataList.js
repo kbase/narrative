@@ -6,15 +6,23 @@
 */
 define(['jquery',
         'underscore',
+        'bluebird',
         'narrativeConfig',
-        'Util/String',
-        'Util/Display',
+        'util/string',
+        'util/display',
+        'util/timeFormat',
         'kbase-client-api',
         'jquery-nearest',
         'kbwidget',
         'kbaseAuthenticatedWidget',
         'kbaseNarrativeDownloadPanel'],
-function ($, _, Config, StringUtil, DisplayUtil) {
+function ($,
+          _,
+          Promise,
+          Config,
+          StringUtil,
+          DisplayUtil,
+          TimeFormat) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeDataList',
@@ -24,11 +32,9 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             ws_name: null, // must be the WS name, not the WS Numeric ID
 
             ws_url: Config.url('workspace'),
-            landing_page_url: "/functional-site/#/", // !! always include trailing slash
             lp_url: Config.url('landing_pages'),
             profile_page_url: Config.url('profile_page'),
 
-            user_name_fetch_url: "https://kbase.us/services/genome_comparison/users?usernames=",
             loadingImage: Config.get('loading_gif'),
             methodStoreURL: Config.url('narrative_method_store'), 
 
@@ -41,7 +47,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             objs_to_render_on_scroll: 5, // number of rows to add when the user scrolls to the bottom, should be <=5, much more and
             // the addition of new rows becomes jerky
 
-            max_objs_to_prevent_filter_as_you_type_in_search: 50000, //if there are more than this # of objs, user must click search
+            maxObjsToPreventFilterAsYouTypeInSearch: 50000, //if there are more than this # of objs, user must click search
             //instead of updating as you type
 
             max_objs_to_prevent_initial_sort: 10000, // initial sort makes loading slower, so we can turn it off if
@@ -49,15 +55,17 @@ function ($, _, Config, StringUtil, DisplayUtil) {
 
             max_name_length: 33,
             refresh_interval: 30000,
-            parentControlPanel: null
+            parentControlPanel: null,
+
+            slideTime: 400
         },
         // private variables
         mainListPanelHeight: '340px',
         refreshTimer: null,
         ws_name: null,
         ws: null,
-        ws_last_update_timestamp: null,
-        ws_obj_count: null,
+        wsLastUpdateTimestamp: null,
+        maxWsObjId: null,
         n_objs_rendered: 0,
         real_name_lookup: {},
         $searchInput: null,
@@ -71,9 +79,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         $mainListDiv: null,
         mainListId: null,
         $loadingDiv: null,
-        methClient: null,
-        obj_list: [],
-        obj_data: {}, // old style - type_name : info
+        objList: [],
+        objData: {}, // old style - type_name : info
 
         my_user_id: null,
         /**
@@ -92,10 +99,11 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             this.$controllerDiv = $('<div>');
             this.$elem.append(this.$controllerDiv);
             this.renderController();
-            this.$loadingDiv = $('<div>').addClass('kb-data-loading')
-                .append('<img src="' + this.options.loadingImage + '">')
-                .hide();
-            this.$elem.append(this.$loadingDiv);
+
+            this.loadingDiv = DisplayUtil.loadingDiv();
+            this.loadingDiv.div.hide();
+            this.loadingDiv.div.css({'top': '0', 'bottom': '0'});
+
             this.mainListId = StringUtil.uuid();
             this.$mainListDiv = $('<div id=' + this.mainListId + '>')
                 .css({'overflow-x': 'hidden', 'overflow-y': 'auto', 'height': this.mainListPanelHeight})
@@ -112,6 +120,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                     self.trigger('toggleSidePanelOverlay.Narrative', self.options.parentControlPanel.$overlayPanel);
                 });
             var $mainListDivContainer = $('<div>').css({'position': 'relative'})
+                .append(this.loadingDiv.div)
                 .append(this.$mainListDiv)
                 .append(this.$addDataButton.hide());
             this.$elem.append($mainListDivContainer);
@@ -129,84 +138,97 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 this.ws_name = this.options.ws_name;
             }
 
-            this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
-
             return this;
         },
-        setWorkspace: function (ws_name) {
-            this.ws_name = ws_name;
-            // this.ws_name = "janakacore"; // for testing a bigish workspace
-            //this.ws_name = "KBasePublicGenomesV4"; // for testing a very big workspace
-            this.refresh();
-        },
-        refresh: function (showError) {
-            var self = this;
 
-            console.log('DataList: refresh -- ' + self.ws_name);
+        setListHeight: function(height, animate) {
+            if(this.$mainListDiv) {
+                if(animate) {
+                    this.$mainListDiv.animate({'height':height},this.options.slideTime);
+                } else {
+                    this.$mainListDiv.css({'height':height});
+                }
+            }
+        },
+
+        /**
+         * @method loggedInCallback
+         * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
+         * is triggered when a login event occurs.
+         * It associates the new auth token with this widget and refreshes the data panel.
+         * @private
+         */
+        loggedInCallback: function (event, auth) {
+            this.ws = new Workspace(this.options.ws_url, auth);
+            this.my_user_id = auth.user_id;
+            this.isLoggedIn = true;
+            this.refresh();
+            return this;
+        },
+
+        /**
+         * @method loggedOutCallback
+         * Like the loggedInCallback, this is triggered during a logout event (through the login widget).
+         * It throws away the auth token and workspace client, and refreshes the widget
+         * @private
+         */
+        loggedOutCallback: function (event, auth) {
+            this.ws = null;
+            this.isLoggedIn = false;
+            this.my_user_id = null;
+            return this;
+        },
+
+        showLoading: function(caption) {
+            this.$mainListDiv.hide();
+            this.loadingDiv.setText(caption || '');
+            this.loadingDiv.div.show();
+        },
+
+        hideLoading: function() {
+            this.loadingDiv.div.hide();
+            this.$mainListDiv.show();
+        },
+
+        refresh: function (showError) {
             // Set the refresh timer on the first refresh. From  here, it'll refresh itself
             // every this.options.refresh_interval (30000) ms
-            if (self.refreshTimer === null) {
-                self.refreshTimer = setInterval(function () {
-                    self.refresh();
-                }, this.options.refresh_interval); // check if there is new data every X ms
+            if (this.refreshTimer === null) {
+                this.refreshTimer = setInterval(function () {
+                    this.refresh();
+                }.bind(this), this.options.refresh_interval); // check if there is new data every X ms
             }
-            if (self.ws_name && self.ws) {
-                self.ws.get_workspace_info({
-                    workspace: this.ws_name
-                },
-                    function (workspace_info) {
-                        //[0] ws_id id, [1] ws_name workspace, [2] username owner, [3] timestamp moddate,
-                        //[4] int object, [5] permission user_permission, [6] permission globalread,
-                        //[7] lock_status lockstat, [8] usermeta metadata
-                        //console.log('I have: '+self.ws_last_update_timestamp+ " remote has: "+workspace_info[3]);
 
-                        // Update RO or RW mode
-                        self.trigger("updateReadOnlyMode.Narrative",
-                            [self.ws, self.ws_name]);
-
-                        if (self.ws_last_update_timestamp) {
-                            if (self.ws_last_update_timestamp !== workspace_info[3]) {
-                                self.ws_last_update_timestamp = workspace_info[3];
-                                self.ws_obj_count = workspace_info[4];
-                                self.reloadWsData();
-                            } else {
-                                //console.log('updating times');
-                                self.refreshTimeStrings();
-                            }
-                        } else {
-                            self.ws_last_update_timestamp = workspace_info[3];
-                            self.ws_obj_count = workspace_info[4];
-                            self.reloadWsData();
-                        }
-                    },
-                    function (error) {
-                        console.error('DataList: when checking for updates:', error);
-                        if (showError) {
-                            self.$mainListDiv.show();
-                            self.$mainListDiv.empty();
-                            self.$mainListDiv.append($('<div>').css({'color': '#F44336', 'margin': '10px'})
-                                .append('Error: Unable to connect to KBase data.'));
-                        }
-                        self.hideLoading();
-                    });
-            } else {
+            if (!this.ws_name || !this.ws) {
                 console.error('DataList: missing variable(s)');
-                console.error('ws_name: ' + self.ws_name);
-                console.error('ws: ' + self.ws);
-                self.hideLoading();
-                /*Not really an error yet because we don't know what order things are being called
-                 var where = "kbaseNarrativeDataList.refresh";
-                 if (!self.ws) {
-                 console.error(where, "Workspace not connected");
-                 }
-                 else {
-                 console.error(where, "Workspace name is empty");
-                 }*/
+                console.error('ws_name: ' + this.ws_name);
+                console.error('ws: ' + this.ws);
+                return;
             }
-        },
-        refreshSpecificObject: function () {
 
+            Promise.resolve(this.ws.get_workspace_info({
+                workspace: this.ws_name
+            }))
+            .then(function(wsInfo) {
+                if (this.wsLastUpdateTimestamp !== wsInfo[3]) {
+                    this.wsLastUpdateTimestamp = wsInfo[3];
+                    this.maxWsObjId = wsInfo[4];
+                    this.showLoading('Fetching data...');
+                    this.reloadWsData();
+                }
+                else {
+                    this.refreshTimeStrings();
+                    this.hideLoading();
+                }
+            }.bind(this))
+            .catch(function(error) {
+                console.error('DataList: when checking for updates:', error);
+                if (showError) {
+                    this.showBlockingError('Error: Unable to connect to KBase data.');
+                }
+            }.bind(this));
         },
+
         refreshTimeStrings: function () {
             var self = this;
             var newTime;
@@ -214,135 +236,144 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             if (self.objectList) {
                 for (var i = 0; i < self.objectList.length; i++) {
                     if (self.objectList[i].$div) {
-                        newTime = self.getTimeStampStr(self.objectList[i].info[3]);
-                        oldTime = self.objectList[i].$div.find('.kb-data-list-date').text();
-                        if (newTime !== oldTime) {
-                            self.objectList[i].$div.find('.kb-data-list-date').text(newTime);
-                        }
+                        newTime = TimeFormat.getTimeStampStr(self.objectList[i].info[3]);
+                        self.objectList[i].$div.find('.kb-data-list-date').text(newTime);
                     }
                 }
             }
         },
-        reloadWsData: function () {
-            var self = this;
-            console.log('DataList: reloadWsData');
-            if (self.ws_name && self.ws) {
-                // empty the existing object list first
-                self.objectList = [];
-                self.obj_data = {};
-                self.availableTypes = {};
 
-                self.getNextDataChunk(0);
-            }
+        reloadWsData: function() {
+            // empty the existing object list first
+            this.objectList = [];
+            this.objData = {};
+            this.availableTypes = {};
+
+            this.fetchWorkspaceData()
+            .then(function() {
+                this.showLoading('Rendering data...');
+                if (this.objectList.length > this.options.maxObjsToPreventFilterAsYouTypeInSearch) {
+                    this.$searchInput.off('input');
+                }
+
+                if (this.objectList.length <= this.options.max_objs_to_prevent_initial_sort) {
+                    this.objectList.sort(function (a, b) {
+                        if (a.info[3] > b.info[3])
+                            return -1; // sort by date
+                        if (a.info[3] < b.info[3])
+                            return 1;  // sort by date
+                        return 0;
+                    });
+                    this.$elem.find('#nar-data-list-default-sort-label').addClass('active');
+                    this.$elem.find('#nar-data-list-default-sort-option').attr('checked');
+                }
+
+                this.populateAvailableTypes();
+                this.renderList();
+                this.hideLoading();
+                this.trigger('dataUpdated.Narrative');
+            }.bind(this));
         },
-        getNextDataChunk: function (skip) {
-            var self = this;
-            console.log('DataList: getNextDataChunk - ' + skip);
-            self.ws.list_objects({
-                workspaces: [self.ws_name],
-                includeMetadata: 1,
-                skip: skip,
-                limit: self.options.ws_chunk_size
-            },
-                function (infoList) {
-                    console.log('DataList: getNextDataChunk return');
-                    console.log(infoList);
-                    // object_info:
-                    // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                    // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                    // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                    // [9] : int size // [10] : usermeta meta
-                    for (var i = 0; i < infoList.length; i++) {
-                        // skip narrative objects
-                        if (infoList[i][2].indexOf('KBaseNarrative') == 0) {
-                            continue;
-                        }
-                        self.objectList.push(
-                            {
+
+
+        /**
+         * @method
+         * @param {string} error - the error string to show
+         * 
+         * This empties out the main data div and injects an error into it.
+         * Used mainly when lookups fail.
+         */
+        showBlockingError: function(error) {
+            this.$mainListDiv.empty();
+            this.$mainListDiv.append(
+                $('<div>').css({'color': '#F44336', 'margin': '10px'})
+                          .append(error)
+            );
+            this.loadingDiv.div.hide();
+            this.$mainListDiv.show();
+        },
+
+        fetchWorkspaceData: function () {
+            var dataChunkNum = 1;
+            return new Promise(function(resolve, reject) {
+                var getDataChunk = function(minId) {
+                    this.showLoading('Fetching data chunk ' + dataChunkNum + '...');
+                    return Promise.resolve(this.ws.list_objects({
+                        workspaces: [this.ws_name],
+                        includeMetadata: 1,
+                        minObjectID: minId,
+                        maxObjectID: minId + this.options.ws_chunk_size
+                    }))
+                    .then(function(infoList) {
+                        // object_info:
+                        // [0] : obj_id objid 
+                        // [1] : obj_name name 
+                        // [2] : type_string type
+                        // [3] : timestamp save_date 
+                        // [4] : int version 
+                        // [5] : username saved_by
+                        // [6] : ws_id wsid 
+                        // [7] : ws_name workspace 
+                        // [8] : string chsum
+                        // [9] : int size 
+                        // [10] : usermeta meta
+                        for (var i=0; i<infoList.length; i++) {
+                            // skip narrative objects
+                            if (infoList[i][2].indexOf('KBaseNarrative') === 0) {
+                                continue;
+                            }
+                            this.objectList.push({
                                 key: StringUtil.uuid(), // always generate the DnD key
-                                $div: null, //self.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
+                                $div: null,
                                 info: infoList[i],
                                 attached: false
+                            });
+                            // type is formatted like this: Module.Type-1.0
+                            // typeKey = Module.Type
+                            // typeName = Type
+                            var typeKey = infoList[i][2].split('-')[0];
+                            if (!(typeKey in this.objData)) {
+                                this.objData[typeKey] = [];
                             }
-                        );
-                        var typeKey = infoList[i][2].split("-")[0];
-                        if (!(typeKey in self.obj_data)) {
-                            self.obj_data[typeKey] = [];
-                        }
-                        self.obj_data[typeKey].push(infoList[i]);
+                            this.objData[typeKey].push(infoList[i]);
 
-                        var typeName = typeKey.split('.')[1];
-                        if (!(typeName in self.availableTypes)) {
-                            self.availableTypes[typeName] =
-                                {
+                            var typeName = typeKey.split('.')[1];
+                            if (!(typeName in this.availableTypes)) {
+                                this.availableTypes[typeName] = {
                                     type: typeName,
                                     count: 0
                                 };
+                            }
+                            this.availableTypes[typeName].count++;
                         }
-                        self.availableTypes[typeName].count++;
-                    }
 
-                    // if we have more than 2k objects, make them hit enter to search...
-                    self.$searchInput.off("input change blur");
-                    self.$searchInput.on("change blur", function () {
-                        self.search();
-                    });
-                    if (self.objectList.length <= self.options.max_objs_to_prevent_filter_as_you_type_in_search) {
-                        self.$searchInput.on("input", function () {
-                            self.search();
-                        });
-                        self.$searchInput.on("keyup", function (e) {
-                            if (e.keyCode == 27)
-                                self.$searchDiv.hide();
-                        });
-                    }
-
-                    self.trigger('dataUpdated.Narrative');
-
-                    //LOGIC: we keep trying to get more until we reach the ws_obj_count or untill the max
-                    // fetch count option, UNLESS the last call returned nothing, in which case we stop.
-                    //IMPORTANT NOTE: IN RARE CASES THIS DOES NOT GAURANTEE THAT WE GET ALL OBJECTS FROM
-                    //THIS WS!!  IF THERE IS A CHUNK THAT RETURNED NOTHING, THERE STILL MAY BE MORE
-                    //OBJECTS DUE TO A BUG IN THE WORKSPACE THAT INCLUDES OLD VERSIONS AND DELETED VERSIONS
-                    //BEFORE FILTERING OUT THE NUMBER - A BETTER TEMP FIX WOULD BE TO LIMIT THE NUMBER OF
-                    //RECURSIONS TO 2 or 3 MAYBE...
-                    //BUT WHATEVER YOU DO PLEASE REMEMBER TO USE CAPITAL LETTERS EXTENSIVELY
-                    //OTHERWISE PEOPLE MIGHT NOT NOTICE WHAT YOU ARE SAYING AND THAT WOULD
-                    //BE EXTREMELY ANNOYING!!!! SERIOUSLY!!!
-                    if (self.objectList.length < self.ws_obj_count
-                        && self.objectList.length < self.options.ws_max_objs_to_fetch
-                        && infoList.length > 0) {
-                        self.getNextDataChunk(skip + self.options.ws_chunk_size);
-                    } else {
-                        if (self.objectList.length <= self.options.max_objs_to_prevent_initial_sort) {
-                            self.objectList.sort(function (a, b) {
-                                if (a.info[3] > b.info[3])
-                                    return -1; // sort by date
-                                if (a.info[3] < b.info[3])
-                                    return 1;  // sort by date
-                                return 0;
-                            });
-                            self.$elem.find('#nar-data-list-default-sort-label').addClass('active');
-                            self.$elem.find('#nar-data-list-default-sort-option').attr('checked');
+                        /* Do another lookup if all of these conditions are met:
+                         * 1. total object list length < max objs allowed to fetch/render
+                         * 2. theres > 0 objects seen.
+                         * 3. our search space hasn't hit the max object id.
+                         * There's no guarantee that we'll ever see the object with
+                         * max id (it could have been deleted), so keep rolling until
+                         * we either meet how many we're allowed to fetch, or we get
+                         * a query with no objects.
+                         */
+                        if (minId + this.options.ws_chunk_size < this.maxWsObjId &&
+                            this.objectList.length < this.options.ws_max_objs_to_fetch &&
+                            infoList.length > 0) {
+                            dataChunkNum++;
+                            return getDataChunk(minId + 1 + this.options.ws_chunk_size);
                         }
-                    }
+                    }.bind(this));
+                }.bind(this);
 
-                    self.populateAvailableTypes();
-                    self.renderList();
-                    self.hideLoading();
-                },
-                function (error) {
-                    console.error(error);
-                    KBError("kbaseNarrativeDataList.getNextDataChunk",
-                        error.error.message);
-                    self.$mainListDiv.show();
-                    self.$mainListDiv.empty();
-                    self.$mainListDiv.append($('<div>').css({'color': '#F44336', 'margin': '10px'})
-                        .append('Error: ' + error.error.message));
-                    self.hideLoading();
-                });
-
+                getDataChunk(0).then(resolve);
+            }.bind(this))
+            .catch(function(error) {
+                this.showBlockingError(error);
+                console.error(error);
+                KBError("kbaseNarrativeDataList.getNextDataChunk", error.error.message);
+            }.bind(this));
         },
+
         getObjData: function (type, ignoreVersion) {
             if (type) {
                 var dataSet = {};
@@ -350,13 +381,13 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                     type = [type];
                 }
                 for (var i = 0; i < type.length; i++) {
-                    if (this.obj_data[type[i]]) {
-                        dataSet[type[i]] = this.obj_data[type[i]];
+                    if (this.objData[type[i]]) {
+                        dataSet[type[i]] = this.objData[type[i]];
                     }
                 }
                 return dataSet;
             }
-            return this.obj_data;
+            return this.objData;
         },
         $currentSelectedRow: null,
         selectedObject: null,
@@ -505,7 +536,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                                     }
                                     $tbl.append($('<tr>')
                                         .append($('<td>').append($revertBtn))
-                                        .append($('<td>').append('Saved by ' + history[k][5] + '<br>' + self.getTimeStampStr(history[k][3])))
+                                        .append($('<td>').append('Saved by ' + history[k][5] + '<br>' + TimeFormat.getTimeStampStr(history[k][3])))
                                         .append($('<td>').append($('<span>').css({margin: '4px'}).addClass('fa fa-info pull-right'))
                                             .tooltip({
                                                 title: history[k][2] + '<br>' + history[k][8] + '<br>' + history[k][9] + ' bytes',
@@ -545,7 +576,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 .click(function (e) {
                     e.stopPropagation();
                     $alertContainer.empty();
-                    window.open(self.options.landing_page_url + 'objgraphview/' + object_info[7] + '/' + object_info[1]);
+                    window.open('/#objgraphview/' + object_info[7] + '/' + object_info[1]);
                 });
             var $download = $('<span>')
                 .addClass(btnClasses).css(css)
@@ -734,13 +765,13 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             var $version = $('<span>').addClass("kb-data-list-version").append('v' + object_info[4]);
             var $type = $('<div>').addClass("kb-data-list-type").append(type);
 
-            var $date = $('<span>').addClass("kb-data-list-date").append(this.getTimeStampStr(object_info[3]));
+            var $date = $('<span>').addClass("kb-data-list-date").append(TimeFormat.getTimeStampStr(object_info[3]));
             var $byUser = $('<span>').addClass("kb-data-list-edit-by");
             if (object_info[5] !== self.my_user_id) {
                 $byUser.append(' by ' + object_info[5])
                     .click(function (e) {
                         e.stopPropagation();
-                        window.open(self.options.landing_page_url + 'people/' + object_info[5]);
+                        window.open('/#people/' + object_info[5]);
                     });
             }
             var metadata = object_info[10];
@@ -760,8 +791,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             DisplayUtil.displayRealName(object_info[5], $savedByUserSpan);
 
             var $alertDiv = $('<div>').css({'text-align': 'center', 'margin': '10px 0px'});
-            var typeLink = '<a href="' + this.options.landing_page_url + 'spec/module/' + type_module + '" target="_blank">' + type_module + "</a>.<wbr>" +
-                '<a href="' + this.options.landing_page_url + 'spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
+            var typeLink = '<a href="/#spec/module/' + type_module + '" target="_blank">' + type_module + "</a>.<wbr>" +
+                '<a href="/#spec/type/' + object_info[2] + '" target="_blank">' + (type_tokens[1].replace('-', '&#8209;')) + '.' + type_tokens[2] + '</a>';
             var $moreRow = $('<div>').addClass("kb-data-list-more-div").hide()
                 .append($('<div>').css({'text-align': 'center', 'margin': '5pt'})
                     .append(self.addDataControls(object_info, $alertDiv)).append($alertDiv))
@@ -921,7 +952,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 }
             });
             node.addEventListener('dragend', function (e) {
-                console.log('drag ended...');
                 var container = document.querySelector('#notebook-container'),
                     targetCells = document.querySelectorAll('#notebook-container .kb-data-list-drag-target');
                 for (var i = 0; i < targetCells.length; i += 1) {
@@ -970,7 +1000,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 $(cell.element).off('dblclick');
                 $(cell.element).off('keydown');
             }
-            //console.log(cell, near_idx);
 
             //var cell_id = StringUtil.uuid();
             //cell.rendered = false;
@@ -986,7 +1015,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 'widget': 'kbaseNarrativeDataCell',
                 'info': info
             });
-
         },
         renderMore: function () {
             var self = this;
@@ -1001,7 +1029,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                         }
                         self.attachRow(i);
                     }
-                    //console.log('showing '+ self.n_objs_rendered + ' of ' + self.objectList.length);
                 } else {
                     // search filter is on, so we have to base this on what is currently filtered
                     var start = self.n_filteredObjsRendered;
@@ -1013,7 +1040,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                         self.attachRowElement(self.currentMatch[i]);
                         self.n_filteredObjsRendered++;
                     }
-                    //console.log('showing '+ self.n_filteredObjsRendered + ' of ' + self.currentMatch.length + ' objs matching search filter');
                 }
             }
         },
@@ -1063,7 +1089,6 @@ function ($, _, Config, StringUtil, DisplayUtil) {
         },
         renderList: function () {
             var self = this;
-            self.showLoading();
 
             self.detachAllRows();
 
@@ -1099,9 +1124,8 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 }
                 self.$mainListDiv.append($noDataDiv);
             }
-
-            self.hideLoading();
         },
+
         renderController: function () {
             var self = this;
 
@@ -1178,12 +1202,12 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 .append('<span class="fa fa-search"></span>')
                 .on('click', function () {
                     if (!self.$searchDiv.is(':visible')) {
-                        self.$searchDiv.show();
-                        self.$sortByDiv.hide();
-                        self.$filterTypeDiv.hide();
+                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$searchDiv.show({effect: 'blind', duration: 'fast'});
                         self.$searchInput.focus();
                     } else {
-                        self.$searchDiv.hide();
+                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
                     }
                 });
 
@@ -1200,11 +1224,11 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 .append('<span class="fa fa-sort-amount-asc"></span>')
                 .on('click', function () {
                     if (!self.$sortByDiv.is(':visible')) {
-                        self.$sortByDiv.show();
-                        self.$searchDiv.hide();
-                        self.$filterTypeDiv.hide();
+                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$sortByDiv.show({effect: 'blind', duration: 'fast'});
                     } else {
-                        self.$sortByDiv.hide();
+                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
                     }
                 });
 
@@ -1221,11 +1245,11 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 .append('<span class="fa fa-filter"></span>')
                 .on('click', function () {
                     if (!self.$filterTypeDiv.is(':visible')) {
-                        self.$filterTypeDiv.show();
-                        self.$sortByDiv.hide();
-                        self.$searchDiv.hide();
+                        self.$sortByDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$searchDiv.hide({effect: 'blind', duration: 'fast'});
+                        self.$filterTypeDiv.show({effect: 'blind', duration: 'fast'});
                     } else {
-                        self.$filterTypeDiv.hide();
+                        self.$filterTypeDiv.hide({effect: 'blind', duration: 'fast'});
                     }
                 });
             var $refreshBtn = $('<span>')
@@ -1243,6 +1267,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                     self.refresh();
                 });
             self.$searchInput = $('<input type="text">')
+                .attr('Placeholder', 'Search in your data')
                 .addClass('form-control')
                 .on('focus', function () {
                     if (Jupyter && Jupyter.narrative) {
@@ -1251,9 +1276,18 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                 })
                 .on('blur', function () {
                     if (Jupyter && Jupyter.narrative) {
-                        Jupyter.narraive.enableKeyboardManager();
+                        Jupyter.narrative.enableKeyboardManager();
                     }
-                });
+                })
+                .on('input change blur', function(e) {
+                    this.search();
+                }.bind(this))
+                .on('keyup', function(e) {
+                    if (e.keyCode === 27) {
+                        this.search();
+                    }
+                }.bind(this));
+
             self.$searchDiv = $('<div>').addClass("input-group").css({'margin-bottom': '10px'})
                 .append(self.$searchInput)
                 .append($("<span>").addClass("input-group-addon")
@@ -1264,12 +1298,13 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                             self.search();
                         })));
 
-            self.$sortByDiv = $('<div>').css({'margin': '3px', 'margin-left': '5px', 'margin-bottom': '10px'})
-                .append("<small>sort by: </small>")
+            self.$sortByDiv = $('<div>').css('text-align', 'center')
+                .append('<small>sort by: </small>')
                 .append($sortByGroup)
                 .append($upOrDown);
 
             self.$filterTypeSelect = $('<select>').addClass("form-control")
+                .css('margin', 'inherit')
                 .append($('<option value="">'))
                 .change(function () {
                     var optionSelected = $(this).find("option:selected");
@@ -1282,7 +1317,7 @@ function ($, _, Config, StringUtil, DisplayUtil) {
                     self.filterByType(typeSelected);
                 });
 
-            self.$filterTypeDiv = $('<div>').css({'margin': '3px', 'margin-left': '5px', 'margin-bottom': '10px'})
+            self.$filterTypeDiv = $('<div>')
                 .append(self.$filterTypeSelect);
 
             var $header = $('<div>');
@@ -1311,6 +1346,10 @@ function ($, _, Config, StringUtil, DisplayUtil) {
 
             self.$controllerDiv.append($header).append($filterDiv);
         },
+
+        /**
+         * Populates the filter set of available types.
+         */
         populateAvailableTypes: function () {
             var self = this;
             if (self.availableTypes && self.$filterTypeSelect) {
@@ -1354,22 +1393,16 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             self.objectList.reverse();
             self.renderList();
             self.search();
-
-            self.hideLoading();
         },
         sortData: function (sortfunction) {
             var self = this;
             if (!self.objectList) {
                 return;
             }
-            //should add spinning wait bar ....
-            self.showLoading();
 
             self.objectList.sort(sortfunction);
             self.renderList();
             self.search();  // always refilter on the search term search if there is something there
-
-            self.hideLoading();
 
             // go back to the top on sort
             self.$mainListDiv.animate({
@@ -1501,89 +1534,5 @@ function ($, _, Config, StringUtil, DisplayUtil) {
             var $usernameTd = $moreRow.find(".kb-data-list-username-td");
             DisplayUtil.displayRealName(object_info[5], $usernameTd);
         },
-        showLoading: function () {
-            this.$loadingDiv.show();
-            this.$mainListDiv.hide();
-        },
-        hideLoading: function () {
-            this.$loadingDiv.hide();
-            this.$mainListDiv.show();
-        },
-
-        /**
-         * @method loggedInCallback
-         * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
-         * is triggered when a login event occurs.
-         * It associates the new auth token with this widget and refreshes the data panel.
-         * @private
-         */
-        loggedInCallback: function (event, auth) {
-            console.log('DataList: loggedInCallback');
-            this.ws = new Workspace(this.options.ws_url, auth);
-            this.my_user_id = auth.user_id;
-            this.isLoggedIn = true;
-            this.refresh();
-            return this;
-        },
-        /**
-         * @method loggedOutCallback
-         * Like the loggedInCallback, this is triggered during a logout event (through the login widget).
-         * It throws away the auth token and workspace client, and refreshes the widget
-         * @private
-         */
-        loggedOutCallback: function (event, auth) {
-            this.ws = null;
-            this.isLoggedIn = false;
-            this.my_user_id = null;
-            if (this.ws_name)
-                this.refresh();
-            return this;
-        },
-        // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
-        getTimeStampStr: function (objInfoTimeStamp) {
-            var date = new Date(objInfoTimeStamp);
-            var seconds = Math.floor((new Date() - date) / 1000);
-
-            // f-ing safari, need to add extra ':' delimiter to parse the timestamp
-            if (isNaN(seconds)) {
-                var tokens = objInfoTimeStamp.split('+');  // this is just the date without the GMT offset
-                var newTimestamp = tokens[0] + '+' + tokens[0].substr(0, 2) + ":" + tokens[1].substr(2, 2);
-                date = new Date(newTimestamp);
-                seconds = Math.floor((new Date() - date) / 1000);
-                if (isNaN(seconds)) {
-                    // just in case that didn't work either, then parse without the timezone offset, but
-                    // then just show the day and forget the fancy stuff...
-                    date = new Date(tokens[0]);
-                    return this.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-                }
-            }
-
-            var interval = Math.floor(seconds / 31536000);
-            if (interval > 1) {
-                return this.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-            }
-            interval = Math.floor(seconds / 2592000);
-            if (interval > 1) {
-                if (interval < 4) {
-                    return interval + " months ago";
-                } else {
-                    return this.monthLookup[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
-                }
-            }
-            interval = Math.floor(seconds / 86400);
-            if (interval > 1) {
-                return interval + " days ago";
-            }
-            interval = Math.floor(seconds / 3600);
-            if (interval > 1) {
-                return interval + " hours ago";
-            }
-            interval = Math.floor(seconds / 60);
-            if (interval > 1) {
-                return interval + " minutes ago";
-            }
-            return Math.floor(seconds) + " seconds ago";
-        },
-        monthLookup: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     })
 });

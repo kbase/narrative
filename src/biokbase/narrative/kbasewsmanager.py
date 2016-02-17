@@ -245,8 +245,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 if content:
                     model['format'] = u'json'
                     model['content'] = nbformat.reads(json.dumps(nar_obj['data']), 4)
-                    model['name'] = nar_obj['data']['metadata'].get(u'name', u'Untitled')
-                    util.kbase_env.narrative = u'ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid'])
+                    model['content']['metadata'].pop('orig_nbformat', None)
+                    model['name'] = nar_obj['data']['metadata'].get('name', 'Untitled')
+                    util.kbase_env.narrative = 'ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid'])
                     util.kbase_env.workspace = model['content'].metadata.ws_name
                 if user is not None:
                     model['writable'] = self.narrative_writable(u'{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), user)

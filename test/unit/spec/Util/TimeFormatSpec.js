@@ -4,7 +4,7 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['jquery', 'Util/TimeFormat'], function($, TF) {
+define(['jquery', 'util/timeFormat'], function($, TF) {
     'use strict';
     var testISOTime = '2015-12-09T21:58:22.202Z';
     var testISOTime2 = '2016-01-06T00:48:43.196Z';

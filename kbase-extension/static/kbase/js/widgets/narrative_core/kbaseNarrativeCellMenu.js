@@ -2,9 +2,10 @@
 /*jslint white: true*/
 define(['jquery', 
         'narrativeConfig',
+        'util/timeFormat',
         'kbwidget', 
         'bootstrap'], 
-function($, Config) {
+function($, Config, TimeFormat) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeCellMenu',
@@ -22,46 +23,27 @@ function($, Config) {
             var self = this;
             this._super(options);
 
-            // console.log(['cell menu', this.options.cell]);
-//            var outputPane = this.$elem.closest('.cell').find('.inner_cell > div:nth-child(2)').get(0);
-//            if (!outputPane.id) {
-//                outputPane.id = this.genId();
-//            }
-//            this.$elem.data('ouputPaneId', outputPane.id);
+            this.$subtitle = $('<div class="subtitle">').hide();
+
+            this.$timestamp = $('<span class="kb-func-timestamp">');
 
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
-                .append($('<span class="fa fa-trash-o" style="font-size:14pt; padding-left: 5px;">'))
-                .click($.proxy(function () {
-                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
-                }, this)),
-                $menuBtn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
-                .append($('<span class="fa fa-cog" style="font-size:14pt">')),
-                // $collapseBtn = $('<button class="btn btn-default" role="button" data-toggle="collapse" href="#' + outputPane.id + '" aria-controls="' + $outputPane.id + '">Open</button>'),
-                $collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle"><span class="fa fa-chevron-down"></button>')
+                .append($('<span class="fa fa-trash-o" style="font-size:14pt;">'))
+                .click(function () {
+                    this.trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(this.options.cell));
+                }.bind(this));
+
+            var $menuBtn = $('<button type="button" data-toggle="dropdown" aria-haspopup="true" class="btn btn-default btn-xs">')
+                .append($('<span class="fa fa-cog" style="font-size:14pt">'));
+
+            this.$collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle" style="width:20px"><span class="fa fa-chevron-down"></button>')
                 .on('click', function () {
-                    self.$elem.trigger('toggle.toolbar');                    
-                });
+                    this.$elem.trigger('toggle.toolbar');
+                }.bind(this));
 
             var cell = this.options.cell;
 
-            /* 
-             * Each cell type unfortunately has a different top level layout.
-             * Not that it matters, but I don't see why there isn't a uniform layout 
-             * for the primary layout areas - prompt, toolbar, body, as they exist
-             * now, and another nice one would be a message/notification are
-             */
-            this.$elem.on('toggle.toolbar', function () {                
-                var $cellNode = self.$elem.closest('.cell');
-                $cellNode
-                    .trigger('toggle.cell');
-            });
-            
-//            this.$elem.on('toggle-output-all', function () {
-//                self.$elem
-//                    .closest('.notebook')
-//                    .find('.cell .inner_cell > div:nth-child(3)')
-//                    .toggle();
-//            });
+
 
             this.$menu = $('<ul>')
                 .addClass('dropdown-menu dropdown-menu-right');
@@ -71,28 +53,28 @@ function($, Config) {
                     icon: 'fa fa-code',
                     text: 'View Job Submission',
                     action: function () {
-                        var metadata = IPython.notebook.get_selected_cell().metadata,
+                        var metadata = this.options.cell.metadata,
                             stackTrace = [],
-                            cell = IPython.notebook.insert_cell_below('code');
+                            newCell = Jupyter.narrative.insertAndSelectCell('code', 'below', Jupyter.notebook.find_cell_index(this.options.cell));
                         if (metadata['kb-cell'] && metadata['kb-cell'].stackTrace) {
                             stackTrace = metadata['kb-cell'].stackTrace;
                         }
                         console.log(stackTrace);
                         if (stackTrace instanceof Array) {
-                            cell.set_text('job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info');
-                            IPython.notebook.get_selected_cell().execute();
+                            newCell.set_text('job_info=' + stackTrace[stackTrace.length - 1] + '\njob_info');
+                            newCell.execute();
                         } else {
-                            cell.set_text('job_info=' + stackTrace);
+                            newCell.set_text('job_info=' + stackTrace);
                         }
                     }
-                });
+                }.bind(this));
             }
 
             this.addMenuItem({
                 icon: 'fa fa-arrow-up',
                 text: 'Move Cell Up',
                 action: function () {
-                    IPython.notebook.move_cell_up();
+                    Jupyter.notebook.move_cell_up();
                 }
             });
 
@@ -100,7 +82,7 @@ function($, Config) {
                 icon: 'fa fa-arrow-down',
                 text: 'Move Cell Down',
                 action: function () {
-                    IPython.notebook.move_cell_down();
+                    Jupyter.notebook.move_cell_down();
                 }
             });
 
@@ -108,7 +90,7 @@ function($, Config) {
                 icon: 'fa fa-caret-square-o-up',
                 text: 'Insert Cell Above',
                 action: function () {
-                    IPython.notebook.insert_cell_above('markdown');
+                    Jupyter.narrative.insertAndSelectCellAbove('markdown');
                 }
             });
 
@@ -116,7 +98,7 @@ function($, Config) {
                 icon: 'fa fa-caret-square-o-down',
                 text: 'Insert Cell Below',
                 action: function () {
-                    IPython.notebook.insert_cell_below('markdown');
+                    Jupyter.narrative.insertAndSelectCellBelow('markdown');
                 }
             });
 
@@ -135,7 +117,7 @@ function($, Config) {
 
                             // the method initializes an internal method input widget, but in an async way
                             // so we have to wait and check when that is done.  When it is, we can update state
-                            var newCell = IPython.notebook.get_selected_cell();
+                            var newCell = Jupyter.notebook.get_selected_cell();
                             var newWidget = $('#' + $(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
                             var updateState = function (state) {
                                 if (newWidget.$inputWidget) {
@@ -152,29 +134,20 @@ function($, Config) {
                 });
             }
 
-            // if (this.options.cell && this.options.cell.metadata['kb-cell'] === undefined) {
-            //     this.addMenuItem({
-            //         icon: 'fa fa-terminal',
-            //         text: 'Toggle Cell Type',
-            //         action: function() {
-            //             if (this.options.cell.cell_type === "markdown") {
-            //                 IPython.notebook.to_code();
-            //             }
-            //             else {
-
-            //             }
-            //         },
-            //         disable: true
-            //     });
-            // }
-//
-//            this.addMenuItem({
-//                icon: 'fa fa-trash-o',
-//                text: 'Delete Cell',
-//                action: $.proxy(function () {
-//                    this.trigger('deleteCell.Narrative', IPython.notebook.get_selected_index());
-//                }, this)
-//            });
+            if (this.options.cell && this.options.cell.metadata['kb-cell'] === undefined) {
+                this.addMenuItem({
+                    icon: 'fa fa-terminal',
+                    text: 'Toggle Cell Type',
+                    action: function() {
+                        if (this.options.cell.cell_type === "markdown") {
+                            Jupyter.notebook.to_code();
+                        }
+                        else {
+                            Jupyter.notebook.to_markdown();
+                        }
+                    }.bind(this),
+                });
+            }
 
             var self = this;
             
@@ -187,12 +160,15 @@ function($, Config) {
                 .css({color: "rgb(42,121,191)"})
                 .hide();
             this.$elem.data('runningIcon', this.$runningIcon);
+
             this.$elem.on('start-running', function () {
                 self.$runningIcon.show();
             });
+            
             this.$elem.on('stop-running', function () {
                 self.$runningIcon.hide();
             });
+            
             this.$elem.on('runningIndicator.toolbar', function (e, data) {
 //                if (data.enabled) {
 //                    self.$runningIcon.show();
@@ -209,6 +185,35 @@ function($, Config) {
 //                }
             });
             
+            this.$elem.on('show-title.toolbar', function () {
+                this.$elem.find('div.title').css('display', 'inline-block');
+            }.bind(this));
+
+            this.$elem.on('hide-title.toolbar', function() {
+                this.$elem.find('div.title').css('display', 'none');
+            }.bind(this));
+
+            this.$elem.on('mousedown', function () {
+                Jupyter.notebook.events.trigger('select.Cell', this.options.cell);
+            }.bind(this));
+
+            this.$elem.dblclick(function(e) {
+                e.stopPropagation();
+                $(this).trigger('toggle.toolbar');
+            });
+
+            /* 
+             * Each cell type unfortunately has a different top level layout.
+             * Not that it matters, but I don't see why there isn't a uniform layout 
+             * for the primary layout areas - prompt, toolbar, body, as they exist
+             * now, and another nice one would be a message/notification area.
+             */
+            this.$elem.on('toggle.toolbar', function () {
+                var $cellNode = self.$elem.closest('.cell');
+                $cellNode
+                    .trigger('toggle.cell');
+            });
+
             function makeIcon(icon) {
                 var spinClass = icon.spin ? 'fa-spin' : '',
                     label = icon.label ? icon.label + ' ' : '',
@@ -266,57 +271,6 @@ function($, Config) {
                 }
             });
 
-            // this shows on error
-            this.$errorIcon = $("<span>")
-                .addClass("fa fa-exclamation-triangle")
-                .css({color: "red"})
-                .hide();
-            this.$elem.data('errorIcon', this.$errorIcon);
-            this.$elem.on('show-error', function () {
-                self.$errorIcon.hide();
-            });
-            this.$elem.on('hide-error', function () {
-                self.$errorIcon.hide();
-            });
-            this.$elem.on('errorIndicator.toolbar', function (e, data) {
-                if (data.enabled) {
-                    self.$errorIcon.show();
-                } else {
-                    self.$errorIcon.hide();
-                }
-            });
-            
-            
-            var $dropdownMenu = $('<span class="btn-group">')
-                .append($menuBtn)
-                .append(this.$menu);
-
-            this.$elem.append(
-                $('<div class="kb-cell-toolbar container-fluid">')
-                .append($('<div class="row">')
-                    .append($('<div class="col-md-1">')
-                        .append($('<div class="buttons pull-left">')
-                            .append($collapseBtn)
-                        )
-                    )
-                    .append($('<div class="col-md-7">')
-                        .append($('<div class="title pull-left">')
-                            .append('<span data-element="title" class="title"></span>') // title here
-                        )
-                    )
-                    .append($('<div class="col-md-4">')
-                        .append($('<div class="buttons pull-right">')
-                            .append(this.$runningIcon)
-                            .append(this.$errorIcon)
-                            .append(this.$jobStateIcon)
-                            .append($deleteBtn)
-                            .append($dropdownMenu)
-                        )
-                    )
-                )
-            );
-            $deleteBtn.tooltip();
-            
             /*
              * Events emitted by the cell to indicate that the toolbar should be
              * selected or unselected. Or rather, that the cell has been selected
@@ -333,7 +287,60 @@ function($, Config) {
                 $dropdownMenu.find('.btn').addClass('disabled');
             });
 
+            this.$elem.on('set-timestamp.toolbar', function (e, time) {
+                this.$timestamp.text(TimeFormat.readableTimestamp(time));
+            }.bind(this));
 
+            // this shows on error
+            this.$errorIcon = $("<span>")
+                .addClass("fa fa-exclamation-triangle")
+                .css({color: "red", 'font-size': '14pt'})
+                .hide();
+            this.$elem.data('errorIcon', this.$errorIcon);
+            this.$elem.on('show-error', function () {
+                self.$errorIcon.hide();
+            });
+            this.$elem.on('hide-error', function () {
+                self.$errorIcon.hide();
+            });
+            this.$elem.on('errorIndicator.toolbar', function (e, data) {
+                if (data.enabled) {
+                    self.$errorIcon.show();
+                } else {
+                    self.$errorIcon.hide();
+                }
+            });
+
+            var $dropdownMenu = $('<span class="btn-group">')
+                .append($menuBtn)
+                .append(this.$menu);
+
+            this.$elem.append(
+                $('<div class="kb-cell-toolbar container-fluid">')
+                .append($('<div class="row">')
+                    .append($('<div class="col-sm-8">')
+                        .append($('<div class="buttons pull-left">')
+                            .append(this.$collapseBtn)
+                        )
+                        .append($('<div class="title" style="display:inline-block">')
+                            .append('<div data-element="title" class="title"></div>') // title here
+                            .append(this.$subtitle)
+                        )
+                    )
+                    .append($('<div class="col-sm-4">')
+                        .append($('<div class="buttons pull-right">')
+                            .append(this.$timestamp)
+                            .append(this.$runningIcon)
+                            .append(this.$errorIcon)
+                            .append(this.$jobStateIcon)
+                            .append($deleteBtn)
+                            .append($dropdownMenu)
+                        )
+                    )
+                )
+            );
+            $deleteBtn.tooltip();
+            
             /*
              * A workaround to provide the default state to buttons, et al.
              * jupyter should call select/unselect on each cell as they are added,
@@ -396,6 +403,57 @@ function($, Config) {
 
             return this;
         },
+
+        toggleState: function(state) {
+            var $icon = this.$collapseBtn.find('span.fa');
+
+            switch (state) {
+                case 'closed':
+                    $icon.removeClass('fa-chevron-down');
+                    $icon.addClass('fa-chevron-right');
+                    this.$elem.parent().removeClass('kb-toolbar-open');
+                    if (this.options.cell.metadata['kb-cell'] && this.$subtitle) {
+                        var type = this.options.cell.metadata['kb-cell']['type'];
+                        var $kbCell = $(this.options.cell.element).find('[id^=kb-cell]');
+                        if ($kbCell) {
+                            switch(type) {
+                                case 'kb_app':
+                                    this.$subtitle.html($kbCell.kbaseNarrativeAppCell('getSubtitle'));
+                                    break;
+                                case 'kb_error':
+                                    this.$subtitle.html('An error has occurred in this cell!');
+                                    break;
+                                case 'function_output':
+                                    // this.$subtitle.html($kbCell.kbaseNarrativeOutputCell('getSubtitle'));
+                                    break;
+                                case 'function_input':
+                                    // doing this more declarative causes some funky rendering issues.
+                                    // we need some better message passing, I think.
+                                    $kbCell.trigger('get_cell_subtitle.Narrative', function(text) {
+                                        this.$subtitle.html(text);
+                                    }.bind(this));
+                                    break;
+                                default:
+                                    break;
+                            }
+                            this.$subtitle.show();
+                        }
+                    }
+                    break;
+                default:
+                    $icon.removeClass('fa-chevron-right');
+                    $icon.addClass('fa-chevron-down');
+                    this.$elem.parent().addClass('kb-toolbar-open');
+                    this.$subtitle.hide();
+                    break;
+            }
+        },
+
+        setSubtitle: function (value) {
+            if (this.$subtitle)
+                this.$subtitle.html(value);
+        },
+
         addMenuItem: function (item) {
             var label = '';
             if (item.icon) {

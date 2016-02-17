@@ -3,8 +3,21 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 2.0.0
+__Changes__
+- Update IPython backend to Jupyter 4.1.0
+- Data Panel slideout should now perform better for users with lots and lots of objects.
+- Fixed problem with copied narratives sometimes referring back to their original workspace.
+- Data Panel slidout dimmer should be in the correct z-position now.
+- Added separate job console for each running method, attached to that cell.
+- Changed style of cells to better show what cell is selected and active.
+- Adjusted Narrative Management tab to be somewhat more performant.
+- Updated Narrative object definition to match the Jupyter notebook object definition more closely.
+
+
 ### Version 1.1.0
 __Changes__
+- Added "Edit and Re-Run" button to method cells that have already been run.
 - Updated 'filtered' in method panel to 'filtered out'.
 - Added uploaders for Feature-Value pair data.
 - Added viewers for BLAST output.

@@ -8,6 +8,7 @@
  */
 define([
     'jquery', 
+    'bluebird',
     'narrativeConfig',
     'kbaseNarrativeSidePanel', 
     'kbaseNarrativeOutputCell', 
@@ -19,9 +20,11 @@ define([
     'ipythonCellMenu',
     'base/js/events',
     'notebook/js/notebook',
-    'Util/Display'
+    'util/display',
+    'jquery-nearest'
 ], 
 function($,
+         Promise,
          Config,
          kbaseNarrativeSidePanel,
          kbaseNarrativeOutputCell,
@@ -80,48 +83,35 @@ function($,
     };
 
     /**
-     * @method
-     * Shows the cell toolbar above the given non-KBase cell (e.g. only
-     * code and markdown cells).
-     * Updates the currently selected cell to be the one passed in.
-     */
-    Narrative.prototype.showJupyterCellToolbar = function(cell) {
-        // tell the toolbar that it is selected. For now, the toolbar is in 
-        // charge.
-        $(cell.element).trigger('select.toolbar');
-    };
-
-    /**
      * Registers Narrative responses to a few Jupyter events - mainly some
      * visual effects for managing when the cell toolbar should be shown, 
      * but it also disables the keyboard manager when KBase cells are selected.
      */
     Narrative.prototype.registerEvents = function() {
-        $([Jupyter.events]).on('status_idle.Kernel',function () {
+        $([Jupyter.events]).on('before_save.Notebook', function() {
+            $('#kb-save-btn').find('div.fa-save').addClass('fa-spin');
+        });
+        $([Jupyter.events]).on('notebook_saved.Notebook', function() {
+            $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
+        });
+        $([Jupyter.events]).on('kernel_idle.Kernel',function () {
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle-o');
         });
 
-        $([Jupyter.events]).on('status_busy.Kernel',function () {
+        $([Jupyter.events]).on('kernel_busy.Kernel',function () {
             $("#kb-kernel-icon").removeClass().addClass('fa fa-circle');
         });
 
-        $([Jupyter.events]).on('select.Cell', function(event, data) {
-            this.showJupyterCellToolbar(data.cell);
-            if (data.cell.metadata['kb-cell']) {
-                this.disableKeyboardManager();
-            }
-        }.bind(this));
-
         $([Jupyter.events]).on('create.Cell', function(event, data) {
-            this.showJupyterCellToolbar(data.cell);
+            // this.showJupyterCellToolbar(data.cell);
         }.bind(this));
 
         $([Jupyter.events]).on('delete.Cell', function(event, data) {
-            this.showJupyterCellToolbar(Jupyter.notebook.get_selected_cell());
             this.enableKeyboardManager();
         }.bind(this));
 
         $([Jupyter.events]).on('notebook_save_failed.Notebook', function(event, data) {
+            $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
             this.saveFailed(event, data);
         }.bind(this));
 
@@ -133,6 +123,7 @@ function($,
             ws_name_or_id: this.getWorkspaceName()
         });
         $('#kb-share-btn').popover({
+            trigger: 'click',
             html : true,
             placement : "bottom",
             content: function() {
@@ -213,23 +204,21 @@ function($,
     Narrative.prototype.checkVersion = function($newVersion) {
         // look up new version here.
         var self = this;
-        $.ajax({
+        Promise.resolve($.ajax({
             url: Config.url('version_check'),
             async: true,
             dataType: 'text',
             crossDomain: true,
-            cache: false,
-            success: function(ver) {
-                ver = $.parseJSON(ver);
-                if (self.currentVersion !== ver.version) {
-                    $newVersion.empty().append('<b>' + ver.version + '</b>');
-                    $('#kb-update-btn').fadeIn('fast'); 
-                }
-            },
-            error: function(err) {
-                console.log('Error while checking for a version update: ' + err.statusText);
-                KBError('Narrative.checkVersion', 'Unable to check for a version update!');
-            },
+            cache: false
+        })).then(function(ver) {
+            ver = $.parseJSON(ver);
+            if (self.currentVersion !== ver.version) {
+                $newVersion.empty().append('<b>' + ver.version + '</b>');
+                $('#kb-update-btn').fadeIn('fast'); 
+            }
+        }).catch(function(error) {
+            console.error('Error while checking for a version update: ' + error.statusText);
+            KBError('Narrative.checkVersion', 'Unable to check for a version update!');
         });
     };
 
@@ -319,10 +308,9 @@ function($,
         $('#notebook').append($versionModal);
     };
 
-    Narrative.prototype.saveFailed = function() {
+    Narrative.prototype.saveFailed = function(event, data) {
+        $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
         Jupyter.save_widget.set_save_status('Narrative save failed!');
-        console.log(event);
-        console.log(data);
 
         var errorText;
         // 413 means that the Narrative is too large to be saved.
@@ -400,14 +388,11 @@ function($,
         Jupyter.CellToolbar.global_show();
 
         if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
-            $.each(Jupyter.notebook.get_cells(), function(idx, cell) {
-                cell.celltoolbar.hide();
-            });
+            // $.each(Jupyter.notebook.get_cells(), function(idx, cell) {
+            //     cell.celltoolbar.hide();
+            // });
 
-            var creatorId = Jupyter.notebook.metadata.creator;
-
-            $('.kb-narr-namestamp').css({'display':'block'});
-
+            var creatorId = Jupyter.notebook.metadata.creator || 'KBase User';
             DisplayUtil.displayRealName(creatorId, $('#kb-narr-creator'));
 
             // This puts the cell menu in the right place.
@@ -415,13 +400,21 @@ function($,
         }
         if (this.getWorkspaceName() !== null) {
             this.initSharePanel();
+
+            var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
+            // init the controller
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
                 ws_id: this.getWorkspaceName()
             });
-            $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false }).render();
+            this.narrController.render()
+            .finally(function() {
+                $sidePanel.render();
+                $('#kb-wait-for-ws').remove();
+            });
         }
         else {
             KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');
+            $('#kb-wait-for-ws').remove();
         }
     };
 
@@ -433,17 +426,17 @@ function($,
      */
     Narrative.prototype.updateVersion = function() {
         var user = $('#signin-button').kbaseLogin('session', 'user_id');
-        var prom = $.ajax({
+        Promise.resolve($.ajax({
             contentType: 'application/json',
             url: '/narrative_shutdown/' + user,
             type: 'DELETE',
             crossDomain: true
-        });
-        prom.done(function(jqXHR, response, status) {
+        }))
+        .then(function() {
             setTimeout(function() { location.reload(true); }, 200);
-        });
-        prom.fail(function(jqXHR, response, error) {
-            alert('Unable to update your Narrative session\nError: ' + jqXHR.status + ' ' + error);
+        })
+        .catch(function(error) {
+            alert('Unable to update your Narrative session\nError: ' + error.statusText + ' ' + error);
         });
     };
 
@@ -511,6 +504,103 @@ function($,
 
     Narrative.prototype.lookupUserProfile = function(username) {
         return displayUtil.lookupUserProfile(username);
+    };
+
+    /**
+     * A little bit of a riff on the Jupyter "find_cell_index". 
+     * Every KBase-ified cell (App, Method, Output) has a unique identifier.
+     * This can be used to find the closest cell element - its index is the 
+     * Jupyter cell index (inferred somewhat from find_cell_index which calls 
+     * get_cell_elements, which does this searching).
+     */
+    Narrative.prototype.getCellIndexByKbaseId = function(id) {
+        return $('#' + id).closest('.cell').not('.cell .cell').index();
+    };
+
+    Narrative.prototype.getCellByKbaseId = function(id) {
+        return Jupyter.notebook.get_cell(this.getCellIndexByKbaseId(id));
+    };
+
+    /**
+     * Jupyter doesn't auto select cells on creation, so this
+     * is a helper that does so. It then returns the cell object
+     * that gets created.
+     */
+    Narrative.prototype.insertAndSelectCellBelow = function(cellType, index) {
+        return this.insertAndSelectCell(cellType, 'below');
+    };
+
+    Narrative.prototype.insertAndSelectCellAbove = function(cellType, index) {
+        return this.insertAndSelectCell(cellType, 'above');
+    };
+
+    Narrative.prototype.insertAndSelectCell = function(cellType, direction, index) {
+        var newCell;
+        if (direction === 'below')
+            newCell = Jupyter.notebook.insert_cell_below(cellType, index);
+        else
+            newCell = Jupyter.notebook.insert_cell_above(cellType, index);
+        Jupyter.notebook.focus_cell(newCell);
+        Jupyter.notebook.select(Jupyter.notebook.find_cell_index(newCell));
+        this.scrollToCell(newCell);
+
+        return newCell;
+    };
+
+    Narrative.prototype.scrollToCell = function(cell, select) {
+        var $elem = $('#notebook-container');
+        $elem.animate({ scrollTop: cell.element.offset().top + $elem.scrollTop() - $elem.offset().top }, 400);
+        if (select) {
+            Jupyter.notebook.focus_cell(cell);
+            Jupyter.notebook.select(Jupyter.notebook.find_cell_index(cell));
+        }
+    };
+
+    /**
+     * if setHidden === true, then always hide
+     * if setHidden === false (not null or undefined), then always show
+     * if the setHidden variable isn't present, then just toggle
+     */
+    Narrative.prototype.toggleSidePanel = function(setHidden) {
+        var delay = 'fast';
+        var hidePanel = setHidden;
+        if (hidePanel === null || hidePanel === undefined)
+            hidePanel = $('#left-column').is(':visible') ? true : false;
+        if (hidePanel) {
+            $('#left-column').trigger('hideSidePanelOverlay.Narrative');
+            $('#left-column').hide('slide', {
+                direction: 'left', 
+                easing: 'swing', 
+                complete: function() { 
+                    $('#kb-side-toggle-in').show('slide', {
+                        direction: 'left',
+                        easing: 'swing',
+                    }, delay);
+                }
+            }, delay);
+            // Move content flush left-ish
+            $('#notebook-container').animate(
+                {left: 0}, 
+                { 
+                  easing: 'swing', 
+                  duration: delay,
+                }
+            );
+        }
+        else {
+            $('#kb-side-toggle-in').hide('slide', {
+                direction: 'left',
+                easing: 'swing',
+                complete: function() {
+                    $('#left-column').show('slide', {
+                        direction: 'left', 
+                        easing: 'swing'
+                    }, delay);
+                    $('#notebook-container').animate({left: 380}, {easing: 'swing', duration: delay});
+                }
+            }, delay);
+            // Move content flush left-ish
+        }
     };
 
     return Narrative;

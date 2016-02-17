@@ -196,7 +196,7 @@ function($, Config) {
                 $hintCol.append(spec.short_hint);
                 if (spec.description && spec.short_hint !== spec.description) {
                     $hintCol.append($('<span>').addClass('fa fa-info kb-method-parameter-info')
-                                    .tooltip({title:spec.description, html:true}));
+                                    .tooltip({title:spec.description, html:true, container: 'body'}));
                 }
             } else {
                 $removalButton = $('<button>').addClass("kb-default-btn kb-btn-sm")
@@ -228,7 +228,7 @@ function($, Config) {
         
         refresh: function() {
             var self = this;
-            
+
             var needToMakeCall = false;
             var lookupTypes = [];
             var foundTypes = {};
@@ -312,7 +312,7 @@ function($, Config) {
             $input.select2({
                 matcher: self.select2Matcher,
                 formatNoMatches: noMatchesFoundStr,
-                placeholder:placeholder,
+                placeholder: placeholder,
                 allowClear: true,
                 selectOnBlur: true,
                 query: function (query) {
@@ -376,6 +376,7 @@ function($, Config) {
                     var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
                     return display;
                 },
+                
                 formatResult: function(object, container, query) {
                     var display = '<span style="word-wrap:break-word;"><b>'+object.text+"</b></span>";
                     if (object.info) {
@@ -392,7 +393,23 @@ function($, Config) {
             .on("select2-selecting",
                 function(e) {
                     $input.data('select2').kbaseHackLastSelection = e.choice;
-                });
+                }
+            )
+            .on("select2-focus",
+                function(e) {
+                    if (Jupyter && Jupyter.notebook) {
+                        Jupyter.narrative.disableKeyboardManager();
+                    }
+                }
+            )
+            .on("select2-blur",
+                function(e) {
+                    if (Jupyter && Jupyter.notebook) {
+                        Jupyter.narrative.enableKeyboardManager();
+                    }
+                }
+            );
+
             
             if (defaultValue) {
                 $input.select2("data",{id:defaultValue, text:defaultValue});

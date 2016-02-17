@@ -87,6 +87,9 @@ data-notebook-path="{{notebook_path}}"
 
 <div id="main-container">
 
+    <div id="kb-side-toggle-in">
+        <span class="fa fa-caret-right"></span>
+    </div>
     <div id="left-column">
         <div id="kb-side-panel"></div>
     </div>
@@ -129,7 +132,7 @@ data-notebook-path="{{notebook_path}}"
 {% block script %}
 {{super()}}
 <script type="text/javascript">
-    sys_info = {{sys_info}};
+    sys_info = {{sys_info|safe}};
 </script>
 
 <script src="{{ static_url("components/text-encoding/lib/encoding.js") }}" charset="utf-8"></script>

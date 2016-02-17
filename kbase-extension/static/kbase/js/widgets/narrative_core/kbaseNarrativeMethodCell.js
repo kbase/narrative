@@ -1,7 +1,7 @@
 /**
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
- * This is a generalized class for an input cell that sits in an IPython markdown cell.
+ * This is a generalized class for an input cell that sits in an Jupyter markdown cell.
  * It handles all of its rendering here (no longer in HTML in markdown), and invokes
  * an input widget passed to it.
  *
@@ -12,7 +12,9 @@
 (function( $, undefined ) {
 require(['jquery',
          'narrativeConfig',
-         'Util/String',
+         'util/string',
+         'util/bootstrapDialog',
+         'util/display',
          'handlebars', 
          'kbwidget', 
          'kbaseAuthenticatedWidget',
@@ -22,7 +24,9 @@ require(['jquery',
          'kbaseReportView'], 
 function($, 
          Config,
-         StringUtil) {
+         StringUtil,
+         BootstrapDialog,
+         Display) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",
@@ -31,7 +35,8 @@ function($,
         options: {
             method: null,
             cellId: null,
-            methodHelpLink: '/functional-site/#/narrativestore/method/'
+            methodHelpLink: '/#appcatalog/app/',
+            methodStoreURL: Config.url('narrative_method_store')
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -63,8 +68,19 @@ function($,
             this.options.method = this.options.method.replace(/\n/g, '');
             this.method = JSON.parse(this.options.method);
             this.cellId = this.options.cellId;
-            this.initErrorModal();
+
+            this.$dynamicMethodSummary = $('<div>');
+
+            this.errorDialog = new BootstrapDialog({
+                title: 'Problems exist in your parameter settings.',
+                buttons: [$('<button type="button" data-dismiss="modal">').addClass('btn btn-default').append('Dismiss')],
+                closeButton: true
+            });
+
             this.methClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
+            this.on('get_cell_subtitle.Narrative', function(e, callback) {
+                callback(this.getSubtitle());
+            }.bind(this));
             this.render();
             return this;
         },
@@ -87,22 +103,21 @@ function($,
             this.$runButton.click(
                 $.proxy(function(event) {
                     console.log('** clicked' + (new Date()).getTime());
-                    event.preventDefault();
 
                     if (!this.checkMethodRun())
                         return;
 
-                    this.submittedText = '&nbsp;&nbsp; submitted on ' + this.readableTimestamp();
+                    this.submittedText = 'submitted on ' + this.readableTimestamp();
                     if(this.auth()) {
                         if(this.auth().user_id)
-                            this.submittedText += ' by <a href="functional-site/#/people/'+this.auth().user_id
+                            this.submittedText += ' by <a href="/#people/'+this.auth().user_id
                                 +'" target="_blank">' + this.auth().user_id + "</a>";
                     }
                     console.log('** submitted' + (new Date()).getTime());
                     this.changeState('submitted');
-                    this.minimizeView();
+                    // this.minimizeView();
                     this.trigger('runCell.Narrative', {
-                        cell: IPython.notebook.get_selected_cell(),
+                        cell: Jupyter.narrative.getCellByKbaseId(this.cellId),
                         method: this.method,
                         parameters: this.getParameters(),
                         widget: this
@@ -159,23 +174,24 @@ function($,
                                .append($('<p>')
                                        .addClass('text-success'));
 
-            var methodId = this.options.cellId + '-method-details-'+StringUtil.uuid();
+            var methodId = 'method-details-'+StringUtil.uuid();
             var buttonLabel = 'details';
             var methodDesc = this.method.info.tooltip;
+
+            var link = this.options.methodHelpLink;
+            if(this.method.info.module_name) {
+                link = link + this.method.info.id; // TODO: add version here, but we don't have the info stored yet
+            } else {
+                link = link + 'l.m/' + this.method.info.id;
+            }
+
             this.$header = $('<div>').css({'margin-top':'4px'})
                            .addClass('kb-func-desc');
-            this.$staticMethodInfo = $('<div>')
-                              .append('<h1><b>' + this.method.info.name + '</b></h1>')
-                              .append($('<h2>')
-                                      .attr('id', methodId)
-                                      .append(methodDesc +
-                                            ' &nbsp&nbsp<a href="'+ this.options.methodHelpLink + this.method.info.id +
-                                                '" target="_blank">more...</a>'
-                                      ));
-             
-            this.$header.append(this.$staticMethodInfo);
+            this.$methodDesc = $('<div>')
+                               .attr('id', methodId)
+                               .addClass('kb-method-subtitle')
+                               .append(methodDesc + ' &nbsp;&nbsp;<a link="' + link + '" target="_blank">more...</a>');
 
-            this.$dynamicMethodSummary = $('<div>');
             this.$header.append(this.$dynamicMethodSummary);
 
             // Controls (minimize)
@@ -187,21 +203,27 @@ function($,
             this.panel_minimized = false;
 
             this.$cellPanel = $('<div>')
-                              .addClass('panel kb-func-panel kb-cell-run')
-                              .append($controlsSpan)
+                              .append(this.$methodDesc)
+                              .append(this.$inputDiv)
                               .append($('<div>')
-                                      .addClass('panel-heading')
-                                      .append(this.$header))
-                              .append($('<div>')
-                                      .addClass('panel-body')
-                                      .append(this.$inputDiv))
-                              .append($('<div>')
-                                      .addClass('panel-footer')
-                                      .css({'overflow' : 'hidden'})
+                                      .addClass('kb-method-footer')
+                                      .css({'overflow': 'hidden'})
                                       .append($buttons));
 
-//             this.cellMenu = $menuSpan.kbaseNarrativeCellMenu({'kbWidget':this, 'kbWidgetType':'method'});
-            var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
+            // this.$cellPanel = $('<div>')
+            //                   .addClass('panel kb-func-panel kb-cell-run')
+            //                   .append($controlsSpan)
+            //                   .append($('<div>')
+            //                           .addClass('panel-heading')
+            //                           .append(this.$header))
+            //                   .append($('<div>')
+            //                           .addClass('panel-body')
+            //                           .append(this.$inputDiv))
+            //                   .append($('<div>')
+            //                           .addClass('panel-footer')
+            //                           .css({'overflow' : 'hidden'})
+            //                           .append($buttons));
+
             this.$elem.append(this.$cellPanel);
 
             // Add minimize/restore actions.
@@ -224,11 +246,17 @@ function($,
                 .closest('.cell')
                 .trigger('set-title.cell', [self.method.info.name]); 
             
-            var methodIcon = '<div class="fa-stack fa-2x"><i class="fa fa-square fa-stack-2x method-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cube"></i></div>';
-            
+            var $logo = $('<div>');
+            if(this.method.info.icon && this.method.info.icon.url) {
+                var url = this.options.methodStoreURL.slice(0, -3) + this.method.info.icon.url;
+                $logo.append( Display.getAppIcon({url: url}) );
+            } else {
+                $logo.append( Display.getAppIcon({}) );
+            }
+
             this.$elem
                 .closest('.cell')
-                .trigger('set-icon.cell', [methodIcon]);
+                .trigger('set-icon.cell', [$logo.html()]);
 
             require([inputWidgetName], 
               $.proxy(function() {
@@ -304,7 +332,8 @@ function($,
                     submittedText : this.submittedText,
                     outputState : this.allowOutput
                 },
-                minimized : this.panel_minimized,
+                // hack for now to ignore state. this now gets managed outside the widget.
+                // minimized : this.panel_minimized,
                 params : this.$inputWidget.getState(),
                 jobDetails: this.jobDetails
             };
@@ -338,27 +367,21 @@ function($,
                         this.isJobStatusLoadedFromState = true;
                 }
                 this.changeState(state.runningState.runState);
-                if(state.minimized) {
-                    this.minimizeView(true); // true so that we don't show slide animation
-                }
+                // if(state.minimized) {
+                //     this.minimizeView(true); // true so that we don't show slide animation
+                // }
             }
             else
                 this.$inputWidget.loadState(state);
+            this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', this.getSubtitle());
         },
 
         /* Show/hide running icon */
         displayRunning: function(is_running, had_error) {
             var $cellMenu = this.$elem.closest('.cell').find('.button_container');
             if (is_running) {
-                // var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
                 $cellMenu.trigger('runningIndicator.toolbar', {enabled: true});
                 $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
-                //console.log('displayRunning: ');
-                //console.log(cellMenu);
-                
-                //this.cellMenu.$runningIcon.show();
-                // never show error icon while running
-                // this.cellMenu.$errorIcon.hide();
             } else {
                 $cellMenu.trigger('runningIndicator.toolbar', {enabled: false});
                 if (had_error) {
@@ -367,16 +390,6 @@ function($,
                     $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
 
                 }
-
-                
-                
-//                var cellMenu = this.$elem.closest('.cell').get(0).querySelector('.button_container');
-//                console.log('displayRunning: ');
-//                console.log(cellMenu);
-//                this.cellMenu.$runningIcon.hide();
-//                // only display error when not running
-//                if (had_error) { this.cellMenu.$errorIcon.show(); }
-//                else { this.cellMenu.$errorIcon.hide(); }
             }
         },
 
@@ -472,6 +485,16 @@ function($,
                         this.$elem.find('.kb-app-panel').addClass('kb-app-error');
                         this.displayRunning(false, true);
                         break;
+                    case 'queued':
+                        this.$submitted.html(this.submittedText).show();
+                        this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
+                        this.$cellPanel.addClass('kb-app-step-running');
+                        this.$runButton.hide();
+                        this.$stopButton.show();
+                        this.$resetButton.hide();
+                        this.$inputWidget.lockInputs();
+                        this.displayRunning(true);
+                        break;
                     default:
                         this.$cellPanel.removeClass('kb-app-step-running');
                         this.$elem.find('.kb-app-panel').removeClass('kb-app-error');
@@ -509,7 +532,7 @@ function($,
                 if (!this.$jobProcessTabs) {
                     this.$jobProcessTabs = $('<div>').addClass('panel-body').addClass('kb-cell-output');
                     var targetPanel = this.$elem;
-                    console.log(this.isJobStatusLoadedFromState, status, jobState, jobInfo);
+                    // console.log(this.isJobStatusLoadedFromState, status, jobState, jobInfo);
                     if (this.isJobStatusLoadedFromState && status) {
                         if ($.inArray(status.toLowerCase(), this.completedStatus) >= 0) {
                             // We move job status panel into cell panel rather than outside because when
@@ -598,15 +621,40 @@ function($,
             var $infoTable = $('<table class="table table-bordered">')
                     .append(makeInfoRow('Job Id', jobId))
                     .append(makeInfoRow('Status', statusText));
+            if (jobState && jobState.state) {
+                var state = jobState.state;
+                var creationTime = state.start_timestamp;
+                var execStartTime = null;
+                var finishTime = null;
+                var posInQueue = null;
+                // console.log(state.step_stats);
+                if (state.step_stats) {
+                    for (var key in state.step_stats) {
+                        if (state.step_stats.hasOwnProperty(key)) {
+                            var stats = state.step_stats[key];
+                            // console.log(key, stats);
+                            if (stats['creation_time'])
+                                creationTime = stats['creation_time'];
+                            execStartTime = stats['exec_start_time'];
+                            finishTime = stats['finish_time'];
+                            posInQueue = stats['pos_in_queue'];
+                        }
+                    }
+                }
+                if (creationTime)
+                    $infoTable.append(makeInfoRow('Submitted', this.readableTimestamp(creationTime)));
+                if (creationTime && execStartTime)
+                    $infoTable.append(makeInfoRow('Time in queue', ((execStartTime - creationTime) / 1000.0) + " sec."));
+                if (posInQueue)
+                    $infoTable.append(makeInfoRow('Position in queue', posInQueue));
+                if (execStartTime)
+                    $infoTable.append(makeInfoRow('Execution Started', this.readableTimestamp(execStartTime)));
+                if (finishTime)
+                    $infoTable.append(makeInfoRow('Execution Finished', this.readableTimestamp(finishTime)));
+                if (execStartTime && finishTime)
+                    $infoTable.append(makeInfoRow('Execution Time', ((finishTime - execStartTime) / 1000.0) + " sec."));
+            }
             
-            if (jobState && jobState.state && jobState.state.start_timestamp)
-                $infoTable.append(makeInfoRow('Submitted', this.readableTimestamp(jobState.state.start_timestamp)));
-            
-            $infoTable.append(makeInfoRow('Time in queue', 'Unknown'))
-                    .append(makeInfoRow('Position in queue', 'Unknown'))
-                    .append(makeInfoRow('Execution Started', 'Unknown'))
-                    .append(makeInfoRow('Execution Finished', 'Unknown'))
-                    .append(makeInfoRow('Execution Time', 'Unknown'));
 
             return $infoTable;
         },
@@ -752,34 +800,17 @@ function($,
         checkMethodRun: function() {
             var v = this.$inputWidget.isValid();
             if (!v.isValid) {
-                this.$errorModalContent.empty();
+                var $error = $('<div>');
                 for (var i=0; i<v.errormssgs.length; i++) {
-                    this.$errorModalContent.append($('<div>')
-                                                   .addClass("kb-app-step-error-mssg")
-                                                   .append('['+(i+1)+']: ' + v.errormssgs[i]));
+                    $error.append($('<div>').addClass("kb-app-step-error-mssg")
+                                            .append('['+(i+1)+']: ' + v.errormssgs[i]));
                 }
-                this.$errorModal.modal('show');
+                this.errorDialog.setBody($error);
+                this.errorDialog.show();
                 return false;
             }
 
             return true;
-        },
-
-        initErrorModal: function() {
-            this.$errorModalContent = $('<div>');
-            this.$errorModal =  $('<div tabindex="-1" role="dialog" aria-hidden="true">').addClass("modal fade");
-            this.$errorModal.append(
-                $('<div>').addClass('modal-dialog').append(
-                    $('<div>').addClass('modal-content').append(
-                        $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" >Problems exist in your parameter settings.</h4>')
-                    ).append(
-                       $('<div>').addClass('modal-body').append(this.$errorModalContent)
-                    ).append(
-                        $('<div>').addClass('modal-footer').append(
-                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
-                    )
-                ));
-            this.$elem.append(this.$errorModal);
         },
 
         /**
@@ -810,6 +841,12 @@ function($,
             this.changeState('complete', null, data.result);
         },
 
+        getSubtitle: function () {
+            if (this.submittedText && !this.isAwaitingInput()) {
+                return this.submittedText;
+            }
+            return "Not yet submitted.";
+        },
 
         updateDynamicMethodSummaryHeader: function() {
             var self = this;
@@ -837,8 +874,6 @@ function($,
             var self = this;
             var $mintarget = self.$cellPanel;
 
-            self.$staticMethodInfo.hide();
-
             // create the dynamic summary based on the run state
             self.updateDynamicMethodSummaryHeader()
             self.$dynamicMethodSummary.show();
@@ -863,7 +898,6 @@ function($,
                                 .addClass("glyphicon-chevron-down");
 
             self.$dynamicMethodSummary.hide();
-            self.$staticMethodInfo.show();
             self.panel_minimized = false;
         },
 
@@ -874,23 +908,22 @@ function($,
          * each of the possible apps/methods.
          */
         getNextSteps: function(render_cb) {
-          //console.debug("Find next steps for method",this.method);
           // fetch full info, which contains suggested next steps
           var params = {ids: [this.method.info.id]};
           var result = {};
+          var self = this;
           this.methClient.get_method_full_info(params,
             $.proxy(function(info_list) {
-              //console.debug("Full info for method: ", info_list);
               var sugg = info_list[0].suggestions;
-              //console.debug("Suggestions for next methods: ", sugg);
               var params = {apps: sugg.next_apps, methods: sugg.next_methods};
-              //console.debug("Getting function specs, params=", params);
               this.trigger('getFunctionSpecs.Narrative', [params,
                 function(specs) { render_cb(specs); }]);
             }, this),
-            function() {
+            function(error) {
+              console.error(error, "method=", self.method);
               KBError("kbaseNarrativeMethodCell.getNextSteps",
                        "Could not get full info for method: " + self.method.info.id);
+              render_cb();
             });
         },
 

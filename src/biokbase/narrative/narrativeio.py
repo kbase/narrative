@@ -58,9 +58,7 @@ class KBaseWSManagerMixin(object):
     """
 
     ws_uri = service.URLS.workspace
-    nar_type = u'KBaseNarrative.Narrative'
-    nar_version = u'4.0'
-    old_version = u'3.0'
+    nar_type = 'KBaseNarrative.Narrative'
 
     def __init__(self, *args, **kwargs):
         if not self.ws_uri:
@@ -156,6 +154,19 @@ class KBaseWSManagerMixin(object):
         4. Return any notebook changes as a list-
            (narrative, ws_id, obj_id)
         """
+
+        if (nb.has_key('worksheets')):
+            # it's an old version. update it by replacing the 'worksheets' key with
+            # the 'cells' subkey
+            # the old version only uses the first 'worksheet', so if it's there,
+            # copy it out
+            if (isinstance(nb['worksheets'], list) and len(nb['worksheets']) > 0 and nb['worksheets'][0].has_key('cells')):
+                nb['cells'] = nb['worksheets'][0]['cells']
+            else:
+                nb['cells'] = list()
+            del(nb['worksheets'])
+            nb['nbformat'] = 4
+
         parsed_ref = self._parse_obj_ref(obj_ref)
         if parsed_ref is None:
             raise HTTPError(500, u'Unable to parse incorrect obj_ref "{}"'.format(obj_ref))
@@ -209,12 +220,8 @@ class KBaseWSManagerMixin(object):
 
         # Now we can save the Narrative object.
         try:
-            # Simple version check - if the 'worksheets' key exist, then it's the older version.
-            nar_version = self.nar_version
-            if 'worksheets' in nb:
-                nar_version = self.old_version
             ws_save_obj = {
-                'type': self.nar_type + '-' + nar_version,
+                'type': self.nar_type,
                 'data': nb,
                 'objid': obj_id,
                 'meta': nb[u'metadata'].copy(),

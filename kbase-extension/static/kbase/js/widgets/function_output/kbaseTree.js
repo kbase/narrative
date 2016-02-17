@@ -4,9 +4,16 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 
-        'knhx', 'widgetMaxWidthCorrection'], 
-        function($) {
+define(['jquery', 
+        'narrativeConfig',
+        'util/string',
+        'kbwidget', 
+        'kbaseAuthenticatedWidget', 
+        'knhx', 
+        'widgetMaxWidthCorrection'], 
+function($,
+         Config,
+         StringUtil) {
     $.KBWidget({
         name: 'kbaseTree',
         parent: 'kbaseAuthenticatedWidget',
@@ -16,19 +23,18 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget',
             workspaceID: null,
             treeObjVer: null,
             kbCache: null,
-            workspaceURL: window.kbconfig.urls.workspace,
-            loadingImage: window.kbconfig.loading_gif,
+            workspaceURL: Config.url('workspace'),
+            loadingImage: Config.get('loading_gif'),
             height: null,
         },
 
         pref: null,
         timer: null,
-        loadingImage: window.kbconfig.loading_gif,
         token: null,
 
         init: function(options) {
             this._super(options);
-            this.pref = this.uuid();
+            this.pref = StringUtil.uuid();
 
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
@@ -193,14 +199,6 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget',
         hideMessage: function() {
             this.$messagePane.hide();
             this.$messagePane.empty();
-        },
-
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
         },
 
         loggedInCallback: function(event, auth) {

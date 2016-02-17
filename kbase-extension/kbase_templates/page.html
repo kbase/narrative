@@ -9,7 +9,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="stylesheet" href="{{static_url("components/jquery-ui/themes/smoothness/jquery-ui.min.css") }}" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     {% block stylesheet %}
     <link rel="stylesheet" href="{{ static_url("style/style.min.css") }}" type="text/css"/>
     {% endblock %}
@@ -19,6 +19,8 @@
     <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseIcons.css") }}"  type="text/css"/>
     <link rel="stylesheet" href="{{ static_url("components/font-awesome/css/font-awesome.min.css") }}" type="text/css" />
     <link rel="stylesheet" type="text/css" href="{{ static_url("kbase/css/landing-pages.css") }}" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseEditor.css") }}" type="text/css" />
+    <link rel="stylesheet" href="{{ static_url("kbase/css/kbaseNotify.css") }}" type="text/css" />
 
     <script src="{{ static_url("ext_components/bowser/bowser.min.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -39,7 +41,7 @@
             }
         }
         checkBrowser();
-    </script>    
+    </script>
     <script>
         /* Google Analaytics */
         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -54,8 +56,9 @@
     <script src="{{static_url("components/requirejs/require.js") }}" type="text/javascript" charset="utf-8"></script>
     <script>
       require.config({
+          waitSeconds: 60,
           {% if version_hash %}
-          // urlArgs: "v={{version_hash}}",
+          urlArgs: "v={{version_hash}}",
           {% endif %}
           baseUrl: '{{static_url("", include_version=False)}}',
           paths: {
@@ -112,7 +115,7 @@
 </head>
 
 <body class="{% block bodyclasses %}{% endblock %}" {% block params %}{% endblock %}>
-    
+
     <noscript>
         <div id='noscript'>
           IPython Notebook requires JavaScript.<br>
@@ -131,7 +134,7 @@
     </div>
     {% endblock %}
 
-    <nav class="navbar-kbase navbar-fixed-top" id="header">
+    <nav class="navbar-kbase navbar-static-top" id="header">
         <div class="container-fluid">
             <div class="navbar-header">
                 <div style="display:inline-block">
@@ -160,7 +163,7 @@
                         <span id="autosave_status"></span>
                     </span>
                 </div>
-                <div>Created by: <span id="kb-narr-creator">KBase User</span>
+                <div>Created by: <span id="kb-narr-creator"></span>
                     <span id="kb-view-mode">
                         <span class="fa fa-pencil"></span>
                     </span>
@@ -170,6 +173,14 @@
             <div class="navbar-right">
                 <span class="kb-navbar-buttons">
                     <div id="kb-notify-area"><div id="notification_area"></div></div>
+
+
+                    <button id="kb-view-only-copy" class="btn btn-default navbar-btn kb-nav-btn hidden">
+                        <div class="fa fa-copy"></div>
+                        <div class="kb-nav-btn-txt">copy</div>
+                    </button>
+                    <div id="kb-view-only-msg" class="label label-warning hidden">View-only mode</div>
+
                     <button id="kb-update-btn" class="btn btn-default navbar-btn kb-nav-btn kb-nav-btn-upgrade">
                         <div class="fa fa-refresh fa-spin"></div>
                         <div class="kb-nav-btn-txt">Get new version!</div>
@@ -184,14 +195,14 @@
                             <li><a id="kb-kernel-ref-btn"><span class="fa fa-refresh"></span> Restart</a></li>
                             <li><a id="kb-kernel-rec-btn"><span class="fa fa-power-off"></span> Reconnect</a></li>
                             <li class="divider"></li>
-                            
+
                             <li title="About Jupyter Notebook"><a id="notebook_about" href="#">About Jupyter</a></li>
                         </ul>
                     </div>
-                    <button id="kb-share-btn" class="btn btn-default navbar-btn kb-nav-btn">
+                    <a id="kb-share-btn" tabindex="0" role="button" class="btn btn-default navbar-btn kb-nav-btn">
                       <div class="fa fa-share-alt"></div>
                       <div class="kb-nav-btn-txt">share</div>
-                    </button>
+                    </a>
                     <button id="kb-save-btn" class="btn btn-default navbar-btn kb-nav-btn">
                         <div class="fa fa-save"></div>
                         <div class="kb-nav-btn-txt">save</div>

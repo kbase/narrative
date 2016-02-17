@@ -113,16 +113,16 @@ function( $, Config ) {
             var $advancedOptionsControllerRow = $("<div>").addClass("row").css({"margin":"5px"});
             if (hasAdvancedOption) {
                 $advancedOptionsControllerRow.append($("<div>").addClass("col-md-12 kb-method-advanced-options-controller")
-                                                     .append("show advanced options"))
+                                                     .append("show advanced options")
                                                      .on('click',function() {
                                                         if (self.$advancedOptionsDiv.is(":visible")) {
                                                             self.$advancedOptionsDiv.hide();
-                                                            $(this).find(".kb-method-advanced-options-controller").html("show advanced options");
+                                                            $(this).closest(".kb-method-advanced-options-controller").text("show advanced options");
                                                         } else {
                                                             self.$advancedOptionsDiv.show();
-                                                            $(this).find(".kb-method-advanced-options-controller").html("hide advanced options");
+                                                            $(this).closest(".kb-method-advanced-options-controller").text("hide advanced options");
                                                         }
-                                                     } );
+                                                     } ));
                 $inputParameterContainer.append($advancedOptionsControllerRow);
                 $inputParameterContainer.append(this.$advancedOptionsDiv.hide());
             } else {
@@ -241,6 +241,45 @@ function( $, Config ) {
             }
             return isValidRet; 
         },
+
+	/*
+	 * Invoke the runImport method on each of the parameters (if the widget
+	 * implements that method.
+	 * The runImport method from the parameters returns a promise; return
+	 * a promise here created by promiseAll.
+	 */
+
+	runImport: function() {
+	    var promises = [];
+            if (this.parameters) {
+                for(var i=0; i<this.parameters.length; i++) {
+		    var w = this.parameters[i].widget;
+		    if (typeof w.runImport == "function")
+		    {
+			var promise = w.runImport();
+			promises.push(promise);
+		    }
+                }
+            }
+	    return Promise.all(promises);
+	},
+        
+	/*
+	 * Invoke the cacnelImport method on each of the parameters (if the widget
+	 * implements that method.
+	 */
+
+	cancelImport: function() {
+            if (this.parameters) {
+                for(var i=0; i<this.parameters.length; i++) {
+		    var w = this.parameters[i].widget;
+		    if (typeof w.cancelImport == "function")
+		    {
+			w.cancelImport();
+		    }
+                }
+            }
+	},
         
         /*
          * Necessary for Apps to disable editing parameters that are automatically filled

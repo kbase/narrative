@@ -41,7 +41,7 @@ require(['narrative_paths'], function(paths) {
             window.kbconfig = config;
             require(['kbaseNarrative'], function(Narrative) {
                 Login.init($('#signin-button'));
-                console.log('Starting IPython main');
+                console.log('Starting Jupyter main');
                 require(['notebook/js/main']);
             });
         });

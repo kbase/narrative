@@ -108,7 +108,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion'], function( $ ) {
             };
 
             var $errorHead = $('<div>')
-                             .addClass('well well-sm')
+                             .addClass('alert alert-danger')
                              .append('<b>An error occurred while running your function!</b>');
 
             var $errorTable = $('<table>')

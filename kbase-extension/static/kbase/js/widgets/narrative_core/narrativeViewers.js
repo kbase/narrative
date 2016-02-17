@@ -4,13 +4,13 @@
 define(['jquery',
         'underscore',
         'narrativeConfig',
+        'bluebird',
         'kbase-client-api'],
-function($, _, Config, Clients) {
+function($, _, Config, Promise, Clients) {
     'use strict';
 
     /**
-     * Returns a jquery deferred (for now - move to Bluebird Promises) 
-     * that, when resolved, will yield an object with 5 fields:
+     * Returns a Promise that, when resolved, will yield an object with 5 fields:
      * viewers - the set of viewers
      * landingPageUrls
      * typeNames
@@ -40,11 +40,11 @@ function($, _, Config, Clients) {
 
         var methodStoreClient = new NarrativeMethodStore(Config.url('narrative_method_store'));
         
-        return methodStoreClient.list_categories({
+        return Promise.resolve(methodStoreClient.list_categories({
             load_methods: 1,
             load_apps: 0,
             load_types: 1
-        }).then(function(data) {
+        })).then(function(data) {
             var methodInfo = data[1];
             var allTypes = data[3];
 
@@ -70,7 +70,7 @@ function($, _, Config, Clients) {
             });
 
             methodIds = _.uniq(methodIds);
-            return methodStoreClient.get_method_spec({ids: methodIds});
+            return Promise.resolve(methodStoreClient.get_method_spec({ids: methodIds}));
         }).then(function (specs) {
             _.each(specs, function (val, key) {
                 specs[val.info.id] = val;
@@ -135,6 +135,8 @@ function($, _, Config, Clients) {
         }
 
         return loadViewerInfo().then(function(viewerInfo) {
+            console.log(viewerInfo);
+            
             var o = dataCell.obj_info;
             var methodId = viewerInfo.viewers[o.bare_type];
             if (!methodId) {
@@ -207,14 +209,9 @@ function($, _, Config, Clients) {
         if (_.isEmpty(o.meta)) {
             mdDesc += "No metadata";
         } else {
-            mdDesc += "Metadata\n";
-            this.prev = false;
+            mdDesc += "Metadata";
             _.each(_.pairs(o.meta), function (p) {
-                if (this.prev) {
-                    mdDesc += "\n";
-                }
-                mdDesc += p[0] += ": " + p[1];
-                this.prev = true;
+                mdDesc += '\n' + p[0] + ': ' + p[1];
             });
         }
         return $('<div>').append($('<pre>').append(mdDesc));

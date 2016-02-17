@@ -6,15 +6,15 @@
  *
  * Placeholder for custom user javascript
  * mainly to be overridden in profile/static/custom/custom.js
- * This will always be an empty file in IPython
+ * This will always be an empty file in Jupyter
  *
  * User could add any javascript in the `profile/static/custom/custom.js` file.
- * It will be executed by the ipython notebook at load time.
+ * It will be executed by the Jupyter notebook at load time.
  *
  * Same thing with `profile/static/custom/custom.css` to inject custom css into the notebook.
  *
  *
- * The object available at load time depend on the version of IPython in use.
+ * The object available at load time depend on the version of Jupyter in use.
  * there is no guaranties of API stability.
  *
  * The example below explain the principle, and might not be valid.
@@ -23,9 +23,9 @@
  *     define([
  *        'base/js/namespace',
  *        'base/js/events'
- *     ], function(IPython, events) {
+ *     ], function(Jupyter, events) {
  *         events.on("app_initialized.NotebookApp", function () {
- *             IPython.keyboard_manager....
+ *             Jupyter.keyboard_manager....
  *         });
  *     });
  *
@@ -37,14 +37,14 @@
  *    define([
  *        'base/js/namespace',
  *        'base/js/events'
- *    ], function(IPython, events) {
+ *    ], function(Jupyter, events) {
  *        events.on('app_initialized.NotebookApp', function(){
- *            IPython.toolbar.add_buttons_group([
+ *            Jupyter.toolbar.add_buttons_group([
  *                {
  *                    'label'   : 'run qtconsole',
  *                    'icon'    : 'icon-terminal', // select your icon from http://fortawesome.github.io/Font-Awesome/icons
  *                    'callback': function () {
- *                        IPython.notebook.kernel.execute('%qtconsole')
+ *                        Jupyter.notebook.kernel.execute('%qtconsole')
  *                    }
  *                }
  *                // add more button here if needed.
@@ -77,8 +77,8 @@
  *    $.getScript('/static/notebook/js/celltoolbarpresets/slideshow.js');
  *
  *
- * @module IPython
- * @namespace IPython
+ * @module Jupyter
+ * @namespace Jupyter
  * @class customjs
  * @static
  */
@@ -99,10 +99,11 @@ define(['jquery',
     'notebook/js/mathjaxutils',
     'components/marked/lib/marked',
     'components/requirejs/require',
-    'narrative_paths'
+    'narrative_paths',
+    'kbaseNarrativeCellMenu'
 ],
     function ($,
-        IPython,
+        Jupyter,
         security,
         utils,
         page,
@@ -132,50 +133,42 @@ define(['jquery',
         };
 
         cellToolbar.CellToolbar.prototype.renderToggleState = function () {
-            var $kbToolbar = $(this.element).find('.kb-cell-toolbar'),
-                $icon = $kbToolbar.find('[data-button="toggle"] > span.fa'),
-                toggleState = this.cell.getCellState('toggleState', 'unknown');
-            switch (toggleState) {
-                case 'closed':
-                    if ($icon.hasClass('fa-chevron-down')) {
-                        $icon.removeClass('fa-chevron-down');
-                        $icon.addClass('fa-chevron-right');
-                    }
-                    break;
-                case 'open':
-                    if ($icon.hasClass('fa-chevron-right')) {
-                        $icon.removeClass('fa-chevron-right');
-                        $icon.addClass('fa-chevron-down');
-                    }
-                    break;
-                case 'unknown':
-                    if ($icon.hasClass('fa-chevron-right')) {
-                        $icon.removeClass('fa-chevron-right');
-                        $icon.addClass('fa-chevron-down');
-                    }
-                    break;
-
-            }
+            var toggleState = this.cell.getCellState('toggleState', 'unknown');
+            // Test to see if the kbaseNarrativeCellMenu is attached to this toolbar.
+            var elemData = $(this.inner_element).find('.button_container').data();
+            if (elemData && elemData['kbaseNarrativeCellMenu'])
+               $(this.inner_element).find('.button_container').kbaseNarrativeCellMenu('toggleState', toggleState);
         };
         
         // disable hiding of the toolbar
-        cellToolbar.CellToolbar.prototype.hide  = function () {
+        cellToolbar.CellToolbar.prototype.hide = function () {
             return;
         }
 
         textCell.MarkdownCell.prototype.renderToggleState = function () {
             cell.Cell.prototype.renderToggleState.apply(this);
             var $cellNode = $(this.element);
+            var type = cellType(this) || 'unknown';
             switch (this.getCellState('toggleState', 'unknown')) {
                 case 'closed':
+                    $cellNode.removeClass('opened');
+                    $cellNode.trigger('show-title.cell');
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', 'none');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', 'none');
                     break;
                 case 'open':
+                    $cellNode.addClass('opened');
+                    if (type === 'unknown') {
+                        $cellNode.trigger('hide-title.cell');
+                    }
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
                     break;
                 case 'unknown':
+                    $cellNode.addClass('opened');
+                    if (type === 'unknown') {
+                        $cellNode.trigger('hide-title.cell');
+                    }
                     $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
                     $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
                     break;
@@ -187,53 +180,22 @@ define(['jquery',
             cm_config: {
                 mode: 'ipythongfm'
             },
-            xplaceholder: "Type _Markdown_ and LaTeX: $\\alpha^2$" +
-                "<!-- " +
-                "The above text is Markdown and LaTeX markup.\n" +
-                "It is provided as a quick sample of what you can do in a Markdown cell.\n" +
-                "Markdown cells are marked with the paragraph icon.\n" +
-                "This is a comment, so it does not appear when rendered.\n" +
-                "Also note that the first item in the cell or the first first-level" +
-                "header will appear as the cell title." +
-                "-->"
+            placeholder: "_Markdown_ and LaTeX cell - double click here to edit."
+            // "Type _Markdown_ and LaTeX: $\\alpha^2$" +
+            //     "<!-- " +
+            //     "The above text is Markdown and LaTeX markup.\n" +
+            //     "It is provided as a quick sample of what you can do in a Markdown cell.\n" +
+            //     "Markdown cells are marked with the paragraph icon.\n" +
+            //     "This is a comment, so it does not appear when rendered.\n" +
+            //     "Also note that the first item in the cell or the first first-level" +
+            //     "header will appear as the cell title." +
+            //     "-->"
         };
-//        textCell.MarkdownCell.prototype.toJSON = function () {
-//            var data = cell.Cell.prototype.toJSON.apply(this);
-//            data.source = this.get_text();
-//            console.log('to json');
-//            console.log(this.get_text());
-//            console.log(data.source);
-//            if (data.source == this.placeholder) {
-//                data.source = "";
-//            }
-//            return data;
-//        };
-//        textCell.MarkdownCell.prototype.unrender = function () {
-//            var cont = cell.Cell.prototype.unrender.apply(this);
-//            if (cont) {
-//                console.log('unrender');
-//                console.log(this.get_text());
-//                console.log(this.element);
-//                var text_cell = this.element;
-//                //if (this.get_text() === this.placeholder) {
-//                //    this.set_text('');
-//                //}
-//                this.refresh();
-//            }
-//            return cont;
-//        };
+
         var original_unselect = cell.Cell.prototype.unselect;
         cell.Cell.prototype.unselect = function (leave_selected) {
             var wasSelected = original_unselect.apply(this, [leave_selected]);
-            // ignore the return value -- it represents the initial selected
-            // state of the cell. We don't really care, or do we? 
-            // in theory, if the cell was not initially selected, we don't need
-            // to issue an event.
-            //if (cont) {
-            // tell the toolbar we are unselected.
-            // this.events.trigger('unselected.cell');
             $(this.element).trigger('unselected.cell');
-            //}
             return wasSelected;
         };
         
@@ -246,7 +208,6 @@ define(['jquery',
             return wasSelected;
         };
         
-        
         cell.Cell.prototype.getCellState = function (name, defaultValue) {
             if (!this.metadata.kbstate) {
                 this.metadata.kbstate = {};
@@ -258,6 +219,7 @@ define(['jquery',
                 return value;
             }
         };
+
         cell.Cell.prototype.setCellState = function (name, value) {
             if (!this.metadata.kbstate) {
                 this.metadata.kbstate = {};
@@ -311,7 +273,7 @@ define(['jquery',
                     return 'output';
                     break;
                 default:
-                    return 'Unknown: ' + type;                    
+                    return 'unknown';
             }
             
         }
@@ -339,8 +301,9 @@ define(['jquery',
             }
             cell.renderCount += 1;
             var kbCellType = cellType(this);
-            
+
             if (kbCellType) {
+                $(this.element).addClass('kb-cell');
                 this.set_rendered(this.get_text());
                 this.typeset();
                 return needsToRender;
@@ -407,8 +370,7 @@ define(['jquery',
             textCell.TextCell.prototype.bind_events.apply(this);
 
             var cell = this,
-                $cellNode = $(this.element),
-                $toolbar = $cellNode.find('.celltoolbar > .button_container');
+                $cellNode = $(this.element);
 
             this.element.dblclick(function () {
                 var cont = cell.unrender();
@@ -416,7 +378,6 @@ define(['jquery',
                     cell.focus_editor();
                 }
             });
-
 
             /*
              * This is the trick to get the markdown to render, and the edit area
@@ -442,6 +403,20 @@ define(['jquery',
                     cell.setCellState('title', title);
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
                     $menu.trigger('set-title.toolbar', [title || '']);
+                    if (cellType(cell) !== undefined)
+                        $(cell.element).trigger('show-title.cell');
+                });
+
+            $cellNode
+                .on('hide-title.cell', function (e) {
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    $menu.trigger('hide-title.toolbar');
+                });
+
+            $cellNode
+                .on('show-title.cell', function (e) {
+                    var $menu = $(cell.celltoolbar.element).find('.button_container');
+                    $menu.trigger('show-title.toolbar');
                 });
 
             $cellNode
@@ -503,23 +478,9 @@ define(['jquery',
                     $(cell.element)
                         .trigger('set-icon.cell', [cell.getCellState('icon', '')]);
 
-                    //$(cell.element)
-                     //   .trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
-                    
-                    if (cell.getCellState('selected')) {
-                        cell.select();
-                    }
-                    
                     cell.renderToggleState();
                 }
             });
-
-//            this.element.click(function () {
-//                var cont = that.unrender();
-//                if (cont) {
-//                    that.focus_editor();
-//                }
-//            });
         };
 
         // Patch the MarkdownCell renderer to throw an error when failing to render Javascript we need.
@@ -547,17 +508,6 @@ define(['jquery',
                     // Alas, it has no discriminating attributes!
                     cell.toggle();
                 });
-            // Use another hook on double click to toggle the cell open if it 
-            // was closed.
-            // Note that the base Cell bind_events already has a default
-            // double click behavior
-            // $(this.element)
-            //     .on('dblclick', function (e) {
-            //         // if cell state is closed...
-            //         if (cell.getCellState('toggleState', 'unknown') === 'closed') {
-            //             cell.toggle();
-            //         }
-            //     });
         };
 
         /*
@@ -607,21 +557,21 @@ define(['jquery',
         codeCell.CodeCell.prototype.renderToggleState = function () {
             cell.Cell.prototype.renderToggleState.apply(this);
             var $cellNode = $(this.element);
+            var elemsToToggle = [
+                $cellNode.find('.input .input_area'),
+                $cellNode.find('.widget-area'),
+                $cellNode.find('.output_wrapper')
+            ];
             switch (this.getCellState('toggleState', 'unknown')) {
                 case 'closed':
-                    $cellNode.find('.input .input_area').hide();
-                    $cellNode.find('.widget-area').hide();
-                    $cellNode.find('.output_wrapper').hide();
+                    $.each(elemsToToggle, function(i, elem) {
+                        elem.hide();
+                    });
                     break;
-                case 'open':
-                    $cellNode.find('.input .input_area').show();
-                    $cellNode.find('.widget-area').show();
-                    $cellNode.find('.output_wrapper').show();
-                    break;
-                case 'unknown':
-                    $cellNode.find('.input .input_area').show();
-                    $cellNode.find('.widget-area').show();
-                    $cellNode.find('.output_wrapper').show();
+                default:
+                    $.each(elemsToToggle, function(i, elem) {
+                        elem.show();
+                    });
                     break;
             }
         };
@@ -710,14 +660,16 @@ define(['jquery',
                     d.find('input[type="text"]').focus().select();
                 }
             });
-
         };
 
         // Kickstart the Narrative loading routine once the notebook is loaded.
-        $([IPython.events]).on('notebook_loaded.Notebook', function () {
+        $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
             require(['kbaseNarrative'], function (Narrative) {
-                IPython.narrative = new Narrative();
-                IPython.narrative.init();
+                Jupyter.narrative = new Narrative();
+
+                $([Jupyter.events]).one('kernel_connected.Kernel', function() {
+                    Jupyter.narrative.init();
+                });
 
                 /*
                  * Override the move-cursor-down-or-next-cell and 
@@ -733,7 +685,7 @@ define(['jquery',
                  * check if the next cell is a KBase cell, and doesn't enable
                  * edit mode if so.
                  */
-                IPython.keyboard_manager.actions.register(
+                Jupyter.keyboard_manager.actions.register(
                     {
                         handler: function(env, event) {
                             var index = env.notebook.get_selected_index();
@@ -757,7 +709,7 @@ define(['jquery',
                     'jupyter-notebook'
                 );
 
-                IPython.keyboard_manager.actions.register(
+                Jupyter.keyboard_manager.actions.register(
                     {
                         handler: function(env, event) {
                             var index = env.notebook.get_selected_index();

@@ -4,7 +4,7 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['Util/String'], function(StringUtil) {
+define(['util/string'], function(StringUtil) {
     'use strict';
     
     describe('KBase String Utility function module', function() {

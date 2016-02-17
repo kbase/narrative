@@ -3,7 +3,7 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
- * This is a generalized class for an input cell that sits in an IPython markdown cell.
+ * This is a generalized class for an input cell that sits in an Jupyter markdown cell.
  * It handles all of its rendering here (no longer in HTML in markdown), and invokes
  * an input widget passed to it.
  *
@@ -13,13 +13,20 @@
 
 (function( $, undefined ) {
   require(['jquery',
-           'narrativeConfig', 
+           'narrativeConfig',
+           'util/string',
+           'util/display',
+           'util/bootstrapDialog',
            'kbwidget',
            'kbaseAuthenticatedWidget',
            'kbaseAccordion',
            'kbaseNarrativeOutputCell'
            ], 
-           function($, Config) {
+  function($, 
+           Config,
+           StringUtil,
+           DisplayUtil,
+           BootstrapDialog) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeAppCell",
@@ -31,8 +38,8 @@
             loadingImage: Config.get('loading_gif'),
             methodStoreURL: Config.url('narrative_method_store'),
 
-            appHelpLink: '/functional-site/#/narrativestore/app/',
-            methodHelpLink: '/functional-site/#/narrativestore/method/'
+            appHelpLink: '/#appcatalog/app/l.a/',
+            methodHelpLink: '/#appcatalog/app/l.m/' // apps cannot have SDK methods, so always add the legacy module id
         },
         IGNORE_VERSION: true,
         defaultInputWidget: 'kbaseNarrativeMethodInput',
@@ -46,8 +53,7 @@
         $runButton: null,
         $stopButton: null,
 
-        $errorModal: null,
-        $errorModalContent:null,
+        errorDialog: null,
 
         OUTPUT_ERROR_WIDGET: 'kbaseNarrativeError',
 
@@ -69,6 +75,11 @@
             this._super(options);
 
             this.methClient = new NarrativeMethodStore(this.options.methodStoreURL);
+            this.errorDialog = new BootstrapDialog({
+                title: 'Problems exist in your parameter settings.',
+                buttons: [$('<button type="button" data-dismiss="modal">').addClass('btn btn-default').append('Dismiss')],
+                closeButton: true
+            });
 
             this.options.appSpec = this.options.appSpec.replace(/\n/g, '');
             this.appSpec = JSON.parse(this.options.appSpec);
@@ -85,11 +96,17 @@
                 },
                 step: { }
             };
-            this.initErrorModal();
 
             this.fetchMethodInfo();
 
             return this;
+        },
+
+        getSubtitle: function() {
+            if (this.state.runningState.submittedText && !this.isAwaitingInput()) {
+                return this.state.runningState.submittedText;
+            }
+            return "Not yet submitted.";
         },
 
         fetchMethodInfo: function() {
@@ -133,7 +150,7 @@
                 $errorPanel.append($('<div>').append(error));
             }
 
-            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            // If it's an object, expect an error object as returned by the execute_reply callback from the Jupyter kernel.
             else if (typeof error === 'object') {
                 var $details = $('<div>');
                 $details.append($('<div>')
@@ -154,6 +171,7 @@
                 $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
             }
             this.$elem.empty().append($errorPanel);
+            this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', 'Error! Unable to load app information!');
         },
 
         /**
@@ -183,19 +201,20 @@
                               .append('Run')
                               .click(
                                   $.proxy(function(event) {
-                                      var submittedText = "&nbsp;&nbsp; submitted on "+this.readableTimestamp(new Date().getTime());
+                                      var submittedText = "submitted on "+this.readableTimestamp(new Date().getTime());
                                       if(this.auth()) {
                                           if(this.auth().user_id)
-                                              submittedText += ' by <a href="/functional-site/#/people/'+this.auth().user_id
+                                              submittedText += ' by <a href="/#people/'+this.auth().user_id
                                                                       +'" target="_blank">' + this.auth().user_id + "</a>";
                                       }
                                       this.$submitted.html(submittedText);
+                                      this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', submittedText);
                                       var isGood = self.startAppRun();
                                       if (!isGood) { return; }
 
                                       event.preventDefault();
                                       this.trigger('runApp.Narrative', {
-                                          cell: IPython.notebook.get_selected_cell(),
+                                          cell: Jupyter.narrative.getCellByKbaseId(this.cellId),
                                           appSpec: this.appSpec,
                                           methodSpecs: this.methodSpecs,
                                           parameters: this.getParameters()
@@ -271,35 +290,36 @@
 
             var $appSubtitleDiv = $("<div>")
                                         .addClass('kb-app-panel-description')
-                                        .append('&nbsp;&nbsp;&nbsp;&nbsp;' + this.appSpec.info.subtitle)
+                                        .append(this.appSpec.info.subtitle)
                                         .append('&nbsp;&nbsp;<a href="'+this.options.appHelpLink+this.appSpec.info.id+'" target="_blank">more...</a>');
             var $appSubmittedStamp = $("<div>");
 
 
             var headerCleaned = this.appSpec.info.header.replace(/&quot;/g, '"')
             var $appHeaderDiv = $("<div>")
-                                        .addClass('kb-app-panel-header')
-                                        .html(headerCleaned);
+                                // .addClass('kb-app-panel-header')
+                                .html(headerCleaned);
 
-            var $menuSpan = $('<div class="pull-right">');
+            // var $menuSpan = $('<div class="pull-right">');
 
             // Controls (minimize)
-            var $controlsSpan = $('<div>').addClass("pull-left");
-            var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
-                        .css({color: "#888", fontSize: "14pt", cursor:'pointer', paddingTop: "7px", margin: "5px"});
-            $controlsSpan.append($minimizeControl);
+            // var $controlsSpan = $('<div>').addClass("pull-left");
+            // var $minimizeControl = $("<span class='glyphicon glyphicon-chevron-down'>")
+            //             .css({color: "#888", fontSize: "14pt", cursor:'pointer', paddingTop: "7px", margin: "5px"});
+            // $controlsSpan.append($minimizeControl);
 
             var $cellPanel = $('<div>')
                              .addClass('panel kb-app-panel kb-cell-run')
-                             .append($controlsSpan)
-                             .append($menuSpan)
+                             // .append($controlsSpan)
+                             // .append($menuSpan)
                              .append($('<div>')
                                         .addClass('panel-heading')
-                                        .append($('<div>').addClass('app-panel-heading')
-                                                   .append($('<div>')
-                                                           .append($('<h1><b>' + appTitle + '</b></h1>')))
-                                                   .append($appSubtitleDiv)
-                                                   .append($appSubmittedStamp)))
+                                        .append($('<div>')
+                                                .append($appSubtitleDiv)
+                                                .append($appSubmittedStamp)))
+                                                   //.addClass('app-panel-heading')
+                                                   // .append($('<div>')
+                                                           // .append($('<h1><b>' + appTitle + '</b></h1>')))
                              .append($('<div>')
                                      .addClass('panel-body')
                                      .append($appHeaderDiv))
@@ -315,10 +335,10 @@
                 .closest('.cell')
                 .trigger('set-title.cell', [appTitle]);             
             
-            var appIcon = '<div class="fa-stack fa-2x"><i  class="fa fa-square fa-stack-2x app-icon"></i><i class="fa fa-inverse fa-stack-1x fa-cubes"></i></div>';
+            var $logo = $('<div>').append(DisplayUtil.getAppIcon({isApp:true}));
             this.$elem
                 .closest('.cell')
-                .trigger('set-icon.cell', [appIcon]);
+                .trigger('set-icon.cell', [$logo.html()]);
             
             //require(['kbaseNarrativeCellMenu'], $.proxy(function() {
             //    this.cellMenu = $menuSpan.kbaseNarrativeCellMenu();
@@ -336,32 +356,6 @@
             var $mintarget = $cellPanel;
             this.panel_minimized = false;
             var self = this;
-            $controlsSpan.click(function() {
-                if (self.panel_minimized) {
-                    $appSubmittedStamp.hide();
-                    $appSubtitleDiv.show();
-
-                    $mintarget.children(".panel-body").slideDown();
-                    $mintarget.children(".panel-footer").slideDown();
-                    $minimizeControl.removeClass("glyphicon-chevron-right")
-                                    .addClass("glyphicon-chevron-down");
-                    self.panel_minimized = false;
-                }
-                else {
-                    if(self.state.runningState.submittedText && !self.isAwaitingInput()) {
-                        $appSubmittedStamp.html($('<h2>').append("&nbsp;&nbsp;&nbsp;" +self.state.runningState.submittedText));
-                        $appSubmittedStamp.show();
-                        $appSubtitleDiv.hide();
-                    }
-                    $mintarget.children(".panel-footer").slideUp();
-                    $mintarget.children(".panel-body").slideUp();
-                    $minimizeControl.removeClass("glyphicon-chevron-down")
-                                    .addClass("glyphicon-chevron-right");
-                    self.panel_minimized = true;
-                }
-            });
-
-            // finally, we refresh so that our drop down or other boxes can be populated
             this.refresh();
         },
 
@@ -385,7 +379,7 @@
 
             // First setup the Input widget header
             var $inputWidgetDiv = $("<div>");
-            var methodId = stepSpec.info.id + '-step-details-' + this.genUUID();
+            var methodId = stepSpec.info.id + '-step-details-' + StringUtil.uuid();
             var buttonLabel = 'details';
             var methodDesc = stepSpec.info.subtitle;
             var $header = $('<div>').css({'margin-top':'4px'})
@@ -592,15 +586,15 @@
          * returns true if everything is valid and we can start, false if there were errors
          */
         startAppRun: function(ignoreValidCheck) {
-            var self = this;
             if (ignoreValidCheck) {
                 //code
             } else {
-                var v = self.validateParameters();
+                var v = this.validateParameters();
                 // Take these action if the app input is not valid?
                 if (!v.isValid) {
                     var errorCount = 1;
-                    self.$errorModalContent.empty();
+                    var $errorDiv = $('<div>');
+
                     for(var k=0; k<v.stepErrors.length; k++) {
                         var $errorStep = $('<div>');
                         $errorStep.append($('<div>').addClass("kb-app-step-error-heading").append('Errors in Step '+v.stepErrors[k].stepNum+':'));
@@ -608,17 +602,18 @@
                             $errorStep.append($('<div>').addClass("kb-app-step-error-mssg").append('['+errorCount+']: ' + v.stepErrors[k].errormssgs[e]));
                             errorCount = errorCount+1;
                         }
-                        self.$errorModalContent.append($errorStep);
+                        $errorDiv.append($errorStep);
                         KBError("App::" + this.appSpec.info.name, "errors=" + errorCount);
                     }
-                    self.$errorModal.modal('show');
+                    this.errorDialog.setBody($errorDiv);
+                    this.errorDialog.show();
                     return false;
                 }
             }
-            self.prepareDataBeforeRun();
-            self.$submitted.show();
-            self.$runButton.hide();
-            self.$stopButton.show();
+            this.prepareDataBeforeRun();
+            this.$submitted.show();
+            this.$runButton.hide();
+            this.$stopButton.show();
             if (this.inputSteps) {
                 for(var i=0; i<this.inputSteps.length; i++) {
                     this.inputSteps[i].widget.lockInputs();
@@ -803,6 +798,7 @@
                     if (state.runningState.submittedText) {
                         this.$submitted.html(state.runningState.submittedText);
                         this.state.runningState.submittedText = state.runningState.submittedText;
+                        this.$elem.closest('.cell').find('.button_container').kbaseNarrativeCellMenu('setSubtitle', state.runningState.submittedText);
                     }
                     if (state.runningState.appRunState === "running") {
                         if (state.runningState.runningStep) {
@@ -993,8 +989,8 @@
                         output: objCopy
                     };
 
-                    if (IPython && IPython.narrative && !preventSave)
-                        IPython.narrative.saveNarrative();
+                    if (Jupyter && Jupyter.narrative && !preventSave)
+                        Jupyter.narrative.saveNarrative();
                 }
             }
         },
@@ -1010,33 +1006,14 @@
                         showMenu: false,
                         time: new Date().getTime()
                     });
-                    if (IPython && IPython.narrative)
-                        IPython.narrative.saveNarrative();
+                    if (Jupyter && Jupyter.narrative)
+                        Jupyter.narrative.saveNarrative();
                 }
             }
         },
 
         /** end methods for setting the app state based on the job status **/
 
-        initErrorModal: function() {
-            var self=this;
-            var errorModalId = "app-error-modal-"+ self.genUUID();
-            var modalLabel = "app-error-modal-lablel-"+ self.genUUID();
-            self.$errorModalContent = $('<div>');
-            self.$errorModal =  $('<div id="'+errorModalId+'" tabindex="-1" role="dialog" aria-labelledby="'+modalLabel+'" aria-hidden="true">').addClass("modal fade");
-            self.$errorModal.append(
-                $('<div>').addClass('modal-dialog').append(
-                    $('<div>').addClass('modal-content').append(
-                        $('<div>').addClass('modal-header kb-app-step-error-main-heading').append('<h4 class="modal-title" id="'+modalLabel+'">Problems exist in your parameter settings.</h4>')
-                    ).append(
-                       $('<div>').addClass('modal-body').append(self.$errorModalContent)
-                    ).append(
-                        $('<div>').addClass('modal-footer').append(
-                            $('<button type="button" data-dismiss="modal">').addClass("btn btn-default").append("Dismiss"))
-                    )
-                ));
-            self.$elem.append(self.$errorModal);
-        },
 
         /**
          * Refreshes the input widget according to its own method.
@@ -1047,13 +1024,6 @@
                     this.inputSteps[i].widget.refresh();
                 }
             }
-        },
-
-        genUUID: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);
-            });
         },
 
          /**

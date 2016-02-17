@@ -312,10 +312,14 @@ class KBaseWSManagerMixin(object):
                     cell_info['viewer'] += 1
                 else:
                     if 'app' in meta['kb-cell']:
-                        app_info[u'app.' + meta['kb-cell']['app']['info']['id']] += 1
+                        app_id = meta['kb-cell']['app']['info']['id']
+                        app_hash = meta['kb-cell']['app']['info'].get('git_commit_hash', '')
+                        app_info[u'app.' + app_id + '/' + app_hash] += 1
                         num_apps += 1
                     elif 'method' in meta['kb-cell']:
-                        method_info[u'method.' + meta['kb-cell']['method']['info']['id']] += 1
+                        method_id = meta['kb-cell']['method']['info']['id']
+                        method_hash = meta['kb-cell']['method']['info'].get('git_commit_hash', '')
+                        method_info[u'method.' + method_id + '/' + method_hash] += 1
                         num_methods += 1
                     else:
                         # covers the cases we care about

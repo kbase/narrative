@@ -7,13 +7,14 @@ function ($) {
     /**
      * options:
      * { 
-         title: string,
-     *   body: jquery node
-     *   buttons: array of jquery nodes
-     *   closeButton: boolean, default false
-     *   }
+     *     title: string,
+     *     body: jquery node
+     *     buttons: array of jquery nodes
+     *     closeButton: boolean, default false
+     *     enterToTrigger: boolean, default false
+     * }
      */
-    var BootstrapDialog = function(options) {
+    var BootstrapDialog = function (options) {
         this.$modal = $('<div class="modal fade" tabindex="-1", role="dialog">');
         this.$dialog = $('<div class="modal-dialog">');
         this.$dialogContent = $('<div class="modal-content">');
@@ -24,6 +25,11 @@ function ($) {
         this.$footer = $('<div class="modal-footer">');
 
         this.$buttonList = $('<div>');
+
+        this.enterToTrigger = false;
+        if (options.enterToTrigger) {
+            this.enterToTrigger = options.enterToTrigger;
+        }
 
         this.initialize(options);
     };
@@ -68,6 +74,18 @@ function ($) {
             var $btn = buttonList[i];
             $btn.addClass('btn btn-default btn-sm');
             this.$footer.append($btn);
+        }
+        if (this.enterToTrigger) {
+            this.$modal
+            .off('keypress')
+            .on('keypress', (function(e) {
+                if (e.keyCode === 13) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    this.$footer.find('.btn:last').trigger('click');
+                }
+            }.bind(this)));
         }
     };
 

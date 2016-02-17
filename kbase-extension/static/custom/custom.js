@@ -586,9 +586,10 @@ define(['jquery',
 
         // Patch the Notebook to return the right name
         notebook.Notebook.prototype.get_notebook_name = function () {
-            if (this.metadata.name)
-                return this.metadata.name;
-            return this.notebook_name;
+            if (!this.metadata.name) {
+                this.metadata.name = this.notebook_name;
+            }
+            return this.metadata.name;
         };
 
         // Patch the Notebook to not wedge a file extension on a new Narrative name

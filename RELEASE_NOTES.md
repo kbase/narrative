@@ -7,6 +7,8 @@ This is built on the Jupyter Notebook v4.1.0 (more notes will follow).
 __Changes__
 - JIRA KBASE-3556 - fixed links from genome widget to gene landing page, made contigs in genome tab clickable.
 - Added tools for editing FBA models.
+- JIRA NAR-838 - delete cell dialog should no longer break when hitting return to trigger it.
+- JIRA NAR-839 - delete cell dialogs should not pollute the DOM (there's only one dialog now, not a new one for each cell).
 
 ### Version 2.0.1
 __Changes__

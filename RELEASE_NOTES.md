@@ -1,15 +1,20 @@
 ### OVERVIEW
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the IPython Notebook (more notes will follow).
+This is built on the Jupyter Notebook v4.1.0 (more notes will follow).
+
+### Version 2.0.2
+__Changes__
+- JIRA KBASE-3556 - fixed links from genome widget to gene landing page, made contigs in genome tab clickable.
+- Added tools for editing FBA models.
 
 ### Version 2.0.1
 __Changes__
 - JIRA KBASE-3623 - fixed problem where updating an old version of the Narrative typed object could cause the Narrative title to be lost
 - JIRA KBASE-3624 - fixed links in method input cell subtitles to manual pages
 - JIRA KBASE-3630 - fixed problem with hierarchical clustering widget missing a button
-- added widget for sequence comparison
-
+- Added widget for sequence comparison
+- Added tools for editing FBA model media sets.
 
 ### Version 2.0.0
 __Changes__
@@ -22,7 +27,6 @@ __Changes__
 - Adjusted Narrative Management tab to be somewhat more performant.
 - Updated Narrative object definition to match the Jupyter notebook object definition more closely.
 - Data panel should no longer hang forever on Narrative startup.
-
 
 ### Version 1.1.0
 __Changes__

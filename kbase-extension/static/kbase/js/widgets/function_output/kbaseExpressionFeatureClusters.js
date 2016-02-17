@@ -278,11 +278,15 @@ function($,
 			var self = this;
 			var pref = self.pref;
 			$('.' + pref + 'action_button').on('click', function(e){
+			    
 				var $actionButton = $(e.target);
-				var x = $actionButton.offset().left - $('#notebook-container').offset().left + e.target.offsetLeft;
-				var y = $actionButton.offset().top - $('#notebook-container').offset().top + e.target.offsetHeight + e.target.offsetTop;
+				if ($actionButton.prop("tagName") !== "BUTTON")
+				    $actionButton = $actionButton.parent();
+				var x = $actionButton.position().left + $('#notebook-container').scrollLeft();
+				var y = $actionButton.position().top + $('#notebook-container').scrollTop() + $actionButton[0].offsetHeight;
+				
 				self.$menu
-                    .data("invokedOn", $(e.target))
+                    .data("invokedOn", $actionButton)
                     .css({
                         position: "absolute",                        
                         left: x,
@@ -355,7 +359,7 @@ function($,
 
 		buildActionMenu: function($container){
 			var $menu = $(' \
-				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none" > \
+				<ul id="contextMenu" class="dropdown-menu" role="menu" style="display:none; list-style:none" > \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_profile">View expression profile</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_pairwise_correlation">View pairwise correlation</a></li> \
 				    <li><a tabindex="-1" href="#" methodInput="view_expression_heatmap">View in sortable condition heatmap</a></li> \

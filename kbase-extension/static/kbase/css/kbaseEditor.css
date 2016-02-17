@@ -1,11 +1,15 @@
 /**
- * CSS related to editing tools.  This currently includes median and model editing
+ * CSS related to editing tools.  This currently includes media and model editing
  */
 
 .modal-body .dataTables_processing {
     border: 1px solid #aaa;
     background: #E8F9FF;
     opacity: 0.8;
+}
+
+.kb-editor {
+    margin: 0 10px;
 }
 
 .kb-editor .tab-content {
@@ -18,6 +22,7 @@
 .kb-editor .controls .btn{
     margin: 0 10px;
 }
+
 
 /**
  * Override KBase stylings that override jupyter styling.
@@ -45,35 +50,40 @@
 }
 
 
-
-/* should rename .kb-editor-table ? */
-.kb-media-editor > tbody > tr > td:first-child {
-    width: 1%;
+/**
+ * General editor styling
+ */
+.kb-editor-table {
+    width: 100% !important; /* override datatables hackory */
 }
 
-.kb-media-editor > tbody > tr > td:first-child .fa-square-o {
+.kb-editor-table > tbody > tr > td:first-child {
+    width: 1%; /* checkboxes are expected on editable tables */
+}
+
+.kb-editor-table > tbody > tr > td:first-child .fa-square-o {
     font-size: 1.4em;
     color: #666;
 }
 
-.kb-media-editor > tbody > tr > td:first-child:hover {
+.kb-editor-table > tbody > tr > td:first-child:hover {
     cursor: pointer;
 }
 
-.kb-media-editor > tbody > tr > td:first-child:hover .fa-square-o {
+.kb-editor-table > tbody > tr > td:first-child:hover .fa-square-o {
     color: #000;
 }
 
-.kb-media-editor > tbody > tr.row-select .fa-square-o:before {
+.kb-editor-table > tbody > tr.row-select .fa-square-o:before {
     content: "\f046";
     color: #444;
 }
 
-.kb-media-editor > tbody > tr > td.editable {
+.kb-editor-table > tbody > tr > td.editable {
     position: relative;
 }
 
-.kb-media-editor > tbody > tr > td.editable:hover:after{
+.kb-editor-table > tbody > tr > td.editable:hover:after{
     content: "\f044";
     font-family: FontAwesome;
     position: absolute;

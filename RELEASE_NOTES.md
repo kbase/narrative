@@ -3,16 +3,25 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the IPython Notebook (more notes will follow).
 
+### Version 2.0.1
+__Changes__
+- JIRA KBASE-3623 - fixed problem where updating an old version of the Narrative typed object could cause the Narrative title to be lost
+- JIRA KBASE-3624 - fixed links in method input cell subtitles to manual pages
+- JIRA KBASE-3630 - fixed problem with hierarchical clustering widget missing a button
+- added widget for sequence comparison
+
+
 ### Version 2.0.0
 __Changes__
-- Update IPython backend to Jupyter 4.1.0
+- Update IPython Notebook backend to Jupyter 4.1.0.
 - Data Panel slideout should now perform better for users with lots and lots of objects.
 - Fixed problem with copied narratives sometimes referring back to their original workspace.
-- Data Panel slidout dimmer should be in the correct z-position now.
+- Data Panel slideout dimmer should be in the correct z-position now.
 - Added separate job console for each running method, attached to that cell.
 - Changed style of cells to better show what cell is selected and active.
 - Adjusted Narrative Management tab to be somewhat more performant.
 - Updated Narrative object definition to match the Jupyter notebook object definition more closely.
+- Data panel should no longer hang forever on Narrative startup.
 
 
 ### Version 1.1.0

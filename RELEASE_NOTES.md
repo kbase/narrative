@@ -9,6 +9,8 @@ __Changes__
 - Added tools for editing FBA models.
 - JIRA NAR-838 - delete cell dialog should no longer break when hitting return to trigger it.
 - JIRA NAR-839 - delete cell dialogs should not pollute the DOM (there's only one dialog now, not a new one for each cell).
+- JIRA NAR-589 - change "Copy Narrative" to "Copy This Narrative" for clarity.
+- JIRA NAR-788 - remove light colors from random picker when coloring user names for sharing.
 
 ### Version 2.0.1
 __Changes__

@@ -239,7 +239,7 @@ function($,
                 var $msgPanel = $("<div>").css({'margin': '10px', 'text-align': 'center'});
                 self.$copyThisNarrBtn = self.makeCopyThisNarrativeBtn($msgPanel);
                 self.$mainPanel.append(
-                    $('<div>').css({'margin': '15px', 'text-align': 'center'})
+                    $('<div>').css({'margin': '10px', 'text-align': 'center'})
                     .append(self.makeNewNarrativeBtn())
                     .append(self.$copyThisNarrBtn)
                     .append($msgPanel));
@@ -948,7 +948,7 @@ function($,
         },
         makeCopyThisNarrativeBtn: function ($alertContainer) {
             var self = this;
-            var active = '<span class="fa fa-copy"></span> Copy Narrative';
+            var active = '<span class="fa fa-copy"></span> Copy This Narrative';
 //            var $active = $('<span>').addClass('fa fa-copy').append(" Copy Narrative");
             var $working = $('<span>').append("Copying Narrative...");
 

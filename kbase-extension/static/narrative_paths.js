@@ -131,7 +131,7 @@ require.config({
         'kbaseDefaultNarrativeOutput'           : 'kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput',
 
         'ModelingAPI'                           : 'kbase/js/api/ModelingAPI',
-        'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling', // deprecated!
+        'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling', // to be deprecated!
         'kbaseTabTable'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
         'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling',
         'KBaseFBA.FBAModel'                     : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModel',
@@ -150,6 +150,9 @@ require.config({
         'kbaseExpressionAnalysis'               : 'kbase/js/widgets/function_output/kbaseExpressionAnalysis',
         'kbaseEditMedia'                        : 'kbase/js/widgets/function_input/kbaseEditMedia',
         'kbaseMediaEditor'                      : 'kbase/js/widgets/function_input/editors/kbaseMediaEditor',
+        'kbaseEditModel'                        : 'kbase/js/widgets/function_input/kbaseEditModel',
+        'kbaseModelEditor'                      : 'kbase/js/widgets/function_input/editors/kbaseModelEditor',
+        'kbaseEditHistory'                      : 'kbase/js/widgets/function_input/editors/kbaseEditHistory',
         'kbaseModal'                            : 'kbase/js/widgets/narrative_core/kbaseModal',
 
         // another implementation of kbaseTabs needed for kbaseTabTable
@@ -245,7 +248,6 @@ require.config({
         'kbwidget'                              : 'kbase/js/ui-common/src/kbwidget',
         'kbaseAccordion'                        : 'kbase/js/ui-common/src/widgets/kbaseAccordion',
         'kbaseAuthenticatedWidget'              : 'kbase/js/ui-common/src/widgets/kbaseAuthenticatedWidget',
-        'kbaseModal'                            : 'kbase/js/ui-common/src/widgets/kbaseModal',
         'kbaseTable'                            : 'kbase/js/ui-common/src/widgets/kbaseTable',
         'kbasePanel'                            : 'kbase/js/ui-common/src/widgets/kbasePanel',
         'kbaseDeletePrompt'                     : 'kbase/js/ui-common/src/widgets/kbaseDeletePrompt',
@@ -278,6 +280,10 @@ require.config({
         },
         knhx : {
             deps : ['knhx_menu', 'knhx_excanvas', 'knhx_canvastext', 'knhx_easytree']
+        },
+        'kbaseModelEditor' : {
+            // could be removed once code is repackaged and require.js-ified
+            'deps' : ['KBaseFBA.FBAModel', 'kbaseTabTableTabs']
         },
         'KBaseFBA.FBAModel' : {
             'deps' : ['KBModeling']

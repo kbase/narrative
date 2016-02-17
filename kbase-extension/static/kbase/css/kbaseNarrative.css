@@ -224,13 +224,18 @@ span#searchspan{
   border-radius: 4px !important;
   margin-right: 0;
 }
+
 .btn { /* don't use drop-shadow on profile menu */
-  border: 0;
   box-shadow: none;
   -webkit-box-shadow: none;
   moz-box-shadow: none;
   xfont-size: 18px;
 }
+
+#signin-button .btn {
+    border: none;
+}
+
 .btn-xs .glyphicon-user { /* also resize user btn */
   padding: 14px 5px 14px 5px;
 }
@@ -989,6 +994,10 @@ div#notebook_panel {
     /*border-bottom: 1px solid #CECECE;*/
 }
 
+.kb-narr-side-panel .btn {
+    border: none;
+}
+
 /* From user and job state service */
 
 .kbujs-table-container {
@@ -1333,6 +1342,11 @@ div#notebook_panel {
     font-weight: bold;
     color: #CECECE !important;
 }
+
+.kb-cell-toolbar .btn {
+    border: none;
+}
+
 .kb-cell-toolbar .title {
     font-weight: normal;
     font-size: 120%;
@@ -1762,21 +1776,6 @@ control with padding, and then scooting the icon back into its column.
     background-color: #F2DEDE;
 }
 
-/*.app-panel-heading {
-    padding-top: 10px;
-}
-
-/*.app-panel-heading h1 {
-    font-family: 'Roboto';
-    font-weight: normal;
-    font-size: 16pt;
-    line-height: 15px;
-    color: #2E618D;
-    margin: 3px;
-    opacity: inherit;
-    display: inline;
-}
-*/
 .kb-app-step-container {
     margin-top: 6px;
 }
@@ -2685,6 +2684,10 @@ div[class="tooltip-inner"] {
     overflow-y: auto;
     /*height: 830px;*/
     display: block;
+}
+
+.kb-import-content .btn-xs {
+    border: none;
 }
 
 .kb-overlay-footer {

@@ -3,6 +3,12 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.1.0 (more notes will follow).
 
+### Version 2.0.3
+__Changes__
+- JIRA KBASE-3388 - fixed problem that caused a crash on save when too many unique methods or apps were in a narrative. The narrative metadata has been reformatted to support this.
+- Fixed problems with funky unicode characters in narrative titles.
+- Updates to various FBA widgets.
+
 ### Version 2.0.2
 __Changes__
 - JIRA KBASE-3556 - fixed links from genome widget to gene landing page, made contigs in genome tab clickable.

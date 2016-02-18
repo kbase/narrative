@@ -4,12 +4,22 @@
  *	Given a pair of workspace and media object names or ids,
  *	produce editable model tables.
  *
- * Authors:
- * 	 nconrad@mcs.anl.gov
+ *  Optional params
+ *  	onSave (function): called after data has been saved
+ *
+ *  @author nconrad <nconrad@anl.gov>
  *
  */
 
-(function( $, undefined ) {
+ define([
+    'jquery',
+    'ModelingAPI',
+    'kbaseEditHistory',
+    'kbwidget',
+    'kbaseAuthenticatedWidget',
+    'kbaseModal',
+],
+function($, ModelingAPI, EditHistory) {
 
 'use strict';
 
@@ -26,9 +36,9 @@ $.KBWidget({
 
         self.$elem.append(container);
 
-        // api
-        var modeling = new KBModeling( self.authToken() ),
-            kbapi = modeling.kbapi,
+        // APIs
+        var modeling = new ModelingAPI( self.authToken() ),
+            api = modeling.api,
             biochem = modeling.biochem,
             getCpds = modeling.getCpds;
 
@@ -40,8 +50,10 @@ $.KBWidget({
             var param = {workspace: wsName, name: objName};
         else if (!isNaN(wsName) && !isNaN(objName) )
             var param = {ref: wsName+'/'+objName};
-        else
-            console.error('kbaseMediaEditor arguements are invalid');
+        else {
+            self.$elem.append('kbaseModelEditor arguments are invalid: ', JSON.stringify(input));
+            return this;
+        }
 
         var table,          // main table to be edited (reactions for now)
             modelObj,
@@ -52,33 +64,33 @@ $.KBWidget({
 
 
         // some controls for the table
-        var saveBtn = $('<button class="btn btn-primary btn-save pull-right hide">'+
+        var saveBtn = $('<button class="btn btn-primary btn-save hide">'+
                         'Save</button>');
-        var saveAsBtn = $('<button class="btn btn-primary btn-save pull-right hide">'+
-                        'Save as...</button>');
-        var addBtn = $('<button class="btn btn-primary pull-right">'+
-                       '<i class="fa fa-plus"></i> Add compounds...</button>');
-        var rmBtn = $('<button class="btn btn-danger pull-right hide">');
+        //var saveAsBtn = $('<button class="btn btn-primary btn-save hide">'+
+        //                'Save as...</button>');
+        var addBtn = $('<button class="btn btn-primary">'+
+                       '<i class="fa fa-plus"></i> Add reactions...</button>');
+        var rmBtn = $('<button class="btn btn-danger hide">');
 
         // keep track of edits
         var _editHistory = new EditHistory();
 
+        var allowedTabs = ['Reactions', 'Compounds', 'Compartments', 'Biomass'];
+
         // get media data
-        kbapi('ws', 'get_objects', [param])
+        container.loading();
+        api('ws', 'get_objects', [param])
             .done(function(res){
                 rawData = $.extend(true, {}, res[0]);
-                console.log('raw model data', rawData)
 
-                modelObj = new modeling['KBaseFBA_FBAModel'](self);
+                modelObj = new KBaseFBA_FBAModel(self);
                 modelObj.setMetadata(res[0].info);
                 modelObj.setData(res[0].data);
                 model = modelObj.data;
+                //console.log('modelObj', modelObj);
 
                 // table being edited
                 modelreactions = model.modelreactions;
-
-                console.log('model', model)
-                console.log('modelObj', modelObj)
 
                 // skip overview
                 var tabList = modelObj.tabList.slice(1);
@@ -90,7 +102,7 @@ $.KBWidget({
                     var tab = tabList[i];
 
                     // skip viz not needed
-                    if (['Genes', 'Pathways', 'Gapfilling'].indexOf(tab.name) !== -1) {
+                    if (allowedTabs.indexOf(tab.name) === -1) {
                         tabList.splice(i,1);
                         continue;
                     }
@@ -105,21 +117,19 @@ $.KBWidget({
                 uiTabs[0].active = true;
                 tabs = container.kbTabs({tabs: uiTabs});
 
-                buildContent(modelObj.tabList)
-
-                console.log('raw model data', rawData)
+                buildContent(tabList);
+                container.rmLoading();
             })
 
 
         function buildContent(tabList) {
-
             //5) Iterates over the entries in the spec and instantiate things
             for (var i = 0; i < tabList.length; i++) {
                 var tabSpec = tabList[i];
                 var tabPane = tabs.tabContent(tabSpec.name);
 
                 // skip any vertical tables for now
-                if (tabSpec.type == 'verticaltbl') continue;
+                if (tabSpec.type === 'verticaltbl') continue;
 
                 if (tabSpec.name === 'Reactions')
                     createRxnTable(tabSpec, tabPane)
@@ -133,7 +143,7 @@ $.KBWidget({
             tabPane.rmLoading();
 
             // the 'style' here is a hack for narrative styling :/
-            var table = $('<table class="table table-bordered table-striped kb-media-editor" style="margin-left: auto; margin-right: auto;">')
+            var table = $('<table class="table table-bordered table-striped kb-editor-table">')
             tabPane.append(table);
             var table = table.DataTable(settings);
         }
@@ -145,29 +155,28 @@ $.KBWidget({
             tabPane.rmLoading();
 
             // the 'style' here is a hack for narrative styling :/
-            table = $('<table class="table table-bordered table-striped kb-media-editor" style="margin-left: auto; margin-right: auto;">')
+            table = $('<table class="table table-bordered table-striped kb-editor-table">')
             tabPane.append(table);
             table = table.DataTable(settings);
 
             // add controls
             var controls = tabPane.find('.controls');
 
-            controls.append(saveAsBtn);
-            controls.append(saveBtn);
-            controls.append(addBtn);
-            controls.append(rmBtn);
+            controls.append(addBtn, rmBtn, saveBtn);
 
-            addBtn.on('click', cpdModal);
-            saveBtn.on('click', function() { saveData(getTableData(), wsName, objName) });
-            saveAsBtn.on('click', saveModal);
+            addBtn.on('click', rxnModal);
+            saveBtn.on('click', function() { saveData(_editHistory.getMaster(), wsName, objName) });
+            //saveAsBtn.on('click', saveModal);
             rmBtn.on('click', function() {
                 // get all selected data
                 var data = getTableData('.row-select');
 
                 // edit table
-                var op = {op: 'rm', data: data};
+                var ids = data.map(function(obj){ return obj.id }) ;
+
+                var op = {op: 'rm', data: data, ids: ids};
                 editTable(op);
-                modeling.notice(container, 'Removed '+data.length+' compounds')
+                modeling.notice(container, 'Removed '+data.length+' reactions')
 
                 rmBtn.toggleClass('hide');
                 addBtn.toggleClass('hide');
@@ -182,7 +191,7 @@ $.KBWidget({
                 if (count > 0){
                     addBtn.addClass('hide');
                     rmBtn.html('<i class="fa fa-minus"></i> '+
-                        'Remove '+count+' compounds')
+                        'Remove '+count+' reactions')
                     rmBtn.removeClass('hide');
                 } else {
                     rmBtn.addClass('hide');
@@ -190,18 +199,82 @@ $.KBWidget({
                 }
             });
 
-            // event for clickingon editable cells
-            table.on('click', '.editable', function(e) {
-                //if (table.cell(this).data().indexOf('=') !== -1) {
-                    //table.cells(this).data().draw()
-                //} else {
-                    $(this).attr('contenteditable', true);
-                    $(this).addClass('editing-focus');
-                    $(this).focus();
-                //}
+            // event for clicking on editable cells
+            table.on('click', '.editable-direction', function(e) {
+                if ($(e.target).is('select')) return;
+
+                var cell = table.cell(this);
+                var cellContent = cell.data();
+                var rowData = table.row( $(this).parents('tr') ).data();
+
+                var direction = rowData.direction;
+
+                // render again with dropdown
+                if ( cellContent.indexOf('<=>') !== -1 )
+                    var sides = cellContent.split('<=>');
+                else if (cellContent.indexOf('=>') !== -1 )
+                    var sides = cellContent.split('=>');
+                else if ( cellContent.indexOf('<=') !== -1 )
+                    var sides = cellContent.split('<=');
+
+                var dd = $('<select class="form-control">'+
+                                '<option value="="><=></option>'+
+                                '<option value="<"><=</option>'+
+                                '<option value=">">=></option>'+
+                            '</select>')
+                var eq = $('<span>');
+                dd.find('option[value="'+direction+'"]').attr('selected', 'selected');
+
+                eq.append(sides[0], dd, sides[1]);
+                table.cell(this).data(eq.html()).draw();
+                $(this).find('select').focus()
+
+                // event for when direction dropdown changes
+                $(this).find('select').on('blur', function(){
+                    var newDirection = $(this).val();
+
+                    if (newDirection === '=')
+                        var dir = '<=>';
+                    else if (newDirection === '>')
+                        var dir = '=>';
+                    else if (newDirection === '<')
+                        var dir = '<=';
+
+                    var newContent = sides[0]+dir+sides[1];
+
+                    // set data in datable memory
+                    cell.data( newContent ).draw();
+
+                    if (direction === newDirection) return;
+
+                    // save in history
+                    var op = {
+                        op: 'edit',
+                        kind: 'direction',
+                        ids: [rowData.id],
+                        before: direction,
+                        after: newDirection
+                    };
+                    editTable(op);
+                })
+
+                $(this).find('select').on('change', function(e) {
+                    $(this).blur();
+                })
             })
 
-            table.on('blur', 'td.editable', function(){
+            // need API call for genes
+            /*
+            table.on('click', '.editable-genes', function(e) {
+                $(this).attr('contenteditable', true);
+                $(this).addClass('editing-focus');
+                $(this).focus();
+            })
+            */
+
+            // event for 'leaving' cell
+            /*
+            table.on('blur', 'td.editable-genes', function(){
                 var before = table.cell(this).data(),
                     after = $(this).text();
 
@@ -212,17 +285,21 @@ $.KBWidget({
                 table.cell( this ).data(after).draw()
 
                 // save in history
-                var op = {op: 'modify', before: before, after: after};
-                editTable(op)
+                var id = table.row( $(this).parents('tr') ).data().id;
+                var op = {op: 'edit', ids: [id], before: before, after: after};
+                editTable(op);
             })
+            */
 
             // emit blur on enter as well
-            table.on('keydown', 'td.editable', function(e) {
+            /*
+            table.on('keydown', 'td.editable-genes', function(e) {
                 if(e.keyCode == 13) {
                     e.preventDefault();
                     $(this).blur();
                 }
-            })
+            });
+            */
 
         }
 
@@ -231,7 +308,7 @@ $.KBWidget({
             var tableColumns = getColSettings(tab);
 
             return {
-                dom: '<"top col-sm-6 controls"l><"top col-sm-6"f>rt<"bottom"ip><"clear">',
+                dom: '<"top col-sm-6 controls"><"top col-sm-6"f>rt<"bottom"ip><"clear">',
                 data: modelObj[tab.key],
                 columns: tableColumns,
                 order: [[ 1, "asc" ]],
@@ -271,12 +348,15 @@ $.KBWidget({
                     defaultContent: '-',
                 }
 
-                if (['equation', 'genes'].indexOf(key) !== -1)
-                    config.className = 'editable';
+                if (['equation'].indexOf(key) !== -1)
+                    config.className = 'editable editable-direction';
 
-                if ( key === 'genes' ) { // fixme: need not depend on spec
+                if (['genes'].indexOf(key) !== -1)
+                    config.className = 'editable-genes';
+
+                if ( key === 'genes' ) {
                     config.data = function(row) {
-                        var items = []
+                        var items = [];
                         for (var i=0; i<row.genes.length; i++) {
                             items.push(row.genes[i].id);
                         }
@@ -295,37 +375,15 @@ $.KBWidget({
             return settings
         }
 
-
-        // takes media data, adds id key/value, and sorts it.
-        function sanitizeMedia(media) {
-            var i = media.length;
-            while (i--) {
-                media[i].id = media[i].compound_ref.split('/').pop();
-            }
-            return media.sort(function(a, b) {
-                if (a.id < b.id) return -1;
-                if (a.id > b.id) return 1;
-                return 0;
-            })
-        }
-
-        function getCpdIds(media) {
-            var ids = [];
-            for (var i=0; i<media.length; i++) {
-                ids.push(media[i].id )
-            }
-            return ids;
-        }
-
-
-        function cpdModal() {
-            var table = $('<table class="table table-bordered table-striped kb-media-editor'+
+        function rxnModal() {
+            var table = $('<table class="table table-bordered table-striped kb-editor-table'+
                 ' " style="width: 100% !important;">');
 
             var modal = $('<div>').kbaseModal({
                 title: 'Add Reactions',
-                subText: 'Select compounds below, then click "add".',
-                body: table
+                subText: 'Select reactions below, then click "add".',
+                body: table,
+                width: '75%'
             })
 
             var table = table.DataTable({
@@ -335,14 +393,16 @@ $.KBWidget({
                 order: [[ 1, "asc" ]],
                 ajax: function (opts, callback, settings) {
                     biochem('reactions', opts,
-                    ['id', 'name', 'definition']
+                        ['id', 'name', 'definition']
                     ).done(function(res){
-                        var data = {
-                            data: res.docs,
-                            recordsFiltered: res.numFound,
-                            recordsTotal: 27693
+                        if (res) {
+                            var data = {
+                                data: res.docs,
+                                recordsFiltered: res.numFound,
+                                recordsTotal: 27693
+                            }
+                            callback(data);
                         }
-                        callback(data);
                     })
                 },
                 dom: '<"top col-sm-6 controls"l><"top col-sm-6"f>rt<"bottom"ip><"clear">',
@@ -386,18 +446,21 @@ $.KBWidget({
                 }
             });
 
-            // add compounds on click, hide dialog, give notice
+            // add reactions on click, hide dialog, give notice
             addBtn.on('click' , function() {
                 var data = setRxnDefaults( selectedRows.getSelected() ),
-                    op = {op: 'add', data: data};
+                    ids = data.map(function(obj) { return obj.id }),
+
+                    op = {op: 'add', data: data, ids: ids};
                 editTable(op);
                 modal.hide();
-                modeling.notice(container, 'Added '+data.length+' compounds')
+                modeling.notice(container, 'Added '+data.length+' reactions')
             })
 
             modal.show();
         }
 
+        // not currently used
         function saveModal() {
             var name = objName // +'-edited';  save as same name by default.
             var input = $('<input type="text" class="form-control" placeholder="my-media-name">'),
@@ -432,7 +495,7 @@ $.KBWidget({
 
             container.find('.btn-save').removeClass('hide');
 
-            if (operation.op === 'modify') {
+            if (operation.op === 'edit') {
                 return;
             } else if (operation.op === 'add') {
                 table.rows.add( operation.data ).draw();
@@ -440,8 +503,6 @@ $.KBWidget({
                 table.rows( '.row-select' )
                       .remove()
                       .draw();
-
-                console.log('new rows', table.rows( ))
             }
         }
 
@@ -484,38 +545,6 @@ $.KBWidget({
             }
         }
 
-        // object for managing edit history
-        function EditHistory() {
-            var ops = [];
-
-            this.add = function(row) {
-                ops.push(row);
-                console.log('op:', ops)
-            }
-
-            this.rm = function(id) {
-                var i = id.length;
-                for (var i=0; i<ops.length; i++) {
-                    if (ops[i].id === id) {
-                        ops.splice(i, 1);
-                        return;
-                    }
-                }
-            }
-
-            this.count = function() {
-                return ops.length;
-            }
-
-            this.getHistory = function() {
-                return ops;
-            }
-
-            this.clearAll = function() {
-                ops = [];
-            }
-        }
-
         // takes list of cpd info, sets defaults and returns
         // list of cpd objects.
         function setRxnDefaults(rxns) {
@@ -553,31 +582,95 @@ $.KBWidget({
             return data;
         }
 
-        // function to save data,
-        function saveData(data, ws, name) {
-            // don't remove name since it may not be in old objects
-            //for (var i=0; i<data.length; i++) {
-            //    delete data[i]['name'];
-            //}
-            rawData.data.mediacompounds = data;
-
+        function saveData(master, ws, name) {
             saveBtn.text('saving...');
-            kbapi('ws', 'save_objects', {
-                workspace: wsName,
-                objects: [{
-                    type: 'KBaseBiochem.Media',
-                    data: rawData.data,
-                    name: name,
-                    meta: rawData.info[10]
-                }]
-            }).done(function(res) {
+
+            // there are 3 requests: added, removed, and edited
+            var prom;
+            var rxnsToAdd = Object.keys(master.added),
+                rxnsToRemove = Object.keys(master.removed),
+                rxnsToEdit = Object.keys(master.edits);
+
+
+            if (rxnsToAdd.length && rxnsToRemove.length) {
+                prom = addReactions(ws, name, rxnsToAdd)
+                    .then(function() {
+                        return rmReactions(ws, name, rxnsToRemove);
+                    })
+            } else if ( rxnsToAdd.length  && !rxnsToRemove.length ) {
+                prom = addReactions(ws, name, rxnsToAdd)
+            } else if ( !rxnsToAdd.length  && rxnsToRemove.length ) {
+                prom = rmReactions(ws, name, rxnsToRemove)
+            }
+
+            if (rxnsToEdit.length) {
+                var directions = [];
+                rxnsToEdit.forEach(function(id) {
+                    directions.push(master.edits[id].direction.after);
+                })
+
+                if (prom) {
+                    prom = prom.then(function() {
+                        return editReactions(ws, name, rxnsToEdit, directions);
+                    })
+                } else {
+                    prom = editReactions(ws, name, rxnsToEdit, directions);
+                }
+            }
+
+            prom.done(function(res) {
                 saveBtn.text('Save').hide();
-                saveAsBtn.text('Save as...').hide();
-                modeling.notice(container, 'Saved as '+name, 5000)
+                //saveAsBtn.text('Save as...').hide();
+                modeling.notice(container, 'Saved as '+name, 5000);
+
+                if (input.onSave) input.onSave();
+            })
+
+        }
+
+        function addReactions(ws, name, ids) {
+            return api('fba', 'adjust_model_reaction', {
+                workspace: ws,
+                model: name,
+                reaction: ids,
+                addReaction: true,
             }).fail(function(e) {
                 var error = JSON.stringify(JSON.parse(e.responseText), null,4);
                 $('<div>').kbaseModal({
-                    title: 'Oh no! Something seems to have went wrong',
+                    title: 'Oh no! Something seems to have went wrong with the reactions you wanted to add'+
+                           'Please contact KBase and we would be glad to help.',
+                    body: '<pre>'+error+'</pre>'
+                }).show();
+            })
+        }
+
+        function rmReactions(ws, name, ids) {
+            return api('fba', 'adjust_model_reaction', {
+                workspace: ws,
+                model: name,
+                reaction: ids,
+                removeReaction: true,
+            }).fail(function(e) {
+                var error = JSON.stringify(JSON.parse(e.responseText), null,4);
+                $('<div>').kbaseModal({
+                    title: 'Oh no! Something seems to have went wrong with the reactions you wanted to remove.'+
+                           'Please contact KBase and we would be glad to help.',
+                    body: '<pre>'+error+'</pre>'
+                }).show();
+            })
+        }
+
+        function editReactions(ws, name, ids, directions) {
+            return api('fba', 'adjust_model_reaction', {
+                workspace: ws,
+                model: name,
+                reaction: ids,
+                direction: directions
+            }).fail(function(e) {
+                var error = JSON.stringify(JSON.parse(e.responseText), null,4);
+                $('<div>').kbaseModal({
+                    title: 'Oh no! Something seems to have went wrong with the reactions you wanted to edit.'+
+                           'Please contact KBase and we would be glad to help.',
                     body: '<pre>'+error+'</pre>'
                 }).show();
             })
@@ -585,5 +678,6 @@ $.KBWidget({
 
         return this;
     }
+}) // end KBWidget
+
 })
-}( jQuery ) );

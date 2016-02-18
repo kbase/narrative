@@ -1,7 +1,5 @@
 /**
- * Input widget to load edit media widget.  May also be used for new media, not sure yet.
- *
- * Responsible for loading the edit media widget.
+ * Input widget to load edit model widget (editors/kbaseModelEditor.js).
  *
  * @param none.  This is an input widget, meant to be used with narrative_method_spec
  * @author Bill Riehl <wjriehl@lbl.gov>, nconrad <nconrad@anl.gov>
@@ -14,7 +12,7 @@ define(['jquery',
         'narrativeConfig',
         'bluebird',
         'kbwidget',
-        'kbaseMediaEditor',
+        'kbaseModelEditor',
         'kbaseNarrativeMethodInput',
         'kbaseNarrativeInput',
         'kbaseNarrativeParameterTextInput',
@@ -24,18 +22,15 @@ function ($,
           Promise) {
     'use strict';
     $.KBWidget({
-        name: 'kbaseEditMedia',
+        name: 'kbaseEditModel',
         parent: 'kbaseNarrativeMethodInput',
 
-        mediaChooserWidget: null,
-        $mediaDisplayPanel: null,
+        modelChooserWidget: null,
+        $modelDisplayPanel: null,
         wsClient: null,
 
         init: function (options) {
             this._super(options);
-
-            // change "Run" button to "Save"?
-            //var saveBtn = this.$elem.parents('.kb-func-panel').find('.kb-method-run').text('Save');
 
             // remove footer
             this.$elem.parents('.kb-cell').find('.kb-method-footer').remove();
@@ -48,11 +43,11 @@ function ($,
 
             this.container = $('<div>');
 
-            this.$mediaChooserPanel = $('<div>');
-            this.$mediaDisplayPanel = $('<div>');
+            this.$modelChooserPanel = $('<div>');
+            this.$modelDisplayPanel = $('<div>');
 
-            this.container.append(this.$mediaChooserPanel)
-                     .append(this.$mediaDisplayPanel);
+            this.container.append(this.$modelChooserPanel)
+                     .append(this.$modelDisplayPanel);
             this.$elem.append(this.container);
 
             // For now, spit up the method spec to console.log so you can read it.
@@ -61,7 +56,7 @@ function ($,
 
             // Creates the media chooser widget, which is just a 'text' input
             // This was originally designed to deal with the parameter spec object.
-            this.mediaChooserWidget = this.$mediaChooserPanel.kbaseNarrativeParameterTextInput(
+            this.modelChooserWidget = this.$modelChooserPanel.kbaseNarrativeParameterTextInput(
                 {
                     loadingImage: Config.get('loading_gif'),
                     parsedParameterSpec: this.options.method.parameters[0],
@@ -72,34 +67,33 @@ function ($,
             // Simple listener that just plops the input value in this panel.
             // Listener gets triggered whenever anything in the chooser widget
             // changes.
-
-            this.mediaChooserWidget.addInputListener(function() {
-                this.mediaName = this.mediaChooserWidget.getParameterValue();
-                this.updateDisplayPanel(this.mediaName);
+            this.modelChooserWidget.addInputListener(function() {
+                this.modelName = this.modelChooserWidget.getParameterValue();
+                this.updateDisplayPanel(this.modelName);
             }.bind(this));
         },
 
         /**
-         * adds media widget (and a horizontal line above it)
+         * adds model widget (and a horizontal line above it)
          */
-        updateDisplayPanel: function(mediaName) {
-            this.$mediaDisplayPanel.remove();
+        updateDisplayPanel: function(modelName) {
+            this.$modelDisplayPanel.remove();
 
-            if (mediaName) {
-                this.$mediaDisplayPanel = $('<div>');
-                var mediaWidget = $('<div>');
+            if (modelName) {
+                this.$modelDisplayPanel = $('<div>');
+                var modelWidget = $('<div>');
 
                 var self = this;
-                mediaWidget.kbaseMediaEditor({
+                modelWidget.kbaseModelEditor({
                     ws: Jupyter.narrative.getWorkspaceName(),
-                    obj: mediaName,
+                    obj: modelName,
                     onSave: function () { self.trigger('updateData.Narrative') }
                 });
 
-                this.$mediaDisplayPanel.append('<hr>');
-                this.$mediaDisplayPanel.append(mediaWidget)
+                this.$modelDisplayPanel.append('<hr>');
+                this.$modelDisplayPanel.append(modelWidget)
 
-                this.container.append(this.$mediaDisplayPanel);
+                this.container.append(this.$modelDisplayPanel);
             }
         },
 
@@ -109,7 +103,7 @@ function ($,
          * whenever the data panel gets updated.
          */
         refresh: function () {
-            this.mediaChooserWidget.refresh();
+            this.modelChooserWidget.refresh();
         },
 
         /**
@@ -119,7 +113,7 @@ function ($,
          * data objects here.
          */
         getState: function () {
-            return {'media': this.mediaName};
+            return {'model': this.modelName};
         },
 
 
@@ -127,8 +121,8 @@ function ($,
          * Should do something with the state that gets returned.
          */
         loadState: function (state) {
-            this.mediaChooserWidget.loadState(state.media);
-            this.updateDisplayPanel(state.media);
+            this.modelChooserWidget.loadState(state.model);
+            this.updateDisplayPanel(state.model);
         },
 
         /**
@@ -150,14 +144,14 @@ function ($,
          * paramId is from the method spec.
          */
         setParameterValue: function(paramId, value) {
-            this.mediaChooserWidget.setParameterValue(value);
+            this.modelChooserWidget.setParameterValue(value);
         },
 
         /**
          * Gets a single parameter value from the id set by the method spec.
          */
         getParameterValue: function(paramId) {
-            return this.mediaChooserWidget.getParameterValue();
+            return this.modelChooserWidget.getParameterValue();
         },
 
         /**
@@ -168,7 +162,7 @@ function ($,
             return [
                 {
                     id: this.options.method.parameters[0].id,
-                    value: this.mediaChooserWidget.getParameterValue()
+                    value: this.modelChooserWidget.getParameterValue()
                 }
             ];
         },
@@ -182,7 +176,7 @@ function ($,
          */
         isValid: function() {
             var isValidRet = { isValid:true, errormssgs: [] };
-            var paramStatus = this.mediaChooserWidget.isValid();
+            var paramStatus = this.modelChooserWidget.isValid();
             if (!paramStatus.isValid()) {
                 isValidRet.isValid = false;
                 for (var i=0; i<paramStatus.errormssgs.length; i++) {

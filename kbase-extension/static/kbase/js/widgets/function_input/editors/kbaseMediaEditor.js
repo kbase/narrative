@@ -7,21 +7,22 @@
  *  Notes:
  *  	to be refactored to use an editor widget.
  *
- *  Authors:
- * 		nconrad@mcs.anl.gov
+ *  Optional params
+ *  	onSave (function): called after data has been saved
+ *
+ * 	@author nconrad <nconrad@anl.gov>
  *
  */
 
 
  define([
     'jquery',
-    'plotly',
     'ModelingAPI',
     'kbwidget',
     'kbaseAuthenticatedWidget',
     'kbaseModal'
 ],
-function($, Plotly, ModelingAPI) {
+function($, ModelingAPI) {
 
 
 'use strict';
@@ -52,8 +53,10 @@ $.KBWidget({
             var param = {workspace: wsName, name: objName};
         else if (!isNaN(wsName) && !isNaN(objName) )
             var param = {ref: wsName+'/'+objName};
-        else
-            console.error('kbaseMediaEditor arguements are invalid');
+        else {
+            self.$elem.append('kbaseMediaEditor arguments are invalid: ', JSON.stringify(input));
+            return this;
+        }
 
         var table, // main table to be rendered
             media, // actual media data
@@ -102,7 +105,7 @@ $.KBWidget({
         // renders table, any associated controls, and events
         function renderTable(data) {
             table = $('<table class="table table-bordered table-striped'+
-                ' kb-media-editor" style="width: 100% !important;">')
+                ' kb-editor-table" style="width: 100% !important;">')
             container.append(table);
 
             table = table.DataTable({
@@ -224,13 +227,14 @@ $.KBWidget({
 
 
         function cpdModal() {
-            var table = $('<table class="table table-bordered table-striped kb-media-editor'+
+            var table = $('<table class="table table-bordered table-striped kb-editor-table'+
                 ' " style="width: 100% !important;">');
 
             var modal = $('<div>').kbaseModal({
                 title: 'Add Compounds',
                 subText: 'Select compounds below, then click "add".',
-                body: table
+                body: table,
+                width: '60%'
             })
 
             var table = table.DataTable({
@@ -398,16 +402,6 @@ $.KBWidget({
                 console.log('op:', ops)
             }
 
-            this.rm = function(id) {
-                var i = id.length;
-                for (var i=0; i<ops.length; i++) {
-                    if (ops[i].id === id) {
-                        ops.splice(i, 1);
-                        return;
-                    }
-                }
-            }
-
             this.count = function() {
                 return ops.length;
             }
@@ -487,7 +481,8 @@ $.KBWidget({
                 saveBtn.text('Save')
                 saveAsBtn.text('Save as...')
                 container.find('.edit-btn').toggleClass('hide');
-                modeling.notice(container, 'Saved as '+name, 5000)
+                modeling.notice(container, 'Saved as '+name, 5000);
+                if (input.onSave) input.onSave()
             }).fail(function(e) {
                 var error = JSON.stringify(JSON.parse(e.responseText), null,4);
                 $('<div>').kbaseModal({
@@ -499,6 +494,6 @@ $.KBWidget({
 
         return this;
     }
-}) // end of $.kbwidget
+}) // end of KBWidget
 
 })

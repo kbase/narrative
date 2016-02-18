@@ -144,7 +144,7 @@ function($,
                     } else {
                         gc_content = "Unknown";
                     }
-                    var overviewData = [gnm.id, '<a href="/functional-site/#/dataview/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>',
+                    var overviewData = [gnm.id, '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>',
                                         gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gc_content, tax, gnm.dna_size,
                                         contigCount, gnm.features.length];
 
@@ -308,8 +308,17 @@ function($,
                     var geneFunc = gene['function'];
                     if (!geneFunc)
                         geneFunc = '-';
-                    genesData.push({id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>',
-                            contig: contigName, start: geneStart, dir: geneDir, len: geneLen, type: geneType, func: geneFunc});
+                    genesData.push({
+                        id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
+                        // id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>',
+                        // contig: contigName,
+                        contig: '<a class="' + pref + 'contig-click" data-contigname="'+contigName+'">' + contigName + '</a>',
+                        start: geneStart,
+                        dir: geneDir,
+                        len: geneLen,
+                        type: geneType,
+                        func: geneFunc
+                    });
                     geneMap[geneId] = gene;
                     var contig = contigMap[contigName];
                     if (contigName != null && !contig) {
@@ -327,24 +336,24 @@ function($,
                     }
                 }
                 var genesSettings = {
-                        "sPaginationType": "full_numbers",
-                        "iDisplayLength": 10,
-                        "aaSorting": [[ 1, "asc" ], [2, "asc"]],
-                        "aoColumns": [
-                                      {sTitle: "Gene ID", mData: "id"},
-                                      {sTitle: "Contig", mData: "contig"},
-                                      {sTitle: "Start", mData: "start"},
-                                      {sTitle: "Strand", mData: "dir"},
-                                      {sTitle: "Length", mData: "len"},
-                                      {sTitle: "Type", mData: "type"},
-                                      {sTitle: "Function", mData: "func"}
-                                      ],
-                                      "aaData": [],
-                                      "oLanguage": {
-                                          "sSearch": "Search gene:",
-                                          "sEmptyTable": "No genes found."
-                                      },
-                                      "fnDrawCallback": geneEvents
+                    "sPaginationType": "full_numbers",
+                    "iDisplayLength": 10,
+                    "aaSorting": [[ 1, "asc" ], [2, "asc"]],
+                    "aoColumns": [
+                                  {sTitle: "Gene ID", mData: "id"},
+                                  {sTitle: "Contig", mData: "contig"},
+                                  {sTitle: "Start", mData: "start"},
+                                  {sTitle: "Strand", mData: "dir"},
+                                  {sTitle: "Length", mData: "len"},
+                                  {sTitle: "Type", mData: "type"},
+                                  {sTitle: "Function", mData: "func"}
+                                  ],
+                                  "aaData": [],
+                                  "oLanguage": {
+                                      "sSearch": "Search gene:",
+                                      "sEmptyTable": "No genes found."
+                                  },
+                                  "fnDrawCallback": function() { geneEvents(); contigEvents(); }
                 };
 
 
@@ -358,6 +367,7 @@ function($,
 
                 var genesTable = $('#'+pref+'genes-table').dataTable(genesSettings);
                 genesTable.fnAddData(genesData);
+                
 
                 ////////////////////////////// Contigs Tab //////////////////////////////
                 var contigTab = $('#'+pref+'contigs');
@@ -440,7 +450,7 @@ function($,
                     $('#'+tabId).append('<table class="table table-striped table-bordered" \
                             style="margin-left: auto; margin-right: auto;" id="'+tabId+'-table"/>');
                     var elemLabels = ['Gene ID', 'Contig name', 'Gene start', 'Strand', 'Gene length', "Gene type", "Function", "Annotations"];
-                    var elemData = ['<a href="/functional-site/#/genes/'+self.ws_name+'/'+self.ws_id+'/'+geneId+'" target="_blank">'+geneId+'</a>',
+                    var elemData = ['<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
                                     '<a class="'+tabId+'-click2" data-contigname="'+contigName+'">' + contigName + '</a>',
                                     geneStart, geneDir, geneLen, geneType, geneFunc, geneAnn];
                     var elemTable = $('#'+tabId+'-table');

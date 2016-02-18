@@ -1,10 +1,10 @@
-Last updated 2/2/2016, 9:00pm PST
+Last updated 2/17/2016, 9:00pm PST
 
   * ~~Markdown cells render a little different. Previously headers could be made by "###text" on its own line, now a space is needed: "### text" on that line.~~
   * ~~The "view only" mode has a gigantic margin on the left side. [KBASE-3370](https://atlassian.kbase.us/browse/KBASE-3370)~~
-  * All cells sit in a container that makes it easier to see what's selected or not, which brings up issues.
-  * KBase cells (method, app, output, data viewer) appear as boxes in boxes with duplicated minimization. [KBASE-3335](https://atlassian.kbase.us/browse/KBASE-3335)
-  * Markdown cells don't have any placeholder text (Jupyter feature) and their input boxes appear shrunken when inactive.
+  * ~~All cells sit in a container that makes it easier to see what's selected or not, which brings up issues.~~
+  * ~~KBase cells (method, app, output, data viewer) appear as boxes in boxes with duplicated minimization. [KBASE-3335](https://atlassian.kbase.us/browse/KBASE-3335)~~
+  * ~~Markdown cells don't have any placeholder text (Jupyter feature) and their input boxes appear shrunken when inactive.~~
   * ~~The data panel can still, occasionally, spin nonstop at page load. [KBASE-3338](https://atlassian.kbase.us/browse/KBASE-3338)~~
   * ~~The 'About Jupyter' dialog in the Kernel menu is non-functional~~
   * Missing Jupyter menu bar [KBASE-3371](https://atlassian.kbase.us/browse/KBASE-3371)
@@ -26,7 +26,3 @@ Last updated 2/2/2016, 9:00pm PST
   * Method/app cells should be drag/droppable like data cells.
   * Name change doesn't seem to change temporary state (should actually use temporary state instead of "Untitled" name)
   * Extra copy of workspace client - needs to migrate to the right repo.
-
-- Update the viewers widget to behave better when it can't find a viewer
-- Finally sketch out and prototype a new cell layout that moves titles around.
-- Check in with the SDK team on the styling of their method cell addition with the console logging. It's pretty bare-bones.

@@ -145,9 +145,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         """
         t = biokbase.auth.Token()
         if (t is not None):
-            return self.kbase_session.get('user_id', t.user_id)
+            return self.kbase_session.get(u'user_id', t.user_id)
         else:
-            return self.kbase_session.get('user_id', None)
+            return self.kbase_session.get(u'user_id', None)
 
     def _clean_id(self, id):
         """Clean any whitespace out of the given id"""
@@ -176,14 +176,14 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         path = path.strip('/')
         obj_ref = self._obj_ref_from_path(path)
         if obj_ref is None:
-            raise HTTPError(404, 'Path "{}" is not a valid Narrative path'.format(path))
-        self.log.warn('looking up whether a narrative exists')
+            raise HTTPError(404, u'Path "{}" is not a valid Narrative path'.format(path))
+        self.log.warn(u'looking up whether a narrative exists')
         try:
-            self.log.warn('trying to get narrative {}'.format(obj_ref))
+            self.log.warn(u'trying to get narrative {}'.format(obj_ref))
             return self.narrative_exists(obj_ref)
         except PermissionsError as e:
-            self.log.warn('found a 403 error')
-            raise HTTPError(403, "You do not have permission to view the narrative with id {}".format(path))
+            self.log.warn(u'found a 403 error')
+            raise HTTPError(403, u"You do not have permission to view the narrative with id {}".format(path))
         # except Exception as e:
         #     self.log.debug('got a 500 error')
         #     raise HTTPError(500, e)
@@ -197,11 +197,11 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         return self.file_exists(path)
 
     def _wsobj_to_model(self, nar, content=True):
-        nar_id = 'ws.{}.obj.{}'.format(nar['wsid'], nar['objid'])
-        model = base_model('{} - {} - {}'.format(nar['saved_by'], nar_id, nar['name']), nar_id)
-        model['format'] = 'json'
-        model['last_modified'] = nar['save_date']
-        model['type'] = 'notebook'
+        nar_id = u'ws.{}.obj.{}'.format(nar['wsid'], nar['objid'])
+        model = base_model(u'{} - {} - {}'.format(nar['saved_by'], nar_id, nar['name']), nar_id)
+        model[u'format'] = u'json'
+        model[u'last_modified'] = nar[u'save_date']
+        model[u'type'] = u'notebook'
 
         # model = base_model('%s/%s' % (nar['notebook_id'], nar['name']))
         # model['format'] = 'v3'
@@ -211,11 +211,11 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         parsed = self._parse_path(path)
         if parsed is None:
             return None
-        if 'wsid' not in parsed or 'objid' not in parsed:
+        if u'wsid' not in parsed or u'objid' not in parsed:
             return None
-        ref = '{}/{}'.format(parsed['wsid'], parsed['objid'])
-        if parsed['ver'] is not None:
-            ref = ref + '/{}'.format(parsed['ver'])
+        ref = u'{}/{}'.format(parsed[u'wsid'], parsed[u'objid'])
+        if parsed[u'ver'] is not None:
+            ref = ref + u'/{}'.format(parsed[u'ver'])
         return ref
 
     def _parse_path(self, path):
@@ -223,9 +223,9 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         if m is None:
             return None
         return dict(
-            wsid=m.group('wsid'),
-            objid=m.group('objid'),
-            ver=m.group('ver')
+            wsid=m.group(u'wsid'),
+            objid=m.group(u'objid'),
+            ver=m.group(u'ver')
         )
 
     def get(self, path, content=True, type=None, format=None):
@@ -233,25 +233,25 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         path = path.strip('/')
 
         model = base_model(path, path)
-        if self.exists(path) and type != 'directory':
+        if self.exists(path) and type != u'directory':
             #It's a narrative object, so try to fetch it.
             obj_ref = self._parse_path(path)
             if not obj_ref:
                 raise HTTPError(404, u'Unknown Narrative "{}"'.format(path))
             try:
-                nar_obj = self.read_narrative('{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), content)
-                model['type'] = 'notebook'
+                nar_obj = self.read_narrative(u'{}/{}'.format(obj_ref[u'wsid'], obj_ref[u'objid']), content)
+                model[u'type'] = u'notebook'
                 user = self.get_userid()
                 if content:
-                    model['format'] = 'json'
+                    model['format'] = u'json'
                     model['content'] = nbformat.reads(json.dumps(nar_obj['data']), 4)
                     model['content']['metadata'].pop('orig_nbformat', None)
                     model['name'] = nar_obj['data']['metadata'].get('name', 'Untitled')
                     util.kbase_env.narrative = 'ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid'])
                     util.kbase_env.workspace = model['content'].metadata.ws_name
                 if user is not None:
-                    model['writable'] = self.narrative_writable('{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), user)
-                self.log.info('Got narrative {}'.format(model['name']))
+                    model['writable'] = self.narrative_writable(u'{}/{}'.format(obj_ref['wsid'], obj_ref['objid']), user)
+                self.log.info(u'Got narrative {}'.format(model['name']))
             except HTTPError:
                 raise
             except PermissionsError as e:
@@ -262,7 +262,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         if not path or type == 'directory':
             #if it's the empty string, look up all narratives, treat them as a dir
             model['type'] = type
-            model['format'] = 'json'
+            model['format'] = u'json'
             if content:
                 contents = []
                 nar_list = self.list_narratives()
@@ -288,23 +288,23 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         if 'content' not in model and model['type'] != 'directory':
             raise HTTPError(400, u'No Narrative content found while trying to save')
 
-        self.log.debug("writing Narrative %s." % path)
+        self.log.debug(u"writing Narrative %s." % path)
         nb = nbformat.from_dict(model['content'])
         self.check_and_sign(nb, path)
 
         try:
             result = self.write_narrative(self._obj_ref_from_path(path), nb, self.get_userid())
 
-            new_id = "ws.%s.obj.%s" % (result[1], result[2])
+            new_id = u"ws.%s.obj.%s" % (result[1], result[2])
             util.kbase_env.narrative = new_id
 
             nb = result[0]
             self.validate_notebook_model(model)
-            validation_message = model.get('message', None)
+            validation_message = model.get(u'message', None)
 
             model = self.get(path, content=False)
             if validation_message:
-                model['message'] = validation_message
+                model[u'message'] = validation_message
             return model
 
         except PermissionsError as err:
@@ -352,7 +352,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         For use in PATCH requests, to enable renaming a file without
         re-uploading its contents. Only used for renaming at the moment.
         """
-        self.log.warn('update')
+        self.log.warn(u'update')
         self.log.warn(model)
         self.log.warn(path)
 

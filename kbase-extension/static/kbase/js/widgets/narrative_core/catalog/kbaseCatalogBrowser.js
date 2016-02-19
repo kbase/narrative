@@ -562,6 +562,16 @@ define([
                     .then(function (apps) {
                         //console.log(apps);
                         for(var k=0; k<apps.length; k++) {
+
+                            // logic to hide/show certain categories
+                            var skip = false;
+                            for(var i=0; i<apps[k].categories.length; i++) {
+                                if(self.options.ignoreCategories[apps[k].categories[i]]) {
+                                    skip = true;
+                                }
+                            }
+                            if(skip) continue;
+
                             var a = new AppCard('app',apps[k],null,self.nms_base_url, null, {}, 
                                 true, function(card) { self.clickCallback(card); });
                             self.appList.push(a);

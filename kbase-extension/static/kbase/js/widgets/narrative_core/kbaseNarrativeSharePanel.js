@@ -514,8 +514,8 @@ function($, Config) {
             '#009688', //teal
             '#4CAF50', //green
             '#8BC34A', //lime green
-            '#CDDC39', //lime
-            '#FFEB3B', //yellow
+            // '#CDDC39', //lime
+            // '#FFEB3B', //yellow
             '#FFC107', //amber
             '#FF9800', //orange
             '#FF5722', //deep orange

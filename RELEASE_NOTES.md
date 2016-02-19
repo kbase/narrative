@@ -1,19 +1,42 @@
 ### OVERVIEW
 The Narrative Interface allows users to craft KBase Narratives using a combination of GUI-based commands, Python and R scripts, and graphical output elements.
 
-This is built on the IPython Notebook (more notes will follow).
+This is built on the Jupyter Notebook v4.1.0 (more notes will follow).
+
+### Version 2.0.3
+__Changes__
+- JIRA KBASE-3388 - fixed problem that caused a crash on save when too many unique methods or apps were in a narrative. The narrative metadata has been reformatted to support this.
+- Fixed problems with funky unicode characters in narrative titles.
+- Updates to various FBA widgets.
+
+### Version 2.0.2
+__Changes__
+- JIRA KBASE-3556 - fixed links from genome widget to gene landing page, made contigs in genome tab clickable.
+- Added tools for editing FBA models.
+- JIRA NAR-838 - delete cell dialog should no longer break when hitting return to trigger it.
+- JIRA NAR-839 - delete cell dialogs should not pollute the DOM (there's only one dialog now, not a new one for each cell).
+- JIRA NAR-589 - change "Copy Narrative" to "Copy This Narrative" for clarity.
+- JIRA NAR-788 - remove light colors from random picker when coloring user names for sharing.
+
+### Version 2.0.1
+__Changes__
+- JIRA KBASE-3623 - fixed problem where updating an old version of the Narrative typed object could cause the Narrative title to be lost
+- JIRA KBASE-3624 - fixed links in method input cell subtitles to manual pages
+- JIRA KBASE-3630 - fixed problem with hierarchical clustering widget missing a button
+- Added widget for sequence comparison
+- Added tools for editing FBA model media sets.
 
 ### Version 2.0.0
 __Changes__
-- Update IPython backend to Jupyter 4.1.0
+- Update IPython Notebook backend to Jupyter 4.1.0.
 - Data Panel slideout should now perform better for users with lots and lots of objects.
 - Fixed problem with copied narratives sometimes referring back to their original workspace.
-- Data Panel slidout dimmer should be in the correct z-position now.
+- Data Panel slideout dimmer should be in the correct z-position now.
 - Added separate job console for each running method, attached to that cell.
 - Changed style of cells to better show what cell is selected and active.
 - Adjusted Narrative Management tab to be somewhat more performant.
 - Updated Narrative object definition to match the Jupyter notebook object definition more closely.
-
+- Data panel should no longer hang forever on Narrative startup.
 
 ### Version 1.1.0
 __Changes__

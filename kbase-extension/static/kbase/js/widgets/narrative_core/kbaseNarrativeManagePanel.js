@@ -239,7 +239,7 @@ function($,
                 var $msgPanel = $("<div>").css({'margin': '10px', 'text-align': 'center'});
                 self.$copyThisNarrBtn = self.makeCopyThisNarrativeBtn($msgPanel);
                 self.$mainPanel.append(
-                    $('<div>').css({'margin': '15px', 'text-align': 'center'})
+                    $('<div>').css({'margin': '10px', 'text-align': 'center'})
                     .append(self.makeNewNarrativeBtn())
                     .append(self.$copyThisNarrBtn)
                     .append($msgPanel));
@@ -602,7 +602,7 @@ function($,
                                         var id = new Date().getTime();
                                         var ws_name = self.my_user_id + ":" + id;
 
-                                        Promise.resolve(this.ws.clone_workspace({
+                                        Promise.resolve(self.ws.clone_workspace({
                                             wsi: {id: ws_info[0]},
                                             workspace: ws_name,
                                             meta: newMeta
@@ -948,7 +948,7 @@ function($,
         },
         makeCopyThisNarrativeBtn: function ($alertContainer) {
             var self = this;
-            var active = '<span class="fa fa-copy"></span> Copy Narrative';
+            var active = '<span class="fa fa-copy"></span> Copy This Narrative';
 //            var $active = $('<span>').addClass('fa fa-copy').append(" Copy Narrative");
             var $working = $('<span>').append("Copying Narrative...");
 

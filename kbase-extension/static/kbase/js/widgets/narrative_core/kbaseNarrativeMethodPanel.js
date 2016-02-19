@@ -320,6 +320,10 @@ function ($, _, Promise, Config, DisplayUtil) {
                     this.$slideoutBtn.tooltip('hide');
                     this.trigger('hideGalleryPanelOverlay.Narrative');
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$appCatalogContainer);
+                    // Need to rerender (not refresh data) because in some states, the catalog browser looks to see
+                    // if things are hidden or not. When this panel is hidden, then refreshed, all sections will
+                    // think they have no content and nothing will display.
+                    this.appCatalog.rerender();
                 }.bind(this));
 
             this.addButton(this.$slideoutBtn);

@@ -134,7 +134,6 @@ define([
                 loadingCalls.push(self.populateAppListWithApps());
                 loadingCalls.push(self.populateModuleList());
 
-
                 // when we have it all, then render the list
                 Promise.all(loadingCalls).then(function() {
 
@@ -170,6 +169,12 @@ define([
 
             },
 
+            rerender: function() {
+                var self = this;
+                if(self.organizeBy) {
+                    self.renderAppList(self.organizeBy);
+                }
+            },
 
             setupClients: function() {
 

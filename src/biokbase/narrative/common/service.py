@@ -481,12 +481,13 @@ class LifecycleSubject(object):
             # 'njs:' or 'method:' - either way
             # they're the only ones with a colon
             try:
-                if job_id.find(':') == -1:
-                    job_manager.register_job(job_id)
-                self._event('register_job', job_id)
+                if job_id.find(':') >= 0:
+                    job_id = job_id.split(':')[1]
+                job_manager.register_job(job_id)
             except Exception as e:
-                # It should be logged somehow 
                 to_log = type(e).__name__ + ': ' + str(e) + '\n' + traceback.format_exc()
+                self._event('debug', to_log)
+            self._event('register_job', job_id)
 
     def register_app(self, app_id):
         """Register a new long-running app process.
@@ -498,12 +499,14 @@ class LifecycleSubject(object):
 
             self._event('debug', app_id)
             try:
-                if app_id.find(':') == -1:
-                    job_manager.register_job(app_id)
-                self._event('register_app', app_id)
+                if app_id.find(':') >= 0:
+                    app_id = app_id.split(':')[1]
+                job_manager.register_job(app_id)
             except Exception as e:
                 # It should be logged somehow 
                 to_log = type(e).__name__ + ': ' + str(e) + '\n' + traceback.format_exc()
+                self._event('debug', to_log)
+            self._event('register_app', app_id)
 
     # get/set 'stage' property
 

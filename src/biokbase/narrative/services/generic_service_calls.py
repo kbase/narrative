@@ -95,7 +95,7 @@ def _method_call(meth, method_spec_json, param_values_json):
         njsClient = NarrativeJobService(service.URLS.job_service, token = token)
         appState = njsClient.run_app(app)
         jobId = "method:" + appState["job_id"]
-        meth.register_app(appState["job_id"])
+        meth.register_app(jobId)
         methodOut = {'job_id': jobId}
     else:
         input = {}

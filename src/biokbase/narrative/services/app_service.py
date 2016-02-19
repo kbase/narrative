@@ -66,7 +66,7 @@ def _app_call(meth, app_spec_json, method_specs_json, param_values_json):
 
     # assuming we get a job ID out of this, do the following:
     job_id = "njs:" + appState["job_id"]
-    meth.register_app(job_id)
+    meth.register_app(appState["job_id"])
 
     return json.dumps({ 'job_id' : job_id, 'app' : app, 'app_state' : appState})
 

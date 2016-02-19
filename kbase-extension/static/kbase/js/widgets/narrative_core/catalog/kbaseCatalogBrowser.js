@@ -75,6 +75,7 @@ define([
                     metabolic_modeling : 'Metabolic Modeling',
                     comparative_genomics : 'Comparative Genomics',
                     expression : 'Expression',
+                    communities : 'Communities',
                     util : 'Utilities'
                 };
 

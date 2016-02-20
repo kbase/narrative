@@ -246,6 +246,7 @@ define([
                 }
                 var $starCount = $('<span>').addClass('kbcb-star-count');
                 if(this.starCount) { $starCount.html(this.starCount); }
+                if(this.onStar) { $star.removeClass('kbcb-star-nonfavorite').addClass('kbcb-star-favorite'); }
                 $footer.append($starDiv.append($star).append($starCount));
                 
             } else {

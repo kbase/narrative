@@ -28,7 +28,6 @@ function($, Config) {
                 {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
                 {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'},
                 {name:['ExpressionMatrix'], displayName: "Example ExpressionMatrix", header:'Gene expression data in a gene vs. condition matrix'},
-                {name:['Collection', 'Metagenome'], displayName: "Example Metagenomic Data", header:'Sets of WGS and amplicon metagenomes'},
                 {name:['TranscriptomeHack'], displayName: "Example Sorghum Transcriptomes", header:'Sorghum bicolor transcriptome data in response to ABA and osmotic stress'}
                 ]
         },

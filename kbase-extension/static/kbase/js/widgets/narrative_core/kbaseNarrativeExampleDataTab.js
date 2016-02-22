@@ -22,7 +22,7 @@ function($, Config) {
             exampleWsName: 'KBaseExampleData', // designed to be a workspace with just a handful of objects
 	        $importStatus:$('<div>'),
             exampleTypeOrder: [
-                {name:['AssemblyInput','SingleEndLibrary','PairedEndLibrary','ReferenceAssembly'], displayName: "Example Sequence Assembly Inputs", header:'Various types of read data configured for sequence assembly.'},
+                {name:['SingleEndLibrary','PairedEndLibrary','ReferenceAssembly'], displayName: "Example Sequence Assembly Inputs", header:'Various types of read data configured for sequence assembly.'},
                 {name:['ContigSet'], displayName: "Example Contig Sets", header:'A set of DNA sequences'},
                 {name:['Genome'], displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
                 {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
@@ -170,11 +170,15 @@ function($, Config) {
             }
 
             for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
-                var tn = self.options.exampleTypeOrder[t].name[0];
-                if(showTypeDiv.hasOwnProperty(tn)) {
-                    if(showTypeDiv[tn]) {
-                        self.$mainPanel.append(typeDivs[tn]);
+                var typeNames = self.options.exampleTypeOrder[t].name;
+                var showDiv = false;
+                for(var k=0; k<typeNames.length; k++) {
+                    if(showTypeDiv[typeNames[k]]) {
+                        showDiv = true;
                     }
+                }
+                if(showDiv) {
+                    self.$mainPanel.append(typeDivs[typeNames[0]]);
                 }
             }
             if (hasOthers) {

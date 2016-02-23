@@ -1,5 +1,3 @@
-
-
 define(['jquery', 
         'plotly',        
         'kbwidget', 

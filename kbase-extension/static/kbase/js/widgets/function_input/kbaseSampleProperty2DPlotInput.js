@@ -2,15 +2,19 @@
  * @author Pavel Novickov <psnovichkov@lbl.gov>
  * @public
  */
-define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
-    function( $ ) {
+define(['jquery', 
+        'narrativeConfig',
+        'kbaseNarrativeParameterCustomTextSubdataInput']
+    function( $, Config ) {
+    
+    var workspaceUrl = Config.url('workspace');
+    var loadingImage = Config.get('loading_gif');
     $.KBWidget({
         name: "kbaseSampleProperty2DPlotInput",
         parent: "kbaseNarrativeMethodInput",
         
         version: "1.0.0",
         options: {
-            loadingImage: window.kbconfig.loading_gif,
             isInSidePanel: false
         },
         
@@ -28,7 +32,7 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
             var self = this;
             
             if(this.authToken){
-                this.ws = new Workspace(window.kbconfig.urls.workspace, {token: this.authToken()});
+                this.ws = new Workspace(workspaceUrl, {token: this.authToken()});
             } else {
                 error('not properly initialized - no auth token found')
             }
@@ -78,7 +82,7 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
             var $stepDiv = $('<div>');
             var $widget = $stepDiv[widgetName](
                 {
-                    loadingImage: self.options.loadingImage, 
+                    loadingImage: loadingImage, 
                     parsedParameterSpec: paramSpec, 
                     isInSidePanel: self.options.isInSidePanel,
                     dataModel: $dataModel

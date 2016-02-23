@@ -1,23 +1,25 @@
 
 
 define([
-        'jquery', 
+        'jquery',
+        'narrativeConfig',    
         'kbwidget', 
         'kbaseAuthenticatedWidget', 
         'kbaseTabs',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap' 
-        ], function($ ) {
+        ], 
+    function( $, Config ) {
+    
+    var workspaceURL = Config.url('workspace');
+    var loadingImage = Config.get('loading_gif');
     $.KBWidget({
         name: 'kbaseMatrix2DAbstract',
         parent: 'kbaseAuthenticatedWidget',
         version: '1.0.0',
         options: {
             workspaceID: null,
-            matrixID: null,   
-            
-            workspaceURL: window.kbconfig.urls.workspace,
-            loadingImage: window.kbconfig.loading_gif        
+            matrixID: null,               
         },
         
 
@@ -45,7 +47,7 @@ define([
         loggedInCallback: function(event, auth) {
             
            // Build a client
-            this.wsClient = new Workspace(this.options.workspaceURL, auth);
+            this.wsClient = new Workspace(workspaceURL, auth);
 
             // Let's go...
             this.loadAndRender();           
@@ -449,7 +451,7 @@ define([
         
         loading: function(isLoading) {
             if (isLoading)
-                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
+                this.showMessage("<img src='" + loadingImage + "'/>");
             else
                 this.hideMessage();                
         },

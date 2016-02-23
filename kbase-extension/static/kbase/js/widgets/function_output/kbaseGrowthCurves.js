@@ -14,14 +14,11 @@ define([
         version: '1.0.0',
         options: {
             
-            valueType: null,//'Samples',
-            sampleSeriesIds: null,//'C121,C17',
+            valueType: null,
+            sampleSeriesIds: null,
             
             showErrorBar: 1,
             logScale: 1,
-//            plotTitle: 'Plot title',
-//            plotXAxisTitle: 'X axis title',
-//            plotYAxisTitle: 'Y axis title',            
         },        
 
         MAX_LABEL_LENGTH : 25,

@@ -9,13 +9,16 @@ define(['jquery',
         'kbaseNarrativeParameterCheckboxInput',
         'kbaseNarrativeParameterCustomTextSubdataInput'],
     function( $, Config ) {
+    
+    var workspaceUrl = Config.url('workspace');
+    var loadingImage = Config.get('loading_gif');
+    
     $.KBWidget({
         name: "kbaseGrowthCurvesInput",
         parent: "kbaseNarrativeMethodInput",
         
         version: "1.0.0",
         options: {
-            loadingImage: window.kbconfig.loading_gif,               
             isInSidePanel: false
         },
         
@@ -31,7 +34,7 @@ define(['jquery',
             var self = this;
 
             if(this.authToken){
-                this.ws = new Workspace(window.kbconfig.urls.workspace, {token: this.authToken()});
+                this.ws = new Workspace(workspaceUrl, {token: this.authToken()});
             } else {
                 error('not properly initialized - no auth token found')
             }
@@ -82,7 +85,7 @@ define(['jquery',
             var $stepDiv = $('<div>');
             var $widget = $stepDiv[widgetName](
                 {
-                    loadingImage: self.options.loadingImage, 
+                    loadingImage: loadingImage, 
                     parsedParameterSpec: paramSpec, 
                     isInSidePanel: self.options.isInSidePanel,
                     dataModel: $dataModel

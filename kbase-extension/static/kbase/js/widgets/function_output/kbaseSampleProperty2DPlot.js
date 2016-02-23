@@ -1,5 +1,3 @@
-
-
 define(['jquery', 
         'plotly',        
         'kbwidget', 
@@ -13,8 +11,8 @@ define(['jquery',
         parent: 'kbaseSamplePropertyMatrix',
         version: '1.0.0',
         options: {
-            propertySeriesX: 'Cu',
-            propertySeriesY: 'W'
+            propertySeriesX: null,
+            propertySeriesY: null
         },
         
         render: function(){

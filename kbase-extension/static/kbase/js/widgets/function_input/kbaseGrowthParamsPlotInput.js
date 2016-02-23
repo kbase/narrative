@@ -3,18 +3,21 @@
  * @public
  */
 define(['jquery', 
-    'kbaseNarrativeParameterCustomTextSubdataInput',
-    'kbaseNarrativeParameterCustomButtonInput',
-    'kbaseNarrativeParameterCustomDropdownGroupInput'
+        'narrativeConfig',
+        'kbaseNarrativeParameterCustomTextSubdataInput',
+        'kbaseNarrativeParameterCustomButtonInput',
+        'kbaseNarrativeParameterCustomDropdownGroupInput'
        ],
-    function( $ ) {
+    function( $, Config ) {
+    
+    var workspaceUrl = Config.url('workspace');
+    var loadingImage = Config.get('loading_gif');
     $.KBWidget({
         name: "kbaseGrowthParamsPlotInput",
         parent: "kbaseNarrativeMethodInput",
         
         version: "1.0.0",
         options: {
-            loadingImage: window.kbconfig.loading_gif,               
             isInSidePanel: false
         },
         
@@ -32,7 +35,7 @@ define(['jquery',
             console.log('initWsClient.self', self);
             
             if(this.authToken){
-                this.ws = new Workspace(window.kbconfig.urls.workspace, {token: this.authToken()});
+                this.ws = new Workspace(workspaceUrl, {token: this.authToken()});
             } else {
                 error('not properly initialized - no auth token found')
             }
@@ -93,7 +96,7 @@ define(['jquery',
             var $stepDiv = $('<div>');
             var $widget = $stepDiv[widgetName](
                 {
-                    loadingImage: self.options.loadingImage, 
+                    loadingImage: loadingImage, 
                     parsedParameterSpec: paramSpec, 
                     isInSidePanel: self.options.isInSidePanel,
                     dataModel: $dataModel
@@ -267,7 +270,7 @@ define(['jquery',
                                     }
                                 );                        
                             },
-                            function(eror){
+                            function(error){
                                 console.error(error);
                             }
                         );

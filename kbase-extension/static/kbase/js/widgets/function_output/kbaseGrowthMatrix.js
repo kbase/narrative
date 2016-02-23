@@ -1,7 +1,4 @@
- 
-
-
-define([
+ define([
         'jquery', 
         'plotly',
         'kbwidget', 

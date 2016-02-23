@@ -102,10 +102,11 @@ require.config({
         'kbStandaloneListSelect'                : 'kbase/js/widgets/function_input/kbStandaloneListselect',
         'devVizSelector'                        : 'kbase/js/widgets/function_input/devDataViz',
 
+        'kbaseGrowthCurvesInput'                : 'kbase/js/widgets/function_input/kbaseGrowthCurvesInput',
         'kbaseGrowthParamsPlotInput'            : 'kbase/js/widgets/function_input/kbaseGrowthParamsPlotInput',
         'kbaseGrowthParams2DPlotInput'          : 'kbase/js/widgets/function_input/kbaseGrowthParams2DPlotInput',
-        'kbaseWellSampleHistogramInput'         : 'kbase/js/widgets/function_input/kbaseWellSampleHistogramInput',
-        'kbaseWellSample2DPlotInput'            : 'kbase/js/widgets/function_input/kbaseWellSample2DPlotInput',
+        'kbaseSamplePropertyHistogramInput'     : 'kbase/js/widgets/function_input/kbaseSamplePropertyHistogramInput',
+        'kbaseSampleProperty2DPlotInput'        : 'kbase/js/widgets/function_input/kbaseSampleProperty2DPlotInput',
 
         'kbaseNarrativeParameterCustomTextSubdataInput' :  'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomTextSubdataInput',
         'kbaseNarrativeParameterCustomButtonInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomButtonInput',
@@ -119,15 +120,23 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+        'kbaseMatrix2DAbstract'                 : 'kbase/js/widgets/function_output/kbaseMatrix2DAbstract',
         'kbaseGrowthMatrixAbstract'             : 'kbase/js/widgets/function_output/kbaseGrowthMatrixAbstract',
         'kbaseGrowthMatrix'                     : 'kbase/js/widgets/function_output/kbaseGrowthMatrix',
         'kbaseGrowthCurves'                     : 'kbase/js/widgets/function_output/kbaseGrowthCurves',
+        
+        
+        'kbaseGrowthParametersAbstract'         : 'kbase/js/widgets/function_output/kbaseGrowthParametersAbstract',
+        'kbaseGrowthParameters'                 : 'kbase/js/widgets/function_output/kbaseGrowthParameters',
         'kbaseGrowthParamsPlot'                 : 'kbase/js/widgets/function_output/kbaseGrowthParamsPlot',
         'kbaseGrowthParams2DPlot'               : 'kbase/js/widgets/function_output/kbaseGrowthParams2DPlot',
-
-        'kbaseWellSampleHistogram'              : 'kbase/js/widgets/function_output/kbaseWellSampleHistogram',
-        'kbaseWellSample2DPlot'                 : 'kbase/js/widgets/function_output/kbaseWellSample2DPlot',
+        
+        'kbaseSamplePropertyMatrixAbstract'     : 'kbase/js/widgets/function_output/kbaseSamplePropertyMatrixAbstract',
+        'kbaseSamplePropertyMatrix'             : 'kbase/js/widgets/function_output/kbaseSamplePropertyMatrix',
+        'kbaseSamplePropertyHistogram'          : 'kbase/js/widgets/function_output/kbaseSamplePropertyHistogram',
+        'kbaseSampleProperty2DPlot'             : 'kbase/js/widgets/function_output/kbaseSampleProperty2DPlot',
         'kbaseChromatographyMatrix'             : 'kbase/js/widgets/function_output/kbaseChromatographyMatrix',
+        'kbaseChromatograms'                    : 'kbase/js/widgets/function_output/kbaseChromatograms',
         'kbaseDefaultNarrativeOutput'           : 'kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput',
 
         'ModelingAPI'                           : 'kbase/js/api/ModelingAPI',

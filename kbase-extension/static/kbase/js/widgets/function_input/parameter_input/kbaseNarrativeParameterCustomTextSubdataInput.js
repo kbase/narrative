@@ -32,9 +32,6 @@ define(['jquery', 'kbwidget', 'select2'],
                                     .on("change",function() { self.isValid() });
             
             self.$feedbackDiv = $("<span>");
-//                    .addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left')
-//                    .prop("title","required field");
-            
             
             var nameColClass  = "col-md-2";
             var inputColClass = "col-md-5";
@@ -89,7 +86,6 @@ define(['jquery', 'kbwidget', 'select2'],
             return this.getParameterValue();
         },
         loadState: function(state) {
-            console.log('----kbaseNarrativeParameterCustomTextSubdataInput: loadState', state);
             if (!state)
                 return;
             this.setParameterValue(state);

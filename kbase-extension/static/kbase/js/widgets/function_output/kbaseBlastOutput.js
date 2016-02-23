@@ -56,15 +56,15 @@ define(['jquery', 'd3', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'jq
 				var tabNames = tabData.names;
 				var tabIds = tabData.ids;
 
-				for(var i = 0; i < tabIds.length; i++){
-					var tabDiv = $('<div id="' + pref + tabIds[i] + '"> ');
+				tabIds.forEach(function(tabId, i){
+					var tabDiv = $('<div id="' + pref + tabId + '"> ');
 					tabPane.kbaseTabs('addTab', {
 						tab: tabNames[i],
 						content: tabDiv,
 						canDelete: false,
 						show: (i == 0)
 					});
-				}
+				});
 
 				////////////////////////////// Overview Tab //////////////////////////////
 
@@ -92,28 +92,47 @@ define(['jquery', 'd3', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'jq
 
 				$('#' + pref + 'contigs').append('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;" id="' + pref + 'contigs-table"/>');
 
+				var formatEvalue = function(value){
+					if(value.includes('e')){
+						var val = value.split('e');
+						return parseInt(val[0]) + 'e' + val[1];
+					}else if(value !== '0'){
+						return parseFloat(value).toFixed(4);
+					}else{
+						return value;
+					}
+				};
 				var genesData = [];
 
-				var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
-				for(var i = 0; i < hits.length; i++){
-					var d = hits[i];
-					var accession = d["Hit_accession"];
+				//var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
+				var query_len = parseInt(data.BlastOutput_iterations.Iteration[0]['Iteration_query-len']);
+				hits.forEach(function(d){
+					var hit_id = d["Hit_id"];
 					var hit_def = d["Hit_def"];
-					var hsps = d["Hit_hsps"].Hsp;
+					var hit_len = d["Hit_len"];
 
+					var hsps = d["Hit_hsps"].Hsp;
 					var hsp = hsps[0];
+
 					var evalue = hsp["Hsp_evalue"];
 					var identity = hsp["Hsp_identity"];
-					var positive = hsp["Hsp_positive"];
-					var score = hsp["Hsp_score"];
+					var align_len = hsp["Hsp_align-len"];
+					var query_to = hsp["Hsp_query-to"];
+					var query_from = hsp["Hsp_query-from"];
+					var hit_to = hsp["Hsp_hit-to"];
+					var hit_from = hsp["Hsp_hit-from"];
+					var bit_score = hsp["Hsp_bit-score"];
+
 					genesData.push({
-						gene_id: accession,
-						evalue: evalue,
+						gene_id: hit_id,
+						evalue: formatEvalue(evalue),
 						gene_annotation: hit_def,
-						identity: identity,
-						score: score
+						identity: Math.round(identity / align_len * 100) + '%',
+						query_cov: Math.round((Math.abs(query_to - query_from) + 1) / query_len * 100) + '%',
+						subject_cov: Math.round((Math.abs(hit_to - hit_from) + 1) / hit_len * 100) + '%',
+						score: bit_score
 					});
-				}
+				});
 
 				function geneEvents(){
 					//   $('.'+pref+'gene-click').unbind('click');
@@ -169,43 +188,38 @@ define(['jquery', 'd3', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'jq
 
 				};
 
-//		var genex = $('#'+pref+'genes');
 				var id = pref + 'genes';
 				var genesDivdata = document.getElementById(id);
 
 				var dataForGraphics = function(Hit){
-					var formattedhits = [{}];
-					for(var i = 0; i < Hit.length; i++){
-						for(var j = 0; j < Hit[i].Hit_hsps.Hsp.length; j++){
-							d = Hit[i].Hit_hsps.Hsp[j];
+					var formatted_hits = [{}];
+					Hit.forEach(function(oneHit, idx){
+						oneHit['Hit_hsps']['Hsp'].forEach(function(hsp){
 
-							var begin = d["Hsp_query-from"];
-							var end = d["Hsp_query-to"];
+							var begin = hsp["Hsp_query-from"];
+							var end = hsp["Hsp_query-to"];
 
 							if(begin > end){
 								var tmp = begin;
 								begin = end;
 								end = tmp;
 							}
-							var seqlength = end - begin;
-							var rownumber = i;
-							var bitscore = d["Hsp_bit-score"];
-							formattedhits.push({
+							formatted_hits.push({
 								"begin": begin,
-								"seqlength": seqlength,
-								"rownumber": rownumber,
-								"bitscore": bitscore,
-								"id": Hit[i].Hit_id
+								"seqlength": (end - begin),
+								"rownumber": idx,
+								"bitscore": hsp["Hsp_bit-score"],
+								"id": oneHit['Hit_id']
 							});
 
-						}
-					}
-					return (formattedhits);
+						});
+					});
+					return (formatted_hits);
 
 				};
 
 				var querylength = data.BlastOutput_iterations.Iteration[0]['Iteration_query-len'];
-				var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
+				//var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
 
 				//set up svg display for graphics alignment
 				var margin = {top: 0, right: 0, bottom: 0, left: 10},
@@ -295,9 +309,8 @@ define(['jquery', 'd3', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'jq
 					str += "Number of matches:" + num_matches + '<hr>';
 					al.append(str);
 
-					for(var counter = 0; counter < hsps.length; counter++){
-						hsp = hsps[counter];
-						matchnumber = counter + 1;
+					hsps.forEach(function(hsp, counter){
+						var match_number = counter + 1;
 						var align_len = hsp["Hsp_align-len"];
 						var bit_score = hsp["Hsp_bit-score"];
 						var evalue = hsp["Hsp_evalue"];
@@ -327,7 +340,7 @@ define(['jquery', 'd3', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'jq
 						var pctgap = (Number(gaps) / Number(align_len) ) * 100;
 
 						var str = '<div STYLE="font-family: monospace;  white-space: pre;">';
-						str += '</br>' + 'Range ' + matchnumber + ': ' + hit_from + ' to ' + hit_to + '</br>';
+						str += '</br>' + 'Range ' + match_number + ': ' + hit_from + ' to ' + hit_to + '</br>';
 						str += 'Score = ' + bit_score + '(' + score + '), ' + 'Expect = ' + evalue + '</br>';
 						str += 'Identities = ' + identity + '/' + align_len + ' (' + Math.round(pctid) + '%),';
 						str += 'Positives = ' + positive + '/' + align_len + ' (' + Math.round(pctpositive) + '%), ';
@@ -372,16 +385,16 @@ define(['jquery', 'd3', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'jq
 							i = end;
 						}
 
-					}
+					});
 				};
 
 				//text alignment tab and use of formatter function to add to the content of the tab
 
 				var al = $('#' + pref + 'alignments');
-				var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
-				for(var i = 0; i < hits.length; i++){
-					formatter(hits[i], al);
-				}
+				//var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
+				hits.forEach(function(hit){
+					formatter(hit, al);
+				});
 
 			};
 

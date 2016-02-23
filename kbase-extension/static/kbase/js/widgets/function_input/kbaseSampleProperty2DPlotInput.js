@@ -2,22 +2,27 @@
  * @author Pavel Novickov <psnovichkov@lbl.gov>
  * @public
  */
-define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
-    function( $ ) {
+define(['jquery', 
+        'narrativeConfig',
+        'kbaseNarrativeParameterCustomTextSubdataInput']
+    function( $, Config ) {
+    
+    var workspaceUrl = Config.url('workspace');
+    var loadingImage = Config.get('loading_gif');
     $.KBWidget({
-        name: "kbaseWellSample2DPlotInput",
+        name: "kbaseSampleProperty2DPlotInput",
         parent: "kbaseNarrativeMethodInput",
         
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
             isInSidePanel: false
         },
         
         
         inRefreshState: false,
         columnMetadata: {},        
-        substanceParams: [],        
+        samplePropertiesParams: [], 
+        
         STATE_NONE: 0,
         STATE_FETCHING: 1,
         STATE_READY: 2,
@@ -25,10 +30,9 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
         ws : null,
         initWsClient: function() {
             var self = this;
-            console.log('initWsClient.self', self);
             
             if(this.authToken){
-                this.ws = new Workspace(window.kbconfig.urls.workspace, {token: this.authToken()});
+                this.ws = new Workspace(workspaceUrl, {token: this.authToken()});
             } else {
                 error('not properly initialized - no auth token found')
             }
@@ -60,11 +64,11 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
             this.addParameterDiv(params[2], "kbaseNarrativeParameterCustomTextSubdataInput", $optionsDiv, self);
             
             
-            self.parameterIdLookup['input_well_sample_matrix'].addInputListener(function(){
+            self.parameterIdLookup['input_sample_property_matrix'].addInputListener(function(){
                 if(!self.inRefreshState){
                     self.state = self.STATE_NONE;
-                    self.parameterIdLookup['input_substance_x'].setParameterValue('');
-                    self.parameterIdLookup['input_substance_y'].setParameterValue('');
+                    self.parameterIdLookup['input_property_x'].setParameterValue('');
+                    self.parameterIdLookup['input_property_y'].setParameterValue('');
                 }
             });            
             
@@ -78,7 +82,7 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
             var $stepDiv = $('<div>');
             var $widget = $stepDiv[widgetName](
                 {
-                    loadingImage: self.options.loadingImage, 
+                    loadingImage: loadingImage, 
                     parsedParameterSpec: paramSpec, 
                     isInSidePanel: self.options.isInSidePanel,
                     dataModel: $dataModel
@@ -93,11 +97,10 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
                         
         fetchData: function(doneCallback){
             var self = this;
-            console.log('fetchData.self', self);
             if(self.state == self.STATE_NONE){
                 $(document).trigger('workspaceQuery.Narrative', 
                     function(ws_name) {
-                        var matrixId = self.getParameterValue( 'input_well_sample_matrix' );
+                        var matrixId = self.getParameterValue( 'input_sample_property_matrix' );
                         if(!matrixId) return;
                     
                         var query = [];
@@ -108,33 +111,10 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
                         self.ws.get_object_subset(query,
                             function(result) {
                                 self.columnMetadata = result[0].data.metadata.column_metadata;
-                                var substances = {};
-                                for(var i in self.columnMetadata){
-                                    var cm = self.columnMetadata[i];
-                                    var averageColumn = false;
-                                    var substance = "";
-                                    
-                                    for(var j in cm){
-                                        var propValue = cm[j];
-                                        if( propValue.entity == 'Measurement' && propValue.property_name == 'Substance' ){
-                                            substance = propValue.property_value;
-                                        }
-                                        if(propValue.entity == 'Measurement' && propValue.property_name == 'ValueType' && propValue.property_value == 'Average'){
-                                            averageColumn = true;
-                                        } 
-                                    }
-                                    if(!averageColumn) continue;
-                                    substances[substance] = substance;
-                                }
-
-                                self.substanceParams = [];
-                                for(var substance in substances){
-                                    self.substanceParams.push({id: substance, text: substance});
-                                }
-                                self.substanceParams.sort(function(a, b) { return a.text > b.text ? 1 : -1});
+                                self.samplePropertiesParams = self.getSampleProperties(self.columnMetadata);
 
                                 self.state = self.STATE_READY;
-                                if(doneCallback) { doneCallback(self.substanceParams); }
+                                if(doneCallback) { doneCallback(self.samplePropertiesParams); }
                             },
                             function(error) {
                                 console.error(error);
@@ -143,9 +123,49 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
                     }
                 );
             } else if(self.state == self.STATE_READY){
-                if(doneCallback) { doneCallback(self.substanceParams); }
+                if(doneCallback) { doneCallback(self.samplePropertiesParams); }
             }           
         },  
+        
+        
+        
+        getSampleProperties: function(columnsMetadata){
+            var samplePorpertiesHash = {};
+            for(var columnId in columnsMetadata){
+                var columnMetadata = columnsMetadata[columnId];
+                
+                var seriesID = null;
+                var propName = null;
+                
+                for(var i in columnMetadata){
+                    var pv = columnMetadata[i];
+                    
+                    if( pv.category == 'DataSeries' && pv.property_name == 'SeriesID'){
+                        seriesID = pv.property_value;
+                    } else if( pv.category == 'Property' && pv.property_name == 'Name'){
+                        propName = pv.property_value;
+                    }
+                }
+
+                if(seriesID != null && propName != null){
+                    samplePorpertiesHash[seriesID] = propName;
+                }
+            }
+            
+            var sampleProperties = [];
+            for(var seriesID in samplePorpertiesHash){
+                sampleProperties.push({
+                    id: seriesID,
+                    text: samplePorpertiesHash[seriesID]
+                });
+            }
+            
+            sampleProperties.sort(function(a, b) { return a.text > b.text ? 1 : -1});            
+
+            return sampleProperties;
+        },
+        
+        
         refresh: function() {
             this.inRefreshState = true;
             if (this.parameters) {

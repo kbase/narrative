@@ -2,15 +2,21 @@
  * @author Pavel Novickov <psnovichkov@lbl.gov>
  * @public
  */
-define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
-    function( $ ) {
+define(['jquery', 
+        'narrativeConfig',
+        'kbaseNarrativeMethodInput', 
+        'kbaseNarrativeParameterCheckboxInput',
+        'kbaseNarrativeParameterCustomTextSubdataInput'],
+    function( $, Config ) {
+    
+    var workspaceUrl = Config.url('workspace');
+    var loadingImage = Config.get('loading_gif');
     $.KBWidget({
-        name: "kbaseWellSampleHistogramInput",
+        name: "kbaseSamplePropertyHistogramInput",
         parent: "kbaseNarrativeMethodInput",
         
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
             isInSidePanel: false
         },
         
@@ -25,10 +31,9 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
         ws : null,
         initWsClient: function() {
             var self = this;
-            console.log('initWsClient.self', self);
-            
+
             if(this.authToken){
-                this.ws = new Workspace(window.kbconfig.urls.workspace, {token: this.authToken()});
+                this.ws = new Workspace(workspaceUrl, {token: this.authToken()});
             } else {
                 error('not properly initialized - no auth token found')
             }
@@ -57,12 +62,14 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
                         
             this.addParameterDiv(params[0], "kbaseNarrativeParameterTextInput", $optionsDiv);
             this.addParameterDiv(params[1], "kbaseNarrativeParameterCustomTextSubdataInput", $optionsDiv, self);
+            this.addParameterDiv(params[2], "kbaseNarrativeParameterCheckboxInput", $optionsDiv);
+            this.addParameterDiv(params[3], "kbaseNarrativeParameterCheckboxInput", $optionsDiv);
             
             
-            self.parameterIdLookup['input_well_sample_matrix'].addInputListener(function(){
+            self.parameterIdLookup['input_sample_property_matrix'].addInputListener(function(){
                 if(!self.inRefreshState){
                     self.state = self.STATE_NONE;
-                    self.parameterIdLookup['input_wells'].setParameterValue('');
+                    self.parameterIdLookup['input_samples'].setParameterValue('');
                 }
             });            
             
@@ -76,7 +83,7 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
             var $stepDiv = $('<div>');
             var $widget = $stepDiv[widgetName](
                 {
-                    loadingImage: self.options.loadingImage, 
+                    loadingImage: loadingImage, 
                     parsedParameterSpec: paramSpec, 
                     isInSidePanel: self.options.isInSidePanel,
                     dataModel: $dataModel
@@ -95,7 +102,7 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
             if(self.state == self.STATE_NONE){
                 $(document).trigger('workspaceQuery.Narrative', 
                     function(ws_name) {
-                        var matrixId = self.getParameterValue( 'input_well_sample_matrix' );
+                        var matrixId = self.getParameterValue( 'input_sample_property_matrix' );
                         if(!matrixId) return;
                     
                         var query = [];
@@ -111,7 +118,7 @@ define(['jquery', 'kbaseNarrativeParameterCustomTextSubdataInput'],
                                     var rm = self.rowMetadata[i];
                                     for(var j in rm){
                                         var propValue = rm[j];
-                                        if( propValue.entity == 'Sample' && propValue.property_name == 'Well' ){
+                                        if( propValue.category == 'Sample' && propValue.property_name == 'Name' ){
                                             wellIds[propValue.property_value] = propValue.property_value;
                                         }
                                     }

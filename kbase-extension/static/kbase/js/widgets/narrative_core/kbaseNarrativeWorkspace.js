@@ -1995,6 +1995,10 @@ function($,
                 if (!widget) {
                     if (method.widgets && method.widgets.output) {
                         widget = method.widgets.output;
+                        // if the widget is set to 'no-display', then exit without showing anything
+                        if(widget === 'no-display') {
+                            return;
+                        }
                     }
                     else {
                         widget = this.defaultOutputWidget;

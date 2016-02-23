@@ -4,7 +4,7 @@
  */
 define(['jquery', 
         'narrativeConfig',
-        'kbaseNarrativeParameterCustomTextSubdataInput']
+        'kbaseNarrativeParameterCustomTextSubdataInput'],
     function( $, Config ) {
     
     var workspaceUrl = Config.url('workspace');

@@ -375,6 +375,13 @@ class Catalog(object):
                           [params], json_rpc_context)
         return resp[0]
   
+    def get_exec_aggr_table(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method get_exec_aggr_table: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.get_exec_aggr_table',
+                          [params], json_rpc_context)
+        return resp[0]
+  
     def set_client_group(self, group, json_rpc_context = None):
         if json_rpc_context and type(json_rpc_context) is not dict:
             raise ValueError('Method set_client_group: argument json_rpc_context is not type dict as required.')

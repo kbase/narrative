@@ -83,7 +83,6 @@
  * @static
  */
 define(['jquery',
-    'bluebird',
     'base/js/namespace',
     'base/js/security',
     'base/js/utils',
@@ -104,7 +103,6 @@ define(['jquery',
     'kbaseNarrativeCellMenu'
 ],
     function ($,
-        Promise,
         Jupyter,
         security,
         utils,

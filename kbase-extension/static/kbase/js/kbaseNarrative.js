@@ -21,6 +21,7 @@ define([
     'base/js/events',
     'notebook/js/notebook',
     'util/display',
+    'util/bootstrapDialog',
     'jquery-nearest'
 ], 
 function($,
@@ -36,8 +37,9 @@ function($,
          kbaseCellToolbar,
          events,
          Notebook,
-         DisplayUtil) {
-    "use strict";
+         DisplayUtil,
+         BootstrapDialog) {
+    'use strict';
 
     /**
      * @constructor
@@ -53,7 +55,7 @@ function($,
      * specific piece of functionality. See Narrative.prototype.saveNarrative below.
      */
     var Narrative = function() {
-        this.maxNarrativeSize = "4 MB";
+        this.maxNarrativeSize = "10 MB";
         this.narrController = null;
         this.readonly = false; /* whether whole narrative is read-only */
         this.authToken = null;
@@ -159,38 +161,26 @@ function($,
         var $upgradeBtn = $('<button type="button" data-dismiss="modal">')
                           .addClass('btn btn-success')
                           .append('Update and Reload')
-                          .click($.proxy(function(e) {
+                          .click(function(e) {
                               this.updateVersion();
-                          }, this));
-        var $upgradeModal = $('<div tabindex=-1 role="dialog" aria-hidden="true">')
-                            .addClass('modal fade')
-                            .append($('<div>')
-                                    .addClass('modal-dialog')
-                                    .append($('<div>')
-                                        .addClass('modal-content')
-                                        .append($('<div>')
-                                                .addClass('modal-header')
-                                                .append($('<h4>')
-                                                        .addClass('modal-title')
-                                                        .attr('id', 'kb-version-label')
-                                                        .append('New Narrative Version available!')))
-                                        .append($('<div>')
-                                                .addClass('modal-body')
-                                                .append($('<span>').append('Your current version of the Narrative is <b>' + this.currentVersion + '</b>. Version '))
-                                                .append($newVersion)
-                                                .append($('<span>').append(' is now available.<br><br>' + 
-                                                                           'See <a href="' + Config.get('release_notes') + '" target="_blank">here</a> for current release notes.<br>' +
-                                                                           'Click "Update and Reload" to reload with the latest version!<br><br>' + 
-                                                                           '<b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b>')))
-                                        .append($('<div>')
-                                                .addClass('modal-footer')
-                                                .append($('<div>')
-                                                        .append($cancelBtn)
-                                                        .append($upgradeBtn)))));
+                          }.bind(this));
+
+        var upgradeDialog = new BootstrapDialog({
+            title: 'New Narrative version available!',
+            body: $('<div>')
+                  .append($('<span>').append('Your current version of the Narrative is <b>' + this.currentVersion + '</b>. Version '))
+                  .append($newVersion)
+                  .append($('<span>').append(' is now available.<br><br>' + 
+                                             'See <a href="' + Config.get('release_notes') + '" target="_blank">here</a> for current release notes.<br>' +
+                                             'Click "Update and Reload" to reload with the latest version!<br><br>' + 
+                                             '<b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b>')),
+            buttons: [$cancelBtn, $upgradeBtn]
+        });
         $('#kb-update-btn').click(function(event) {
-            $upgradeModal.modal('show');
+            upgradeDialog.show();
         });
         this.checkVersion($newVersion);
+
         // ONLY CHECK AT STARTUP FOR NOW.
         // setInterval(function() {
         //     self.checkVersion($newVersion);
@@ -307,6 +297,10 @@ function($,
         });
         $('#notebook').append($versionModal);
     };
+
+    // Narrative.prototype.initShutdownDialog = function() {
+
+    // };
 
     Narrative.prototype.saveFailed = function(event, data) {
         $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
@@ -436,7 +430,8 @@ function($,
             setTimeout(function() { location.reload(true); }, 200);
         })
         .catch(function(error) {
-            alert('Unable to update your Narrative session\nError: ' + error.statusText + ' ' + error);
+            alert('Unable to update your Narrative session\nError: ' + error.status + ': ' + error.statusText);
+            console.error(error);
         });
     };
 

@@ -48,7 +48,7 @@ function($, Config, TimeFormat) {
             this.$menu = $('<ul>')
                 .addClass('dropdown-menu dropdown-menu-right');
             
-            if (Config.debug) {
+            if (Config.get('dev_mode')) {
                 this.addMenuItem({
                     icon: 'fa fa-code',
                     text: 'View Job Submission',
@@ -66,8 +66,8 @@ function($, Config, TimeFormat) {
                         } else {
                             newCell.set_text('job_info=' + stackTrace);
                         }
-                    }
-                }.bind(this));
+                    }.bind(this)
+                });
             }
 
             this.addMenuItem({

@@ -112,7 +112,7 @@ define(['jquery',
             
             var getJobStateCmd  = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'import json\n'+
-                                  //'print json.dumps({"finished":1})\n'; 
+                                  //'print json.dumps(["56ce1841e4b0f08f9eb9581e", "msneddon", "complete", "2016-02-24T20:53:31+0000", "done", "2016-02-24T20:53:49+0000", None, None, "none", None, 1, 0, "AWE job for MegaHit.run_megahit", {}])\n';
                                   'job_manager = KBjobManager()\n' +
                                   'print json.dumps(job_manager.proxy_client().get_job_info("' + self.job_id + '"))\n';
 
@@ -300,11 +300,16 @@ define(['jquery',
             var self = this;
             self.loading(false);
 
-            if(!build_state.finished) {
-                setTimeout(function(event) {
-                    self.getLogAndState(self.last_log_line);
-                }, 1000);
+            if(!build_state) return;
+            if(build_state.length>=11) {
+                if(!build_state[10]) {
+                    setTimeout(function(event) {
+                        self.getLogAndState(self.last_log_line);
+                    }, 1000);
+                }
             }
+
+            
 
             /*if (state === 'error') {
                 self.$registration_state_td.empty()

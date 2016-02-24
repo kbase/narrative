@@ -51,6 +51,10 @@ class KBjobManager():
 
         return self.ujs_proxy
 
+    def proxy_client(self, token=None):
+        return self.__proxy_client(token)
+
+
     def register_job(self, job_id):
         """This really just shares an existing job with narrativejoblistener.
         Propagates its exception if unsuccessful

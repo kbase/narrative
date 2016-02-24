@@ -482,8 +482,8 @@ class LifecycleSubject(object):
             # they're the only ones with a colon
             try:
                 if job_id.find(':') >= 0:
-                    job_id = job_id.split(':')[1]
-                job_manager.register_job(job_id)
+                    unprefixed_job_id = job_id.split(':')[1]
+                job_manager.register_job(unprefixed_job_id)
             except Exception as e:
                 to_log = type(e).__name__ + ': ' + str(e) + '\n' + traceback.format_exc()
                 self._event('debug', to_log)
@@ -500,8 +500,8 @@ class LifecycleSubject(object):
             self._event('debug', app_id)
             try:
                 if app_id.find(':') >= 0:
-                    app_id = app_id.split(':')[1]
-                job_manager.register_job(app_id)
+                    unprefixed_app_id = app_id.split(':')[1]
+                job_manager.register_job(unprefixed_app_id)
             except Exception as e:
                 # It should be logged somehow 
                 to_log = type(e).__name__ + ': ' + str(e) + '\n' + traceback.format_exc()

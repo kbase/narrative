@@ -171,7 +171,7 @@ def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, par
         appState = None
         if is_async:
             # It's an SDK method, we use narrative proxy user to deal with sharing
-            ujs_proxy = job_manager.__proxy_client()
+            ujs_proxy = job_manager.proxy_client()
             appState = ujs_proxy.check_app_state(method_job_id)
         else:  # If it's NJS script method then we cannot use narrative proxy user
             appState = njsClient.check_app_state(method_job_id)

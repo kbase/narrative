@@ -7,6 +7,7 @@ define(['jquery',
         'kbaseNarrativeSharePanel', 
         'bootstrap'], function($, Config) {
 'use strict';
+
 $(document).on('workspaceIdQuery.Narrative', function(e, callback) {
     if (callback) {
         callback(workspaceId);
@@ -66,7 +67,7 @@ $('#kb-add-md-cell').click(function() {
 });
 
 $('#kb-side-toggle-in').click(function() {
-  Jupyter.narrative.toggleSidePanel();
+    Jupyter.narrative.toggleSidePanel();
 });
 
 /**

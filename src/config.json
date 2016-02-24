@@ -72,7 +72,7 @@
     "git_commit_hash": "abed9f9", 
     "git_commit_time": "Fri Feb 5 17:42:04 2016 -0800", 
     "loading_gif": "/narrative/static/kbase/images/ajax-loader.gif", 
-    "mode": "production", 
+    "dev_mode": true,
     "name": "KBase Narrative", 
     "next": {
         "awe": "https://next.kbase.us/services/awe-api", 
@@ -148,5 +148,5 @@
         "showDelay": 750
     }, 
     "use_local_widgets": true, 
-    "version": "2.0.3"
+    "version": "2.0.4"
 }

@@ -34,6 +34,7 @@ function(configSet,
         git_commit_time: configSet.git_commit_time,
         release_notes:   configSet.release_notes,
         mode:            configSet.mode,
+        dev_mode:        configSet.dev_mode,
         tooltip:         configSet.tooltip,
         icons:           iconsSet,
         workspaceId:     workspaceId,
@@ -42,6 +43,7 @@ function(configSet,
     };
 
     var debug = config.mode === "debug";
+    config.debug = debug;
 
     // Add a remote UI-common to the Require.js config
     require.config({
@@ -106,6 +108,6 @@ function(configSet,
         config: config,
         url: url,
         get: get,
-        debug: debug
+        debug: debug,
     };
 });

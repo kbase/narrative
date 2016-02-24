@@ -83,6 +83,7 @@
  * @static
  */
 define(['jquery',
+    'bluebird',
     'base/js/namespace',
     'base/js/security',
     'base/js/utils',
@@ -103,6 +104,7 @@ define(['jquery',
     'kbaseNarrativeCellMenu'
 ],
     function ($,
+        Promise,
         Jupyter,
         security,
         utils,
@@ -638,6 +640,7 @@ define(['jquery',
                                     d.modal('hide');
                                     that.notebook.metadata.name = new_name;
                                     that.element.find('span.filename').text(new_name);
+                                    Jupyter.narrative.saveNarrative();
                                 }, function (error) {
                                 d.find('.rename-message').text(error.message || 'Unknown error');
                                 d.find('input[type="text"]').prop('disabled', false).focus().select();

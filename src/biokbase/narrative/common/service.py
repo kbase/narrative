@@ -481,6 +481,7 @@ class LifecycleSubject(object):
             # 'njs:' or 'method:' - either way
             # they're the only ones with a colon
             try:
+                unprefixed_job_id = job_id
                 if job_id.find(':') >= 0:
                     unprefixed_job_id = job_id.split(':')[1]
                 job_manager.register_job(unprefixed_job_id)
@@ -499,6 +500,7 @@ class LifecycleSubject(object):
 
             self._event('debug', app_id)
             try:
+                unprefixed_app_id = app_id
                 if app_id.find(':') >= 0:
                     unprefixed_app_id = app_id.split(':')[1]
                 job_manager.register_job(unprefixed_app_id)

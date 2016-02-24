@@ -559,7 +559,7 @@ define(['jquery',
             var $cellNode = $(this.element);
             var elemsToToggle = [
                 $cellNode.find('.input .input_area'),
-                $cellNode.find('.widget-area'),
+                // $cellNode.find('.widget-area'),
                 $cellNode.find('.output_wrapper')
             ];
             switch (this.getCellState('toggleState', 'unknown')) {

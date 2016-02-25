@@ -129,10 +129,10 @@ define(['jquery',
                 },
                 iopub: {
                     output: function(content) { 
-                        console.log('output',content);
+                        //console.log('output',content);
                         // parse the result here and handle it
                         state = JSON.parse(content.content.text)
-                        console.log('parsed job info:',state);
+                        //console.log('parsed job info:',state);
                         self.updateBuildState(state);
                         self.updateLogData(skip);
                     },
@@ -233,10 +233,10 @@ define(['jquery',
                 },
                 iopub: {
                     output: function(content) { 
-                        console.log('output',content);
+                        //console.log('output',content);
                         // parse the result here and handle it
                         build_log = JSON.parse(content.content.text)
-                        console.log('parsed log:',build_log);
+                        //console.log('parsed log:',build_log);
 
                         // make sure our log array is big enough
                         var log_length = skip+build_log.lines.length;
@@ -305,7 +305,7 @@ define(['jquery',
                 if(!build_state[10]) {
                     setTimeout(function(event) {
                         self.getLogAndState(self.last_log_line);
-                    }, 1000);
+                    }, 2000);
                 }
             }
 

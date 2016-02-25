@@ -253,7 +253,7 @@ require.config({
 
         'd3'                                    : 'ext_components/d3/d3.min',//  'kbase/js/ui-common/ext/d3/d3.v3.min',
         'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer.min',
-        'handlebars'                            : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
+        'handlebars'                            : 'ext_components/handlebars/handlebars', //kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
         'kbwidget'                              : 'kbase/js/ui-common/src/kbwidget',
         'kbaseAccordion'                        : 'kbase/js/ui-common/src/widgets/kbaseAccordion',
         'kbaseAuthenticatedWidget'              : 'kbase/js/ui-common/src/widgets/kbaseAuthenticatedWidget',

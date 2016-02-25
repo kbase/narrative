@@ -3,18 +3,21 @@
  * @public
  */
 define(['jquery', 
-    'kbaseNarrativeParameterCustomTextSubdataInput',
-    'kbaseNarrativeParameterCustomButtonInput',
-    'kbaseNarrativeParameterCustomDropdownGroupInput'
+        'narrativeConfig',
+        'kbaseNarrativeParameterCustomTextSubdataInput',
+        'kbaseNarrativeParameterCustomButtonInput',
+        'kbaseNarrativeParameterCustomDropdownGroupInput'
        ],
-    function( $ ) {
+    function( $, Config ) {
+    
+    var workspaceUrl = Config.url('workspace');
+    var loadingImage = Config.get('loading_gif');
     $.KBWidget({
         name: "kbaseGrowthParamsPlotInput",
         parent: "kbaseNarrativeMethodInput",
         
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
             isInSidePanel: false
         },
         
@@ -32,7 +35,7 @@ define(['jquery',
             console.log('initWsClient.self', self);
             
             if(this.authToken){
-                this.ws = new Workspace(window.kbconfig.urls.workspace, {token: this.authToken()});
+                this.ws = new Workspace(workspaceUrl, {token: this.authToken()});
             } else {
                 error('not properly initialized - no auth token found')
             }
@@ -49,10 +52,8 @@ define(['jquery',
         
         render: function(){
             var self = this;
-            console.log('render.self', self);
             
             self.initWsClient();
-            
             
             this.parameters = [];
             this.parameterIdLookup = {};
@@ -69,7 +70,7 @@ define(['jquery',
             this.addParameterDiv(params[4], "kbaseNarrativeParameterCustomDropdownGroupInput", $optionsDiv, self);
             
             
-            self.parameterIdLookup['input_growth_matrix'].addInputListener(function(){
+            self.parameterIdLookup['input_growth_parameters'].addInputListener(function(){
                 if(!self.inRefreshState){
                     self.state = self.STATE_NONE;
                     self.parameterIdLookup['input_condition_param'].setParameterValue('');
@@ -95,7 +96,7 @@ define(['jquery',
             var $stepDiv = $('<div>');
             var $widget = $stepDiv[widgetName](
                 {
-                    loadingImage: self.options.loadingImage, 
+                    loadingImage: loadingImage, 
                     parsedParameterSpec: paramSpec, 
                     isInSidePanel: self.options.isInSidePanel,
                     dataModel: $dataModel
@@ -141,7 +142,7 @@ define(['jquery',
                     var paramFound = false;
                     for(var j in cMetadata){
                         var propValue = cMetadata[j];
-                        if(propValue.entity != 'Condition') continue;
+                        if(propValue.category != 'Condition') continue;
                         if(propValue.property_name == mainParam){
                             paramFound = true;
                             break;
@@ -158,7 +159,7 @@ define(['jquery',
                 // Collect other params
                for(var j in cMetadata){
                     var propValue = cMetadata[j];
-                    if(propValue.entity != 'Condition') continue;
+                    if(propValue.category != 'Condition') continue;
                    
                     var isMainParam = false;
                     for(var k in mainParams){
@@ -238,46 +239,61 @@ define(['jquery',
             if(self.state == self.STATE_NONE){
                 $(document).trigger('workspaceQuery.Narrative', 
                     function(ws_name) {
-                        var matrixId = self.getParameterValue( 'input_growth_matrix' );
-                        if(!matrixId) return;
                     
-                        var query = [];
-                        query.push( {ref:ws_name+'/'+matrixId, included: ["metadata/column_metadata"]} );
+                        var growthParametersID = self.getParameterValue( 'input_growth_parameters' );
+                        var refGrowthParams = {ref : ws_name+'/'+growthParametersID}
+                        self.ws.get_objects([refGrowthParams], 
+                            function(data) {
+                                self.growthParams = data[0].data;
+                                var matrixRef = self.growthParams.matrix_id;
+                                if( !matrixRef ) return;
+                    
+                                var query = [];
+                                query.push( {ref: matrixRef, included: ["metadata/column_metadata"]} );
 
+                                self.state = self.STATE_FETCHING;                    
+                                self.ws.get_object_subset(query,
+                                    function(result) {
+                                        self.columnMetadata = result[0].data.metadata.column_metadata;
+                                        var conditions = self.getConditions(self.columnMetadata);
 
-                        self.state = self.STATE_FETCHING;                    
-                        self.ws.get_object_subset(query,
-                            function(result) {
-                                self.columnMetadata = result[0].data.metadata.column_metadata;
-                                var conditions = {};
-                                for(var i in self.columnMetadata){
-                                    var cm = self.columnMetadata[i];
-                                    for(var j in cm){
-                                        var propValue = cm[j];
-                                        if(propValue.entity != 'Condition') continue;
-                                        conditions[propValue.property_name] = propValue.property_name;
+                                        self.conditionParams = [];
+                                        for(var conditionParam in conditions){
+                                            self.conditionParams.push({id: conditionParam, text: conditionParam});
+                                        }
+
+                                        self.state = self.STATE_READY;
+                                        if(doneCallback) { doneCallback(self.conditionParams); }
+                                    },
+                                    function(error) {
+                                        console.error(error);
                                     }
-                                }
-
-                                self.conditionParams = [];
-                                for(var i in conditions){
-                                    var conditionParam = conditions[i];
-                                    self.conditionParams.push({id: conditionParam, text: conditionParam});
-                                }
-
-                                self.state = self.STATE_READY;
-                                if(doneCallback) { doneCallback(self.conditionParams); }
+                                );                        
                             },
-                            function(error) {
+                            function(error){
                                 console.error(error);
                             }
-                        );                        
+                        );
                     }
                 );
             } else if(self.state == self.STATE_READY){
                 if(doneCallback) { doneCallback(self.conditionParams); }
             }           
         },  
+        
+        getConditions: function(columnsMetadata){
+            var conditions = {};
+            for(var i in columnsMetadata){
+                var columnMetadata = columnsMetadata[i];
+                for(var j in columnMetadata){
+                    var pv = columnMetadata[j];
+                    if(pv.category != 'Condition') continue;
+                    conditions[pv.property_name] = true;
+                }
+            }
+            return conditions;
+        },
+        
         refresh: function() {
             this.inRefreshState = true;
             if (this.parameters) {

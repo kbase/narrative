@@ -239,6 +239,7 @@ function ($, _, Promise, Config, DisplayUtil) {
                                this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
                                this.$searchInput.focus();
                            }.bind(this)));
+
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-refresh">')
@@ -274,19 +275,23 @@ function ($, _, Promise, Config, DisplayUtil) {
                                         })
                                         .append('R')
             this.versionState = 'R';
-            this.addButton(this.$toggleVersionBtn
-                                .click(function(e) {
-                                    var versionTag = 'release';
-                                    if(this.versionState=='R') { this.versionState='B'; versionTag='beta'; }
-                                    else if(this.versionState=='B') { this.versionState='D'; versionTag='dev'; }
-                                    else if(this.versionState=='D') { this.versionState='R'; versionTag='release'; }
-                                    this.$toggleVersionBtn.html(this.versionState);
-                                    this.refreshFromService(versionTag);
 
-                                    if(this.appCatalog) {
-                                        this.appCatalog.setTag(versionTag);
-                                    }
-                                }.bind(this)));
+            console.log(Config.get('dev_mode'));
+            if (Config.get('dev_mode')) {
+                this.addButton(this.$toggleVersionBtn
+                                    .click(function(e) {
+                                        var versionTag = 'release';
+                                        if(this.versionState=='R') { this.versionState='B'; versionTag='beta'; }
+                                        else if(this.versionState=='B') { this.versionState='D'; versionTag='dev'; }
+                                        else if(this.versionState=='D') { this.versionState='R'; versionTag='release'; }
+                                        this.$toggleVersionBtn.html(this.versionState);
+                                        this.refreshFromService(versionTag);
+
+                                        if(this.appCatalog) {
+                                            this.appCatalog.setTag(versionTag);
+                                        }
+                                    }.bind(this)));
+            }
 
 
 
@@ -320,6 +325,10 @@ function ($, _, Promise, Config, DisplayUtil) {
                     this.$slideoutBtn.tooltip('hide');
                     this.trigger('hideGalleryPanelOverlay.Narrative');
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$appCatalogContainer);
+                    // Need to rerender (not refresh data) because in some states, the catalog browser looks to see
+                    // if things are hidden or not. When this panel is hidden, then refreshed, all sections will
+                    // think they have no content and nothing will display.
+                    this.appCatalog.rerender();
                 }.bind(this));
 
             this.addButton(this.$slideoutBtn);

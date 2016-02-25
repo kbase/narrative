@@ -559,7 +559,7 @@ define(['jquery',
             var $cellNode = $(this.element);
             var elemsToToggle = [
                 $cellNode.find('.input .input_area'),
-                $cellNode.find('.widget-area'),
+                // $cellNode.find('.widget-area'),
                 $cellNode.find('.output_wrapper')
             ];
             switch (this.getCellState('toggleState', 'unknown')) {
@@ -638,6 +638,7 @@ define(['jquery',
                                     d.modal('hide');
                                     that.notebook.metadata.name = new_name;
                                     that.element.find('span.filename').text(new_name);
+                                    Jupyter.narrative.saveNarrative();
                                 }, function (error) {
                                 d.find('.rename-message').text(error.message || 'Unknown error');
                                 d.find('input[type="text"]').prop('disabled', false).focus().select();

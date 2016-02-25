@@ -5,15 +5,20 @@
  * The dataModel should have fetchData method accepting doneCallback method as a parameter.
  *
  */
-define(['jquery', 'kbwidget', 'select2'],
-    function( $ ) {
+define(['jquery', 
+        'narrativeConfig',
+        'kbwidget', 
+        'select2'],
+    function( $, Config ) {
+    
+    var workspaceUrl = Config.url('workspace');
+    var loadingImage = Config.get('loading_gif');
     
     $.KBWidget({
         name: "kbaseNarrativeParameterCustomTextSubdataInput",
         parent: "kbaseNarrativeParameterInput",  
         version: "1.0.0",
         options: {
-            loadingImage: "../images/ajax-loader.gif",
             isInSidePanel: false,
             dataModel: null
         },
@@ -32,9 +37,6 @@ define(['jquery', 'kbwidget', 'select2'],
                                     .on("change",function() { self.isValid() });
             
             self.$feedbackDiv = $("<span>");
-//                    .addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left')
-//                    .prop("title","required field");
-            
             
             var nameColClass  = "col-md-2";
             var inputColClass = "col-md-5";
@@ -89,7 +91,6 @@ define(['jquery', 'kbwidget', 'select2'],
             return this.getParameterValue();
         },
         loadState: function(state) {
-            console.log('----kbaseNarrativeParameterCustomTextSubdataInput: loadState', state);
             if (!state)
                 return;
             this.setParameterValue(state);

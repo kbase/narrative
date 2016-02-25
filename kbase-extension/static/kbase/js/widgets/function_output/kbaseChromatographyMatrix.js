@@ -1,332 +1,174 @@
-
-
-define(['jquery', 
-        'plotly',        
+define([
+        'jquery', 
         'kbwidget', 
-        'kbaseAuthenticatedWidget', 
+        'kbaseMatrix2DAbstract', 
         'kbaseTabs',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap'
-        ], function($, Plotly) {
+        'jquery-dataTables-bootstrap' 
+        ], function($) {
     $.KBWidget({
         name: 'kbaseChromatographyMatrix',
-        parent: 'kbaseAuthenticatedWidget',
+        parent: 'kbaseMatrix2DAbstract',
         version: '1.0.0',
-        options: {
-            workspaceID: null,
-
-            chromatographyMatrixID: null,
-
-            // Service URL: should be in window.kbconfig.urls.
-            workspaceURL: window.kbconfig.urls.workspace,
-            loadingImage: "static/kbase/images/ajax-loader.gif"
-        },
-
-        // Prefix for all div ids
-        pref: null,
-
-        // KBaseFeatureValue client
-        wsClient: null,
-
-        // Matrix set stat
-        chromatographyhMatrix: null,
-
-        init: function(options) {
-            this._super(options);
-            this.pref = this.uuid();
-
-            // Create a message pane
-            this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);       
-
-            return this;
-        },
-
-        loggedInCallback: function(event, auth) {
-
-           // Build a client
-            this.wsClient = new Workspace(this.options.workspaceURL, auth);
-
-            // Let's go...
-            this.loadAndRender();           
-            return this;
-        },
-
-        loggedOutCallback: function(event, auth) {
-            this.isLoggedIn = false;
-            return this;
-        },
-
-        setTestParameters: function(){
-            // this.options.workspaceID = '645';
-            // this.options.chromatographyhMatrixID = '9';
-        },
-
-
-        loadAndRender: function(){
-            var self = this;
-            self.loading(true);
-
-//            self.setTestParameters();
-            var ref = self.buildObjectIdentity(this.options.workspaceID, this.options.chromatographyMatrixID);
-            self.wsClient.get_objects([ref], 
-                function(data) {
-
-                    self.chromatographyhMatrix = data[0].data;
-                    console.log("chromatographyhMatrix",self.chromatographyhMatrix);
-                    self.loading(false);
-                    self.render();
-                },
-                function(error){
-                    self.clientError(error);
-                }
-            );
-        },
-
+         
         render: function(){
-
-            // var $overviewContainer = $("<div/>");
-            // this.$elem.append( $overviewContainer );
-            // this.buildOverviewDiv( $overviewContainer );
-
-            // // Separator
-            // this.$elem.append( $('<div style="margin-top:1em"></div>') );
-
-            var $vizContainer = $("<div/>");
-            this.$elem.append( $vizContainer );
-            this.buildWidget( $vizContainer );            
-        },
-
-        buildOverviewDiv: function($containerDiv){
-            var self = this;
-            var pref = this.pref;
-
-            var $overviewSwitch = $("<a/>").html('[Selected genes]');
-            $containerDiv.append($overviewSwitch);
-
-            $overviewSwitch.click(function(){
-                $overvewContainer.toggle();
-            });
-        },
-      
-        // To be overriden
-        buildWidget: function($containerDiv){
+            var pref = self.pref;
             
-            var self = this;
-            var data = [];
-            var timeUnit = "";
+            // Prepare data for visualization
+            var timePoints = this.getTimePoints(this.matrix);            
+            var substances = this.buildSubstances(this.matrix, timePoints);
             
-            var rowIds = self.chromatographyhMatrix.data.row_ids;
-            var rowsMetadata = self.chromatographyhMatrix.metadata.row_metadata;
-            var columnIds = self.chromatographyhMatrix.data.col_ids;
-            var coulmnsMetadata = self.chromatographyhMatrix.metadata.column_metadata;            
-            var values = self.chromatographyhMatrix.data.values;
+            var timeSeriesSummary = this.getNumericProperyStat(this.matrix.metadata.row_metadata, 'TimeSeries');
+//            var substancesSummary = this.getSubstancesSummary(substances);
+            
+            this.loading(false);
+            var $container = $("<div/>");
+            this.$elem.append( $container );        
+            
+            // Create a tabPane for all tabs
+            var $tabPane = $('<div>')
+                .attr( 'id', pref+'tab-content')
+                .appendTo($container);
+            $tabPane.kbaseTabs({canDelete : true, tabs : []});   
 
-                        
-            for(var cIndex in columnIds) {
-                var cId = columnIds[cIndex];
-                var columnMetadata = coulmnsMetadata[cId];
-                
-                // Build xValues. It should be time series and the values should be in row metadata
-                var xValues = [];                
-                for(var rIndex in rowIds){
-                    var rId = rowIds[rIndex];
-                    var rowMetadata = rowsMetadata[rId];                    
-                    for (var i in rowMetadata){
-                        var propValue = rowMetadata[i];
-                        if(propValue.entity == 'TimeSeries'){
-                            xValues.push(propValue.property_value );
-                            timeUnit =  propValue.property_unit;
-                        }
-                    }
-                }
-                
-                // Build yValues
-                var yValues = [];
-                for(var rIndex in rowIds) {
-                    yValues.push( values[rIndex][cIndex] );
-                }
-                
-                var label = "";
-                for(var i in columnMetadata){
-                    var propValue = columnMetadata[i];
-                    if(propValue.entity == 'Measurement' && propValue.property_name == 'Intensity'){
-                        label = propValue.property_value;
-                        break;
-                    }
-                }
-                
-                console.log("coulmnsMetadata  + columnMetadata + label", coulmnsMetadata, columnMetadata, label)
-                
-                
-                
-                // Build track
-                var dataTrack = {
-                    x : xValues,
-                    y : yValues,
-                    name: label
-                };
-                data.push(dataTrack);
-            }            
-            
-            
-            
-            var layout = {
-                autosize: true,
-                margin: {
-                    l: 50,
-                    r: 50,
-                    b: 100,
-                    t: 100,
-                    pad: 4
-                },
-                "title": self.chromatographyhMatrix.description, 
-                "titlefont": {
-                    "color": "rgb(33, 33, 33)", 
-                    "family": "", 
-                    "size": 0
-                },  
-                "xaxis": {
-                    "title": "Time, " + timeUnit, 
-                    "titlefont": {
-                        "color": "", 
-                        "family": "", 
-                        "size": 0
-                    } 
-                },                 
-                "yaxis": {
-                    "title": "", 
-//                    type: 'log',
-                    autorange: true
-                }                
-            };     
+            // Build matrix overview tab
+            var $tabOverview = $("<div/>");
+            $tabPane.kbaseTabs('addTab', {tab: 'Overview', content: $tabOverview, canDelete : false, show: true});
+            this.buildMatrixOverview( $tabOverview );
 
-            console.log('data', data);
-            Plotly.plot( $containerDiv[0], data, layout, {showLink: false} );            
+            // Build  matrix summary tab
+            var $tabSummary = $("<div/>");
+            $tabPane.kbaseTabs('addTab', {tab: 'Summary', content: $tabSummary, canDelete : false, show: false});
+            this.buildMatrixSummary($tabSummary, timeSeriesSummary, substances);            
             
-            
-            
-//            var matrix = this.chromatographyhMatrix;
-//            var xValues = matrix.column_metadata.time_values;
-//            var names = matrix.row_metadata.elem_labels;            
-//
-//            var data =[];
-//            for(var i = 0; i < names.length; i ++){
-//                var values = [];
-//                for(var j = 0; j < xValues.length; j++){
-//                    values.push( [xValues[j], matrix.data.values[j][i]] );
-//                }
-//                data.push({
-//                    name: names[i],
-//                    data: values
-//                });
-//            }
-//            console.log('seriees',data);
-//            $containerDiv.highcharts({
-//                title: {
-//                    text: matrix.description ,
-//                    x: -20 //center
-//                },
-//                subtitle: {
-//                    text: 'Source: ENIGMA Metals Campaign',
-//                    x: -20
-//                },
-//                xAxis: {
-//                    title: {
-//                        text: 'Time, ' + matrix.column_metadata.unit
-//                    },
-//                    plotLines: [{
-//                        value: 0,
-//                        width: 1,
-//                        color: '#808080'
-//                    }]
-//                },
-//                yAxis: {
-//                    title: {
-//                        text: ''
-//                    },
-//                    plotLines: [{
-//                        value: 0,
-//                        width: 1,
-//                        color: '#808080'
-//                    }]
-//                },
-//                tooltip: {
-//                    valueSuffix: '°C'
-//                },
-//                legend: {
-//                    layout: 'vertical',
-//                    align: 'right',
-//                    verticalAlign: 'middle',
-//                    borderWidth: 0
-//                },
-//                credits: {
-//                    enabled: false
-//                },                
-//                   series: data
-//            });
-        },
-
-        makeRow: function(name, value) {
-            var $row = $("<tr/>")
-                       .append($("<th />").css('width','20%').append(name))
-                       .append($("<td />").append(value));
-            return $row;
+            // Build  matrix series tab
+            var $tabSubstances = $("<div/>");
+            $tabPane.kbaseTabs('addTab', {tab: 'Substances', content: $tabSubstances, canDelete : false, show: false});
+            this.buildSubstancesTable($tabSubstances, substances);                 
         },
         
-        loading: function(isLoading) {
-            if (isLoading)
-                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
-            else
-                this.hideMessage();                
-        },
-
-        showMessage: function(message) {
-            var span = $("<span/>").append(message);
-
-            this.$messagePane.append(span);
-            this.$messagePane.show();
-        },
-
-        hideMessage: function() {
-            this.$messagePane.hide();
-            this.$messagePane.empty();
-        },
-
-        clientError: function(error){
-            this.loading(false);
-            this.showMessage(error.error.error);
-        },            
-
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
-        },
-
-        buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
-            if (wsRef) {
-                obj['ref'] = wsRef;
-            } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
-
-                // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
-                
-                if (objectVer)
-                    obj['ver'] = objectVer;
+        getTimePoints: function(matrix){
+            return this.getNumericPropertyCourse(matrix.data.row_ids, matrix.metadata.row_metadata, 'TimeSeries', 'Time');
+        },        
+        
+        buildMatrixSummary: function($tab, timeSeriesSummary, substances){
+            var pref = this.pref;
+            
+            // Substances summary
+            var $container = $("<div>")
+                .css('margin-top','1em')
+                .appendTo($tab);
+            
+            
+            $("<div>")
+                .append( "Substances summary")
+                .css('font-style', 'italic')
+                .appendTo($container);
+            
+            var $tableConditionsSummary = $('<table>')
+                .attr('id', pref+'conditions-summary-table')
+                .addClass("table table-striped table-bordered")
+                .css('width', '100%')
+                .css('margin-left', '0px' )
+                .css('margin-right', '0px')
+                .appendTo($container);
+                        
+            
+    
+            $tableConditionsSummary
+                .append( this.makeRow( 
+                    "Number of substances", 
+                    substances.length ) );
+            
+            for(var i in substances){
+                var substabce = substances[i];
+                $tableConditionsSummary
+                    .append( this.makeRow( 
+                        'Substance', 
+                        substabce.label ) );
             }
-            return obj;
-        }
+            
+            
+            // Time points summary
+            $("<div>")
+                .append("Time course summary")
+                .css('font-style', 'italic')
+                .css('margin-top', '3em')
+                .appendTo($container);
+            
+            var $tableTimeSummary =  $('<table>')
+                .attr('id', pref+'time-summary-table')
+                .addClass("table table-striped table-bordered")
+                .css('width', '100%')
+                .css('margin-left', '0px' )
+                .css('margin-right', '0px')
+                .appendTo($container);
+                        
+            $tableTimeSummary
+                .append( this.makeRow( 
+                    'Number of points', 
+                    this.matrix.data.row_ids.length ) )
+                .append( this.makeRow( 
+                    'Min time (' + timeSeriesSummary.valueUnit + ')', 
+                    timeSeriesSummary.valueMin ) )
+                .append( this.makeRow( 
+                    'Max time (' + timeSeriesSummary.valueUnit + ')', 
+                    timeSeriesSummary.valueMax ) );                             
+        },        
+        
+        buildSubstances: function(matrix, timePoints){
+            var substances = [];
+            var columnIds = matrix.data.col_ids;
+            var columnsMetadata = matrix.metadata.column_metadata;
 
-    });
-});
+            for(var cIndex in columnIds){
+                var columnId = columnIds[cIndex];
+                var columnMetadata = columnsMetadata[columnId];
+                var substanceName = this.getPropertyValue(columnMetadata, 'Measurement', 'Substance');
+                if(substanceName == null) continue;
+                
+                var maxValue = null;
+                var maxValueTime = null;
+                for(var i in timePoints){
+                    var timePoint = timePoints[i];
+                    var time = timePoint.value;
+                    var rIndex = timePoint.index;
+                    
+                    var val = matrix.data.values[rIndex][cIndex];
+                    if(maxValue == null || val > maxValue){
+                        maxValue = val;
+                        maxValueTime = time;
+                    }
+                }                
+                
+                substance = {
+                    substanceId : columnId,
+                    label : substanceName,
+                    maxValue : maxValue,
+                    maxValueTime: maxValueTime
+                };
+                substances.push(substance);
+            }
+            
+            return substances;
+        },
+        
+        buildSubstancesTable: function($container, substances){
+            this.buildTable(
+                $container,
+                substances,
+                [
+                    { sTitle: "Substance ID", mData: "substanceId"},
+                    { sTitle: "Substance", mData: "label"},
+                    { sTitle: "Max value", mData: "maxValue"},                                        
+                    { sTitle: "Max value time", mData:"maxValueTime" }
+                ],
+                "No substances found!"
+            );            
+        }             
+        
+    });        
+}); 
+
+
+

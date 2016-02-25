@@ -51,6 +51,10 @@ class KBjobManager():
 
         return self.ujs_proxy
 
+    def proxy_client(self, token=None):
+        return self.__proxy_client(token)
+
+
     def register_job(self, job_id):
         """This really just shares an existing job with narrativejoblistener.
         Propagates its exception if unsuccessful
@@ -228,3 +232,12 @@ class KBjobManager():
             import json
             deletion_status = json.dumps(deletion_status)
         return deletion_status
+
+    def get_job_logs(self, params, ujs_proxy=None):
+        """
+        Loads SDK job logs on behalf of the narrativejoblistener account.
+        Params is a structure with 'job_id' string value and optional 'skip_lines' int value.
+        """
+        if ujs_proxy is None:
+            ujs_proxy = self.__proxy_client()
+        return ujs_proxy.get_job_logs(params)

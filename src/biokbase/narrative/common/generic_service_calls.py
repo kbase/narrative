@@ -36,8 +36,7 @@ import hashlib
 import re
 import sys
 # Third-party
-import IPython.utils.traitlets as trt
-from IPython.core.application import Application
+import traitlets as trt
 from biokbase.njs_mock.Client import NJSMock
 from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.workspace.client import Workspace as workspaceService
@@ -163,12 +162,19 @@ def _app_get_state(workspace, token, URLS, job_manager, app_spec_json, method_sp
 
 def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, param_values_json, method_job_id):
     methodSpec = json.loads(method_spec_json)
-    methodInputValues = json.loads(param_values_json)
+    methodInputValues = json.loads(correct_method_specs_json(param_values_json))
     njsClient = NarrativeJobService(URLS.job_service, token = token)
     wsClient = workspaceService(URLS.workspace, token = token)
     if method_job_id.startswith("method:"):
         method_job_id = method_job_id[7:]
-        appState = njsClient.check_app_state(method_job_id)
+        is_async = is_async_method(methodSpec)
+        appState = None
+        if is_async:
+            # It's an SDK method, we use narrative proxy user to deal with sharing
+            ujs_proxy = job_manager.proxy_client()
+            appState = ujs_proxy.check_app_state(method_job_id)
+        else:  # If it's NJS script method then we cannot use narrative proxy user
+            appState = njsClient.check_app_state(method_job_id)
         for stepId in appState['step_outputs']:
             rpcOut = appState['step_outputs'][stepId]
             appState['widget_outputs'] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
@@ -367,6 +373,8 @@ def build_args_njs(paramValue, paramMapping, workspace, paramSpec):
 def is_script_method(methodSpec):
     behavior = methodSpec['behavior']
     if 'kb_service_input_mapping' in behavior:
+        if 'job_id_output_field' in methodSpec:
+            return False
         url = behavior['kb_service_url']
         if len(url) == 0:
             return True
@@ -374,8 +382,17 @@ def is_script_method(methodSpec):
         return True
     return False
 
+def is_async_method(methodSpec):
+    if is_script_method(methodSpec):
+        return False
+    behavior = methodSpec['behavior']
+    return ('job_id_output_field' in methodSpec and 
+            methodSpec['job_id_output_field'] == 'docker' and 
+            'kb_service_input_mapping' in behavior and 
+            behavior['kb_service_url'] == '')
+
 def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, stepId, scriptStep):
-    step = { 'step_id' : stepId }
+    step = { 'step_id' : stepId, 'method_spec_id' : methodSpec['info']['id'] }
     if methodInputValues is not None:
         behavior = methodSpec['behavior']
         if 'kb_service_input_mapping' in behavior or 'script_input_mapping' in behavior:
@@ -416,7 +433,11 @@ def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, s
                             if len(rpcOutPath) == 1:
                                 rpcJobIdField = rpcOutPath[0]
                 if not jobIdFieldFound:
-                    raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
+                    if jobIdField == 'docker':
+                        if 'kb_service_version' in behavior:
+                            step['service']['service_version'] = behavior['kb_service_version']
+                    else:
+                        raise ValueError("Job id field wasn't found in method output mappings for method [" + methodId + "]: " + json.dumps(behavior['kb_service_output_mapping']))
                 step['is_long_running'] = 1
                 if rpcJobIdField is not None:
                     step['job_id_output_field'] = rpcJobIdField                                   
@@ -610,6 +631,10 @@ class GenericService(object):
         resp = json.loads(ret.read())
 
         if 'result' in resp:
+            # Note: what if there are more than one return values? --mike
+            # we need to check for methods with no return
+            if not resp['result']:
+                return None
             return resp['result'][0]
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')

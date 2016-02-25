@@ -1,0 +1,279 @@
+/*
+This CSS file is for overriding the Jupyter CSS. Any KBase-component
+CSS should go in /kbase-extension/static/kbase/css/kbaseNarrative.css
+
+(or the specific css file if available)
+*/
+
+#site {
+    overflow: visible;
+}
+
+/* disable the standard notebook, bottom spacer */
+#notebook > .end_space {
+    min-height: 0;
+    height: 0;
+}
+
+@media (min-width: 1200px)
+#notebook-container {
+    width: auto;
+}
+
+@media (min-width: 992px)
+#notebook-container {
+    width: auto;
+}
+
+@media (min-width: 768px)
+#notebook-container {
+    width: auto;
+}
+
+.notebook_app {
+    overflow-y: auto;
+    background-color: #FFFFFF;
+}
+
+.btn * { color: black; }
+
+.celltoolbar {
+    height: auto;
+    background: none;
+    border: none;
+    border-left: 1px solid transparent;
+    padding-top: 7px;
+}
+
+div.input_area {
+    border: 1px solid #CECECE;
+    border-radius: 0px;
+}
+
+div.text_cell_input {
+    border: 1px solid #CECECE;
+    border-radius: 0px;
+}
+
+/*div.text_cell_render {
+    margin-bottom: -10px;
+}*/
+
+div.cell {
+    margin: 8px 0 8px 0px;
+    padding: 0 0 6px 4px;
+    border: 1px solid #CCC;
+    border-radius: 0;
+}
+
+div.cell.selected {
+    border: 1px solid #4BB856;
+    border-left: 5px solid #4BB856;
+    padding-left: 0px;
+    background-color: #E8EFFF;
+    background: none;
+    transition: box-shadow 0.2s ease-in-out;
+    -moz-transition: box-shadow 0.2s ease-in-out;
+    -webkit-transition: box-shadow 0.2s ease-in-out;
+    box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
+    -moz-box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
+    -webkit-box-shadow: 0px 1px 2px #aaa, 0 5px 5px #aaa;
+}
+
+div.cell.opened {
+    padding-top: 0px;
+}
+
+.edit_mode div.cell.selected {
+    border-left: 5px solid #66BB6A;
+    background: none;
+    padding-left: 0px;
+}
+
+div.cell.selected.kb-error {
+    border: 1px solid #d9534f;
+    border-left: 5px solid #d9534f;
+}
+input.raw_input {
+    /*height:auto;*/
+}
+
+div#notebook {
+    overflow-y: auto;
+    min-width: 460px;
+    min-height: 0;
+    height: 0;
+    padding-top: 0;
+}
+
+span#notebook_name {
+    color: #006698;
+}
+
+span#notebook_name:hover {
+    cursor: pointer;
+    background-color: #e0e0e0;    
+}
+
+.prompt {
+    min-width: 10ex;
+    padding-top: 10px;
+}
+
+
+#notebook-container {
+    box-shadow: none;
+    -moz-box-shadow: none;
+    -webkit-box-shadow: none;
+    width: auto;
+    min-width: 460px;
+    position: fixed;
+    left: 380px;
+    top: 70px;
+    right: 0; 
+    bottom: 0;
+    overflow: auto;
+    padding-bottom: 100px;
+}
+
+/* margin left doesn't really seeem to play well */
+.btn-toolbar {
+    margin-left: 0;
+    padding-left: -5px;
+}
+
+.kb-narr-side-panel .btn-group .btn {
+    padding: 3px 4px 3px 4px;
+    font-size: 16px;
+}
+
+.btn-subtle {
+    color: #888;
+    margin: 0px
+}
+.btn-subtle .fa {
+    color: #888;
+}
+.btn-subtle .fa::before {
+    color: #888;
+}
+
+.notebook_app .btn.active {
+    box-shadow: none;
+}
+
+/* Fooling around with the narrative cells */
+
+.notebook_app .inner_cell {
+    overflow: visible;
+    /*margin-right: 4px;*/
+}
+/*.notebook_app .cell.selected .inner_cell > div:nth-child(2),
+.notebook_app .cell.selected .inner_cell > div:nth-child(3) {
+    background-color: #FFF;
+}
+*/
+.notebook_app .celltoolbar > .button_container {
+    width: 100%;
+}
+
+.notebook_app .prompt {
+    font-size: 12px;
+    color: silver;
+    width: 75px;
+}
+
+/*.notebook_app .code_cell {
+    background-color: #FFF;
+}
+*/
+.notebook_app .cell.unselected div.text_cell_render {
+    border: 1px solid transparent;
+}
+.notebook_app .cell.selected div.text_cell_render {
+    border: 1px solid transparent;
+}
+
+.notebook_app .buttons .dropdown-menu {
+    height: auto !important;
+    overflow: visible !important;
+        
+}
+
+.notebook_app .btn.disabled .fa {
+    color: silver;
+}
+
+.notebook_app .cell .celltoolbar .btn {
+    background-color: transparent;
+}
+
+.text_cell.kb-cell .rendered_html table {
+    border: 1px solid #ddd;
+}
+
+.text_cell.kb-cell .rendered_html ul {
+    margin: 0;
+}
+
+.text_cell.opened.rendered.kb-cell .rendered_html {
+    padding: 0;
+    border: 0;
+}
+
+.text_cell.opened.rendered.selected.kb-cell .rendered_html {
+    border-left: 1px solid #4BB856;
+}
+.text_cell.opened.rendered.selected.kb-cell.kb-error .rendered_html {
+    border-left: 1px solid #d9534f;
+}
+.text_cell.opened.rendered.kb-cell {
+    padding-bottom: 0;
+}
+/* narrative cell icons */
+
+.cell.selected .prompt .method-icon {
+    color: rgb(103, 58, 183);
+}
+.cell.selected .prompt .app-icon {
+    color: rgb(0, 150, 136);
+}
+.cell.selected .prompt .markdown-icon {
+    color: #000;
+}
+
+.cell.selected .prompt .app-output-icon {
+    color: #000;
+}
+
+.cell.selected .prompt .method-output-icon {
+    color: #000;
+}
+
+.cell.selected .prompt .data-viewer-icon {
+    color: #000;
+}
+
+.cell.selected .prompt .error-icon {
+    color: red;
+}
+
+.cell.selected .prompt.input_prompt {
+    color: #303F9F;
+}
+
+.cell.selected .prompt.output_prompt {
+    color: #D84315;
+}
+
+.cell > .inner_cell > .ctb_hideshow {
+    display: block;
+}
+
+.cell.selected .btn-default {
+    color: #000;
+}
+
+.cell.unselected .btn-default {
+    color: #CCC;
+}

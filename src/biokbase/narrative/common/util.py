@@ -12,7 +12,8 @@ from setuptools import Command
 import time
 from .kvp import KVP_EXPR, parse_kvp
 from biokbase.workspace.client import Workspace as WS2
-from biokbase.workspace.client import ServerError, URLError
+from biokbase.workspace.client import ServerError
+from urllib2 import URLError
 
 def kbase_debug_mode():
     return bool(os.environ.get('KBASE_DEBUG', None))
@@ -31,13 +32,15 @@ class _KBaseEnv(object):
     env_narrative  = "KB_NARRATIVE"
     env_session    = "KB_SESSION"
     env_client_ip  = "KB_CLIENT_IP"
+    env_workspace  = "KB_WORKSPACE_ID"
     env_user       = None
 
     _defaults = {'auth_token': 'none',
                  'narrative': 'none',
                  'session': 'none',
                  'client_ip': '0.0.0.0',
-                 'user': 'anonymous'}
+                 'user': 'anonymous',
+                 'workspace': 'none'}
 
     def __getattr__(self, name):
         ename = "env_" + name

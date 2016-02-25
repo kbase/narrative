@@ -1064,7 +1064,18 @@ use_proxy = function(self)
             new_container()
             -- assign comtainer to session
             local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
-            local returnurl = string.format("%s://%s%s", scheme, ngx.var.host, ngx.var.request_uri)
+
+            -- poke the /login url in the container to get the auth credentials set up
+            -- local req = {
+            --     url = 
+            --     url = nexus_url .. token['un'],
+            --     method = "GET",
+            --     headers = { Authorization = "Globus-Goauthtoken "..token['token'] }
+            -- }
+
+            -- local ok,code,headers,status,body = httpclient:request(req)
+
+            local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)
             return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(returnurl)))
         end
         session_lock.unlock()

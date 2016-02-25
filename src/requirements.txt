@@ -24,7 +24,7 @@ jsonschema
 pexpect
 pickleshare
 simplegeneric
-qgrid
+# qgrid
 bokeh
 markupsafe
 plotly

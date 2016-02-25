@@ -396,11 +396,9 @@ function($,
         Jupyter.CellToolbar.activate_preset("KBase");
         Jupyter.CellToolbar.global_show();
 
-        if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
-            // $.each(Jupyter.notebook.get_cells(), function(idx, cell) {
-            //     cell.celltoolbar.hide();
-            // });
+        this.authToken = $('#signin-button').kbaseLogin('token');
 
+        if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
             var creatorId = Jupyter.notebook.metadata.creator || 'KBase User';
             DisplayUtil.displayRealName(creatorId, $('#kb-narr-creator'));
 

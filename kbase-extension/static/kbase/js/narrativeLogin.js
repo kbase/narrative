@@ -11,14 +11,13 @@ define(['jquery',
         'kbapi',
         'base/js/utils'
 ], function($, 
-            config,
+            Config,
             kbaseLogin, 
             kbapi, 
-            ipythonUtils) {
+            JupyterUtils) {
     "use strict";
 
-
-    var baseUrl = ipythonUtils.get_body_data('baseUrl');
+    var baseUrl = JupyterUtils.get_body_data('baseUrl');
 
     /* set the auth token by calling the kernel execute method on a function in
      * the magics module
@@ -26,7 +25,7 @@ define(['jquery',
     var ipythonLogin = function(token) {
         window.kb = new KBCacheClient(token);
         $.ajax({
-            url: ipythonUtils.url_join_encode(baseUrl, 'login'),
+            url: JupyterUtils.url_join_encode(baseUrl, 'login'),
         }).then(
             function(ret) { 
                 // console.log(ret); 
@@ -40,7 +39,7 @@ define(['jquery',
 
     var ipythonLogout = function() {
         $.ajax({
-            url: ipythonUtils.url_join_encode(baseUrl, 'logout'),
+            url: JupyterUtils.url_join_encode(baseUrl, 'logout'),
         }).then(
             function(ret) { 
                 // console.log(ret); 

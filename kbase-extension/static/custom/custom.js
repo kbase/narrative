@@ -120,6 +120,18 @@ define(['jquery',
         marked) {
         'use strict';
 
+        // inject necessary environment vars into the kernel as soon as it's ready.
+        $([Jupyter.events]).on('kernel_ready.Kernel', 
+            function() {
+                Jupyter.notebook.kernel.execute(
+                    'import os;' +
+                    'os.environ["KB_AUTH_TOKEN"]="' + Jupyter.narrative.authToken + '";' +
+                    'os.environ["KB_WORKSPACE_ID"]="' + Jupyter.notebook.metadata.ws_name + '"'
+                );
+            }
+        );
+
+
         // Patch the security mechanisms to allow any JavaScript to run for now.
         // TODO: update this so only the few KBase commands run.
         security.sanitize_html = function (html, allow_css) {

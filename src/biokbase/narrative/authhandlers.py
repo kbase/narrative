@@ -85,8 +85,7 @@ class KBaseLoginHandler(LoginHandler):
 
 
     def post(self):
-        # Just do the same as in get
-        return self.get()
+        pass
 
     @classmethod
     def get_user(cls, handler):

@@ -124,13 +124,13 @@ require.config({
         'kbaseGrowthMatrixAbstract'             : 'kbase/js/widgets/function_output/kbaseGrowthMatrixAbstract',
         'kbaseGrowthMatrix'                     : 'kbase/js/widgets/function_output/kbaseGrowthMatrix',
         'kbaseGrowthCurves'                     : 'kbase/js/widgets/function_output/kbaseGrowthCurves',
-        
-        
+
+
         'kbaseGrowthParametersAbstract'         : 'kbase/js/widgets/function_output/kbaseGrowthParametersAbstract',
         'kbaseGrowthParameters'                 : 'kbase/js/widgets/function_output/kbaseGrowthParameters',
         'kbaseGrowthParamsPlot'                 : 'kbase/js/widgets/function_output/kbaseGrowthParamsPlot',
         'kbaseGrowthParams2DPlot'               : 'kbase/js/widgets/function_output/kbaseGrowthParams2DPlot',
-        
+
         'kbaseSamplePropertyMatrixAbstract'     : 'kbase/js/widgets/function_output/kbaseSamplePropertyMatrixAbstract',
         'kbaseSamplePropertyMatrix'             : 'kbase/js/widgets/function_output/kbaseSamplePropertyMatrix',
         'kbaseSamplePropertyHistogram'          : 'kbase/js/widgets/function_output/kbaseSamplePropertyHistogram',
@@ -332,8 +332,9 @@ require.config({
                       'KBasePhenotypes.PhenotypeSet',
                       'KBasePhenotypes.PhenotypeSimulationSet',
                       'KBaseFBA.FBAComparison',
+                      'modelSeedVizConfig',
                       'kbasePathways',
-                      'msPathway',                           
+                      'msPathway',
                       'kbaseTabTableTabs',
                       'kbasePMIBarchart']
         },

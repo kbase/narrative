@@ -27,17 +27,20 @@
 require(['narrative_paths'], function(paths) {
     require([
         'jquery',
+        'bluebird',
         'narrativeConfig',
         'kbase-client-api',
         'narrativeLogin'
     ], function($,
-                config,
-                clientApi,
+                Promise,
+                Config,
+                ClientApi,
                 Login) {
         "use strict";
         console.log('Loading KBase Narrative setup routine.');
 
-        config.updateConfig(function(config) { 
+        Config.updateConfig()
+        .then(function(config) {
             window.kbconfig = config;
             require(['kbaseNarrative'], function(Narrative) {
                 Login.init($('#signin-button'));

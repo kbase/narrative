@@ -1,0 +1,236 @@
+{
+    "ci": {
+        "publicData": {
+            "genomes": {
+                "name": "Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "KBasePublicGenomesV5",
+                "search": true
+            },
+            "media": {
+                "name": "Media",
+                "type": "KBaseBiochem.Media",
+                "ws": "KBaseMedia",
+                "search": false
+            },
+            "plant_gnms": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "PlantCSGenomes",
+                "search": false
+            }
+        },
+        "exampleData": {
+            "ws": "KBaseExampleData",
+            "data_types": [
+                {
+                    "name": [
+                        "SingleEndLibrary",
+                        "PairedEndLibrary",
+                        "ReferenceAssembly"
+                    ],
+                    "displayName": "Example Sequence Assembly Inputs",
+                    "header": "Various types of read data configured for sequence assembly."
+                },
+                {
+                    "name": [
+                        "ContigSet"
+                    ], 
+                    "displayName": "Example Contig Sets", 
+                    "header": "A set of DNA sequences"
+                },
+                {
+                    "name": [
+                        "Genome"
+                    ],
+                    "displayName": "Example Genomes",
+                    "header": "Genomic sequence generally with attached functional annotations"
+                },
+                {
+                    "name": [
+                        "FBAModel"
+                    ],
+                    "displayName": "Example FBAModels",
+                    "header": "A metabolic model of an organism"
+                },
+                {
+                    "name": [
+                        "Media"
+                    ],
+                    "displayName": "Example Media",
+                    "header": "Specification of an environmental condition"
+                },
+                {
+                    "name": [
+                        "ExpressionMatrix"
+                    ],
+                    "displayName": "Example ExpressionMatrix", 
+                    "header": "Gene expression data in a gene vs. condition matrix"
+                },
+                {
+                    "name": [
+                        "TranscriptomeHack"
+                    ],
+                    "displayName": "Example Sorghum Transcriptomes",
+                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
+                }
+            ]
+        }
+    },
+    "next": {
+        "publicData": {
+            "genomes": {
+                "name": "Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "KBasePublicGenomesV5",
+                "search": true
+            },
+            "media": {
+                "name": "Media",
+                "type": "KBaseBiochem.Media",
+                "ws": "KBaseMedia",
+                "search": false
+            },
+            "plant_gnms": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "PlantCSGenomes",
+                "search": false
+            }
+        },
+        "exampleData": {
+            "ws": "KBaseExampleData",
+            "data_types": [
+                {
+                    "name": [
+                        "SingleEndLibrary",
+                        "PairedEndLibrary",
+                        "ReferenceAssembly"
+                    ],
+                    "displayName": "Example Sequence Assembly Inputs",
+                    "header": "Various types of read data configured for sequence assembly."
+                },
+                {
+                    "name": [
+                        "ContigSet"
+                    ], 
+                    "displayName": "Example Contig Sets", 
+                    "header": "A set of DNA sequences"
+                },
+                {
+                    "name": [
+                        "Genome"
+                    ],
+                    "displayName": "Example Genomes",
+                    "header": "Genomic sequence generally with attached functional annotations"
+                },
+                {
+                    "name": [
+                        "FBAModel"
+                    ],
+                    "displayName": "Example FBAModels",
+                    "header": "A metabolic model of an organism"
+                },
+                {
+                    "name": [
+                        "Media"
+                    ],
+                    "displayName": "Example Media",
+                    "header": "Specification of an environmental condition"
+                },
+                {
+                    "name": [
+                        "ExpressionMatrix"
+                    ],
+                    "displayName": "Example ExpressionMatrix", 
+                    "header": "Gene expression data in a gene vs. condition matrix"
+                },
+                {
+                    "name": [
+                        "TranscriptomeHack"
+                    ],
+                    "displayName": "Example Sorghum Transcriptomes",
+                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
+                }
+            ]
+        }
+    },
+    "prod": {
+        "publicData": {
+            "genomes": {
+                "name": "Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "KBasePublicGenomesV5",
+                "search": true
+            },
+            "media": {
+                "name": "Media",
+                "type": "KBaseBiochem.Media",
+                "ws": "KBaseMedia",
+                "search": false
+            },
+            "plant_gnms": {
+                "name": "Plant Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "PlantCSGenomes",
+                "search": false
+            }
+        },
+        "exampleData": {
+            "ws": "KBaseExampleData",
+            "data_types": [
+                {
+                    "name": [
+                        "SingleEndLibrary",
+                        "PairedEndLibrary",
+                        "ReferenceAssembly"
+                    ],
+                    "displayName": "Example Sequence Assembly Inputs",
+                    "header": "Various types of read data configured for sequence assembly."
+                },
+                {
+                    "name": [
+                        "ContigSet"
+                    ], 
+                    "displayName": "Example Contig Sets", 
+                    "header": "A set of DNA sequences"
+                },
+                {
+                    "name": [
+                        "Genome"
+                    ],
+                    "displayName": "Example Genomes",
+                    "header": "Genomic sequence generally with attached functional annotations"
+                },
+                {
+                    "name": [
+                        "FBAModel"
+                    ],
+                    "displayName": "Example FBAModels",
+                    "header": "A metabolic model of an organism"
+                },
+                {
+                    "name": [
+                        "Media"
+                    ],
+                    "displayName": "Example Media",
+                    "header": "Specification of an environmental condition"
+                },
+                {
+                    "name": [
+                        "ExpressionMatrix"
+                    ],
+                    "displayName": "Example ExpressionMatrix", 
+                    "header": "Gene expression data in a gene vs. condition matrix"
+                },
+                {
+                    "name": [
+                        "TranscriptomeHack"
+                    ],
+                    "displayName": "Example Sorghum Transcriptomes",
+                    "header": "Sorghum bicolor transcriptome data in response to ABA and osmotic stress"
+                }
+            ]
+        }
+    }
+}

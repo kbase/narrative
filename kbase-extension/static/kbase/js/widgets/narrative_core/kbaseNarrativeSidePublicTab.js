@@ -31,6 +31,7 @@ function($,
         loadingImage: Config.get('loading_gif'),
         wsUrl: Config.url('workspace'),
         wsClient: null,
+        publicCategories: Config.get('public_data_categories'),
         categories: ['genomes', 
                      //'metagenomes', 
                      'media', 'plant_gnms'
@@ -67,6 +68,16 @@ function($,
             this.data_icons = Config.get('icons').data;
             this.icon_colors = Config.get('icons').colors;
             this.wsName = Jupyter.narrative.getWorkspaceName();
+
+            // If the config properly returned the public categories, use those instead
+            if(this.publicCategories) {
+                if(this.publicCategories['categories']) {
+                    this.categories = this.publicCategories['categories'];
+                }
+                if(this.publicCategories['categories']) {
+                    this.categoryDescr = this.publicCategories['categoryDescr'];
+                }
+            }
 
             return this;
         },
@@ -131,7 +142,7 @@ function($,
             }
             if (self.currentQuery && self.currentQuery === query && category === self.currentCategory)
                 return;
-            //console.log("Sending query: " + query);
+
             self.totalPanel.empty();
             self.resultPanel.empty();
             self.totalPanel.append($('<span>').addClass("kb-data-list-type").append('<img src="'+this.loadingImage+'"/> searching...'));
@@ -159,11 +170,10 @@ function($,
                     includeMetadata: 1,
                 }))
                 .then(function(data) {
-                    console.log('RENDER MOAR');
-                    if (query !== this.currentQuery)
+                    if (thisQuery !== this.currentQuery)
                         return;
-                    query = this.currentQuery.replace(/[\*]/g,' ').trim().toLowerCase();
-                    for (var i in data) {
+                    var query = this.currentQuery.replace(/[\*]/g,' ').trim().toLowerCase();
+                    for (var i=0; i<data.length; i++) {
                         var info = data[i];
                         // object_info:
                         // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
@@ -171,11 +181,13 @@ function($,
                         // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
                         // [9] : int size // [10] : usermeta meta
                         var name = info[1];
-                        var id = info[1];
+                        var id = info[0];
                         var metadata = {};
-                        if (this.currentCategory === 'media') {
-                            metadata['Size'] = info[9];
-                        } else if (this.currentCategory === 'plant_gnms') {
+                        // the ws object size of the media doesn't seem useful!
+                        //if (this.currentCategory === 'media') {
+                        //    metadata['Size'] = info[9];
+                        //} else
+                        if (this.currentCategory === 'plant_gnms') {
                             if (info[10].Name) {
                                 metadata['ID'] = id;
                                 name = info[10].Name;
@@ -183,8 +195,10 @@ function($,
                             metadata['Source'] = info[10].Source;
                             metadata['Genes'] = info[10]['Number features'];
                         }
-                        if (name.toLowerCase().indexOf(query) == -1)
-                            continue;
+                        if(query) {
+                            if (name.toLowerCase().indexOf(query) == -1)
+                                continue;
+                        }
                         this.objectList.push({
                             $div: null,
                             info: info,
@@ -203,6 +217,7 @@ function($,
                             .append("Total results: " + data.totalResults));
                 }.bind(this))
                 .catch(function(error) {
+                    console.error(error);
                     this.totalPanel.empty();
                     this.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
                 }.bind(this));

@@ -332,6 +332,8 @@ require.config({
                       'KBasePhenotypes.PhenotypeSet',
                       'KBasePhenotypes.PhenotypeSimulationSet',
                       'KBaseFBA.FBAComparison',
+                      'kbasePathways',
+                      'msPathway',                           
                       'kbaseTabTableTabs',
                       'kbasePMIBarchart']
         },

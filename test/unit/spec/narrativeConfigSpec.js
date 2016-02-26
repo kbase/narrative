@@ -31,7 +31,7 @@ define(['narrativeConfig', 'bluebird'], function(Config, Promise) {
             Config.updateConfig()
             .then(function(config) {
                 expect(config.exampleData).toBeDefined();
-                expect(config.publicData).toBeDefined();
+                expect(config.publicCategories).toBeDefined();
                 done();
             });
         });

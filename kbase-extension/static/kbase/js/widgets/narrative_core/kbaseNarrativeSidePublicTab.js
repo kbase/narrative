@@ -31,25 +31,24 @@ function($,
         loadingImage: Config.get('loading_gif'),
         wsUrl: Config.url('workspace'),
         wsClient: null,
-        publicCategories: Config.get('public_data_categories'),
-        categories: ['genomes', 
-                     //'metagenomes', 
-                     'media', 'plant_gnms'
-                     /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations',
-                     'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'*/ ],
-        categoryDescr: {  // search API category -> {}
-            'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV5',search:true},
-            // 'metagenomes': {name: 'Metagenomes',type:'Communities.Metagenome',ws:'wilke:Data',search:true},
-            'media': {name:'Media',type:'KBaseBiochem.Media',ws:'KBaseMedia',search:false},
-            'plant_gnms': {name:'Plant Genomes',type:'KBaseGenomes.Genome',ws:'PlantCSGenomes',search:false}
+        // categories: ['genomes', 
+        //              //'metagenomes', 
+        //              'media', 'plant_gnms'
+        //              /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations',
+        //              'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'*/ ],
+        // categoryDescr: {  // search API category -> {}
+        //     'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV5',search:true},
+        //     // 'metagenomes': {name: 'Metagenomes',type:'Communities.Metagenome',ws:'wilke:Data',search:true},
+        //     'media': {name:'Media',type:'KBaseBiochem.Media',ws:'KBaseMedia',search:false},
+        //     'plant_gnms': {name:'Plant Genomes',type:'KBaseGenomes.Genome',ws:'PlantCSGenomes',search:false}
             
-            /*'gwas_populations': {name:'GWAS Populations',type:'KBaseGwasData.GwasPopulation',ws:'KBasePublicGwasDataV2',search:true},
-            'gwas_population_kinships': {name:'GWAS Population Kinships',type:'KBaseGwasData.GwasPopulationKinship',ws:'KBasePublicGwasDataV2',search:true},
-            'gwas_population_variations': {name:'GWAS Population Variations',type:'KBaseGwasData.GwasPopulationVariation',ws:'KBasePublicGwasDataV2',search:true},
-            'gwas_top_variations': {name:'GWAS Top Variations',type:'KBaseGwasData.GwasTopVariations',ws:'KBasePublicGwasDataV2',search:true},
-            'gwas_population_traits': {name:'GWAS Population Traits',type:'KBaseGwasData.GwasPopulationTrait',ws:'KBasePublicGwasDataV2',search:true},
-            'gwas_gene_lists': {name:'GWAS Gene Lists',type:'KBaseGwasData.GwasGeneList',ws:'KBasePublicGwasDataV2',search:true}*/
-        },
+        //     'gwas_populations': {name:'GWAS Populations',type:'KBaseGwasData.GwasPopulation',ws:'KBasePublicGwasDataV2',search:true},
+        //     'gwas_population_kinships': {name:'GWAS Population Kinships',type:'KBaseGwasData.GwasPopulationKinship',ws:'KBasePublicGwasDataV2',search:true},
+        //     'gwas_population_variations': {name:'GWAS Population Variations',type:'KBaseGwasData.GwasPopulationVariation',ws:'KBasePublicGwasDataV2',search:true},
+        //     'gwas_top_variations': {name:'GWAS Top Variations',type:'KBaseGwasData.GwasTopVariations',ws:'KBasePublicGwasDataV2',search:true},
+        //     'gwas_population_traits': {name:'GWAS Population Traits',type:'KBaseGwasData.GwasPopulationTrait',ws:'KBasePublicGwasDataV2',search:true},
+        //     'gwas_gene_lists': {name:'GWAS Gene Lists',type:'KBaseGwasData.GwasGeneList',ws:'KBasePublicGwasDataV2',search:true}
+        // },
         mainListPanelHeight: '535px',
         maxNameLength: 60,
         totalPanel: null,
@@ -68,16 +67,9 @@ function($,
             this.data_icons = Config.get('icons').data;
             this.icon_colors = Config.get('icons').colors;
             this.wsName = Jupyter.narrative.getWorkspaceName();
-
-            // If the config properly returned the public categories, use those instead
-            if(this.publicCategories) {
-                if(this.publicCategories['categories']) {
-                    this.categories = this.publicCategories['categories'];
-                }
-                if(this.publicCategories['categories']) {
-                    this.categoryDescr = this.publicCategories['categoryDescr'];
-                }
-            }
+            this.categoryDescr = Config.get('publicCategories');
+            if (this.categoryDescr)
+                this.categories = Object.keys(this.categoryDescr);
 
             return this;
         },
@@ -85,7 +77,12 @@ function($,
         render: function() {
             if ((!this.token) || (!this.wsName))
                 return;
-            this.$elem.empty();
+            this.infoPanel = $('<div>');
+            this.$elem.empty().append(this.infoPanel);
+            if (!this.categories) {
+                this.showError("Unable to load public data configuration! Please refresh your page to try again. If this continues to happen, please <a href='https://kbase.us/contact-us/'>click here</a> to contact KBase with the problem.");
+                return;
+            }
 
             this.wsClient = new Workspace(this.wsUrl, {'token': this.token});
             var mrg = {'margin': '10px 0px 10px 0px'};
@@ -638,7 +635,7 @@ function($,
             if (error.error && error.error.message)
                 errorMsg = error.error.message;
             this.infoPanel.empty();
-            this.infoPanel.append('<span class="label label-danger">Error: '+errorMsg+'"</span>');
+            this.infoPanel.append('<div class="alert alert-danger">Error: '+errorMsg+'</span>');
         },
 
         logoColorLookup:function(type) {

@@ -89,42 +89,50 @@ function($,
             return config;
         })
         .then(function(config) {
-            console.log('Config: fetching public data categories');
-            return Promise.resolve($.getJSON(config.urls['data_panel_sources']))
+            console.log('Config: fetching remote data configuration.');
+            return Promise.resolve($.getJSON(config.urls.data_panel_sources));
         })
         .then(function(dataCategories) {
-            console.log('Config: processing public data categories');
+            console.log('Config: processing remote data configuration.');
             config.publicCategories = dataCategories[config.environment].publicData;
             config.exampleData = dataCategories[config.environment].exampleData;
             return Promise.try(function() { return config; });
         })
         .catch(function(error) {
-            console.error('Config: unable to process remote configuration options. Searching locally.');
-            console.error(error);
-            return Promise.resolve($.getJSON('kbase/config/' + config.urls['data_panel_sources']))
+            console.error('Config: unable to process remote data configuration options. Searching locally.');
+            return Promise.resolve($.getJSON('static/kbase/config' + config.urls.data_panel_sources));
+        })
+        .then(function(dataCategories) {
+            console.log('Config: processing local data configuration.');
+            config.publicCategories = dataCategories[config.environment].publicData;
+            config.exampleData = dataCategories[config.environment].exampleData;
+            return Promise.try(function() { return config; });
+        })
+        .catch(function(error) {
+            console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
             return Promise.try(function() { return config; });
         });
-    };
+    }
 
     /**
      * Simple wrapper to return a URL by its key. If not present, just returns undefined.
      */
     function url(key) {
         return config.urls[key];
-    };
+    }
 
     /**
      * Simple wrapper to return some value by its key. If not present, just returns undefined.
      */
     function get(key) {
         return config[key];
-    };
+    }
 
     return {
         updateConfig: updateConfig,
         config: config,
         url: url,
         get: get,
-        debug: debug,
-    };
+        debug: debug
+    }
 });

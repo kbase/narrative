@@ -41,7 +41,6 @@ require(['narrative_paths'], function(paths) {
 
         Config.updateConfig()
         .then(function(config) {
-            console.log('SETTING GLOBAL CONFIG');
             window.kbconfig = config;
             require(['kbaseNarrative'], function(Narrative) {
                 Login.init($('#signin-button'));

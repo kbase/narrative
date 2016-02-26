@@ -469,6 +469,8 @@ function($,
             $btnToolbar.append($openLandingPage).append($openProvenance);
 
             var titleElement = $('<span>').css({'margin':'10px'}).append($btnToolbar.hide()).append($name);
+
+            var hasMetadata = false;
             for (var key in object.metadata) {
                 if (!object.metadata.hasOwnProperty(key))
                     continue;
@@ -477,6 +479,10 @@ function($,
                     val = '-';
                 var value = $('<span>').addClass("kb-data-list-type").append('&nbsp;&nbsp;' + key + ':&nbsp;' + val);
                 titleElement.append('<br>').append(value);
+                hasMetadata = true;
+            }
+            if(!hasMetadata) {
+                titleElement.append('<br>').append('&nbsp;');
             }
 
                     // Set data icon

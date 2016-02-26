@@ -100,18 +100,22 @@ function($,
         })
         .catch(function(error) {
             console.error('Config: unable to process remote data configuration options. Searching locally.');
-            return Promise.resolve($.getJSON('static/kbase/config' + config.urls.data_panel_sources));
+            // hate embedding this stuff, but it seems the only good way.
+            // the filename is the last step of that url path (after the last /)
+            var path = config.urls.data_panel_sources.split('/');
+
+            return Promise.resolve($.getJSON('static/kbase/config/' + path[path.length-1]))
+            .then(function(dataCategories) {
+                console.log('Config: processing local data configuration.');
+                config.publicCategories = dataCategories[config.environment].publicData;
+                config.exampleData = dataCategories[config.environment].exampleData;
+                return Promise.try(function() { return config; });
+            })
+            .catch(function(error) {
+                console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
+                return Promise.try(function() { return config; });
+            });
         })
-        .then(function(dataCategories) {
-            console.log('Config: processing local data configuration.');
-            config.publicCategories = dataCategories[config.environment].publicData;
-            config.exampleData = dataCategories[config.environment].exampleData;
-            return Promise.try(function() { return config; });
-        })
-        .catch(function(error) {
-            console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
-            return Promise.try(function() { return config; });
-        });
     }
 
     /**

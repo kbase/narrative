@@ -9,6 +9,7 @@ __Changes__
 - Added separate configuration file for Public and Example data tabs.
 - Fixed a few missing vis widget paths.
 - Fixed jitter on data object mouseover.
+- Added 'Shutdown and Restart' option to hamburger menu.
 
 ### Version 2.0.4
 __Changes__

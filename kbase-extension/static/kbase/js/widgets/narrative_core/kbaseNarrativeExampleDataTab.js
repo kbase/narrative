@@ -5,11 +5,14 @@
  * @public
  */
 define(['jquery',
+        'bluebird',
         'narrativeConfig',
         'kbwidget',
         'kbaseAuthenticatedWidget',
         'kbaseNarrative'],
-function($, Config) {
+function($,
+         Promise,
+         Config) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeExampleDataTab',
@@ -19,17 +22,7 @@ function($, Config) {
             ws_name: null, // must be the WS name, not the WS Numeric ID
             ws_url: Config.url('workspace'),
             loadingImage: Config.get('loading_gif'),
-            exampleWsName: 'KBaseExampleData', // designed to be a workspace with just a handful of objects
-	        $importStatus:$('<div>'),
-            exampleTypeOrder: [
-                {name:['SingleEndLibrary','PairedEndLibrary','ReferenceAssembly'], displayName: "Example Sequence Assembly Inputs", header:'Various types of read data configured for sequence assembly.'},
-                {name:['ContigSet'], displayName: "Example Contig Sets", header:'A set of DNA sequences'},
-                {name:['Genome'], displayName: "Example Genomes", header:'Genomic sequence generally with attached functional annotations'},
-                {name:['FBAModel'], displayName: "Example FBAModels", header:'A metabolic model of an organism'},
-                {name:['Media'], displayName: "Example Media", header:'Specification of an environmental condition'},
-                {name:['ExpressionMatrix'], displayName: "Example ExpressionMatrix", header:'Gene expression data in a gene vs. condition matrix'},
-                {name:['TranscriptomeHack'], displayName: "Example Sorghum Transcriptomes", header:'Sorghum bicolor transcriptome data in response to ABA and osmotic stress'}
-                ]
+	        $importStatus: $('<div>'),
         },
 
         ws: null,
@@ -58,6 +51,7 @@ function($, Config) {
                 .css({'overflow-y':'auto','height':'604px'});
             this.$elem.append(this.$mainPanel);
 
+            this.dataConfig = Config.get('exampleData');
             var icons = Config.get('icons');
             this.data_icons = icons.data;
             this.icon_colors = icons.colors;
@@ -65,7 +59,6 @@ function($, Config) {
 
             if (Jupyter && Jupyter.narrative) {
                 this.narWs = Jupyter.narrative.getWorkspaceName();
-                // this.getExampleDataAndRender();
             }
 
             return this;
@@ -76,44 +69,49 @@ function($, Config) {
         objectList:null,
 
         getExampleDataAndRender: function() {
-            var self = this;
-            if (self.narWs && self.ws) {
-                self.ws.list_objects({
-                        workspaces : [self.options.exampleWsName],
-                        includeMetadata: 1
-                    },
-                    function(infoList) {
-                        self.objectList = [];
-                        // object_info:
-                        // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
-                        // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
-                        // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
-                        // [9] : int size // [10] : usermeta meta
-                        for (var i=0; i<infoList.length; i++) {
-                            // skip narrative objects
-                            if (infoList[i][2].indexOf('KBaseNarrative') == 0) { continue; }
-                            if (infoList[i][1].indexOf('Transcriptome') == 0) {
-                                infoList[i][2] = 'TranscriptomeHack';
-                            }
-                            self.objectList.push({
-                                    $div:self.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
-                                    info:infoList[i]
-                                }
-                            );
+            if (!this.dataConfig) {
+                this.showError("Unable to load example data configuration! Please refresh your page to try again. If this continues to happen, please <a href='https://kbase.us/contact-us/'>click here</a> to contact KBase with the problem.");
+                return;
+            }
+
+            if (this.narWs && this.ws) {
+                Promise.resolve(this.ws.list_objects({
+                    workspaces : [this.dataConfig.ws],
+                    includeMetadata: 1
+                }))
+                .then(function(infoList) {
+                    this.objectList = [];
+                    // object_info:
+                    // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
+                    // [3] : timestamp save_date // [4] : int version // [5] : username saved_by
+                    // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
+                    // [9] : int size // [10] : usermeta meta
+                    for (var i=0; i<infoList.length; i++) {
+                        // skip narrative objects
+                        if (infoList[i][2].indexOf('KBaseNarrative') == 0) { continue; }
+                        if (infoList[i][1].indexOf('Transcriptome') == 0) {
+                            infoList[i][2] = 'TranscriptomeHack';
                         }
-                        self.renderData();
-                    },
-                    function(error) {
-                        self.$mainPanel.show();
-                        self.$mainPanel.append("error: ");
-                        self.$mainPanel.append(error.error.message);
-                        console.error(error);
-                        self.hideLoading();
-                    });
+                        this.objectList.push({
+                            $div:this.renderObjectRowDiv(infoList[i]), // we defer rendering the div until it is shown
+                            info:infoList[i]
+                        });
+                    }
+                    this.renderData();
+                }.bind(this))
+                .catch(function(error) {
+                    this.showError(error.error.message);
+                    console.error(error);
+                }.bind(this));
             }
 
         },
 
+        showError: function(errorMsg) {
+            this.$mainPanel.show();
+            this.$mainPanel.append($('<div class="alert alert-danger">').append('Error: ' + errorMsg));
+            this.hideLoading();
+        },
 
         renderData: function() {
             var self = this;
@@ -121,8 +119,8 @@ function($, Config) {
 
             var typeDivs = {}; 
             var showTypeDiv = {};
-            for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
-                var typeInfo = self.options.exampleTypeOrder[t];
+            for(var t=0; t<this.dataConfig.data_types.length; t++) {
+                var typeInfo = this.dataConfig.data_types[t];
                 var $tc = $('<div>')
                             .append($('<div>').css({'margin':'15px'})
                                 .append($('<div>').css({'margin':'4px','margin-top':'15px','color':'#555','font-size':'large','font-weight':'bold'})
@@ -168,8 +166,8 @@ function($, Config) {
                 }
             }
 
-            for(var t=0; t<self.options.exampleTypeOrder.length; t++) {
-                var typeNames = self.options.exampleTypeOrder[t].name;
+            for(var t=0; t<this.dataConfig.data_types.length; t++) {
+                var typeNames = this.dataConfig.data_types[t].name;
                 var showDiv = false;
                 for(var k=0; k<typeNames.length; k++) {
                     if(showTypeDiv[typeNames[k]]) {
@@ -298,6 +296,7 @@ function($, Config) {
             this.$loadingDiv.show();
             this.$mainPanel.hide();
         },
+
         hideLoading : function() {
             this.$loadingDiv.hide();
             this.$mainPanel.show();

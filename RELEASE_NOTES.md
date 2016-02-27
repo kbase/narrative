@@ -3,6 +3,14 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.1.0 (more notes will follow).
 
+### Version 2.0.5
+__Changes__
+- Fixed problems with missing data from Public data tab.
+- Added separate configuration file for Public and Example data tabs.
+- Fixed a few missing vis widget paths.
+- Fixed jitter on data object mouseover.
+- Added 'Shutdown and Restart' option to hamburger menu.
+
 ### Version 2.0.4
 __Changes__
 - Fixed problems with sharing jobs based on SDK-built methods.

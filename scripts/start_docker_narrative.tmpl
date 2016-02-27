@@ -6,8 +6,9 @@ export JUPYTER_RUNTIME_DIR=/tmp/jupyter_runtime
 export JUPYTER_DATA_DIR=/tmp/jupyter_data
 export JUPYTER_PATH=$NARRATIVE_DIR/kbase-extension
 export IPYTHONDIR=$NARRATIVE_DIR/kbase-extension/ipython
+export HOME=/tmp
 CFGDIR=$JUPYTER_CONFIG_DIR/static/kbase
 
-cp $NARRATIVE_DIR/src/config.json $JUPYTER_CONFIG_DIR/static/kbase/
+cp $NARRATIVE_DIR/src/config.json $JUPYTER_CONFIG_DIR/static/kbase/config/
 
 jupyter notebook --NotebookApp.base_url=/narrative --NotebookApp.open_browser=False --ip=* "$@"

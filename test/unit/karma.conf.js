@@ -41,7 +41,8 @@ module.exports = function (config) {
         // if true, Karma captures browsers, runs the tests and exits
         singleRun: true,
         proxies: {
-            '/narrative/static/': 'http://localhost:8888/narrative/static'
+            '/narrative/static/': 'http://localhost:8888/narrative/static',
+            '/static/': 'http://localhost:8888/narrative/static'
         }
 
     });

@@ -11,10 +11,14 @@
  * @module Narrative
  * @static
  */
-define(['json!kbase/config.json',
-        'json!kbase/icons.json'
-], 
-function(configSet,
+define([
+    'jquery',
+    'bluebird',
+    'json!kbase/config/config.json',
+    'json!kbase/config/icons.json'],
+function($,
+         Promise,
+         configSet,
          iconsSet) {
     'use strict';
 
@@ -27,18 +31,19 @@ function(configSet,
 
     // Build the config up from the configSet (from config.json)
     var config = {
-        urls:            configSet[configSet.config],
-        version:         configSet.version,
-        name:            configSet.name,
-        git_commit_hash: configSet.git_commit_hash,
-        git_commit_time: configSet.git_commit_time,
-        release_notes:   configSet.release_notes,
-        mode:            configSet.mode,
-        dev_mode:        configSet.dev_mode,
-        tooltip:         configSet.tooltip,
-        icons:           iconsSet,
-        workspaceId:     workspaceId,
-        loading_gif:     configSet.loading_gif,
+        environment:       configSet.config,
+        urls:              configSet[configSet.config],
+        version:           configSet.version,
+        name:              configSet.name,
+        git_commit_hash:   configSet.git_commit_hash,
+        git_commit_time:   configSet.git_commit_time,
+        release_notes:     configSet.release_notes,
+        mode:              configSet.mode,
+        dev_mode:          configSet.dev_mode,
+        tooltip:           configSet.tooltip,
+        icons:             iconsSet,
+        workspaceId:       workspaceId,
+        loading_gif:       configSet.loading_gif,
         use_local_widgets: configSet.use_local_widgets
     };
 
@@ -63,51 +68,75 @@ function(configSet,
      * as configured with the use_local_widgets flag, then skip this step
      * and just run the callback.
      */
-    function updateConfig(callback) {
-        if (!config.use_local_widgets) {
-            // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";
-            require(['uiCommonPaths'], function(pathConfig) {
-                for (var name in pathConfig.paths) {
-                    pathConfig.paths[name] = config.urls.ui_common_root + pathConfig.paths[name];
-                }
-                require.config(pathConfig);
-                config.new_paths = pathConfig;
-                if (callback) {
-                    callback(config);
-                }
-            }, function(error) { 
-                console.log("Unable to get updated widget paths. Sticking with what we've got.");
-                if (callback) {
-                    callback(config);
-                }
-            });
-        }
-        else {
-            if (callback) {
-                callback(config);
+    function updateConfig() {
+        return Promise.try(function() {
+            console.log('Config: checking remote widgets');
+            if (!config.use_local_widgets) {
+                // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";
+                require(['uiCommonPaths'], function(pathConfig) {
+                    for (var name in pathConfig.paths) {
+                        pathConfig.paths[name] = config.urls.ui_common_root + pathConfig.paths[name];
+                    }
+                    require.config(pathConfig);
+                    config.new_paths = pathConfig;
+                    if (callback) {
+                        callback(config);
+                    }
+                }, function(error) {
+                    console.log("Unable to get updated widget paths. Sticking with what we've got.");
+                });
             }
-        }
-    };
+            return config;
+        })
+        .then(function(config) {
+            console.log('Config: fetching remote data configuration.');
+            return Promise.resolve($.getJSON(config.urls.data_panel_sources));
+        })
+        .then(function(dataCategories) {
+            console.log('Config: processing remote data configuration.');
+            config.publicCategories = dataCategories[config.environment].publicData;
+            config.exampleData = dataCategories[config.environment].exampleData;
+            return Promise.try(function() { return config; });
+        })
+        .catch(function(error) {
+            console.error('Config: unable to process remote data configuration options. Searching locally.');
+            // hate embedding this stuff, but it seems the only good way.
+            // the filename is the last step of that url path (after the last /)
+            var path = config.urls.data_panel_sources.split('/');
+
+            return Promise.resolve($.getJSON('static/kbase/config/' + path[path.length-1]))
+            .then(function(dataCategories) {
+                console.log('Config: processing local data configuration.');
+                config.publicCategories = dataCategories[config.environment].publicData;
+                config.exampleData = dataCategories[config.environment].exampleData;
+                return Promise.try(function() { return config; });
+            })
+            .catch(function(error) {
+                console.error('Config: unable to process local configuration options, too! Public and Example data unavailable!');
+                return Promise.try(function() { return config; });
+            });
+        })
+    }
 
     /**
      * Simple wrapper to return a URL by its key. If not present, just returns undefined.
      */
     function url(key) {
         return config.urls[key];
-    };
+    }
 
     /**
      * Simple wrapper to return some value by its key. If not present, just returns undefined.
      */
     function get(key) {
         return config[key];
-    };
+    }
 
     return {
         updateConfig: updateConfig,
         config: config,
         url: url,
         get: get,
-        debug: debug,
-    };
+        debug: debug
+    }
 });

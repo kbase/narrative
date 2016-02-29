@@ -4,15 +4,15 @@
  * @public
  */
 
-define(['jquery', 
+define(['jquery',
         'narrativeConfig',
-        'ContigBrowserPanel', 
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
+        'ContigBrowserPanel',
+        'kbwidget',
+        'kbaseAuthenticatedWidget',
         'kbaseTabs',
         'jquery-dataTables',
-        'jquery-dataTables-bootstrap'], 
-function($, 
+        'jquery-dataTables-bootstrap'],
+function($,
          Config,
          ContigBrowserPanel) {
     $.KBWidget({
@@ -77,9 +77,20 @@ function($,
             var type = this.genomeType(genome);
 
             if (type == 'transcriptome') {
+
+                //normally, we just have an Overview and a Genes tab.
+                var names = ['Overview', 'Genes'];
+                var ids = ['overview', 'genes'];
+
+                //XXX plants baloney - but plants also get a CDS column.
+                if (genome.domain == 'Plant') {
+                    names.push('CDS');
+                    ids.push('cds');
+                }
+
                 return {
-                    names : ['Overview', 'Genes'],
-                    ids : ['overview', 'genes']
+                    names   : names,
+                    ids     : ids
                 };
             }
             else {
@@ -132,6 +143,7 @@ function($,
                             style="margin-left: auto; margin-right: auto;" id="'+pref+'overview-table"/>');
                     var overviewLabels = ['KBase ID', 'Name', 'Domain', 'Genetic code', 'Source', "Source ID", "GC", "Taxonomy", "Size",
                                           "Number of Contigs", "Number of Genes"];
+
                     var tax = gnm.taxonomy;
                     if (tax == null)
                         tax = '';
@@ -144,9 +156,27 @@ function($,
                     } else {
                         gc_content = "Unknown";
                     }
+
                     var overviewData = [gnm.id, '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'" target="_blank">'+gnm.scientific_name+'</a>',
                                         gnm.domain, gnm.genetic_code, gnm.source, gnm.source_id, gc_content, tax, gnm.dna_size,
                                         contigCount, gnm.features.length];
+
+                    //XXX baloney Plants hack.
+                    //Plant genes need different information, and we want to display the gene and transcript counts separately
+                    //so if the domain is plants, add on the extra label, pop off the existing length value, and push on the length of genes and
+                    //transcripts individually.
+                    if (gnm.domain == 'Plant') {
+                        overviewLabels.push('Number of Transcripts');
+                        var types = {};
+                        $.each(gnm.features, function(i,v) {
+                            if (types[v.type] == undefined) {types[v.type] = 0};
+                            types[v.type]++;
+                        });
+                        overviewData.pop();
+                        overviewData.push(types['locus']);
+                        overviewData.push(types['CDS']);
+                    }
+                    //XXX end plants baloney here. There's more below for the Genes table.
 
                     //XXX this is hopelessly brittle since it relies upon injecting/removing specific fields at exact locations in the parallel arrays.
                     //these should be refactored - a single master list of all possible fields as objects ( { name : 'Kbase ID', value : gnm.id, id : 'kbase_id' } )
@@ -184,6 +214,13 @@ function($,
 
                     var genesDiv = $('#'+pref+'genes');
                     genesDiv.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading genes data...</div>");
+
+                    //XXX plants baloney - only plants have a CDS tab.
+                    var cdsDiv = $('#'+pref+'cds');
+                    if (cdsDiv) {
+                        cdsDiv.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading cds data...</div>");
+                    }
+
                     var genesAreShown = false;
 
                     var liElems = tabPane.find('li');
@@ -193,7 +230,8 @@ function($,
                         if (aElem.length != 1)
                             continue;
                         var dataTab = aElem.attr('data-tab');
-                        if (dataTab === 'Contigs' || dataTab === 'Genes') {
+                        //XXX plants baloney - only plants have a CDS tab.
+                        if (dataTab === 'Contigs' || dataTab === 'Genes' || dataTab === 'CDS') {
                             aElem.on('click', function() {
                                 if (!genesAreShown) {
                                     genesAreShown = true;
@@ -210,7 +248,7 @@ function($,
             var included = ["/complete","/contig_ids","/contig_lengths","contigset_ref","/dna_size",
                             "/domain","/gc_content","/genetic_code","/id","/md5","num_contigs",
                             "/scientific_name","/source","/source_id","/tax_id","/taxonomy",
-                            "/features/[*]/unknownfield", "/features/[*]/location"];
+                            "/features/[*]/type", "/features/[*]/unknownfield", "/features/[*]/location"];
             kbws.get_object_subset([{ref: self.ws_name + "/" + self.ws_id, included: included}], function(data) {
                 var gnm = data[0].data;
                 if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
@@ -261,6 +299,8 @@ function($,
                 var geneMap = {};
                 var contigMap = {};
 
+                var cdsData = [] //XXX plants baloney. Extra tab for CDS data. See below on line 337 or so.
+
                 if (data.length > 1) {
                     var ctg = data[1].data;
                     for (var pos in ctg.contigs) {
@@ -308,7 +348,15 @@ function($,
                     var geneFunc = gene['function'];
                     if (!geneFunc)
                         geneFunc = '-';
-                    genesData.push({
+
+                    //XXX plants baloney - if it's non plant, it just goes into the genes array.
+                    //but if it is plants, then we split it up - same data, two different tabs.
+                    //locus data goes on the genes tab, cds data goes on the cds tab.
+                    var dataArray = gnm.domain != 'Plant' || gene.type == 'locus'
+                        ? genesData
+                        : cdsData;
+
+                    dataArray.push({
                         id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
                         // id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>',
                         // contig: contigName,
@@ -363,11 +411,41 @@ function($,
                         {sTitle: "Length", mData: "len"},
                         {sTitle: "Function", mData: "func"}
                     ];
+
+                    // XXX more plants baloney. Remove the length column
+                    if (gnm.domain == 'Plant') {
+                        genesSettings["aaSorting"] = [[ 0, "asc" ], [1, "asc"]];
+                        genesSettings.aoColumns.splice(1,1);
+                    }
+                    // XXX done with plants
                 }
 
                 var genesTable = $('#'+pref+'genes-table').dataTable(genesSettings);
                 genesTable.fnAddData(genesData);
-                
+
+                //XXX plants baloney - build up the CDS div, if necessary.
+                if (gnm.domain == 'Plant') {
+
+                    var cdsTab = $('#'+pref+'cds');
+                    cdsTab.empty();
+                    cdsTab.append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'cds-table" \
+                    class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
+
+                    var cdsSettings = {
+                        "sPaginationType": "full_numbers",
+                        "iDisplayLength": 10,
+                        "aaSorting": [[ 0, "asc" ], [1, "asc"]],
+                        "aoColumns": [
+                            {sTitle: "Gene ID", mData: "id"},
+                            {sTitle: "Function", mData: "func"}
+                        ]
+                    };
+
+                    var cdsTable = $('#'+pref+'cds-table').dataTable(cdsSettings);
+                    cdsTable.fnAddData(cdsData);
+                }
+                //XXX done with plants
+
 
                 ////////////////////////////// Contigs Tab //////////////////////////////
                 var contigTab = $('#'+pref+'contigs');

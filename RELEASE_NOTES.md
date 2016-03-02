@@ -8,6 +8,7 @@ __Changes__
 - Fixed local configuration issue with Public and Example data tabs.
 - Updated genome viewer widget to better support eukaryotic genomes.
 - Added sequence category to app catalog.
+- Added Release/Beta method button toggle that should show up in production mode.
 
 ### Version 2.0.5
 __Changes__

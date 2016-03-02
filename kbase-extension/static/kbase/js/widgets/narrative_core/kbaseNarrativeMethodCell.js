@@ -26,7 +26,8 @@ function($,
          Config,
          StringUtil,
          BootstrapDialog,
-         Display) {
+         Display,
+         Handlebars) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",

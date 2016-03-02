@@ -9,6 +9,7 @@ __Changes__
 - Updated genome viewer widget to better support eukaryotic genomes.
 - Added sequence category to app catalog.
 - Added Release/Beta method button toggle that should show up in production mode.
+- JIRA NAR-846 - fix problem with Run Time in jobs panel reported as "how long ago"
 
 ### Version 2.0.5
 __Changes__

@@ -108,7 +108,7 @@ function($,
                                       .addClass('glyphicon glyphicon-refresh'))
                               .tooltip({
                                     title : 'Refresh job status', 
-                                    container : 'body',                     
+                                    container : 'body',
                                     delay: {
                                         show: Config.get('tooltip').showDelay, 
                                         hide: Config.get('tooltip').hideDelay
@@ -705,6 +705,8 @@ function($,
                 }
                 this.setJobCounter(stillRunning);
             }
+            // hide any showing tooltips, otherwise they just sit there stagnant forever.
+            this.$jobsPanel.find('span[data-toggle="tooltip"]').tooltip('hide');
             this.$jobsPanel.empty().append($jobsList);
         },
 
@@ -788,14 +790,14 @@ function($,
                 if (jobState.state.complete_time) {
                     completedTime = TimeFormat.prettyTimestamp(jobState.state.complete_time);
                     if (jobState.state.start_time) {
-                        runTime = TimeFormat.calcTimeFromNow(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
+                        runTime = TimeFormat.calcTimeDifference(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
                     }
                 }
                 else if (jobState.state.ujs_info) {
                     if (jobState.state.ujs_info[5] !== null) {
                         completedTime = TimeFormat.prettyTimestamp(jobState.state.ujs_info[5]);
                         if (jobState.state.ujs_info[3]) {
-                            runTime = TimeFormat.calcTimeFromNow(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
+                            runTime = TimeFormat.calcTimeDifference(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
                         }
                     }
                 }
@@ -858,8 +860,16 @@ function($,
             if (runTime) {
                 $infoTable.append(this.makeInfoRow('Run Time', runTime));
             }
-            else if (jobState.timestamp) {
-                started = TimeFormat.prettyTimestamp(jobState.timestamp);
+            if (jobState.timestamp) {
+                started = $(TimeFormat.prettyTimestamp(jobState.timestamp));
+                started.tooltip({
+                    container: 'body',
+                    placement: 'right',
+                    delay: {
+                        show: Config.get('tooltip').showDelay, 
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                });
                 $infoTable.append(this.makeInfoRow('Started', started));
             }
 

@@ -108,7 +108,7 @@ function($,
                                       .addClass('glyphicon glyphicon-refresh'))
                               .tooltip({
                                     title : 'Refresh job status', 
-                                    container : 'body',                     
+                                    container : 'body',
                                     delay: {
                                         show: Config.get('tooltip').showDelay, 
                                         hide: Config.get('tooltip').hideDelay
@@ -705,6 +705,8 @@ function($,
                 }
                 this.setJobCounter(stillRunning);
             }
+            // hide any showing tooltips, otherwise they just sit there stagnant forever.
+            this.$jobsPanel.find('span[data-toggle="tooltip"]').tooltip('hide');
             this.$jobsPanel.empty().append($jobsList);
         },
 
@@ -859,7 +861,15 @@ function($,
                 $infoTable.append(this.makeInfoRow('Run Time', runTime));
             }
             if (jobState.timestamp) {
-                started = TimeFormat.prettyTimestamp(jobState.timestamp);
+                started = $(TimeFormat.prettyTimestamp(jobState.timestamp));
+                started.tooltip({
+                    container: 'body',
+                    placement: 'right',
+                    delay: {
+                        show: Config.get('tooltip').showDelay, 
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                });
                 $infoTable.append(this.makeInfoRow('Started', started));
             }
 

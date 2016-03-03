@@ -15,8 +15,11 @@ define([
         'jquery', 
         'underscore',
         'bluebird',
+        'handlebars',
         'narrativeConfig',
         'util/display',
+        'util/bootstrapDialog',
+        'text!kbase/templates/beta_warning_body.html',
         'kbwidget',
         'kbaseAccordion',
         'kbaseNarrativeControlPanel',
@@ -25,7 +28,14 @@ define([
         'catalog-client-api',
         'kbase-client-api',
         'bootstrap'], 
-function ($, _, Promise, Config, DisplayUtil) {
+function ($, 
+          _,
+          Promise,
+          Handlebars,
+          Config,
+          DisplayUtil,
+          BootstrapDialog,
+          BetaWarningTemplate) {
     'use strict';
     $.KBWidget({
         name: 'kbaseNarrativeMethodPanel',
@@ -224,6 +234,7 @@ function ($, _, Promise, Config, DisplayUtil) {
 
 
 
+            // Search button
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="fa fa-search"></span>')
@@ -239,6 +250,8 @@ function ($, _, Promise, Config, DisplayUtil) {
                                this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
                                this.$searchInput.focus();
                            }.bind(this)));
+
+            // Refresh button
             this.addButton($('<button>')
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-refresh">')
@@ -252,8 +265,7 @@ function ($, _, Promise, Config, DisplayUtil) {
                             })
                            .click(function(e) {
                                 var versionTag = 'release';
-                                if(this.versionState=='R') { versionTag='release'; }
-                                else if(this.versionState=='B') { versionTag='beta'; }
+                                if(this.versionState=='B') { versionTag='beta'; }
                                 else if(this.versionState=='D') { versionTag='dev'; }
                                 this.refreshFromService(versionTag);
 
@@ -262,32 +274,69 @@ function ($, _, Promise, Config, DisplayUtil) {
                                 }
                            }.bind(this)));
 
+            // Toggle version btn
+            var toggleTooltipText = 'Toggle between Release and Beta Versions';
+            if (Config.get('dev_mode'))
+                toggleTooltipText = 'Toggle between Release/Beta/Dev versions';
             this.$toggleVersionBtn = $('<button>')
-                                        .addClass('btn btn-xs btn-default')
-                                        .tooltip({
-                                            title: 'Toggle between Release/Beta/Dev versions',
-                                            container: 'body',
-                                            delay: { 
-                                                show: Config.get('tooltip').showDelay, 
-                                                hide: Config.get('tooltip').hideDelay
-                                            }
-                                        })
-                                        .append('R')
+                .addClass('btn btn-xs btn-default')
+                .tooltip({
+                    title: toggleTooltipText,
+                    container: 'body',
+                    delay: { 
+                        show: Config.get('tooltip').showDelay, 
+                        hide: Config.get('tooltip').hideDelay
+                    }
+                })
+                .append('R');
             this.versionState = 'R';
-            this.addButton(this.$toggleVersionBtn
-                                .click(function(e) {
-                                    var versionTag = 'release';
-                                    if(this.versionState=='R') { this.versionState='B'; versionTag='beta'; }
-                                    else if(this.versionState=='B') { this.versionState='D'; versionTag='dev'; }
-                                    else if(this.versionState=='D') { this.versionState='R'; versionTag='release'; }
-                                    this.$toggleVersionBtn.html(this.versionState);
-                                    this.refreshFromService(versionTag);
 
-                                    if(this.appCatalog) {
-                                        this.appCatalog.setTag(versionTag);
-                                    }
-                                }.bind(this)));
+            var devMode = Config.get('dev_mode');
+            var showBetaWarning = true;
+            var betaWarningCompiled = Handlebars.compile(BetaWarningTemplate);
 
+            this.betaWarningDialog = new BootstrapDialog({
+                title: 'Warning - entering beta mode!',
+                body: betaWarningCompiled(),
+                buttons: [ $('<button class="btn btn-primary" data-dismiss="modal">OK</button>') ],
+                closeButton: true,
+                enterToTrigger: true
+            });
+            this.betaWarningDialog.getBody().find('input').change(function() {
+                showBetaWarning = $(this).is(':checked');
+            }).prop('checked', showBetaWarning);
+
+            this.$toggleVersionBtn.click(function(e) {
+                this.$toggleVersionBtn.tooltip('hide');
+                var versionTag = 'release';
+                if (this.versionState === 'R') {
+                    this.versionState = 'B';
+                    versionTag = 'beta';
+                    if (!devMode && showBetaWarning) {
+                        this.betaWarningDialog.show();
+                    }
+                }
+                else if (this.versionState === 'B') {
+                    if (devMode) {
+                        this.versionState = 'D';
+                        versionTag = 'dev';
+                    }
+                    else {
+                        this.versionState = 'R';
+                        versionTag = 'release';
+                    }
+                }
+                else if (this.versionState === 'D') {
+                    this.versionState = 'R';
+                    versionTag = 'release';
+                }
+                this.$toggleVersionBtn.html(this.versionState);
+                this.refreshFromService(versionTag);
+                if (this.appCatalog) {
+                    this.appCatalog.setTag(versionTag);
+                }
+            }.bind(this));
+            this.addButton(this.$toggleVersionBtn);
 
 
             this.$appCatalogBody = $('<div>');
@@ -320,6 +369,10 @@ function ($, _, Promise, Config, DisplayUtil) {
                     this.$slideoutBtn.tooltip('hide');
                     this.trigger('hideGalleryPanelOverlay.Narrative');
                     this.trigger('toggleSidePanelOverlay.Narrative', this.$appCatalogContainer);
+                    // Need to rerender (not refresh data) because in some states, the catalog browser looks to see
+                    // if things are hidden or not. When this panel is hidden, then refreshed, all sections will
+                    // think they have no content and nothing will display.
+                    this.appCatalog.rerender();
                 }.bind(this));
 
             this.addButton(this.$slideoutBtn);

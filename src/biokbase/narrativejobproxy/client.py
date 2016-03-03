@@ -152,10 +152,10 @@ class NarrativeJobProxy(object):
         if self.timeout < 1:
             raise ValueError('Timeout value must be at least 1 second')
 
-    def ver(self):
+    def _call(self, method, params):
 
-        arg_hash = {'method': 'NarrativeJobProxy.ver',
-                    'params': [],
+        arg_hash = {'method': method,
+                    'params': params,
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -183,76 +183,32 @@ class NarrativeJobProxy(object):
         resp = json.loads(ret.read())
 
         if 'result' in resp:
-            return resp['result'][0]
+            return resp['result']
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+
+    def ver(self):
+        resp = self._call('NarrativeJobProxy.ver',
+                          [])
+        return resp[0]
 
     def get_detailed_error(self, job):
-
-        arg_hash = {'method': 'NarrativeJobProxy.get_detailed_error',
-                    'params': [job],
-                    'version': '1.1',
-                    'id': str(random.random())[2:]
-                    }
-
-        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
-        try:
-            request = urllib2.Request(self.url, body, self._headers)
-            ret = urllib2.urlopen(request, timeout=self.timeout)
-        except HTTPError as h:
-            if _CT in h.headers and h.headers[_CT] == _AJ:
-                b = h.read()
-                err = json.loads(b)
-                if 'error' in err:
-                    raise ServerError(**err['error'])
-                else:            # this should never happen... but if it does
-                    se = ServerError('Unknown', 0, b)
-                    se.httpError = h
-                    # h.read() will return '' in the calling code.
-                    raise se
-            else:
-                raise h
-        if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' +
-                           ret.code)
-        resp = json.loads(ret.read())
-
-        if 'result' in resp:
-            return resp['result'][0]
-        else:
-            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+        resp = self._call('NarrativeJobProxy.get_detailed_error',
+                          [job])
+        return resp[0]
 
     def get_job_info(self, job):
+        resp = self._call('NarrativeJobProxy.get_job_info',
+                          [job])
+        return resp[0]
 
-        arg_hash = {'method': 'NarrativeJobProxy.get_job_info',
-                    'params': [job],
-                    'version': '1.1',
-                    'id': str(random.random())[2:]
-                    }
+    def check_app_state(self, job_id):
+        resp = self._call('NarrativeJobProxy.check_app_state',
+                          [job_id])
+        return resp[0]
 
-        body = json.dumps(arg_hash, cls=JSONObjectEncoder)
-        try:
-            request = urllib2.Request(self.url, body, self._headers)
-            ret = urllib2.urlopen(request, timeout=self.timeout)
-        except HTTPError as h:
-            if _CT in h.headers and h.headers[_CT] == _AJ:
-                b = h.read()
-                err = json.loads(b)
-                if 'error' in err:
-                    raise ServerError(**err['error'])
-                else:            # this should never happen... but if it does
-                    se = ServerError('Unknown', 0, b)
-                    se.httpError = h
-                    # h.read() will return '' in the calling code.
-                    raise se
-            else:
-                raise h
-        if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' +
-                           ret.code)
-        resp = json.loads(ret.read())
-
-        if 'result' in resp:
-            return resp['result'][0]
-        else:
-            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+    def get_job_logs(self, params):
+        resp = self._call('NarrativeJobProxy.get_job_logs',
+                          [params])
+        return resp[0]

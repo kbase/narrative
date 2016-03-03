@@ -90,7 +90,6 @@ define(['jquery', 'narrativeConfig'], function($, config) {
             url += q ? '&keyword('+q+')' : '&keyword(*)';
 
             // let's do this
-            console.log('returning!')
             return $.ajax({
                 url: url,
                 type: 'GET'
@@ -102,7 +101,6 @@ define(['jquery', 'narrativeConfig'], function($, config) {
         // This is a temporary helper function for media data, which will be removed.
         // DO NOT USE ELSEWHERE.  You've been warned :)
         this.getCpds = function(id, opts) {
-            console.log('opts', id, opts)
             var url = SOLR_ENDPOINT+'model_compound/?http_accept=application/json';
 
             if (opts && 'select' in opts) {

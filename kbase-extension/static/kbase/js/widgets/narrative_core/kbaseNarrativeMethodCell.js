@@ -26,7 +26,8 @@ function($,
          Config,
          StringUtil,
          BootstrapDialog,
-         Display) {
+         Display,
+         Handlebars) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeMethodCell",
@@ -190,7 +191,7 @@ function($,
             this.$methodDesc = $('<div>')
                                .attr('id', methodId)
                                .addClass('kb-method-subtitle')
-                               .append(methodDesc + ' &nbsp;&nbsp;<a link="' + link + '" target="_blank">more...</a>');
+                               .append(methodDesc + ' &nbsp;&nbsp;<a href="' + link + '" target="_blank">more...</a>');
 
             this.$header.append(this.$dynamicMethodSummary);
 

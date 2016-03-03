@@ -120,6 +120,18 @@ define(['jquery',
         marked) {
         'use strict';
 
+        // inject necessary environment vars into the kernel as soon as it's ready.
+        $([Jupyter.events]).on('kernel_ready.Kernel', 
+            function() {
+                Jupyter.notebook.kernel.execute(
+                    'import os;' +
+                    'os.environ["KB_AUTH_TOKEN"]="' + Jupyter.narrative.authToken + '";' +
+                    'os.environ["KB_WORKSPACE_ID"]="' + Jupyter.notebook.metadata.ws_name + '"'
+                );
+            }
+        );
+
+
         // Patch the security mechanisms to allow any JavaScript to run for now.
         // TODO: update this so only the few KBase commands run.
         security.sanitize_html = function (html, allow_css) {
@@ -559,7 +571,7 @@ define(['jquery',
             var $cellNode = $(this.element);
             var elemsToToggle = [
                 $cellNode.find('.input .input_area'),
-                $cellNode.find('.widget-area'),
+                // $cellNode.find('.widget-area'),
                 $cellNode.find('.output_wrapper')
             ];
             switch (this.getCellState('toggleState', 'unknown')) {
@@ -586,9 +598,10 @@ define(['jquery',
 
         // Patch the Notebook to return the right name
         notebook.Notebook.prototype.get_notebook_name = function () {
-            if (this.metadata.name)
-                return this.metadata.name;
-            return this.notebook_name;
+            if (!this.metadata.name) {
+                this.metadata.name = this.notebook_name;
+            }
+            return this.metadata.name;
         };
 
         // Patch the Notebook to not wedge a file extension on a new Narrative name
@@ -637,6 +650,7 @@ define(['jquery',
                                     d.modal('hide');
                                     that.notebook.metadata.name = new_name;
                                     that.element.find('span.filename').text(new_name);
+                                    Jupyter.narrative.saveNarrative();
                                 }, function (error) {
                                 d.find('.rename-message').text(error.message || 'Unknown error');
                                 d.find('input[type="text"]').prop('disabled', false).focus().select();

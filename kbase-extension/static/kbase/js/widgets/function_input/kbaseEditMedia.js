@@ -38,7 +38,7 @@ function ($,
             //var saveBtn = this.$elem.parents('.kb-func-panel').find('.kb-method-run').text('Save');
 
             // remove footer
-            this.$elem.parents('.kb-func-panel').find('.panel-footer').remove();
+            this.$elem.parents('.kb-cell').find('.kb-method-footer').remove();
 
             return this;
         },
@@ -89,9 +89,11 @@ function ($,
                 this.$mediaDisplayPanel = $('<div>');
                 var mediaWidget = $('<div>');
 
+                var self = this;
                 mediaWidget.kbaseMediaEditor({
                     ws: Jupyter.narrative.getWorkspaceName(),
-                    obj: mediaName
+                    obj: mediaName,
+                    onSave: function () { self.trigger('updateData.Narrative') }
                 });
 
                 this.$mediaDisplayPanel.append('<hr>');

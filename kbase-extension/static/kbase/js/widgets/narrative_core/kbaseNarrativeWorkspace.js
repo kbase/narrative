@@ -29,7 +29,6 @@ define(['jquery',
         'bootstrap', 
         'kbaseDefaultNarrativeOutput',
         'kbaseDefaultNarrativeInput',
-        'kbasePrompt',
         'kbaseNarrativeAppCell',
         'kbaseNarrativeMethodCell',
         'kbaseNarrativeSidePanel',
@@ -271,43 +270,40 @@ function($,
             this.$deleteCellModalBody = $('<div>');
 
             var buttonList = [
-                {
-                    name : 'Cancel',
-                    type : 'default',
-                    callback : function(e, $prompt) {
+                $('<button>')
+                .addClass('btn btn-default')
+                .attr('data-dismiss', 'modal')
+                .append('Cancel'),
+
+                $('<button>')
+                .addClass('btn btn-danger')
+                .attr('data-dismiss', 'modal')
+                .append('Delete')
+                .click(function(e) {
+                    if (this.cellToDelete !== undefined && this.cellToDelete !== null) {
+                        var cell = Jupyter.notebook.get_cell(this.cellToDelete);
+                        var removeId = $(cell.element).find('[id^=kb-cell-]').attr('id');
+                        this.trigger('cancelJobCell.Narrative', removeId, false);
+                        Jupyter.notebook.delete_cell(this.cellToDelete);
                         this.cellToDelete = null;
-                        $prompt.closePrompt();
                     }
-                },
-                {
-                    name : 'Delete',
-                    type : 'danger',
-                    callback : $.proxy(function(e, $prompt) {
-                        if (this.cellToDelete !== undefined && this.cellToDelete !== null) {
-                            var cell = Jupyter.notebook.get_cell(this.cellToDelete);
-                            var removeId = $(cell.element).find('[id^=kb-cell-]').attr('id');
-                            this.trigger('cancelJobCell.Narrative', removeId, false);
-                            Jupyter.notebook.delete_cell(this.cellToDelete);
-                            this.cellToDelete = null;
-                        }
-                        $prompt.closePrompt();
-                    }, this)
-                }
+                }.bind(this))
             ];
-            this.$deleteCellModal = $('<div>').kbasePrompt({
-                title : 'Delete Cell and Job?',
-                body : this.$deleteCellModalBody,
-                controls : buttonList
+            this.$deleteCellModal = new BootstrapDialog({
+                title: 'Delete Cell and Job?',
+                body: this.$deleteCellModalBody,
+                closeButton: false,
+                buttons: buttonList,
+                enterToTrigger: true
             });
         },
 
         showDeleteCellModal: function(index, cell, message) {
-            this.initDeleteCellModal();
             if (cell && cell.metadata[this.KB_CELL]) {
                 this.cellToDelete = index;
                 if (message)
                     this.$deleteCellModalBody.empty().html(message);
-                this.$deleteCellModal.openPrompt();
+                this.$deleteCellModal.show();
             }
         },
 
@@ -1999,6 +1995,10 @@ function($,
                 if (!widget) {
                     if (method.widgets && method.widgets.output) {
                         widget = method.widgets.output;
+                        // if the widget is set to 'no-display', then exit without showing anything
+                        if(widget === 'no-display') {
+                            return;
+                        }
                     }
                     else {
                         widget = this.defaultOutputWidget;

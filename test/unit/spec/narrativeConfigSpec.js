@@ -4,7 +4,7 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['narrativeConfig'], function(Config) {
+define(['narrativeConfig', 'bluebird'], function(Config, Promise) {
     'use strict';
     describe('Tests for narrativeConfig', function() {
         it('loaded the config module', function() {
@@ -19,8 +19,21 @@ define(['narrativeConfig'], function(Config) {
             expect(Config.config.urls.workspace).toMatch(/https\:\/\/.*kbase\.us\/services\/ws/);
         });
 
-        it('tries to update paths from ui-common', function() {
-            Config.updateConfig(function(cfg) { });
+        it('tries to update paths from ui-common and gets data source config', function(done) {
+            Config.updateConfig()
+            .then(function(config) {
+                expect(config).toBeDefined();
+                done();
+            });
+        });
+
+        it('updates paths and sees data sources for both example and public data', function(done) {
+            Config.updateConfig()
+            .then(function(config) {
+                expect(config.exampleData).toBeDefined();
+                expect(config.publicCategories).toBeDefined();
+                done();
+            });
         });
 
         it('can use the url method to fetch a url', function() {

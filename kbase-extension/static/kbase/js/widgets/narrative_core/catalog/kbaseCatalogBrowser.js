@@ -75,6 +75,8 @@ define([
                     metabolic_modeling : 'Metabolic Modeling',
                     comparative_genomics : 'Comparative Genomics',
                     expression : 'Expression',
+                    communities : 'Communities',
+                    sequence : 'Sequence Alignment & Search',
                     util : 'Utilities'
                 };
 
@@ -134,7 +136,6 @@ define([
                 loadingCalls.push(self.populateAppListWithApps());
                 loadingCalls.push(self.populateModuleList());
 
-
                 // when we have it all, then render the list
                 Promise.all(loadingCalls).then(function() {
 
@@ -170,6 +171,12 @@ define([
 
             },
 
+            rerender: function() {
+                var self = this;
+                if(self.organizeBy) {
+                    self.renderAppList(self.organizeBy);
+                }
+            },
 
             setupClients: function() {
 
@@ -238,7 +245,29 @@ define([
                 $searchBox.on('input',
                     function() {
                         self.filterApps($searchBox.val());
-                    });
+                    }
+                )
+                .on('focus',
+                    function() {
+                        if (Jupyter && Jupyter.narrative) {
+                            Jupyter.narrative.disableKeyboardManager();
+                        }
+                    }
+                )
+                .on('blur',
+                    function() {
+                        if (Jupyter && Jupyter.narrative) {
+                            Jupyter.narrative.enableKeyboardManager();
+                        }
+                    }
+                )
+                .bind('keypress',
+                    function(e) {
+                        if (e.keyCode === 13) {
+                            return false;
+                        }
+                    }
+                );
                 $content.append($('<form>').addClass('navbar-form navbar-left')
                                     .append($('<div>').addClass('form-group')
                                         .append($searchBox)));
@@ -562,6 +591,16 @@ define([
                     .then(function (apps) {
                         //console.log(apps);
                         for(var k=0; k<apps.length; k++) {
+
+                            // logic to hide/show certain categories
+                            var skip = false;
+                            for(var i=0; i<apps[k].categories.length; i++) {
+                                if(self.options.ignoreCategories[apps[k].categories[i]]) {
+                                    skip = true;
+                                }
+                            }
+                            if(skip) continue;
+
                             var a = new AppCard('app',apps[k],null,self.nms_base_url, null, {}, 
                                 true, function(card) { self.clickCallback(card); });
                             self.appList.push(a);

@@ -374,4 +374,31 @@ class Catalog(object):
         resp = self._call('Catalog.get_exec_aggr_stats',
                           [params], json_rpc_context)
         return resp[0]
+  
+    def get_exec_aggr_table(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method get_exec_aggr_table: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.get_exec_aggr_table',
+                          [params], json_rpc_context)
+        return resp[0]
+  
+    def set_client_group(self, group, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method set_client_group: argument json_rpc_context is not type dict as required.')
+        self._call('Catalog.set_client_group',
+                   [group], json_rpc_context)
+  
+    def get_client_groups(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method get_client_groups: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.get_client_groups',
+                          [params], json_rpc_context)
+        return resp[0]
+  
+    def is_admin(self, username, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method is_admin: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.is_admin',
+                          [username], json_rpc_context)
+        return resp[0]
  

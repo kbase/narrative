@@ -1,89 +1,112 @@
-
 define([
         'jquery', 
         'plotly',
         'kbwidget', 
-        'kbaseGrowthMatrixAbstract', 
+        'kbaseGrowthParametersAbstract', 
         'kbaseTabs',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap' 
         ], function($,Plotly) {
     $.KBWidget({
         name: 'kbaseGrowthParamsPlot',
-        parent: 'kbaseGrowthMatrixAbstract',
+        parent: 'kbaseGrowthParametersAbstract',
         version: '1.0.0',        
         options: {
             growthParam: null,
             conditionParam: null
         },
         
-        
-        
-        setTestParameters: function(){
+        render: function(){
+            var sampleParams = this.buildSamplesWithParameters();
+            var seriesParams = this.groupSamplesWithParametersIntoSeries(sampleParams);
+            
+            this.loading(false);
+            var $vizContainer = $("<div/>");
+            this.$elem.append( $vizContainer );
+            this.buildWidget( $vizContainer , seriesParams);                 
         },        
         
-        buildWidget: function($containerDiv){
-            
+        buildWidget: function($containerDiv, seriesParams){   
             var growthParamNames = {
-                "maxRate": "Max growth rate",
-                "maxRateTime": "Max growth rate time",
-                "maxOD":  "Max OD",
-                "maxODTime": "Max OD time"
+                "growth_rate": "Growth rate",
+                "max_growth": "Max growth",
+                "lag_phase":  "Lag phase",
+                "area_under_curve": "Area under curve"
             };                        
             
             var growthParamType = this.options.growthParam;
             var growthParamName = growthParamNames[growthParamType];
             var conditionParamX = this.options.conditionParam;                
                         
-            this.buildPlot($containerDiv, growthParamType, growthParamName, conditionParamX);
+            this.buildPlot($containerDiv, growthParamType, growthParamName, seriesParams, conditionParamX);
         },
         
-        buildPlot: function($containerDiv, growthParamType, growthParamName, conditionParamX){
+        buildPlot: function($containerDiv, growthParamType, growthParamName, seriesParams, conditionParamX){
             var self = this;
             
-            var xyValues = [];
+            var xyeValues = [];
             var conditionParamXUnit;
             
-            var conditions = self.conditions;
-            for(var ci in conditions){
-                var condition = conditions[ci];
+            var filters = self.options.conditionFilter;
+            
+            // iterate over all series
+            for(var i in seriesParams){
+                var seriesParam = seriesParams[i];
+                var samples = seriesParam.samples;
                 
-
-                // find the value        
-                var value;                    
-                for(var j in condition.metadata){
-                    var pv  = condition.metadata[j];
-                    if( pv.entity != 'Condition') continue;
-                    if( pv.property_name == conditionParamX){
+                // Check all properties
+                var filterPassed = true;
+                var value = null;
+                var unit = null;
+                
+                for(var conditionName in seriesParam.conditionHash){
+                    var pv = seriesParam.conditionHash[conditionName];
+                    if(conditionName == conditionParamX){
                         value = pv.property_value;
-                        conditionParamXUnit = pv.property_unit;
-                        break;
+                        unit = pv.property_unit;
+                    } else {
+                        if( !(conditionName in filters)){
+                            filterPassed = false;
+                            break;                                
+                        }
+                        if( pv.property_value != filters[conditionName] ){
+                            filterPassed = false;
+                            break;                                
+                        }                        
                     }
                 }
                 
-                // Check whether xValues are numeric
-                var xIsNumber = (conditionParamXUnit? true: false);
                 
-
-                // if value is found, add it to the data
-                if(value != undefined){
-                    xyValues.push({
-                        x: xIsNumber? parseFloat(value): value,
-                        y: condition[growthParamType]
+                if( value != null && filterPassed){
+                    xyeValues.push({
+                        x: value,
+                        y: seriesParam['avg_' + growthParamType],
+                        e: seriesParam['se_' + growthParamType]
                     });
+                    conditionParamXUnit = unit;
                 }
             }
+
+
             
             
             // Sort by xvalues
-            xyValues.sort(function(a, b) { return a.x > b.x ? 1 : -1});            
+            if(conditionParamXUnit != null && conditionParamXUnit != ""){
+                // If unit is provided we expect that it x values are numeric
+                xyeValues.sort(function(a, b) { return a.x - b.x;});            
+            } else{
+                xyeValues.sort(function(a, b) { return a.x > b.x ? 1 : -1});            
+            }
+            
             
             // Build xValue and yValues arrays
             var xValues = [];
             var yValues = [];
-            for(var i in xyValues){
-                xValues.push(xyValues[i].x);
-                yValues.push(xyValues[i].y);
+            var yErrors = [];
+            for(var i in xyeValues){
+                xValues.push(xyeValues[i].x);
+                yValues.push(xyeValues[i].y);
+                yErrors.push(xyeValues[i].e);
             }
             
             
@@ -92,7 +115,13 @@ define([
             data.push({
                     x : xValues,
                     y : yValues,
-//                    text: names,
+                    'error_y':{
+                      type: 'data',
+                      array: yErrors,
+                      visible: true
+                    },
+                
+                //                    text: names,
                     mode: 'lines+markers',
                     type: 'scatter',
                     marker: { size: 9 }
@@ -100,8 +129,7 @@ define([
 
             // Build title
             var title = growthParamName;
-            var filters = self.options.conditionFilter;
-            if(filters){
+            if(filters && Object.keys(filters).length > 0){
                 title += '<br><span style="font-size:0.8em; font-style: italic">constrained parameteres: ';
                 var i = 0;
                 for(var param in filters){
@@ -135,7 +163,7 @@ define([
                     type: "category"
                 },                 
                 yaxis: {
-                    title: growthParamName,
+//                    title: growthParamName,
                 }
             };     
 

@@ -7,6 +7,7 @@ define(['jquery',
         'kbaseNarrativeSharePanel', 
         'bootstrap'], function($, Config) {
 'use strict';
+
 $(document).on('workspaceIdQuery.Narrative', function(e, callback) {
     if (callback) {
         callback(workspaceId);
@@ -35,6 +36,11 @@ $('#kb-kernel-ref-btn').click(function(e) {
         Jupyter.notebook.kernel.restart();
     }
 });
+$('#kb-kernel-rec-btn').click(function(e) {
+    if (Jupyter && Jupyter.notebook && Jupyter.notebook.kernel) {
+        Jupyter.notebook.kernel.reconnect();
+    }
+});
 $('#kb-del-btn').click(function(e) {
     if (Jupyter && Jupyter.notebook) {
         Jupyter.notebook.delete_cell();
@@ -42,8 +48,6 @@ $('#kb-del-btn').click(function(e) {
 });
 $('#kb-jira-btn').attr('href', Config.url('submit_jira_ticket') + '%20' + Config.get('version'));
 $('#kb-status-btn').attr('href', Config.url('status_page'));
-
-
 
 $('#kb-add-code-cell').click(function() {
     Jupyter.narrative.insertAndSelectCellBelow('code');
@@ -66,7 +70,7 @@ $('#kb-add-md-cell').click(function() {
 });
 
 $('#kb-side-toggle-in').click(function() {
-  Jupyter.narrative.toggleSidePanel();
+    Jupyter.narrative.toggleSidePanel();
 });
 
 /**

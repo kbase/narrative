@@ -15,6 +15,7 @@
     "select2-bootstrap-css": "^1.4.5",
     "underscore": "~1.8.3",
     "plotly.js": "git://github.com/plotly/plotly.js/#1.5.1",
-    "bluebird": "3.0.6"
+    "bluebird": "3.0.6",
+    "handlebars": "^4.0.5"
   }
 }

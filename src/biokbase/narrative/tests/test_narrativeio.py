@@ -138,8 +138,8 @@ class NarrIOTestCase(unittest.TestCase):
         """
         Validates a narrative object's overall structure.
         We're just making sure that the right elements are expected 
-        to be here - we leave the IPython Notebook validation part to
-        the IPython test suite.
+        to be here - we leave the Jupyter Notebook validation part to
+        the Jupyter test suite.
         """
         if nar is None:
             return "Unable to validate null Narrative!"
@@ -166,6 +166,12 @@ class NarrIOTestCase(unittest.TestCase):
             if missing_keys:
                 return "Narrative metadata is missing the following keys: {}".format(', '.join(missing_keys))
         return None
+
+    def validate_metadata(self, std_meta, meta):
+        """
+        Validates a Narrative's typed object metadata.
+        """
+        pass
 
     def test_read_narrative_valid_content_metadata(self):
         nar = self.mixin.read_narrative(self.public_nar['ref'], content=True, include_metadata=False)

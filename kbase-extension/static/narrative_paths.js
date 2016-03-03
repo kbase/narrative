@@ -102,10 +102,11 @@ require.config({
         'kbStandaloneListSelect'                : 'kbase/js/widgets/function_input/kbStandaloneListselect',
         'devVizSelector'                        : 'kbase/js/widgets/function_input/devDataViz',
 
+        'kbaseGrowthCurvesInput'                : 'kbase/js/widgets/function_input/kbaseGrowthCurvesInput',
         'kbaseGrowthParamsPlotInput'            : 'kbase/js/widgets/function_input/kbaseGrowthParamsPlotInput',
         'kbaseGrowthParams2DPlotInput'          : 'kbase/js/widgets/function_input/kbaseGrowthParams2DPlotInput',
-        'kbaseWellSampleHistogramInput'         : 'kbase/js/widgets/function_input/kbaseWellSampleHistogramInput',
-        'kbaseWellSample2DPlotInput'            : 'kbase/js/widgets/function_input/kbaseWellSample2DPlotInput',
+        'kbaseSamplePropertyHistogramInput'     : 'kbase/js/widgets/function_input/kbaseSamplePropertyHistogramInput',
+        'kbaseSampleProperty2DPlotInput'        : 'kbase/js/widgets/function_input/kbaseSampleProperty2DPlotInput',
 
         'kbaseNarrativeParameterCustomTextSubdataInput' :  'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomTextSubdataInput',
         'kbaseNarrativeParameterCustomButtonInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomButtonInput',
@@ -119,19 +120,27 @@ require.config({
         /***
          * CUSTOM OUTPUT AND VIEWER WIDGETS
          ***/
+        'kbaseMatrix2DAbstract'                 : 'kbase/js/widgets/function_output/kbaseMatrix2DAbstract',
         'kbaseGrowthMatrixAbstract'             : 'kbase/js/widgets/function_output/kbaseGrowthMatrixAbstract',
         'kbaseGrowthMatrix'                     : 'kbase/js/widgets/function_output/kbaseGrowthMatrix',
         'kbaseGrowthCurves'                     : 'kbase/js/widgets/function_output/kbaseGrowthCurves',
+
+
+        'kbaseGrowthParametersAbstract'         : 'kbase/js/widgets/function_output/kbaseGrowthParametersAbstract',
+        'kbaseGrowthParameters'                 : 'kbase/js/widgets/function_output/kbaseGrowthParameters',
         'kbaseGrowthParamsPlot'                 : 'kbase/js/widgets/function_output/kbaseGrowthParamsPlot',
         'kbaseGrowthParams2DPlot'               : 'kbase/js/widgets/function_output/kbaseGrowthParams2DPlot',
 
-        'kbaseWellSampleHistogram'              : 'kbase/js/widgets/function_output/kbaseWellSampleHistogram',
-        'kbaseWellSample2DPlot'                 : 'kbase/js/widgets/function_output/kbaseWellSample2DPlot',
+        'kbaseSamplePropertyMatrixAbstract'     : 'kbase/js/widgets/function_output/kbaseSamplePropertyMatrixAbstract',
+        'kbaseSamplePropertyMatrix'             : 'kbase/js/widgets/function_output/kbaseSamplePropertyMatrix',
+        'kbaseSamplePropertyHistogram'          : 'kbase/js/widgets/function_output/kbaseSamplePropertyHistogram',
+        'kbaseSampleProperty2DPlot'             : 'kbase/js/widgets/function_output/kbaseSampleProperty2DPlot',
         'kbaseChromatographyMatrix'             : 'kbase/js/widgets/function_output/kbaseChromatographyMatrix',
+        'kbaseChromatograms'                    : 'kbase/js/widgets/function_output/kbaseChromatograms',
         'kbaseDefaultNarrativeOutput'           : 'kbase/js/widgets/function_output/kbaseDefaultNarrativeOutput',
 
         'ModelingAPI'                           : 'kbase/js/api/ModelingAPI',
-        'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling', // deprecated!
+        'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling', // to be deprecated!
         'kbaseTabTable'                         : 'kbase/js/revised-widgets/src/widgets/modeling/kbaseTabTable',
         'KBModeling'                            : 'kbase/js/revised-widgets/src/widgets/modeling/KBModeling',
         'KBaseFBA.FBAModel'                     : 'kbase/js/revised-widgets/src/widgets/modeling/KBaseFBA.FBAModel',
@@ -150,6 +159,9 @@ require.config({
         'kbaseExpressionAnalysis'               : 'kbase/js/widgets/function_output/kbaseExpressionAnalysis',
         'kbaseEditMedia'                        : 'kbase/js/widgets/function_input/kbaseEditMedia',
         'kbaseMediaEditor'                      : 'kbase/js/widgets/function_input/editors/kbaseMediaEditor',
+        'kbaseEditModel'                        : 'kbase/js/widgets/function_input/kbaseEditModel',
+        'kbaseModelEditor'                      : 'kbase/js/widgets/function_input/editors/kbaseModelEditor',
+        'kbaseEditHistory'                      : 'kbase/js/widgets/function_input/editors/kbaseEditHistory',
         'kbaseModal'                            : 'kbase/js/widgets/narrative_core/kbaseModal',
 
         // another implementation of kbaseTabs needed for kbaseTabTable
@@ -166,6 +178,7 @@ require.config({
         'kbaseContigSetView'                    : 'kbase/js/widgets/function_output/kbaseContigSetView',
         'kbaseAssemblyView'                     : 'kbase/js/widgets/function_output/kbaseAssemblyView',
         'AssemblyWidget'                        : 'kbase/js/widgets/function_output/kbaseAssembly',
+        'kbaseSeqCompView'                      : 'kbase/js/widgets/function_output/kbaseSeqCompView',
         'FbaModelComparisonWidget'              : 'kbase/js/widgets/function_output/kbaseFbaModelComparison',
         // for the GenomeComparison object
         'kbaseGenomeComparisonViewer'           : 'kbase/js/widgets/function_output/kbaseGenomeComparisonViewer',
@@ -240,11 +253,10 @@ require.config({
 
         'd3'                                    : 'ext_components/d3/d3.min',//  'kbase/js/ui-common/ext/d3/d3.v3.min',
         'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer.min',
-        'handlebars'                            : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
+        'handlebars'                            : 'ext_components/handlebars/handlebars', //kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
         'kbwidget'                              : 'kbase/js/ui-common/src/kbwidget',
         'kbaseAccordion'                        : 'kbase/js/ui-common/src/widgets/kbaseAccordion',
         'kbaseAuthenticatedWidget'              : 'kbase/js/ui-common/src/widgets/kbaseAuthenticatedWidget',
-        'kbaseModal'                            : 'kbase/js/ui-common/src/widgets/kbaseModal',
         'kbaseTable'                            : 'kbase/js/ui-common/src/widgets/kbaseTable',
         'kbasePanel'                            : 'kbase/js/ui-common/src/widgets/kbasePanel',
         'kbaseDeletePrompt'                     : 'kbase/js/ui-common/src/widgets/kbaseDeletePrompt',
@@ -277,6 +289,10 @@ require.config({
         },
         knhx : {
             deps : ['knhx_menu', 'knhx_excanvas', 'knhx_canvastext', 'knhx_easytree']
+        },
+        'kbaseModelEditor' : {
+            // could be removed once code is repackaged and require.js-ified
+            'deps' : ['KBaseFBA.FBAModel', 'kbaseTabTableTabs']
         },
         'KBaseFBA.FBAModel' : {
             'deps' : ['KBModeling']
@@ -316,6 +332,9 @@ require.config({
                       'KBasePhenotypes.PhenotypeSet',
                       'KBasePhenotypes.PhenotypeSimulationSet',
                       'KBaseFBA.FBAComparison',
+                      'modelSeedVizConfig',
+                      'kbasePathways',
+                      'msPathway',
                       'kbaseTabTableTabs',
                       'kbasePMIBarchart']
         },

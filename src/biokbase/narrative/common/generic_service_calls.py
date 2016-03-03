@@ -167,7 +167,14 @@ def _method_get_state(workspace, token, URLS, job_manager, method_spec_json, par
     wsClient = workspaceService(URLS.workspace, token = token)
     if method_job_id.startswith("method:"):
         method_job_id = method_job_id[7:]
-        appState = njsClient.check_app_state(method_job_id)
+        is_async = is_async_method(methodSpec)
+        appState = None
+        if is_async:
+            # It's an SDK method, we use narrative proxy user to deal with sharing
+            ujs_proxy = job_manager.proxy_client()
+            appState = ujs_proxy.check_app_state(method_job_id)
+        else:  # If it's NJS script method then we cannot use narrative proxy user
+            appState = njsClient.check_app_state(method_job_id)
         for stepId in appState['step_outputs']:
             rpcOut = appState['step_outputs'][stepId]
             appState['widget_outputs'] = app_state_output_into_method_output(workspace, token, wsClient, methodSpec, methodInputValues, rpcOut)
@@ -374,6 +381,15 @@ def is_script_method(methodSpec):
     if 'script_input_mapping' in behavior:
         return True
     return False
+
+def is_async_method(methodSpec):
+    if is_script_method(methodSpec):
+        return False
+    behavior = methodSpec['behavior']
+    return ('job_id_output_field' in methodSpec and 
+            methodSpec['job_id_output_field'] == 'docker' and 
+            'kb_service_input_mapping' in behavior and 
+            behavior['kb_service_url'] == '')
 
 def create_app_step(workspace, token, wsClient, methodSpec, methodInputValues, stepId, scriptStep):
     step = { 'step_id' : stepId, 'method_spec_id' : methodSpec['info']['id'] }

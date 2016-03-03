@@ -1,407 +1,305 @@
-
-
 define([
         'jquery', 
         'kbwidget', 
-        'kbaseAuthenticatedWidget', 
+        'kbaseMatrix2DAbstract', 
         'kbaseTabs',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap' 
         ], function($) {
     $.KBWidget({
         name: 'kbaseGrowthMatrixAbstract',
-        parent: 'kbaseAuthenticatedWidget',
+        parent: 'kbaseMatrix2DAbstract',
         version: '1.0.0',
-        options: {
-            workspaceID: null,
-            growthMatrixID: null,
-            columnIds: null,
-            conditionParam: null,
-            conditionParamX: null,
-            conditionParamY: null,            
-            conditionFilter: {},
+        
+        TYPE_SAMPLES : 'Samples',
+        TYPE_SERIES : 'Series',        
 
-            // Service URL: should be in window.kbconfig.urls.
-            workspaceURL: window.kbconfig.urls.workspace,
-            loadingImage: "static/kbase/images/ajax-loader.gif"
+        getTimePoints: function(matrix){
+            return this.getNumericPropertyCourse(matrix.data.row_ids, matrix.metadata.row_metadata, 'TimeSeries', 'Time');
         },
+        
+        groupAndFillGrowthParams: function(matrix, seriesList, timePoints){
+            
+            var values = matrix.data.values;            
+            
+            for(var si in seriesList){                
+                var series = seriesList[si];
+                var samples = series.samples;
 
-        // Prefix for all div ids
-        pref: null,
-
-        // KBaseFeatureValue client
-        wsClient: null,
-
-        // Matrix 
-        growthMatrix: null,
+                var maxRate = null;
+                var maxRateTime = null;
+                var maxOD = null;
+                var maxODTime = null;                  
                 
-        // Conditions
-        conditions: null,
-        
-
-        init: function(options) {
-            this._super(options);
-            this.pref = this.uuid();
-
-            // Create a message pane
-            this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);       
-
-            return this;
-        },
-
-        loggedInCallback: function(event, auth) {
-
-            console.log('options', this.options);
-            
-           // Build a client
-            this.wsClient = new Workspace(this.options.workspaceURL, auth);
-
-            // Let's go...
-            this.loadAndRender();           
-            return this;
-        },
-
-        loggedOutCallback: function(event, auth) {
-            this.isLoggedIn = false;
-            return this;
-        },
-
-        setTestParameters: function(){
-        },
-
-
-        loadAndRender: function(){
-            var self = this;
-            self.loading(true);
-
-            self.setTestParameters();
-            var ref = self.buildObjectIdentity(this.options.workspaceID, this.options.growthMatrixID);
-            self.wsClient.get_objects([ref], 
-                function(data) {
-
-                    self.growthMatrix = data[0].data;
-                    self.conditions = self.buildConditions();
-                    console.log("growthMatrix",self.growthMatrix);
-                    self.loading(false);
-                    self.render();
-                },
-                function(error){
-                    self.clientError(error);
-                }
-            );
-        },
-
-        // main function to render widget
-        render: function(){
-
-            var $overviewContainer = $("<div/>");
-            this.$elem.append( $overviewContainer );
-            this.buildOverviewDiv( $overviewContainer );
-
-            // // Separator
-            // this.$elem.append( $('<div style="margin-top:1em"></div>') );
-
-            var $vizContainer = $("<div/>");
-            this.$elem.append( $vizContainer );
-            this.buildWidget( $vizContainer );               
-        },
-
-        buildOverviewDiv: function($containerDiv){
-            var self = this;
-            var pref = this.pref;
-
-            
-            var $overviewSwitch = $("<a/>").html('[Show/Hide Conditions]');
-            $containerDiv.append($overviewSwitch);
-
-            var $overvewContainer = $('<div hidden style="margin:1em 0 4em 0"/>');
-            $containerDiv.append($overvewContainer);
-            self.buildConditionsTable($overvewContainer);
-            
-            $overviewSwitch.click(function(){
-                $overvewContainer.toggle();
-            });              
-        },
-        
-        buildConditionsTable: function($container){
-            
-            console.log('from buildConditionsTable');
-            var self = this;
-            var pref = self.pref;
-            
-            var iDisplayLength = 10;
-            var style = 'lftip';
-            if(self.conditions.length<=iDisplayLength) { style = 'fti'; }
-
-            var table = $('<table id="'+pref+'conditions-table"  \
-                class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;">\
-                </table>')
-                .appendTo($container)
-                .dataTable( {
-                    "sDom": style,
-                    "iDisplayLength": iDisplayLength,
-                    "aaData": self.conditions,
-                    "aoColumns": [
-                        { sTitle: "Condition ID", mData: "columnId"},
-                        { sTitle: "Conditions", mData: "label"},
-                        { sTitle: "Max rate", mData:"maxRate" },
-                        { sTitle: "Max rate time", mData:"maxRateTime" },
-                        { sTitle: "Max OD", mData:"maxOD" },
-                        { sTitle: "Max OD time", mData:"maxODTime" }
-                    ],
-                    "oLanguage": {
-                                "sEmptyTable": "No conditions found!",
-                                "sSearch": "Search: "
-                    }                    
-                } );          
-        },
-        
-        
-        
-        // Prepare conditions for furhter visualization:
-        // 1. build condition label
-        // 2. calculate growth curve paramaeters
-        buildConditions: function(){
-            var self = this;
-            var conditions = [];
-            
-            
-            var rowIds = self.growthMatrix.data.row_ids;
-            
-            // If columnIds parameter is defined then let us use only thouse columns, 
-            // otherwise we will use all columns in the matrix
-            var columnIds = self.options.columnIds ? 
-                    $.map(self.options.columnIds.split(","), $.trim): 
-                    self.growthMatrix.data.col_ids;
-            
-            // Build hash of columnIds to column indeces to be able to access values by columnId
-            var columnIds2ColumnIndex = self.buildColumnIds2ColumnIndex(self.growthMatrix);
-                        
-            
-            // metadat of columns and rows
-            var rowsMetadata = self.growthMatrix.metadata.row_metadata;
-            var columnsMetadata = self.growthMatrix.metadata.column_metadata;
-            
-            // Actual values in the matrix
-            var values = self.growthMatrix.data.values;
-            
-            var conditionFilter = self.options.conditionFilter;
-            
-            var conditionParam = self.options.conditionParam;
-            var conditionParamX = self.options.conditionParamX;
-            var conditionParamY = self.options.conditionParamY;
-
-
-            var conditionParams = {};
-            if(conditionParam) conditionParams[conditionParam] = "";
-            if(conditionParamX) conditionParams[conditionParamX] = "";
-            if(conditionParamY) conditionParams[conditionParamY] = "";
-
-            
-            
-            for(var ci in columnIds) {
-                var columnId = columnIds[ci];
-                
-                // cIndex is the index of columnId in the matrix 
-                var cIndex = columnIds2ColumnIndex[columnId];
-                var columnMetadata = columnsMetadata[columnId];
-                                
-                // Check conditionParam && filters: all column params should be specified
-                if( !$.isEmptyObject(conditionParams) ){
+                var odPrev = null;
+                var timePrev = null;
+                for(var i in timePoints){
                     
-                    // Check that all conditions params are present in a given column
-                    var conditionParamsFound = true;
-                    for(var conditionParam in conditionParams){
-                        var conditionParamFound = false;
-                        for(var i in columnMetadata){
-                            var pv  = columnMetadata[i];
-                            if(pv.entity != 'Condition') continue;
-                            if(conditionParam == pv.property_name ){
-                                conditionParamFound = true;
-                                break;
-                            }
-                        }
-                        if(!conditionParamFound){
-                            conditionParamsFound = false;
-                            break;
-                        }                        
+                    var timePoint = timePoints[i];
+                    var rIndex = timePoint.index;
+
+                    var time = timePoint.value;
+                    
+                    // calculate average od
+                    var od = 0;
+                    for(var j in samples){
+                        var cIndex = samples[j].columnIndex;
+                        od += values[rIndex][cIndex];
                     }
+                    od /= samples.length;
                     
-                    if(!conditionParamsFound) continue;
-                        
-                    // Check that all params are either main params or constrained by filter
-                    var filtersPassed = true;                
-                    for(var i in columnMetadata){
-                        var pv  = columnMetadata[i];
-                        if(pv.entity != 'Condition') continue;
-                        if( !(pv.property_name in conditionParams) && ( !(pv.property_name in conditionFilter) || conditionFilter[pv.property_name ] != pv.property_value) ){
-                            filtersPassed = false;
-                            break;
-                        } 
-                    }
-
-                    if(!filtersPassed){
-                        continue;
-                    }                
-                }                
-                
-                // Calculate growth curve parameters
-                var maxRate = 0;
-                var maxRateTime = 0;
-                var maxOD = 0;
-                var maxODTime = 0;
-                for(var rIndex in rowIds) {
-                    
-                    var od = values[rIndex][cIndex];  
-                    var time = self.getRowTime(rowIds[rIndex], rowsMetadata);
-                    if(rIndex > 0){
-                        var odPrev = values[rIndex-1][cIndex];  
-                        var timePrev = self.getRowTime(rowIds[rIndex-1], rowsMetadata);
-
+                    if(i > 0){
                         var rate = 0;
                         if(od > 0 && odPrev > 0){
-                            rate = (Math.log(od) - Math.log(odPrev))/(time - timePrev);
+                            rate = (Math.log(od/odPrev))/(time - timePrev);
                         }
-//                        var rate = (growth - growthPrev)/(time - timePrev);
-                        if(rate > maxRate){
+                        if(maxRate == null || rate > maxRate){
                             maxRate = rate;
                             maxRateTime = time;
                         }
-                    }
-                        
-                    if(od > maxOD){
+                    }  
+                    
+                    if(maxOD == null || od > maxOD){
                         maxOD = od;
                         maxODTime = time;
+                    }                    
+                    
+                    timePrev = time;
+                    odPrev = od;
+                }
+                
+                series['maxRate'] = maxRate != null ?  maxRate.toFixed(3) : 'ND';
+                series['maxRateTime'] = maxRateTime != null ?  maxRateTime.toFixed(1) : 'ND';
+                series['maxOD'] = maxOD != null ? maxOD.toFixed(3): 'ND';
+                series['maxODTime'] = maxODTime != null ? maxODTime.toFixed(1) : 'ND';                
+            }
+        },        
+        
+        fillGrowthParams: function(matrix, sample, timePoints){
+            // Calculate growth curve parameters
+            var maxRate = null;
+            var maxRateTime = null;
+            var maxOD = null;
+            var maxODTime = null;
+            
+            var cIndex = sample.columnIndex;
+            var values = matrix.data.values;            
+            
+            var odPrev = null;
+            var timePrev = null;
+            for(var i in timePoints){
+                var timePoint = timePoints[i];
+                var rIndex = timePoint.index;
+                
+                var time = timePoint.value;
+                var od = values[rIndex][cIndex];  
+                
+                if(i > 0){
+                    var rate = 0;
+                    if(od > 0 && odPrev > 0){
+                        rate = (Math.log(od) - Math.log(odPrev))/(time - timePrev);
                     }
+                    if(maxRate == null || rate > maxRate){
+                        maxRate = rate;
+                        maxRateTime = time;
+                    }
+                }
+
+                if(maxOD == null || od > maxOD){
+                    maxOD = od;
+                    maxODTime = time;
+                }
+
+                timePrev = time;
+                odPrev = od;
+            }            
+
+            // Populate conditions with growth params
+            sample['maxRate'] = maxRate != null ?  maxRate.toFixed(3) : 'ND';
+            sample['maxRateTime'] = maxRateTime != null ?  maxRateTime.toFixed(1) : 'ND';
+            sample['maxOD'] = maxOD != null ? maxOD.toFixed(3): 'ND';
+            sample['maxODTime'] = maxODTime != null ? maxODTime.toFixed(1) : 'ND';
+        },
+        
+        
+        buildSamples: function(matrix, columnIds, timePoints){
+            var samples = [];
+            
+            var columnsMetadata = matrix.metadata.column_metadata;
+            var columnIds2ColumnIndex = this.buildColumnIds2ColumnIndex(matrix);
+            
+            for(var i in columnIds){
+                var columnId = columnIds[i];
+                var columnMetadata = columnsMetadata[columnId];
+                var columnIndex = columnIds2ColumnIndex[columnId];
+                var seriesId = this.getPropertyValue(columnMetadata, 'DataSeries', 'SeriesID');
+                
+                var sampleProperties = this.getProperties(columnMetadata, 'Condition');
+                sampleProperties.sort(function(a,b){ return a.property_name > b.property_name ? 1 : (a.property_name < b.property_name ? -1 :0 ); });
+                var sampleLabel = this.propertiesToString(sampleProperties);
+                
+                
+                var sample = {
+                    columnIndex: columnIndex,
+                    columnId: columnId,
+                    seriesId: seriesId,
+                    label: sampleLabel,
+                    properties: sampleProperties,
+                    
+                    maxOD: null,
+                    maxODTime: null,
+                    maxRate: null,
+                    maxRateTime: null                    
+                };
+                
+                this.fillGrowthParams(matrix, sample, timePoints);
+                samples.push(sample);
+            }
+            
+            return samples;
+        },
+        
+        groupSamplesIntoSeries: function(matrix, samples, timePoints){
+            var seriesHash = {};
+            for(var i in samples){
+                var sample = samples[i];
+                var seriesId = sample.seriesId;
+                var series = seriesHash[seriesId];
+                if(series == null){
+                    series = {
+                        seriesId: seriesId,
+                        samples: [],
+                        label: sample.label,
+                      
+                        maxOD: null,
+                        maxODTime: null,
+                        maxRate: null,
+                        maxRateTime: null,  
+                        samplesCount: 0
+                    };
+                    seriesHash[seriesId] = series;
+                }
+                series.samples.push(sample);
+            }
+
+            // Convert hash into list and fill out the number of samples (to be used in the jtables)
+            var seriesList = [];
+            for(var seriesId in seriesHash){
+                var series = seriesHash[seriesId];
+                series.samplesCount = series.samples.length;
+                seriesList.push(series);
+            }
+            
+            
+            // Calulate average values across samples for each series and then 
+            // estimate maxOD and maxRate
+            this.groupAndFillGrowthParams(matrix, seriesList, timePoints);
+            
+            
+            return seriesList;
+        },
+        
+        getSamplesSummary: function(samples){
+            var summary = {};
+            
+            // For each proprty we will collect all values, and also the property unit
+            for(var i in samples){
+                var props = samples[i].properties;
+                
+                for(var j in props){
+                    var pv = props[j];
+                    var propSummary = summary[pv.property_name];
+                    if(propSummary == null){
+                        propSummary = {
+                            propertyUnit: pv.property_unit,
+                            valueSet: {}                            
+                        };
+                        summary[pv.property_name] = propSummary;                        
+                    }
+                    propSummary.valueSet[pv.property_value] = true;
+                }
+            }
+            
+            
+            // Sort all values either alphabetically or numrecially, 
+            // and build a string representations
+            
+            var propNames = [];
+            for(var propName in summary){
+                propNames.push(propName);
+                var propSummary = summary[propName];
+                var values = [];
+                for(var val in propSummary.valueSet){                    
+                    values.push(val);                    
+                }
+                
+                // Ugly...  if propertyUnit is defined => consider values as numeric
+                if(propSummary.propertyUnit) {
+                    values.sort(function(a,b){return a - b});
+                } else{
+                    values.sort();
                 }
                 
                 
-                // Build a properties record for a given condition
-                conditions.push({
-                    columnIndex: cIndex,
-                    columnId: columnId,
-                    label: self.getColumnLabel(columnMetadata),
-                    metadata: columnMetadata,
-                    
-                    maxOD: maxOD.toFixed(3),
-                    maxODTime: maxODTime.toFixed(1),
-                    maxRate: maxRate.toFixed(3),
-                    maxRateTime: maxRateTime.toFixed(1)
+                propSummary['values'] = values;
+                propSummary['valuesString'] = values.join(', ');
+            }        
+            
+            // Sort property names and build a list of summary properties
+            propNames.sort();
+            
+            var summaryList = [];
+            for(var i in propNames){
+                var propName = propNames[i];
+                var propSummary = summary[propName];
+                summaryList.push({
+                    propName: propName,
+                    propertyUnit: propSummary.propertyUnit,
+                    valuesString: propSummary.valuesString
                 });
             }
             
-            return conditions;
-        },
-        
-        // Builds and returns map of columnIds => column index in the matrix
-        buildColumnIds2ColumnIndex: function(matrix){
-            var columnIds2ColumnIndex = {};
-            var columnIds = matrix.data.col_ids;
-            for(var columnIndex in columnIds){
-                columnIds2ColumnIndex[ columnIds[columnIndex] ] = columnIndex;
-            }
-            return columnIds2ColumnIndex;
-        },
-        
-        // Builds and returns a column label by combining all column properties described in the metadata
-        getColumnLabel: function(columnMetadata){
-            var label = "";
-            for(var i in columnMetadata){
-                propValue  = columnMetadata[i];
-                if(i > 0){
-                    label += "; ";
-                }
-                label += propValue.property_name + ":" + propValue.property_value +  (propValue.property_unit ? propValue.property_unit : "");
-            }
-            return label;
-        },
-        
-        // Returns time value for a given row in the matrix
-        getRowTime : function(rowId, rowsMetadata){
-            var time;
-            var rowMetadata = rowsMetadata[rowId];                    
-            for (var i in rowMetadata){
-                var propValue = rowMetadata[i];
-                if(propValue.entity == 'TimeSeries'){
-                    time = propValue.property_value;
-                    break;
-                }
-            }            
-            return parseFloat(time);
+            
+            return {
+                'samplesCount' : samples.length,
+                'properties': summaryList
+            };
         },        
         
-        // Returns max value in 2d array for a given column
-        maxValueForColumn: function(values, columnIndex){
-            var maxValue = values[0][columnIndex];
-            for(var i = 0; i < values.length; i++){
-                if(maxValue > values[i][columnIndex]){
-                    maxValue = values[i][columnIndex];
-                }
-            }
-            return maxValue;
-        },
         
-        makeRow: function(name, value) {
-            var $row = $("<tr/>")
-                       .append($("<th />").css('width','20%').append(name))
-                       .append($("<td />").append(value));
-            return $row;
-        },
+        buildSamplesTable: function($tab, samples){
+            this.buildTable(
+                $tab,
+                samples,
+                [
+                    { sTitle: "Sample ID", mData: "columnId"},
+                    { sTitle: "Series ID", mData: "seriesId"},
+                    { sTitle: "Conditions", mData: "label"},
+                    { sTitle: "Max rate", mData:"maxRate" },
+                    { sTitle: "Max rate time", mData:"maxRateTime" },
+                    { sTitle: "Max OD", mData:"maxOD" },
+                    { sTitle: "Max OD time", mData:"maxODTime" }
+                ],
+                "No conditions found!"
+            );
+        },     
         
-        loading: function(isLoading) {
-            if (isLoading)
-                this.showMessage("<img src='" + this.options.loadingImage + "'/>");
-            else
-                this.hideMessage();                
-        },
-
-        showMessage: function(message) {
-            var span = $("<span/>").append(message);
-
-            this.$messagePane.append(span);
-            this.$messagePane.show();
-        },
-
-        hideMessage: function() {
-            this.$messagePane.hide();
-            this.$messagePane.empty();
-        },
-
-        clientError: function(error){
-            this.loading(false);
-            this.showMessage(error.error.error);
-        },            
-
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
-        },
-
-        buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
-            var obj = {};
-            if (wsRef) {
-                obj['ref'] = wsRef;
-            } else {
-                if (/^\d+$/.exec(workspaceID))
-                    obj['wsid'] = workspaceID;
-                else
-                    obj['workspace'] = workspaceID;
-
-                // same for the id
-                if (/^\d+$/.exec(objectID))
-                    obj['objid'] = objectID;
-                else
-                    obj['name'] = objectID;
-                
-                if (objectVer)
-                    obj['ver'] = objectVer;
-            }
-            return obj;
+        buildSeriesTable: function($tab, series){
+            this.buildTable(
+                $tab,
+                series,
+                [
+                    { sTitle: "Series ID", mData: "seriesId"},
+                    { sTitle: "Conditions", mData: "label"},
+                    { sTitle: "Number of samples", mData: "samplesCount"},                                        
+                    { sTitle: "Max rate", mData:"maxRate" },
+                    { sTitle: "Max rate time", mData:"maxRateTime" },
+                    { sTitle: "Max OD", mData:"maxOD" },
+                    { sTitle: "Max OD time", mData:"maxODTime" }
+                ],
+                "No series found!"
+            );
         }
-
+        
     });
 });

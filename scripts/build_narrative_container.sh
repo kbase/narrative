@@ -9,7 +9,7 @@ NAR_BASE="kbase/narrbase"
 NAR_BASE_VER="4.3"
 NAR_PREREQ="kbase/narrprereq"
 NAR_PREREQ_VER="1.1"
-WEBROOT_DIR="." #/kb/deployment/services/kbase-ui"
+WEBROOT_DIR="/kb/deployment/services/kbase-ui"
 
 function usage () {
     printf "usage: $0 [options]\n"

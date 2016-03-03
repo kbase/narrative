@@ -72,4 +72,4 @@ docker build -q -t $NAR_NAME .
 docker tag $NAR_NAME:latest $NAR_NAME:$DS
 
 # Remove any provisioned, but not used, containers
-curl -L -X DELETE http://localhost/proxy_map/provisioned || echo "Ignore Error"
+curl -k -X DELETE https://localhost/proxy_map/provisioned || echo "Ignore Error"

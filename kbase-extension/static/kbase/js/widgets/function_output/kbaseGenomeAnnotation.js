@@ -172,6 +172,7 @@ function($,
                             if (types[v.type] == undefined) {types[v.type] = 0};
                             types[v.type]++;
                         });
+
                         overviewData.pop();
                         overviewData.push(types['locus']);
                         overviewData.push(types['CDS']);
@@ -421,7 +422,9 @@ function($,
                 }
 
                 var genesTable = $('#'+pref+'genes-table').dataTable(genesSettings);
-                genesTable.fnAddData(genesData);
+                if (genesData.length) {
+                    genesTable.fnAddData(genesData);
+                }
 
                 //XXX plants baloney - build up the CDS div, if necessary.
                 if (gnm.domain == 'Plant') {
@@ -442,7 +445,9 @@ function($,
                     };
 
                     var cdsTable = $('#'+pref+'cds-table').dataTable(cdsSettings);
-                    cdsTable.fnAddData(cdsData);
+                    if (cdsData.length) {
+                        cdsTable.fnAddData(cdsData);
+                    }
                 }
                 //XXX done with plants
 

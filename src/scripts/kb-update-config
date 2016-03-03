@@ -76,7 +76,7 @@ def parse_args():
     p.add_argument("-v", "--verbose", dest="vb", action="count", default=0, help="Increase verbosity")
     p.add_argument("-o", "--output", dest="opt_out", default=None, help="Optional extra output file for Narrative version and git stamp")
     p.add_argument("-e", "--env", dest="env", default="ci", help="Configure KBase environment. Choose from ci, next, prod, appdev (default=%(default)s)")
-    p.add_argument("-m", "--dev-mode", dest="dev_mode", default="true", help="Set developer mode as either 'true' or 'false' (default=true)")
+    p.add_argument("-d", "--dev-mode", dest="dev_mode", default="true", help="Set developer mode as either 'true' or 'false' (default=true)")
     return p.parse_args()
 
 if __name__ == '__main__':

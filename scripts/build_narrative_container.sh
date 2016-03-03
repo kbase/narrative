@@ -38,4 +38,4 @@ docker tag $NAR_NAME:latest $NAR_NAME:$DS
 cp kbase-extension/static/kbase/config/data_source_config.json $WEBROOT_DIR/data_source_config.json
 
 # Remove any provisioned, but not used, containers
-curl -L -X DELETE http://localhost/proxy_map/provisioned || echo "Ignore Error"
+curl -k -X DELETE https://localhost/proxy_map/provisioned || echo "Ignore Error"

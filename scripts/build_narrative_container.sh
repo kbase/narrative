@@ -11,6 +11,44 @@ NAR_PREREQ="kbase/narrprereq"
 NAR_PREREQ_VER="1.1"
 WEBROOT_DIR="/kb/deployment/services/kbase-ui"
 
+function usage () {
+    printf "usage: $0 [options]\n"
+    printf "example: $0 -e ci -d true\n"
+    printf "options:\n"
+    printf "  {-h | --help} \n\tShow these help options.\n"
+    printf "  {-e | --env} environment\n\tSet the environment the narrative should use.\n\t"
+    printf "current options are ci, next, prod, appdev (default=ci)\n" 
+    printf "  {-d | --dev_mode} true/false\n\tSet developer mode true or false (default=true)\n"
+}
+
+# Arg parsing
+env="ci"
+dev_mode="true"
+while [ $# -gt 0 ]; do
+    case $1 in
+        -h | --help | -\?)
+            usage
+            exit 0
+            ;;
+        -e | --env)
+            env=$2
+            shift 2
+            ;;
+        -d | --dev_mode)
+            dev_mode=$2
+            shift 2
+            ;;
+        *)
+            usage
+            exit 0
+            ;;
+    esac
+done
+
+# Update the Git hash in the config file to be hosted at *.kbase.us/narrative_version
+./src/scripts/kb-update-config -f src/config.json -o $WEBROOT_DIR/narrative_version -e $env -m $dev_mode || exit 1
+cp kbase-extension/static/kbase/config/data_source_config.json $WEBROOT_DIR/data_source_config.json
+
 # Make sure the prereq image is there. If not, build it.
 docker images |grep "^$NAR_PREREQ "|grep " $NAR_PREREQ_VER " > /dev/null
 
@@ -32,10 +70,6 @@ echo "Building latest version"
 # Build the Narrative container and tag it (as a backup)
 docker build -q -t $NAR_NAME .
 docker tag $NAR_NAME:latest $NAR_NAME:$DS
-
-# Update the Git hash in the config file to be hosted at *.kbase.us/narrative_version
-./src/scripts/kb-git-version -f src/config.json -o $WEBROOT_DIR/narrative_version
-cp kbase-extension/static/kbase/config/data_source_config.json $WEBROOT_DIR/data_source_config.json
 
 # Remove any provisioned, but not used, containers
 curl -L -X DELETE http://localhost/proxy_map/provisioned || echo "Ignore Error"

@@ -9,7 +9,7 @@ NAR_BASE="kbase/narrbase"
 NAR_BASE_VER="4.3"
 NAR_PREREQ="kbase/narrprereq"
 NAR_PREREQ_VER="1.1"
-WEBROOT_DIR="/kb/deployment/services/kbase-ui"
+WEBROOT_DIR="." #/kb/deployment/services/kbase-ui"
 
 function usage () {
     printf "usage: $0 [options]\n"
@@ -46,26 +46,29 @@ while [ $# -gt 0 ]; do
 done
 
 # Update the Git hash in the config file to be hosted at *.kbase.us/narrative_version
+echo "Updating configuration"
 ./src/scripts/kb-update-config -f src/config.json -o $WEBROOT_DIR/narrative_version -e $env -d $dev_mode || exit 1
 cp kbase-extension/static/kbase/config/data_source_config.json $WEBROOT_DIR/data_source_config.json
 
 # Make sure the prereq image is there. If not, build it.
+echo "Checking for prereq image v$NAR_PREREQ_VER"
 docker images |grep "^$NAR_PREREQ "|grep " $NAR_PREREQ_VER " > /dev/null
 
 if [ $? -eq 1 ] ; then
-    echo "Build prereq image"
+    echo "Prereq image not found! Building..."
     docker build -q -t $NAR_PREREQ:$NAR_PREREQ_VER narrprereq-image/
 fi
 
 # Make sure the base image is there. If not, build it.
+echo "Checking for base image v$NAR_BASE_VER"
 docker images |grep "^$NAR_BASE "|grep " $NAR_BASE_VER " > /dev/null
 
 if [ $? -eq 1 ] ; then
-  echo "Build base image"
+  echo "Base image not found! Building..."
   docker build -q -t $NAR_BASE:$NAR_BASE_VER narrbase-image/
 fi
 
-echo "Building latest version"
+echo "Building latest narrative version"
 
 # Build the Narrative container and tag it (as a backup)
 docker build -q -t $NAR_NAME .

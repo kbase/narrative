@@ -39,12 +39,15 @@ def main(args):
             print("Setting environment to " + args.env)
         config['config'] = args.env
 
+        args.dev_mode = args.dev_mode.lower()
         if args.vb > 0:
             print("Setting developer mode to " + args.dev_mode)
         if args.dev_mode == "true":
             config['dev_mode'] = True
-        else:
+        elif args.dev_mode == "false":
             config['dev_mode'] = False
+        else:
+            raise Exception('Unknown developer mode: "' + args.dev_mode + '"\nAllowed modes are true or false')
 
         if args.vb > 0:
             print("Writing updated config file")

@@ -8,7 +8,7 @@ define(['narrativeViewers'], function(Viewers) {
     'use strict';
     describe('Test the NarrativeViewers module', function() {
         it('should load viewer info as a promise', function(done) {
-            Viewers.viewerInfo.done(function(info) {
+            Viewers.viewerInfo.then(function(info) {
                 expect(info.viewers).toBeDefined();
                 expect(info.typeNames).toBeDefined();
                 expect(info.specs).toBeDefined();

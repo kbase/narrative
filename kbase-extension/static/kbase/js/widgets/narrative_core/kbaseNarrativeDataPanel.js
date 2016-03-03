@@ -136,7 +136,6 @@ function($,
                     // find the index of what tab is being shown.
                     if (this.$overlayPanel.is(':visible')) {
                         var idx = $('.kb-side-overlay-container').find('.kb-side-header.active').index();
-                        console.log('UPDATING DATA PANEL RENDERING');
                         this.updateSlideoutRendering(idx);
                     }
                 }.bind(this)
@@ -876,7 +875,6 @@ function($,
                 for (var i in objs) {
                     var ref = objs[i].ref;
                     var name = objs[i].name;
-                    console.log('copying ', ref, 'to', nar_ws_name);
                     proms.push( ws.copy_object({to: {workspace: nar_ws_name, name: name},
                                                 from: {ref: ref} }) );
                 }

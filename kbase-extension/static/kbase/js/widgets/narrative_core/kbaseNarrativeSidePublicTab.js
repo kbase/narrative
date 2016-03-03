@@ -31,24 +31,24 @@ function($,
         loadingImage: Config.get('loading_gif'),
         wsUrl: Config.url('workspace'),
         wsClient: null,
-        categories: ['genomes', 
-                     //'metagenomes', 
-                     'media', 'plant_gnms'
-                     /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations',
-                     'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'*/ ],
-        categoryDescr: {  // search API category -> {}
-            'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV5',search:true},
-            // 'metagenomes': {name: 'Metagenomes',type:'Communities.Metagenome',ws:'wilke:Data',search:true},
-            'media': {name:'Media',type:'KBaseBiochem.Media',ws:'KBaseMedia',search:false},
-            'plant_gnms': {name:'Plant Genomes',type:'KBaseGenomes.Genome',ws:'PlantCSGenomes',search:false}
+        // categories: ['genomes', 
+        //              //'metagenomes', 
+        //              'media', 'plant_gnms'
+        //              /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations',
+        //              'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'*/ ],
+        // categoryDescr: {  // search API category -> {}
+        //     'genomes': {name:'Genomes',type:'KBaseGenomes.Genome',ws:'KBasePublicGenomesV5',search:true},
+        //     // 'metagenomes': {name: 'Metagenomes',type:'Communities.Metagenome',ws:'wilke:Data',search:true},
+        //     'media': {name:'Media',type:'KBaseBiochem.Media',ws:'KBaseMedia',search:false},
+        //     'plant_gnms': {name:'Plant Genomes',type:'KBaseGenomes.Genome',ws:'PlantCSGenomes',search:false}
             
-            /*'gwas_populations': {name:'GWAS Populations',type:'KBaseGwasData.GwasPopulation',ws:'KBasePublicGwasDataV2',search:true},
-            'gwas_population_kinships': {name:'GWAS Population Kinships',type:'KBaseGwasData.GwasPopulationKinship',ws:'KBasePublicGwasDataV2',search:true},
-            'gwas_population_variations': {name:'GWAS Population Variations',type:'KBaseGwasData.GwasPopulationVariation',ws:'KBasePublicGwasDataV2',search:true},
-            'gwas_top_variations': {name:'GWAS Top Variations',type:'KBaseGwasData.GwasTopVariations',ws:'KBasePublicGwasDataV2',search:true},
-            'gwas_population_traits': {name:'GWAS Population Traits',type:'KBaseGwasData.GwasPopulationTrait',ws:'KBasePublicGwasDataV2',search:true},
-            'gwas_gene_lists': {name:'GWAS Gene Lists',type:'KBaseGwasData.GwasGeneList',ws:'KBasePublicGwasDataV2',search:true}*/
-        },
+        //     'gwas_populations': {name:'GWAS Populations',type:'KBaseGwasData.GwasPopulation',ws:'KBasePublicGwasDataV2',search:true},
+        //     'gwas_population_kinships': {name:'GWAS Population Kinships',type:'KBaseGwasData.GwasPopulationKinship',ws:'KBasePublicGwasDataV2',search:true},
+        //     'gwas_population_variations': {name:'GWAS Population Variations',type:'KBaseGwasData.GwasPopulationVariation',ws:'KBasePublicGwasDataV2',search:true},
+        //     'gwas_top_variations': {name:'GWAS Top Variations',type:'KBaseGwasData.GwasTopVariations',ws:'KBasePublicGwasDataV2',search:true},
+        //     'gwas_population_traits': {name:'GWAS Population Traits',type:'KBaseGwasData.GwasPopulationTrait',ws:'KBasePublicGwasDataV2',search:true},
+        //     'gwas_gene_lists': {name:'GWAS Gene Lists',type:'KBaseGwasData.GwasGeneList',ws:'KBasePublicGwasDataV2',search:true}
+        // },
         mainListPanelHeight: '535px',
         maxNameLength: 60,
         totalPanel: null,
@@ -67,6 +67,9 @@ function($,
             this.data_icons = Config.get('icons').data;
             this.icon_colors = Config.get('icons').colors;
             this.wsName = Jupyter.narrative.getWorkspaceName();
+            this.categoryDescr = Config.get('publicCategories');
+            if (this.categoryDescr)
+                this.categories = Object.keys(this.categoryDescr);
 
             return this;
         },
@@ -74,7 +77,12 @@ function($,
         render: function() {
             if ((!this.token) || (!this.wsName))
                 return;
-            this.$elem.empty();
+            this.infoPanel = $('<div>');
+            this.$elem.empty().append(this.infoPanel);
+            if (!this.categories) {
+                this.showError("Unable to load public data configuration! Please refresh your page to try again. If this continues to happen, please <a href='https://kbase.us/contact-us/'>click here</a> to contact KBase with the problem.");
+                return;
+            }
 
             this.wsClient = new Workspace(this.wsUrl, {'token': this.token});
             var mrg = {'margin': '10px 0px 10px 0px'};
@@ -131,7 +139,7 @@ function($,
             }
             if (self.currentQuery && self.currentQuery === query && category === self.currentCategory)
                 return;
-            //console.log("Sending query: " + query);
+
             self.totalPanel.empty();
             self.resultPanel.empty();
             self.totalPanel.append($('<span>').addClass("kb-data-list-type").append('<img src="'+this.loadingImage+'"/> searching...'));
@@ -159,11 +167,10 @@ function($,
                     includeMetadata: 1,
                 }))
                 .then(function(data) {
-                    console.log('RENDER MOAR');
-                    if (query !== this.currentQuery)
+                    if (thisQuery !== this.currentQuery)
                         return;
-                    query = this.currentQuery.replace(/[\*]/g,' ').trim().toLowerCase();
-                    for (var i in data) {
+                    var query = this.currentQuery.replace(/[\*]/g,' ').trim().toLowerCase();
+                    for (var i=0; i<data.length; i++) {
                         var info = data[i];
                         // object_info:
                         // [0] : obj_id objid // [1] : obj_name name // [2] : type_string type
@@ -171,11 +178,13 @@ function($,
                         // [6] : ws_id wsid // [7] : ws_name workspace // [8] : string chsum
                         // [9] : int size // [10] : usermeta meta
                         var name = info[1];
-                        var id = info[1];
+                        var id = info[0];
                         var metadata = {};
-                        if (this.currentCategory === 'media') {
-                            metadata['Size'] = info[9];
-                        } else if (this.currentCategory === 'plant_gnms') {
+                        // the ws object size of the media doesn't seem useful!
+                        //if (this.currentCategory === 'media') {
+                        //    metadata['Size'] = info[9];
+                        //} else
+                        if (this.currentCategory === 'plant_gnms') {
                             if (info[10].Name) {
                                 metadata['ID'] = id;
                                 name = info[10].Name;
@@ -183,8 +192,10 @@ function($,
                             metadata['Source'] = info[10].Source;
                             metadata['Genes'] = info[10]['Number features'];
                         }
-                        if (name.toLowerCase().indexOf(query) == -1)
-                            continue;
+                        if(query) {
+                            if (name.toLowerCase().indexOf(query) == -1)
+                                continue;
+                        }
                         this.objectList.push({
                             $div: null,
                             info: info,
@@ -203,6 +214,7 @@ function($,
                             .append("Total results: " + data.totalResults));
                 }.bind(this))
                 .catch(function(error) {
+                    console.error(error);
                     this.totalPanel.empty();
                     this.totalPanel.append($('<span>').addClass("kb-data-list-type").append("Total results: 0"));
                 }.bind(this));
@@ -454,6 +466,8 @@ function($,
             $btnToolbar.append($openLandingPage).append($openProvenance);
 
             var titleElement = $('<span>').css({'margin':'10px'}).append($btnToolbar.hide()).append($name);
+
+            var hasMetadata = false;
             for (var key in object.metadata) {
                 if (!object.metadata.hasOwnProperty(key))
                     continue;
@@ -462,6 +476,10 @@ function($,
                     val = '-';
                 var value = $('<span>').addClass("kb-data-list-type").append('&nbsp;&nbsp;' + key + ':&nbsp;' + val);
                 titleElement.append('<br>').append(value);
+                hasMetadata = true;
+            }
+            if(!hasMetadata) {
+                titleElement.append('<br>').append('&nbsp;');
             }
 
                     // Set data icon
@@ -623,7 +641,7 @@ function($,
             if (error.error && error.error.message)
                 errorMsg = error.error.message;
             this.infoPanel.empty();
-            this.infoPanel.append('<span class="label label-danger">Error: '+errorMsg+'"</span>');
+            this.infoPanel.append('<div class="alert alert-danger">Error: '+errorMsg+'</span>');
         },
 
         logoColorLookup:function(type) {

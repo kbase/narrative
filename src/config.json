@@ -17,6 +17,7 @@
         "narrative_method_store": "https://ci.kbase.us/services/narrative_method_store/rpc", 
         "profile_page": "/functional-site/#/people/", 
         "protein_info": "", 
+        "data_panel_sources": "/data_source_config.json",
         "reset_password": "https://gologin.kbase.us/ResetPassword", 
         "search": "https://kbase.us/services/search/getResults", 
         "shock": "https://ci.kbase.us/services/shock-api", 
@@ -54,6 +55,7 @@
         "narrative_method_store": "http://dev19.berkeley.kbase.us/narrative_method_store/rpc", 
         "profile_page": "/functional-site/#/people/", 
         "protein_info": "https://kbase.us/services/protein_info_service", 
+        "data_panel_sources": "/data_source_config.json",
         "reset_password": "https://gologin.kbase.us/ResetPassword", 
         "search": "https://kbase.us/services/search/getResults", 
         "shock": "https://kbase.us/services/shock-api", 
@@ -91,7 +93,8 @@
         "narrative_job_proxy": "http://narrative-next.kbase.us:7068", 
         "narrative_method_store": "https://next.kbase.us/services/narrative_method_store/rpc", 
         "profile_page": "/functional-site/#/people/", 
-        "protein_info": "", 
+        "protein_info": "",
+        "data_panel_sources": "/data_source_config.json",
         "reset_password": "https://gologin.kbase.us/ResetPassword", 
         "search": "https://kbase.us/services/search/getResults", 
         "shock": "https://next.kbase.us/services/shock-api", 
@@ -126,6 +129,7 @@
         "narrative_method_store": "https://kbase.us/services/narrative_method_store/rpc", 
         "profile_page": "/functional-site/#/people/", 
         "protein_info": "https://kbase.us/services/protein_info_service", 
+        "data_panel_sources": "/data_source_config.json",
         "reset_password": "https://gologin.kbase.us/ResetPassword", 
         "search": "https://kbase.us/services/search/getResults", 
         "shock": "https://kbase.us/services/shock-api", 
@@ -148,5 +152,5 @@
         "showDelay": 750
     }, 
     "use_local_widgets": true, 
-    "version": "2.0.4"
+    "version": "2.0.7"
 }

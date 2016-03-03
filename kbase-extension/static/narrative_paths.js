@@ -124,13 +124,13 @@ require.config({
         'kbaseGrowthMatrixAbstract'             : 'kbase/js/widgets/function_output/kbaseGrowthMatrixAbstract',
         'kbaseGrowthMatrix'                     : 'kbase/js/widgets/function_output/kbaseGrowthMatrix',
         'kbaseGrowthCurves'                     : 'kbase/js/widgets/function_output/kbaseGrowthCurves',
-        
-        
+
+
         'kbaseGrowthParametersAbstract'         : 'kbase/js/widgets/function_output/kbaseGrowthParametersAbstract',
         'kbaseGrowthParameters'                 : 'kbase/js/widgets/function_output/kbaseGrowthParameters',
         'kbaseGrowthParamsPlot'                 : 'kbase/js/widgets/function_output/kbaseGrowthParamsPlot',
         'kbaseGrowthParams2DPlot'               : 'kbase/js/widgets/function_output/kbaseGrowthParams2DPlot',
-        
+
         'kbaseSamplePropertyMatrixAbstract'     : 'kbase/js/widgets/function_output/kbaseSamplePropertyMatrixAbstract',
         'kbaseSamplePropertyMatrix'             : 'kbase/js/widgets/function_output/kbaseSamplePropertyMatrix',
         'kbaseSamplePropertyHistogram'          : 'kbase/js/widgets/function_output/kbaseSamplePropertyHistogram',
@@ -253,7 +253,7 @@ require.config({
 
         'd3'                                    : 'ext_components/d3/d3.min',//  'kbase/js/ui-common/ext/d3/d3.v3.min',
         'colorbrewer'                           : 'kbase/js/ui-common/ext/colorbrewer.min',
-        'handlebars'                            : 'kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
+        'handlebars'                            : 'ext_components/handlebars/handlebars', //kbase/js/ui-common/ext/handlebars/handlebars-v1.3.0',
         'kbwidget'                              : 'kbase/js/ui-common/src/kbwidget',
         'kbaseAccordion'                        : 'kbase/js/ui-common/src/widgets/kbaseAccordion',
         'kbaseAuthenticatedWidget'              : 'kbase/js/ui-common/src/widgets/kbaseAuthenticatedWidget',
@@ -332,6 +332,9 @@ require.config({
                       'KBasePhenotypes.PhenotypeSet',
                       'KBasePhenotypes.PhenotypeSimulationSet',
                       'KBaseFBA.FBAComparison',
+                      'modelSeedVizConfig',
+                      'kbasePathways',
+                      'msPathway',
                       'kbaseTabTableTabs',
                       'kbasePMIBarchart']
         },

@@ -9,6 +9,7 @@
 define([
     'jquery', 
     'bluebird',
+    'handlebars',
     'narrativeConfig',
     'kbaseNarrativeSidePanel', 
     'kbaseNarrativeOutputCell', 
@@ -22,10 +23,12 @@ define([
     'notebook/js/notebook',
     'util/display',
     'util/bootstrapDialog',
+    'text!kbase/templates/update_dialog_body.html',
     'jquery-nearest'
 ], 
 function($,
          Promise,
+         Handlebars,
          Config,
          kbaseNarrativeSidePanel,
          kbaseNarrativeOutputCell,
@@ -38,7 +41,8 @@ function($,
          events,
          Notebook,
          DisplayUtil,
-         BootstrapDialog) {
+         BootstrapDialog,
+         UpdateDialogBodyTemplate) {
     'use strict';
 
     /**
@@ -153,8 +157,8 @@ function($,
      * dialog then lets the user shut down their existing Narrative container.
      */
     Narrative.prototype.initUpgradeDialog = function() {
-        var $newVersion = $('<span>')
-                          .append('<b>No new version</b>');  // init to the current version
+        var bodyTemplate = Handlebars.compile(UpdateDialogBodyTemplate);
+
         var $cancelBtn = $('<button type="button" data-dismiss="modal">')
                          .addClass('btn btn-default')
                          .append('Cancel');
@@ -167,24 +171,22 @@ function($,
 
         var upgradeDialog = new BootstrapDialog({
             title: 'New Narrative version available!',
-            body: $('<div>')
-                  .append($('<span>').append('Your current version of the Narrative is <b>' + this.currentVersion + '</b>. Version '))
-                  .append($newVersion)
-                  .append($('<span>').append(' is now available.<br><br>' + 
-                                             'See <a href="' + Config.get('release_notes') + '" target="_blank">here</a> for current release notes.<br>' +
-                                             'Click "Update and Reload" to reload with the latest version!<br><br>' + 
-                                             '<b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b>')),
             buttons: [$cancelBtn, $upgradeBtn]
         });
         $('#kb-update-btn').click(function(event) {
             upgradeDialog.show();
         });
-        this.checkVersion($newVersion);
-
-        // ONLY CHECK AT STARTUP FOR NOW.
-        // setInterval(function() {
-        //     self.checkVersion($newVersion);
-        // }, this.versionCheckTime);
+        this.checkVersion()
+        .then(function(ver) {
+            upgradeDialog.setBody(bodyTemplate({
+                currentVersion: this.currentVersion,
+                newVersion: ver ? ver.version : "No new version",
+                releaseNotesUrl: Config.get('release_notes')
+            }));
+            if (ver && ver.version && this.currentVersion !== ver.version) {
+                $('#kb-update-btn').fadeIn('fast');
+            }
+        }.bind(this));
     };
 
     /**
@@ -194,22 +196,58 @@ function($,
     Narrative.prototype.checkVersion = function($newVersion) {
         // look up new version here.
         var self = this;
-        Promise.resolve($.ajax({
+        return Promise.resolve($.ajax({
             url: Config.url('version_check'),
             async: true,
             dataType: 'text',
             crossDomain: true,
             cache: false
         })).then(function(ver) {
-            ver = $.parseJSON(ver);
-            if (self.currentVersion !== ver.version) {
-                $newVersion.empty().append('<b>' + ver.version + '</b>');
-                $('#kb-update-btn').fadeIn('fast'); 
-            }
+            return Promise.try(function() {
+                ver = $.parseJSON(ver);
+                return ver;
+            })
         }).catch(function(error) {
             console.error('Error while checking for a version update: ' + error.statusText);
             KBError('Narrative.checkVersion', 'Unable to check for a version update!');
         });
+    };
+
+    Narrative.prototype.createShutdownDialogButtons = function () {
+        var $shutdownButton = $('<button>')
+                              .attr({'type':'button', 'data-dismiss':'modal'})
+                              .addClass('btn btn-danger')
+                              .append('Okay. Shut it all down!')
+                              .click(function(e) {
+                                  this.updateVersion();
+                              }.bind(this));
+
+        var $reallyShutdownPanel = $('<div style="margin-top:10px">')
+                                   .append('This will shutdown your Narrative session and close this window.<br><b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b><br>')
+                                   .append($shutdownButton)
+                                   .hide();
+
+        var $firstShutdownBtn = $('<button>')
+                                .attr({'type':'button'})
+                                .addClass('btn btn-danger')
+                                .append('Shutdown')
+                                .click(function(e) {
+                                    $reallyShutdownPanel.slideDown('fast');
+                                });
+
+        var $cancelButton = $('<button type="button" data-dismiss="modal">')
+                            .addClass('btn btn-default')
+                            .append('Dismiss')
+                            .click(function(e) {
+                                $reallyShutdownPanel.hide();
+                            });
+
+        return {
+            cancelButton: $cancelButton, 
+            firstShutdownButton: $firstShutdownBtn,
+            finalShutdownButton: $shutdownButton,
+            shutdownPanel: $reallyShutdownPanel
+        };
     };
 
     Narrative.prototype.initAboutDialog = function() {
@@ -245,62 +283,38 @@ function($,
         })
         $versionDiv.append($verAccordion);
 
-        var $shutdownButton = $('<button>')
-                              .attr({'type':'button', 'data-dismiss':'modal'})
-                              .addClass('btn btn-danger')
-                              .append('Okay. Shut it all down!')
-                              .click($.proxy(function(e) {
-                                  this.updateVersion();
-                              }, this));
-        var $reallyShutdownPanel = $('<div style="margin-top:10px">')
-                                   .append('This will shutdown your Narrative session and close this window.<br><b>Any unsaved data in any open Narrative in any window WILL BE LOST!</b><br>')
-                                   .append($shutdownButton)
-                                   .hide();
-
-        var $firstShutdownBtn = $('<button>')
-                                .attr({'type':'button'})
-                                .addClass('btn btn-danger')
-                                .append('Shutdown')
-                                .click(function(e) {
-                                    $reallyShutdownPanel.slideDown('fast');
-                                });
-
-        var $versionModal = $('<div tabindex=-1 role="dialog" aria-labelledby="kb-version-label" aria-hidden="true">')
-                            .addClass('modal fade')
-                            .append($('<div>')
-                                    .addClass('modal-dialog')
-                                    .append($('<div>')
-                                        .addClass('modal-content')
-                                        .append($('<div>')
-                                                .addClass('modal-header')
-                                                .append($('<h4>')
-                                                        .addClass('modal-title')
-                                                        .attr('id', 'kb-version-label')
-                                                        .append('KBase Narrative Properties')))
-                                        .append($('<div>')
-                                                .addClass('modal-body')
-                                                .append($versionDiv))
-                                        .append($('<div>')
-                                                .addClass('modal-footer')
-                                                .append($('<div>')
-                                                        .append($('<button type="button" data-dismiss="modal">')
-                                                                .addClass('btn btn-default')
-                                                                .append('Dismiss')
-                                                                .click(function(e) {
-                                                                    $reallyShutdownPanel.hide();
-                                                                }))
-                                                        .append($firstShutdownBtn))
-                                                .append($reallyShutdownPanel))));
+        var shutdownButtons = this.createShutdownDialogButtons();
+        var aboutDialog = new BootstrapDialog({
+            title: 'KBase Narrative Properties',
+            body: $versionDiv,
+            buttons: [
+                shutdownButtons.cancelButton,
+                shutdownButtons.firstShutdownButton,
+                shutdownButtons.shutdownPanel
+            ]
+        });
 
         $('#kb-about-btn').click(function(event) {
-            $versionModal.modal('show');
+            aboutDialog.show();
         });
-        $('#notebook').append($versionModal);
     };
 
-    // Narrative.prototype.initShutdownDialog = function() {
+    Narrative.prototype.initShutdownDialog = function() {
+        var shutdownButtons = this.createShutdownDialogButtons();
 
-    // };
+        var shutdownDialog = new BootstrapDialog({
+            title: 'Shutdown and restart narrative?',
+            body: $('<div>').append('Shutdown and restart your Narrative session? Any unsaved changes in any open Narrative in any window WILL BE LOST!'),
+            buttons: [
+                shutdownButtons.cancelButton,
+                shutdownButtons.finalShutdownButton
+            ]
+        });
+
+        $('#kb-shutdown-btn').click(function() {
+            shutdownDialog.show();
+        });
+    };
 
     Narrative.prototype.saveFailed = function(event, data) {
         $('#kb-save-btn').find('div.fa-save').removeClass('fa-spin');
@@ -369,6 +383,7 @@ function($,
         this.registerEvents();
         this.initAboutDialog();
         this.initUpgradeDialog();
+        this.initShutdownDialog();
 
         // var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
 
@@ -381,11 +396,9 @@ function($,
         Jupyter.CellToolbar.activate_preset("KBase");
         Jupyter.CellToolbar.global_show();
 
-        if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
-            // $.each(Jupyter.notebook.get_cells(), function(idx, cell) {
-            //     cell.celltoolbar.hide();
-            // });
+        this.authToken = $('#signin-button').kbaseLogin('token');
 
+        if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
             var creatorId = Jupyter.notebook.metadata.creator || 'KBase User';
             DisplayUtil.displayRealName(creatorId, $('#kb-narr-creator'));
 

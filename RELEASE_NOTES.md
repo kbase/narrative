@@ -3,6 +3,26 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.1.0 (more notes will follow).
 
+### Version 2.0.7
+__Changes__
+- Fixed data subsetting parameter input.
+
+### Version 2.0.6
+__Changes__
+- Fixed local configuration issue with Public and Example data tabs.
+- Updated genome viewer widget to better support eukaryotic genomes.
+- Added sequence category to app catalog.
+- Added Release/Beta method button toggle that should show up in production mode.
+- JIRA NAR-846 - fix problem with Run Time in jobs panel reported as "how long ago"
+
+### Version 2.0.5
+__Changes__
+- Fixed problems with missing data from Public data tab.
+- Added separate configuration file for Public and Example data tabs.
+- Fixed a few missing vis widget paths.
+- Fixed jitter on data object mouseover.
+- Added 'Shutdown and Restart' option to hamburger menu.
+
 ### Version 2.0.4
 __Changes__
 - Fixed problems with sharing jobs based on SDK-built methods.

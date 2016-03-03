@@ -76,6 +76,7 @@ define([
                     comparative_genomics : 'Comparative Genomics',
                     expression : 'Expression',
                     communities : 'Communities',
+                    sequence : 'Sequence Alignment & Search',
                     util : 'Utilities'
                 };
 

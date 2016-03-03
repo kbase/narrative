@@ -72,7 +72,6 @@ function ($) {
         this.$footer.empty();
         for (var i=0; i<buttonList.length; i++) {
             var $btn = buttonList[i];
-            $btn.addClass('btn btn-default btn-sm');
             this.$footer.append($btn);
         }
         if (this.enterToTrigger) {

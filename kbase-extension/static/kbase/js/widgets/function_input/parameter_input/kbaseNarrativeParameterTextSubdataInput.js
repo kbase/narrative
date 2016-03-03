@@ -6,11 +6,11 @@
 
 define(['jquery',
         'narrativeConfig',
+        'handlebars',
         'kbwidget',
         'kbaseNarrativeParameterInput',
-        'select2',
-        'handlebars'],
-function($, Config) {
+        'select2'],
+function($, Config, Handlebars) {
     'use strict';
     $.KBWidget({
         name: "kbaseNarrativeParameterTextSubdataInput",

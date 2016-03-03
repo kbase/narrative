@@ -3,6 +3,10 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.1.0 (more notes will follow).
 
+### Version 2.0.7
+__Changes__
+- Fixed data subsetting parameter input.
+
 ### Version 2.0.6
 __Changes__
 - Fixed local configuration issue with Public and Example data tabs.

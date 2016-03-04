@@ -88,7 +88,7 @@ function($, Plotly) {
 
                 var trace1 = $.extend({}, basopts, {
                     x: values.gsrFluxPExpP,
-                    name: 'GSA Reactions F(+) E(+)',
+                    name: 'GAR Active flux and expression',
                     marker: {
                         color: 'rgba(243, 13, 13, .7)'
                     }
@@ -96,7 +96,7 @@ function($, Plotly) {
 
                 var trace2 = $.extend({}, basopts, {
                     x: values.gsrFluxMExpM,
-                    name: 'GSA Reactions F(-) E(+)',
+                    name: 'GAR No flux or expression',
                     marker: {
                         color: 'rgba(99, 78, 58,.8)'
                     }
@@ -104,7 +104,7 @@ function($, Plotly) {
 
                 var trace3 = $.extend({}, basopts, {
                     x: values.gsrFluxMExpP,
-                    name: 'GSA Reactions F(-) E(+)',
+                    name: 'GAR No flux, but active expression',
                     marker: {
                         color: 'rgba(173, 169, 86, .7)'
                     }
@@ -112,7 +112,7 @@ function($, Plotly) {
 
                 var trace4 = $.extend({}, basopts, {
                     x: values.gsrFluxPExpN,
-                    name: 'GSA Reactions F(+) E(-)',
+                    name: 'Active flux, but no expression',
                     marker: {
                         color: 'rgba(64, 153, 62, .8)'
                     }
@@ -120,7 +120,7 @@ function($, Plotly) {
 
                 var trace5 = $.extend({}, basopts, {
                     x: values.gpRxnsFluxP,
-                    name: 'Gapfilled Reactions F(+)',
+                    name: 'Active gapfilled reactions',
                     marker: {
                         color: 'rgba(33, 150, 243, .8)'
                     }
@@ -140,7 +140,7 @@ function($, Plotly) {
                         titlefont: {
                             color: '#7f7f7f'
                         }
-                    },
+                    }
                 };
 
                 // add container
@@ -150,6 +150,7 @@ function($, Plotly) {
 
                 // render
                 Plotly.newPlot(id, data, layout);
+
             }
 
             return this;

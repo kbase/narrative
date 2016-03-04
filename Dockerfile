@@ -22,7 +22,7 @@ ADD ./kbase-logdb.conf /tmp/kbase-logdb.conf
 WORKDIR /kb/dev_container/narrative
 
 # Generate a version file that we can scrape later
-RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-git-version -f src/config.json -o /kb/deployment/ui-common/narrative_version
+RUN mkdir -p /kb/deployment/ui-common/ && ./src/scripts/kb-update-config -f src/config.json -o /kb/deployment/ui-common/narrative_version
 
 RUN git submodule update --init; rm -rf .git/modules/modules
 

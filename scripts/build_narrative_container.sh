@@ -47,6 +47,7 @@ done
 
 # Update the Git hash in the config file to be hosted at *.kbase.us/narrative_version
 echo "Updating configuration"
+mkdir -p $WEBROOT_DIR
 ./src/scripts/kb-update-config -f src/config.json -o $WEBROOT_DIR/narrative_version -e $env -d $dev_mode || exit 1
 cp kbase-extension/static/kbase/config/data_source_config.json $WEBROOT_DIR/data_source_config.json
 

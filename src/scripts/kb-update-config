@@ -6,31 +6,51 @@ commit from which we're deploying.
 Updated 1/31/2015
 """
 
+from __future__ import print_function
 import json
 import os
 import subprocess
 import sys
 import argparse
-
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 default_cfg_file = 'config.json'
 
 def main(args):
     try:
         if args.vb > 0:
-            print "Opening config file"
+            print("Opening config file")
         cfg_json = open(args.cfg_file).read()
         config = json.loads(cfg_json)
 
         if args.vb > 0:
-            print "Getting git commit info"
+            print("Getting git commit info")
         hash_time = subprocess.check_output('git log --pretty="%h,%ad" -n 1', shell=True)
         hash_time = hash_time.strip().split(',')
         config['git_commit_hash'] = hash_time[0]
         config['git_commit_time'] = hash_time[1]
 
+        args.env = args.env.lower()
         if args.vb > 0:
-            print "Writing updated config file"
+            print("Checking valid environment '" + args.env + "'")
+        if (args.env not in ['ci', 'next', 'prod', 'appdev']):
+            raise Exception('Unknown environment: "' + args.env + '"\nAllowed environments: ci, next, prod, appdev')
+
+        if args.vb > 0:
+            print("Setting environment to " + args.env)
+        config['config'] = args.env
+
+        args.dev_mode = args.dev_mode.lower()
+        if args.vb > 0:
+            print("Setting developer mode to " + args.dev_mode)
+        if args.dev_mode == "true":
+            config['dev_mode'] = True
+        elif args.dev_mode == "false":
+            config['dev_mode'] = False
+        else:
+            raise Exception('Unknown developer mode: "' + args.dev_mode + '"\nAllowed modes are true or false')
+
+        if args.vb > 0:
+            print("Writing updated config file")
         cfg_json = json.dumps(config, sort_keys=True, indent=4)
         outfile = open(args.cfg_file, 'w')
         outfile.write(cfg_json)
@@ -38,7 +58,7 @@ def main(args):
 
         if args.opt_out is not None:
             if args.vb > 0:
-                print "Writing updated version check file for browser access"
+                print("Writing updated version check file for browser access")
             mini_cfg = {
                 'version' : config.get('version', None),
                 'git_hash' : config.get('git_commit_hash', None)
@@ -48,16 +68,18 @@ def main(args):
             outfile.close()
 
 
-
     except Exception as err:
-        print 'Failed to update git commit hash and timestamp!'
-        print err
+        print("Failed to update git commit hash and timestamp!")
+        print(err)
+        sys.exit(1)
 
 def parse_args():
     p = argparse.ArgumentParser(description=__doc__.strip())
     p.add_argument("-f", "--config-file", dest="cfg_file", default=default_cfg_file, help="JSON config file (default=%(default)s)")
     p.add_argument("-v", "--verbose", dest="vb", action="count", default=0, help="Increase verbosity")
     p.add_argument("-o", "--output", dest="opt_out", default=None, help="Optional extra output file for Narrative version and git stamp")
+    p.add_argument("-e", "--env", dest="env", default="ci", help="Configure KBase environment. Choose from ci, next, prod, appdev (default=%(default)s)")
+    p.add_argument("-d", "--dev-mode", dest="dev_mode", default="true", help="Set developer mode as either 'true' or 'false' (default=true)")
     return p.parse_args()
 
 if __name__ == '__main__':

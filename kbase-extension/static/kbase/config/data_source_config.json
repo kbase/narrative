@@ -30,6 +30,18 @@
                 "type": "KBaseAssembly.PairedEndLibrary",
                 "ws": "PlantCSGenomes",
                 "search": false
+            },
+            "plant_rnaseq_anno": {
+                "name": "Plant RNA-Seq Annotation",
+                "type": "KBaseRNASeq.ReferenceAnnotation",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_bowtie2_idx": {
+                "name": "Plant Bowtie2 Indexes",
+                "type": "KBaseRNASeq.Bowtie2Indexes",
+                "ws": "PlantCSGenomes",
+                "search": false
             }
         },
         "exampleData": {
@@ -120,6 +132,18 @@
                 "type": "KBaseAssembly.PairedEndLibrary",
                 "ws": "PlantCSGenomes",
                 "search": false
+            },
+            "plant_rnaseq_anno": {
+                "name": "Plant RNA-Seq Annotation",
+                "type": "KBaseRNASeq.ReferenceAnnotation",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_bowtie2_idx": {
+                "name": "Plant Bowtie2 Indexes",
+                "type": "KBaseRNASeq.Bowtie2Indexes",
+                "ws": "PlantCSGenomes",
+                "search": false
             }
         },
         "exampleData": {
@@ -208,6 +232,18 @@
             "pe_reads": {
                 "name": "RNA-Seq Reads (paired end)",
                 "type": "KBaseAssembly.PairedEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_rnaseq_anno": {
+                "name": "Plant RNA-Seq Annotation",
+                "type": "KBaseRNASeq.ReferenceAnnotation",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_bowtie2_idx": {
+                "name": "Plant Bowtie2 Indexes",
+                "type": "KBaseRNASeq.Bowtie2Indexes",
                 "ws": "PlantCSGenomes",
                 "search": false
             }

@@ -100,9 +100,17 @@ c.NotebookApp.logout_handler_class = 'biokbase.narrative.authhandlers.KBaseLogou
 # The session manager class to use.
 # c.NotebookApp.session_manager_class = <class 'IPython.html.services.sessions.sessionmanager.SessionManager'>
 
+# def debug_log(handler):
+#     headers = handler.request.headers
+#     print "headers:"
+#     for (k, v) in sorted(headers.get_all()):
+#         print("%s: %s" % (k,v))
+
 # Supply overrides for the tornado.web.Application that the IPython notebook
 # uses.
-c.NotebookApp.tornado_settings = { 'compress_response': True }
+c.NotebookApp.tornado_settings = { 'compress_response': True, } #'debug': True, 'log_function': debug_log }
+
+
 
 # The directory to use for notebooks and kernels.
 # c.NotebookApp.notebook_dir = u''

@@ -18,6 +18,30 @@
                 "type": "KBaseGenomes.Genome",
                 "ws": "PlantCSGenomes",
                 "search": false
+            },
+            "se_reads": {
+                "name": "RNA-Seq Reads (single end)",
+                "type": "KBaseAssembly.SingleEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "pe_reads": {
+                "name": "RNA-Seq Reads (paired end)",
+                "type": "KBaseAssembly.PairedEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_rnaseq_anno": {
+                "name": "Plant RNA-Seq Annotation",
+                "type": "KBaseRNASeq.ReferenceAnnotation",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_bowtie2_idx": {
+                "name": "Plant Bowtie2 Indexes",
+                "type": "KBaseRNASeq.Bowtie2Indexes",
+                "ws": "PlantCSGenomes",
+                "search": false
             }
         },
         "exampleData": {
@@ -96,6 +120,30 @@
                 "type": "KBaseGenomes.Genome",
                 "ws": "PlantCSGenomes",
                 "search": false
+            },
+            "se_reads": {
+                "name": "RNA-Seq Reads (single end)",
+                "type": "KBaseAssembly.SingleEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "pe_reads": {
+                "name": "RNA-Seq Reads (paired end)",
+                "type": "KBaseAssembly.PairedEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_rnaseq_anno": {
+                "name": "Plant RNA-Seq Annotation",
+                "type": "KBaseRNASeq.ReferenceAnnotation",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_bowtie2_idx": {
+                "name": "Plant Bowtie2 Indexes",
+                "type": "KBaseRNASeq.Bowtie2Indexes",
+                "ws": "PlantCSGenomes",
+                "search": false
             }
         },
         "exampleData": {
@@ -172,6 +220,30 @@
             "plant_gnms": {
                 "name": "Plant Genomes",
                 "type": "KBaseGenomes.Genome",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "se_reads": {
+                "name": "RNA-Seq Reads (single end)",
+                "type": "KBaseAssembly.SingleEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "pe_reads": {
+                "name": "RNA-Seq Reads (paired end)",
+                "type": "KBaseAssembly.PairedEndLibrary",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_rnaseq_anno": {
+                "name": "Plant RNA-Seq Annotation",
+                "type": "KBaseRNASeq.ReferenceAnnotation",
+                "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "plant_bowtie2_idx": {
+                "name": "Plant Bowtie2 Indexes",
+                "type": "KBaseRNASeq.Bowtie2Indexes",
                 "ws": "PlantCSGenomes",
                 "search": false
             }

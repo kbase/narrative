@@ -1,3 +1,5 @@
+/* global: define */
+
 /**
  * Top-level 'widget' for the workspace interaction with the KBase narrative.
  *
@@ -18,22 +20,22 @@
  * @public
  */
 
-define(['jquery', 
+define(['jquery',
         'underscore',
         'bluebird',
         'narrativeConfig',
         'util/bootstrapDialog',
         'util/string',
         'jquery-nearest',
-        'kbwidget', 
-        'bootstrap', 
+        'kbwidget',
+        'bootstrap',
         'kbaseDefaultNarrativeOutput',
         'kbaseDefaultNarrativeInput',
         'kbaseNarrativeAppCell',
         'kbaseNarrativeMethodCell',
         'kbaseNarrativeSidePanel',
         'kbaseNarrativeDataPanel'],
-function($, 
+function($,
          _,
          Promise,
          Config,
@@ -48,7 +50,7 @@ function($,
             tableElem: null,
             controlsElem: null,
             ws_id: null,
-            methodStoreURL: Config.url('narrative_method_store'),
+            methodStoreURL: Config.url('narrative_method_store')
         },
         ws_client: null,
         ws_id: null,
@@ -75,11 +77,11 @@ function($,
 
         // set up as a hash for quickie lookup time!
         ignoredDataTypes : {
-            'string' : 1,
-            'unicode' : 1,
-            'numeric' : 1,
-            'integer' : 1,
-            'list' : 1,
+            string : 1,
+            unicode : 1,
+            numeric : 1,
+            integer : 1,
+            list : 1,
             'a number' : 1
         },
 
@@ -188,8 +190,8 @@ function($,
             $(document).on('createOutputCell.Narrative',
                 function(event, data) {
                     var cell = Jupyter.narrative.getCellByKbaseId(data.cellId);
-                    var params = {'embed' : true,
-                                  'data': StringUtil.safeJSONStringify(data.result)};
+                    var params = {embed : true,
+                                  data: StringUtil.safeJSONStringify(data.result)};
                     if (data.next_steps) {
                       // console.debug("adding next steps in create");
                       params.next_steps = data.next_steps;
@@ -244,7 +246,7 @@ function($,
                 title: 'Toggle view-only mode',
                 container: 'body',
                 delay: {
-                    show: Config.get('tooltip').showDelay, 
+                    show: Config.get('tooltip').showDelay,
                     hide: Config.get('tooltip').hideDelay
                 },
                 placement: 'bottom'
@@ -895,7 +897,7 @@ function($,
                 });
                 this.toggleRunButtons(true);
                 this.toggleSelectBoxes(true);
-                
+
                 // re-enable auto-save status
                 $('#autosave_status').show();
                 _.map(this.getReadOnlySelectors(), function (id) {
@@ -2165,7 +2167,7 @@ function($,
                     cell = Jupyter.notebook.insert_cell_above('markdown', currentIndex);
                     break;
                 case 'below':
-                default: 
+                default:
                     var cell = Jupyter.notebook.insert_cell_below('markdown', currentIndex);
             }
             // cell.celltoolbar.hide();

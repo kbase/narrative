@@ -143,11 +143,13 @@ function($, Config) {
             // toggle off the methods and jobs panels
             this.$methodsWidget.$elem.toggle(!readOnly);
             this.$jobsWidget.$elem.toggle(!readOnly);
-            this.$dataWidget.$elem.css({'height': (readOnly ? '100%' : '50%')});
 
             // toggle off the jobs header
             this.$tabs.header.find('div:nth-child(4).kb-side-header').toggle(!readOnly); // hide the jobs header
             this.$tabs.header.find('div.kb-side-header').css({'width': (readOnly ? ((100-this.hideButtonSize)/2)+'%' : ((100-this.hideButtonSize)/3)+'%')});
+
+            this.$dataWidget.setReadOnlyMode(readOnly);
+            this.handleMinimizedMethodPanel(readOnly);
         },
 
         /**

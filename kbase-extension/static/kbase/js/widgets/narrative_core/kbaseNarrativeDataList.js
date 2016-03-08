@@ -1107,7 +1107,12 @@ function ($,
                     }
                     self.attachRow(i);
                 }
-                this.$addDataButton.toggle(!(Jupyter.narrative && Jupyter.narrative.readonly === true));
+                if (Jupyter.narrative.readonly) {
+                    this.$addDataButton.hide();
+                }
+                else {
+                    this.$addDataButton.show();
+                }
             } else {
                 var $noDataDiv = $('<div>')
                     .css({'text-align': 'center', 'margin': '20pt'})

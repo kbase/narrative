@@ -88,6 +88,7 @@ function($,
             this.ws_id = this.options.ws_id;
 
             this.narrativeIsReadOnly = !Jupyter.notebook.writable;
+            Jupyter.narrative.readonly = this.narrativeIsReadOnly;
             this.inReadOnlyMode = false;
 
             this.first_readonly = true; // still trying for first check?
@@ -487,7 +488,7 @@ function($,
         },
 
         buildAppCommand: function(appSpec, methodSpecs, parameters) {
-            console.log([appSpec, methodSpecs, parameters]);
+            // console.log([appSpec, methodSpecs, parameters]);
             var appSpecJSON = StringUtil.safeJSONStringify(appSpec);
             var methodSpecJSON = StringUtil.safeJSONStringify(methodSpecs);
             var paramsJSON = StringUtil.safeJSONStringify(parameters);
@@ -833,6 +834,7 @@ function($,
             _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
             this.toggleRunButtons(false);
             this.toggleSelectBoxes(false);
+            $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true);
 
             if (this.narrativeIsReadOnly) {
                 $('#kb-view-only-msg').popover({
@@ -844,7 +846,6 @@ function($,
                     'copy that can be modified, use the ' +
                     '"Copy" button.'
                 });
-                $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true);
                 $('#kb-view-only-copy').removeClass('hidden');
                 $('#kb-view-mode').hide();
 
@@ -904,9 +905,6 @@ function($,
             // Restore side-panel
             // Restore margin for content
             Jupyter.narrative.toggleSidePanel(false);
-            // $('#notebook-container').animate({left: '380'}, {duration: delay, easing: 'swing'});
-            // $('#left-column').show('slide', {direction: 'left', easing: 'swing'}, delay);
-            // Show hidden things
             this.inReadOnlyMode = false;
         },
 

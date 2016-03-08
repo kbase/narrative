@@ -3,9 +3,6 @@
 /**
  * Widget to display a table of data objects from a kbase workspace.
  *
- * TODO: Re-enable "readonly" mode by following instructions in isReadonlyWorkspace()
- *       (dan g. 10/30/2014)
- *
  * Options:
  *    wsId - the name of the workspace to show in this widget
  *    loadingImage - an image to show in the middle of the widget while loading data
@@ -163,6 +160,18 @@ function($,
             this.addButton(this.$slideoutBtn);
             
             return this;
+        },
+
+        setReadOnlyMode: function(readOnly) {
+            this.$elem.css({'height': (readOnly ? '100%' : '50%')});
+            if (readOnly) {
+                this.$slideoutBtn.hide();
+                this.dataListWidget.$addDataButton.hide();
+            }
+            else {
+                this.$slideoutBtn.show();
+                this.dataListWidget.$addDataButton.show();
+            }
         },
 
         setListHeight: function(height, animate) {

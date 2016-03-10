@@ -27,7 +27,7 @@ define([], function() {
      * @private
      */
     function safeJSONStringify (obj) {
-        var esc = function(s) { 
+        var esc = function(s) {
             return s.replace(/'/g, "&apos;")
                     .replace(/"/g, "&quot;");
         };

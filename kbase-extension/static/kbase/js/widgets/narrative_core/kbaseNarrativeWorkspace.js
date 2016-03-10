@@ -411,6 +411,8 @@ function($,
                 input: function(content) { self.handleInputRequest(data.cell, content); }
             };
 
+            console.log(code);
+
             var executeOptions = {
                 silent: true,
                 user_expressions: {},

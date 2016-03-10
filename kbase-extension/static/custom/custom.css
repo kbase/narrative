@@ -112,7 +112,7 @@ span#notebook_name {
 
 span#notebook_name:hover {
     cursor: pointer;
-    background-color: #e0e0e0;    
+    background-color: #e0e0e0;
 }
 
 .prompt {
@@ -130,7 +130,7 @@ span#notebook_name:hover {
     position: fixed;
     left: 380px;
     top: 70px;
-    right: 0; 
+    right: 0;
     bottom: 0;
     overflow: auto;
     padding-bottom: 100px;
@@ -197,7 +197,7 @@ span#notebook_name:hover {
 .notebook_app .buttons .dropdown-menu {
     height: auto !important;
     overflow: visible !important;
-        
+
 }
 
 .notebook_app .btn.disabled .fa {

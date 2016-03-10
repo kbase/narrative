@@ -68,7 +68,7 @@
         "workspace": "https://ci.kbase.us/services/ws",
         "ws_browser": "https://narrative.kbase.us/#ws"
     },
-    "config": "prod",
+    "config": "ci",
     "dev": {
         "awe": "http://140.221.67.185:7080",
         "catalog": "https://ci.kbase.us/services/catalog",

@@ -5,11 +5,11 @@ In method 'bindRunButton' of 'src/notebook/ipython_profiles/profile_narrative/kb
 instead of line:
                     //self.runCell()(cell, method.service, method.title, paramList);
 you can use:
-                    var methodSpec = {parameters: [{id: "param0", field_type : "text"}, {id : "param1", field_type : "text"}], 
-                            behavior: {kb_service_url: "https://kbase.us/services/trees", 
-                                kb_service_name: "KBaseTrees", kb_service_method: "construct_tree_for_alignment", 
+                    var methodSpec = {parameters: [{id: "param0", field_type : "text"}, {id : "param1", field_type : "text"}],
+                            behavior: {kb_service_url: "https://kbase.us/services/trees",
+                                kb_service_name: "KBaseTrees", kb_service_method: "construct_tree_for_alignment",
                                 kb_service_parameters_mapping: {
-                                    param0: {target_property: "msa_ref", target_type_transform: "ref"}, 
+                                    param0: {target_property: "msa_ref", target_type_transform: "ref"},
                                     param1: {target_property: "out_tree_id"}
                                 }, kb_service_workspace_name_mapping: {target_property: "out_workspace"}}};
                     self.runCell()(cell, "generic_service", "method_call", [JSON.stringify(methodSpec), JSON.stringify(paramList)]);

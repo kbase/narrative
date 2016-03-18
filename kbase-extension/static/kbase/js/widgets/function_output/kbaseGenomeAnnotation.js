@@ -83,7 +83,7 @@ function($,
                 var ids = ['overview', 'genes'];
 
                 //XXX plants baloney - but plants also get a CDS column.
-                if (genome.domain == 'Plant') {
+                if (genome.domain == 'Plant' || genome.domain == 'Eukaryota') {
                     names.push('CDS');
                     ids.push('cds');
                 }
@@ -94,9 +94,20 @@ function($,
                 };
             }
             else {
+
+                //normally, we just have an Overview, Contigs, and Genes tab.
+                var names = ['Overview', 'Contigs', 'Genes'];
+                var ids = ['overview', 'contigs', 'genes'];
+
+                //XXX plants baloney - but plants get different columns
+                if (genome.domain == 'Plant' || genome.domain == 'Eukaryota') {
+                    names = ['Overview', 'Genes', 'CDS'];
+                    ids = ['overview', 'genes', 'cds'];
+                }
+
                 return {
-                    names : ['Overview', 'Contigs', 'Genes'],
-                    ids : ['overview', 'contigs', 'genes']
+                    names : names,
+                    ids : ids
                 };
             }
         },
@@ -165,7 +176,7 @@ function($,
                     //Plant genes need different information, and we want to display the gene and transcript counts separately
                     //so if the domain is plants, add on the extra label, pop off the existing length value, and push on the length of genes and
                     //transcripts individually.
-                    if (gnm.domain == 'Plant') {
+                    if (gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
                         overviewLabels.push('Number of Transcripts');
                         var types = {};
                         $.each(gnm.features, function(i,v) {
@@ -185,7 +196,10 @@ function($,
                     //to do that right now. :-/
 
                     if (genomeType != 'genome') {
-                        overviewLabels.splice(3, 0, 'Subtype');
+                        //XXX plants baloney - don't display the subtype if it's plant or eukaryota domain
+                        if (gnm.domain != 'Plant' && gnm.domain != 'Eukaryota') {
+                          overviewLabels.splice(3, 0, 'Subtype');
+                        }
                         overviewData.splice(3, 0, genomeType);
                     }
 
@@ -300,7 +314,8 @@ function($,
                 var geneMap = {};
                 var contigMap = {};
 
-                var cdsData = [] //XXX plants baloney. Extra tab for CDS data. See below on line 337 or so.
+                var cdsData = [] //XXX plants baloney. Extra tab for CDS data. See below on line 372 or so.
+                var mrnaData = [] //XXX plants baloney. We throw away mrnaData. See below on line 372 or so.
 
                 if (data.length > 1) {
                     var ctg = data[1].data;
@@ -353,9 +368,18 @@ function($,
                     //XXX plants baloney - if it's non plant, it just goes into the genes array.
                     //but if it is plants, then we split it up - same data, two different tabs.
                     //locus data goes on the genes tab, cds data goes on the cds tab.
-                    var dataArray = gnm.domain != 'Plant' || gene.type == 'locus'
-                        ? genesData
-                        : cdsData;
+                    //We're also creating an mrnaData array for mrna data, but we're just throwing that out later.
+
+                    var dataArray = [];
+                    if ((gnm.domain != 'Plant' && gnm.domain != 'Eukaryota') || gene.type == 'locus') {
+                      dataArray = genesData;
+                    }
+                    else if (gene.type == 'CDS') {
+                      dataArray = cdsData;
+                    }
+                    else if (gene.type == 'mRNA') {
+                      dataArray = mrnaData;
+                    }
 
                     dataArray.push({
                         id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
@@ -405,8 +429,8 @@ function($,
                                   "fnDrawCallback": function() { geneEvents(); contigEvents(); }
                 };
 
-
-                if (genomeType == 'transcriptome') {
+                //XXX plants baloney - plants are a special case. If it's in plants or eukaryota, then we use the simpler display with less data.
+                if (genomeType == 'transcriptome' || gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
                     genesSettings.aoColumns = [
                         {sTitle: "Gene ID", mData: "id"},
                         {sTitle: "Length", mData: "len"},
@@ -414,7 +438,7 @@ function($,
                     ];
 
                     // XXX more plants baloney. Remove the length column
-                    if (gnm.domain == 'Plant') {
+                    if (gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
                         genesSettings["aaSorting"] = [[ 0, "asc" ], [1, "asc"]];
                         genesSettings.aoColumns.splice(1,1);
                     }
@@ -427,7 +451,7 @@ function($,
                 }
 
                 //XXX plants baloney - build up the CDS div, if necessary.
-                if (gnm.domain == 'Plant') {
+                if (gnm.domain == 'Plant' || gnm.domain == 'Eukaryota') {
 
                     var cdsTab = $('#'+pref+'cds');
                     cdsTab.empty();

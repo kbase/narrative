@@ -111,6 +111,7 @@ require.config({
         'kbaseNarrativeParameterCustomTextSubdataInput' :  'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomTextSubdataInput',
         'kbaseNarrativeParameterCustomButtonInput'      : 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomButtonInput',
         'kbaseNarrativeParameterCustomDropdownGroupInput': 'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterCustomDropdownGroupInput',
+        'kbaseNarrativeParameterAjaxTextSubdataInput'   :  'kbase/js/widgets/function_input/parameter_input/kbaseNarrativeParameterAjaxTextSubdataInput',
         /***
          * END CUSTOM INPUT WIDGETS
          ***/
@@ -162,6 +163,7 @@ require.config({
         'kbaseEditModel'                        : 'kbase/js/widgets/function_input/kbaseEditModel',
         'kbaseModelEditor'                      : 'kbase/js/widgets/function_input/editors/kbaseModelEditor',
         'kbaseEditHistory'                      : 'kbase/js/widgets/function_input/editors/kbaseEditHistory',
+        'kbaseHomologySearch'                   : 'kbase/js/widgets/function_input/kbaseHomologySearch',
         'kbaseModal'                            : 'kbase/js/widgets/narrative_core/kbaseModal',
 
         // another implementation of kbaseTabs needed for kbaseTabTable

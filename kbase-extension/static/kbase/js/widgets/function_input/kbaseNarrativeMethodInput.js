@@ -87,6 +87,15 @@ function( $, Config ) {
                     });
                     this.parameters.push({id:paramSpec.id, widget:textInputWidget});
                     this.parameterIdLookup[paramSpec.id] = textInputWidget;
+                } else if (paramSpec.field_type === "ajax_textsubdata"){
+                    var ajaxTextInputWidget = $stepDiv["kbaseNarrativeParameterAjaxTextSubdataInput"]({
+                        loadingImage: this.options.loadingImage,
+                        parsedParameterSpec: params[i],
+                        isInSidePanel: this.options.isInSidePanel,
+                        ajaxConfig: this.ajaxConfig
+                    });
+                    this.parameters.push({id: paramSpec.id, widget: ajaxTextInputWidget});
+                    this.parameterIdLookup[paramSpec.id] = ajaxTextInputWidget;
                 } else if (paramSpec.field_type === "file") {
                     var fileInputWidget = $stepDiv["kbaseNarrativeParameterFileInput"]({loadingImage: this.options.loadingImage, parsedParameterSpec: params[i], isInSidePanel: this.options.isInSidePanel});
                     this.parameters.push({id:paramSpec.id, widget:fileInputWidget});

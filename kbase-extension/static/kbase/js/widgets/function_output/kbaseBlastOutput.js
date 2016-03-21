@@ -1,11 +1,12 @@
 define(['jquery',
+    'util/string',
     'd3',
     'kbwidget',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'jquery-dataTables',
     'jquery-dataTables-bootstrap'],
-function ($) {
+function ($, StringUtil) {
     $.KBWidget({
         name: "kbaseBlastOutput",
         parent: "kbaseAuthenticatedWidget",
@@ -40,7 +41,7 @@ function ($) {
 
         render: function () {
             var self = this;
-            var pref = this.uuid();
+            var pref = StringUtil.uuid();
 
             //login related error
             var container = this.$elem;
@@ -428,15 +429,6 @@ function ($) {
             return this;
         },
 
-        getData: function () {
-            return {
-                type: "NarrativeTempCard",
-                id: this.ws_name + "." + this.ws_id,
-                workspace: this.ws_name,
-                title: "Temp Widget"
-            };
-        },
-
         loggedInCallback: function (event, auth) {
             this.token = auth.token;
             this.render();
@@ -447,13 +439,6 @@ function ($) {
             this.token = null;
             this.render();
             return this;
-        },
-        uuid: function () {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function (c) {
-                    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                    return v.toString(16);
-                });
         }
     });
 });

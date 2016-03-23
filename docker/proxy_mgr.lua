@@ -140,7 +140,7 @@ M.provision_count = 20
 M.container_max = 5000
 
 -- Default URL for authentication failure redirect, nil means just error out without redirect
-M.auth_redirect = "/?redirect=%s"
+M.redirect_on_auth_fail = true
 
 M.load_redirect = "/loading.html?n=%s"
 --
@@ -433,7 +433,6 @@ initialize = function(self, conf)
         M.mark_interval = conf.mark_interval or M.mark_interval
         M.provision_interval = conf.provision_interval or M.provision_interval
         M.timeout = conf.idle_timeout or M.timeout
-        M.auth_redirect = conf.auth_redirect or M.auth_redirect
         M.provision_count = conf.provision_count or M.provision_count
         M.container_max = conf.container_max or M.container_max
         M.lock_name = conf.lock_name or M.lock_name
@@ -441,8 +440,8 @@ initialize = function(self, conf)
         docker_map = conf.docker_map or ngx.shared.docker_map
         token_cache = conf.token_cache or ngx.shared.token_cache
         proxy_mgr = conf.proxy_mgr or ngx.shared.proxy_mgr
-        ngx.log(ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d auth_redirect %s",
-                                            M.sweep_interval, M.mark_interval, M.timeout, tostring(M.auth_redirect)))
+        ngx.log(ngx.INFO, string.format("Initializing proxy manager: sweep_interval %d mark_interval %d idle_timeout %d ",
+                                            M.sweep_interval, M.mark_interval, M.timeout))
     else
         ngx.log(ngx.INFO, string.format("Initialized at %d, skipping", initialized))
     end
@@ -1014,6 +1013,15 @@ assign_container = function(session_id, client_ip)
     return nil
 end
 
+---
+--- Redirect to the login handler in the ui, passing the current uri in the required json encoded structure.
+---
+auth_redirect = function()
+    -- use / to make this relative to the host, but absolute path
+    local next_request = json.encode({path = ngx.var.request_uri, external = true})
+    return ngx.redirect('/#login?nextrequest=' .. ngx.escape_uri(next_request))
+end
+
 --
 -- Route to the appropriate proxy
 --
@@ -1031,7 +1039,11 @@ use_proxy = function(self)
     local session_key = get_session()
     if not session_key then
         ngx.log(ngx.WARN, "No session_key found, bad auth")
-        return(ngx.exit(ngx.HTTP_UNAUTHORIZED))
+	if M.redirect_on_auth_fail then
+	    return auth_redirect()
+	else
+	    return ngx.exit(ngx.HTTP_UNAUTHORIZED)
+	end
     end
     -- get proxy target
     target = session_map:get(session_key)
@@ -1042,7 +1054,7 @@ use_proxy = function(self)
         if elasped then
             target = session_map:get(session_key)
         end
-        -- still missing, assign comtainer to session
+        -- still missing, assign container to session
         if target == nil then
             -- session_key still locked in called function
             -- this updates docker_map with session info
@@ -1096,10 +1108,9 @@ use_proxy = function(self)
             ngx.log(ngx.WARN, "Error: failed to update docker cache: "..err)
         end
         dock_lock:unlock()
-    elseif M.auth_redirect then
-        local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
-        local returnurl = string.format("%s://%s/%s", scheme,ngx.var.host,ngx.var.request_uri)
-        return ngx.redirect(string.format(M.auth_redirect, ngx.escape_uri(returnurl)))
+    elseif M.redirect_on_auth_fail then
+        ngx.log(ngx.WARN, "No session_key found, bad auth")
+	return auth_redirect()
     else
         return(ngx.exit(ngx.HTTP_NOT_FOUND))
     end

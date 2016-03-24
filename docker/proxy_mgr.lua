@@ -69,7 +69,7 @@ local use_proxy
 -- that we use to track docker containers. The ngx.shared.DICT
 -- implementation only supports basic scalar types, so we need a
 -- couple of these instead of using a common table object
--- session_map maps a session key (kbase token userid) to a whitespace seperated list of:
+-- session_map maps a session key (kbase token userid) to a whitespace separated list of:
 --          1. ip/port proxy target (eg. '127.0.0.1:49000')
 --          2. docker ID
 -- docker_map maps a docker ID to a whitespace seperated list of:
@@ -1027,72 +1027,72 @@ end
 --
 use_proxy = function(self)
     local target = nil
-    local new_flag = false
-    -- ngx.log( ngx.INFO, "In /narrative/ handler")
+
     local client_ip = ngx.var.remote_addr
+
     -- get the provisioning / reaper functions into the run queue if not already
-    -- the workers sometimes crash and having it here guarentees it will be running
+    -- the workers sometimes crash and having it here guarantees it will be running
     check_provisioner()
     check_marker()
+
     -- get session
-    -- unauthorized if no session
-    local session_key = get_session()
-    if not session_key then
-        ngx.log(ngx.WARN, "No session_key found, bad auth")
-	if M.redirect_on_auth_fail then
-	    return auth_redirect()
-	else
-	    return ngx.exit(ngx.HTTP_UNAUTHORIZED)
-	end
+    -- If if fails for any reason (there are several possible) redirect to
+    -- an end point which can authenticate and hopefully send them back here
+    -- NB although the key for the container is called various things through this 
+    -- file it is important that it is the USERNAME, and thus it is named in this
+    -- function.
+    local username = get_session()
+    if not username then
+        return auth_redirect()
     end
+
     -- get proxy target
-    target = session_map:get(session_key)
+    target = session_map:get(username)
+
     -- didn't find in session_map, lock and try again
     if target == nil then
         session_lock = locklib:new(M.lock_name, lock_opts)
-        elapsed, err = session_lock:lock(session_key)
+        elapsed, err = session_lock:lock(username)
+        -- nb elapsed is used here as "not err", as throughout this file
         if elapsed then
-            target = session_map:get(session_key)
+            target = session_map:get(username)
         end
-        -- still missing, assign container to session
+        -- still missing, but we would expect that, as it is unlikely that 
+        -- a session for this user would be created between the two calls.
         if target == nil then
-            -- session_key still locked in called function
             -- this updates docker_map with session info
-            target = assign_container(session_key, client_ip)
+            target = assign_container(username, client_ip)
+
             -- if assignment fails, launch new container and try again
             if target == nil then
                 ngx.log(ngx.WARN, "No queued containers to assign, launching new")
                 res = new_container()
                 if res then
-                    target = assign_container(session_key, client_ip)
+                    target = assign_container(username, client_ip)
                 end
             end
+
             -- can not assign a new one / bad state
             if target == nil then
                 ngx.log(ngx.ERR, "No available docker containers!")
+                session_lock.unlock()
                 return(ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE))
             end
-            -- if a queued container is assigned, enqueue another
+
+            -- if a container is assigned, enqueue another
             new_container()
-            -- assign comtainer to session
+
+            -- route to the "loading" page which will wait until the container
+            -- is ready before loading the narrative.
             local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
-
-            -- poke the /login url in the container to get the auth credentials set up
-            -- local req = {
-            --     url = 
-            --     url = nexus_url .. token['un'],
-            --     method = "GET",
-            --     headers = { Authorization = "Globus-Goauthtoken "..token['token'] }
-            -- }
-
-            -- local ok,code,headers,status,body = httpclient:request(req)
-
             local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)
+            session_lock.unlock()
             return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(returnurl)))
         end
         session_lock.unlock()
     end
-    -- proxy target already in session
+    -- if we got here, we will have successfully pulled a container from the
+    -- session (username) map, and this section updates the entry.
     if target ~= nil then
         -- session = { IP:port, docker_id }
         local session = notemgr:split(target)
@@ -1101,17 +1101,19 @@ use_proxy = function(self)
         local dock_lock = locklib:new(M.lock_name, lock_opts)
         elapsed, err = dock_lock:lock(session[2])
         if elapsed == nil then
+            -- TODO: soooo ... why do we go ahead and update the cache entry that
+            -- can't be locked?
             ngx.log(ngx.ERR, "Error: failed to lock docker cache: "..err)
         end
-        success,err,forcible = docker_map:set(session[2], table.concat({"active", session[1], session_key, os.time(), client_ip}, " "))
+        success,err,forcible = docker_map:set(session[2], table.concat({"active", session[1], username, os.time(), client_ip}, " "))
         if not success then
             ngx.log(ngx.WARN, "Error: failed to update docker cache: "..err)
         end
         dock_lock:unlock()
-    elseif M.redirect_on_auth_fail then
-        ngx.log(ngx.WARN, "No session_key found, bad auth")
-	return auth_redirect()
     else
+        -- I really don't even see how this condition is possible, or likely
+        -- the session should either be found, created, or if it can't be created
+        -- an error condition reported.
         return(ngx.exit(ngx.HTTP_NOT_FOUND))
     end
 end

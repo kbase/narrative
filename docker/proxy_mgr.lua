@@ -139,9 +139,6 @@ M.provision_count = 20
 -- The max number of docker containers to have running, including provisioned
 M.container_max = 5000
 
--- Default URL for authentication failure redirect, nil means just error out without redirect
-M.redirect_on_auth_fail = true
-
 M.load_redirect = "/loading.html?n=%s"
 --
 -- Function that runs a netstat and returns a table of foreign IP:PORT

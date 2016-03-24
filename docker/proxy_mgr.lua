@@ -1051,7 +1051,7 @@ use_proxy = function(self)
     if target == nil then
         session_lock = locklib:new(M.lock_name, lock_opts)
         elapsed, err = session_lock:lock(session_key)
-        if elasped then
+        if elapsed then
             target = session_map:get(session_key)
         end
         -- still missing, assign container to session

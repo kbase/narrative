@@ -1024,7 +1024,6 @@ end
 --
 use_proxy = function(self)
     local target = nil
-
     local client_ip = ngx.var.remote_addr
 
     -- get the provisioning / reaper functions into the run queue if not already
@@ -1050,10 +1049,11 @@ use_proxy = function(self)
     if target == nil then
         session_lock = locklib:new(M.lock_name, lock_opts)
         elapsed, err = session_lock:lock(username)
-        -- nb elapsed is used here as "not err", as throughout this file
-        if elapsed then
-            target = session_map:get(username)
+        if err then 
+            ngx.log(ngx.ERR, string.format("Error obtaining key %s", err))
+            return ngx.exit(ngx.HTTP_REQUEST_TIMEOUT, string.format("Error obtaining key %s", err))
         end
+        target = session_map:get(username)
         -- still missing, but we would expect that, as it is unlikely that 
         -- a session for this user would be created between the two calls.
         if target == nil then
@@ -1069,10 +1069,12 @@ use_proxy = function(self)
                 end
             end
 
+            -- Done with the lock (assign_container assumes the username is locked)
+            session_lock:unlock()
+
             -- can not assign a new one / bad state
             if target == nil then
                 ngx.log(ngx.ERR, "No available docker containers!")
-                session_lock.unlock()
                 return(ngx.exit(ngx.HTTP_SERVICE_UNAVAILABLE))
             end
 
@@ -1082,11 +1084,10 @@ use_proxy = function(self)
             -- route to the "loading" page which will wait until the container
             -- is ready before loading the narrative.
             local scheme = ngx.var.src_scheme and ngx.var.src_scheme or 'http'
-            local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)
-            session_lock.unlock()
+            local returnurl = string.format("%s://%s%s", scheme, ngx.var.http_host, ngx.var.request_uri)            
             return ngx.redirect(string.format(M.load_redirect, ngx.escape_uri(returnurl)))
         end
-        session_lock.unlock()
+        session_lock:unlock()
     end
     -- if we got here, we will have successfully pulled a container from the
     -- session (username) map, and this section updates the entry.
@@ -1097,7 +1098,7 @@ use_proxy = function(self)
         -- update docker_map session info, lock first
         local dock_lock = locklib:new(M.lock_name, lock_opts)
         elapsed, err = dock_lock:lock(session[2])
-        if elapsed == nil then
+        if err then
             -- TODO: soooo ... why do we go ahead and update the cache entry that
             -- can't be locked?
             ngx.log(ngx.ERR, "Error: failed to lock docker cache: "..err)

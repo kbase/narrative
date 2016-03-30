@@ -334,6 +334,7 @@ $.KBWidget({
         var svg = 
             '<svg id="'+self.pref+'svg" style="width:'+w+'px;height:'+h+'px;background-color:white" '+
             'viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="xMinYMin meet">';
+        var isFirefox = typeof InstallTrigger !== 'undefined';
         var imax = self.cmp.proteome1names.length;
         if ((imax - 1 - i0) * sp / 100.0 > w0)
             imax = Math.min(self.cmp.proteome1names.length, Math.round(w0 * 100.0 / sp) + i0 + 1);
@@ -342,7 +343,13 @@ $.KBWidget({
         if ((jmax - 1 - j0) * sp / 100.0 > h0)
             jmax = Math.min(self.cmp.proteome2names.length, Math.round(h0 * 100.0 / sp) + j0 + 1);
         var ymax = Math.min(h0, Math.round((jmax - j0 - 1) * sp / 100.0) + 1);
-        svg += '<rect x="'+xShift+'" y="0" width="'+xmax+'" height="'+ymax+'" style="fill:rgb(0,75,75)"/>';
+        var fieldX = xShift;
+        var fieldY = 0;
+        if (isFirefox) {
+            fieldX += 0.5;
+            fieldY += 0.5;
+        }
+        svg += '<rect x="'+fieldX+'" y="'+fieldY+'" width="'+xmax+'" height="'+ymax+'" style="fill:rgb(0,75,75)"/>';
         for (var i = i0; i < imax; i++) {
             var x = xShift + Math.round((i - i0) * sp / 100.0);
             var hitList = self.cmp.data1[i];
@@ -356,6 +363,10 @@ $.KBWidget({
                 var gbPart = Math.min(255, Math.max(0, Math.round(255.0 * (bbhPercent - 90.0) / 10.0)));
                 var greenPart = 255 - Math.round((255 - gbPart) / 2);
                 var bluePart = gbPart;
+                if (isFirefox) {
+                    x += 0.5;
+                    y += 0.5;
+                }
                 svg += '<rect x="'+x+'" y="'+y+'" width="1" height="1" style="fill:rgb(255,'+greenPart+','+bluePart+')"/>';
             }
         }
@@ -373,6 +384,10 @@ $.KBWidget({
                 var ySize = Math.min(self.size, self.cmp.proteome2names.length * self.scale / 100);
                 var rX = Math.round(x + xShift - half - 1); 
                 var rY = Math.round(ySize + 1 - y - half - 1);
+                if (isFirefox) {
+                    rX += 0.5;
+                    rY += 0.5;
+                }
                 var rS = 1 + half * 2;
                 var rX2 = rX + rS - 1;
                 var rY2 = rY + rS - 1;

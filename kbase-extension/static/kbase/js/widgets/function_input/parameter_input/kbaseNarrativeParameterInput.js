@@ -7,8 +7,8 @@
 
 define(['jquery',
         'narrativeConfig',
-        'kbwidget', 
-        'kbaseAuthenticatedWidget'], 
+        'kbwidget',
+        'kbaseAuthenticatedWidget'],
 function($, Config) {
     'use strict';
     $.KBWidget({
@@ -24,37 +24,35 @@ function($, Config) {
 
         $mainPanel:null,
         spec:null,
-        
+
         init: function(options) {
             this._super(options);
 
             this.spec = options.parsedParameterSpec;
-            
+
             this.$mainPanel = $("<div>");
             this.$elem.append(this.$mainPanel);
             this.render();
-            
+
             return this;
         },
-        
+
         render: function() {
             this.$mainPanel.append("A parameter is not being displayed correctly.");
             console.error("Incorrect Parameter Spec:");
             console.error(this.spec);
         },
-        
+
         getState: function() {
             return this.getParameterValue();
         },
 
         loadState: function(state) {
-            if (!state)
-                return;
             this.setParameterValue(state);
         },
-        
+
         refresh: function() {
-        
+
         },
 
         /*
@@ -65,32 +63,32 @@ function($, Config) {
          * red (see kbaseNarrativeMethodInput for default styles).
          */
         isValid: function() {
-           return { isValid: false, errormssgs: ["A parameter is not specified properly."] }; 
+           return { isValid: false, errormssgs: ["A parameter is not specified properly."] };
         },
-        
+
         /*
          * Necessary for Apps to disable editing parameters that are automatically filled
          * from a previous step.  Returns nothing.
          */
         disableParameterEditing: function() {
-            
+
         },
-        
+
         /*
          * Allows those parameters to be renabled, which may be an option for advanced users.
          */
         enableParameterEditing: function() {
-            
+
         },
-        
+
         /*
          * An App (or a narrative that needs to auto populate certain fields) needs to set
          * specific parameter values based on the App spec, so we need a way to do this.
          */
         setParameterValue: function(value) {
-            
+
         },
-        
+
         /*
          * We need to be able to retrieve any parameter value from this method.  Valid parameter
          * values may be strings, numbers, objects, or lists, but must match what is declared
@@ -99,15 +97,15 @@ function($, Config) {
         getParameterValue: function() {
             return "";
         },
-        
+
         /*
          * This function is invoked every time we run app or method. This is the difference between it
-         * and getParameterValue() which could be invoked many times before running (e.g. when widget 
-         * is rendered). 
+         * and getParameterValue() which could be invoked many times before running (e.g. when widget
+         * is rendered).
          */
         prepareValueBeforeRun: function(methodSpec) {
-        	
+
         }
-        
+
     });
 });

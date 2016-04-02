@@ -208,19 +208,14 @@ function($, Config) {
         setParameterValue: function(value) {
             // todo: handle case where this is a multiple, we need to check if value array matches number of elements,
             // and if not we must do something special   ...
-            if(value === this.checkedValue) {
-                this.$elem.find("#"+this.spec.id).prop('checked', true);
-            } else if (value === this.uncheckedValue) {
-                this.$elem.find("#"+this.spec.id).prop('checked', false);
-            } else if(value === true) {
-                this.$elem.find("#"+this.spec.id).prop('checked', true);
-            } else if(value === false) {
-                this.$elem.find("#"+this.spec.id).prop('checked', false);
-            } else if(value === "checked") {
-                this.$elem.find("#"+this.spec.id).prop('checked', true);
-            } else if(value === "unchecked") {
-                this.$elem.find("#"+this.spec.id).prop('checked', false);
-            }
+            var setChecked = false;
+            if (value === this.checkedValue ||
+                value === String(this.checkedValue) ||
+                value === true ||
+                value === "true" ||
+                value === "checked")
+                setChecked = true;
+            this.$elem.find("#"+this.spec.id).prop('checked', setChecked);
 
             this.isValid();
         },

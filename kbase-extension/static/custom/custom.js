@@ -121,7 +121,7 @@ define(['jquery',
         'use strict';
 
         // inject necessary environment vars into the kernel as soon as it's ready.
-        $([Jupyter.events]).on('kernel_ready.Kernel', 
+        $([Jupyter.events]).on('kernel_ready.Kernel',
             function() {
                 Jupyter.notebook.kernel.execute(
                     'import os;' +
@@ -151,7 +151,7 @@ define(['jquery',
             if (elemData && elemData['kbaseNarrativeCellMenu'])
                $(this.inner_element).find('.button_container').kbaseNarrativeCellMenu('toggleState', toggleState);
         };
-        
+
         // disable hiding of the toolbar
         cellToolbar.CellToolbar.prototype.hide = function () {
             return;
@@ -210,7 +210,7 @@ define(['jquery',
             $(this.element).trigger('unselected.cell');
             return wasSelected;
         };
-        
+
         var original_select = cell.Cell.prototype.select;
         cell.Cell.prototype.select = function () {
             var wasSelected = original_select.apply(this);
@@ -219,7 +219,7 @@ define(['jquery',
             }
             return wasSelected;
         };
-        
+
         cell.Cell.prototype.getCellState = function (name, defaultValue) {
             if (!this.metadata.kbstate) {
                 this.metadata.kbstate = {};
@@ -238,7 +238,7 @@ define(['jquery',
             }
             this.metadata.kbstate[name] = value;
         };
-        
+
         cell.Cell.prototype.toggle = function () {
             switch (this.getCellState('toggleState', 'unknown')) {
                 case 'closed':
@@ -253,11 +253,11 @@ define(['jquery',
             }
             this.renderToggleState();
         };
-        
+
         cell.Cell.prototype.renderToggleState = function () {
             this.celltoolbar.renderToggleState();
         };
-        
+
         function cellType(cell) {
             // Cells are (currently) rendered twice. The first time the kb metadata
             // is not available, but we can rely on future renders.
@@ -268,14 +268,14 @@ define(['jquery',
             var type = cell.metadata &&
                     cell.metadata['kb-cell'] &&
                     cell.metadata['kb-cell']['type'];
-                
+
             // Markdown cells don't of course have a kb cell type.
             if (type === undefined) {
                 return;
             }
-                
+
             switch (type) {
-                case 'function_input': 
+                case 'function_input':
                     return 'method';
                     break;
                 case 'kb_app':
@@ -287,25 +287,25 @@ define(['jquery',
                 default:
                     return 'unknown';
             }
-            
+
         }
 
         textCell.MarkdownCell.prototype.render = function () {
             /*
-             * Ahem, these silly javascript method overriding or extensions. 
+             * Ahem, these silly javascript method overriding or extensions.
              * First, you need to know what the parent object prototype
-             * does, in order for this to make any sense. For rendering, what 
+             * does, in order for this to make any sense. For rendering, what
              * does it mean to extend or override the rendering? Does the parent
              * class actually do any rendering, i.e. create display elements based
              * on data? In this case, no. TextCell has no base render method, but
-             * above that Cell does, but it only checks to see if the rendering 
+             * above that Cell does, but it only checks to see if the rendering
              * flags mean that rendering is required and returns that value. It
-             * is that return value which is used here to determine whether 
-             * rendering should be done or not. 
+             * is that return value which is used here to determine whether
+             * rendering should be done or not.
              * I would argue that there should just be a method "needRender".
              */
             var needsToRender = textCell.TextCell.prototype.render.apply(this);
-            
+
             // which cell type is it? KBase hosts apps, methods, and output cells
             // within markdown cells.
             if (cell.renderCount === undefined) {
@@ -320,7 +320,7 @@ define(['jquery',
                 this.typeset();
                 return needsToRender;
             }
-            
+
             if (needsToRender) {
                 var that = this,
                     text = this.get_text(),
@@ -333,7 +333,7 @@ define(['jquery',
                 var text_and_math = mathjaxutils.remove_math(text);
                 text = text_and_math[0];
                 math = text_and_math[1];
-                
+
                 marked(text, function (err, html) {
                     html = mathjaxutils.replace_math(html, math);
                     html = security.sanitize_html(html);
@@ -401,7 +401,7 @@ define(['jquery',
 
 
             /*
-             * The cell toolbar buttons area knows how to set the title and 
+             * The cell toolbar buttons area knows how to set the title and
              * icon for itself. But we store the title and icon here in case
              * the celltoolbar is not fully built yet. In that case, it will
              * look at the containing cell to see if it has been set yet, and if
@@ -437,7 +437,7 @@ define(['jquery',
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
                     $menu.trigger('set-icon.toolbar', [icon]);
                 });
-                
+
             $cellNode
                 .on('job-state.cell', function (e, data) {
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
@@ -466,7 +466,7 @@ define(['jquery',
             $(this.element)
                 .on('selected.cell', function (e) {
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
-                    cell.setCellState('selected', true); 
+                    cell.setCellState('selected', true);
                     $menu.trigger('selected.toolbar');
                 });
 
@@ -481,12 +481,12 @@ define(['jquery',
                     // This is really the kick-off for the narrative, since the
                     // presets on the celltoobar are loaded via event calls,
                     // so are not necessarily part of the synchronous process
-                    // which builds the UI, and also of course the 
-                   
+                    // which builds the UI, and also of course the
+
                     // Set up the toolbar based on the state.
                     $(cell.element)
                         .trigger('set-title.cell', [cell.getCellState('title', '')]);
-                    
+
                     $(cell.element)
                         .trigger('set-icon.cell', [cell.getCellState('icon', '')]);
 
@@ -506,9 +506,9 @@ define(['jquery',
 
         /*
          * NEW:
-         * 
+         *
          * Extend the Cell bind_events.
-         * 
+         *
          * Adds cell toggling.
          */
         var original_cell_bind_events = cell.Cell.prototype.bind_events;
@@ -524,10 +524,10 @@ define(['jquery',
 
         /*
          * NEW:
-         * 
+         *
          * Extend the CodeCell bind_events method to add handling of toolbar
          * events.
-         * 
+         *
          *  A note on "extension" of a function object's function prototype:
          *  We first save the existing function, and then replace it with a new
          *  one which in its first statement executes the original one.
@@ -541,7 +541,7 @@ define(['jquery',
             var $cellNode = $(this.element), cell = this;
 
             // TODO: toggle state on the cell object so we can be sure about this.
-                
+
             $cellNode
                 .on('unselected.cell', function (e) {
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
@@ -555,14 +555,14 @@ define(['jquery',
                     var $menu = $(cell.celltoolbar.element).find('.button_container');
                     cell.setCellState('selected', true);
                     $menu.trigger('selected.toolbar');
-                });                
-                
+                });
+
         };
-        
+
         /*
-         * NEW: 
-         * 
-         * Hides and shows code cell components based on the current toggle 
+         * NEW:
+         *
+         * Hides and shows code cell components based on the current toggle
          * state of the cell, as reflected in the cell metadata
          * (via getCellState).
          */
@@ -680,19 +680,16 @@ define(['jquery',
         $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
             require(['kbaseNarrative'], function (Narrative) {
                 Jupyter.narrative = new Narrative();
-
-                $([Jupyter.events]).one('kernel_connected.Kernel', function() {
-                    Jupyter.narrative.init();
-                });
+                Jupyter.narrative.init();
 
                 /*
-                 * Override the move-cursor-down-or-next-cell and 
+                 * Override the move-cursor-down-or-next-cell and
                  * move-cursor-up-or-previous-cell actions.
                  *
-                 * When editing a textcell (markdown or code), if a user uses 
+                 * When editing a textcell (markdown or code), if a user uses
                  * the arrow keys to move to another cell, it normally lands
                  * there in edit mode.
-                 * 
+                 *
                  * This is bad for KBase-ified markdown cells, since it shows
                  * the div and script tags that are used to render them, and
                  * screws up the state management. These overrides just
@@ -752,8 +749,8 @@ define(['jquery',
         });
 
         /*
-         * We override this method because jupyter uses .height() rather than 
-         * css('height'). In the former just the internal height is returned, 
+         * We override this method because jupyter uses .height() rather than
+         * css('height'). In the former just the internal height is returned,
          * although later versions of jquery (should be the one we are using,
          * but it didn't appear to be so) should have fixed this behavior when
          * box-sizing: border-box is used. I tried that, but it didn't seem to

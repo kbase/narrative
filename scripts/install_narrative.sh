@@ -2,7 +2,7 @@
 # 1. source into virtualenv
 # > virtualenv narrative-jupyter
 # > source narrative-jupyter/bin/activate
-# 
+#
 # 2. fetch the right tag of jupyter notebook
 # > git clone https://github.com/jupyter/notebook jupyter-notebook
 # > cd jupyter-notebook
@@ -18,7 +18,7 @@
 #
 # 4. setup configs to be in kbase-config, not in /home/users/.jupyter
 # > SOME ENV VAR setup
-# 
+#
 # 5. go into src and grab requirements
 # > cd src
 # > pip install -r requirements.txt
@@ -28,7 +28,7 @@
 #
 # 7. build run script. (see jupyter-narrative.sh)
 # > cp jupyter-narrative.sh narrative-jupyter/bin
-# 
+#
 # 8. Done!
 
 JUPYTER_NOTEBOOK_INSTALL_DIR=jupyter_notebook
@@ -158,7 +158,7 @@ pip install ipywidgets==$IPYWIDGETS_TAG >> ${logfile} 2>&1
 # ----------------------
 console "Installing biokbase modules"
 log "Installing requirements from src/requirements.txt with 'pip'"
-cd $NARRATIVE_ROOT_DIR/src 
+cd $NARRATIVE_ROOT_DIR/src
 pip install -r requirements.txt >> ${logfile} 2>&1
 if [ $? -ne 0 ]; then
     console "pip install for biokbase requirements failed: please examine $logfile"

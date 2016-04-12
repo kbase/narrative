@@ -5,16 +5,20 @@
  */
 
 define(['jquery',
+        'bluebird',
         'narrativeConfig',
         'ContigBrowserPanel',
+        'util/String',
         'kbwidget',
         'kbaseAuthenticatedWidget',
         'kbaseTabs',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap'],
 function($,
+         Promise,
          Config,
-         ContigBrowserPanel) {
+         ContigBrowserPanel,
+         StringUtil) {
     $.KBWidget({
         name: "kbaseGenomeView",
         parent: "kbaseAuthenticatedWidget",
@@ -114,7 +118,7 @@ function($,
 
         render: function() {
             var self = this;
-        	var pref = this.uuid();
+        	var pref = StringUtil.uuid();
 
             var container = this.$elem;
             if (self.token == null) {
@@ -344,6 +348,7 @@ function($,
 
                 for (var genePos in gnm.features) {
                     var gene = gnm.features[genePos];
+                    gene.arrPos = genePos;
                     var geneId = gene.id;
                     var contigName = null;
                     var geneStart = null;
@@ -382,8 +387,8 @@ function($,
                     }
 
                     dataArray.push({
-                        id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
-                        // id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>',
+                        // id: '<a href="/#dataview/'+self.ws_name+'/'+self.ws_id+'?sub=Feature&subid='+geneId+'" target="_blank">'+geneId+'</a>',
+                        id: '<a class="'+pref+'gene-click" data-geneid="'+geneId+'">'+geneId+'</a>',
                         // contig: contigName,
                         contig: '<a class="' + pref + 'contig-click" data-contigname="'+contigName+'">' + contigName + '</a>',
                         start: geneStart,
@@ -528,6 +533,7 @@ function($,
                     var tabDiv = $('<div id="'+tabId+'"> ');
                     tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
                         tabPane.kbaseTabs('removeTab', name);
+                        tabPane.kbaseTabs('showTab', tabPane.kbaseTabs('activeTab'));
                     }});
                     return tabId;
                 }
@@ -573,6 +579,24 @@ function($,
                                     <td>'+elemData[i]+'</td></tr>');
                         }
                     }
+                    elemTable.append('<tr id="seq-loader"><td colspan=2><img src="' + self.loadingImage + '"></td></tr>');
+                    Promise.resolve(kbws.get_object_subset([{
+                        ref: self.ws_name + "/" + self.ws_id,
+                        included: ['/features/' + gene.arrPos + '/protein_translation',
+                                   '/features/' + gene.arrPos + '/dna_sequence']
+                    }])).then(function(data) {
+                        elemTable.find('#seq-loader').remove();
+                        data = data[0].data;
+                        if (data.features) {
+                            var f = data.features[0];
+                            if (f.protein_translation) {
+                                elemTable.append('<tr><td>Protein Translation</td><td><div class="kb-ga-seq">' + f.protein_translation + '</div></td></tr>');
+                            }
+                            if (f.dna_sequence) {
+                                elemTable.append('<tr><td>Nucleotide Sequence</td><td><div class="kb-ga-seq">' + f.dna_sequence + '</div></td></tr>');
+                            }
+                        }
+                    });
                     $('.'+tabId+'-click2').click(function() {
                         showContig($(this).data('contigname'));
                     });
@@ -615,15 +639,6 @@ function($,
             });
         },
 
-        getData: function() {
-        	return {
-        		type: "NarrativeTempCard",
-        		id: this.ws_name + "." + this.ws_id,
-        		workspace: this.ws_name,
-        		title: "Temp Widget"
-        	};
-        },
-
         loggedInCallback: function(event, auth) {
             this.token = auth.token;
             this.render();
@@ -635,13 +650,5 @@ function($,
             this.render();
             return this;
         },
-
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
-        }
     });
 });

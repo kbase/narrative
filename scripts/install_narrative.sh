@@ -90,6 +90,7 @@ function make_activate_venv () {
 # -----------
 
 no_venv=0
+update_only=0
 while [ $# -gt 0 ]; do
     case $1 in
         -h | --help | -\?)
@@ -103,6 +104,10 @@ while [ $# -gt 0 ]; do
         -v | --virtualenv)
             make_activate_venv $2
             shift 2
+            ;;
+        -u | --update)
+            update_only=1
+            shift
             ;;
     esac
 done
@@ -126,33 +131,35 @@ then
   exit 1
 fi
 
-# Install external JavaScript code
-# --------------------
-cd $NARRATIVE_ROOT_DIR
-npm install >> ${logfile} 2>&1
-bower install --allow-root --config.interactive=false >> ${logfile} 2>&1
+if [ ! $update_only -eq 1 ]
+then
+    # Install external JavaScript code
+    # --------------------
+    cd $NARRATIVE_ROOT_DIR
+    npm install >> ${logfile} 2>&1
+    bower install --allow-root --config.interactive=false >> ${logfile} 2>&1
 
+    cd $VIRTUAL_ENV
+    # Install Jupyter code
+    # --------------------
+    # 1. Setup Jupyter Notebook inside virtualenv
+    log "Installing Jupyter notebook using $PYTHON"
+    console "Installing Jupyter notebook from directory '$JUPYTER_NOTEBOOK_INSTALL_DIR'"
+    git clone https://github.com/jupyter/notebook $JUPYTER_NOTEBOOK_INSTALL_DIR
+    cd $JUPYTER_NOTEBOOK_INSTALL_DIR
+    git checkout tags/$JUPYTER_NOTEBOOK_TAG
+    pip install --pre -e . >> ${logfile} 2>&1
+    cd ..
 
-cd $VIRTUAL_ENV
-# Install Jupyter code
-# --------------------
-# 1. Setup Jupyter Notebook inside virtualenv
-log "Installing Jupyter notebook using $PYTHON"
-console "Installing Jupyter notebook from directory '$JUPYTER_NOTEBOOK_INSTALL_DIR'"
-git clone https://github.com/jupyter/notebook $JUPYTER_NOTEBOOK_INSTALL_DIR
-cd $JUPYTER_NOTEBOOK_INSTALL_DIR
-git checkout tags/$JUPYTER_NOTEBOOK_TAG
-pip install --pre -e . >> ${logfile} 2>&1
-cd ..
-
-# Setup ipywidgets addon
-log "Installing ipywidgets using $PYTHON"
-console "Installing ipywidgets from directory 'ipywidgets'"
-# git clone https://github.com/ipython/ipywidgets
-# cd ipywidgets
-# git checkout tags/$IPYWIDGETS_TAG
-pip install ipywidgets==$IPYWIDGETS_TAG >> ${logfile} 2>&1
-# pip install -e . >> ${logfile} 2>&1
+    # Setup ipywidgets addon
+    log "Installing ipywidgets using $PYTHON"
+    console "Installing ipywidgets from directory 'ipywidgets'"
+    # git clone https://github.com/ipython/ipywidgets
+    # cd ipywidgets
+    # git checkout tags/$IPYWIDGETS_TAG
+    pip install ipywidgets==$IPYWIDGETS_TAG >> ${logfile} 2>&1
+    # pip install -e . >> ${logfile} 2>&1
+fi
 
 # Install Narrative code
 # ----------------------
@@ -169,14 +176,17 @@ ${PYTHON} setup.py install >> ${logfile} 2>&1
 log "Done installing biokbase."
 cd $NARRATIVE_ROOT_DIR
 
-# Install KBase data_api package
-# ------------------------------
-git clone https://github.com/kbase/data_api -b develop
-cd data_api
-pip install -r requirements.txt
-$PYTHON setup.py install >> ${logfile} 2>&1
-cd ..
-rm -rf data_api
+if [ ! $update_only -eq 1 ]
+then
+    # Install KBase data_api package
+    # ------------------------------
+    git clone https://github.com/kbase/data_api -b develop
+    cd data_api
+    pip install -r requirements.txt
+    $PYTHON setup.py install >> ${logfile} 2>&1
+    cd ..
+    rm -rf data_api
+fi
 
 # Setup jupyter_narrative script
 # ------------------------------

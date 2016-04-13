@@ -44,6 +44,9 @@ function($,
          BootstrapDialog,
          UpdateDialogBodyTemplate) {
     'use strict';
+    
+    kbaseNarrativePrestart.loadDomEvents();
+    kbaseNarrativePrestart.loadGlobals();
 
     /**
      * @constructor

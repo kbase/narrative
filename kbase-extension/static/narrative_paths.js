@@ -41,6 +41,12 @@ require.config({
         'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
         'catalog-client-api'                    : 'kbase/js/api/Catalog',
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
+        
+        /**
+         * New Test Runtime and Widget Framework
+         */
+        runtimeManager : 'kbase/js/widgetApi/runtimeManager',
+        narrativeDataWidget: 'kbase/js/widgetApi/narrativeDataWidget',
 
         /***
          * CORE NARRATIVE WIDGETS
@@ -371,6 +377,6 @@ require.config({
         },
         bootstrap : {
             deps : ['jquery', 'jqueryui']
-        },
+        }
     }
 });

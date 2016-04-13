@@ -66,7 +66,7 @@
             "name": "Workspace"
         },
         "narrative": {
-            "url": "https://narrative-ci.kbase.us",
+            "url": "https://local-dev.kbase.us",
             "name": "Narrative User Interface"
         },
         "catalog": {
@@ -142,9 +142,9 @@
         }
     },
     "deploy": {
-        "environment": "ci",
-        "hostname": "narrative-ci.kbase.us",
-        "icon": "flask",
-        "name": "Continuous Integration"
+        "environment": "local-dev",
+        "hostname": "local-dev.kbase.us",
+        "icon": "paper-plane",
+        "name": "Local Development"
     }
 }

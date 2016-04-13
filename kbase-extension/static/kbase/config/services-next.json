@@ -88,6 +88,14 @@
         "doc_site": {
             "url": "http://kbase.us",
             "name": "Documentation and Support Site"
+        },
+        "cdn": {
+            "url": "http://localhost:10001",
+            "name": "Javascript CDN"
+        },
+        "widget": {
+            "url": "http://localhost:11001",
+            "name": "Widget Service"
         }
     },
     "resources": {

@@ -23,7 +23,7 @@ define([
         iconsSet,
         localRequire) {
         'use strict';
-        
+
         var config, debug;
 
         function loadConfig() {
@@ -87,7 +87,7 @@ define([
                 });
             });
         }
-        
+
         function assertConfig() {
             if (config === undefined) {
                 throw new Error('Config has not yet been loaded');
@@ -109,7 +109,7 @@ define([
                 if (window.kbconfig) {
                     return window.kbconfig;
                 }
-                console.log('Config: checking remote widgets');                
+                console.log('Config: checking remote widgets');
                 assertConfig();
                 if (!config.use_local_widgets) {
                     // var uiCommonPaths = config.urls.ui_common_root + "widget-paths.json";
@@ -179,7 +179,7 @@ define([
             assertConfig();
             return config[key];
         }
-        
+
         /*
          * If the module is defined in multiple module loaders, the module variable config and debug will 
          * not be available.

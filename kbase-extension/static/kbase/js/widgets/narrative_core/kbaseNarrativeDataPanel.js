@@ -356,8 +356,6 @@ define (
             var maxObjFetch = 100000;
 
             var self = this;
-console.log("CREATES LOGIN BUTTON");
-console.log("CREATEd LOGIN BUTTON", this);
             if (this.$login == undefined) {
                 if (this.loginInit) {
                     return;
@@ -368,7 +366,7 @@ console.log("CREATEd LOGIN BUTTON", this);
             }
             var user = this.$login.session('user_id');
             //var user = $('#signin-button').kbaseLogin('session', 'user_id');
-console.log("USER IS ", user);
+
             if (!user) {
                 console.error("NarrativeDataPanel: user is not defined, parsing token instead...");
                 var tokenParts = this.token.split("|");

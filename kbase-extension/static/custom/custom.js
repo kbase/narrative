@@ -688,7 +688,7 @@ define(['jquery',
         // Kickstart the Narrative loading routine once the notebook is loaded.
         $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
             require(['kbaseNarrative'], function (Narrative) {
-console.log("NEW NARRATIVE HERE", Narrative);
+
                 Jupyter.narrative = new Narrative();
                 Jupyter.narrative.init();
 

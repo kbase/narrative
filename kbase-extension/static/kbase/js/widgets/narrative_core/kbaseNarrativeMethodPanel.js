@@ -304,7 +304,7 @@ define (
 
             var devMode = Config.get('dev_mode');
             var showBetaWarning = true;
-console.log("h4", BetaWarningTemplate, Handlebars);
+
             var betaWarningCompiled = Handlebars.compile(BetaWarningTemplate);
 
             this.betaWarningDialog = new BootstrapDialog({

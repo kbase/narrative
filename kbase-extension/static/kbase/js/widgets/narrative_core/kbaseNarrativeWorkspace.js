@@ -56,7 +56,7 @@ define (
 		kbaseNarrativeDataPanel,
         kbaseNarrativeOutputCell
 	) {
-console.log("KNOC : ", kbaseNarrativeOutputCell);
+
     return KBWidget({
         name: 'kbaseNarrativeWorkspace',
 
@@ -1267,7 +1267,7 @@ console.log("KNOC : ", kbaseNarrativeOutputCell);
             }
             else if (this.isOutputCell(cell)) {
                 // do output widget stuff.
-console.log("OUTPUT WIDGET STUFF");
+
                 widget = 'kbaseNarrativeOutputCell';
             }
             else if (this.isAppCell(cell)) {
@@ -1301,7 +1301,7 @@ console.log("OUTPUT WIDGET STUFF");
          * @private
          */
         loadRecentCellState: function(cell) {
-console.log("LRCS");
+
             var state = this.getRecentState(cell);
             if (state) {
                 var target = 'div[id^=kb-cell-]';

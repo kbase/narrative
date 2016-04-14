@@ -28,6 +28,9 @@ class WidgetManager:
     default_output_widget = "kbaseNarrativeDefaultOutput"
 
     def __init__(self):
+        self.reload_info()
+
+    def reload_info(self):
         self.widget_info = self.load_all_widget_info()
 
     def get_system_variable(self, var):

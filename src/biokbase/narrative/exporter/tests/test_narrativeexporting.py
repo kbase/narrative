@@ -36,6 +36,5 @@ class NarrativeExportTesting(unittest.TestCase):
         with self.assertRaises(PermissionsError) as err:
             self.exporter.export_narrative(private_narrative_ref, output_file)
 
-
 if __name__ == "__main__":
     unittest.main()

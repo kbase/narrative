@@ -356,6 +356,7 @@ require.config({
         },
         'kbaseTabTableTabs' : {
             'deps' : ['jquery',
+                      'jqueryui',
                       'jquery-dataTables',
                       'jquery-dataTables-bootstrap',
                       'bootstrap']

@@ -34,10 +34,10 @@ from nbformat import (
 )
 from notebook.services.contents.manager import ContentsManager
 from traitlets.traitlets import (
-    Unicode, 
-    Dict, 
-    Bool, 
-    List, 
+    Unicode,
+    Dict,
+    Bool,
+    List,
     TraitError
 )
 from IPython.utils import tz
@@ -45,7 +45,7 @@ from IPython.utils import tz
 # Local
 from .manager_util import base_model
 from .narrativeio import (
-    KBaseWSManagerMixin, 
+    KBaseWSManagerMixin,
     PermissionsError
 )
 from .kbasecheckpoints import KBaseCheckpoints
@@ -154,11 +154,11 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         return self.wsid_regex.sub('', id.replace(' ', '_'))
 
     #####
-    # API part 1: methods that must be implemented in subclasses.        
+    # API part 1: methods that must be implemented in subclasses.
     #####
     def dir_exists(self, path):
-        """If it's blank, just return True - 
-           we'll be looking up the list of all Narratives from 
+        """If it's blank, just return True -
+           we'll be looking up the list of all Narratives from
            that dir, so it's real."""
         if not path:
             return True
@@ -244,8 +244,10 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 user = self.get_userid()
                 if content:
                     model['format'] = u'json'
-                    model['content'] = nbformat.reads(json.dumps(nar_obj['data']), 4)
-                    model['content']['metadata'].pop('orig_nbformat', None)
+                    nb = nbformat.reads(json.dumps(nar_obj['data']), 4)
+                    nb['metadata'].pop('orig_nbformat', None)
+                    self.mark_trusted_cells(nb, path)
+                    model['content'] = nb
                     model['name'] = nar_obj['data']['metadata'].get('name', 'Untitled')
                     util.kbase_env.narrative = 'ws.{}.obj.{}'.format(obj_ref['wsid'], obj_ref['objid'])
                     util.kbase_env.workspace = model['content'].metadata.ws_name
@@ -402,29 +404,29 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 e.message, json.dumps(e.instance, indent=1, default=lambda obj: '<UNKNOWN>'),
             )
         return model
-    
+
     def new_untitled(self, path='', type='', ext=''):
         """Create a new untitled file or directory in path
-        
+
         path must be a directory
-        
+
         File extension can be specified.
-        
+
         Use `new` to create files with a fully specified path (including filename).
         """
         path = path.strip('/')
         if not self.dir_exists(path):
             raise HTTPError(404, 'No such directory: %s' % path)
-        
+
         model = {}
         if type:
             model['type'] = type
-        
+
         if ext == '.ipynb':
             model.setdefault('type', 'notebook')
         else:
             model.setdefault('type', 'file')
-        
+
         insert = ''
         if model['type'] == 'directory':
             untitled = self.untitled_directory
@@ -436,26 +438,26 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
             untitled = self.untitled_file
         else:
             raise HTTPError(400, "Unexpected model type: %r" % model['type'])
-        
+
         name = self.increment_filename(untitled + ext, path, insert=insert)
         path = u'{0}/{1}'.format(path, name)
         return self.new(model, path)
-    
+
     def new(self, model=None, path=''):
         """Create a new file or directory and return its model with no content.
-        
+
         To create a new untitled entity in a directory, use `new_untitled`.
         """
         # TODO
         path = path.strip('/')
         if model is None:
             model = {}
-        
+
         if path.endswith('.ipynb'):
             model.setdefault('type', 'notebook')
         else:
             model.setdefault('type', 'file')
-        
+
         # no content, not a directory, so fill out new-file model
         if 'content' not in model and model['type'] != 'directory':
             if model['type'] == 'notebook':
@@ -465,7 +467,7 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
                 model['content'] = ''
                 model['type'] = 'file'
                 model['format'] = 'text'
-        
+
         model = self.save(model, path)
         return model
 
@@ -487,20 +489,20 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         else:
             from_dir = ''
             from_name = path
-        
+
         model = self.get(path)
         model.pop('path', None)
         model.pop('name', None)
         if model['type'] == 'directory':
             raise HTTPError(400, "Can't copy directories")
-        
+
         if to_path is None:
             to_path = from_dir
         if self.dir_exists(to_path):
             name = copy_pat.sub(u'.', from_name)
             to_name = self.increment_filename(name, to_path, insert='-Copy')
             to_path = u'{0}/{1}'.format(to_path, to_name)
-        
+
         model = self.save(model, to_path)
         return model
 
@@ -550,10 +552,15 @@ class KBaseWSManager(KBaseWSManagerMixin, ContentsManager):
         path : string
             The notebook's path (for logging)
         """
-        trusted = self.notary.check_signature(nb)
-        if not trusted:
-            self.log.warn("Notebook %s is not trusted", path)
-        self.notary.mark_cells(nb, trusted)
+        # commenting out, but leaving behind for a while.
+        # trusted = self.notary.check_signature(nb)
+        # if not trusted:
+        #     self.log.warn("Notebook %s is not trusted", path)
+        # self.notary.mark_cells(nb, trusted)
+
+        self.log.warn("Notebook %s is totally trusted", path)
+        # all notebooks are trustworthy, because KBase is Pollyanna.
+        self.notary.mark_cells(nb, True)
 
     def should_list(self, name):
         """Should this file/directory name be displayed in a listing?"""

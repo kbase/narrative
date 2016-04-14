@@ -7,12 +7,12 @@
  * To set global variables, use: Jupyter.narrative.<name> = value
  */
 define([
-    'jquery', 
+    'jquery',
     'bluebird',
     'handlebars',
     'narrativeConfig',
-    'kbaseNarrativeSidePanel', 
-    'kbaseNarrativeOutputCell', 
+    'kbaseNarrativeSidePanel',
+    'kbaseNarrativeOutputCell',
     'kbaseNarrativeWorkspace',
     'kbaseNarrativeMethodCell',
     'narrativeLogin',
@@ -25,7 +25,7 @@ define([
     'util/bootstrapDialog',
     'text!kbase/templates/update_dialog_body.html',
     'jquery-nearest'
-], 
+],
 function($,
          Promise,
          Handlebars,
@@ -52,7 +52,7 @@ function($,
      * @constructor
      * The base, namespaced Narrative object. This is mainly used at start-up time, and
      * gets injected into the Jupyter namespace.
-     * 
+     *
      * Most of its methods below - init, registerEvents, initAboutDialog, initUpgradeDialog,
      * checkVersion, updateVersion - are set up at startup time.
      * This is all done by an injection into static/notebook/js/main.js where the
@@ -93,7 +93,7 @@ function($,
 
     /**
      * Registers Narrative responses to a few Jupyter events - mainly some
-     * visual effects for managing when the cell toolbar should be shown, 
+     * visual effects for managing when the cell toolbar should be shown,
      * but it also disables the keyboard manager when KBase cells are selected.
      */
     Narrative.prototype.registerEvents = function() {
@@ -155,7 +155,7 @@ function($,
     }
 
     /**
-     * The "Upgrade your container" dialog should be made available when 
+     * The "Upgrade your container" dialog should be made available when
      * there's a more recent version of the Narrative ready to use. This
      * dialog then lets the user shut down their existing Narrative container.
      */
@@ -246,7 +246,7 @@ function($,
                             });
 
         return {
-            cancelButton: $cancelButton, 
+            cancelButton: $cancelButton,
             firstShutdownButton: $firstShutdownBtn,
             finalShutdownButton: $shutdownButton,
             shutdownPanel: $reallyShutdownPanel
@@ -328,10 +328,10 @@ function($,
         // currently - 4/6/2015 - there's a hard limit of 4MB per KBase Narrative.
         // Any larger object will throw a 413 error, and we need to show some text.
         if (data.xhr.status === 413) {
-            errorText = 'Due to current system constraints, a Narrative may not exceed ' + 
+            errorText = 'Due to current system constraints, a Narrative may not exceed ' +
                         this.maxNarrativeSize + ' of text.<br><br>' +
-                        'Errors of this sort are usually due to excessive size ' + 
-                        'of outputs from Code Cells, or from large objects ' + 
+                        'Errors of this sort are usually due to excessive size ' +
+                        'of outputs from Code Cells, or from large objects ' +
                         'embedded in Markdown Cells.<br><br>' +
                         'Please decrease the document size and try to save again.';
         }
@@ -342,7 +342,7 @@ function($,
             if (errorText) {
                 /* gonna throw in a special case for workspace permissions issues for now.
                  * if it has this pattern:
-                 * 
+                 *
                  * User \w+ may not write to workspace \d+
                  * change the text to something more sensible.
                  */
@@ -392,7 +392,7 @@ function($,
 
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0,0);
-        
+
         // Disable autosave so as not to spam the Workspace.
         Jupyter.notebook.set_autosave_interval(0);
         kbaseCellToolbar.register(Jupyter.notebook);
@@ -466,8 +466,8 @@ function($,
      * @public
      * Insert a new method into the narrative, set it as active, populate the
      * parameters, and run it.  This is useful for widgets that need to trigger
-     * some additional narrative action, such as creating a FeatureSet from 
-     * a selected set of Features in a widget, or computing a statistic on a 
+     * some additional narrative action, such as creating a FeatureSet from
+     * a selected set of Features in a widget, or computing a statistic on a
      * subselection made from within a widget.
      */
     Narrative.prototype.createAndRunMethod = function(method_id, parameters) {
@@ -518,10 +518,10 @@ function($,
     };
 
     /**
-     * A little bit of a riff on the Jupyter "find_cell_index". 
+     * A little bit of a riff on the Jupyter "find_cell_index".
      * Every KBase-ified cell (App, Method, Output) has a unique identifier.
-     * This can be used to find the closest cell element - its index is the 
-     * Jupyter cell index (inferred somewhat from find_cell_index which calls 
+     * This can be used to find the closest cell element - its index is the
+     * Jupyter cell index (inferred somewhat from find_cell_index which calls
      * get_cell_elements, which does this searching).
      */
     Narrative.prototype.getCellIndexByKbaseId = function(id) {
@@ -580,9 +580,9 @@ function($,
         if (hidePanel) {
             $('#left-column').trigger('hideSidePanelOverlay.Narrative');
             $('#left-column').hide('slide', {
-                direction: 'left', 
-                easing: 'swing', 
-                complete: function() { 
+                direction: 'left',
+                easing: 'swing',
+                complete: function() {
                     $('#kb-side-toggle-in').show('slide', {
                         direction: 'left',
                         easing: 'swing',
@@ -591,9 +591,9 @@ function($,
             }, delay);
             // Move content flush left-ish
             $('#notebook-container').animate(
-                {left: 0}, 
-                { 
-                  easing: 'swing', 
+                {left: 0},
+                {
+                  easing: 'swing',
                   duration: delay,
                 }
             );
@@ -604,7 +604,7 @@ function($,
                 easing: 'swing',
                 complete: function() {
                     $('#left-column').show('slide', {
-                        direction: 'left', 
+                        direction: 'left',
                         easing: 'swing'
                     }, delay);
                     $('#notebook-container').animate({left: 380}, {easing: 'swing', duration: delay});

@@ -1,0 +1,150 @@
+{
+    "services": {
+        "awe": {
+            "url": "https://ci.kbase.us/services/awe-api",
+            "name": "AWE"
+        },
+        "cdmi": {
+            "url": "https://kbase.us/services/cdmi_api",
+            "name": "CDMI"
+        },
+        "data_import_export": {
+            "url": "https://ci.kbase.us/services/data_import_export",
+            "name": "Data Import Export"
+        },
+        "fba": {
+            "url": "https://ci.kbase.us/services/KBaseFBAModeling",
+            "name": "FBA"
+        },
+        "gene_families": {
+            "url": "https://ci.kbase.us/services/gene_families",
+            "name": "Gene Families"
+        },
+        "genome_comparison": {
+            "url": "https://ci.kbase.us/services/genome_comparison/jsonrpc",
+            "name": "Genome Comparison"
+        },
+        "login": {
+            "url": "https://ci.kbase.us/services/authorization/Sessions/Login",
+            "name": "Login"
+        },
+        "narrative_method_store": {
+            "url": "https://ci.kbase.us/services/narrative_method_store/rpc",
+            "image_url": "https://ci.kbase.us/services/narrative_method_store/",
+            "name": "Narrative Method Store"
+        },
+        "protein_info": {
+            "url": "https://kbase.us/services/protein_info_service",
+            "name": "Protein Info"
+        },
+        "search": {
+            "url": "https://kbase.us/services/search/",
+            "name": "Data Search"
+        },
+        "shock": {
+            "url": "https://ci.kbase.us/services/shock-api",
+            "name": "Shock"
+        },
+        "transform": {
+            "url": "https://ci.kbase.us/services/transform",
+            "name": "Transform"
+        },
+        "trees": {
+            "url": "https://ci.kbase.us/services/trees",
+            "name": "Trees"
+        },
+        "user_profile": {
+            "url": "https://ci.kbase.us/services/user_profile/rpc",
+            "name": "User Profile"
+        },
+        "user_job_state": {
+            "url": "https://ci.kbase.us/services/userandjobstate",
+            "name": "User and Job State"
+        },
+        "workspace": {
+            "url": "https://ci.kbase.us/services/ws",
+            "name": "Workspace"
+        },
+        "narrative": {
+            "url": "https://narrative-ci.kbase.us",
+            "name": "Narrative User Interface"
+        },
+        "catalog": {
+            "url": "https://ci.kbase.us/services/catalog",
+            "name": "Catalog"
+        },
+        "taxon_api": {
+            "url": "https://ci.kbase.us/services/data/taxon",
+            "name": "Taxon API"
+        },
+        "assembly_api": {
+            "url": "https://ci.kbase.us/services/data/assembly",
+            "name": "Assembly API"
+        },
+        "genomeAnnotation_api": {
+            "url": "https://ci.kbase.us/services/data/genome_annotation",
+            "name": "Genome Annotation API"
+        },
+        "doc_site": {
+            "url": "http://kbase.us",
+            "name": "Documentation and Support Site"
+        },
+        "cdn": {
+            "url": "http://localhost:10001",
+            "name": "Javascript CDN"
+        },
+        "widget": {
+            "url": "http://localhost:11001",
+            "name": "Widget Service"
+        }
+    },
+    "resources": {
+        "docSite": {
+            "base": {
+                "url": "http://kbase.us"
+            }
+        },
+        "documentation": {
+            "loginHelp": {
+                "url": "http://kbase.us/help"
+            },
+            "narrativeGuide": {
+                "url": "http://kbase.us/narrative-guide"
+            },
+            "tutorials": {
+                "url": "http://kbase.us/tutorials"
+            },
+            "apps": {
+                "url": "http://kbase.us/apps"
+            }
+        },
+        "userAccount": {
+            "resetPassword": {
+                "url": "http://kbase.us/reset-password"
+            },
+            "updateProfile": {
+                "url": "https://www.globusid.org/profile"
+            },
+            "update_profile": {
+                "url": "https://www.globusid.org/profile"
+            },
+            "access": {
+                "url": "https://gologin.kbase.us/globus-app/account"
+            },
+            "signUp": {
+                "url": "http://kbase.us/sign-up"
+            }
+        },
+        "status_page": "http://kbase.us/internal/status",
+        "submit_jira_ticket": "https://atlassian.kbase.us/secure/CreateIssueDetails!init.jspa?pid=10200&issuetype=1&description=",
+        "googleAnalytics": {
+            "code": "UA-74532036-1"
+        }
+    },
+    "deploy": {
+        "environment": "ci",
+        "hostname": "narrative-ci.kbase.us",
+        "icon": "flask",
+        "name": "Continuous Integration"
+    }
+}

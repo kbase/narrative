@@ -5,22 +5,33 @@
  browser: true,
  white: true
  */
-define([
-    'jquery',
-    'bluebird',
-    'narrativeConfig',
-    'narrative_core/catalog/app_card',
-    'util/display',
-    'catalog-client-api',
-    'kbase-client-api',
-    'kbwidget',
-    'kbaseAuthenticatedWidget', 
-    'bootstrap',
-],
-    function ($, Promise, Config, AppCard, DisplayUtil) {
-        $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'bluebird',
+		'narrativeConfig',
+		'narrative_core/catalog/app_card',
+		'util/display',
+		'catalog-client-api',
+		'kbase-client-api',
+		'kbaseAuthenticatedWidget'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Promise,
+		Config,
+		AppCard,
+		DisplayUtil,
+		catalog_client_api,
+		kbase_client_api,
+		kbaseAuthenticatedWidget
+	) {
+        return KBWidget({
             name: "KBaseCatalogBrowser",
-            parent: "kbaseAuthenticatedWidget",  // todo: do we still need th
+            parent : kbaseAuthenticatedWidget,  // todo: do we still need th
             options: {
                 tag: null,
                 ignoreCategories: {}

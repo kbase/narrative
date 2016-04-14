@@ -4,15 +4,27 @@
  * @public
  */
 
-define(['jquery', 
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'kbaseTabs', 
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap'], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: "kbaseContigSetView",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         ws_id: null,
         ws_name: null,
@@ -61,7 +73,7 @@ define(['jquery',
             		console.log(cs);
             		var tabPane = $('<div id="'+pref+'tab-content">');
             		container.append(tabPane);
-            		tabPane.kbaseTabs({canDelete : true, tabs : []});
+            		 new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             		var tabNames = ['Overview', 'Contigs'];
             		var tabIds = ['overview', 'contigs'];
             		for (var i=0; i<tabIds.length; i++) {

@@ -1,9 +1,9 @@
 (function( $, undefined ) {
 
-$.KBWidget({
+return KBWidget({
     name: "kbaseModelTabs",    
     version: "1.0.0",  
-    parent: "kbaseAuthenticatedWidget",
+    parent : kbaseAuthenticatedWidget,
     options: {
     },
     

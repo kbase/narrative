@@ -1,11 +1,20 @@
 /*global define*/
 /*jslint white: true*/
 // Bind all page buttons right at startup.
-define(['jquery',
-        'narrativeConfig', 
-        'bootstrap', 
-        'kbaseNarrativeSharePanel', 
-        'bootstrap'], function($, Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrativeSharePanel'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrativeSharePanel
+	) {
 'use strict';
 
 $(document).on('workspaceIdQuery.Narrative', function(e, callback) {

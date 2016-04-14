@@ -4,14 +4,23 @@
  * @public
  */
 
-define(['jquery', 
-		'kbwidget', 
-		'kbaseAuthenticatedWidget', 
-        'kbaseLinechart'
-		], function($) {
-	$.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbaseLinechart'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbaseLinechart
+	) {
+	return KBWidget({
 		name: 'kbaseExpressionEstimateK',
-		parent: 'kbaseAuthenticatedWidget',
+		parent : kbaseAuthenticatedWidget,
 		version: '1.0.0',
 		options: {
 			estimateKResultID: null,
@@ -169,8 +178,7 @@ define(['jquery',
             
             $lineChartDiv = $("<div style = 'width : 500px; height : 300px'>");
             $containerDiv.append($lineChartDiv);
-            $lineChartDiv.kbaseLinechart(
-                {
+             new kbaseLinechart($lineChartDiv, {
                     scaleAxes       : true,
 
                     xLabel      : 'Values of K',

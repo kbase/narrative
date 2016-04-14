@@ -4,7 +4,16 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['a_module'], function(Module) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'a_module'
+	], function(
+		KBWidget,
+		bootstrap,
+		Module
+	) {
     'use strict';
     describe('Test the module', function() {
         it('Should do things', function() {

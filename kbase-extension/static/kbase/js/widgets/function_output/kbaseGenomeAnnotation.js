@@ -4,24 +4,35 @@
  * @public
  */
 
-define(['jquery',
-        'bluebird',
-        'narrativeConfig',
-        'ContigBrowserPanel',
-        'util/String',
-        'kbwidget',
-        'kbaseAuthenticatedWidget',
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap'],
-function($,
-         Promise,
-         Config,
-         ContigBrowserPanel,
-         StringUtil) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'bluebird',
+		'narrativeConfig',
+		'ContigBrowserPanel',
+		'util/String',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Promise,
+		Config,
+		ContigBrowserPanel,
+		StringUtil,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: "kbaseGenomeView",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         ws_id: null,
         ws_name: null,
@@ -133,7 +144,7 @@ function($,
             		container.empty();
             		var tabPane = $('<div id="'+pref+'tab-content">');
             		container.append(tabPane);
-            		tabPane.kbaseTabs({canDelete : true, tabs : []});
+            		 new kbaseTabs(tabPane, {canDelete : true, tabs : []});
 
                     var genomeType = self.genomeType(gnm);
 

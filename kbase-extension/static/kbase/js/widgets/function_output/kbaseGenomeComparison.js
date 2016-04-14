@@ -4,17 +4,25 @@
  * @public
  */
 
-define(['jquery', 
-        'narrativeConfig',
-        'util/string',
-        'kbwidget',
-        'kbaseAuthenticatedWidget'], 
-function($,
-         Config,
-         StringUtil) {
-$.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'util/string',
+		'kbaseAuthenticatedWidget'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		StringUtil,
+		kbaseAuthenticatedWidget
+	) {
+return KBWidget({
     name: "GenomeComparisonWidget",
-    parent: "kbaseAuthenticatedWidget",
+    parent : kbaseAuthenticatedWidget,
     version: "1.0.0",
 	ws_name: null,
 	ws_id: null,

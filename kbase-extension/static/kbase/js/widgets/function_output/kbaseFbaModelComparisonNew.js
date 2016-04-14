@@ -1,18 +1,28 @@
-define(['jquery',
-        'narrativeConfig',
-        'bluebird',
-        'util/string',
-        'kbwidget', 
-        'kbaseAuthenticatedWidget',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap'],
-function($, 
-         Config,
-         Promise,
-         StringUtil) {
-$.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'bluebird',
+		'util/string',
+		'kbaseAuthenticatedWidget',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		Promise,
+		StringUtil,
+		kbaseAuthenticatedWidget,
+		jquery_dataTables,
+		bootstrap
+	) {
+return KBWidget({
     name: "kbaseFbaModelComparisonNew",     
-    parent: "kbaseAuthenticatedWidget",
+    parent : kbaseAuthenticatedWidget,
     version: "1.0.0",
     ws_name: null,
     mc_id: null,
@@ -57,7 +67,7 @@ $.KBWidget({
             container.empty();
             var tabPane = $('<div id="'+pref+'tab-content">');
             container.append(tabPane);
-            tabPane.kbaseTabs({canDelete : true, tabs : []});
+             new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             //////////////////////////////////////////// Statistics tab /////////////////////////////////////////////
             var tabStats = $("<div/>");
             tabPane.kbaseTabs('addTab', {tab: 'Statistics', content: tabStats, canDelete : false, show: true});

@@ -10,12 +10,26 @@
  * @public
  */
 
- define(['jquery', 'plotly', 'kbwidget', 'kbaseAuthenticatedWidget', 'KBModeling'],
-function($, Plotly) {
+ define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'plotly',
+		'kbaseAuthenticatedWidget',
+		'KBModeling'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Plotly,
+		kbaseAuthenticatedWidget,
+		KBModeling
+	) {
 
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseExpressionAnalysis",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {},
         init: function(input) {

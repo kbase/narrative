@@ -15,21 +15,29 @@
  */
 
 
- define([
-    'jquery',
-    'ModelingAPI',
-    'kbwidget',
-    'kbaseAuthenticatedWidget',
-    'kbaseModal'
-],
-function($, ModelingAPI) {
+ define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'ModelingAPI',
+		'kbaseAuthenticatedWidget',
+		'kbaseModal'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		ModelingAPI,
+		kbaseAuthenticatedWidget,
+		kbaseModal
+	) {
 
 
 'use strict';
 
-$.KBWidget({
+return KBWidget({
     name: "kbaseMediaEditor",
-    parent: "kbaseAuthenticatedWidget",
+    parent : kbaseAuthenticatedWidget,
     version: "1.0.0",
     options: {},
     init: function(input) {
@@ -230,7 +238,7 @@ $.KBWidget({
             var table = $('<table class="table table-bordered table-striped kb-editor-table'+
                 ' " style="width: 100% !important;">');
 
-            var modal = $('<div>').kbaseModal({
+            var modal =  new kbaseModal($('<div>'), {
                 title: 'Add Compounds',
                 subText: 'Select compounds below, then click "add".',
                 body: table,
@@ -319,7 +327,7 @@ $.KBWidget({
             input.val(name);
             form.find('div').append(input);
 
-            var modal = $('<div>').kbaseModal({
+            var modal =  new kbaseModal($('<div>'), {
                 title: 'Save Media As...',
                 body: form,
                 buttons: [{
@@ -485,7 +493,7 @@ $.KBWidget({
                 if (input.onSave) input.onSave()
             }).fail(function(e) {
                 var error = JSON.stringify(JSON.parse(e.responseText), null,4);
-                $('<div>').kbaseModal({
+                 new kbaseModal($('<div>'), {
                     title: 'Oh no! Something seems to have went wrong',
                     body: '<pre>'+error+'</pre>'
                 }).show();

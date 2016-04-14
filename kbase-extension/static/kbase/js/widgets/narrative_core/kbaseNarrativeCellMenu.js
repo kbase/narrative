@@ -1,15 +1,23 @@
 /*global define*/
 /*jslint white: true*/
-define(['jquery', 
-        'narrativeConfig',
-        'util/timeFormat',
-        'kbwidget', 
-        'bootstrap'], 
-function($, Config, TimeFormat) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'util/timeFormat'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		TimeFormat
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseNarrativeCellMenu',
-        parent: 'kbaseWidget',
+        
         options: {cell: null, kbWidget: null, kbWidgetType: null},
         genId: function () {
             if (!this.lastId) {
@@ -118,7 +126,7 @@ function($, Config, TimeFormat) {
                             // the method initializes an internal method input widget, but in an async way
                             // so we have to wait and check when that is done.  When it is, we can update state
                             var newCell = Jupyter.notebook.get_selected_cell();
-                            var newWidget = $('#' + $(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
+                            var newWidget =  new kbaseNarrativeMethodCell($('#' + $(newCell.get_text())[0].id));
                             var updateState = function (state) {
                                 if (newWidget.$inputWidget) {
                                     // if the $inputWidget is not null, we are good to go, so set the state

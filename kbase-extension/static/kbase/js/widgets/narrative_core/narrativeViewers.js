@@ -1,12 +1,24 @@
 /*global define*/
 /*jslint white: true*/
 
-define(['jquery',
-        'underscore',
-        'narrativeConfig',
-        'bluebird',
-        'kbase-client-api'],
-function($, _, Config, Promise, Clients) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'underscore',
+		'narrativeConfig',
+		'bluebird',
+		'kbase-client-api'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		_,
+		Config,
+		Promise,
+		Clients
+	) {
     'use strict';
 
     /**

@@ -5,16 +5,24 @@
  * @author Bill Riehl wjriehl@lbl.gov
  */
 
-define(['jquery', 
-        'narrativeConfig',
-        'kbaseLogin', 
-        'kbapi',
-        'base/js/utils'
-], function($, 
-            Config,
-            kbaseLogin, 
-            kbapi, 
-            JupyterUtils) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseLogin',
+		'kbapi',
+		'base/js/utils'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseLogin,
+		kbapi,
+		JupyterUtils
+	) {
     "use strict";
 
     var baseUrl = JupyterUtils.get_body_data('baseUrl');
@@ -56,7 +64,7 @@ define(['jquery',
         /**
          * Initialize the login widget and bind login/logout callbacks
          */
-        var loginWidget = $elem.kbaseLogin({
+        var loginWidget =  new kbaseLogin($elem, {
             /* If the notebook kernel's initialized, tell it to set the token.
              * This really only gets called when the user does a login on the Narrative page.
              * And since the user needs to be logged in already to get to the Narrative (in production),

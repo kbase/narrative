@@ -20,10 +20,19 @@
  * The example below explain the principle, and might not be valid.
  *
  * Instances are created after the loading of this file and might need to be accessed using events:
- *     define([
- *        'base/js/namespace',
- *        'base/js/events'
- *     ], function(Jupyter, events) {
+ *     define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'*        base/js/namespace',
+		'*        base/js/events
+ *'
+	], function(
+		KBWidget,
+		bootstrap,
+		Jupyter,
+		events
+	) {
  *         events.on("app_initialized.NotebookApp", function () {
  *             Jupyter.keyboard_manager....
  *         });
@@ -679,6 +688,7 @@ define(['jquery',
         // Kickstart the Narrative loading routine once the notebook is loaded.
         $([Jupyter.events]).on('notebook_loaded.Notebook', function () {
             require(['kbaseNarrative'], function (Narrative) {
+console.log("NEW NARRATIVE HERE", Narrative);
                 Jupyter.narrative = new Narrative();
                 Jupyter.narrative.init();
 

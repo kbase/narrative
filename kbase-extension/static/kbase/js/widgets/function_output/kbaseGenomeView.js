@@ -8,9 +8,9 @@
  */
 (function( $, undefined ) {
 
-	$.KBWidget({
+	return KBWidget({
         name: "GenomeView", 
-        parent: "kbaseWidget",
+        
 		version: "1.0.0",
         options: {
             data: null

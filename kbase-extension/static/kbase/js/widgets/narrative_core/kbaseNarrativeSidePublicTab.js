@@ -5,18 +5,26 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define(['jquery',
-        'bluebird',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseAuthenticatedWidget'],
-function($, 
-         Promise, 
-         Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'bluebird',
+		'narrativeConfig',
+		'kbaseAuthenticatedWidget'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Promise,
+		Config,
+		kbaseAuthenticatedWidget
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeSidePublicTab",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
             $importStatus:$('<div>'),

@@ -1,8 +1,7 @@
-(function ($, undefined) {
-    require(['jquery', 'kbwidget'], function ($) {
-        $.KBWidget({
+    define(['jquery', 'kbwidget', 'bootstrap', 'kbaseDefaultNarrativeOutput'], function ($, KBWidget, bootstrap, kbaseDefaultNarrativeOutput) {
+        return KBWidget({
             name: 'kbaseNarrativeOutputCell',
-            parent: 'kbaseWidget',
+            
             version: '1.0.0',
             options: {
                 widget: 'kbaseDefaultNarrativeOutput',
@@ -126,7 +125,11 @@
                     require([widget],
                         // If we successfully Require the widget code, render it:
                         $.proxy(function () {
-                            this.$outWidget = $body[widget](widgetData);
+                            var widget_mapping = {
+                                'kbaseDefaultNarrativeOutput' : kbaseDefaultNarrativeOutput
+                            };
+
+                            this.$outWidget = new widget_mapping[widget]($body, widgetData);
                             // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
                             this.$elem.append($body);
                         }, this),
@@ -227,4 +230,3 @@
 
         });
     });
-})(jQuery);

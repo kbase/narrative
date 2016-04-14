@@ -11,15 +11,22 @@
  * @module Narrative
  * @static
  */
-define([
-    'jquery',
-    'bluebird',
-    'json!kbase/config/config.json',
-    'json!kbase/config/icons.json'],
-function($,
-         Promise,
-         configSet,
-         iconsSet) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'bluebird',
+		'json!kbase/config/config.json',
+		'json!kbase/config/icons.json'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Promise,
+		configSet,
+		iconsSet
+	) {
     'use strict';
 
     // Get the workspace id from the URL

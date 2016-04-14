@@ -4,21 +4,36 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseNarrativeInput',
-        'kbaseNarrativeParameterTextInput',
-        'kbaseNarrativeParameterDropdownInput',
-        'kbaseNarrativeParameterCheckboxInput',
-        'kbaseNarrativeParameterTextareaInput',
-        'kbaseNarrativeParameterFileInput',
-        'kbaseNarrativeParameterTextSubdataInput'],
-function( $, Config ) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrativeInput',
+		'kbaseNarrativeParameterTextInput',
+		'kbaseNarrativeParameterDropdownInput',
+		'kbaseNarrativeParameterCheckboxInput',
+		'kbaseNarrativeParameterTextareaInput',
+		'kbaseNarrativeParameterFileInput',
+		'kbaseNarrativeParameterTextSubdataInput'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrativeInput,
+		kbaseNarrativeParameterTextInput,
+		kbaseNarrativeParameterDropdownInput,
+		kbaseNarrativeParameterCheckboxInput,
+		kbaseNarrativeParameterTextareaInput,
+		kbaseNarrativeParameterFileInput,
+		kbaseNarrativeParameterTextSubdataInput
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeMethodInput",
-        parent: "kbaseNarrativeInput",
+        parent : kbaseNarrativeInput,
         version: "1.0.0",
         options: {
             loadingImage: Config.get('loading_gif'),

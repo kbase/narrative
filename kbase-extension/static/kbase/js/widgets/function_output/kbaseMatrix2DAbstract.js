@@ -1,21 +1,31 @@
 
 
-define([
-        'jquery',
-        'narrativeConfig',    
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap' 
-        ], 
-    function( $, Config ) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
     
     var workspaceURL = Config.url('workspace');
     var loadingImage = Config.get('loading_gif');
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseMatrix2DAbstract',
-        parent: 'kbaseAuthenticatedWidget',
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: {
             workspaceID: null,

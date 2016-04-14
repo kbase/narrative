@@ -2,16 +2,26 @@
  * @author Pavel Novickov <psnovichkov@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'narrativeConfig',
-        'kbaseNarrativeParameterCustomTextSubdataInput'],
-    function( $, Config ) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrativeParameterCustomTextSubdataInput'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrativeParameterCustomTextSubdataInput
+	) {
     
     var workspaceUrl = Config.url('workspace');
     var loadingImage = Config.get('loading_gif');
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseSampleProperty2DPlotInput",
-        parent: "kbaseNarrativeMethodInput",
+        parent : kbaseNarrativeMethodInput,
         
         version: "1.0.0",
         options: {

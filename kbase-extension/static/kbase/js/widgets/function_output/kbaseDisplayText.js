@@ -2,7 +2,7 @@
  * KBase widget to display text.
  */
 (function($, undefined) {
-    $.KBWidget({
+    return KBWidget({
         name: 'DisplayTextWidget',
         version: '1.0.0',
         options: {

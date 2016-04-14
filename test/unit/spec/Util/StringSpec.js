@@ -4,7 +4,16 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['util/string'], function(StringUtil) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'util/string'
+	], function(
+		KBWidget,
+		bootstrap,
+		StringUtil
+	) {
     'use strict';
     
     describe('KBase String Utility function module', function() {

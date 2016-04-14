@@ -11,7 +11,18 @@
  *  - Could make separate api methods for each service
  */
 
-define(['jquery', 'narrativeConfig'], function($, config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		config
+	) {
 
     function ModelingAPI(token) {
         var self = this;

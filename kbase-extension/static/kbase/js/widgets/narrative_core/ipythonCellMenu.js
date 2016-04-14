@@ -2,18 +2,27 @@
  * KBase preset wrapper for its cell menu.
  */
 
-define([
-    'jquery',
-    'notebook/js/celltoolbar',
-    'kbaseNarrativeCellMenu'
-], function($, celltoolbar) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'notebook/js/celltoolbar',
+		'kbaseNarrativeCellMenu'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		celltoolbar,
+		kbaseNarrativeCellMenu
+	) {
     "use strict";
 
     var CellToolbar = celltoolbar.CellToolbar;
 
     var $kbMenu = $('<span>');
     var makeKBaseMenu = function(div, cell) {
-        $(div).kbaseNarrativeCellMenu({cell: cell});
+         new kbaseNarrativeCellMenu($(div), {cell: cell});
     };
 
     var register = function(notebook) {

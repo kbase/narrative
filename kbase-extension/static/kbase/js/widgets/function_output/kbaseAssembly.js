@@ -2,11 +2,21 @@
  * Just a simple example widget - makes a div with "Hello world!"
  * in a user-defined color (must be a css color - 'red' or 'yellow' or '#FF0000')
  */
-define(['jquery', 'kbwidget', 'kbasePrompt'], 
-    function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbasePrompt'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbasePrompt
+	) {
+    return KBWidget({
         name: "AssemblyWidget",
-        parent: "kbaseWidget",
+        
         version: "1.0.0",
         options: {
             color: "black",
@@ -496,7 +506,7 @@ define(['jquery', 'kbwidget', 'kbasePrompt'],
 
         import_contigs_to_ws: function(token, fba_url, ws_url, ws_name, shock_id, shock_url, contig_name){
             var contig_name = $('<div class="input-group"> <span class="input-group-addon">ContigSet Name</span> <input type="text" class="form-control cname-input" value="'+ contig_name +'"> </div>');
-            var $importModal = $('<div></div>').kbasePrompt({
+            var $importModal =  new kbasePrompt($('<div></div>'), {
                 title : 'Import Contigs',
                 body : contig_name,
                 modalClass : 'fade', //Not required. jquery animation class to show/hide. Defaults to 'fade'

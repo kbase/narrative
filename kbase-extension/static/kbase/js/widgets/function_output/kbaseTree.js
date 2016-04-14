@@ -4,19 +4,29 @@
  * @public
  */
 
-define(['jquery', 
-        'narrativeConfig',
-        'util/string',
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'knhx', 
-        'widgetMaxWidthCorrection'], 
-function($,
-         Config,
-         StringUtil) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'util/string',
+		'kbaseAuthenticatedWidget',
+		'knhx',
+		'widgetMaxWidthCorrection'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		StringUtil,
+		kbaseAuthenticatedWidget,
+		knhx,
+		widgetMaxWidthCorrection
+	) {
+    return KBWidget({
         name: 'kbaseTree',
-        parent: 'kbaseAuthenticatedWidget',
+        parent : kbaseAuthenticatedWidget,
         version: '0.0.1',
         options: {
             treeID: null,

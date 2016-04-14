@@ -5,12 +5,22 @@
  * The dataModel should have getDropdownSpecs method providing an array of spec files.
  *
  */
-define(['jquery', 'kbwidget', 'kbaseNarrativeParameterDropdownInput'],
-    function( $ ) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseNarrativeParameterDropdownInput'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseNarrativeParameterDropdownInput
+	) {
     
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeParameterCustomDropdownGroupInput",
-        parent: "kbaseNarrativeParameterInput",  
+        parent : kbaseNarrativeParameterInput,  
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",

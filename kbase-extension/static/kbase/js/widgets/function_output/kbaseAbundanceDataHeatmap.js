@@ -1,11 +1,23 @@
 /**
  * KBase widget to display table of BIOM data
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 
-        'kbStandaloneHeatmap'], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbStandaloneHeatmap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbStandaloneHeatmap
+	) {
+    return KBWidget({
             name: 'AbundanceDataHeatmap',
-            parent: "kbaseAuthenticatedWidget",
+            parent : kbaseAuthenticatedWidget,
             version: '1.0.0',
             token: null,
             options: {

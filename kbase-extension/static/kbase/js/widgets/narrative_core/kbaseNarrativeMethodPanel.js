@@ -11,35 +11,46 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define([
-        'jquery', 
-        'underscore',
-        'bluebird',
-        'handlebars',
-        'narrativeConfig',
-        'util/display',
-        'util/bootstrapDialog',
-        'text!kbase/templates/beta_warning_body.html',
-        'kbwidget',
-        'kbaseAccordion',
-        'kbaseNarrativeControlPanel',
-        'narrative_core/catalog/kbaseCatalogBrowser',
-        'kbaseNarrative',
-        'catalog-client-api',
-        'kbase-client-api',
-        'bootstrap'], 
-function ($, 
-          _,
-          Promise,
-          Handlebars,
-          Config,
-          DisplayUtil,
-          BootstrapDialog,
-          BetaWarningTemplate) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'underscore',
+		'bluebird',
+		'handlebars',
+		'narrativeConfig',
+		'util/display',
+		'util/bootstrapDialog',
+		'text!kbase/templates/beta_warning_body.html',
+		'kbaseAccordion',
+		'kbaseNarrativeControlPanel',
+		'narrative_core/catalog/kbaseCatalogBrowser',
+		'kbaseNarrative',
+		'catalog-client-api',
+		'kbase-client-api'
+	], function(
+		KBWidget,
+		bootstrap_g,
+		$,
+		_,
+		Promise,
+		Handlebars,
+		Config,
+		DisplayUtil,
+		BootstrapDialog,
+		BetaWarningTemplate,
+        kbaseAccordion,
+		kbaseNarrativeControlPanel,
+		narrative_core_catalog_kbaseCatalogBrowser,
+		kbaseNarrative,
+		catalog_client_api,
+		kbase_client_api
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseNarrativeMethodPanel',
-        parent: 'kbaseNarrativeControlPanel',
+        parent : kbaseNarrativeControlPanel,
         version: '0.0.1',
         options: {
             loadingImage: Config.get('loading_gif'),
@@ -293,6 +304,7 @@ function ($,
 
             var devMode = Config.get('dev_mode');
             var showBetaWarning = true;
+console.log("h4", BetaWarningTemplate, Handlebars);
             var betaWarningCompiled = Handlebars.compile(BetaWarningTemplate);
 
             this.betaWarningDialog = new BootstrapDialog({
@@ -941,7 +953,7 @@ function ($,
 
                 this.$errorPanel.append($details)
                                 .append($tracebackPanel);
-                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+                 new kbaseAccordion($tracebackPanel, { elements : tracebackAccordion });
             }
 
             this.$functionPanel.hide();

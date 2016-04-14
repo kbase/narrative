@@ -14,27 +14,42 @@
  * @author Dan Gunter <dkgunter@lbl.gov>
  * @public
  */
-define(['jquery',
-        'underscore',
-        'bluebird',
-        'narrativeConfig',
-        'util/timeFormat',
-        'kbwidget',
-        'kbaseNarrative',
-        'kbaseNarrativeControlPanel',
-        'kbaseNarrativeDataList',
-        'kbaseNarrativeSidePublicTab',
-        'kbaseNarrativeSideImportTab',
-        'kbaseNarrativeExampleDataTab'],
-function($,
-         _,
-         Promise,
-         Config,
-         TimeFormat) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'underscore',
+		'bluebird',
+		'narrativeConfig',
+		'util/timeFormat',
+		'kbaseNarrative',
+		'kbaseNarrativeControlPanel',
+		'kbaseNarrativeDataList',
+		'kbaseNarrativeSidePublicTab',
+		'kbaseNarrativeSideImportTab',
+		'kbaseNarrativeExampleDataTab',
+        'kbaseLogin'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		_,
+		Promise,
+		Config,
+		TimeFormat,
+		kbaseNarrative,
+		kbaseNarrativeControlPanel,
+		kbaseNarrativeDataList,
+		kbaseNarrativeSidePublicTab,
+		kbaseNarrativeSideImportTab,
+		kbaseNarrativeExampleDataTab,
+        kbaseLogin
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeDataPanel",
-        parent: "kbaseNarrativeControlPanel",
+        parent : kbaseNarrativeControlPanel,
         version: "1.0.0",
         wsClient: null,
         table: null,
@@ -83,8 +98,7 @@ function($,
             var $dataList = $('<div>');
             this.body().append($dataList);
             this.dataListWidget = 
-                $dataList.kbaseNarrativeDataList(
-                    {
+                 new kbaseNarrativeDataList($dataList, {
                         ws_name: this.ws_name,
                         parentControlPanel: this,
                         slideTime: this.slideTime
@@ -342,7 +356,19 @@ function($,
             var maxObjFetch = 100000;
 
             var self = this;
-            var user = $("#signin-button").kbaseLogin('session', 'user_id');
+console.log("CREATES LOGIN BUTTON");
+console.log("CREATEd LOGIN BUTTON", this);
+            if (this.$login == undefined) {
+                if (this.loginInit) {
+                    return;
+                }
+                this.loginInit = true;
+                this.$login = new kbaseLogin( $('#signin-button') );
+                this.loginInit = false;
+            }
+            var user = this.$login.session('user_id');
+            //var user = $('#signin-button').kbaseLogin('session', 'user_id');
+console.log("USER IS ", user);
             if (!user) {
                 console.error("NarrativeDataPanel: user is not defined, parsing token instead...");
                 var tokenParts = this.token.split("|");
@@ -526,15 +552,16 @@ function($,
             }
 
             // Setup the panels that are defined by widgets
-            // minePanel.kbaseNarrativeMyDataTab({ws_name: this.ws_name});
-            // sharedPanel.kbaseNarrativeSharedDataTab({ws_name: this.ws_name});
+             //new kbaseNarrativeMyDataTab(minePanel, {ws_name: this.ws_name});
+             //new kbaseNarrativeSharedDataTab(sharedPanel, {ws_name: this.ws_name});
 
-            this.publicTab = publicPanel.kbaseNarrativeSidePublicTab({$importStatus:importStatus, ws_name: this.ws_name});
-            this.importTab = importPanel.kbaseNarrativeSideImportTab({ws_name: this.ws_name});
-            this.exampleTab = examplePanel.kbaseNarrativeExampleDataTab({$importStatus:importStatus, ws_name: this.ws_name});
+            this.publicTab =  new kbaseNarrativeSidePublicTab(publicPanel, {$importStatus:importStatus, ws_name: this.ws_name});
+            this.importTab =  new kbaseNarrativeSideImportTab(importPanel, {ws_name: this.ws_name});
+            this.exampleTab =  new kbaseNarrativeExampleDataTab(examplePanel, {$importStatus:importStatus, ws_name: this.ws_name});
 
             // It is silly to invoke a new object for each widget
-            var auth = {token: $("#signin-button").kbaseLogin('session', 'token')};
+            var auth = {token : this.$login.session('token')};
+            //var auth = {token: $("#signin-button").kbaseLogin('session', 'token')};
             var ws = new Workspace(this.options.workspaceURL, auth);
 
             closeBtn.click(function() {

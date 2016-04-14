@@ -3,9 +3,9 @@
  * 
  */
 (function( $, undefined ) {
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseCompareFBAs",
-        parent: "kbaseWidget",
+        
         version: "1.0.0",
         options: {
             color: "black",

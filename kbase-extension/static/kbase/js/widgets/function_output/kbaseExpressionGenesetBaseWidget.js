@@ -12,17 +12,29 @@
  * @public
  */
 
-define(['jquery', 
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap',        
-        'kbaseFeatureValues-client-api'
-        ], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap',
+		'kbaseFeatureValues-client-api'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap,
+		kbaseFeatureValues_client_api
+	) {
+    return KBWidget({
         name: 'kbaseExpressionGenesetBaseWidget',
-        parent: 'kbaseAuthenticatedWidget',
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: {
             workspaceID: null,

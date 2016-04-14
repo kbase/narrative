@@ -3,16 +3,27 @@
  * @public
  */
 
-define(['jquery', 
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap',        
-        'kbase-client-api'
-        ], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap',
+		'kbase-client-api'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		jquery_dataTables,
+		bootstrap,
+		kbase_client_api
+	) {
+    return KBWidget({
         name: 'kbaseReportView',
-        parent: 'kbaseAuthenticatedWidget',
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: {
             workspace_name: null,
@@ -131,7 +142,7 @@ define(['jquery',
                                     var obj = _.findWhere(self.objectList, {key: key});
                                     var info = self.createInfoObject(obj.info);
                                     // Insert the narrative data cell into the div we just rendered
-                                    //$('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+                                     new kbaseNarrativeDataCell(//$('#' + cell_id), {cell: cell, info: info});
                                     self.trigger('createViewerCell.Narrative', {
                                         'nearCellIdx': near_idx,
                                         'widget': 'kbaseNarrativeDataCell',

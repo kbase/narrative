@@ -13,7 +13,7 @@
  }
 */
 (function( $, undefined ) {
-    $.KBWidget({
+    return KBWidget({
         name: "ValueListWidget",
         version: "0.1.0",
         options: {

@@ -1,16 +1,27 @@
 
-define([
-        'jquery', 
-        'plotly',
-        'kbwidget', 
-        'kbaseGrowthMatrixAbstract', 
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap' 
-        ], function($,Plotly) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'plotly',
+		'kbaseGrowthMatrixAbstract',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Plotly,
+		kbaseGrowthMatrixAbstract,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: 'kbaseGrowthCurves',
-        parent: 'kbaseGrowthMatrixAbstract',
+        parent : kbaseGrowthMatrixAbstract,
         version: '1.0.0',
         options: {
             

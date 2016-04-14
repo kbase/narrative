@@ -8,8 +8,19 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define(['jquery', 'kbwidget', 'kbaseAccordion'], function( $ ) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAccordion'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAccordion
+	) {
+    return KBWidget({
         /* 
          * (required) Your widget should be named in CamelCase.
          */
@@ -24,7 +35,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion'], function( $ ) {
          * this.user_id() = the logged in user id
          * this.authToken() = the current authentication token
          */
-        parent: 'kbaseWidget',
+        
 
         /*
          * (optional) Widgets should be semantically versioned.
@@ -124,8 +135,7 @@ define(['jquery', 'kbwidget', 'kbaseAccordion'], function( $ ) {
                       .append($errorTable)
                       .append($stackTraceAccordion);
 
-            $stackTraceAccordion.kbaseAccordion(
-                { 
+             new kbaseAccordion($stackTraceAccordion, { 
                     elements: [
                         {
                             title: 'Detailed Error Message',

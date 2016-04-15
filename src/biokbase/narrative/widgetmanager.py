@@ -269,3 +269,99 @@ class WidgetManager:
                                              cell_title="Title Goes Here",
                                              timestamp=int(round(time.time()*1000)))
         return Javascript(data=js, lib=None, css=None)
+
+
+    def show_external_widget(self, widget_title, options, auth_required=True):
+    """
+    Renders a widget as loaded from a very simple hosted CDN.
+    The CDN information is fetched dynamically from the local configuration.
+    """
+    from IPython.display import Javascript
+    from jinja2 import Template
+    import json
+    import uuid
+
+    #  Interface from Narrative's Python layer.
+    #  The template placeholders will be substituted.
+    #  widget_name - the registered widget name
+    #  input_data - the expected input data (aka params) for the widget
+    #  token - the current auth token, made available within the containing python function
+    #  element - the output cell DOM node, as visible to this code due to the environment it is inserted into.
+    #
+    #  The Javascript functions doc from Jupyter:
+    #  "When this object is returned by an expression or passed to the
+    #  display function, it will result in the data being displayed
+    #  in the frontend. If the data is a URL, the data will first be
+    #  downloaded and then displayed.
+    #
+    #  In the Notebook, the containing element will be available as `element`,
+    #  and jQuery will be available.  Content appended to `element` will be
+    #  visible in the output area.""
+
+    input_template = """
+require([
+    'narrativeDataWidget'
+], function (NarrativeDataWidget) {
+
+    var widgetDef = JSON.parse('{{widget_def}}'),
+        objectRefs = JSON.parse('{{object_refs}}'),
+        options = JSON.parse('{{options}}'),
+        config = JSON.parse('{{config}}'),
+        packageName = widgetDef.package,
+        packageVersion = widgetDef.package_version,
+        widgetName = widgetDef.name,
+        widgetParentNode = element[0];
+
+    var dataWidget = NarrativeDataWidget.make({
+        package: packageName,
+        version: packageVersion,
+        widget: widgetName,
+        title: widgetDef.title,
+        parent: widgetParentNode,
+        authRequired: config.authRequired
+    });
+
+    dataWidget.runWidget(objectRefs, options)
+        .then(function () {
+            console.log('FINISHED');
+        })
+        .catch(function (err) {
+            console.error('ERROR', err);
+            dataWidget.showErrorMessage(err.message);
+        });
+});
+    """
+
+    # Prepare data for export into the Javascript.
+    # token = get_system_variable('token')
+
+    if type(widget) is list:
+        widget_package = widget[0]
+        widget_package_version = widget[1]
+        widget_name = widget[2]
+    else:
+        widget_package = None
+        widget_package_version = None
+        widget_name = widget
+
+    # Note: All Python->Javascript data flow is serialized as JSON strings.
+    widget_def = {
+        'id': str(uuid.uuid4()),
+        'package': widget_package,
+        'package_version': widget_package_version,
+        'name': widget_name,
+        'title': widget_title
+    }
+
+    config = {
+        'auth_required': auth_required
+    }
+
+    # context - Data for building the Javascript prior to insertion is provided
+    # input_data - raw widget input data as provided by the caller
+    js = Template(input_template).render(widget_def=json.dumps(widget_def),
+                                         object_refs=json.dumps(objects),
+                                         options=json.dumps(options),
+                                         config=json.dumps(config))
+
+    return Javascript(data=js, lib=None, css=None)

@@ -13,8 +13,8 @@ require.config({
         configPath                              : 'kbase',
         narrativeViewers                        : 'kbase/js/widgets/narrative_core/narrativeViewers',
         domReady                                : 'ext_components/requirejs/domReady',
-        json                                    : 'ext_components/requirejs-json/json',
-        text                                    : 'ext_components/requirejs-text/text',
+        json                                    : 'ext_components/requirejs-plugins/src/json',
+        text                                    : 'ext_components/requirejs-plugins/lib/text',
         jquery                                  : 'components/jquery/jquery.min',
         jqueryui                                : 'components/jquery-ui/ui/minified/jquery-ui.min',
         'jquery-svg'                            : 'ext_components/jquery-extensions/js/jquery.svg',
@@ -41,7 +41,7 @@ require.config({
         'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
         'catalog-client-api'                    : 'kbase/js/api/Catalog',
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
-        
+
         /**
          * New Test Runtime and Widget Framework
          */
@@ -362,6 +362,7 @@ require.config({
         },
         'kbaseTabTableTabs' : {
             'deps' : ['jquery',
+                      'jqueryui',
                       'jquery-dataTables',
                       'jquery-dataTables-bootstrap',
                       'bootstrap']

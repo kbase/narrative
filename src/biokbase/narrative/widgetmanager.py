@@ -24,10 +24,14 @@ from pprint import pprint
 class WidgetManager:
     widget_info = dict()
     version_tags = ["release", "beta", "dev"]
+    cell_id_prefix = "kb-vis-"
     default_input_widget = "kbaseNarrativeDefaultInput"
     default_output_widget = "kbaseNarrativeDefaultOutput"
 
     def __init__(self):
+        self.reload_info()
+
+    def reload_info(self):
         self.widget_info = self.load_all_widget_info()
 
     def get_system_variable(self, var):
@@ -235,15 +239,17 @@ class WidgetManager:
 
     def show_output_widget(self, widget_name, tag="release", **kwargs):
         """
-        renders a widget!
+        Renders a widget using the generic output widget container.
         """
         self.check_tag(tag, raise_exception=True)
 
         if widget_name not in self.widget_info[tag]:
             raise ValueError("Widget %s not found with %s tag!" % (widget_name, tag))
 
-        input_data = kwargs
-        input_data.update(self.get_widget_constants(widget_name, tag))
+        input_data = self.get_widget_constants(widget_name, tag)
+        # Let the kwargs override constants
+        input_data.update(kwargs)
+
         input_template = """
         element.html("<div id='{{input_id}}'></div>");
 
@@ -257,7 +263,7 @@ class WidgetManager:
         });
         """
 
-        js = Template(input_template).render(input_id=uuid.uuid4(),
+        js = Template(input_template).render(input_id=self.cell_id_prefix + str(uuid.uuid4()),
                                              widget_name=widget_name,
                                              input_data=json.dumps(input_data),
                                              cell_title="Title Goes Here",

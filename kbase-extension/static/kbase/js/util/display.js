@@ -5,15 +5,24 @@
  *
  * @author Bill Riehl wjriehl@lbl.gov
  */
-define(['jquery',
-        'bluebird',
-        'narrativeConfig',
-        'util/timeFormat',
-        'kbase-client-api'],
-function($,
-         Promise,
-         Config,
-         TimeFormat) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'bluebird',
+		'narrativeConfig',
+		'util/timeFormat',
+		'kbase-client-api'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Promise,
+		Config,
+		TimeFormat,
+		kbase_client_api
+	) {
     'use strict';
 
     var profileClient = new UserProfile(Config.url('user_profile'));

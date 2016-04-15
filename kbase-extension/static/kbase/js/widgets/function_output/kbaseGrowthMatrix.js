@@ -1,15 +1,26 @@
- define([
-        'jquery', 
-        'plotly',
-        'kbwidget', 
-        'kbaseGrowthMatrixAbstract', 
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap' 
-        ], function($,Plotly) {
-    $.KBWidget({
+ define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'plotly',
+		'kbaseGrowthMatrixAbstract',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Plotly,
+		kbaseGrowthMatrixAbstract,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: 'kbaseGrowthMatrix',
-        parent: 'kbaseGrowthMatrixAbstract',
+        parent : kbaseGrowthMatrixAbstract,
         version: '1.0.0',
          
         render: function(){
@@ -31,7 +42,7 @@
             var $tabPane = $('<div>')
                 .attr( 'id', pref+'tab-content')
                 .appendTo($container);
-            $tabPane.kbaseTabs({canDelete : true, tabs : []});   
+             new kbaseTabs($tabPane, {canDelete : true, tabs : []});   
 
             // Build  matrix overview tab
             var $tabOverview = $("<div/>");

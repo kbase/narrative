@@ -1,11 +1,29 @@
 /**
  * KBase widget to display a Metagenome
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor',
-        'kbStandaloneTable', 'kbStandaloneGraph'], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'RGBColor',
+		'kbStandaloneTable',
+		'kbStandaloneGraph'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		RGBColor,
+		kbStandaloneTable,
+		kbStandaloneGraph
+	) {
+    return KBWidget({
         name: 'MetagenomeView',
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         token: null,
         options: {
@@ -91,7 +109,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseTabs', 'RGBColor
                     // set tabs
                     var tabPane = $('<div id="'+pref+'tab-content">');
         		    container.append(tabPane);
-        		    tabPane.kbaseTabs({canDelete : false, tabs : []});
+        		     new kbaseTabs(tabPane, {canDelete : false, tabs : []});
                 
                     // overview tab
                     var oTabDiv = $('<div id="'+pref+'overview">');

@@ -1,7 +1,15 @@
 /*global define*/
 /*jslint white: true*/
-define(['jquery', 'bootstrap'], 
-function ($) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery'
+	], function(
+		KBWidget,
+		bootstrap,
+		$
+	) {
     'use strict';
 
     /**

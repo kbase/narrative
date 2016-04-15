@@ -10,28 +10,28 @@
  */
 
 (function( $, undefined ) {
-require(['jquery',
+require(['kbwidget', 'bootstrap', 'jquery',
          'narrativeConfig',
          'util/string',
          'util/bootstrapDialog',
          'util/display',
          'handlebars', 
-         'kbwidget', 
          'kbaseAuthenticatedWidget',
          'kbaseNarrativeCellMenu',
          'kbaseTabs',
          'kbaseViewLiveRunLog',
          'kbaseReportView'], 
-function($, 
+function(KBWidget, bootstrap, $, 
          Config,
          StringUtil,
          BootstrapDialog,
          Display,
-         Handlebars) {
+         Handlebars,
+        kbaseAuthenticatedWidget, kbaseNarrativeCellMenu, kbaseTabs, kbaseViewLiveRunLog, kbaseReportView) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeMethodCell",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
             method: null,
@@ -543,7 +543,7 @@ function($,
                         }
                     }
                     targetPanel.append(this.$jobProcessTabs);
-                    this.$jobProcessTabs.kbaseTabs({canDelete: false, tabs: []});
+                     new kbaseTabs(this.$jobProcessTabs, {canDelete: false, tabs: []});
                     this.$jobStatusDiv = $('<div>');
                     this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Status', content: this.$jobStatusDiv, 
                         canDelete: false, show: true});
@@ -573,7 +573,7 @@ function($,
                     this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Console Log', showContentCallback: 
                         function() {
                             var $jobLogsPanel = $('<div>');
-                            $jobLogsPanel.kbaseViewLiveRunLog({'job_id': jobId, 'show_loading_error': false});
+                             new kbaseViewLiveRunLog($jobLogsPanel, {'job_id': jobId, 'show_loading_error': false});
                             return $jobLogsPanel;
                         }, 
                         canDelete: false, show: false});
@@ -758,7 +758,7 @@ function($,
                     .append($errorTable);
             if (jobState && jobState.state && jobState.state.traceback) {
                 var $tb = $('<div>');
-                $tb.kbaseAccordion({
+                 new kbaseAccordion($tb, {
                     elements: [{
                         title: 'Detailed Error Information',
                         body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
@@ -857,6 +857,7 @@ function($,
             if(self.method.replacement_text && 
               self.submittedText && !self.isAwaitingInput()) {
                 // If replacement text exists, and the method was submitted, use it
+console.log("h3", self.method.replacement_text, Handlebars);
                 var template = Handlebars.compile(self.method.replacement_text);
                 self.$dynamicMethodSummary.append($('<h1>').html(template(self.getParameterMapForReplacementText())));
                 self.$dynamicMethodSummary.append($('<h2>').append(self.submittedText));

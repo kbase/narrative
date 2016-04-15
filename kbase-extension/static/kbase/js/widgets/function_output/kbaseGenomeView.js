@@ -6,11 +6,12 @@
  * wjriehl@lbl.gov 
  * October 25, 2013
  */
-(function( $, undefined ) {
+define(['kbwidget', 'jquery', 'bootstrap'],
+function(KBWidget, $, bootstrap) {
 
-	$.KBWidget({
+	return KBWidget({
         name: "GenomeView", 
-        parent: "kbaseWidget",
+        
 		version: "1.0.0",
         options: {
             data: null
@@ -50,4 +51,4 @@
 
 	});
 
-})( jQuery );
+})

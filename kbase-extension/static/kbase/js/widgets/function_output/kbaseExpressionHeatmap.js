@@ -5,16 +5,27 @@
  * @public
  */
 
- define([
-        'jquery',
-        'd3',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap',      
-        'kbaseExpressionGenesetBaseWidget'
-        ], function($) {
-    $.KBWidget({
+ define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'd3',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap',
+		'kbaseExpressionGenesetBaseWidget'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		d3,
+		jquery_dataTables,
+		bootstrap,
+		kbaseExpressionGenesetBaseWidget
+	) {
+    return KBWidget({
         name: 'kbaseExpressionHeatmap',
-        parent: 'kbaseExpressionGenesetBaseWidget',
+        parent : kbaseExpressionGenesetBaseWidget,
         version: '1.0.0',
 
         colorGenerator: null,

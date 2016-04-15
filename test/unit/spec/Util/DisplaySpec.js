@@ -4,7 +4,18 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['jquery','util/display'], function($,DisplayUtil) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'util/display'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		DisplayUtil
+	) {
     'use strict';
     
     describe('KBase Display Utility function module', function() {

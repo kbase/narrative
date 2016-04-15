@@ -1,12 +1,24 @@
 /*global define*/
 /*jslint white: true*/
 
-define(['jquery',
-        'underscore',
-        'narrativeConfig',
-        'bluebird',
-        'kbase-client-api'],
-function($, _, Config, Promise, Clients) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'underscore',
+		'narrativeConfig',
+		'bluebird',
+		'kbase-client-api'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		_,
+		Config,
+		Promise,
+		Clients
+	) {
     'use strict';
 
     /**
@@ -135,7 +147,6 @@ function($, _, Config, Promise, Clients) {
         }
 
         return loadViewerInfo().then(function(viewerInfo) {
-            console.log(viewerInfo);
             
             var o = dataCell.obj_info;
             var methodId = viewerInfo.viewers[o.bare_type];
@@ -175,14 +186,15 @@ function($, _, Config, Promise, Clients) {
             // XXX: Temporary until all widgets are loaded with Require.
             // First, try to load it from global space.
             var $elem = $('<div>');
+
             try {
                 w = $elem[outputWidget](output);
             }
             // If that fails, try to load with require. 
             // If THAT fails, fail with an error (though the error should be improved)
             catch (err) {
-                require([outputWidget], function () {
-                    w = $elem[outputWidget](output);
+                require([outputWidget], function (W) {
+                    w = new W($elem, output);
                     return w;
                 }, function () {
                     console.error("error making widget: " + outputWidget);

@@ -1,14 +1,24 @@
-define([
-        'jquery', 
-        'kbwidget', 
-        'kbaseMatrix2DAbstract', 
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap' 
-        ], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseMatrix2DAbstract',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseMatrix2DAbstract,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: 'kbaseChromatographyMatrix',
-        parent: 'kbaseMatrix2DAbstract',
+        parent : kbaseMatrix2DAbstract,
         version: '1.0.0',
          
         render: function(){
@@ -29,7 +39,7 @@ define([
             var $tabPane = $('<div>')
                 .attr( 'id', pref+'tab-content')
                 .appendTo($container);
-            $tabPane.kbaseTabs({canDelete : true, tabs : []});   
+             new kbaseTabs($tabPane, {canDelete : true, tabs : []});   
 
             // Build matrix overview tab
             var $tabOverview = $("<div/>");

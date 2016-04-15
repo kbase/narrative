@@ -6,43 +6,56 @@
  *
  * To set global variables, use: Jupyter.narrative.<name> = value
  */
-define([
-    'jquery',
-    'bluebird',
-    'handlebars',
-    'narrativeConfig',
-    'kbaseNarrativeSidePanel',
-    'kbaseNarrativeOutputCell',
-    'kbaseNarrativeWorkspace',
-    'kbaseNarrativeMethodCell',
-    'narrativeLogin',
-    'kbase-client-api',
-    'kbaseNarrativePrestart',
-    'ipythonCellMenu',
-    'base/js/events',
-    'notebook/js/notebook',
-    'util/display',
-    'util/bootstrapDialog',
-    'text!kbase/templates/update_dialog_body.html',
-    'jquery-nearest'
-],
-function($,
-         Promise,
-         Handlebars,
-         Config,
-         kbaseNarrativeSidePanel,
-         kbaseNarrativeOutputCell,
-         kbaseNarrativeWorkspace,
-         kbaseNarrativeMethodCell,
-         narrativeLogin,
-         kbaseClient,
-         kbaseNarrativePrestart,
-         kbaseCellToolbar,
-         events,
-         Notebook,
-         DisplayUtil,
-         BootstrapDialog,
-         UpdateDialogBodyTemplate) {
+ 
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'bluebird',
+		'handlebars',
+		'narrativeConfig',
+		'kbaseNarrativeSidePanel',
+		'kbaseNarrativeOutputCell',
+		'kbaseNarrativeWorkspace',
+		'kbaseNarrativeMethodCell',
+        'kbaseAccordion',
+        'kbaseLogin',
+        'kbaseNarrativeSharePanel',
+		'narrativeLogin',
+		'kbase-client-api',
+		'kbaseNarrativePrestart',
+		'ipythonCellMenu',
+		'base/js/events',
+		'notebook/js/notebook',
+		'util/display',
+		'util/bootstrapDialog',
+		'text!kbase/templates/update_dialog_body.html',
+		'jquery-nearest'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Promise,
+		Handlebars,
+		Config,
+		kbaseNarrativeSidePanel,
+		kbaseNarrativeOutputCell,
+		kbaseNarrativeWorkspace,
+		kbaseNarrativeMethodCell,
+        kbaseAccordion,
+        kbaseLogin,
+        kbaseNarrativeSharePanel,
+		narrativeLogin,
+		kbaseClient,
+		kbaseNarrativePrestart,
+		kbaseCellToolbar,
+		events,
+		Notebook,
+		DisplayUtil,
+		BootstrapDialog,
+		UpdateDialogBodyTemplate
+	) {
     'use strict';
     
     kbaseNarrativePrestart.loadDomEvents();
@@ -128,7 +141,7 @@ function($,
 
     Narrative.prototype.initSharePanel = function() {
         var $sharePanel = $('<div>');
-        var $shareWidget = $sharePanel.kbaseNarrativeSharePanel({
+        var $shareWidget =  new kbaseNarrativeSharePanel($sharePanel, {
             ws_name_or_id: this.getWorkspaceName()
         });
         $('#kb-share-btn').popover({
@@ -160,7 +173,9 @@ function($,
      * dialog then lets the user shut down their existing Narrative container.
      */
     Narrative.prototype.initUpgradeDialog = function() {
+
         var bodyTemplate = Handlebars.compile(UpdateDialogBodyTemplate);
+
 
         var $cancelBtn = $('<button type="button" data-dismiss="modal">')
                          .addClass('btn btn-default')
@@ -278,7 +293,7 @@ function($,
             }
         );
         var $verAccordion = $('<div style="margin-top:15px">');
-        $verAccordion.kbaseAccordion({
+         new kbaseAccordion($verAccordion, {
             elements: [{
                 title: 'KBase Service URLs',
                 body: $versionTable
@@ -388,7 +403,7 @@ function($,
         this.initUpgradeDialog();
         this.initShutdownDialog();
 
-        // var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
+        // var $sidePanel =  new kbaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
 
         // NAR-271 - Firefox needs to be told where the top of the page is. :P
         window.scrollTo(0,0);
@@ -399,7 +414,11 @@ function($,
         Jupyter.CellToolbar.activate_preset("KBase");
         Jupyter.CellToolbar.global_show();
 
-        this.authToken = $('#signin-button').kbaseLogin('token');
+
+        var $login = new kbaseLogin($('#signin-button'));
+
+        this.authToken = $login.token();
+
 
         if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
             var creatorId = Jupyter.notebook.metadata.creator || 'KBase User';
@@ -411,9 +430,9 @@ function($,
         if (this.getWorkspaceName() !== null) {
             this.initSharePanel();
 
-            var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
+            var $sidePanel =  new kbaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
             // init the controller
-            this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
+            this.narrController =  new kbaseNarrativeWorkspace($('#notebook_panel'), {
                 ws_id: this.getWorkspaceName()
             });
             this.narrController.render()
@@ -490,7 +509,7 @@ function($,
                 // TODO: update kbaseNarrativeMethodCell to return a promise to mark when rendering is complete
                 var newCell = Jupyter.notebook.get_selected_cell();
                 var newCellIdx = Jupyter.notebook.get_selected_index();
-                var newWidget = $('#'+$(newCell.get_text())[0].id).kbaseNarrativeMethodCell();
+                var newWidget =  new kbaseNarrativeMethodCell($('#'+$(newCell.get_text())[0].id));
                 var updateStateAndRun = function(state) {
                     if(newWidget.$inputWidget) {
                         // if the $inputWidget is not null, we are good to go, so set the parameters

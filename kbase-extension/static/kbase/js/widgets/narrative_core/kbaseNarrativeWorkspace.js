@@ -20,30 +20,48 @@
  * @public
  */
 
-define(['jquery',
-        'underscore',
-        'bluebird',
-        'narrativeConfig',
-        'util/bootstrapDialog',
-        'util/string',
-        'jquery-nearest',
-        'kbwidget',
-        'bootstrap',
-        'kbaseDefaultNarrativeOutput',
-        'kbaseDefaultNarrativeInput',
-        'kbaseNarrativeAppCell',
-        'kbaseNarrativeMethodCell',
-        'kbaseNarrativeSidePanel',
-        'kbaseNarrativeDataPanel'],
-function($,
-         _,
-         Promise,
-         Config,
-         BootstrapDialog,
-         StringUtil) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'underscore',
+		'bluebird',
+		'narrativeConfig',
+		'util/bootstrapDialog',
+		'util/string',
+		'jquery-nearest',
+		'kbaseDefaultNarrativeOutput',
+		'kbaseDefaultNarrativeInput',
+		'kbaseNarrativeAppCell',
+		'kbaseNarrativeMethodCell',
+		'kbaseNarrativeSidePanel',
+		'kbaseNarrativeDataPanel',
+        'kbaseNarrativeOutputCell',
+        'kbaseTabs'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		_,
+		Promise,
+		Config,
+		BootstrapDialog,
+		StringUtil,
+        jqueryN,
+		kbaseDefaultNarrativeOutput,
+		kbaseDefaultNarrativeInput,
+		kbaseNarrativeAppCell,
+		kbaseNarrativeMethodCell,
+		kbaseNarrativeSidePanel,
+		kbaseNarrativeDataPanel,
+        kbaseNarrativeOutputCell,
+        kbaseTabs
+	) {
+
+    return KBWidget({
         name: 'kbaseNarrativeWorkspace',
-        parent: 'kbaseWidget',
+
         version: '1.0.0',
         options: {
             loadingImage: Config.get('loading_gif'),
@@ -334,7 +352,7 @@ function($,
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                              "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
+                               "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
                               "</script>";
 
             cell.set_text(cellContent);
@@ -441,7 +459,7 @@ function($,
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                              "$('#" + cellId + "').kbaseNarrativeAppCell({'appSpec' : '" + StringUtil.safeJSONStringify(appSpec) + "', 'cellId' : '" + cellId + "'});" +
+                               "new kbaseNarrativeAppCell($('#" + cellId + "'), {'appSpec' : '" + StringUtil.safeJSONStringify(appSpec) + "', 'cellId' : '" + cellId + "'});" +
                               "</script>";
             cell.set_text(cellContent);
             cell.rendered = false;
@@ -1251,6 +1269,7 @@ function($,
             }
             else if (this.isOutputCell(cell)) {
                 // do output widget stuff.
+
                 widget = 'kbaseNarrativeOutputCell';
             }
             else if (this.isAppCell(cell)) {
@@ -1284,6 +1303,7 @@ function($,
          * @private
          */
         loadRecentCellState: function(cell) {
+
             var state = this.getRecentState(cell);
             if (state) {
                 var target = 'div[id^=kb-cell-]';
@@ -1328,8 +1348,14 @@ function($,
                 // it might not be either! if we don't have both a target and widget, don't do anything!
                 if (target && widget) {
                     try {
-                        if ($(cell.element).find(target)[widget](['prototype'])['loadState']) {
-                            $(cell.element).find(target)[widget]('loadState', state.state);
+                        var widget_mapping = {
+                            'kbaseNarrativeOutputCell' : kbaseNarrativeOutputCell,
+                            'kbaseTabs' : kbaseTabs
+                        };
+
+                        var $widget = new widget_mapping[widget] ( $(cell.element).find(target) ) ;
+                        if ($widget.prototype.loadState) {
+                            $widget.loadState(state.state);
                             // later, do something with the timestamp.
                         }
                     } catch(err) {
@@ -2032,7 +2058,7 @@ function($,
 
             cellText = '<div id="' + outCellId + '"></div>\n' +
                        '<script>' +
-                       '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
+                       'new kbaseNarrativeOutputCell($("#' + outCellId + '")' + outputData + ');' +
                        '</script>';
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render

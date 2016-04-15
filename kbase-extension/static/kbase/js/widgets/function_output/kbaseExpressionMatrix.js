@@ -4,18 +4,31 @@
  * @public
  */
 
-define(['jquery', 
-		'kbwidget', 
-		'kbaseAuthenticatedWidget', 
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap',
-		'kbaseFeatureValues-client-api'
-//        ,'jquery-dataScroller'
-		], function($) {
-	$.KBWidget({
+		'kbaseFeatureValues-client-api',
+		'jquery-dataScroller'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		jquery_dataTables,
+		jquery_dataTables_bootstrap,
+		kbaseFeatureValues_client_api,
+		jquery_dataScroller
+	) {
+	return KBWidget({
 		name: 'kbaseExpressionMatrix',
-		parent: 'kbaseAuthenticatedWidget',
+		parent : kbaseAuthenticatedWidget,
 		version: '1.0.2',
 		options: {
 			expressionMatrixID: null,
@@ -104,7 +117,7 @@ define(['jquery',
 			var tabPane = $('<div id="'+pref+'tab-content">');
 			container.append(tabPane);
 
-			tabPane.kbaseTabs({canDelete : true, tabs : []});                    
+			 new kbaseTabs(tabPane, {canDelete : true, tabs : []});                    
 			///////////////////////////////////// Overview table ////////////////////////////////////////////           
 			var tabOverview = $("<div/>");
 			tabPane.kbaseTabs('addTab', {tab: 'Overview', content: tabOverview, canDelete : false, show: true});

@@ -3,24 +3,32 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'narrativeConfig',
-        'narrativeManager',
-        'util/display',
-        'bluebird',
-        'narrativeConfig',
-        'kbwidget', 
-        'kbaseNarrativeControlPanel',
-        'api/NewWorkspace'],
-function($, 
-         Config, 
-         NarrativeManager,
-         DisplayUtil,
-         Promise) {
-    'use strict',
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'narrativeManager',
+		'util/display',
+		'bluebird',
+		'kbaseNarrativeControlPanel',
+		'api/NewWorkspace'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		NarrativeManager,
+		DisplayUtil,
+		Promise,
+		kbaseNarrativeControlPanel,
+		api_NewWorkspace
+	) {
+    'use strict';
+    return KBWidget({
         name: "kbaseNarrativeManagePanel",
-        parent: "kbaseNarrativeControlPanel",
+        parent : kbaseNarrativeControlPanel,
         version: "1.0.0",
         wsClient: null,
         table: null,
@@ -895,7 +903,7 @@ function($,
 
                         var $sharingDiv = $('<div>');
                         self.setInteractionPanel($interactionPanel, 'Share Settings', $sharingDiv);
-                        $sharingDiv.kbaseNarrativeSharePanel({
+                         new kbaseNarrativeSharePanel($sharingDiv, {
                             ws_name_or_id: data.ws_info[0],
                             max_list_height: 'none',
                             add_user_input_width: '280px'

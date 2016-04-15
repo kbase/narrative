@@ -1,16 +1,27 @@
-define([
-        'jquery', 
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'kbaseGrowthParametersAbstract', 
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap' 
-        ], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbaseGrowthParametersAbstract',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbaseGrowthParametersAbstract,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: 'kbaseGrowthParameters',
-        parent: 'kbaseAuthenticatedWidget',
-        parent: 'kbaseGrowthParametersAbstract',
+        parent : kbaseAuthenticatedWidget,
+        parent : kbaseGrowthParametersAbstract,
         version: '1.0.0',
          
 
@@ -28,7 +39,7 @@ define([
             var $tabPane = $('<div>')
                 .attr( 'id', pref+'tab-content')
                 .appendTo($container);
-            $tabPane.kbaseTabs({canDelete : true, tabs : []});   
+             new kbaseTabs($tabPane, {canDelete : true, tabs : []});   
 
             // Build matrix overview tab
             var $tabOverview = $("<div/>");

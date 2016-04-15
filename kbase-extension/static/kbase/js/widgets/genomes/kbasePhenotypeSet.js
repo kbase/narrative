@@ -3,9 +3,9 @@
  * 
  */
 (function( $, undefined ) {
-    $.KBWidget({
+    return KBWidget({
         name: "kbasePhenotypeSet",
-        parent: "kbaseWidget",
+        
         version: "1.0.0",
         options: {
             color: "black",
@@ -30,7 +30,7 @@
                     // setup tabs
                     var phenoTable = $('<table class="table table-bordered table-striped" style="width: 100%;">');
 
-                    var tabs = container.kbTabs({tabs: [
+                    var tabs = container.kbaseTabTableTabs({tabs: [
                                                 {name: 'Overview', active: true},
                                                 {name: 'Phenotypes', content: phenoTable}]
                                               })
@@ -111,7 +111,7 @@
                 var prom = kb.fba.get_media({medias: [id], workspaces: [ws]})
                 $.when(prom).done(function(data) {
                     ele.rmLoading();
-                    $(ele).kbaseMediaEditor({ids: [id], 
+                     new kbaseMediaEditor($(ele), {ids: [id], 
                                              workspaces : [ws],
                                              data: data});
                 }).fail(function(e){

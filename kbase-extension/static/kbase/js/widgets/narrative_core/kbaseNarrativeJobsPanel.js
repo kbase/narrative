@@ -1,27 +1,31 @@
 /*global define*/
 /*jslint white: true*/
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbasePrompt',
-        'kbaseNarrativeControlPanel',
-        'bootstrap',
-        'util/bootstrapDialog',
-        'util/timeFormat',
-        'util/string'],
-function($,
-         Config,
-         kbwidget,
-         kbasePrompt,
-         kbaseNarrativeControlPanel,
-         bootstrap,
-         BootstrapDialog,
-         TimeFormat,
-         StringUtil) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbasePrompt',
+		'kbaseNarrativeControlPanel',
+		'util/bootstrapDialog',
+		'util/timeFormat',
+		'util/string'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbasePrompt,
+		kbaseNarrativeControlPanel,
+		BootstrapDialog,
+        TimeFormat,
+        StringUtil
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseNarrativeJobsPanel',
-        parent: 'kbaseNarrativeControlPanel',
+        parent : kbaseNarrativeControlPanel,
         version: '0.0.1',
         options: {
             loadingImage: Config.get('loading_gif'),
@@ -1151,7 +1155,7 @@ function($,
                                            .append($errorTable);
                 if (jobState.state.traceback) {
                     var $tb = $('<div>');
-                    $tb.kbaseAccordion({
+                     new kbaseAccordion($tb, {
                         elements: [{
                             title: 'Detailed Error Information',
                             body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
@@ -1241,7 +1245,7 @@ function($,
 
                 this.$errorPanel.append($details)
                                 .append($tracebackPanel);
-                $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+                 new kbaseAccordion($tracebackPanel, { elements : tracebackAccordion });
             }
             if (this.refreshTimer)
                 clearTimeout(this.refreshTimer);

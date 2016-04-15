@@ -1,8 +1,21 @@
-define(['jquery', 'kbwidget', 'd3', 'kbaseContigBrowserButtons'], function($) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'd3',
+		'kbaseContigBrowserButtons'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		d3,
+		kbaseContigBrowserButtons
+	) {
     return function() {
         this.data = {
             name: "ContigBrowserPanel", 
-            parent: "kbaseWidget",
+            
             version: "1.0.0",
             options: {
                 contig: null,

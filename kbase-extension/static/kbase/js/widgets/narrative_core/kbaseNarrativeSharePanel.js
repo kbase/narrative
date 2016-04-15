@@ -5,16 +5,26 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseAuthenticatedWidget', 
-        'select2'], 
-function($, Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseAuthenticatedWidget',
+		'select2'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseAuthenticatedWidget,
+		select2
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeSharePanel",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
             ws_url: Config.url('workspace'),

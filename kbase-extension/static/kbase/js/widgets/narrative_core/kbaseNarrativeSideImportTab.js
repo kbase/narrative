@@ -5,24 +5,30 @@
  * @author Roman Sutormin <rsutormin@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'narrativeConfig',
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'select2',
-        'json!kbase/config/upload_config.json',
-        'util/string'], 
-function($,
-         Config,
-         kbwidget,
-         kbaseAuthenticatedWidget,
-         select2,
-         transformConfig,
-         StringUtil) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseAuthenticatedWidget',
+		'select2',
+		'json!kbase/config/upload_config.json',
+		'util/string'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbwidget,
+		kbaseAuthenticatedWidget,
+		select2,
+		transformConfig
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeSideImportTab",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
             ws_name: null

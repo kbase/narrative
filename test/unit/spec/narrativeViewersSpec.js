@@ -4,7 +4,16 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['narrativeViewers'], function(Viewers) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'narrativeViewers'
+	], function(
+		KBWidget,
+		bootstrap,
+		Viewers
+	) {
     'use strict';
     describe('Test the NarrativeViewers module', function() {
         it('should load viewer info as a promise', function(done) {

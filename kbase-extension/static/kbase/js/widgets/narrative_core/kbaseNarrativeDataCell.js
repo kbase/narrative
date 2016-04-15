@@ -9,22 +9,33 @@
  */
 /*global define*/
 /*jslint white:true,browser:true*/
-define(['jquery',
-    'underscore',
-    'narrativeConfig',
-    'narrativeViewers',
-    'kbwidget',
-    'kbaseNarrativeCell'
-], function ($, _, Config, Viewers) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'underscore',
+		'narrativeConfig',
+		'narrativeViewers',
+		'kbaseNarrativeCell'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		_,
+		Config,
+		Viewers,
+		kbaseNarrativeCell
+	) {
     'use strict';
 
     /**
      * Initialize
      */
 
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseNarrativeDataCell',
-        parent: 'kbaseNarrativeCell',
+        parent : kbaseNarrativeCell,
         version: '0.0.1',
         options: {
             info: null, // object info

@@ -4,24 +4,37 @@
  * @public
  */
 
-define(['jquery', 
-        'narrativeConfig',
-        'util/string',
-		'kbwidget', 
-		'kbaseAuthenticatedWidget', 
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'util/string',
+		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap',
 		'kbaseTreechart',
-		'knhx'
-//        ,'jquery-dataScroller'
-		],
-function($,
-         Config,
-         StringUtil) {
-	$.KBWidget({
+		'knhx',
+		'jquery-dataScroller'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		StringUtil,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		jquery_dataTables,
+		jquery_dataTables_bootstrap,
+		kbaseTreechart,
+		knhx,
+		jquery_dataScroller
+	) {
+	return KBWidget({
 		name: 'kbaseExpressionFeatureClusters',
-		parent: 'kbaseAuthenticatedWidget',
+		parent : kbaseAuthenticatedWidget,
 		version: '1.0.0',
 		options: {
 			clusterSetID: null,
@@ -145,7 +158,7 @@ function($,
 			var tabPane = $('<div id="'+pref+'tab-content">');
 			$container.append(tabPane);
 
-			tabPane.kbaseTabs({canDelete : true, tabs : []});                    
+			 new kbaseTabs(tabPane, {canDelete : true, tabs : []});                    
 			///////////////////////////////////// Overview table ////////////////////////////////////////////           
 			var tabOverview = $("<div/>");
 			tabPane.kbaseTabs('addTab', {tab: 'Overview', content: tabOverview, canDelete : false, show: true});
@@ -249,7 +262,7 @@ function($,
                 tabPane.kbaseTabs('addTab', {tab: 'Dendrogram', content: tabDendro, canDelete : false, show: false});
                 var dendroPanel = $("<div/>");
                 tabDendro.append(dendroPanel);
-                dendroPanel.kbaseTreechart({ 
+                 new kbaseTreechart(dendroPanel, { 
                     lineStyle: 'square',
                     dataset: root
                 });

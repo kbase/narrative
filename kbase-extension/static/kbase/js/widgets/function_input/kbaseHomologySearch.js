@@ -5,17 +5,26 @@
  * @public
  */
 
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseNarrativeMethodInput',
-        'kbaseNarrativeParameterAjaxTextSubdataInput'
-],
-function ($, Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrativeMethodInput',
+		'kbaseNarrativeParameterAjaxTextSubdataInput'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrativeMethodInput,
+		kbaseNarrativeParameterAjaxTextSubdataInput
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseHomologySearch",
-        parent: "kbaseNarrativeMethodInput",
+        parent : kbaseNarrativeMethodInput,
 
         constSequenceNA: 'nucleotide',
         constSequenceAA: 'protein',

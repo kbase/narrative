@@ -24,6 +24,7 @@ from pprint import pprint
 class WidgetManager:
     widget_info = dict()
     version_tags = ["release", "beta", "dev"]
+    cell_id_prefix = "kb-vis-"
     default_input_widget = "kbaseNarrativeDefaultInput"
     default_output_widget = "kbaseNarrativeDefaultOutput"
 
@@ -238,7 +239,7 @@ class WidgetManager:
 
     def show_output_widget(self, widget_name, tag="release", **kwargs):
         """
-        renders a widget!
+        Renders a widget using the generic output widget container.
         """
         self.check_tag(tag, raise_exception=True)
 
@@ -246,6 +247,7 @@ class WidgetManager:
             raise ValueError("Widget %s not found with %s tag!" % (widget_name, tag))
 
         input_data = self.get_widget_constants(widget_name, tag)
+        # Let the kwargs override constants
         input_data.update(kwargs)
 
         input_template = """
@@ -261,7 +263,7 @@ class WidgetManager:
         });
         """
 
-        js = Template(input_template).render(input_id=uuid.uuid4(),
+        js = Template(input_template).render(input_id=self.cell_id_prefix + str(uuid.uuid4()),
                                              widget_name=widget_name,
                                              input_data=json.dumps(input_data),
                                              cell_title="Title Goes Here",

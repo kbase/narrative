@@ -1,4 +1,4 @@
-{%- extends 'basic.tpl' -%}
+{%- extends 'narrative_basic.tpl' -%}
 {% from 'mathjax.tpl' import mathjax %}
 
 
@@ -8,7 +8,7 @@
 <head>
 {%- block html_head -%}
 <meta charset="utf-8" />
-<title>{{resources['metadata']['name']}}</title>
+<title>KBase Narrative - {{ resources['kbase']['title'] }}</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -47,8 +47,7 @@ div#notebook {
 }
 </style>
 
-<!-- Custom stylesheet, it must be in the same directory as the html file -->
-<link rel="stylesheet" href="custom.css">
+<link rel="stylesheet" href="https://narrative-dev.kbase.us/static/ext_components/font-awesome/css/font-awesome.min.css">
 <link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/landing-pages.css">
 <link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/kbaseEditor.css">
 <link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/kbaseNotify.css">
@@ -93,22 +92,39 @@ div#notebook {
     });
 </script>
 <script src="{{ resources['kbase']['host'] }}/static/kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell.js"></script>
-
 {%- endblock html_head -%}
 </head>
 {%- endblock header -%}
 
-{% block body %}
 <body>
+{% block body %}
+  <div class="container">
+    <div class="row">
+      <div class="col-md-1"><h1><img src="{{ resources['kbase']['host'] }}/static/kbase/images/kbase_logo.png"/></h1></div>
+      <div class="col-md-11">
+        <h1>{{ resources['kbase']['title'] }}</h1>
+      </div>
+    </div>
+  </div>
   <div tabindex="-1" id="notebook" class="border-box-sizing">
     <div class="container" id="notebook-container">
-      <h1>{{ resources['kbase']['title'] }}</h1>
 {{ super() }}
     </div>
   </div>
-</body>
+  <div style="bottom:20px;right:20px;position:fixed;opacity:.8;z-index:100" class="btn btn-lg btn-info hide-input">Toggle Widget Inputs</div>
+  <style type="text/css">
+    .white-text{color:white !important;}
+  </style>
+  <script>
+  $('.hide-input').click(function() {
+    $('div[class^=kb-cell-]').closest('div.cell').find('div.input').toggle();
+    $('div[class^=kb-cell-]').closest('div.cell').find('div.output_prompt').toggleClass('white-text');
+  });
+  $('.hide-input').click();
+  </script>
 {%- endblock body %}
+</body>
 
 {% block footer %}
-</html>
 {% endblock footer %}
+</html>

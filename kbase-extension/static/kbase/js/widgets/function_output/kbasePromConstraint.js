@@ -43,7 +43,7 @@
                 // setup tabs
                 var pcTable = $('<table class="table table-bordered table-striped" style="width: 100%;">');
 
-                var tabs = container.kbTabs({tabs: [
+                var tabs = container.kbaseTabTableTabs({tabs: [
                                             {name: 'Overview', active: true},
                                             {name: 'PROM Constraint', content: pcTable}]
                                           })

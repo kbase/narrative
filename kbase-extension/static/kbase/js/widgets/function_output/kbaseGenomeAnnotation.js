@@ -143,6 +143,7 @@ define (
             var ready = function(gnm, ctg) {
             		container.empty();
             		var tabPane = $('<div id="'+pref+'tab-content">');
+                    var tabObj = new kbaseTabs(tabPane);
             		container.append(tabPane);
             		 new kbaseTabs(tabPane, {canDelete : true, tabs : []});
 
@@ -154,7 +155,7 @@ define (
 
             		for (var i=0; i<tabIds.length; i++) {
             			var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
-            			tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
+            			tabObj.addTab({tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
             		}
 
                     var contigCount = 0;

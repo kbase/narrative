@@ -124,12 +124,8 @@
                 try {
                     require([widget],
                         // If we successfully Require the widget code, render it:
-                        $.proxy(function () {
-                            var widget_mapping = {
-                                'kbaseDefaultNarrativeOutput' : kbaseDefaultNarrativeOutput
-                            };
-
-                            this.$outWidget = new widget_mapping[widget]($body, widgetData);
+                        $.proxy(function (W) {
+                            this.$outWidget = new W($body, widgetData);
                             // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
                             this.$elem.append($body);
                         }, this),

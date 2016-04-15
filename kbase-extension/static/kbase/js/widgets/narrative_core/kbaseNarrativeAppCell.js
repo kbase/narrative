@@ -971,6 +971,7 @@
 
                     var widgetName = this.inputStepLookup[stepId].outputWidgetName;
                     var $outputWidget = $('<div>').css({'padding':'5px 0'});
+console.log("MAKE A");
                      new kbaseNarrativeOutputCell($outputWidget, {
                         widget: widgetName,
                         data: output,
@@ -999,6 +1000,7 @@
         setStepError: function(stepId, error) {
             if (this.inputStepLookup) {
                 if(this.inputStepLookup[stepId]) {
+console.log("MAKE B");
                      new kbaseNarrativeOutputCell(this.inputStepLookup[stepId], {
                         widget: this.OUTPUT_ERROR_WIDGET,
                         data: error,

@@ -37,7 +37,8 @@ define (
 		'kbaseNarrativeMethodCell',
 		'kbaseNarrativeSidePanel',
 		'kbaseNarrativeDataPanel',
-        'kbaseNarrativeOutputCell'
+        'kbaseNarrativeOutputCell',
+        'kbaseTabs'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -54,7 +55,8 @@ define (
 		kbaseNarrativeMethodCell,
 		kbaseNarrativeSidePanel,
 		kbaseNarrativeDataPanel,
-        kbaseNarrativeOutputCell
+        kbaseNarrativeOutputCell,
+        kbaseTabs
 	) {
 
     return KBWidget({
@@ -350,7 +352,7 @@ define (
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                               "new kbaseNarrativeMethodCell($('#" + cellId + "'), {'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
+                               "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
                               "</script>";
 
             cell.set_text(cellContent);
@@ -1347,8 +1349,10 @@ define (
                 if (target && widget) {
                     try {
                         var widget_mapping = {
-                            'kbaseNarrativeOutputCell' : kbaseNarrativeOutputCell
+                            'kbaseNarrativeOutputCell' : kbaseNarrativeOutputCell,
+                            'kbaseTabs' : kbaseTabs
                         };
+
                         var $widget = new widget_mapping[widget] ( $(cell.element).find(target) ) ;
                         if ($widget.prototype.loadState) {
                             $widget.loadState(state.state);
@@ -1951,7 +1955,7 @@ define (
 
             var cellText = '<div id="' + outCellId + '"></div>\n' +
                        '<script>' +
-                       'new kbaseNarrativeOutputCell($("#' + outCellId + '"), ' + outputData + ');' +
+                       '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
                        '</script>';
             cell.set_text(cellText);
             cell.rendered = false; // force a render

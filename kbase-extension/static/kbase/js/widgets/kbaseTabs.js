@@ -44,6 +44,7 @@ define (
 		$,
 		kbaseDeletePrompt
 	) { 
+
     return KBWidget({
 
         name: "kbaseTabs",

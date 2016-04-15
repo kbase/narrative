@@ -124,7 +124,7 @@ return KBWidget({
                 }
 
                 uiTabs[0].active = true;
-                tabs = container.kbTabs({tabs: uiTabs});
+                tabs = container.kbaseTabTableTabs({tabs: uiTabs});
 
                 buildContent(tabList);
                 container.rmLoading();

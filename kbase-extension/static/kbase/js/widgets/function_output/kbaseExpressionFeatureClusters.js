@@ -16,8 +16,7 @@ define (
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap',
 		'kbaseTreechart',
-		'knhx
-//',
+		'knhx',
 		'jquery-dataScroller'
 	], function(
 		KBWidget,
@@ -28,10 +27,9 @@ define (
 		kbaseAuthenticatedWidget,
 		kbaseTabs,
 		jquery_dataTables,
-		bootstrap,
+		jquery_dataTables_bootstrap,
 		kbaseTreechart,
-		knhx
-_,
+		knhx,
 		jquery_dataScroller
 	) {
 	return KBWidget({

@@ -13,8 +13,7 @@ define (
 		'kbaseTabs',
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap',
-		'kbaseFeatureValues-client-api
-//',
+		'kbaseFeatureValues-client-api',
 		'jquery-dataScroller'
 	], function(
 		KBWidget,
@@ -23,9 +22,8 @@ define (
 		kbaseAuthenticatedWidget,
 		kbaseTabs,
 		jquery_dataTables,
-		bootstrap,
-		kbaseFeatureValues_client_api
-_,
+		jquery_dataTables_bootstrap,
+		kbaseFeatureValues_client_api,
 		jquery_dataScroller
 	) {
 	return KBWidget({

@@ -95,6 +95,10 @@ function($, Config) {
                 name: "TSV", external_type: 'TSV.FeatureClusters', transform_options: {}
             }, {
                 name: "SIF", external_type: 'SIF.FeatureClusters', transform_options: {}
+            }],
+
+            'KBaseOntology.OntologyDictionary':[{
+                name: "OBO", external_type: 'OBO.Ontology', transform_options: {}
             }]
         },
 

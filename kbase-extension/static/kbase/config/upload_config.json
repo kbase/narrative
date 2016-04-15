@@ -512,5 +512,24 @@
                 }
             }
         }
+    },
+
+    "KBaseOntology.OntologyDictionary": {
+        "import_ontologydictionary_obo_file": {
+            "external_type": "OBO.Ontology",
+            "kbase_type": "KBaseOntology.OntologyDictionary",
+            "object_name": "outputObject",
+            "optional_arguments": {
+                "validate": {},
+                "transform": {}
+            },
+            "url_mapping": {
+                "OBO.Ontology": {
+                    "type": "string",
+                    "param": "oboFile",
+                    "optional": false
+                }
+            }
+        }
     }
 }

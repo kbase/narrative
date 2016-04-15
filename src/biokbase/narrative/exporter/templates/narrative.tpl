@@ -53,16 +53,16 @@ div#notebook {
 <!-- Loading mathjax macro -->
 {{ mathjax() }}
 
-<script src="./kbase-extension/static/narrative_paths.js"></script>
+<script src="{{ resources['kbase']['host'] }}/static/narrative_paths.js"></script>
 <script>
     require.config({
-        baseUrl: "./kbase-extension/static/",
+        baseUrl: "{{ resources['kbase']['host'] }}/static/",
         paths: {
-            jquery: '../../narrative-venv/jupyter_notebook/notebook/static/components/jquery/jquery-min',
-            underscore : '../../narrative-venv/jupyter_notebook/notebook/static/components/underscore/underscore-min',
-            backbone : '../../narrative-venv/jupyter_notebook/notebook/static/components/backbone/backbone-min',
-            bootstrap: '../../narrative-venv/jupyter_notebook/notebook/static/components/bootstrap/js/bootstrap.min',
-            'jquery-ui': '../../narrative-venv/jupyter_notebook/notebook/static/components/jquery-ui/ui/minified/jquery-ui.min',
+            jquery: 'components/jquery/jquery-min',
+            underscore : 'components/underscore/underscore-min',
+            backbone : 'components/backbone/backbone-min',
+            bootstrap: 'components/bootstrap/js/bootstrap.min',
+            'jquery-ui': 'components/jquery-ui/ui/minified/jquery-ui.min',
             kbaseAuthenticatedWidget: 'kbase/js/widgets/kbaseStaticAuthenticatedWidget'
         },
         shim: {
@@ -89,7 +89,8 @@ div#notebook {
         }
     });
 </script>
-<script src="./kbase-extension/static/kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell.js"></script>
+<script src="{{ resources['kbase']['host'] }}/static/kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell.js"></script>
+
 {%- endblock html_head -%}
 </head>
 {%- endblock header -%}

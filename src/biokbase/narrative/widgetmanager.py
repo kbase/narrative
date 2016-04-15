@@ -245,8 +245,9 @@ class WidgetManager:
         if widget_name not in self.widget_info[tag]:
             raise ValueError("Widget %s not found with %s tag!" % (widget_name, tag))
 
-        input_data = kwargs
-        input_data.update(self.get_widget_constants(widget_name, tag))
+        input_data = self.get_widget_constants(widget_name, tag)
+        input_data.update(kwargs)
+
         input_template = """
         element.html("<div id='{{input_id}}'></div>");
 

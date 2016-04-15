@@ -90,11 +90,11 @@
             "name": "Documentation and Support Site"
         },
         "cdn": {
-            "url": "http://localhost:10001",
+            "url": "http://narrative-dev.kbase.us/cdn",
             "name": "Javascript CDN"
         },
         "widget": {
-            "url": "http://localhost:11001",
+            "url": "http://narrative-dev.kbase.us/widget",
             "name": "Widget Service"
         }
     },

@@ -15,6 +15,10 @@ class NarrativePreprocessor(Preprocessor):
     Something to build on!
     """
 
+    def __init__(self, **kw):
+        super(NarrativePreprocessor, self).__init__(**kw)
+        self.host = 'https://narrative-dev.kbase.us'
+
     def preprocess(self, nb, resources):
-        resources['kbase'] = {'title': nb['metadata']['name']}
+        resources['kbase'] = {'title': nb['metadata']['name'], 'host': self.host }
         return nb, resources

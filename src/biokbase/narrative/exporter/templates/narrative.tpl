@@ -49,7 +49,10 @@ div#notebook {
 
 <!-- Custom stylesheet, it must be in the same directory as the html file -->
 <link rel="stylesheet" href="custom.css">
-
+<link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/landing-pages.css">
+<link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/kbaseEditor.css">
+<link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/kbaseNotify.css">
+<link rel="stylesheet" href="{{ resources['kbase']['host'] }}/static/kbase/css/contigBrowserStyles.css">
 <!-- Loading mathjax macro -->
 {{ mathjax() }}
 

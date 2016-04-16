@@ -299,7 +299,11 @@ class WidgetManager:
         #  and jQuery will be available.  Content appended to `element` will be
         #  visible in the output area.""
 
+
+
         input_template = """
+        element.html("<div id='{{input_id}}'>");
+
         require([
             'narrativeDataWidget'
         ], function (NarrativeDataWidget) {
@@ -311,7 +315,7 @@ class WidgetManager:
                 packageName = widgetDef.package,
                 packageVersion = widgetDef.package_version,
                 widgetName = widgetDef.name,
-                widgetParentNode = element[0];
+                widgetParentNode = $('#{{input_id}}')[0];
 
             var dataWidget = NarrativeDataWidget.make({
                 package: packageName,
@@ -347,7 +351,7 @@ class WidgetManager:
 
         # Note: All Python->Javascript data flow is serialized as JSON strings.
         widget_def = {
-            'id': str(uuid.uuid4()),
+            'id': self.cell_id_prefix + str(uuid.uuid4()),
             'package': widget_package,
             'package_version': widget_package_version,
             'name': widget_name,
@@ -360,7 +364,8 @@ class WidgetManager:
 
         # context - Data for building the Javascript prior to insertion is provided
         # input_data - raw widget input data as provided by the caller
-        js = Template(input_template).render(widget_def=json.dumps(widget_def),
+        js = Template(input_template).render(input_id=widget_def['id'],
+                                             widget_def=json.dumps(widget_def),
                                              object_refs=json.dumps(objects),
                                              options=json.dumps(options),
                                              config=json.dumps(config))

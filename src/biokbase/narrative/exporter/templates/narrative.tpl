@@ -116,8 +116,8 @@ div#notebook {
   </style>
   <script>
   $('.hide-input').click(function() {
-    $('div[class^=kb-cell-]').closest('div.cell').find('div.input').toggle();
-    $('div[class^=kb-cell-]').closest('div.cell').find('div.output_prompt').toggleClass('white-text');
+    $('div[class^=kb-vis-area]').closest('div.cell').find('div.input').toggle();
+    $('div[class^=kb-vis-area]').closest('div.cell').find('div.output_prompt').toggleClass('white-text');
   });
   $('.hide-input').click();
   </script>

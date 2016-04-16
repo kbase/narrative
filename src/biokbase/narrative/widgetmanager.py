@@ -251,7 +251,7 @@ class WidgetManager:
         input_data.update(kwargs)
 
         input_template = """
-        element.html("<div id='{{input_id}}'></div>");
+        element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
 
         require(['kbaseNarrativeOutputCell', '{{widget_name}}'], function(kbaseNarrativeOutputCell) {
             new kbaseNarrativeOutputCell($('#{{input_id}}'), {"data": {{input_data}},
@@ -302,7 +302,7 @@ class WidgetManager:
 
 
         input_template = """
-        element.html("<div id='{{input_id}}'>");
+        element.html("<div id='{{input_id}}' class='kb-vis-area'>");
 
         require([
             'narrativeDataWidget'

@@ -91,7 +91,6 @@ div#notebook {
         }
     });
 </script>
-<script src="{{ resources['kbase']['host'] }}/static/kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell.js"></script>
 {%- endblock html_head -%}
 </head>
 {%- endblock header -%}

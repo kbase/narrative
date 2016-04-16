@@ -7,7 +7,8 @@ define (
 		'kbaseTabs',
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap',
-        'util/string'
+        'util/string',
+        'narrativeConfig',
 	], function(
 		KBWidget,
 		bootstrap,
@@ -16,7 +17,8 @@ define (
 		kbaseTabs,
 		jquery_dataTables,
 		jquery_dataTables_bootstrap,
-        StringUtil
+        StringUtil,
+        Config
 	) {
     return KBWidget({
         name: "kbaseGenomeComparisonViewer",
@@ -30,8 +32,8 @@ define (
             id: null,
             ws: null
         },
-        wsUrl: window.kbconfig.urls.workspace,
-        loadingImage: window.kbconfig.loading_gif,
+        wsUrl: Config.url('workspace'),
+        loadingImage: Config.get('loading_gif'),
 
         init: function(options) {
             this._super(options);

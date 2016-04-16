@@ -253,13 +253,14 @@ class WidgetManager:
         input_template = """
         element.html("<div id='{{input_id}}'></div>");
 
-        require(['kbaseNarrativeOutputCell', '{{widget_name}}'], function() {
-            $('#{{input_id}}').kbaseNarrativeOutputCell({"data": {{input_data}},
-            "type":"method",
-            "widget": "{{widget_name}}",
-            "cellId": "{{input_id}}",
-            "title": "{{cell_title}}",
-            "time": {{timestamp}} });
+        require(['kbaseNarrativeOutputCell', '{{widget_name}}'], function(kbaseNarrativeOutputCell) {
+            new kbaseNarrativeOutputCell($('#{{input_id}}'), {"data": {{input_data}},
+                "type":"method",
+                "widget": "{{widget_name}}",
+                "cellId": "{{input_id}}",
+                "title": "{{cell_title}}",
+                "time": {{timestamp}}
+            });
         });
         """
 

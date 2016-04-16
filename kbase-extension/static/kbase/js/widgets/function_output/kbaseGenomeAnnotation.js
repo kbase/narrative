@@ -12,7 +12,7 @@ define (
 		'bluebird',
 		'narrativeConfig',
 		'ContigBrowserPanel',
-		'util/String',
+		'util/string',
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
 		'jquery-dataTables',
@@ -143,9 +143,8 @@ define (
             var ready = function(gnm, ctg) {
             		container.empty();
             		var tabPane = $('<div id="'+pref+'tab-content">');
-                    var tabObj = new kbaseTabs(tabPane);
             		container.append(tabPane);
-            		 new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+                    var tabObj = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
 
                     var genomeType = self.genomeType(gnm);
 
@@ -266,7 +265,7 @@ define (
                             aElem.on('click', function() {
                                 if (!genesAreShown) {
                                     genesAreShown = true;
-                                    self.prepareGenesAndContigs(pref, kbws, gnm, tabPane);
+                                    self.prepareGenesAndContigs(pref, kbws, gnm, tabObj);
                                 }
                             });
                         }
@@ -538,14 +537,14 @@ define (
                 var lastElemTabNum = 0;
 
                 function openTabGetId(tabName) {
-                    if (tabPane.kbaseTabs('hasTab', tabName))
+                    if (tabPane.hasTab(tabName))
                         return null;
                     lastElemTabNum++;
                     var tabId = '' + pref + 'elem' + lastElemTabNum;
                     var tabDiv = $('<div id="'+tabId+'"> ');
-                    tabPane.kbaseTabs('addTab', {tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
-                        tabPane.kbaseTabs('removeTab', name);
-                        tabPane.kbaseTabs('showTab', tabPane.kbaseTabs('activeTab'));
+                    tabPane.addTab({tab: tabName, content: tabDiv, canDelete : true, show: true, deleteCallback: function(name) {
+                        tabPane.removeTab(name);
+                        tabPane.showTab(tabPane.activeTab());
                     }});
                     return tabId;
                 }
@@ -553,7 +552,7 @@ define (
                 function showGene(geneId) {
                     var tabId = openTabGetId(geneId);
                     if (tabId == null) {
-                        tabPane.kbaseTabs('showTab', geneId);
+                        tabPane.showTab(geneId);
                         return;
                     }
                     var gene = geneMap[geneId];
@@ -612,13 +611,13 @@ define (
                     $('.'+tabId+'-click2').click(function() {
                         showContig($(this).data('contigname'));
                     });
-                    tabPane.kbaseTabs('showTab', geneId);
+                    tabPane.showTab(geneId);
                 }
 
                 function showContig(contigName) {
                     var tabId = openTabGetId(contigName);
                     if (tabId == null) {
-                        tabPane.kbaseTabs('showTab', contigName);
+                        tabPane.showTab(contigName);
                         return;
                     }
                     var contig = contigMap[contigName];
@@ -643,7 +642,7 @@ define (
                     });
                     $('#'+tabId).append(cgb.data.$elem);
                     cgb.data.init();
-                    tabPane.kbaseTabs('showTab', contigName);
+                    tabPane.showTab(contigName);
                 }
             }, function(data) {
                 container.empty();

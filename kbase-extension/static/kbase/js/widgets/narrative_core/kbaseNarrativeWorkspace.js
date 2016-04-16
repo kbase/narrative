@@ -352,7 +352,9 @@ define (
             // Yeah, I know it's ugly, but that's how it goes.
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
-                               "$('#" + cellId + "').kbaseNarrativeMethodCell({'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
+                              "require(['kbaseNarrativeMethodCell'], function(kbaseNarrativeMethodCell) {" +
+                              "new kbaseNarrativeMethodCell($('#" + cellId + "'), {'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
+                              "});" +
                               "</script>";
 
             cell.set_text(cellContent);
@@ -1278,16 +1280,22 @@ define (
 
             try {
                 var state;
-                if (widget && $(cell.element).find(target)[widget](['prototype'])['getState']) {
-                    // if that widget can save state, do it!
-                    state = $(cell.element).find(target)[widget]('getState');
-                }
+                /** wjriehl - 6:20pm,Fri,15apr2016
+                 * SAVE STATE DISABLED
+                 * changes to the kbwidget API have caused this to embed the actual cell object into the
+                 * state, making it all circular when it tries to serialize.
+                 * so, disabled for now.
+                 */
+                // if (widget && $(cell.element).find(target)[widget](['prototype'])['getState']) {
+                //     // if that widget can save state, do it!
+                //     state = $(cell.element).find(target)[widget]('getState');
+                // }
 
-                var timestamp = this.getTimestamp();
-                cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
-                while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
-                    cell.metadata[this.KB_CELL][this.KB_STATE].pop();
-                }
+                // var timestamp = this.getTimestamp();
+                // cell.metadata[this.KB_CELL][this.KB_STATE].unshift({ 'time' : timestamp, 'state' : state });
+                // while (this.maxSavedStates && cell.metadata[this.KB_CELL][this.KB_STATE].length > this.maxSavedStates) {
+                //     cell.metadata[this.KB_CELL][this.KB_STATE].pop();
+                // }
             }
             catch(error) {
                 this.dbg('Unable to save state for cell:');
@@ -1952,11 +1960,16 @@ define (
                                '"cellId":"' + outCellId + '", ' +
                                '"title":"' + title + '", ' +
                                '"time":' + this.getTimestamp() + '}';
-
             var cellText = '<div id="' + outCellId + '"></div>\n' +
-                       '<script>' +
-                       '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
-                       '</script>';
+                           '<script>' +
+                           'require(["kbaseNarrativeOutputCell"], function(kbaseNarrativeOutputCell) {' +
+                           'new kbaseNarrativeOutputCell($("#' + outCellId + '"), ' + outputData + '); });' +
+                           '</script>';
+
+            // var cellText = '<div id="' + outCellId + '"></div>\n' +
+            //            '<script>' +
+            //            '$("#' + outCellId + '").kbaseNarrativeOutputCell(' + outputData + ');' +
+            //            '</script>';
             cell.set_text(cellText);
             cell.rendered = false; // force a render
             cell.render();
@@ -2058,7 +2071,8 @@ define (
 
             cellText = '<div id="' + outCellId + '"></div>\n' +
                        '<script>' +
-                       'new kbaseNarrativeOutputCell($("#' + outCellId + '")' + outputData + ');' +
+                       'require(["kbaseNarrativeOutputCell"], function(kbaseNarrativeOutputCell) {' +
+                       'new kbaseNarrativeOutputCell($("#' + outCellId + '"), ' + outputData + '); });' +
                        '</script>';
             outputCell.set_text(cellText);
             outputCell.rendered = false; // force a render

@@ -63,15 +63,11 @@ return KBWidget({
     	this.pref = StringUtil.uuid();
         return this;
     },
-    
+
     render: function() {
         var self = this;
         var container = this.$elem;
     	container.empty();
-        if (!self.authToken()) {
-        	container.append("<div>[Error] You're not logged in</div>");
-        	return;
-        }
 
         var kbws = new Workspace(this.wsUrl, {'token': self.authToken()});
         //var jobSrv = new UserAndJobState(this.jobSrvUrl, {'token': self.authToken()});
@@ -123,7 +119,7 @@ return KBWidget({
             	table.append(createTableRow("Comparison object", self.ws_id));
             	table.append(createTableRow("Genome1 (x-axis)", '<a href="/#dataview/'+self.genome1wsName+'/'+self.genome1objName+'" target="_blank">' + genome1id + '</a>' +
             			" (" + self.cmp.proteome1names.length + " genes, " + count1hits + " have hits)"));
-            	table.append(createTableRow("Genome2 (y-axis)", '<a href="/#dataview/'+self.genome2wsName+'/'+self.genome2objName+'" target="_blank">' + genome2id + '</a>' + 
+            	table.append(createTableRow("Genome2 (y-axis)", '<a href="/#dataview/'+self.genome2wsName+'/'+self.genome2objName+'" target="_blank">' + genome2id + '</a>' +
             			" (" + self.cmp.proteome2names.length + " genes, " + count2hits + " have hits)"));
             	if (self.scale == null)
             		self.scale = self.size * 100 / Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length);
@@ -131,26 +127,26 @@ return KBWidget({
             	var sr = ' style="border: 0px; margin: 0px; padding: 0px;"';
             	var sd = ' style="border: 0px; margin: 0px; padding: 1px;"';
             	var sb = ' style="width: 27px;"';
-            	table.append('<tr><td>' + 
+            	table.append('<tr><td>' +
             			'<center>' +
             			'<button id="'+self.pref+'btn-zi">Zoom +</button>'+
-            			'&nbsp;' + 
+            			'&nbsp;' +
             			'<button id="'+self.pref+'btn-zo">Zoom -</button>'+
-            			'<br><br><table'+st+'><tr'+sr+'><td'+sd+'>' + 
+            			'<br><br><table'+st+'><tr'+sr+'><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mul"'+sb+'>&#8598;</button>'+
             			'</td><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mu"'+sb+'>&#8593;</button>'+
-            			'</td><td'+sd+'>' + 
+            			'</td><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mur"'+sb+'>&#8599;</button>'+
             			'</td></tr><tr'+sr+'><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-ml"'+sb+'>&#8592;</button>'+
             			'</td><td'+sd+'/><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mr"'+sb+'>&#8594;</button>'+
-            			'</td></tr><tr'+sr+'><td'+sd+'>' + 
+            			'</td></tr><tr'+sr+'><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mdl"'+sb+'>&#8601;</button>'+
             			'</td><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-md"'+sb+'>&#8595;</button>'+
-            			'</td><td'+sd+'>' + 
+            			'</td><td'+sd+'>' +
             			'<button id="'+self.pref+'btn-mdr"'+sb+'>&#8600;</button>'+
             			'</td></tr></table></center>' +
             			'</td><td><div style="float:left;width:'+(self.size+40)+'px;max-width:'+(self.size+40)+'px">'+
@@ -164,7 +160,7 @@ return KBWidget({
             		var ySize = Math.min(self.size, self.cmp.proteome2names.length * self.scale / 100);
             		var centerI = self.imgI + xSize * 50 / self.scale;
             		var centerJ = self.imgJ + ySize * 50 / self.scale;
-                    if (self.size * 100 / (self.scale * mult) > 1.1 * 
+                    if (self.size * 100 / (self.scale * mult) > 1.1 *
                     		Math.max(self.cmp.proteome1names.length, self.cmp.proteome2names.length)) {
                     	return;
                     }
@@ -208,7 +204,7 @@ return KBWidget({
             	$('#'+self.pref+'btn-mdr').click(function() {
             		move(-1,1);
             	});
-            	
+
             	var hitSearch = function(e) {
             		var scrX = e.pageX;
             		var scrY = e.pageY;
@@ -261,7 +257,7 @@ return KBWidget({
             		}
             		return {scrX: docX, scrY: docY, relX: relX, relY: relY, bestDist: bestDist, bestI: bestI, bestJ: bestJ};
             	};
-            	            	
+
             	$('#'+self.pref+'img').hover(
             			function() {
             				$('#widget-tooltip'+self.pref).show();
@@ -273,7 +269,7 @@ return KBWidget({
             		var hit = hitSearch(e);
     				var tip = $('#widget-tooltip' + self.pref);
             		if (Number(hit.bestDist) >= 0) {
-            			var msg = 'X-axis: ' + self.cmp.proteome1names[Number(hit.bestI)] + 
+            			var msg = 'X-axis: ' + self.cmp.proteome1names[Number(hit.bestI)] +
             				', Y-axis: ' + self.cmp.proteome2names[Number(hit.bestJ)] +
             				'<br>click to see details...';
             			tip.html(msg);
@@ -327,7 +323,7 @@ return KBWidget({
 			self.imgJ = 0;
 		self.imgI = Math.round(self.imgI);
 		self.imgJ = Math.round(self.imgJ);
-		//var img = self.cmpImgUrl + "?ws=" + self.ws_name + "&id=" + self.ws_id + "&x=" + self.imgI + 
+		//var img = self.cmpImgUrl + "?ws=" + self.ws_name + "&id=" + self.ws_id + "&x=" + self.imgI +
 		//		"&y=" + self.imgJ + "&w=" + self.size + "&sp=" + self.scale + "&token=" + encodeURIComponent(self.authToken());
 		var $svg = $('#'+self.pref+'img');
 		var i0 = self.imgI;
@@ -339,7 +335,7 @@ return KBWidget({
         var yShift = 15;
         var w = w0 + xShift;
         var h = h0 + yShift;
-        var svg = 
+        var svg =
             '<svg id="'+self.pref+'svg" style="width:'+w+'px;height:'+h+'px;background-color:white" '+
             'viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="xMinYMin meet">';
         var isFirefox = typeof InstallTrigger !== 'undefined';
@@ -390,7 +386,7 @@ return KBWidget({
                 if (half < 1)
                     half = 1;
                 var ySize = Math.min(self.size, self.cmp.proteome2names.length * self.scale / 100);
-                var rX = Math.round(x + xShift - half - 1); 
+                var rX = Math.round(x + xShift - half - 1);
                 var rY = Math.round(ySize + 1 - y - half - 1);
                 if (isFirefox) {
                     rX += 0.5;
@@ -441,7 +437,7 @@ return KBWidget({
 				'<td rowspan="'+(self.geneRows+2)+'" width="10" style="border: 0px; margin: 0px; padding: 0px; text-align: center; vertical-align: middle;"><button id="'+self.pref+'btn-dirJ"'+sb+'>'+arrowJ+'</button></td>'+
 				'</tr>');
 		var svgLines = '';
-		var svgLineEnds = []; // [{x1:...,y1:...,x2:...,y2:...,gene1:...,gene2:...,bit_score:...,percent_of_bbh:...}] 
+		var svgLineEnds = []; // [{x1:...,y1:...,x2:...,y2:...,gene1:...,gene2:...,bit_score:...,percent_of_bbh:...}]
 		for (var rowPos = 0; rowPos < self.geneRows; rowPos++) {
 			var i = self.geneI + (rowPos - half) * self.dirI;
 			var j = self.geneJ + (rowPos - half) * self.dirJ;
@@ -519,8 +515,8 @@ return KBWidget({
     		var bestLine = null;
     		for (var n in svgLineEnds) {
     			var l = svgLineEnds[n];
-    			// [{x1:...,y1:...,x2:...,y2:...,gene1:...,gene2:...,bit_score:...,percent_of_bbh:...}] 
-    			var dist = Math.abs((l.y2-l.y1)*x-(l.x2-l.x1)*y+l.x2*l.y1-l.y2*l.x1) / 
+    			// [{x1:...,y1:...,x2:...,y2:...,gene1:...,gene2:...,bit_score:...,percent_of_bbh:...}]
+    			var dist = Math.abs((l.y2-l.y1)*x-(l.x2-l.x1)*y+l.x2*l.y1-l.y2*l.x1) /
     					Math.sqrt((l.y2-l.y1)*(l.y2-l.y1)+(l.x2-l.x1)*(l.x2-l.x1));
     			if ((minDist < 0) || (dist < minDist)) {
     				minDist = dist;
@@ -529,7 +525,7 @@ return KBWidget({
     		}
 			var tip = $('#widget-tooltip'+self.pref);
 			if (minDist && minDist <= 2) {
-    			var msg = 'Gene1: ' + bestLine.gene1 + '<br>Gene2: ' + bestLine.gene2 + '<br>' + 
+    			var msg = 'Gene1: ' + bestLine.gene1 + '<br>Gene2: ' + bestLine.gene2 + '<br>' +
     					'Bit-score: ' + bestLine.bit_score + '<br>Percent of related BBH bit-score: ' + bestLine.percent_of_bbh + '%';
     			tip.html(msg);
     			tip.css({

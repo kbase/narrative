@@ -12,9 +12,9 @@
  * And here's an example:
  *
  *     @example
- *     var widget = $.KBWidget({
+ *     var widget = return KBWidget({
  *         name: "MyFancyWidget",
- *         parent: "MommyWidget",
+ *         parent : MommyWidget,
  *         init: function () {}
  *     });
  */
@@ -333,7 +333,7 @@
         return $(tag);
     }
 
-    $.KBWidget = function (def) {
+    return KBWidget = function (def) {
         def = (def || {});
         var name    = def.name;
         var parent  = def.parent;
@@ -581,7 +581,7 @@
         }
     }
 
-    $.KBWidget(
+    return KBWidget(
         {
             name : 'kbaseWidget',
 

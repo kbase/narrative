@@ -4,7 +4,18 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['jquery', 'kbwidget', 'narrativeLogin'], function($, KBWidget, Narrative) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeLogin'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		KBWidget
+	) {
     describe('Test the kbaseNarrative module', function() {
         it('Should do things', function() {
 

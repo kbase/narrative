@@ -5,18 +5,27 @@
  * The dataModel should have fetchData method accepting doneCallback method as a parameter.
  *
  */
-define(['jquery', 
-        'narrativeConfig',
-        'kbwidget', 
-        'select2'],
-    function( $, Config ) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'select2'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		select2
+	) {
     
     var workspaceUrl = Config.url('workspace');
     var loadingImage = Config.get('loading_gif');
     
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeParameterCustomTextSubdataInput",
-        parent: "kbaseNarrativeParameterInput",  
+        parent : kbaseNarrativeParameterInput,  
         version: "1.0.0",
         options: {
             isInSidePanel: false,

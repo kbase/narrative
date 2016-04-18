@@ -2,9 +2,9 @@
  * KBase widget to upload file content into shock node.
  */
 (function($, undefined) {
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseShockFileUploader',
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: {
             'url': 'https://kbase.us/services/shock-api/',

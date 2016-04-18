@@ -91,7 +91,6 @@ div#notebook {
         }
     });
 </script>
-<script src="{{ resources['kbase']['host'] }}/static/kbase/js/widgets/narrative_core/kbaseNarrativeOutputCell.js"></script>
 {%- endblock html_head -%}
 </head>
 {%- endblock header -%}
@@ -117,8 +116,8 @@ div#notebook {
   </style>
   <script>
   $('.hide-input').click(function() {
-    $('div[class^=kb-cell-]').closest('div.cell').find('div.input').toggle();
-    $('div[class^=kb-cell-]').closest('div.cell').find('div.output_prompt').toggleClass('white-text');
+    $('div[class^=kb-vis-area]').closest('div.cell').find('div.input').toggle();
+    $('div[class^=kb-vis-area]').closest('div.cell').find('div.output_prompt').toggleClass('white-text');
   });
   $('.hide-input').click();
   </script>

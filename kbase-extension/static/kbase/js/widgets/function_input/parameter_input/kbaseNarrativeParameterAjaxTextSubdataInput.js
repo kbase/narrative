@@ -5,15 +5,24 @@
  * See the example of ajaxConfig https://select2.github.io/examples.html#data-ajax
  *
  */
-define(['jquery', 
-        'narrativeConfig',
-        'kbwidget', 
-        'kbaseNarrativeParameterCustomTextSubdataInput'],
-    function( $, Config ) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrativeParameterCustomTextSubdataInput'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrativeParameterCustomTextSubdataInput
+	) {
 
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeParameterAjaxTextSubdataInput",
-        parent: "kbaseNarrativeParameterCustomTextSubdataInput",
+        parent : kbaseNarrativeParameterCustomTextSubdataInput,
         version: "1.0.0",
         options: {
             isInSidePanel: false,

@@ -4,21 +4,33 @@
  * @public
  */
 
-define(['jquery',
-        'narrativeConfig',
-        'util/string',
-        'kbwidget', 
-        'kbaseAuthenticatedWidget', 
-        'kbaseTabs', 
-        'kbasePrompt',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap'], 
-function($,
-         Config,
-         StringUtil) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'util/string',
+		'kbaseAuthenticatedWidget',
+		'kbaseTabs',
+		'kbasePrompt',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		StringUtil,
+		kbaseAuthenticatedWidget,
+		kbaseTabs,
+		kbasePrompt,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: "kbasePanGenome",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
         	ws: null,
@@ -86,7 +98,7 @@ function($,
         		container.empty();
         		var tabPane = $('<div id="'+self.pref+'tab-content">');
         		container.append(tabPane);
-        		tabPane.kbaseTabs({canDelete : true, tabs : []});
+        		 new kbaseTabs(tabPane, {canDelete : true, tabs : []});
 
         		var showOverview = true;
         		if (self.options.withExport)
@@ -465,7 +477,7 @@ function($,
         },
         
         showInfo: function(message) {
-        	$('<div/>').kbasePrompt({title : 'Information', body : message}).openPrompt();
+        	 new kbasePrompt($('<div/>'), {title : 'Information', body : message}).openPrompt();
         }
     });
 

@@ -4,29 +4,40 @@
 * @author Michael Sneddon <mwsneddon@lbl.gov>
 * @public
 */
-define(['jquery',
-        'underscore',
-        'bluebird',
-        'narrativeConfig',
-        'util/string',
-        'util/display',
-        'util/timeFormat',
-        'kbase-client-api',
-        'jquery-nearest',
-        'kbwidget',
-        'kbaseAuthenticatedWidget',
-        'kbaseNarrativeDownloadPanel'],
-function ($,
-          _,
-          Promise,
-          Config,
-          StringUtil,
-          DisplayUtil,
-          TimeFormat) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'underscore',
+		'bluebird',
+		'narrativeConfig',
+		'util/string',
+		'util/display',
+		'util/timeFormat',
+		'kbase-client-api',
+		'jquery-nearest',
+		'kbaseAuthenticatedWidget',
+		'kbaseNarrativeDownloadPanel'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		_,
+		Promise,
+		Config,
+		StringUtil,
+		DisplayUtil,
+		TimeFormat,
+		kbase_client_api,
+		jquery_nearest,
+		kbaseAuthenticatedWidget,
+		kbaseNarrativeDownloadPanel
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseNarrativeDataList',
-        parent: 'kbaseAuthenticatedWidget',
+        parent : kbaseAuthenticatedWidget,
         version: '1.0.0',
         options: {
             ws_name: null, // must be the WS name, not the WS Numeric ID
@@ -597,7 +608,7 @@ function ($,
                     var objId = object_info[1];
                     var downloadPanel = $('<div>');
                     $alertContainer.append(downloadPanel);
-                    downloadPanel.kbaseNarrativeDownloadPanel({token: self._attributes.auth.token, type: type, wsId: wsId, objId: objId});
+                     new kbaseNarrativeDownloadPanel(downloadPanel, {token: self._attributes.auth.token, type: type, wsId: wsId, objId: objId});
                 });
 
             var $rename = $('<span>')
@@ -1009,7 +1020,7 @@ function ($,
             var obj = _.findWhere(self.objectList, {key: key});
             var info = self.createInfoObject(obj.info);
             // Insert the narrative data cell into the div we just rendered
-            //$('#' + cell_id).kbaseNarrativeDataCell({cell: cell, info: info});
+            // new kbaseNarrativeDataCell($('#' + cell_id), {cell: cell, info: info});
             self.trigger('createViewerCell.Narrative', {
                 'nearCellIdx': near_idx,
                 'widget': 'kbaseNarrativeDataCell',

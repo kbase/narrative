@@ -1,14 +1,21 @@
 /*global define,Jupyter*/
 /*jslint white: true,browser:true*/
 // Bind all page buttons right at startup.
-define([
-    'jquery',
-    'narrativeConfig',
-    'bootstrap',
-    'kbaseNarrativeSharePanel',
-    'bootstrap'
-], function ($, Config) {
-    'use strict';
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrativeSharePanel'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrativeSharePanel
+	) {
+'use strict';
 
     function loadDomEvents() {
 

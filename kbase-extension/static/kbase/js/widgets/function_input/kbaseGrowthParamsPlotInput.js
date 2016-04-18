@@ -2,19 +2,30 @@
  * @author Pavel Novickov <psnovichkov@lbl.gov>
  * @public
  */
-define(['jquery', 
-        'narrativeConfig',
-        'kbaseNarrativeParameterCustomTextSubdataInput',
-        'kbaseNarrativeParameterCustomButtonInput',
-        'kbaseNarrativeParameterCustomDropdownGroupInput'
-       ],
-    function( $, Config ) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrativeParameterCustomTextSubdataInput',
+		'kbaseNarrativeParameterCustomButtonInput',
+		'kbaseNarrativeParameterCustomDropdownGroupInput'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrativeParameterCustomTextSubdataInput,
+		kbaseNarrativeParameterCustomButtonInput,
+		kbaseNarrativeParameterCustomDropdownGroupInput
+	) {
     
     var workspaceUrl = Config.url('workspace');
     var loadingImage = Config.get('loading_gif');
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseGrowthParamsPlotInput",
-        parent: "kbaseNarrativeMethodInput",
+        parent : kbaseNarrativeMethodInput,
         
         version: "1.0.0",
         options: {

@@ -26,8 +26,17 @@
  * @see kbaseAuthenticatedWidget.js
  * @public
  */
-define(['jquery', 'kbwidget'], function( $ ) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery'
+	], function(
+		KBWidget,
+		bootstrap,
+		$
+	) {
+    return KBWidget({
         /* 
          * (required) Your widget should be named in CamelCase.
          */
@@ -42,7 +51,7 @@ define(['jquery', 'kbwidget'], function( $ ) {
          * this.user_id() = the logged in user id
          * this.authToken() = the current authentication token
          */
-        parent: 'kbaseWidget',
+        
 
         /*
          * (optional) Widgets should be semantically versioned.

@@ -2,7 +2,7 @@
  * KBase widget to display an lists within categories.
  */
 (function($, undefined) {
-    $.KBWidget({
+    return KBWidget({
         name: 'CategoryViewWidget',
         version: '1.0.0',
         options: {

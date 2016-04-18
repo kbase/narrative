@@ -11,21 +11,30 @@
  *
  */
 
- define([
-    'jquery',
-    'ModelingAPI',
-    'kbaseEditHistory',
-    'kbwidget',
-    'kbaseAuthenticatedWidget',
-    'kbaseModal',
-],
-function($, ModelingAPI, EditHistory) {
+ define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'ModelingAPI',
+		'kbaseEditHistory',
+		'kbaseAuthenticatedWidget',
+		'kbaseModal'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		ModelingAPI,
+		EditHistory,
+		kbaseAuthenticatedWidget,
+		kbaseModal
+	) {
 
 'use strict';
 
-$.KBWidget({
+return KBWidget({
     name: "kbaseModelEditor",
-    parent: "kbaseAuthenticatedWidget",
+    parent : kbaseAuthenticatedWidget,
     version: "1.0.0",
     options: {},
     init: function(input) {
@@ -115,7 +124,7 @@ $.KBWidget({
                 }
 
                 uiTabs[0].active = true;
-                tabs = container.kbTabs({tabs: uiTabs});
+                tabs = container.kbaseTabTableTabs({tabs: uiTabs});
 
                 buildContent(tabList);
                 container.rmLoading();
@@ -379,7 +388,7 @@ $.KBWidget({
             var table = $('<table class="table table-bordered table-striped kb-editor-table'+
                 ' " style="width: 100% !important;">');
 
-            var modal = $('<div>').kbaseModal({
+            var modal =  new kbaseModal($('<div>'), {
                 title: 'Add Reactions',
                 subText: 'Select reactions below, then click "add".',
                 body: table,
@@ -471,7 +480,7 @@ $.KBWidget({
             input.val(name);
             form.find('div').append(input);
 
-            var modal = $('<div>').kbaseModal({
+            var modal =  new kbaseModal($('<div>'), {
                 title: 'Save Media As...',
                 body: form,
                 buttons: [{
@@ -636,7 +645,7 @@ $.KBWidget({
                 addReaction: true,
             }).fail(function(e) {
                 var error = JSON.stringify(JSON.parse(e.responseText), null,4);
-                $('<div>').kbaseModal({
+                 new kbaseModal($('<div>'), {
                     title: 'Oh no! Something seems to have went wrong with the reactions you wanted to add'+
                            'Please contact KBase and we would be glad to help.',
                     body: '<pre>'+error+'</pre>'
@@ -652,7 +661,7 @@ $.KBWidget({
                 removeReaction: true,
             }).fail(function(e) {
                 var error = JSON.stringify(JSON.parse(e.responseText), null,4);
-                $('<div>').kbaseModal({
+                 new kbaseModal($('<div>'), {
                     title: 'Oh no! Something seems to have went wrong with the reactions you wanted to remove.'+
                            'Please contact KBase and we would be glad to help.',
                     body: '<pre>'+error+'</pre>'
@@ -668,7 +677,7 @@ $.KBWidget({
                 direction: directions
             }).fail(function(e) {
                 var error = JSON.stringify(JSON.parse(e.responseText), null,4);
-                $('<div>').kbaseModal({
+                 new kbaseModal($('<div>'), {
                     title: 'Oh no! Something seems to have went wrong with the reactions you wanted to edit.'+
                            'Please contact KBase and we would be glad to help.',
                     body: '<pre>'+error+'</pre>'

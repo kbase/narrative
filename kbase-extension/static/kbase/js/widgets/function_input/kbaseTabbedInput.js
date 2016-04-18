@@ -5,10 +5,23 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], function( $ ) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseTabs',
+		'kbaseNarrativeMethodInput'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseTabs,
+		kbaseNarrativeMethodInput
+	) {
+    return KBWidget({
         name: "kbaseTabbedInput",
-        parent: "kbaseNarrativeMethodInput",
+        parent : kbaseNarrativeMethodInput,
         version: "1.0.0",
         options: {
             isInSidePanel: false
@@ -71,7 +84,7 @@ define(['jquery', 'kbwidget', 'kbaseTabs', 'kbaseNarrativeMethodInput'], functio
             	if (self.options.isInSidePanel) {
             		self.buildTabs(self.tabPane);
             	} else {
-            		self.tabPane.kbaseTabs({canDelete : true, tabs : []});
+            		 new kbaseTabs(self.tabPane, {canDelete : true, tabs : []});
             	}
             	self.tabs = {};
             	self.tabParamToSpec = {};

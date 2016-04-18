@@ -8,22 +8,34 @@
 
 /*global define*/
 /*jslint white: true*/
-define(['jquery',
-        'narrativeConfig',
-        'bluebird',
-        'kbwidget',
-        'kbaseModelEditor',
-        'kbaseNarrativeMethodInput',
-        'kbaseNarrativeInput',
-        'kbaseNarrativeParameterTextInput',
-        'kbase-client-api'],
-function ($,
-          Config,
-          Promise) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'bluebird',
+		'kbaseModelEditor',
+		'kbaseNarrativeMethodInput',
+		'kbaseNarrativeInput',
+		'kbaseNarrativeParameterTextInput',
+		'kbase-client-api'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		Promise,
+		kbaseModelEditor,
+		kbaseNarrativeMethodInput,
+		kbaseNarrativeInput,
+		kbaseNarrativeParameterTextInput,
+		kbase_client_api
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseEditModel',
-        parent: 'kbaseNarrativeMethodInput',
+        parent : kbaseNarrativeMethodInput,
 
         modelChooserWidget: null,
         $modelDisplayPanel: null,
@@ -56,8 +68,7 @@ function ($,
 
             // Creates the media chooser widget, which is just a 'text' input
             // This was originally designed to deal with the parameter spec object.
-            this.modelChooserWidget = this.$modelChooserPanel.kbaseNarrativeParameterTextInput(
-                {
+            this.modelChooserWidget =  new kbaseNarrativeParameterTextInput(this.$modelChooserPanel, {
                     loadingImage: Config.get('loading_gif'),
                     parsedParameterSpec: this.options.method.parameters[0],
                     isInSidePanel: false
@@ -84,7 +95,7 @@ function ($,
                 var modelWidget = $('<div>');
 
                 var self = this;
-                modelWidget.kbaseModelEditor({
+                 new kbaseModelEditor(modelWidget, {
                     ws: Jupyter.narrative.getWorkspaceName(),
                     obj: modelName,
                     onSave: function () { self.trigger('updateData.Narrative') }

@@ -1,14 +1,24 @@
-define([
-        'jquery', 
-        'kbwidget', 
-        'kbaseMatrix2DAbstract', 
-        'kbaseTabs',
-        'jquery-dataTables',
-        'jquery-dataTables-bootstrap' 
-        ], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseMatrix2DAbstract',
+		'kbaseTabs',
+		'jquery-dataTables',
+		'jquery-dataTables-bootstrap'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseMatrix2DAbstract,
+		kbaseTabs,
+		jquery_dataTables,
+		bootstrap
+	) {
+    return KBWidget({
         name: 'kbaseGrowthMatrixAbstract',
-        parent: 'kbaseMatrix2DAbstract',
+        parent : kbaseMatrix2DAbstract,
         version: '1.0.0',
         
         TYPE_SAMPLES : 'Samples',

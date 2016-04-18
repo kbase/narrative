@@ -1,4 +1,15 @@
-define(['jquery', 'narrativeLogin'], function($, Login) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeLogin'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Login
+	) {
     describe('Test the kbaseNarrative module', function() {
         it('Should do things', function() {
             expect(Login.init).not.toBe(null);

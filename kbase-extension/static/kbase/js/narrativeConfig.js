@@ -16,77 +16,119 @@ define([
     'bluebird',
     'json!kbase/config/config.json',
     'json!kbase/config/icons.json',
+    'json!kbase/config/cdn-service-config.json',
     'require'],
     function ($,
         Promise,
         configSet,
         iconsSet,
+        serviceSet,
         localRequire) {
         'use strict';
 
         var config, debug;
 
-        function loadConfig() {
-            return Promise.try(function () {
-                if (window.kbconfig) {
-                    return window.kbconfig;
-                }
-                // Get the workspace id from the URL
-                var workspaceId = null;
-                var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
-                if (m && m.length > 1) {
-                    workspaceId = parseInt(m[1]);
-                }
-
-                // Build the config up from the configSet (from config.json)
-                config = {
-                    environment: configSet.config,
-                    urls: configSet[configSet.config],
-                    version: configSet.version,
-                    name: configSet.name,
-                    git_commit_hash: configSet.git_commit_hash,
-                    git_commit_time: configSet.git_commit_time,
-                    release_notes: configSet.release_notes,
-                    mode: configSet.mode,
-                    dev_mode: configSet.dev_mode,
-                    tooltip: configSet.tooltip,
-                    icons: iconsSet,
-                    workspaceId: workspaceId,
-                    loading_gif: configSet.loading_gif,
-                    use_local_widgets: configSet.use_local_widgets
-                };
-
-                debug = config.mode === "debug";
-                config.debug = debug;
-
-                // Add a remote UI-common to the Require.js config
-                require.config({
-                    paths: {
-                        uiCommonPaths: config.urls.ui_common_root + 'widget-paths'
-                    }
-                });
-                window.kbconfig = config;
-
-                return new Promise(function (resolve, reject) {
-                    var servicesConfigPath = 'kbase/config/services-' + configSet.config + '.json';
-                    localRequire([
-                        'json!' + servicesConfigPath
-                    ], function (servicesConfig) {
-                        try {
-                            // Merge service config into the main config object.
-                            Object.keys(servicesConfig).forEach(function (key) {
-                                config[key] = servicesConfig[key];
-                            });
-                            resolve(config);
-                        } catch (ex) {
-                            reject(ex);
-                        }
-                    }, function (err) {
-                        reject(err);
-                    });
-                });
-            });
+        // Get the workspace id from the URL
+        var workspaceId = null;
+        var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
+        if (m && m.length > 1) {
+            workspaceId = parseInt(m[1]);
         }
+
+        // Build the config up from the configSet (from config.json)
+        config = {
+            environment: configSet.config,
+            urls: configSet[configSet.config],
+            version: configSet.version,
+            name: configSet.name,
+            git_commit_hash: configSet.git_commit_hash,
+            git_commit_time: configSet.git_commit_time,
+            release_notes: configSet.release_notes,
+            mode: configSet.mode,
+            dev_mode: configSet.dev_mode,
+            tooltip: configSet.tooltip,
+            icons: iconsSet,
+            workspaceId: workspaceId,
+            loading_gif: configSet.loading_gif,
+            use_local_widgets: configSet.use_local_widgets
+        };
+
+        debug = config.mode === "debug";
+        config.debug = debug;
+
+        // Add a remote UI-common to the Require.js config
+        require.config({
+            paths: {
+                uiCommonPaths: config.urls.ui_common_root + 'widget-paths'
+            }
+        });
+        window.kbconfig = config;
+
+        Object.keys(serviceSet).forEach(function (key) {
+            config[key] = serviceSet[key];
+        });
+
+        // function loadConfig() {
+        //     return Promise.try(function () {
+        //         if (window.kbconfig) {
+        //             return window.kbconfig;
+        //         }
+        //         // Get the workspace id from the URL
+        //         var workspaceId = null;
+        //         var m = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
+        //         if (m && m.length > 1) {
+        //             workspaceId = parseInt(m[1]);
+        //         }
+
+        //         // Build the config up from the configSet (from config.json)
+        //         config = {
+        //             environment: configSet.config,
+        //             urls: configSet[configSet.config],
+        //             version: configSet.version,
+        //             name: configSet.name,
+        //             git_commit_hash: configSet.git_commit_hash,
+        //             git_commit_time: configSet.git_commit_time,
+        //             release_notes: configSet.release_notes,
+        //             mode: configSet.mode,
+        //             dev_mode: configSet.dev_mode,
+        //             tooltip: configSet.tooltip,
+        //             icons: iconsSet,
+        //             workspaceId: workspaceId,
+        //             loading_gif: configSet.loading_gif,
+        //             use_local_widgets: configSet.use_local_widgets
+        //         };
+
+        //         debug = config.mode === "debug";
+        //         config.debug = debug;
+
+        //         // Add a remote UI-common to the Require.js config
+        //         require.config({
+        //             paths: {
+        //                 uiCommonPaths: config.urls.ui_common_root + 'widget-paths'
+        //             }
+        //         });
+        //         window.kbconfig = config;
+
+        //         return new Promise(function (resolve, reject) {
+        //             var servicesConfigPath = 'kbase/config/services-' + configSet.config + '.json';
+        //             localRequire([
+        //                 'json!' + servicesConfigPath
+        //             ], function (servicesConfig) {
+        //                 try {
+        //                     // Merge service config into the main config object.
+        //                     Object.keys(servicesConfig).forEach(function (key) {
+        //                         config[key] = servicesConfig[key];
+        //                     });
+        //                     resolve(config);
+        //                 } catch (ex) {
+        //                     reject(ex);
+        //                 }
+        //             }, function (err) {
+        //                 reject(err);
+        //             });
+        //         });
+        //     });
+        // }
 
         function assertConfig() {
             if (config === undefined) {
@@ -95,8 +137,8 @@ define([
         }
 
         /**
-         * Updates the RequireJS config with additional locations from 
-         * a config given by the ui-common repo. This file is expected to be 
+         * Updates the RequireJS config with additional locations from
+         * a config given by the ui-common repo. This file is expected to be
          * called "widget-paths.js" and should be deployed in the configured
          * ui-common location.
          *
@@ -181,7 +223,7 @@ define([
         }
 
         /*
-         * If the module is defined in multiple module loaders, the module variable config and debug will 
+         * If the module is defined in multiple module loaders, the module variable config and debug will
          * not be available.
          */
         function getConfig() {
@@ -190,7 +232,7 @@ define([
 
         return {
             updateConfig: updateConfig,
-            loadConfig: loadConfig,
+            // loadConfig: loadConfig,
             config: config,
             getConfig: getConfig,
             url: url,

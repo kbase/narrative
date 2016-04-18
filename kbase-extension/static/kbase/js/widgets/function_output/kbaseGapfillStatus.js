@@ -1,6 +1,6 @@
 
 (function($, undefined) {
-    $.KBWidget({
+    return KBWidget({
         /* 
          * (required) Your widget should be named in CamelCase.
          */
@@ -15,7 +15,7 @@
          * this.user_id() = the logged in user id
          * this.authToken() = the current authentication token
          */
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
 
         /*
          * (optional) Widgets should be semantically versioned.
@@ -89,7 +89,7 @@
                                                     var errorRegex = /_ERROR_[^]+_ERROR_/gm
                                                     var errormssg = mssg.match(errorRegex);
                                                     errormssg = errormssg.join("\n\n").replace(/_ERROR_/gm,'')
-                                                    self.$elem.kbaseNarrativeError({'error': {
+                                                     new kbaseNarrativeError(self.$elem, {'error': {
                                                                                         'msg' :  errormssg +"\n\n"+mssg,
                                                                                         'method_name' : 'Gapfill an FBA Model',
                                                                                         'type' : 'Error',

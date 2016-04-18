@@ -1,8 +1,8 @@
 (function( $, undefined ) {
 
-$.KBWidget({
+return KBWidget({
     name: "kbaseModelMetaNarrative",     
-    parent: "kbaseAuthenticatedWidget",
+    parent : kbaseAuthenticatedWidget,
     version: "1.0.0",
     options: {
     	data: null,			// if it's not null it's the main data to show

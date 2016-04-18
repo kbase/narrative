@@ -5,17 +5,28 @@
 * @public
 */
 
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseNarrative',
-        'kbaseNarrativeInput',
-        'kbStandaloneListSelect'],
-function($, Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrative',
+		'kbaseNarrativeInput',
+		'kbStandaloneListSelect'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrative,
+		kbaseNarrativeInput,
+		kbStandaloneListSelect
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "devVizSelector",
-        parent: "kbaseNarrativeInput",
+        parent : kbaseNarrativeInput,
         version: "1.0.0",
         options: {
             ws: 3350 ,

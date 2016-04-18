@@ -10,22 +10,34 @@
 
 /*global define*/
 /*jslint white: true*/
-define(['jquery',
-        'narrativeConfig',
-        'bluebird',
-        'kbwidget',
-        'kbaseMediaEditor',
-        'kbaseNarrativeMethodInput',
-        'kbaseNarrativeInput',
-        'kbaseNarrativeParameterTextInput',
-        'kbase-client-api'],
-function ($,
-          Config,
-          Promise) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'bluebird',
+		'kbaseMediaEditor',
+		'kbaseNarrativeMethodInput',
+		'kbaseNarrativeInput',
+		'kbaseNarrativeParameterTextInput',
+		'kbase-client-api'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		Promise,
+		kbaseMediaEditor,
+		kbaseNarrativeMethodInput,
+		kbaseNarrativeInput,
+		kbaseNarrativeParameterTextInput,
+		kbase_client_api
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: 'kbaseEditMedia',
-        parent: 'kbaseNarrativeMethodInput',
+        parent : kbaseNarrativeMethodInput,
 
         mediaChooserWidget: null,
         $mediaDisplayPanel: null,
@@ -61,8 +73,7 @@ function ($,
 
             // Creates the media chooser widget, which is just a 'text' input
             // This was originally designed to deal with the parameter spec object.
-            this.mediaChooserWidget = this.$mediaChooserPanel.kbaseNarrativeParameterTextInput(
-                {
+            this.mediaChooserWidget =  new kbaseNarrativeParameterTextInput(this.$mediaChooserPanel, {
                     loadingImage: Config.get('loading_gif'),
                     parsedParameterSpec: this.options.method.parameters[0],
                     isInSidePanel: false
@@ -90,7 +101,7 @@ function ($,
                 var mediaWidget = $('<div>');
 
                 var self = this;
-                mediaWidget.kbaseMediaEditor({
+                 new kbaseMediaEditor(mediaWidget, {
                     ws: Jupyter.narrative.getWorkspaceName(),
                     obj: mediaName,
                     onSave: function () { self.trigger('updateData.Narrative') }

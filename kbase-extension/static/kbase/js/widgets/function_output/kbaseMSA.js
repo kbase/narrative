@@ -4,10 +4,21 @@
  * @public
  */
 
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget'], function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget
+	) {
+    return KBWidget({
         name: 'kbaseMSA',
-        parent: 'kbaseAuthenticatedWidget',
+        parent : kbaseAuthenticatedWidget,
         version: '0.0.1',
         options: {
             msaID: null,

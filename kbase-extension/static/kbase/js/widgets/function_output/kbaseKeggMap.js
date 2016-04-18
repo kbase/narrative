@@ -7,7 +7,7 @@
  
  */
 (function($, undefined) {
-    $.KBWidget({
+    return KBWidget({
         name: 'KeggMapWidget',
         version: '1.0.0',
         imagepath: 'static/kbase/images/keggmap.png',

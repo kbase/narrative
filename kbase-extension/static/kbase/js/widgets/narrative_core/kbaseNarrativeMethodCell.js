@@ -9,29 +9,29 @@
  * format from the narrative_method_store service.
  */
 
-(function( $, undefined ) {
-require(['jquery',
+// (function( $, undefined ) {
+define(['kbwidget', 'bootstrap', 'jquery',
          'narrativeConfig',
          'util/string',
          'util/bootstrapDialog',
          'util/display',
-         'handlebars', 
-         'kbwidget', 
+         'handlebars',
          'kbaseAuthenticatedWidget',
          'kbaseNarrativeCellMenu',
          'kbaseTabs',
          'kbaseViewLiveRunLog',
-         'kbaseReportView'], 
-function($, 
+         'kbaseReportView'],
+function(KBWidget, bootstrap, $,
          Config,
          StringUtil,
          BootstrapDialog,
          Display,
-         Handlebars) {
+         Handlebars,
+        kbaseAuthenticatedWidget, kbaseNarrativeCellMenu, kbaseTabs, kbaseViewLiveRunLog, kbaseReportView) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeMethodCell",
-        parent: "kbaseAuthenticatedWidget",
+        parent : kbaseAuthenticatedWidget,
         version: "1.0.0",
         options: {
             method: null,
@@ -241,12 +241,12 @@ function($,
             var inputWidgetName = this.method.widgets.input;
             if (!inputWidgetName || inputWidgetName === 'null')
                 inputWidgetName = this.defaultInputWidget;
-            
-                        
+
+
             this.$elem
                 .closest('.cell')
-                .trigger('set-title.cell', [self.method.info.name]); 
-            
+                .trigger('set-title.cell', [self.method.info.name]);
+
             var $logo = $('<div>');
             if(this.method.info.icon && this.method.info.icon.url) {
                 var url = this.options.methodStoreURL.slice(0, -3) + this.method.info.icon.url;
@@ -259,7 +259,7 @@ function($,
                 .closest('.cell')
                 .trigger('set-icon.cell', [$logo.html()]);
 
-            require([inputWidgetName], 
+            require([inputWidgetName],
               $.proxy(function() {
                 this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
               }, this),
@@ -357,7 +357,7 @@ function($,
             // That's new!
             // old one just has the state that should be passed to the input widget.
             // that'll be deprecated soonish.
-            if (state.hasOwnProperty('params') 
+            if (state.hasOwnProperty('params')
               && state.hasOwnProperty('runningState')) {
                 this.allowOutput = state.runningState.outputState;
                 this.$inputWidget.loadState(state.params);
@@ -386,7 +386,7 @@ function($,
             } else {
                 $cellMenu.trigger('runningIndicator.toolbar', {enabled: false});
                 if (had_error) {
-                    $cellMenu.trigger('errorIndicator.toolbar', {enabled: true});                   
+                    $cellMenu.trigger('errorIndicator.toolbar', {enabled: true});
                 } else {
                     $cellMenu.trigger('errorIndicator.toolbar', {enabled: false});
 
@@ -435,12 +435,12 @@ function($,
         changeState: function(runState, jobDetails, result) {
             if (!this.$cellPanel)
                 return;
-            
+
             var $toolbar = this.$elem.find('.button_container');
             $toolbar.trigger('run-state.toolbar', {
                 status: this.runState.toLowerCase()
             });
-            
+
             if (this.runState !== runState) {
                 this.runState = runState.toLowerCase();
                 switch(this.runState) {
@@ -509,21 +509,21 @@ function($,
                         break;
                 }
             }
-            
+
 
 
             if (jobDetails) {
                 // Put this data into widget (with results) for next saveState operation
                 if(result) { jobDetails['result'] = result; }
-                this.jobDetails = jobDetails; 
-                
+                this.jobDetails = jobDetails;
+
             } else {
                 if(result) { this.jobDetails['result'] = result; }
                 jobDetails = this.jobDetails; // Get data from previously saved widget state (this is
                                               // necessary because job panel doesn't call this method for
                                               // finished jobs (it's called from init without UJS info)
             }
-            
+
             if (jobDetails && jobDetails['job_id']) {
                 var jobState = jobDetails['job_state'];
                 var jobInfo = jobDetails['job_info'];
@@ -537,15 +537,15 @@ function($,
                     if (this.isJobStatusLoadedFromState && status) {
                         if ($.inArray(status.toLowerCase(), this.completedStatus) >= 0) {
                             // We move job status panel into cell panel rather than outside because when
-                            // job is done (or finished with error) we want to be able to collapse this 
+                            // job is done (or finished with error) we want to be able to collapse this
                             // panel as part of cell panel collapse.
                             targetPanel = this.$cellPanel;
                         }
                     }
                     targetPanel.append(this.$jobProcessTabs);
-                    this.$jobProcessTabs.kbaseTabs({canDelete: false, tabs: []});
+                     new kbaseTabs(this.$jobProcessTabs, {canDelete: false, tabs: []});
                     this.$jobStatusDiv = $('<div>');
-                    this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Status', content: this.$jobStatusDiv, 
+                    this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Status', content: this.$jobStatusDiv,
                         canDelete: false, show: true});
                 }
                 var jobId = jobDetails['job_id'];
@@ -570,12 +570,12 @@ function($,
                 this.$jobStatusDiv.append(status);
                 if (!this.hasLogsPanelLoaded) {
                     this.hasLogsPanelLoaded = true;
-                    this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Console Log', showContentCallback: 
+                    this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Console Log', showContentCallback:
                         function() {
                             var $jobLogsPanel = $('<div>');
-                            $jobLogsPanel.kbaseViewLiveRunLog({'job_id': jobId, 'show_loading_error': false});
+                             new kbaseViewLiveRunLog($jobLogsPanel, {'job_id': jobId, 'show_loading_error': false});
                             return $jobLogsPanel;
-                        }, 
+                        },
                         canDelete: false, show: false});
                 }
                 if (jobDetails['result']) {
@@ -584,7 +584,7 @@ function($,
                         // Check if the job details gives a report, if so, then we can add two more tabs
                         if(jobDetails['result']['workspace_name'] && jobDetails['result']['report_name']) {
 
-                            this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Report', showContentCallback: 
+                            this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'Report', showContentCallback:
                                 function() {
                                     var $reportPanel = $('<div>');
                                     var result = jobDetails.result;
@@ -592,10 +592,10 @@ function($,
                                     result['showCreatedObjects'] = false;
                                     $reportPanel.kbaseReportView(result);
                                     return $reportPanel;
-                                }, 
+                                },
                                 canDelete: false, show: true});
 
-                            this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'New Data Objects', showContentCallback: 
+                            this.$jobProcessTabs.kbaseTabs('addTab', {tab: 'New Data Objects', showContentCallback:
                                 function() {
                                     var $reportPanel = $('<div>');
                                     var result = jobDetails.result;
@@ -603,7 +603,7 @@ function($,
                                     result['showCreatedObjects'] = true;
                                     $reportPanel.kbaseReportView(result);
                                     return $reportPanel;
-                                }, 
+                                },
                                 canDelete: false, show: false});
                         }
                     }
@@ -618,7 +618,7 @@ function($,
                         .append($('<td>')
                         .append(info));
             }
-            
+
             var $infoTable = $('<table class="table table-bordered">')
                     .append(makeInfoRow('Job Id', jobId))
                     .append(makeInfoRow('Status', statusText));
@@ -655,11 +655,11 @@ function($,
                 if (execStartTime && finishTime)
                     $infoTable.append(makeInfoRow('Execution Time', ((finishTime - execStartTime) / 1000.0) + " sec."));
             }
-            
+
 
             return $infoTable;
         },
-        
+
         makeJobErrorPanel: function(jobId, jobState, jobInfo, btnText) {
             var $errBtn = $('<div>')
                 .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
@@ -678,7 +678,7 @@ function($,
              */
             if (!jobState || !jobState.source) {
                 errorText = "This job is not associated with a Running Cell.";
-                errorType = "Unknown Cell";                    
+                errorType = "Unknown Cell";
             }
             else if ($('#' + jobState.source).length === 0) {
                 errorText = "The App Cell associated with this job can no longer be found in your Narrative.";
@@ -704,7 +704,7 @@ function($,
                 errorText = $('<div class="kb-jobs-error-modal">').append(jobState.state.error);
                 errorType = "Runtime";
                 if (jobState.state.error === 'awe_error')
-                    errorType = 'AWE Error';                    
+                    errorType = 'AWE Error';
             }
 
             /* error types:
@@ -748,7 +748,7 @@ function($,
                         .append($('<td>')
                         .append(info));
             }
-            
+
             var $errorTable = $('<table class="table table-bordered">')
                     .append(makeInfoRow('Job Id', jobId))
                     .append(makeInfoRow('Type', errorType))
@@ -758,7 +758,7 @@ function($,
                     .append($errorTable);
             if (jobState && jobState.state && jobState.state.traceback) {
                 var $tb = $('<div>');
-                $tb.kbaseAccordion({
+                 new kbaseAccordion($tb, {
                     elements: [{
                         title: 'Detailed Error Information',
                         body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
@@ -769,7 +769,7 @@ function($,
 
             return $modalBody;
         },
-        
+
         isAwaitingInput: function() {
             if(this.runState) {
                 if(this.runState==='input') { return true; }
@@ -854,9 +854,10 @@ function($,
             self.$dynamicMethodSummary.empty();
 
             // First set the main text
-            if(self.method.replacement_text && 
+            if(self.method.replacement_text &&
               self.submittedText && !self.isAwaitingInput()) {
                 // If replacement text exists, and the method was submitted, use it
+console.log("h3", self.method.replacement_text, Handlebars);
                 var template = Handlebars.compile(self.method.replacement_text);
                 self.$dynamicMethodSummary.append($('<h1>').html(template(self.getParameterMapForReplacementText())));
                 self.$dynamicMethodSummary.append($('<h2>').append(self.submittedText));
@@ -958,4 +959,4 @@ function($,
         }
     });
   });
-})( jQuery );
+// })( jQuery );

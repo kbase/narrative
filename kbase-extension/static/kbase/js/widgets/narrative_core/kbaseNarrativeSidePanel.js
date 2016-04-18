@@ -1,19 +1,33 @@
 /*global define*/
 /*jslint white: true*/
-define(['jquery', 
-        'narrativeConfig',
-        'jqueryui',
-        'kbwidget', 
-        'kbaseNarrativeDataPanel', 
-        'kbaseNarrativeMethodPanel', 
-        'kbaseNarrativeManagePanel', 
-        'kbaseNarrativeJobsPanel',
-        'kbaseNarrative'],
-function($, Config) {
-    'use strict',
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'jqueryui',
+		'kbaseNarrativeDataPanel',
+		'kbaseNarrativeMethodPanel',
+		'kbaseNarrativeManagePanel',
+		'kbaseNarrativeJobsPanel',
+		'kbaseNarrative'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		jqueryui,
+		kbaseNarrativeDataPanel,
+		kbaseNarrativeMethodPanel,
+		kbaseNarrativeManagePanel,
+		kbaseNarrativeJobsPanel,
+		kbaseNarrative
+	) {
+    'use strict';
+    return KBWidget({
         name: 'kbaseNarrativeSidePanel',
-        parent: 'kbaseWidget',
+        
         options: {
             loadingImage: Config.get('loading_gif'),
             autorender: true,
@@ -325,7 +339,13 @@ function($, Config) {
                                  .addClass('kb-side-separator')
                                  .css({'height' : height + '%'});
 
-                retObj[widgetInfo.name] = $widgetDiv[widgetInfo.name](widgetInfo.params);
+                var constructor_mapping = {
+                    'kbaseNarrativeDataPanel' : kbaseNarrativeDataPanel,
+                    'kbaseNarrativeMethodPanel' : kbaseNarrativeMethodPanel,
+                    'kbaseNarrativeManagePanel' : kbaseNarrativeManagePanel,
+                    'kbaseNarrativeJobsPanel' : kbaseNarrativeJobsPanel,
+                };
+                retObj[widgetInfo.name] = new constructor_mapping[widgetInfo.name]($widgetDiv, widgetInfo.params);
                 $panelSet.append($widgetDiv);
             }
             retObj['panelSet'] = $panelSet;

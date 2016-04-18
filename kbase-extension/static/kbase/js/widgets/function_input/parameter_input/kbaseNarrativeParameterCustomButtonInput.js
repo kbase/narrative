@@ -5,12 +5,22 @@
  * The dataModel should have fetchData method onButtonClick().
  *
  */
-define(['jquery', 'kbwidget', 'select2'],
-    function( $ ) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'select2'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		select2
+	) {
     
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeParameterCustomButtonInput",
-        parent: "kbaseNarrativeParameterInput",  
+        parent : kbaseNarrativeParameterInput,  
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",

@@ -1,12 +1,25 @@
 /**
  * KBase widget to display table of BIOM data
  */
-define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget',
-        'kbStandalonePlot', 'RGBColor'],
-        function($) {
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseAuthenticatedWidget',
+		'kbStandalonePlot',
+		'RGBColor'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseAuthenticatedWidget,
+		kbStandalonePlot,
+		RGBColor
+	) {
+    return KBWidget({
             name: 'AbundanceDataPcoa',
-            parent: "kbaseAuthenticatedWidget",
+            parent : kbaseAuthenticatedWidget,
             version: '1.0.0',
             token: null,
             options: {

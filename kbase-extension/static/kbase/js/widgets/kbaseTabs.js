@@ -2,8 +2,7 @@
 
     Easy widget to serve as a tabbed container.
 
-    var $tabs = $('#tabs').kbaseTabs(
-        {
+    var $tabs =  new kbaseTabs($('#tabs'), {
             tabPosition : 'bottom', //or left or right or top. Defaults to 'top'
             canDelete : true,       //whether or not the tab can be removed. Defaults to false.
             tabs : [
@@ -33,8 +32,20 @@
 
 */
 
-define(['jquery', 'kbwidget', 'kbaseDeletePrompt'], function($) { 
-    $.KBWidget({
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'kbaseDeletePrompt'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		kbaseDeletePrompt
+	) { 
+
+    return KBWidget({
 
         name: "kbaseTabs",
 
@@ -268,8 +279,7 @@ define(['jquery', 'kbwidget', 'kbaseDeletePrompt'], function($) {
         shouldShowTab : function (tab) { return 1; },
 
         deletePrompt : function(tabName) {
-            var $deleteModal = $('<div></div>').kbaseDeletePrompt(
-                {
+            var $deleteModal =  new kbaseDeletePrompt($('<div></div>'), {
                     name     : tabName,
                     callback : this.deleteTabCallback(tabName),
                 }

@@ -5,16 +5,26 @@
  * @public
  */
 
-define(['jquery',
-        'narrativeConfig',
-        'kbwidget',
-        'kbaseNarrativeParameterInput',
-        'select2'], 
-function($, Config) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'narrativeConfig',
+		'kbaseNarrativeParameterInput',
+		'select2'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		Config,
+		kbaseNarrativeParameterInput,
+		select2
+	) {
     'use strict';
-    $.KBWidget({
+    return KBWidget({
         name: "kbaseNarrativeParameterTextInput",
-        parent: "kbaseNarrativeParameterInput",
+        parent : kbaseNarrativeParameterInput,
         version: "1.0.0",
         options: {
             loadingImage: Config.get('loading_gif'),

@@ -4,7 +4,18 @@
 /*global beforeEach, afterEach*/
 /*jslint white: true*/
 
-define(['jquery', 'util/bootstrapDialog'], function($, Dialog) {
+define (
+	[
+		'kbwidget',
+		'bootstrap',
+		'jquery',
+		'util/bootstrapDialog'
+	], function(
+		KBWidget,
+		bootstrap,
+		$,
+		bootstrap
+	) {
     var $simpleBody = $('<div>').append('This is a body text');
     var simpleTitle = 'Title';
     var simpleButtons = [

@@ -525,7 +525,7 @@
             },
             "url_mapping": {
                 "OBO.Ontology": {
-                    "type": "string",
+                    "type": "shock",
                     "param": "oboFile",
                     "optional": false
                 }
@@ -544,7 +544,7 @@
             },
             "url_mapping": {
                 "TSV.Ontology": {
-                    "type": "string",
+                    "type": "shock",
                     "param": "tsvFile",
                     "optional": false
                 }

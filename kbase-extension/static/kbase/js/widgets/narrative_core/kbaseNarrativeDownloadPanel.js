@@ -99,6 +99,10 @@ function($, Config) {
 
             'KBaseOntology.OntologyDictionary':[{
                 name: "OBO", external_type: 'OBO.Ontology', transform_options: {}
+            }],
+
+            'KBaseOntology.OntologyTranslation':[{
+                name: "TSV", external_type: 'TSV.Ontology', transform_options: {}
             }]
         },
 

@@ -531,5 +531,24 @@
                 }
             }
         }
+    },
+
+    "KBaseOntology.OntologyTranslation": {
+        "import_ontologydictionary_tsv_file": {
+            "external_type": "TSV.Ontology",
+            "kbase_type": "KBaseOntology.OntologyTranslation",
+            "object_name": "outputObject",
+            "optional_arguments": {
+                "validate": {},
+                "transform": {}
+            },
+            "url_mapping": {
+                "TSV.Ontology": {
+                    "type": "string",
+                    "param": "tsvFile",
+                    "optional": false
+                }
+            }
+        }
     }
 }

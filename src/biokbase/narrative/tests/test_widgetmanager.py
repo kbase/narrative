@@ -20,21 +20,21 @@ class WidgetManagerTestCase(unittest.TestCase):
         self.assertIsInstance(self.wm, WidgetManager)
 
     def test_check_tag_good(self):
-        self.assertTrue(self.wm.check_tag(self.good_tag))
+        self.assertTrue(self.wm._check_tag(self.good_tag))
 
     def test_check_tag_bad(self):
-        self.assertFalse(self.wm.check_tag(self.bad_tag))
+        self.assertFalse(self.wm._check_tag(self.bad_tag))
 
     def test_check_tag_bad_except(self):
         with self.assertRaises(ValueError) as err:
-            self.wm.check_tag(self.bad_tag, raise_exception=True)
+            self.wm._check_tag(self.bad_tag, raise_exception=True)
 
     def test_widget_inputs(self):
-        self.wm.get_widget_inputs(self.good_widget)
+        self.wm.print_widget_inputs(self.good_widget)
 
     def test_widget_inputs_bad(self):
         with self.assertRaises(ValueError) as err:
-            self.wm.get_widget_inputs(self.bad_widget)
+            self.wm.print_widget_inputs(self.bad_widget)
 
     def test_widget_constants(self):
         constants = self.wm.get_widget_constants(self.good_widget)

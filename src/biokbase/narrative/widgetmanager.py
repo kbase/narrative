@@ -22,22 +22,52 @@ import time
 from pprint import pprint
 
 class WidgetManager:
+    """
+    Manages data (and other) visualization widgets for use in the KBase Narrative.
+
+    Basic flow for use:
+    1. Instantiate the manager:
+       wm = WidgetManager()
+
+    This loads the widget info. If things have changed, reload_info can be used to update the known widgets.
+
+    2. wm.widget_info
+    This contains a large dictionary of KBase widget info as reported by the Narrative Method Store.
+
+    2a. wm.widget_info['release'].keys()
+    This returns a list of available widget names
+
+    3. wm.print_widget_inputs(widget_name, release_tag)
+    This will print out all non-constant variable names and their required values
+
+    4. wm.show_output_widget(widget_name, tag="release", **kwargs)
+    This will render the widget with the given name and tag. The kwargs are the list of variables from print_widget_inputs
+
+    5. wm.show_external_widget({see method for details})
+    This will fetch and render a widget and its required environment from the configured external CDN.
+    """
     widget_info = dict()
-    version_tags = ["release", "beta", "dev"]
-    cell_id_prefix = "kb-vis-"
-    default_input_widget = "kbaseNarrativeDefaultInput"
-    default_output_widget = "kbaseNarrativeDefaultOutput"
+    _version_tags = ["release", "beta", "dev"]
+    _cell_id_prefix = "kb-vis-"
+    _default_input_widget = "kbaseNarrativeDefaultInput"
+    _default_output_widget = "kbaseNarrativeDefaultOutput"
 
     def __init__(self):
         self.reload_info()
 
     def reload_info(self):
-        self.widget_info = self.load_all_widget_info()
+        """
+        Fetches all widget information from the method store and contains it in this object.
+        """
+        self.widget_info = self._load_all_widget_info()
 
-    def get_system_variable(self, var):
+    def _get_system_variable(self, var):
         """
         Returns a KBase system variable. Just a little wrapper.
-        options:
+
+        Parameters
+        ----------
+        var: string, one of "workspace", "token", "user_id"
             workspace - returns the KBase workspace name
             token - returns the current user's token credential
             user_id - returns the current user's id
@@ -59,35 +89,48 @@ class WidgetManager:
             else:
                 return None
 
-    def check_tag(self, tag, raise_exception=False):
+    def _check_tag(self, tag, raise_exception=False):
         """
         Checks if the given tag is one of "release", "beta", or "dev".
         Returns a boolean.
         if raise_exception == True and the tag is bad, raises a ValueError
         """
-        tag_exists = tag in self.version_tags
+        tag_exists = tag in self._version_tags
         if not tag_exists and raise_exception:
-            raise ValueError("Can't find tag %s - allowed tags are %s" % (tag, ", ".join(self.version_tags)))
+            raise ValueError("Can't find tag %s - allowed tags are %s" % (tag, ", ".join(self._version_tags)))
         else:
             return tag_exists
 
-    def load_all_widget_info(self):
+    def _load_all_widget_info(self):
+        """
+        Loads all widget info and stores it in this object.
+        It does this by calling load_widget_info on all available tags.
+        """
         info = dict()
-        for tag in self.version_tags:
+        for tag in self._version_tags:
             info[tag] = self.load_widget_info(tag)
         return info
 
     def load_widget_info(self, tag="release", verbose=False):
         """
         Loads widget info and mapping.
-        Eventually will fetch from perhaps kbase-ui or something.
+        Eventually will fetch from kbase-ui, a kbase CDN, or the catalog service.
         For now, it gets known vis widgets from all method specs.
 
-        In the end, this should provide some kind of structure or class that has
-        1. a list of all widgets by invocation name
-        2. their expected inputs (either taken as a kwargs list by the viewer function or a dict or JSON or whatever)
+        This returns the a Dict where all keys are the name of a widget, and all values
+        contain widget information in this structure:
+        {
+            "params": {
+                "param_name": {
+                    "is_constant": boolean,
+                    "param_type": one of (string|boolean|dropdown),
+                    "allowed_values": list of strings (exists when param_type==dropdown),
+                    "allowed_types": list of data types (when param_type==string),
+                    "param_value": something, mainly when is_constant==True
+                }
+        }
         """
-        self.check_tag(tag, raise_exception=True)
+        self._check_tag(tag, raise_exception=True)
 
         nms = NarrativeMethodStore(URLS.narrative_method_store)
         methods = nms.list_methods_spec({'tag': tag})
@@ -108,7 +151,7 @@ class WidgetManager:
 
         for method in methods:
             if 'output' not in method['widgets']:
-                widget_name = self.default_output_widget
+                widget_name = self._default_output_widget
             else:
                 widget_name = method['widgets']['output']
             if widget_name == 'null':
@@ -161,7 +204,7 @@ class WidgetManager:
                         # this is something like the ws name or token that needs to get fetched
                         # by the system. Shouldn't be handled by the user.
                         is_constant = True
-                        param_value = self.get_system_variable(p['narrative_system_variable'])
+                        param_value = self._get_system_variable(p['narrative_system_variable'])
                     if 'service_method_output_path' in p:
                         param_type = 'from_service_output'
 
@@ -200,8 +243,26 @@ class WidgetManager:
                     all_widgets[w]["params"][p]["allowed_values"] = list(all_widgets[w]["params"][p]["allowed_values"])
         return all_widgets
 
-    def get_widget_inputs(self, widget_name, tag="release"):
-        self.check_tag(tag, raise_exception=True)
+    def print_widget_inputs(self, widget_name, tag="release"):
+        """
+        Prints a list of expected user inputs for a widget.
+        These are printed as the following:
+        variable name - variable type - <extra information>
+
+        for example:
+
+        id - string - is a workspace object where the type is one of [KBaseGenomes.Genome, KBaseGenome.GenomeSet]
+        or
+        object_name - string - must be one of ["x", "y", "z"]
+
+        Parameters
+        ----------
+        widget_name : string
+            The name of the widget to print the inputs for.
+        tag : string, default="release"
+            The version tag to use when looking up widget information.
+        """
+        self._check_tag(tag, raise_exception=True)
 
         if widget_name not in self.widget_info[tag]:
             raise ValueError("Widget %s not found!" % widget_name)
@@ -213,16 +274,24 @@ class WidgetManager:
                 if "allowed_types" in params[p]:
                     p_def = p_def + " - is a workspace object where the type is one of: %s" % (json.dumps(params[p]["allowed_types"]))
                 if "allowed_values" in params[p]:
-                    p_def = p_def + ", must be one of: %s" % (json.dumps(params[p]["allowed_values"]))
+                    p_def = p_def + " - must be one of: %s" % (json.dumps(params[p]["allowed_values"]))
                 print p_def
 
     def get_widget_constants(self, widget_name, tag="release"):
         """
-        params should be the structure of widget parameters as defined in the method specs,
-        so a dict where keys = param names, and values are a dict of param info
-        returns constant values as a key:value dict (key = param name, value = well, it's value)
+        Returns a Dict with constants required for each widget.
+        These constants are either part of the widget spec itself, or are provided by the current
+        Narrative environment (e.g. Workspace name, user name).
+
+        Parameters
+        ----------
+        widget_name : string
+            The name of the widget to print the constants for.
+        tag : string, default="release"
+            The version tag to use when looking up widget information.
+
         """
-        self.check_tag(tag, raise_exception=True)
+        self._check_tag(tag, raise_exception=True)
 
         if widget_name not in self.widget_info[tag]:
             raise ValueError("Widget %s not found!" % widget_name)
@@ -239,9 +308,19 @@ class WidgetManager:
 
     def show_output_widget(self, widget_name, tag="release", **kwargs):
         """
-        Renders a widget using the generic output widget container.
+        Renders a widget using the generic kbaseNarrativeOutputWidget container.
+
+        Parameters
+        ----------
+        widget_name : string
+            The name of the widget to print the widgets for.
+        tag : string, default="release"
+            The version tag to use when looking up widget information.
+        **kwargs:
+            These vary, based on the widget. Look up required variable names
+            with WidgetManager.print_widget_inputs()
         """
-        self.check_tag(tag, raise_exception=True)
+        self._check_tag(tag, raise_exception=True)
 
         if widget_name not in self.widget_info[tag]:
             raise ValueError("Widget %s not found with %s tag!" % (widget_name, tag))
@@ -264,7 +343,7 @@ class WidgetManager:
         });
         """
 
-        js = Template(input_template).render(input_id=self.cell_id_prefix + str(uuid.uuid4()),
+        js = Template(input_template).render(input_id=self._cell_id_prefix + str(uuid.uuid4()),
                                              widget_name=widget_name,
                                              input_data=json.dumps(input_data),
                                              cell_title="Title Goes Here",
@@ -274,8 +353,27 @@ class WidgetManager:
 
     def show_external_widget(self, widget, widget_title, objects, options, auth_required=True):
         """
-        Renders a widget as loaded from a very simple hosted CDN.
+        Renders a JavaScript widget as loaded from a very simple hosted CDN.
         The CDN information is fetched dynamically from the local configuration.
+
+        Parameters
+        ----------
+        widget: string or list
+            If a string, should just be the name of the widget
+            If a list, should be components on the versioned CDN path to that widget.
+            E.g. "pairedEndLibrary" vs. ["widgets", "0.1.0", "pairedEndLibrary"]
+
+        widget_title: string
+            The title that appears in the header of the created widget.
+
+        objects: dictionary
+            This dict has the object information that feeds into the widget.
+
+        options: dictionary
+            This dict has widget-specific options used for rendering
+
+        auth_required: boolean, default == True
+            Whether or not authentication is required for fetching object data
         """
         from IPython.display import Javascript
         from jinja2 import Template
@@ -298,8 +396,6 @@ class WidgetManager:
         #  In the Notebook, the containing element will be available as `element`,
         #  and jQuery will be available.  Content appended to `element` will be
         #  visible in the output area.""
-
-
 
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'>");
@@ -338,7 +434,7 @@ class WidgetManager:
         """
 
         # Prepare data for export into the Javascript.
-        # token = get_system_variable('token')
+        # token = _get_system_variable('token')
 
         if type(widget) is list:
             widget_package = widget[0]
@@ -351,7 +447,7 @@ class WidgetManager:
 
         # Note: All Python->Javascript data flow is serialized as JSON strings.
         widget_def = {
-            'id': self.cell_id_prefix + str(uuid.uuid4()),
+            'id': self._cell_id_prefix + str(uuid.uuid4()),
             'package': widget_package,
             'package_version': widget_package_version,
             'name': widget_name,

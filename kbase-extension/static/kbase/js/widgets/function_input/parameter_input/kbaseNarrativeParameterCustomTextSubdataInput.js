@@ -1,7 +1,7 @@
  /**
  * @author Pavel Novichkov <psnovichkov@lbl.gov>
  *
- * This shows dropdown basing on the dataModel provided in the options. 
+ * This shows dropdown basing on the dataModel provided in the options.
  * The dataModel should have fetchData method accepting doneCallback method as a parameter.
  *
  */
@@ -11,42 +11,44 @@ define (
 		'bootstrap',
 		'jquery',
 		'narrativeConfig',
+        'kbaseNarrativeParameterInput',
 		'select2'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
 		Config,
+        kbaseNarrativeParameterInput,
 		select2
 	) {
-    
+
     var workspaceUrl = Config.url('workspace');
     var loadingImage = Config.get('loading_gif');
-    
+
     return KBWidget({
         name: "kbaseNarrativeParameterCustomTextSubdataInput",
-        parent : kbaseNarrativeParameterInput,  
+        parent : kbaseNarrativeParameterInput,
         version: "1.0.0",
         options: {
             isInSidePanel: false,
             dataModel: null
         },
-        
+
         enabled: true,
         $rowDiv: null,
         $errorDiv: null,
         $feedbackDiv: null,
         $dropdown: null,
-                        
+
         render: function() {
             var self = this;
-            var spec = self.spec;            
-            
+            var spec = self.spec;
+
             self.$dropdown = $('<input id="' + spec.id + '" type="text" style="width:100%" />')
                                     .on("change",function() { self.isValid() });
-            
+
             self.$feedbackDiv = $("<span>");
-            
+
             var nameColClass  = "col-md-2";
             var inputColClass = "col-md-5";
             var hintColClass  = "col-md-5";
@@ -70,9 +72,9 @@ define (
             self.$mainPanel.append(self.$rowDiv);
             self.$mainPanel.append(self.$errorDiv);
             self.setupSelect2(self.$dropdown);
-            self.isValid();            
-        },  
-        
+            self.isValid();
+        },
+
         setupSelect2: function ($input) {
             var self = this;
             var noMatchesFoundStr = "No matching data found.";
@@ -83,19 +85,19 @@ define (
                 formatSelection: function(object, container) {
                     var display = '<span class="kb-parameter-data-selection">'+object.text+'</span>';
                     return display;
-                },                
-                query: function (query) {                    
+                },
+                query: function (query) {
                     self.options.dataModel.fetchData(
                         function(dataItems){
                             query.callback({
                                 results: dataItems,
-                                more: false 
+                                more: false
                             });
                         }
                     );
                 }
             });
-        },                
+        },
         getState: function() {
             return this.getParameterValue();
         },
@@ -104,7 +106,7 @@ define (
                 return;
             this.setParameterValue(state);
         },
-        refresh: function() { 
+        refresh: function() {
         },
         isValid: function() {
             var self = this;
@@ -113,17 +115,17 @@ define (
             var valid = !$.isEmptyObject(value);
             if( this.spec.allow_multiple ){
                 valid = value.length > 1 || value[0] != '';
-            }            
+            }
 
             if(!valid){
                 errorMessages.push("required field "+self.spec.ui_name+" missing.");
             }
-            
+
             // Update $feedbackDiv
             self.$feedbackDiv.removeClass();
             if(this.enabled){
                 if(valid){
-                    self.$feedbackDiv.addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');                
+                    self.$feedbackDiv.addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
                 } else{
                     self.$feedbackDiv
                         .addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left')
@@ -131,10 +133,10 @@ define (
                 }
             }
             self.$feedbackDiv.show();
-            
-            return { isValid: valid, errormssgs:errorMessages};            
+
+            return { isValid: valid, errormssgs:errorMessages};
         },
-        disableParameterEditing: function() { 
+        disableParameterEditing: function() {
             this.enabled = false;
             this.$elem.find("#"+this.spec.id).select2('disable',true);
             this.isValid();
@@ -145,12 +147,12 @@ define (
             this.isValid();
         },
         setParameterValue: function(value) {
-            
+
             if(value == ''){
                 if(this.spec.allow_multiple){
                     value = [];
                 }
-                
+
                 this.$elem.find("#"+this.spec.id).select2("data",value);
             } else{
                 var data = null;
@@ -162,7 +164,7 @@ define (
                 } else{
                     data = {id:value, text:value};
                 }
-                
+
                 if (this.enabled) {
                     this.$elem.find("#"+this.spec.id).select2("data",data);
                 } else {
@@ -171,15 +173,15 @@ define (
                     this.$elem.find("#"+this.spec.id).select2('disable',false);
                 }
             }
-            
+
             this.isValid();
-        },        
+        },
         getParameterValue: function() {
             var value = this.$elem.find("#"+this.spec.id).val();
             if(this.spec.allow_multiple){
                 value = value.split(',');
             }
-            return value; 
+            return value;
         },
         prepareValueBeforeRun: function(methodSpec) {
         },
@@ -188,9 +190,9 @@ define (
         },
         unlockInputs: function() {
             this.enableParameterEditing();
-        },       
+        },
         addInputListener: function(onChangeFunc) {
             this.$elem.find("#"+this.spec.id).on("change",onChangeFunc);
-        }        
+        }
     });
-});    
+});

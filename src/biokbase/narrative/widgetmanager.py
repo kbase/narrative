@@ -332,14 +332,15 @@ class WidgetManager:
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
 
-        require(['kbaseNarrativeOutputCell', '{{widget_name}}'], function(kbaseNarrativeOutputCell) {
-            new kbaseNarrativeOutputCell($('#{{input_id}}'), {"data": {{input_data}},
+        require(['base/js/namespace', 'kbaseNarrativeOutputCell'], function(Jupyter, KBaseNarrativeOutputCell) {
+            var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {"data": {{input_data}},
                 "type":"method",
-                "widget": "{{widget_name}}",
-                "cellId": "{{input_id}}",
-                "title": "{{cell_title}}",
-                "time": {{timestamp}}
+                "widget":"{{widget_name}}",
+                "cellId":"{{input_id}}",
+                "title":"{{cell_title}}",
+                "time":{{timestamp}}
             });
+            Jupyter.narrative.registerWidget(w,'{{input_id}}');
         });
         """
 
@@ -401,8 +402,9 @@ class WidgetManager:
         element.html("<div id='{{input_id}}' class='kb-vis-area'>");
 
         require([
+            'base/js/namespace',
             'narrativeDataWidget'
-        ], function (NarrativeDataWidget) {
+        ], function (Jupyter, NarrativeDataWidget) {
 
             var widgetDef = JSON.parse('{{widget_def}}'),
                 objectRefs = JSON.parse('{{object_refs}}'),
@@ -430,6 +432,7 @@ class WidgetManager:
                     console.error('ERROR', err);
                     dataWidget.showErrorMessage(err.message);
                 });
+            Jupyter.narrative.registerWidget(dataWidget, '{{input_id}}');
         });
         """
 

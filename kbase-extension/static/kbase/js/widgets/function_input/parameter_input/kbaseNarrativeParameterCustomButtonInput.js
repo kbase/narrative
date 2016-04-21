@@ -10,50 +10,52 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery',
-		'select2'
+		'select2',
+        'kbaseNarrativeParameterInput'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
-		select2
+		select2,
+        kbaseNarrativeParameterInput
 	) {
-    
+
     return KBWidget({
         name: "kbaseNarrativeParameterCustomButtonInput",
-        parent : kbaseNarrativeParameterInput,  
+        parent : kbaseNarrativeParameterInput,
         version: "1.0.0",
         options: {
             loadingImage: "../images/ajax-loader.gif",
             isInSidePanel: false,
             dataModel: null
         },
-        
+
         $rowDiv: null,
         $errorDiv: null,
         $feedbackDiv: null,
         $button: null,
-        
+
         enabled: true,
         active: false,
         value: false,
-                        
+
         render: function() {
             var self = this;
-            var spec = self.spec;            
-            
+            var spec = self.spec;
+
             var nameColClass  = "col-md-2";
             var inputColClass = "col-md-5";
             var hintColClass  = "col-md-5";
-            
+
             self.$button = $('<button type="button">' + spec.ui_name + '</button>')
                     .addClass('btn btn-default ')
                     .prop('disabled', true);
             self.deactivate();
-            
+
             self.$feedbackDiv = $("<span>")
                     .addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left')
                     .prop("title","required field");
-            
+
             self.$rowDiv = $('<div>').addClass("row kb-method-parameter-row")
                             .hover(function(){$(this).toggleClass('kb-method-parameter-row-hover');});
             var $nameCol = $('<div>').addClass(nameColClass).addClass("kb-method-parameter-name")
@@ -72,15 +74,15 @@ define (
 
             self.$mainPanel.append(self.$rowDiv);
             self.$mainPanel.append(self.$errorDiv);
-            
+
             self.$button.click(function(){
                 self.options.dataModel.onButtonClick();
                 self.setParameterValue(true);
             });
-            
-            self.isValid();            
-        }, 
-        
+
+            self.isValid();
+        },
+
         // What will be saved in the narrative
         getState: function() {
             var state = {
@@ -97,25 +99,25 @@ define (
                 this.deactivate();
             }
         },
-        
+
         // it can be called at any time..
-        refresh: function() { 
+        refresh: function() {
         },
         isValid: function() {
             var self = this;
             var errorMessages = [];
             var valid = self.getParameterValue();
-            
+
             if(!valid){
                 errorMessages.push("Button "+self.spec.ui_name+" needs to be clicked.");
             }
-            
+
             // Update $feedbackDiv
             if(self.$feedbackDiv){
                 self.$feedbackDiv.removeClass();
                 if(self.enabled){
                     if(valid){
-                        self.$feedbackDiv.addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');                
+                        self.$feedbackDiv.addClass('kb-method-parameter-accepted-glyph glyphicon glyphicon-ok');
                     } else{
                         self.$feedbackDiv
                             .addClass('kb-method-parameter-required-glyph glyphicon glyphicon-arrow-left')
@@ -124,10 +126,10 @@ define (
                 }
                 self.$feedbackDiv.show();
             }
-            
-            return { isValid: valid, errormssgs:errorMessages};            
+
+            return { isValid: valid, errormssgs:errorMessages};
         },
-        disableParameterEditing: function() { 
+        disableParameterEditing: function() {
 //            console.log('-----kbaseNarrativeParameterCustomButtonInput: disableParameterEditing');
             this.enabled = false;
             this.$button.prop('disabled', true);
@@ -140,7 +142,7 @@ define (
         setParameterValue: function(value) {
             this.value = value;
             this.isValid();
-        },  
+        },
         getParameterValue: function() {
             return this.value;
         },
@@ -159,9 +161,9 @@ define (
         deactivate: function() {
             this.active = false;
             this.$button.prop('disabled', true);
-        },       
+        },
         addInputListener: function(onChangeFunc) {
             this.$elem.find("#"+this.spec.id).on("change",onChangeFunc);
-        }        
+        }
     });
-});    
+});

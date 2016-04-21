@@ -9,25 +9,34 @@
  * format from the narrative_method_store service.
  */
 
-// (function( $, undefined ) {
-define(['kbwidget', 'bootstrap', 'jquery',
-         'narrativeConfig',
-         'util/string',
-         'util/bootstrapDialog',
-         'util/display',
-         'handlebars',
-         'kbaseAuthenticatedWidget',
-         'kbaseNarrativeCellMenu',
-         'kbaseTabs',
-         'kbaseViewLiveRunLog',
-         'kbaseReportView'],
-function(KBWidget, bootstrap, $,
+define(['kbwidget',
+        'bootstrap',
+        'jquery',
+        'narrativeConfig',
+        'base/js/namespace',
+        'util/string',
+        'util/bootstrapDialog',
+        'util/display',
+        'handlebars',
+        'kbaseAuthenticatedWidget',
+        'kbaseNarrativeCellMenu',
+        'kbaseTabs',
+        'kbaseViewLiveRunLog',
+        'kbaseReportView'],
+function(KBWidget,
+         bootstrap,
+         $,
          Config,
+         Jupyter,
          StringUtil,
          BootstrapDialog,
          Display,
          Handlebars,
-        kbaseAuthenticatedWidget, kbaseNarrativeCellMenu, kbaseTabs, kbaseViewLiveRunLog, kbaseReportView) {
+         kbaseAuthenticatedWidget,
+         kbaseNarrativeCellMenu,
+         kbaseTabs,
+         kbaseViewLiveRunLog,
+         kbaseReportView) {
     'use strict';
     return KBWidget({
         name: "kbaseNarrativeMethodCell",
@@ -83,6 +92,9 @@ function(KBWidget, bootstrap, $,
                 callback(this.getSubtitle());
             }.bind(this));
             this.render();
+
+            Jupyter.narrative.registerWidget(this, this.cellId);
+
             return this;
         },
 
@@ -211,20 +223,6 @@ function(KBWidget, bootstrap, $,
                                       .css({'overflow': 'hidden'})
                                       .append($buttons));
 
-            // this.$cellPanel = $('<div>')
-            //                   .addClass('panel kb-func-panel kb-cell-run')
-            //                   .append($controlsSpan)
-            //                   .append($('<div>')
-            //                           .addClass('panel-heading')
-            //                           .append(this.$header))
-            //                   .append($('<div>')
-            //                           .addClass('panel-body')
-            //                           .append(this.$inputDiv))
-            //                   .append($('<div>')
-            //                           .addClass('panel-footer')
-            //                           .css({'overflow' : 'hidden'})
-            //                           .append($buttons));
-
             this.$elem.append(this.$cellPanel);
 
             // Add minimize/restore actions.
@@ -242,7 +240,6 @@ function(KBWidget, bootstrap, $,
             if (!inputWidgetName || inputWidgetName === 'null')
                 inputWidgetName = this.defaultInputWidget;
 
-
             this.$elem
                 .closest('.cell')
                 .trigger('set-title.cell', [self.method.info.name]);
@@ -259,13 +256,16 @@ function(KBWidget, bootstrap, $,
                 .closest('.cell')
                 .trigger('set-icon.cell', [$logo.html()]);
 
+            console.log('trying to load input widget ' + inputWidgetName);
             require([inputWidgetName],
-              $.proxy(function() {
-                this.$inputWidget = this.$inputDiv[inputWidgetName]({ method: this.options.method });
-              }, this),
-              $.proxy(function() {
-                console.error('Error while trying to load widget "' + inputWidgetName + '"');
-              }));
+                function(W) {
+                    console.log('loaded input widget ' + inputWidgetName);
+                    this.$inputWidget = new W(this.$inputDiv, { method: this.options.method });
+                }.bind(this),
+                function(error) {
+                    console.error('Error while trying to load widget "' + inputWidgetName + '"');
+                }
+            );
         },
 
         /**

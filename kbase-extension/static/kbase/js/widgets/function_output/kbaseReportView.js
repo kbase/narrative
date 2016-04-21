@@ -9,6 +9,8 @@ define (
 		'bootstrap',
 		'jquery',
 		'kbaseAuthenticatedWidget',
+        'narrativeConfig',
+        'util/string',
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap',
 		'kbase-client-api'
@@ -17,6 +19,8 @@ define (
 		bootstrap,
 		$,
 		kbaseAuthenticatedWidget,
+        Config,
+        StringUtil,
 		jquery_dataTables,
 		bootstrap,
 		kbase_client_api
@@ -36,8 +40,7 @@ define (
 
             inNarrative: true,  // todo: toggles whether data links show in narrative or new page
 
-            wsURL: window.kbconfig.urls.workspace,
-            loadingImage: "static/kbase/images/ajax-loader.gif"
+            wsURL: Config.url('workspace'),
         },
 
         // workspace client
@@ -46,15 +49,11 @@ define (
         init: function(options) {
             this._super(options);
 
-            if (window.kbconfig && window.kbconfig.urls) {
-                this.options.wsURL = window.kbconfig.urls.workspace;
-            }
-
             // Create a message pane
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
-            this.$elem.append(this.$messagePane);      
+            this.$elem.append(this.$messagePane);
 
-            this.$mainPanel = $("<div>"); 
+            this.$mainPanel = $("<div>");
             this.$elem.append(this.$mainPanel);
 
             return this;
@@ -63,10 +62,10 @@ define (
         loggedInCallback: function(event, auth) {
 
            // Build a client
-            this.ws = new Workspace(this.options.wsURL, auth);         
+            this.ws = new Workspace(this.options.wsURL, auth);
 
             // Let's go...
-            this.loadAndRender();           
+            this.loadAndRender();
             return this;
         },
 
@@ -132,7 +131,7 @@ define (
                         self.ws.get_object_info_new({'objects':objIds},
                             function(objInfo) {
 
-                                var pref = self.uuid();
+                                var pref = StringUtil.uuid();
                                 var displayData = [];
                                 var dataNameToInfo = {};
                                 for(var k=0; k<objInfo.length; k++) {
@@ -171,7 +170,7 @@ define (
                                 var sDom = "ft<ip>";
                                 var $tblDiv = $('<div>').css('margin-top','10px');
                                 self.$mainPanel.append($tblDiv);
-                                if(displayData.length<=iDisplayLength) { 
+                                if(displayData.length<=iDisplayLength) {
                                     var $objTable = $('<table class="table table-striped table-bordered" style="margin-left: auto; margin-right: auto;">');
 
                                     displayData.sort(function(a, b) {
@@ -217,7 +216,7 @@ define (
                                     objTable.fnAddData(displayData);
 
 
-                                    var $objTable = $('<table ' + 
+                                    var $objTable = $('<table ' +
                                                         'class="table table-bordered table-striped" style="width:100%;margin-left:0px; margin-right:0px;">'+
                                                             '</table>')
                                                             .dataTable( {
@@ -239,7 +238,7 @@ define (
                                                             } );
                                     //$tblDiv.append($objTable)
                                 }
-                                
+
                             }, function(error) {
                                 console.error(error);
                             });
@@ -249,13 +248,13 @@ define (
 
             this.loading(false);
         },
-        
+
         openViewerCell: function(ws_info) {
             var self = this;
-            var cell = IPython.notebook.get_selected_cell();
+            var cell = Jupyter.notebook.get_selected_cell();
             var near_idx = 0;
             if (cell) {
-                near_idx = IPython.notebook.find_cell_index(cell);
+                near_idx = Jupyter.notebook.find_cell_index(cell);
                 $(cell.element).off('dblclick');
                 $(cell.element).off('keydown');
             }
@@ -272,13 +271,12 @@ define (
                 'saved_by', 'ws_id', 'ws_name', 'chsum', 'size',
                 'meta'], info);
         },
-        
+
         loading: function(isLoading) {
             if (isLoading) {
-                //this.showMessage("<img src='" + this.options.loadingImage + "'/>");
                 this.showMessage('<i class="fa fa-spinner fa-spin"></i>');
             } else {
-                this.hideMessage();                
+                this.hideMessage();
             }
         },
 
@@ -304,14 +302,14 @@ define (
             else if (error.error && error.error.error && typeof error.error.error==='string') {
                 errString = error.error.error;
             }
-            
+
             var $errorDiv = $("<div>")
                             .addClass("alert alert-danger")
                             .append("<b>Error:</b>")
                             .append("<br>" + errString);
             this.$elem.empty();
             this.$elem.append($errorDiv);
-        },            
+        },
 
         buildObjectIdentity: function(workspaceID, objectID, objectVer, wsRef) {
             var obj = {};
@@ -328,20 +326,12 @@ define (
                     obj['objid'] = objectID;
                 else
                     obj['name'] = objectID;
-                
+
                 if (objectVer)
                     obj['ver'] = objectVer;
             }
             return obj;
         },
-
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
-                function(c) {
-                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                    return v.toString(16);
-                });
-        }
 
     });
 });

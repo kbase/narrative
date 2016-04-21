@@ -88,6 +88,8 @@ define (
         // controls widget management and KBase method execution
         this.narrController = null;
 
+        this.sidePanel = null;
+
         // If true, this narrative is read only
         this.readonly = false;
 
@@ -458,6 +460,23 @@ define (
 
         this.authToken = NarrativeLogin.loginWidget($('#signin-button')).token();
 
+        /* Clever extension to $.event from StackOverflow
+         * Lets us watch DOM nodes and catch when a widget's node gets nuked.
+         * http://stackoverflow.com/questions/2200494/jquery-trigger-event-when-an-element-is-removed-from-the-dom
+         *
+         * We bind a jQuery event to a node. Call it 'destroyed'.
+         * When that event is no longer bound (i.e. when the node is removed, OR when .unbind is called)
+         * it triggers the 'remove' function. Lets us keep track of when widgets get removed
+         * in the registerWidget function below.
+         */
+        $.event.special.destroyed = {
+            remove: function(o) {
+                if (o.handler) {
+                    o.handler();
+                }
+            }
+        };
+
         $([Jupyter.events]).on('notebook_loaded.Notebook', function() {
             // Disable autosave so as not to spam the Workspace.
             Jupyter.notebook.set_autosave_interval(0);
@@ -475,16 +494,16 @@ define (
             if (this.getWorkspaceName() !== null) {
                 this.initSharePanel();
 
-                var $sidePanel =  new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
+                this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
                 // init the controller
                 this.narrController =  new KBaseNarrativeWorkspace($('#notebook_panel'), {
                     ws_id: this.getWorkspaceName()
                 });
                 this.narrController.render()
                 .finally(function() {
-                    $sidePanel.render();
+                    this.sidePanel.render();
                     $('#kb-wait-for-ws').remove();
-                });
+                }.bind(this));
             }
             else {
                 KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');
@@ -651,10 +670,7 @@ define (
                 direction: 'left',
                 easing: 'swing',
                 complete: function() {
-                    $('#kb-side-toggle-in').show('slide', {
-                        direction: 'left',
-                        easing: 'swing'
-                    }, delay);
+                    $('#kb-side-toggle-in').show(0);
                 }
             }, delay);
             // Move content flush left-ish
@@ -667,18 +683,13 @@ define (
             );
         }
         else {
-            $('#kb-side-toggle-in').hide('slide', {
-                direction: 'left',
-                easing: 'swing',
-                complete: function() {
-                    $('#left-column').show('slide', {
-                        direction: 'left',
-                        easing: 'swing'
-                    }, delay);
-                    $('#notebook-container').animate({left: 380}, {easing: 'swing', duration: delay});
-                }
-            }, delay);
-            // Move content flush left-ish
+            $('#kb-side-toggle-in').hide(0, function() {
+                $('#left-column').show('slide', {
+                    direction: 'left',
+                    easing: 'swing'
+                }, delay);
+                $('#notebook-container').animate({left: 380}, {easing: 'swing', duration: delay});
+            });
         }
     };
 
@@ -689,6 +700,7 @@ define (
      */
     Narrative.prototype.registerWidget = function(widget, cellId) {
         this.kbaseWidgets[cellId] = widget;
+        $('#' + cellId).bind('destroyed', function() { this.removeWidget(cellId); }.bind(this) );
     };
 
     Narrative.prototype.removeWidget = function(cellId) {

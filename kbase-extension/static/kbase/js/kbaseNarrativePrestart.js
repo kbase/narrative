@@ -1,4 +1,4 @@
-/*global define,Jupyter*/
+/*global define,Jupyter,window*/
 /*jslint white: true,browser:true*/
 // Bind all page buttons right at startup.
 define (
@@ -84,7 +84,7 @@ define (
             Jupyter.narrative.toggleSidePanel();
         });
     }
-    
+
     function loadGlobals() {
         /**
          * Error logging for detectable failure conditions.

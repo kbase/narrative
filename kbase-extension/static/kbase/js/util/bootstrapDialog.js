@@ -1,20 +1,18 @@
 /*global define*/
 /*jslint white: true*/
 define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery'
-	], function(
-		KBWidget,
-		bootstrap,
-		$
-	) {
+    [
+        'bootstrap',
+        'jquery'
+    ], function (
+        bootstrap,
+        $
+    ) {
     'use strict';
 
     /**
      * options:
-     * { 
+     * {
      *     title: string,
      *     body: jquery node
      *     buttons: array of jquery nodes

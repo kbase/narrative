@@ -1,5 +1,5 @@
 /*global define*/
-/*jslint white:true*/
+/*jslint white:true,browser:true*/
 /**
  * Loads the required narrative configuration files.
  * This returns a Promise that will eventually hold the results.
@@ -25,6 +25,8 @@ define([
         serviceSet,
         localRequire) {
         'use strict';
+
+        console.log("Initializing KBase Configuration.");
 
         var config, debug;
 

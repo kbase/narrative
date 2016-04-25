@@ -4,34 +4,33 @@
  * @author Bill Riehl <wjriehl@lbl.gov>
  * @public
  */
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseNarrativeInput',
-		'kbaseNarrativeParameterTextInput',
-		'kbaseNarrativeParameterDropdownInput',
-		'kbaseNarrativeParameterCheckboxInput',
-		'kbaseNarrativeParameterTextareaInput',
-		'kbaseNarrativeParameterFileInput',
-		'kbaseNarrativeParameterTextSubdataInput',
-        'kbaseNarrativeParameterAjaxTextSubdataInput',
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		KBaseNarrativeInput,
-		KBaseNarrativeParameterTextInput,
-		KBaseNarrativeParameterDropdownInput,
-		KBaseNarrativeParameterCheckboxInput,
-		KBaseNarrativeParameterTextareaInput,
-		KBaseNarrativeParameterFileInput,
-		KBaseNarrativeParameterTextSubdataInput,
-        KBaseNarrativeParameterAjaxTextSubdataInput
-	) {
+define ([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'kbaseNarrativeInput',
+    'kbaseNarrativeParameterTextInput',
+    'kbaseNarrativeParameterDropdownInput',
+    'kbaseNarrativeParameterCheckboxInput',
+    'kbaseNarrativeParameterTextareaInput',
+    'kbaseNarrativeParameterFileInput',
+    'kbaseNarrativeParameterTextSubdataInput',
+    'kbaseNarrativeParameterAjaxTextSubdataInput'
+], function (
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    KBaseNarrativeInput,
+    KBaseNarrativeParameterTextInput,
+    KBaseNarrativeParameterDropdownInput,
+    KBaseNarrativeParameterCheckboxInput,
+    KBaseNarrativeParameterTextareaInput,
+    KBaseNarrativeParameterFileInput,
+    KBaseNarrativeParameterTextSubdataInput,
+    KBaseNarrativeParameterAjaxTextSubdataInput
+) {
     'use strict';
     return KBWidget({
         name: "kbaseNarrativeMethodInput",

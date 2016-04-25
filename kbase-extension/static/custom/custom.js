@@ -685,6 +685,12 @@ define(['jquery',
             });
         };
 
+        var hideInputArea = function() {
+            if (!this.options.cellId)
+                return;
+            $('#' + this.options.cellId).closest('.cell').find('.inner_cell .input_area').hide();
+        };
+
         // Kickstart the Narrative loading routine once the notebook is loaded.
         $([Jupyter.events]).on('app_initialized.NotebookApp', function () {
             require(['kbaseNarrative'], function (Narrative) {

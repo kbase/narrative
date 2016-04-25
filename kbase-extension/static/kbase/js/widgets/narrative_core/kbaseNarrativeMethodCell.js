@@ -9,34 +9,37 @@
  * format from the narrative_method_store service.
  */
 
-define(['kbwidget',
-        'bootstrap',
-        'jquery',
-        'narrativeConfig',
-        'base/js/namespace',
-        'util/string',
-        'util/bootstrapDialog',
-        'util/display',
-        'handlebars',
-        'kbaseAuthenticatedWidget',
-        'kbaseNarrativeCellMenu',
-        'kbaseTabs',
-        'kbaseViewLiveRunLog',
-        'kbaseReportView'],
-function(KBWidget,
-         bootstrap,
-         $,
-         Config,
-         Jupyter,
-         StringUtil,
-         BootstrapDialog,
-         Display,
-         Handlebars,
-         kbaseAuthenticatedWidget,
-         kbaseNarrativeCellMenu,
-         kbaseTabs,
-         kbaseViewLiveRunLog,
-         kbaseReportView) {
+define([
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'base/js/namespace',
+    'util/string',
+    'util/bootstrapDialog',
+    'util/display',
+    'handlebars',
+    'kbaseAuthenticatedWidget',
+    'kbaseNarrativeCellMenu',
+    'kbaseTabs',
+    'kbaseViewLiveRunLog',
+    'kbaseReportView'
+], function (
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    Jupyter,
+    StringUtil,
+    BootstrapDialog,
+    Display,
+    Handlebars,
+    kbaseAuthenticatedWidget,
+    kbaseNarrativeCellMenu,
+    kbaseTabs,
+    kbaseViewLiveRunLog,
+    kbaseReportView
+) {
     'use strict';
     return KBWidget({
         name: "kbaseNarrativeMethodCell",
@@ -93,7 +96,8 @@ function(KBWidget,
             }.bind(this));
             this.render();
 
-            Jupyter.narrative.registerWidget(this, this.cellId);
+            if (Jupyter.narrative)
+                Jupyter.narrative.registerWidget(this, this.cellId);
 
             return this;
         },

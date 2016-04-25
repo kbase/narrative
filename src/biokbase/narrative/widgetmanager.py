@@ -332,7 +332,7 @@ class WidgetManager:
         input_template = """
         element.html("<div id='{{input_id}}' class='kb-vis-area'></div>");
 
-        require(['base/js/namespace', 'kbaseNarrativeOutputCell'], function(Jupyter, KBaseNarrativeOutputCell) {
+        require(['kbaseNarrativeOutputCell'], function(KBaseNarrativeOutputCell) {
             var w = new KBaseNarrativeOutputCell($('#{{input_id}}'), {"data": {{input_data}},
                 "type":"method",
                 "widget":"{{widget_name}}",
@@ -340,7 +340,6 @@ class WidgetManager:
                 "title":"{{cell_title}}",
                 "time":{{timestamp}}
             });
-            Jupyter.narrative.registerWidget(w,'{{input_id}}');
         });
         """
 
@@ -402,7 +401,6 @@ class WidgetManager:
         element.html("<div id='{{input_id}}' class='kb-vis-area'>");
 
         require([
-            'base/js/namespace',
             'narrativeDataWidget'
         ], function (Jupyter, NarrativeDataWidget) {
 
@@ -432,7 +430,6 @@ class WidgetManager:
                     console.error('ERROR', err);
                     dataWidget.showErrorMessage(err.message);
                 });
-            Jupyter.narrative.registerWidget(dataWidget, '{{input_id}}');
         });
         """
 

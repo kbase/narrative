@@ -8,7 +8,7 @@ from nbconvert import HTMLExporter, PDFExporter
 from biokbase.workspace.client import Workspace
 from biokbase.narrative.common.url_config import URLS
 from .preprocessor import NarrativePreprocessor
-from biokbase.narrative.narrativeio import KBaseWSManagerMixin as NarrativeIO
+from biokbase.narrative.contents.narrativeio import KBaseWSManagerMixin as NarrativeIO
 import nbformat
 import json
 import os

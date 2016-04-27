@@ -11,6 +11,7 @@ from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.narrative.common.url_config import URLS
 from biokbase.workspace.client import Workspace
 from biokbase.narrative_method_store.client import NarrativeMethodStore
+from biokbase.narrative.jobmanager.method_util import check_tag
 from IPython.core.magic import register_line_magic
 import os
 import re
@@ -89,18 +90,6 @@ class WidgetManager:
             else:
                 return None
 
-    def _check_tag(self, tag, raise_exception=False):
-        """
-        Checks if the given tag is one of "release", "beta", or "dev".
-        Returns a boolean.
-        if raise_exception == True and the tag is bad, raises a ValueError
-        """
-        tag_exists = tag in self._version_tags
-        if not tag_exists and raise_exception:
-            raise ValueError("Can't find tag %s - allowed tags are %s" % (tag, ", ".join(self._version_tags)))
-        else:
-            return tag_exists
-
     def _load_all_widget_info(self):
         """
         Loads all widget info and stores it in this object.
@@ -130,7 +119,7 @@ class WidgetManager:
                 }
         }
         """
-        self._check_tag(tag, raise_exception=True)
+        check_tag(tag, raise_exception=True)
 
         nms = NarrativeMethodStore(URLS.narrative_method_store)
         methods = nms.list_methods_spec({'tag': tag})
@@ -262,7 +251,7 @@ class WidgetManager:
         tag : string, default="release"
             The version tag to use when looking up widget information.
         """
-        self._check_tag(tag, raise_exception=True)
+        check_tag(tag, raise_exception=True)
 
         if widget_name not in self.widget_info[tag]:
             raise ValueError("Widget %s not found!" % widget_name)
@@ -291,7 +280,7 @@ class WidgetManager:
             The version tag to use when looking up widget information.
 
         """
-        self._check_tag(tag, raise_exception=True)
+        check_tag(tag, raise_exception=True)
 
         if widget_name not in self.widget_info[tag]:
             raise ValueError("Widget %s not found!" % widget_name)
@@ -320,7 +309,7 @@ class WidgetManager:
             These vary, based on the widget. Look up required variable names
             with WidgetManager.print_widget_inputs()
         """
-        self._check_tag(tag, raise_exception=True)
+        check_tag(tag, raise_exception=True)
 
         if widget_name not in self.widget_info[tag]:
             raise ValueError("Widget %s not found with %s tag!" % (widget_name, tag))

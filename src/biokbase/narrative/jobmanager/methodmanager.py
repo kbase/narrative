@@ -196,7 +196,8 @@ class MethodUsage(object):
         tmpl = """
         <h1>{{usage.name}}</h1>
         id = {{usage.id}}<br>
-        {{usage.subtitle}}
+        {{usage.subtitle}}<br>
+        Parameters (<span class="bg-warning">required</span>)
         <table class="table table-striped table-bordered table-condensed">
         <thead>
             <tr>
@@ -239,11 +240,11 @@ class MethodUsage(object):
         return self.__str__()
 
     def __str__(self):
-        s = "id: {}\nname: {}\nsubtitle: {}\nparameters:\n-----------".format(self.usage['id'], self.usage['name'], self.usage['subtitle'])
+        s = "id: {}\nname: {}\nsubtitle: {}\nparameters (*required):\n-----------------------".format(self.usage['id'], self.usage['name'], self.usage['subtitle'])
 
         for p in self.usage['params']:
             if not p.get("is_constant", False):
-                p_def = "\n{} - {}".format(p['id'], p['type'])
+                p_def = "\n{}{} - {}".format('*' if not p['optional'] else '', p['id'], p['type'])
                 if "allowed_types" in p:
                     p_def = p_def + " - is a data object where the type is one of: {}".format(json.dumps(p['allowed_types']))
                 if "allowed_values" in p:

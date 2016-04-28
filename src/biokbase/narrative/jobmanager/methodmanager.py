@@ -5,19 +5,23 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 from .job import Job
 from biokbase.narrative_method_store.client import NarrativeMethodStore
+from biokbase.workspace.client import Workspace
 import os
 import biokbase.auth
 from biokbase.narrative.common.url_config import URLS
 from .method_util import (
     method_version_tags,
-    check_tag
+    check_tag,
+    system_variable
 )
 from IPython.display import HTML
 from jinja2 import Template
 import json
+import re
 
 class MethodManager(object):
     nms = NarrativeMethodStore(URLS.narrative_method_store)
+    ws_client = Workspace(URLS.workspace)
     method_specs = dict()
 
     def __init__(self):
@@ -121,11 +125,20 @@ class MethodManager(object):
                     p_info['allowed_types'] = opts['valid_ws_types']
                 if 'validate_as' in opts:
                     p_info['type'] = opts['validate_as']
+                if 'min_float' in opts:
+                    p_info['min_val'] = opts['min_float']
+                if 'min_int' in opts:
+                    p_info['min_val'] = opts['min_int']
+                if 'max_float' in opts:
+                    p_info['max_val'] = opts['max_float']
+                if 'max_int' in opts:
+                    p_info['max_val'] = opts['max_int']
+                if 'regex_constraint' in opts and len(opts['regex_constraint']):
+                    p_info['regex_constraint'] = opts['regex_constraint']
 
-            if p['allow_multiple'] == 0:
-                p_info['input_list'] = False
-            else:
-                p_info['input_list'] = True
+            p_info['allow_multiple'] = False
+            if p['allow_multiple'] == 1:
+                p_info['allow_multiple'] = True
 
             params.append(p_info)
 
@@ -211,27 +224,114 @@ class MethodManager(object):
         spec_params = self._method_params(spec)
 
         # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
-        params = kwargs
+
+        spec_param_ids = [ p['id'] for p in spec_params ]
 
         # First, test for presence.
         missing_params = list()
         for p in spec_params:
-            if not p['optional'] and not p['id'] in params:
+            if not p['optional'] and not kwargs.get(p['id'], None):
                 missing_params.append(p['id'])
-
         if len(missing_params):
             raise ValueError('Missing required parameters {} - try executing method_usage("{}", tag="{}") for more information'.format(json.dumps(missing_params), method_id, tag))
 
+        # Next, test for extra params that don't make sense
+        extra_params = list()
+        for p in kwargs.keys():
+            if p not in spec_param_ids:
+                extra_params.append(p)
+        if len(extra_params):
+            raise ValueError('Unknown parameters {} - maybe something was misspelled?\nexecute method_usage("{}", tag="{}") for more information'.format(json.dumps(extra_params), method_id, tag))
+
+        # Now, test for values.
+        # Should also check if input (NOT OUTPUT) object variables are present in the current workspace
+
+        workspace = system_variable('workspace')
+        param_errors = list()
+        for p in spec_params:
+            if p['id'] in kwargs:
+                err = self._check_parameter(p, kwargs[p['id']], workspace)
+                if err is not None:
+                    param_errors.append("{} - {}".format(p['id'], err))
+        if len(param_errors):
+            raise ValueError('Parameter value errors found! {}'.format(json.dumps(param_errors)))
+
         return None
 
+    def _check_parameter(self, param, value, workspace):
+        if param['allow_multiple'] and isinstance(value, list):
+            error_list = list()
+            for v in value:
+                err = self._validate_param_value(param, v, workspace)
+                if err:
+                    error_list.append(err)
+            if len(error_list):
+                return ", ".join(error_list)
+            else:
+                return None
+        return self._validate_param_value(param, value, workspace)
 
-    def _check_parameter(self, param, value):
+
+    def _validate_param_value(self, param, value, workspace):
         """
         Tests a value to make sure it's valid.
-        Returns True if valid, False if not.
+        Returns None if valid, an error string if not.
         """
-        pass
 
+        # cases - value == list, int, float, others get rejected
+        if not (isinstance(value, basestring) or
+                isinstance(value, int) or
+                isinstance(value, float)):
+            return "input type not supported - only str, int, float, or list"
+
+        # check types. basestring is pretty much anything (it'll just get casted),
+        # but ints, floats, or lists are funky.
+        if param['type'] == 'int' and not isinstance(value, int):
+            return 'Given value {} is not an int'.format(value)
+        elif param['type'] == 'float' and not (isinstance(value, float) or isinstance(value, int)):
+            return 'Given value {} is not a number'.format(value)
+
+        # if it's expecting a workspace object, check if that's present, and a valid type
+        if 'allowed_types' in param and not param['is_output']:
+            try:
+                info = self.ws_client.get_object_info_new({'objects': [{'workspace':workspace, 'name':value}]})[0]
+                type_ok = False
+                for t in param['allowed_types']:
+                    if re.match(t, info[2]):
+                        type_ok = True
+                if not type_ok:
+                    return 'Type of data object, {}, does not match allowed types'.format(info[2])
+            except Exception as e:
+                return 'Data object named {} not found with this Narrative. (additional info: {})'.format(value, e)
+
+        # if it expects a set of allowed values, check if this one matches
+        if 'allowed_values' in param:
+            if value not in param['allowed_values']:
+                return "Given value is not permitted in the allowed set."
+
+        # if it expects a numerical value in a certain range, check that.
+        if 'max_val' in param:
+            try:
+                if float(value) > param['max_val']:
+                    return "Given value {} should be <= {}".format(value, param['max_val'])
+            except:
+                return "Given value {} must be a number".format(value)
+
+        if 'min_val' in param:
+            try:
+                if float(value) < param['min_val']:
+                    return "Given value {} should be >= {}".format(value, param['min_val'])
+            except:
+                return "Given value {} must be a number".format(value)
+
+        # Last, regex. not being used, but... eh.
+        if 'regex_constraint' in param:
+            for regex in regex_constraint:
+                if not re.match(regex_constraint, value):
+                    return 'Value {} does not match required regex {}'.format(value, regex)
+
+        # Whew. Passed all filters!
+        return None
 
 
 class MethodUsage(object):

@@ -3,7 +3,7 @@ Some tests for narrative exporting.
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
-from biokbase.narrative.narrativeio import PermissionsError
+from biokbase.narrative.contents.narrativeio import PermissionsError
 from biokbase.narrative.exporter.exporter import NarrativeExporter
 import unittest
 import os

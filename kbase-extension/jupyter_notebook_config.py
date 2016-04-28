@@ -29,7 +29,7 @@ c.NotebookApp.ip = 'localhost'
 # Python modules to load as notebook server extensions. This is an experimental
 # API, and may change in future releases.
 # c.NotebookApp.server_extensions = []
-c.NotebookApp.server_extensions=['biokbase.narrative.narrativehandler']
+c.NotebookApp.server_extensions=['biokbase.narrative.handlers.narrativehandler']
 
 # The random bytes used to secure cookies. By default this is a new random
 # number every time you start the Notebook. Set it to a value in a config file
@@ -72,7 +72,7 @@ c.NotebookApp.port = 8888
 # c.NotebookApp.allow_origin = ''
 
 # The notebook manager class to use.
-c.NotebookApp.contents_manager_class = 'biokbase.narrative.kbasewsmanager.KBaseWSManager'
+c.NotebookApp.contents_manager_class = 'biokbase.narrative.contents.kbasewsmanager.KBaseWSManager'
 # default: 'IPython.html.services.contents.filemanager.FileContentsManager'
 
 # Use a regular expression for the Access-Control-Allow-Origin header
@@ -90,7 +90,7 @@ c.NotebookApp.contents_manager_class = 'biokbase.narrative.kbasewsmanager.KBaseW
 # c.NotebookApp.certfile = u''
 
 # The logout handler class to use.
-c.NotebookApp.logout_handler_class = 'biokbase.narrative.authhandlers.KBaseLogoutHandler'
+c.NotebookApp.logout_handler_class = 'biokbase.narrative.handlers.authhandlers.KBaseLogoutHandler'
 
 # The base URL for the notebook server.
 #
@@ -229,7 +229,7 @@ c.NotebookApp.extra_template_paths = [os.path.join(myfile, 'kbase_templates')]
 
 # The login handler class to use.
 # c.NotebookApp.login_handler_class = <class 'IPython.html.auth.login.LoginHandler'>
-c.NotebookApp.login_handler_class = 'biokbase.narrative.authhandlers.KBaseLoginHandler'
+c.NotebookApp.login_handler_class = 'biokbase.narrative.handlers.authhandlers.KBaseLoginHandler'
 
 # DEPRECATED, use tornado_settings
 # c.NotebookApp.webapp_settings = {}

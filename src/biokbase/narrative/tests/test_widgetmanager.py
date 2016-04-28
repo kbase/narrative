@@ -19,16 +19,6 @@ class WidgetManagerTestCase(unittest.TestCase):
     def test_widgetmanager_instantiated(self):
         self.assertIsInstance(self.wm, WidgetManager)
 
-    def test_check_tag_good(self):
-        self.assertTrue(self.wm._check_tag(self.good_tag))
-
-    def test_check_tag_bad(self):
-        self.assertFalse(self.wm._check_tag(self.bad_tag))
-
-    def test_check_tag_bad_except(self):
-        with self.assertRaises(ValueError) as err:
-            self.wm._check_tag(self.bad_tag, raise_exception=True)
-
     def test_widget_inputs(self):
         self.wm.print_widget_inputs(self.good_widget)
 

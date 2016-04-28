@@ -1,31 +1,26 @@
+/*global define,window*/
+/*jslint white:true,browser:true*/
 /**
  * Uses the user's login information to initialize the IPython environment.
  * This should be one of the very first functions to be run on the page, as it sets up
  * the login widget, and wires the environment together.
  * @author Bill Riehl wjriehl@lbl.gov
  */
-
 define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbaseLogin',
-		'kbapi',
-		'base/js/utils'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbaseLogin,
-		kbapi,
-		JupyterUtils
-	) {
+    [
+        'jquery',
+        'kbaseLogin',
+        'kbapi',
+        'base/js/utils'
+    ], function(
+        $,
+        KBaseLogin,
+        kbapi,
+        JupyterUtils
+    ) {
     "use strict";
-
     var baseUrl = JupyterUtils.get_body_data('baseUrl');
+    var loginWidget;
 
     /* set the auth token by calling the kernel execute method on a function in
      * the magics module
@@ -33,28 +28,28 @@ define (
     var ipythonLogin = function(token) {
         window.kb = new KBCacheClient(token);
         $.ajax({
-            url: JupyterUtils.url_join_encode(baseUrl, 'login'),
+            url: JupyterUtils.url_join_encode(baseUrl, 'login')
         }).then(
-            function(ret) { 
-                // console.log(ret); 
+            function(ret) {
+                // console.log(ret);
             }
         ).fail(
-            function(err) { 
-                // console.err(err); 
+            function(err) {
+                // console.err(err);
             }
         );
     };
 
     var ipythonLogout = function() {
         $.ajax({
-            url: JupyterUtils.url_join_encode(baseUrl, 'logout'),
+            url: JupyterUtils.url_join_encode(baseUrl, 'logout')
         }).then(
-            function(ret) { 
-                // console.log(ret); 
+            function(ret) {
+                // console.log(ret);
             }
         ).fail(
-            function(err) { 
-                // console.err(err); 
+            function(err) {
+                // console.err(err);
             }
         );
         window.location.href = "/";
@@ -64,7 +59,7 @@ define (
         /**
          * Initialize the login widget and bind login/logout callbacks
          */
-        var loginWidget =  new kbaseLogin($elem, {
+        loginWidget = new KBaseLogin($elem, {
             /* If the notebook kernel's initialized, tell it to set the token.
              * This really only gets called when the user does a login on the Narrative page.
              * And since the user needs to be logged in already to get to the Narrative (in production),
@@ -90,7 +85,7 @@ define (
              */
             prior_login_callback: function(args) {
                 ipythonLogin(args.token);
-            },
+            }
         });
 
         if (loginWidget.token() === undefined) {
@@ -99,7 +94,15 @@ define (
         }
     };
 
+    var getLoginWidget = function($elem) {
+        if (loginWidget === undefined && $elem !== undefined) {
+            init($elem);
+        }
+        return loginWidget;
+    };
+
     return {
-        init: init
+        init: init,
+        loginWidget: getLoginWidget
     };
 });

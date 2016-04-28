@@ -22,6 +22,7 @@
 
 define (
 	[
+        'base/js/namespace',
 		'kbwidget',
 		'bootstrap',
 		'jquery',
@@ -30,7 +31,6 @@ define (
 		'narrativeConfig',
 		'util/bootstrapDialog',
 		'util/string',
-		'jquery-nearest',
 		'kbaseDefaultNarrativeOutput',
 		'kbaseDefaultNarrativeInput',
 		'kbaseNarrativeAppCell',
@@ -40,6 +40,7 @@ define (
         'kbaseNarrativeOutputCell',
         'kbaseTabs'
 	], function(
+        Jupyter,
 		KBWidget,
 		bootstrap,
 		$,
@@ -48,7 +49,6 @@ define (
 		Config,
 		BootstrapDialog,
 		StringUtil,
-        jqueryN,
 		kbaseDefaultNarrativeOutput,
 		kbaseDefaultNarrativeInput,
 		kbaseNarrativeAppCell,
@@ -78,7 +78,7 @@ define (
         connectable: {},
 
         inputsRendered: false,
-        maxSavedStates: 2,      // limit the states saved to 2 for now.
+        maxSavedStates: 1,      // limit the states saved to 1 for now.
         nextOutputCellId: '',
 
         // constant strings.
@@ -149,15 +149,6 @@ define (
                         }
 
                         this.inputsRendered = true;
-                    }
-                }.bind(this)
-            );
-
-            $(document).on('narrativeDataQuery.Narrative',
-                function(e, callback) {
-                    var objList = this.getNarrativeDependencies();
-                    if (callback) {
-                        callback(objList);
                     }
                 }.bind(this)
             );
@@ -353,7 +344,7 @@ define (
             var cellContent = "<div id='" + cellId + "'></div>" +
                               "\n<script>" +
                               "require(['kbaseNarrativeMethodCell'], function(kbaseNarrativeMethodCell) {" +
-                              "new kbaseNarrativeMethodCell($('#" + cellId + "'), {'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
+                              "var w = new kbaseNarrativeMethodCell($('#" + cellId + "'), {'method' : '" + StringUtil.safeJSONStringify(method) + "', 'cellId' : '" + cellId + "'});" +
                               "});" +
                               "</script>";
 
@@ -371,7 +362,6 @@ define (
                 return;
             }
             this.saveCellState(data.cell);
-            this.updateNarrativeDependencies();
             var self = this;
             var code = '';
             var showOutput = true;
@@ -474,7 +464,6 @@ define (
                 return;
             }
             this.saveCellState(data.cell);
-            this.updateNarrativeDependencies();
             var self = this;
             var callbacks = {
                 shell: {
@@ -856,7 +845,8 @@ define (
             _.map(this.getReadOnlySelectors(), function (id) {$(id).hide()});
             this.toggleRunButtons(false);
             this.toggleSelectBoxes(false);
-            $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true);
+
+            Jupyter.narrative.sidePanel.setReadOnlyMode(true);
 
             if (this.narrativeIsReadOnly) {
                 $('#kb-view-only-msg').popover({
@@ -901,11 +891,11 @@ define (
                 delay = 0;
 
             if (this.narrativeIsReadOnly) {
-                $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', true, this.hideControlPanels);
+                Jupyter.narrative.sidePanel.setReadOnlyMode(true, this.hideControlPanels);
             }
 
             else {
-                $('#kb-side-panel').kbaseNarrativeSidePanel('setReadOnlyMode', false);
+                Jupyter.narrative.sidePanel.setReadOnlyMode(false);
                 $('#kb-view-only-msg').addClass('hidden');
                 $('#kb-view-only-copy').addClass('hidden');
 
@@ -1077,166 +1067,6 @@ define (
                    cell.metadata[this.KB_CELL][this.KB_TYPE] === type;
         },
 
-        getMethodCellDependencies: function(cell, paramValues) {
-            if (!this.isFunctionCell(cell))
-                return;
-            paramValues = $(cell.element).find('div[id^=kb-cell-]').kbaseNarrativeMethodCell('getParameters') || [];
-            var params = cell.metadata[this.KB_CELL].method.parameters;
-
-            var data = [];
-
-            // paramValues and method.properties.parameters should be parallel, but check anyway.
-            // assume that those elements between the parameters list and method's params that
-            var cellDeps = [];
-            var types = [];
-            var typesHash = {};
-
-            // note - it's method.parameters.param##
-            for (var i=0; i<params.length; i++) {
-                var p = params[i];
-
-                /* fields: default, description, type, ui_name */
-                if (p.text_options) {
-                    if (p.text_options.valid_ws_types) {
-                        var type = p.text_options.valid_ws_types[0];
-                        if (type && !this.ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
-                            cellDeps.push([type, paramValues[i]]);
-                            if (!typesHash[type]) {
-                                typesHash[type] = 1;
-                                types.push(type);
-                            }
-                        }
-                    }
-                }
-
-            }
-
-            // look up the deps in the data panel.
-            // Cheating for now - needs to be a synchronous call, though! There's no reason for it not to be, if the data's already loaded!
-            var objList = $('#kb-ws').kbaseNarrativeDataPanel('getLoadedData', types);
-
-            // Man, now what. N^2 searching? What a drag.
-            for (var i=0; i<cellDeps.length; i++) {
-                var type = cellDeps[i][0];
-                var found = false;
-                if (objList[type] && objList[type].length > 0) {
-                    for (var j=0; j<objList[type].length; j++) {
-                        if (objList[type][j][1] === cellDeps[i][1]) {
-                            data.push(objList[type][j][6] + '/' + objList[type][j][0] + '/' + objList[type][j][4]);
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            return data;
-
-        },
-
-        /**
-         * @method
-         * Returns a list of Workspace object dependencies for a single cell.
-         * These dependencies are returned as workspace object references of the format:
-         * X/Y/Z
-         * X = workspace number
-         * Y = object number
-         * Z = version number
-         * @private
-         */
-        getCellDependencies: function(cell, paramValues) {
-            if (!this.isFunctionCell(cell))
-                return;
-
-            var data = [];
-            var target = '#inputs';
-            // get a 'handle' (really just the invocable name) of the input widget
-            var inputWidget = cell.metadata[this.KB_CELL].method.properties.widgets.input || this.defaultInputWidget;
-            var params = cell.metadata[this.KB_CELL]['method'].properties.parameters;
-
-            if (!paramValues) {
-                paramValues = $(cell.element).find('#inputs')[inputWidget]('getParameters') || [];
-            }
-
-            // paramValues and method.properties.parameters should be parallel, but check anyway.
-            // assume that those elements between the parameters list and method's params that
-            var cellDeps = [];
-            var types = [];
-            var typesHash = {};
-
-            // note - it's method.parameters.param##
-            for (var i=0; i<Object.keys(params).length; i++) {
-                var pid = 'param' + i;
-                var p = params[pid];  // this is the param object itself.
-
-                /* fields: default, description, type, ui_name */
-                var type = p.type;
-                if (!this.ignoredDataTypes[type.toLowerCase()] && paramValues[i]) {
-                    cellDeps.push([type, paramValues[i]]);
-                    if (!typesHash[type]) {
-                        typesHash[type] = 1;
-                        types.push(type);
-                    }
-                }
-            }
-
-            // look up the deps in the data panel.
-            // Cheating for now - needs to be a synchronous call, though! There's no reason for it not to be, if the data's already loaded!
-            var objList = $('#kb-ws').kbaseNarrativeDataPanel('getLoadedData', types);
-
-            // Man, now what. N^2 searching? What a drag.
-            for (var i=0; i<cellDeps.length; i++) {
-                var type = cellDeps[i][0];
-                var found = false;
-                if (objList[type] && objList[type].length > 0) {
-                    for (var j=0; j<objList[type].length; j++) {
-                        if (objList[type][j][1] === cellDeps[i][1]) {
-                            data.push(objList[type][j][6] + '/' + objList[type][j][0] + '/' + objList[type][j][4]);
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            return data;
-        },
-
-        /**
-         * @method
-         * @return a list containing all dependencies as WS references.
-         * @public
-         */
-        getNarrativeDependencies: function() {
-            var cells = Jupyter.notebook.get_cells();
-            var deps = {};
-            // For each cell in the Notebook
-            $.each(cells, $.proxy(function(idx, cell) {
-                // Get its dependencies (it'll skip non-input cells)
-                if (this.isFunctionCell(cell)) {
-                    var cellDeps = [];
-                    if (cell.metadata[this.KB_CELL].method.properties) {
-                        cellDeps = this.getCellDependencies(cell);
-                    }
-                    else {
-                        cellDeps = this.getMethodCellDependencies(cell);
-                    }
-                    // Shove them in the Object as properties to uniquify them.
-                    for (var i=0; i<cellDeps.length; i++) {
-                        deps[cellDeps[i]] = 1;
-                    }
-                }
-            }, this));
-            // Return the final, unique list (cleaner than looping over every returned hit)
-            return Object.keys(deps);
-        },
-
-        /**
-         * @method
-         * @private
-         */
-        updateNarrativeDependencies: function() {
-            var deps = this.getNarrativeDependencies();
-            Jupyter.notebook.metadata.data_dependencies = deps;
-        },
 
         /**
          * Saves a cell's state into its metadata.
@@ -1452,7 +1282,6 @@ define (
                     // get the list of parameters and save the state in the cell's metadata
                     var paramList = $(cell.element).find("#inputs")[inputWidget]('getParameters');
                     self.saveCellState(cell);
-                    self.updateNarrativeDependencies();
 
                     // var state = $(cell.element).find("#inputs")[inputWidget]('getState');
                     // cell.metadata[self.KB_CELL][self.KB_STATE] = state;
@@ -2453,6 +2282,5 @@ define (
             for (var i = 0; i < type.length; code += type.charCodeAt(i++));
             return this.icon_colors[code % this.icon_colors.length];
         }
-
     });
 });

@@ -208,15 +208,29 @@ class MethodManager(object):
 
         # Get the spec & params
         spec = self.method_specs[tag][method_id]
-        params = self._method_params(spec)
+        spec_params = self._method_params(spec)
 
         # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
+        params = kwargs
+
+        # First, test for presence.
+        missing_params = list()
+        for p in spec_params:
+            if not p['optional'] and not p['id'] in params:
+                missing_params.append(p['id'])
+
+        if len(missing_params):
+            raise ValueError('Missing required parameters {} - try executing method_usage("{}", tag="{}") for more information'.format(json.dumps(missing_params), method_id, tag))
+
+        return None
+
 
     def _check_parameter(self, param, value):
         """
         Tests a value to make sure it's valid.
         Returns True if valid, False if not.
         """
+        pass
 
 
 

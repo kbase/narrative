@@ -53,7 +53,9 @@ class MethodUtilTestCase(unittest.TestCase):
         os.environ['KB_AUTH_TOKEN'] = self.bad_fake_token
         self.assertIsNone(system_variable('user_id'))
 
-        del os.environ['KB_AUTH_TOKEN']
+    def test_sys_var_user_none(self):
+        if 'KB_AUTH_TOKEN' in os.environ:
+            del os.environ['KB_AUTH_TOKEN']
         self.assertIsNone(system_variable('user_id'))
 
     def test_sys_var_bad(self):

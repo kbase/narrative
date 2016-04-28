@@ -66,5 +66,30 @@ class MethodManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             self.mm.list_available_methods(self.bad_tag)
 
+    def test_run_method_good_inputs(self):
+        self.assertFalse("TODO: this test and code")
+
+    def test_run_method_bad_id(self):
+        with self.assertRaises(ValueError) as err:
+            self.mm.run_method(self.bad_method_id)
+
+    def test_run_method_bad_tag(self):
+        with self.assertRaises(ValueError) as err:
+            self.mm.run_method(self.good_method_id, tag=self.bad_tag)
+
+    def test_run_method_bad_version_match(self):
+        # fails because a non-release tag can't be versioned
+        with self.assertRaises(ValueError) as err:
+            self.mm.run_method(self.good_method_id, tag=self.good_tag, version=">0.0.1")
+
+    def test_run_method_missing_inputs(self):
+        # with self.assertRaises(ValueError) as err:
+        self.mm.run_method(self.good_method_id, tag=self.good_tag)
+
+    def test_method_description(self):
+        self.assertFalse("TODO: this test and code")
+
+
+
 if __name__ == "__main__":
     unittest.main()

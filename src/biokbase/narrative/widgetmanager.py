@@ -11,7 +11,10 @@ from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.narrative.common.url_config import URLS
 from biokbase.workspace.client import Workspace
 from biokbase.narrative_method_store.client import NarrativeMethodStore
-from biokbase.narrative.jobmanager.method_util import check_tag
+from biokbase.narrative.jobmanager.method_util import (
+    check_tag,
+    system_variable
+)
 from IPython.core.magic import register_line_magic
 import os
 import re
@@ -62,33 +65,6 @@ class WidgetManager:
         """
         self.widget_info = self._load_all_widget_info()
 
-    def _get_system_variable(self, var):
-        """
-        Returns a KBase system variable. Just a little wrapper.
-
-        Parameters
-        ----------
-        var: string, one of "workspace", "token", "user_id"
-            workspace - returns the KBase workspace name
-            token - returns the current user's token credential
-            user_id - returns the current user's id
-
-        if anything is not found, returns None
-        """
-        var = var.lower()
-        if var == 'workspace':
-            return os.environ.get('KB_WORKSPACE_ID', None)
-        elif var == 'token':
-            return os.environ.get('KB_AUTH_TOKEN', None)
-        elif var == 'user_id':
-            token = os.environ.get('KB_AUTH_TOKEN', None)
-            if token is None:
-                return None
-            m = re.match("un=(\w+)|", token)
-            if m is not None and len(m.groups()) == 1:
-                return m.group(1)
-            else:
-                return None
 
     def _load_all_widget_info(self):
         """
@@ -193,7 +169,7 @@ class WidgetManager:
                         # this is something like the ws name or token that needs to get fetched
                         # by the system. Shouldn't be handled by the user.
                         is_constant = True
-                        param_value = self._get_system_variable(p['narrative_system_variable'])
+                        param_value = system_variable(p['narrative_system_variable'])
                     if 'service_method_output_path' in p:
                         param_type = 'from_service_output'
 
@@ -423,7 +399,6 @@ class WidgetManager:
         """
 
         # Prepare data for export into the Javascript.
-        # token = _get_system_variable('token')
 
         if type(widget) is list:
             widget_package = widget[0]

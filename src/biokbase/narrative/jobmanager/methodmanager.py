@@ -177,14 +177,46 @@ class MethodManager(object):
                                           methods=sorted(list(self.method_specs[tag].values()), key=lambda m: m['info']['id'])))
 
 
-    def run_method(self, method_id, tag="release", **kwargs):
+    def run_method(self, method_id, tag="release", version=None, **kwargs):
         """
         Attemps to run the method, returns a Job with the running method info.
         Should *hopefully* also inject that method into the Narrative's metadata.
         Probably need some kind of JavaScript-foo to get that to work.
+
+        Parameters:
+        -----------
+        method_id - should be from the method spec, e.g. 'build_a_metabolic_model'
+                    or 'MegaHit/run_megahit'.
+        tag - optional, one of [release|beta|dev] (default=release)
+        version - optional, a semantic version string. Only released modules have
+                  versions, so if the tag is not 'release', and a version is given,
+                  a ValueError will be raised.
+        **kwargs - these are the set of parameters to be used with the method.
+                   They can be found by using the method_usage function. If any
+                   non-optional methods are missing, a ValueError will be raised.
+
+        Example:
+        --------
+        my_job - mm.run_method('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
         """
+
+        # Intro tests:
         self.check_method(method_id, tag, raise_exception=True)
 
+        if version is not None and tag != "release":
+            raise ValueError("Method versions only apply to released method modules!")
+
+        # Get the spec & params
+        spec = self.method_specs[tag][method_id]
+        params = self._method_params(spec)
+
+        # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
+
+    def _check_parameter(self, param, value):
+        """
+        Tests a value to make sure it's valid.
+        Returns True if valid, False if not.
+        """
 
 
 

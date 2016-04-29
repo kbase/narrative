@@ -243,9 +243,8 @@ class MethodManager(object):
         if len(extra_params):
             raise ValueError('Unknown parameters {} - maybe something was misspelled?\nexecute method_usage("{}", tag="{}") for more information'.format(json.dumps(extra_params), method_id, tag))
 
-        # Now, test for values.
+        # Now, validate parameter values.
         # Should also check if input (NOT OUTPUT) object variables are present in the current workspace
-
         workspace = system_variable('workspace')
         param_errors = list()
         for p in spec_params:
@@ -256,9 +255,19 @@ class MethodManager(object):
         if len(param_errors):
             raise ValueError('Parameter value errors found! {}'.format(json.dumps(param_errors)))
 
+        # Finally
+
         return None
 
     def _check_parameter(self, param, value, workspace):
+        """
+        Checks if the given value matches the rules provided in the param dict.
+        If yes, returns None
+        If no, returns a String with an error.
+
+        This is a pretty light wrapper around _validate_param_value that handles the case
+        where the given value is a list.
+        """
         if param['allow_multiple'] and isinstance(value, list):
             error_list = list()
             for v in value:
@@ -277,7 +286,6 @@ class MethodManager(object):
         Tests a value to make sure it's valid.
         Returns None if valid, an error string if not.
         """
-
         # cases - value == list, int, float, others get rejected
         if not (isinstance(value, basestring) or
                 isinstance(value, int) or
@@ -324,7 +332,7 @@ class MethodManager(object):
             except:
                 return "Given value {} must be a number".format(value)
 
-        # Last, regex. not being used, but... eh.
+        # Last, regex. not being used in any extant specs, but cover it anyway.
         if 'regex_constraint' in param:
             for regex in regex_constraint:
                 if not re.match(regex_constraint, value):

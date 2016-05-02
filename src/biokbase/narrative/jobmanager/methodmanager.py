@@ -5,6 +5,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 from .job import Job
 from biokbase.narrative_method_store.client import NarrativeMethodStore
+from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.workspace.client import Workspace
 import os
 import biokbase.auth
@@ -21,6 +22,7 @@ import re
 
 class MethodManager(object):
     nms = NarrativeMethodStore(URLS.narrative_method_store)
+    njs = NarrativeJobService(URLS.job_service)
     ws_client = Workspace(URLS.workspace)
     method_specs = dict()
 
@@ -114,8 +116,20 @@ class MethodManager(object):
             p_info['type'] = p['field_type']
             p_info['is_output'] = False
 
+            p_info['allow_multiple'] = False
+            if p['allow_multiple'] == 1:
+                p_info['allow_multiple'] = True
+
             if p_info['type'].lower() == 'dropdown':
                 p_info['allowed_values'] = [ opt['value'] for opt in p['dropdown_options']['options'] ]
+            if p_info['type'] == 'checkbox':
+                p_info['allowed_values'] = [True, False]
+
+            defaults = p['default_values']
+            if p_info['allow_multiple']:
+                p_info['default'] = defaults
+            else:
+                p_info['default'] = defaults[0] if len(defaults) > 0 else None
 
             if 'text_options' in p:
                 opts = p['text_options']
@@ -123,7 +137,7 @@ class MethodManager(object):
                     p_info['is_output'] = opts['is_output_name']
                 if 'valid_ws_types' in opts:
                     p_info['allowed_types'] = opts['valid_ws_types']
-                if 'validate_as' in opts:
+                if 'validate_as' in opts and p_info['type'] != 'checkbox':
                     p_info['type'] = opts['validate_as']
                 if 'min_float' in opts:
                     p_info['min_val'] = opts['min_float']
@@ -135,10 +149,8 @@ class MethodManager(object):
                     p_info['max_val'] = opts['max_int']
                 if 'regex_constraint' in opts and len(opts['regex_constraint']):
                     p_info['regex_constraint'] = opts['regex_constraint']
-
-            p_info['allow_multiple'] = False
-            if p['allow_multiple'] == 1:
-                p_info['allow_multiple'] = True
+                if 'checkbox_options' in opts and len(opts['checkbox_options'].keys()) == 2:
+                    p_info['checkbox_map'] = [opts['checkbox_options']['checked_value'], opts['checkbox_options']['unchecked_value']]
 
             params.append(p_info)
 
@@ -221,16 +233,18 @@ class MethodManager(object):
 
         # Get the spec & params
         spec = self.method_specs[tag][method_id]
+        if not 'behavior' in spec or not 'kb_service_input_mapping' in spec['behavior']:
+            raise Exception("Only good for SDK-made methods!")
         spec_params = self._method_params(spec)
 
-        # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
 
+        # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
         spec_param_ids = [ p['id'] for p in spec_params ]
 
         # First, test for presence.
         missing_params = list()
         for p in spec_params:
-            if not p['optional'] and not kwargs.get(p['id'], None):
+            if not p['optional'] and not p['default'] and not kwargs.get(p['id'], None):
                 missing_params.append(p['id'])
         if len(missing_params):
             raise ValueError('Missing required parameters {} - try executing method_usage("{}", tag="{}") for more information'.format(json.dumps(missing_params), method_id, tag))
@@ -255,9 +269,54 @@ class MethodManager(object):
         if len(param_errors):
             raise ValueError('Parameter value errors found! {}'.format(json.dumps(param_errors)))
 
-        # Finally
+        # Hooray, parameters are validated. Set them up for transfer.
+        params = kwargs
+        for p in spec_params:
+            # If any param is a checkbox, need to map from boolean to actual expected value in p['checkbox_map']
+            # note that True = 0th elem, False = 1st
+            if p['type'] == 'checkbox':
+                if p['id'] in params:
+                    checkbox_idx = 0 if params[p['id']] else 1
+                    params[p['id']] = p['checkbox_map'][checkbox_idx]
+            # While we're at it, set the default values for any unset parameters that have them
+            if p['default'] and p['id'] not in params:
+                params[p['id']] = p['default']
 
-        return None
+        # Okay, NOW we can start the show
+        input_vals = dict()
+        for param in spec['behavior']['kb_service_input_mapping']:
+            p_value = None
+            p_id = param.get('target_property', 'invalid_mapping')
+            if 'input_parameter' in param:
+                p_value = params.get(param['input_parameter'], None)
+            elif 'narrative_system_variable' in param:
+                p_value = system_variable(param['narrative_system_variable'])
+            input_vals[p_id] = p_value
+
+        method_name = spec['behavior']['kb_service_method']
+        service_name = spec['behavior']['kb_service_name']
+        service_ver = spec['behavior']['kb_service_version']
+        service_url = spec['behavior']['kb_service_url']
+        # 3. set up app structure
+        app = {'name': 'App wrapper for method ' + method_id,
+               'steps': [{'input_values': [input_vals],
+                          'is_long_running': 1,
+                          'method_spec_id': method_id,
+                          'script': {'has_files': 0, 'method_name': '', 'service_name': ''},
+                          'service': {'method_name': method_name,
+                                      'service_name': service_name,
+                                      'service_url': service_url,
+                                      'service_version': service_ver},
+                          'step_id': method_id,
+                          'type': 'service'}]}
+
+        app_state = self.njs.run_app(app)
+        print "Starting app with the following info:"
+
+        from pprint import pprint
+        pprint(app_state)
+
+        # return KBaseJob(app_state)
 
     def _check_parameter(self, param, value, workspace):
         """
@@ -332,6 +391,15 @@ class MethodManager(object):
             except:
                 return "Given value {} must be a number".format(value)
 
+        # if it's an output object, make sure it follows the data object rules.
+        if param['is_output']:
+            if re.search('\s', value):
+                return "Spaces are not allowed in data object names."
+            if re.match('^\d+$', value):
+                return "Data objects cannot be just a number."
+            if not re.match('^[a-z0-9|\.|\||_\-]*$', value, re.IGNORECASE):
+                return "Data object names can only include symbols: _ - . |"
+
         # Last, regex. not being used in any extant specs, but cover it anyway.
         if 'regex_constraint' in param:
             for regex in regex_constraint:
@@ -360,6 +428,7 @@ class MethodUsage(object):
                 <th>Allowed Types</th>
                 <th>Description</th>
                 <th>Allowed Values</th>
+                <th>Default</th>
             </tr>
         </thead>
         {% for p in usage.params %}
@@ -371,6 +440,8 @@ class MethodUsage(object):
                 {% for t in p.allowed_types %}
                     {{t}}<br>
                 {% endfor %}
+            {% else %}
+                N/A
             {% endif %}
             </td>
             <td>{{ p.short_hint|e }}</td>
@@ -379,8 +450,14 @@ class MethodUsage(object):
                 {% for v in p.allowed_values %}
                     {{v}}<br>
                 {% endfor %}
+            {% else %}
+                N/A
             {% endif %}
             </td>
+            <td>
+            {% if p.default %}
+                {{ p.default }}
+            {% endif %}
             </tr>
         {% endfor %}
         </table>

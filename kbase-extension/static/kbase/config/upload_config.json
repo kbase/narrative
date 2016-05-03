@@ -532,6 +532,7 @@
                         "param" : "oboFile",
                         "optional": false
 		    }
+		}
             },
             "url_mapping": {
                 "OBO.Ontology": {
@@ -561,6 +562,7 @@
                         "param" : "oboFile",
                         "optional": false
 		    }
+		}
             },
             "url_mapping": {
                 "TSV.Ontology": {

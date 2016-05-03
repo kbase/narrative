@@ -23,6 +23,7 @@ define (
 		'bluebird',
 		'narrativeConfig',
 		'util/timeFormat',
+        'base/js/namespace',
 		'kbaseNarrative',
 		'kbaseNarrativeControlPanel',
 		'kbaseNarrativeDataList',
@@ -38,6 +39,7 @@ define (
 		Promise,
 		Config,
 		TimeFormat,
+        Jupyter,
 		kbaseNarrative,
 		kbaseNarrativeControlPanel,
 		kbaseNarrativeDataList,
@@ -66,7 +68,7 @@ define (
             loadingImage: Config.get('loading_gif'),
             notLoggedInMsg: "Please log in to view a workspace.",
             workspaceURL: Config.url('workspace'),
-            lp_url: Config.url('landing_pages'), 
+            lp_url: Config.url('landing_pages'),
             container: null,
             ws_name: null,
         },
@@ -86,10 +88,8 @@ define (
         init: function(options) {
             this._super(options);
             var self = this;
-            
-            if (Jupyter && Jupyter.narrative) {
-                this.ws_name = Jupyter.narrative.getWorkspaceName();
-            }
+
+            this.ws_name = Jupyter.narrative.getWorkspaceName();
 
             var icons = Config.get('icons');
             this.data_icons = icons.data;
@@ -97,7 +97,7 @@ define (
 
             var $dataList = $('<div>');
             this.body().append($dataList);
-            this.dataListWidget = 
+            this.dataListWidget =
                  new kbaseNarrativeDataList($dataList, {
                         ws_name: this.ws_name,
                         parentControlPanel: this,
@@ -157,11 +157,11 @@ define (
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
-                    title: 'Hide / Show data browser', 
-                    container: 'body', 
-                    delay: { 
-                        show: Config.get('tooltip').showDelay, 
-                        hide: Config.get('tooltip').hideDelay 
+                    title: 'Hide / Show data browser',
+                    container: 'body',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
                     }
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
@@ -172,7 +172,7 @@ define (
                 }.bind(this));
 
             this.addButton(this.$slideoutBtn);
-            
+
             return this;
         },
 
@@ -381,11 +381,11 @@ define (
             var myData = [],
                 sharedData = [];
 
-            var myWorkspaces = [], 
+            var myWorkspaces = [],
                 sharedWorkspaces = [];
 
             // model for selected objects to import
-            var mineSelected = [], 
+            var mineSelected = [],
                 sharedSelected = [];
 
             var types = ["KBaseGenomes.Genome",
@@ -628,7 +628,7 @@ define (
 
             function getWorkspaces(view, ignoreWs) {
                 var getWsInfoParams = {};
-                if (view === 'mine') 
+                if (view === 'mine')
                     getWsInfoParams.owners = [user];
                 else
                     getWsInfoParams.excludeGlobal = 1;
@@ -645,7 +645,7 @@ define (
 
                         // check if current or temporary ws - skip if so.
                         var isLegacy = false;
-                        if (d[i][8].is_temporary && 
+                        if (d[i][8].is_temporary &&
                             d[i][8].is_temporary === 'true') {
                             if (d[i][1] === ignoreWs) {
                                 self.currentWsIsTemp();
@@ -653,7 +653,7 @@ define (
                             continue;
                         }
                         var displayName = d[i][1];
-                        if (d[i][8].narrative && 
+                        if (d[i][8].narrative &&
                             d[i][8].narrative_nice_name) {
                             displayName = d[i][8].narrative_nice_name;
                         }
@@ -695,7 +695,7 @@ define (
 
             /**
              * Returns a set of data.
-             * Either uses all workspaces in workspaces array, 
+             * Either uses all workspaces in workspaces array,
              * or just the one named wsName.
              * Also returns only data of the given type, if not undefined
              */
@@ -765,7 +765,7 @@ define (
                     maxRequest = 10000,
                     totalFetch = 0;
 
-                // Set up all possible requests. We'll break out of 
+                // Set up all possible requests. We'll break out of
                 // the request loop in below
                 for (var i=0; i<wsIdsToCounts.length; i++) {
                     var thisWs = wsIdsToCounts[i];
@@ -848,7 +848,7 @@ define (
                     }, 100);
                 }
             }
-            
+
             function renderOnIconsReady(view, data, container, selected, template) {
                 var headerMessage = '';
                 if (data.length >= maxObjFetch) {
@@ -991,11 +991,11 @@ define (
 
             function filterData(data, f) {
                 if (data.length == 0) return [];
-                
+
                 // if we're at our limit for what to load,
                 // then the filter should go against list_objects.
                 // send the filter there and re-render.
-                // ...actually, that won't work because it only 
+                // ...actually, that won't work because it only
                 // returns names. no-op for now.
 
                 var filteredData = [];
@@ -1128,7 +1128,7 @@ define (
                     query = $(this).val();
                     setLoading(view, true);
                     var dataToFilter = sharedData;
-                    if (view === 'mine') 
+                    if (view === 'mine')
                         dataToFilter = myData;
                     var filtered = filterData(dataToFilter, {type: type, ws:ws, query:query})
                     render(view, filtered, container, []);

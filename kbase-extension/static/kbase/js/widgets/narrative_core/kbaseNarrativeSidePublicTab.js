@@ -12,14 +12,16 @@ define (
 		'jquery',
 		'bluebird',
 		'narrativeConfig',
-		'kbaseAuthenticatedWidget'
+		'kbaseAuthenticatedWidget',
+        'base/js/namespace'
 	], function(
 		KBWidget,
 		bootstrap,
 		$,
 		Promise,
 		Config,
-		kbaseAuthenticatedWidget
+		kbaseAuthenticatedWidget,
+        Jupyter
 	) {
     'use strict';
     return KBWidget({
@@ -39,8 +41,8 @@ define (
         loadingImage: Config.get('loading_gif'),
         wsUrl: Config.url('workspace'),
         wsClient: null,
-        // categories: ['genomes', 
-        //              //'metagenomes', 
+        // categories: ['genomes',
+        //              //'metagenomes',
         //              'media', 'plant_gnms'
         //              /*'gwas_populations', 'gwas_population_kinships', 'gwas_population_variations',
         //              'gwas_top_variations', 'gwas_population_traits', 'gwas_gene_lists'*/ ],
@@ -49,7 +51,7 @@ define (
         //     // 'metagenomes': {name: 'Metagenomes',type:'Communities.Metagenome',ws:'wilke:Data',search:true},
         //     'media': {name:'Media',type:'KBaseBiochem.Media',ws:'KBaseMedia',search:false},
         //     'plant_gnms': {name:'Plant Genomes',type:'KBaseGenomes.Genome',ws:'PlantCSGenomes',search:false}
-            
+
         //     'gwas_populations': {name:'GWAS Populations',type:'KBaseGwasData.GwasPopulation',ws:'KBasePublicGwasDataV2',search:true},
         //     'gwas_population_kinships': {name:'GWAS Population Kinships',type:'KBaseGwasData.GwasPopulationKinship',ws:'KBasePublicGwasDataV2',search:true},
         //     'gwas_population_variations': {name:'GWAS Population Variations',type:'KBaseGwasData.GwasPopulationVariation',ws:'KBasePublicGwasDataV2',search:true},
@@ -384,7 +386,7 @@ define (
         //         errorCallback(error);
         //     });
         // },
-        
+
         attachRow: function(index) {
             var obj = this.objectList[index];
             if (obj.attached) { return; }
@@ -575,18 +577,18 @@ define (
             //     }
             // });
         },
-        
+
         copyPrompt: function(object, targetName, thisBtn, withError) {
             var self = this;
             $(thisBtn).prop("disabled", false);
             $(thisBtn).html('<span class="fa fa-chevron-circle-left"/> Add');
             var $input = $('<input/>').attr('type','text').addClass('form-control').val(targetName);
             var dialog = $('<div/>').append($("<p/>").addClass("rename-message")
-                    .html('Enter target object name' + 
+                    .html('Enter target object name' +
                             (withError ? ':' : ' (or leave current one for overwriting):')))
                             .append($("<br/>")).append($input);
             IPython.dialog.modal({
-                title: withError ? 'There are some problems checking object existence' : 
+                title: withError ? 'There are some problems checking object existence' :
                     'Object with this name already exists',
                 body: dialog,
                 buttons : {
@@ -611,7 +613,7 @@ define (
                 }
             });
         },
-        
+
         copyFinal: function(object, targetName, thisBtn) {
             console.log("Copying " + object.ws + "/" + object.id + " -> " + this.wsName + "/" + targetName);
             Promise.resolve(this.wsClient.copy_object({

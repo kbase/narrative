@@ -521,7 +521,17 @@
             "object_name": "outputObject",
             "optional_arguments": {
                 "validate": {},
-                "transform": { "output_file_name" : "Toy" }
+                "transform": {
+		    "output_file_name" : {
+		        "type": "string",
+                        "value" : "obo.json",
+                        "optional": false
+		    },
+		    "input_file_name" : {
+		        "type": "string",
+                        "param" : "oboFile",
+                        "optional": false
+		    }
             },
             "url_mapping": {
                 "OBO.Ontology": {
@@ -540,7 +550,17 @@
             "object_name": "outputObject",
             "optional_arguments": {
                 "validate": {},
-                "transform": { "output_file_name" : "Toy" }
+                "transform": {
+		    "output_file_name" : {
+		        "type": "string",
+                        "value" : "obo.json",
+                        "optional": false
+		    },
+		    "input_file_name" : {
+		        "type": "string",
+                        "param" : "oboFile",
+                        "optional": false
+		    }
             },
             "url_mapping": {
                 "TSV.Ontology": {

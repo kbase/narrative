@@ -521,7 +521,7 @@
             "object_name": "outputObject",
             "optional_arguments": {
                 "validate": {},
-                "transform": {}
+                "transform": { "output_file_name" : "Toy" }
             },
             "url_mapping": {
                 "OBO.Ontology": {
@@ -540,7 +540,7 @@
             "object_name": "outputObject",
             "optional_arguments": {
                 "validate": {},
-                "transform": {}
+                "transform": { "output_file_name" : "Toy" }
             },
             "url_mapping": {
                 "TSV.Ontology": {

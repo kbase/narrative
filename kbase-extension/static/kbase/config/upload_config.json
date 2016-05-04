@@ -572,5 +572,80 @@
                 }
             }
         }
+    },
+
+    "KBaseGenomeAnnotations.GenomeAnnotation" : {
+        "import_genomeannotation_gbk_file" : {
+            "external_type" : "Genbank.Genome",
+            "kbase_type" : "KBaseGenomeAnnotations.GenomeAnnotation",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {}
+            },
+            "url_mapping" : {
+                "Genbank.Genome" : {
+                    "type" : "shock",
+                    "param" : "gbkFile",
+                    "optional" : false
+                }
+            }
+        },
+        "import_genomeannotation_gbk_ftp" : {
+            "external_type" : "Genbank.Genome",
+            "kbase_type" : "KBaseGenomeAnnotations.GenomeAnnotation",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {}
+            },
+            "url_mapping" : {
+                "Genbank.Genome" : {
+                    "type" : "string",
+                    "param" : "ftpFolder",
+                    "optional" : false
+                }
+            }
+        }        
+    },
+    "KBaseGenomeAnnotations.Assembly" : {
+        "import_assembly_fasta_file" : {
+            "external_type" : "FASTA.DNA.Assembly",
+            "kbase_type" : "KBaseGenomeAnnotations.Assembly",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {
+                    "fasta_reference_only" : {
+                        "type" : "boolean",
+                        "param" : "fastaReferenceOnly",
+                        "optional" : false
+                    }
+                }
+            },
+            "url_mapping" : {
+                "FASTA.DNA.Assembly" : {
+                    "type" : "shock",
+                    "param" : "fastaFile",
+                    "optional" : false
+                }
+            }
+        },
+        "import_assembly_fasta_ftp" : {
+            "external_type" : "FASTA.DNA.Assembly",
+            "kbase_type" : "KBaseGenomeAnnotations.Assembly",
+            "object_name" : "outputObject",
+            "optional_arguments" : {
+                "validate" : {},
+                "transform" : {}
+            },
+            "url_mapping" : {
+                "FASTA.DNA.Assembly" : {
+                    "type" : "string",
+                    "param" : "ftpFolder",
+                    "optional" : false
+                }
+            }
+        }
     }
 }

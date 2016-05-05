@@ -25,6 +25,9 @@ import uuid
 import time
 from pprint import pprint
 
+def get_manager():
+    return _manager
+
 class WidgetManager:
     """
     Manages data (and other) visualization widgets for use in the KBase Narrative.
@@ -431,3 +434,5 @@ class WidgetManager:
                                              config=json.dumps(config))
 
         return Javascript(data=js, lib=None, css=None)
+
+_manager = WidgetManager()

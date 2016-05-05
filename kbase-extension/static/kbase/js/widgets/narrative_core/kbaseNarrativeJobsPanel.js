@@ -10,7 +10,8 @@ define (
 		'kbaseNarrativeControlPanel',
 		'util/bootstrapDialog',
 		'util/timeFormat',
-		'util/string'
+		'util/string',
+        'base/js/namespace'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -20,7 +21,8 @@ define (
 		kbaseNarrativeControlPanel,
 		BootstrapDialog,
         TimeFormat,
-        StringUtil
+        StringUtil,
+        Jupyter
 	) {
     'use strict';
     return KBWidget({
@@ -66,6 +68,7 @@ define (
             this._super(options);
 
             this.title.append(this.$jobCountBadge);
+
             $(document).on('registerMethod.Narrative', $.proxy(
                 function(e, jobInfo) {
                     this.registerJob(jobInfo, false);
@@ -194,6 +197,43 @@ define (
             }
 
             return this;
+        },
+
+        initCommChannel: function() {
+            this.commManager = Jupyter.notebook.kernel.comm_manager;
+
+            // simple for now...
+            var handleMessage = function(msg) {
+                console.log('got message from our channel');
+                console.log(msg);
+            };
+
+            // init the listener channel.
+            Jupyter.notebook.kernel.comm_manager.register_target('KBaseJobs', function(comm, msg) {
+                console.log('opened comm');
+                console.log(msg);
+                comm.on_msg(handleMessage);
+            });
+
+            // init the backend with existing jobs.
+            if (this.jobStates === null)
+                this.initJobStates();
+
+            var code = this.getJobInitCode();
+            Jupyter.notebook.kernel.execute(code);
+        },
+
+        getJobInitCode: function() {
+            var jobTuples = [];
+            for (var jobId in this.jobStates) {
+                var source = 'None';
+                if (this.jobStates[jobId].source) {
+                    source = this.jobStates[jobId].source;
+                }
+                jobTuples.push('("' + jobId + '", "release", "' + source + '")');
+            }
+            return ["import biokbase.narrative.jobmanager.jobmanager",
+                    "biokbase.narrative.jobmanager.jobmanager.get_manager().initialize_jobs([" + jobTuples.join(',') + "])"].join('\n');
         },
 
         setJobCounter: function(numJobs) {
@@ -476,12 +516,12 @@ define (
                 this.initJobStates();
 
             // if there's no timer, set one up - this should only happen the first time.
-            if (this.refreshTimer === null) {
-                this.refreshTimer = setInterval(
-                    $.proxy(function() { this.refresh(true, false); }, this),
-                    this.refreshInterval
-                );
-            }
+            // if (this.refreshTimer === null) {
+            //     this.refreshTimer = setInterval(
+            //         $.proxy(function() { this.refresh(true, false); }, this),
+            //         this.refreshInterval
+            //     );
+            // }
 
             // If none of the base Jupyter stuff shows up, then it's not inited yet.
             // Just return silently.

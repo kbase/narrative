@@ -241,6 +241,8 @@ require.config({
         'kbasePValueHistogram'                        : 'kbase/js/ui-common/src/widgets/kbasePValueHistogram',
         'kbasePMIBarchart'                        : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePMIBarchart',
         'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
+        'kbaseOntologyDictionary'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseOntologyDictionary',
+        'kbaseOntologyTranslation'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseOntologyTranslation',
         'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
         'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',

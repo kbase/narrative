@@ -18,6 +18,8 @@ from IPython.display import HTML
 from jinja2 import Template
 import json
 import re
+from biokbase.narrative.common import kblogging
+import logging
 
 def get_manager():
     return _manager
@@ -28,7 +30,10 @@ class MethodManager(object):
     ws_client = clients.get('workspace')
     spec_manager = specmanager.get_manager()
 
+
     def __init__(self):
+        self._log = kblogging.get_logger(__name__)
+        self._log.setLevel(logging.INFO)
         pass
 
     def reload_methods(self):
@@ -177,13 +182,27 @@ class MethodManager(object):
                           'step_id': method_id,
                           'type': 'service'}]}
 
-        app_state = self.njs.run_app(app)
+
+        log_info = {
+            'method_id': method_id,
+            'tag': tag,
+            'version': service_ver,
+            'username': system_variable('user_id')
+        }
+        self._log.setLevel(logging.INFO)
+        kblogging.log_event(self._log, "run_method", log_info)
+
+        try:
+            app_state = self.njs.run_app(app)
+        except Exception, e:
+            log_info.update({'err': str(e)})
+            self._log.setLevel(logging.ERROR)
+            kblogging.log_event(_kblog, "run_method", log_info)
+            raise
 
         new_job = Job(app_state['job_id'], method_id, params, tag=tag, method_version=service_ver, cell_id=cell_id)
         jobmanager.get_manager().register_new_job(new_job)
         return new_job
-
-        # return KBaseJob(app_state)
 
     def _check_parameter(self, param, value, workspace):
         """

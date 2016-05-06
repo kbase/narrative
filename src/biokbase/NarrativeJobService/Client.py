@@ -109,7 +109,7 @@ class NarrativeJobService(object):
                  password=None, token=None, ignore_authrc=False,
                  trust_all_ssl_certificates=False):
         if url is None:
-            url = 'http://localhost:7080'
+            raise ValueError('A url is required')
         scheme, _, _, _, _, _ = _urlparse.urlparse(url)
         if scheme not in _URL_SCHEME:
             raise ValueError(url + " isn't a valid http url")
@@ -193,4 +193,48 @@ class NarrativeJobService(object):
     def list_config(self):
         resp = self._call('NarrativeJobService.list_config',
                           [])
+        return resp[0]
+
+    def ver(self):
+        resp = self._call('NarrativeJobService.ver',
+                          [])
+        return resp[0]
+
+    def status(self):
+        resp = self._call('NarrativeJobService.status',
+                          [])
+        return resp[0]
+
+    def list_running_apps(self):
+        resp = self._call('NarrativeJobService.list_running_apps',
+                          [])
+        return resp[0]
+
+    def run_job(self, params):
+        resp = self._call('NarrativeJobService.run_job',
+                          [params])
+        return resp[0]
+
+    def get_job_params(self, job_id):
+        resp = self._call('NarrativeJobService.get_job_params',
+                          [job_id])
+        return resp
+
+    def add_job_logs(self, job_id, lines):
+        resp = self._call('NarrativeJobService.add_job_logs',
+                          [job_id, lines])
+        return resp[0]
+
+    def get_job_logs(self, params):
+        resp = self._call('NarrativeJobService.get_job_logs',
+                          [params])
+        return resp[0]
+
+    def finish_job(self, job_id, params):
+        self._call('NarrativeJobService.finish_job',
+                   [job_id, params])
+
+    def check_job(self, job_id):
+        resp = self._call('NarrativeJobService.check_job',
+                          [job_id])
         return resp[0]

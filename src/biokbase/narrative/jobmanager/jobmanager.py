@@ -1,9 +1,29 @@
+"""
+KBase Job Manager
+
+The main class here defines a manager for running jobs (as Job objects).
+This class knows how to fetch job status, kill jobs, etc.
+It also communicates with the front end over the KBaseJobs channel.
+
+It is intended for use as a singleton - use the get_manager() function
+to fetch it.
+"""
+__author__ = "Bill Riehl <wjriehl@lbl.gov>"
+__version__ = "0.0.1"
+
 from biokbase.narrative.common.kbjob_manager import KBjobManager
 import biokbase.narrative.clientmanager as clients
 from .job import Job
 from ipykernel.comm import Comm
 import threading
 import json
+import logging
+from biokbase.narrative.common import kblogging
+from biokbase.narrative.common.log_common import EVENT_MSG_SEP
+
+_log = logging.getLogger("tornado.application")
+_kblog = kblogging.get_logger(__name__)
+_kblog.setLevel(logging.INFO)
 
 def get_manager():
     """
@@ -21,6 +41,7 @@ class JobManager(object):
         self._lookup_timer = None
         self.running_jobs = dict()
         self._comm_channel = None
+        _log.warning('initing jobmanager...')
 
     def initialize_jobs(self, job_tuples):
         """
@@ -33,10 +54,16 @@ class JobManager(object):
         This is expected to be run with a list of job ids that have already been initialized.
         For example, if the kernel is restarted and the synching needs to be redone from the front end.
         """
-        for job_tuple in job_tuples:
-            if job_tuple[0] not in self.running_jobs:
-                self.running_jobs[job_tuple[0]] = self.get_existing_job(job_tuple)
-        self.lookup_job_status(set_timer=True)
+        _log.warning('initing job list...')
+        try:
+            for job_tuple in job_tuples:
+                if job_tuple[0] not in self.running_jobs:
+                    self.running_jobs[job_tuple[0]] = self.get_existing_job(job_tuple)
+            self.lookup_job_status(set_timer=True)
+        except Exception, e:
+            _kblog.setLevel(logging.ERROR)
+            kblogging.log_event(_kblog, "init_error", {'err': str(e)})
+            self._send_comm_message('job_init_err', str(e))
 
     def get_existing_job(self, job_tuple):
         """
@@ -51,7 +78,9 @@ class JobManager(object):
         try:
             job_state = clients.get('job_service').check_app_state(job_id)
             return Job.from_state(job_state, json.loads(job_tuple[1]), tag=job_tuple[2], cell_id=job_tuple[3])
-        except:
+        except Exception, e:
+            _kblog.setLevel(logging.ERROR)
+            kblogging.log_event(_kblog, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
             raise
 
     def lookup_job_status(self, set_timer=False):
@@ -63,10 +92,14 @@ class JobManager(object):
         'KBaseJobs' channel.
         """
         status_set = dict()
-        for job_id in self.running_jobs:
-            status_set[job_id] = self.running_jobs[job_id].status()
-
-        self._send_comm_message('job_status', status_set)
+        try:
+            for job_id in self.running_jobs:
+                status_set[job_id] = self.running_jobs[job_id].status()
+            self._send_comm_message('job_status', status_set)
+        except Exception, e:
+            _kblog.setLevel(logging.ERROR)
+            kblogging.log_event(_kblog, "lookup_job_status.error", {'err': str(e)})
+            self._send_comm_message('job_err', str(e))
 
         if set_timer:
             self._lookup_timer = threading.Timer(10, self.lookup_job_status, kwargs={'set_timer':True})

@@ -210,7 +210,7 @@ define (
                 console.log(msg.content.data.content);
             }
             else {
-                console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "':");
+                console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "'):");
                 console.warn(msg);
             }
         },
@@ -219,9 +219,8 @@ define (
             this.commManager = Jupyter.notebook.kernel.comm_manager;
 
             // init the listener channel.
+            console.info('Registering Job channel with kernel.');
             Jupyter.notebook.kernel.comm_manager.register_target('KBaseJobs', function(comm, msg) {
-                console.log('opened comm');
-                console.log(msg);
                 comm.on_msg(this.handleCommMessages.bind(this));
             }.bind(this));
 

@@ -98,8 +98,9 @@ class JobManager(object):
         }
         if not self._comm_channel:
             self._comm_channel = Comm(target_name='KBaseJobs', data={})
+        self._comm_channel.open()
         self._comm_channel.send(msg)
-
+        self._comm_channel.close()
 
 _manager = JobManager()
 

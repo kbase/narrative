@@ -3,6 +3,7 @@ import biokbase.narrative.clientmanager as clients
 from .job import Job
 from ipykernel.comm import Comm
 import threading
+import json
 
 def get_manager():
     """
@@ -17,9 +18,9 @@ class JobManager(object):
     front end listens to.
     """
     def __init__(self):
-        self._comm_channel = Comm(target_name='KBaseJobs', data={})
         self._lookup_timer = None
         self.running_jobs = dict()
+        self._comm_channel = None
 
     def initialize_jobs(self, job_tuples):
         """
@@ -41,13 +42,15 @@ class JobManager(object):
         """
         creates a Job object from a job_id that already exists.
         If no job exists, throws a XXXX Exception. (not found? value error?)
+        Tuple format:
+        ( job_id, job_inputs (as json), tag, cell_id )
         """
 
         # remove the prefix (if present) and take the last element in the split
         job_id = job_tuple[0].split(':')[-1]
         try:
             job_state = clients.get('job_service').check_app_state(job_id)
-            return Job.from_state(job_state, tag=job_tuple[1], cell_id=job_tuple[2])
+            return Job.from_state(job_state, json.loads(job_tuple[1]), tag=job_tuple[2], cell_id=job_tuple[3])
         except:
             raise
 
@@ -63,7 +66,7 @@ class JobManager(object):
         for job_id in self.running_jobs:
             status_set[job_id] = self.running_jobs[job_id].status()
 
-        self._comm_channel.send(status_set)
+        self._send_comm_message('job_status', status_set)
 
         if set_timer:
             self._lookup_timer = threading.Timer(10, self.lookup_job_status, kwargs={'set_timer':True})
@@ -76,15 +79,27 @@ class JobManager(object):
         if self._lookup_timer:
             self._lookup_timer.cancel()
 
-    def add_job_from_id(self, job_id):
-        try:
-            new_job = self.get_existing_job(job_id)
-            self.running_jobs[job_id] = new_job
-        except:
-            raise
-
-    def register_job(self, job):
+    def register_new_job(self, job):
         self.running_jobs[job.job_id] = job
+        # push it forward! create a new_job message.
+        self._send_comm_message('new_job', {
+            'id': job.job_id,
+            'method_id': job.method_id,
+            'inputs': job.inputs,
+            'version': job.method_version,
+            'tag': job.tag,
+            'cell_id': job.cell_id
+        })
+
+    def _send_comm_message(self, msg_type, content):
+        msg = {
+            'msg_type': msg_type,
+            'content': content
+        }
+        if not self._comm_channel:
+            self._comm_channel = Comm(target_name='KBaseJobs', data={})
+        self._comm_channel.send(msg)
+
 
 _manager = JobManager()
 

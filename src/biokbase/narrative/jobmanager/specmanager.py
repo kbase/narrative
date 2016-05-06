@@ -3,6 +3,9 @@ from .method_util import (
     method_version_tags,
     check_tag
 )
+import json
+from jinja2 import Template
+from IPython.display import HTML
 
 def get_manager():
     return _manager

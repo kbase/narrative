@@ -5,6 +5,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 from .job import Job
 import biokbase.narrative.clients as clients
+import biokbase.narrative.jobmanager.jobmanager as jobmanager
 import specmanager as specmanager
 import os
 import biokbase.auth
@@ -178,8 +179,8 @@ class MethodManager(object):
 
         app_state = self.njs.run_app(app)
 
-        new_job = Job(app_state['job_id'], method_id, tag=tag, method_version=service_ver, cell_id=cell_id)
-        job_manager.get_manager.register_job(new_job)
+        new_job = Job(app_state['job_id'], method_id, params, tag=tag, method_version=service_ver, cell_id=cell_id)
+        jobmanager.get_manager().register_new_job(new_job)
         return new_job
 
         # return KBaseJob(app_state)

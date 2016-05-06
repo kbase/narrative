@@ -88,7 +88,7 @@
             }
         }
     },
-    
+
     "KBaseGenomes.ContigSet" : {
         "import_contigset_fasta_file" : {
             "external_type" : "FASTA.DNA.Assembly",
@@ -395,7 +395,7 @@
                     "format_type" : {
                         "type" : "string",
                         "value" : "Simple",
-                        "optional" : false                        
+                        "optional" : false
                     },
                     "fill_missing_values" : {
                         "type" : "int",
@@ -521,7 +521,18 @@
             "object_name": "outputObject",
             "optional_arguments": {
                 "validate": {},
-                "transform": {}
+                "transform": {
+                    "output_file_name" : {
+                        "type": "string",
+                                "value" : "obo.json",
+                                "optional": false
+                    },
+                    "input_file_name" : {
+                        "type": "string",
+                        "param" : "oboFile",
+                        "optional": false
+                    }
+                }
             },
             "url_mapping": {
                 "OBO.Ontology": {
@@ -540,7 +551,13 @@
             "object_name": "outputObject",
             "optional_arguments": {
                 "validate": {},
-                "transform": {}
+                "transform": {
+                    "output_file_name" : {
+                        "type" : "string",
+                        "value" : "Toy",
+                        "optional" : false
+                    }
+                }
             },
             "url_mapping": {
                 "TSV.Ontology": {

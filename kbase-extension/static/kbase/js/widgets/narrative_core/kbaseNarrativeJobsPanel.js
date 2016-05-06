@@ -199,21 +199,31 @@ define (
             return this;
         },
 
+        handleCommMessages: function(msg) {
+            var msgType = msg.content.data.msg_type;
+            if (msgType === 'new_job') {
+                console.log("Adding new job info:");
+                this.registerKernelJob(msg.content.data.content);
+            }
+            else if (msgType === 'job_status') {
+                console.log("updating job status with following info:");
+                console.log(msg.content.data.content);
+            }
+            else {
+                console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "':");
+                console.warn(msg);
+            }
+        },
+
         initCommChannel: function() {
             this.commManager = Jupyter.notebook.kernel.comm_manager;
-
-            // simple for now...
-            var handleMessage = function(msg) {
-                console.log('got message from our channel');
-                console.log(msg);
-            };
 
             // init the listener channel.
             Jupyter.notebook.kernel.comm_manager.register_target('KBaseJobs', function(comm, msg) {
                 console.log('opened comm');
                 console.log(msg);
-                comm.on_msg(handleMessage);
-            });
+                comm.on_msg(this.handleCommMessages.bind(this));
+            }.bind(this));
 
             // init the backend with existing jobs.
             if (this.jobStates === null)
@@ -226,11 +236,33 @@ define (
         getJobInitCode: function() {
             var jobTuples = [];
             for (var jobId in this.jobStates) {
+                var jobInfo = this.jobStates[jobId];
                 var source = 'None';
-                if (this.jobStates[jobId].source) {
-                    source = this.jobStates[jobId].source;
+                if (jobInfo.source) {
+                    source = jobInfo.source;
                 }
-                jobTuples.push('("' + jobId + '", "release", "' + source + '")');
+                var inputs = {};
+                if (jobInfo.inputs) {
+                    inputs = jobInfo.inputs;
+                }
+                else if (source !== 'None') {
+                    var cell = Jupyter.narrative.getCellByKbaseId(source);
+                    if (cell && cell.metadata && cell.metadata['kb-cell']) {
+                        var state = cell.metadata['kb-cell']['widget_state'];
+                        if (state.length > 0) {
+                            if (state[0].state.params) {
+                                inputs = state[0].state.params;
+                                //whew.
+                            }
+                        }
+                    }
+                }
+                var tag = 'release';
+                if (jobInfo.tag) {
+                    tag = jobInfo.tag;
+                }
+                jobTuples.push("('" + jobId + "', '" + StringUtil.safeJSONStringify(inputs) + "', '" + tag + "', '" + source + "')");
+
             }
             return ["import biokbase.narrative.jobmanager.jobmanager",
                     "biokbase.narrative.jobmanager.jobmanager.get_manager().initialize_jobs([" + jobTuples.join(',') + "])"].join('\n');
@@ -433,6 +465,34 @@ define (
             this.$errorPanel.hide();
             this.$loadingPanel.hide();
             this.$jobsPanel.show();
+        },
+
+        /**
+         * @method
+         * Similar to registerJob below, this registers a job that was started by the Kernel, then pushed over
+         * the KBaseJobs comm channel. This expects the following elements (will be replaced with null if not present):
+         * id - string, required - will fail if not present
+         * method_id - string
+         * tag - string
+         * version - string
+         * inputs - semi-random object - keys are the input values, values are, well, the inputs
+         * cell_id - string, optional - the id of the KBase cell that started the job
+         */
+        registerKernelJob: function(jobInfo) {
+            if (!Jupyter.notebook || !jobInfo.id)
+                return;
+            if (!Jupyter.notebook.metadata.job_ids) {
+                Jupyter.notebook.metadata.job_ids = {
+                    'methods': []
+                };
+            }
+            if (jobInfo.cell_id) {
+                jobInfo.source = jobInfo.cell_id;
+            }
+            Jupyter.notebook.metadata.job_ids['methods'].push(jobInfo);
+            this.jobStates[jobInfo.id] = $.extend({}, jobInfo, {'status' : null});
+            this.source2Job[jobInfo.source] = jobInfo.id;
+            Jupyter.notebook.save_checkpoint();
         },
 
         /**

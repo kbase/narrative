@@ -21,8 +21,9 @@ class Job ():
     method_id = None
     method_version = None
     cell_id = None
+    inputs = None
 
-    def __init__(self, job_id, method_id, tag='release', method_version=None, cell_id=None):
+    def __init__(self, job_id, method_id, inputs, tag='release', method_version=None, cell_id=None):
         """
         Initializes a new Job with a given id, method id, and method method_version.
         The method_id and method_version should both align with what's available in
@@ -34,25 +35,31 @@ class Job ():
         self.tag = tag
         self.cell_id = cell_id
         self.job_manager = KBjobManager()
+        self.inputs = inputs
 
     @classmethod
-    def from_state(Job, state, tag='release', cell_id=None):
+    def from_state(Job, state, inputs, tag='release', cell_id=None):
         return Job(state['job_id'],
                    state['original_app']['steps'][0]['method_spec_id'],
+                   inputs,
                    tag=tag,
                    method_version=state['original_app']['steps'][0]['service'].get('service_version', None),
                    cell_id=cell_id)
 
     def info(self):
         spec = self.method_spec()
-        state = self.full_state()
         print "Method name (id): {}".format(spec['info']['name'], self.method_id)
         print "Version: {}".format(spec['info']['ver'])
-        print "Status: {}".format(state['job_state'])
-        inputs = map_inputs_from_state(state, spec)
-        print "Inputs:\n------"
-        for p in inputs:
-            print "{}: {}".format(p, inputs[p])
+
+        try:
+            state = self.full_state()
+            print "Status: {}".format(state['job_state'])
+            inputs = map_inputs_from_state(state, spec)
+            print "Inputs:\n------"
+            for p in inputs:
+                print "{}: {}".format(p, inputs[p])
+        except:
+            print "Unable to retrieve current running state!"
 
     def method_spec(self):
         return specmanager.get_manager().get_method_spec(self.method_id, self.tag)
@@ -65,9 +72,12 @@ class Job ():
         Queries the job service to see the status of the current job.
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
-        return clients.get('job_service').check_app_state(self.job_id)
+        try:
+            return clients.get('job_service').check_app_state(self.job_id)
+        except Exception, e:
+            raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
 
-    def results(self):
+    def output_viewer(self):
         """
         For a complete job, returns the job results.
         An incomplete job throws an exception
@@ -84,7 +94,7 @@ class Job ():
                 elif 'constant_value' in out_param:
                     widget_params[p_id] = out_param['constant_value']
                 elif 'input_parameter' in out_param:
-                    widget_params[p_id] = state['original_app']['steps'][0]['input_values'][0][out_param['input_parameter']]
+                    widget_params[p_id] = self.inputs.get(out_param['input_parameter'], None)
                 elif 'service_method_output_path' in out_param:
                     widget_params[p_id] = get_sub_path(json.loads(state['step_outputs'][self.method_id]), out_param['service_method_output_path'], 0)
 

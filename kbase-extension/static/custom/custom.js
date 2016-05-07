@@ -156,9 +156,14 @@ define(['jquery',
         cellToolbar.CellToolbar.prototype.renderToggleState = function () {
             var toggleState = this.cell.getCellState('toggleState', 'unknown');
             // Test to see if the kbaseNarrativeCellMenu is attached to this toolbar.
-            var elemData = $(this.inner_element).find('.button_container').data();
-            if (elemData && elemData['kbaseNarrativeCellMenu'])
-               $(this.inner_element).find('.button_container').kbaseNarrativeCellMenu('toggleState', toggleState);
+            // 
+            //var elemData = $(this.inner_element).find('.button_container').data();
+            //if (elemData && elemData['kbaseNarrativeCellMenu'])
+            //   $(this.inner_element).find('.button_container').kbaseNarrativeCellMenu('toggleState', toggleState);
+            //   
+            // TODO: rewire the rendering of togglestate to just go through the
+            // natural cell toolbar refresh which occurs when the cell metadata
+            // is updated (cell.metadata = {what:'ever'};).
         };
 
         // disable hiding of the toolbar

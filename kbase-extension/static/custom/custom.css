@@ -173,8 +173,13 @@ span#notebook_name:hover {
     background-color: #FFF;
 }
 */
+
 .notebook_app .celltoolbar > .button_container {
-    width: 100%;
+    flex: 0 auto;
+}
+
+.notebook_app .celltoolbar > .button_container:nth-child(1) {
+    flex: auto;
 }
 
 .notebook_app .prompt {

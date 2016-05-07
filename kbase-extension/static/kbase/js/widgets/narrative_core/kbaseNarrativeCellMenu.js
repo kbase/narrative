@@ -1,19 +1,12 @@
 /*global define*/
 /*jslint white: true*/
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'util/timeFormat'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		TimeFormat
-	) {
+define(['jquery',
+    'narrativeConfig',
+    'util/timeFormat',
+    'base/js/namespace',
+    'kbwidget',
+    'bootstrap'],
+    function ($, Config, TimeFormat, Jupyter) {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeCellMenu',
@@ -35,6 +28,15 @@ define (
 
             this.$timestamp = $('<span class="kb-func-timestamp">');
 
+                var devMode = true;
+
+                var $editMetadataButton = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Edit Cell Metadata (dev mode!!)">')
+                    .append($('<span class="fa fa-file-o" style="font-size:14pt;">'))
+                    .click(function () {
+                        alert('editing metadata....');
+                    }
+                    .bind(this));
+
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
                 .append($('<span class="fa fa-trash-o" style="font-size:14pt;">'))
                 .click(function () {
@@ -47,11 +49,10 @@ define (
             this.$collapseBtn = $('<button type="button" class="btn btn-default btn-xs" role="button" data-button="toggle" style="width:20px"><span class="fa fa-chevron-down"></button>')
                 .on('click', function () {
                     this.$elem.trigger('toggle.toolbar');
-                }.bind(this));
-
-            var cell = this.options.cell;
-
-
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    .bind(this));
 
             this.$menu = $('<ul>')
                 .addClass('dropdown-menu dropdown-menu-right');
@@ -251,7 +252,7 @@ define (
                     default: 
                         self.$jobStateIcon.html('?: ' + data.status); 
                 }
-            })
+                });
             
             this.$elem.on('job-state.toolbar', function (e, data) {
                 switch (data.status) {
@@ -343,6 +344,7 @@ define (
                             .append(this.$jobStateIcon)
                             .append($deleteBtn)
                             .append($dropdownMenu)
+                                .append($editMetadataButton)
                         )
                     )
                 )
@@ -411,8 +413,10 @@ define (
 
             return this;
         },
-
-        toggleState: function(state) {
+            toggleState: function (state) {
+                if (!this.$collapseBtn) {
+                    return;
+                }
             var $icon = this.$collapseBtn.find('span.fa');
 
             switch (state) {

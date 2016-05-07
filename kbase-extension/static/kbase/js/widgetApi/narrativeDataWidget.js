@@ -45,7 +45,7 @@ define([
                         req = runtimeManager.getModuleLoader('0.1.1', require, '/narrative/widgetApi/kbase/js/widgetApi');
 
                     req([
-                        'kb_widget/widgetManager',
+                        'kb_widget_service/widgetManager',
                         // 'yaml!./config.yml',
                         'kb_common/props',
                         'kb_common/session',

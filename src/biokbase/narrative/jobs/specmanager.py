@@ -7,14 +7,16 @@ import json
 from jinja2 import Template
 from IPython.display import HTML
 
-def get_manager():
-    return _manager
-
 class SpecManager(object):
+    __instance = None
+
     method_specs = dict()
 
-    def __init__(self):
-        self.reload_methods()
+    def __new__(cls):
+        if SpecManager.__instance is None:
+            SpecManager.__instance = object.__new__(cls)
+            SpecManager.__instance.reload_methods()
+        return SpecManager.__instance
 
     def get_method_spec(self, method_id, tag='release'):
         self.check_method(method_id, tag, raise_exception=True)
@@ -268,6 +270,3 @@ class MethodUsage(object):
                 s = s + p_def
 
         return s
-
-
-_manager = SpecManager()

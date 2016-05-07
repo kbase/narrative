@@ -6,7 +6,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 from .job import Job
 import biokbase.narrative.clients as clients
 from .jobmanager import JobManager
-import specmanager as specmanager
+from .specmanager import SpecManager
 import os
 import biokbase.auth
 from .method_util import (
@@ -27,7 +27,7 @@ class MethodManager(object):
     nms = clients.get('narrative_method_store')
     njs = clients.get('job_service')
     ws_client = clients.get('workspace')
-    spec_manager = specmanager.get_manager()
+    spec_manager = SpecManager()
     _log = kbLogging.get_logger(__name__)
     _log.setLevel(logging.INFO)
 

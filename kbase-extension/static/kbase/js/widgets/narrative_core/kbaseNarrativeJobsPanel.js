@@ -263,8 +263,8 @@ define (
                 jobTuples.push("('" + jobId + "', '" + StringUtil.safeJSONStringify(inputs) + "', '" + tag + "', '" + source + "')");
 
             }
-            return ["import biokbase.narrative.jobmanager.jobmanager",
-                    "biokbase.narrative.jobmanager.jobmanager.get_manager().initialize_jobs([" + jobTuples.join(',') + "])"].join('\n');
+            return ["from biokbase.narrative.jobs.jobmanager import JobManager",
+                    "JobManager().initialize_jobs([" + jobTuples.join(',') + "])"].join('\n');
         },
 
         setJobCounter: function(numJobs) {

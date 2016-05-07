@@ -4,7 +4,7 @@ KBase job class
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 import biokbase.narrative.clients as clients
-import specmanager as specmanager
+from .specmanager import SpecManager
 import biokbase.narrative.widgetmanager as widgetmanager
 from .method_util import (
     system_variable,
@@ -62,7 +62,7 @@ class Job ():
             print "Unable to retrieve current running state!"
 
     def method_spec(self):
-        return specmanager.get_manager().get_method_spec(self.method_id, self.tag)
+        return SpecManager().get_method_spec(self.method_id, self.tag)
 
     def status(self):
         return self.full_state()['job_state']

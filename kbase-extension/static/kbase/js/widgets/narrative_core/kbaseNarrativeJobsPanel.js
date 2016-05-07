@@ -208,6 +208,15 @@ define (
             else if (msgType === 'job_status') {
                 console.log("updating job status with following info:");
                 console.log(msg.content.data.content);
+                // kind silly, but yet again, it's late on Friday and I want to go home.
+                var status = {},
+                    info = {},
+                    content = msg.content.data.content;
+                for (var job_id in content) {
+                    status[job_id] = content[job_id].state;
+                    info[job_id] = {'spec':{'methodSpec': content[job_id]['spec']}};
+                }
+                this.populateJobsPanel(status, info);
             }
             else {
                 console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "'):");

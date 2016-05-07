@@ -55,10 +55,14 @@ class JobManager(object):
             for job_tuple in job_tuples:
                 if job_tuple[0] not in self.running_jobs:
                     self.running_jobs[job_tuple[0]] = self.get_existing_job(job_tuple)
-            self.lookup_job_status(set_timer=True)
+
+            # only keep one loop at a time in cause this gets called again!
+            if self._lookup_timer is not None:
+                self._lookup_timer.cancel()
+            self.lookup_job_status_loop()
         except Exception, e:
             self._log.setLevel(logging.ERROR)
-            kblogging.log_event(_kblog, "init_error", {'err': str(e)})
+            kblogging.log_event(_log, "init_error", {'err': str(e)})
             self._send_comm_message('job_init_err', str(e))
 
     def get_existing_job(self, job_tuple):
@@ -76,10 +80,10 @@ class JobManager(object):
             return Job.from_state(job_state, json.loads(job_tuple[1]), tag=job_tuple[2], cell_id=job_tuple[3])
         except Exception, e:
             self._log.setLevel(logging.ERROR)
-            kblogging.log_event(_kblog, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
+            kblogging.log_event(_log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
             raise
 
-    def lookup_job_status(self, set_timer=False):
+    def lookup_job_status(self):
         """
         Starts the job status lookup. This then optionally spawns a timer that
         looks up the status again after a few seconds.
@@ -90,18 +94,20 @@ class JobManager(object):
         status_set = dict()
         try:
             for job_id in self.running_jobs:
-                status_set[job_id] = self.running_jobs[job_id].status()
+                status_set[job_id] = {'state': self.running_jobs[job_id].full_state(),
+                                      'spec': self.running_jobs[job_id].method_spec()}
             self._send_comm_message('job_status', status_set)
         except Exception, e:
             self._log.setLevel(logging.ERROR)
-            kblogging.log_event(_kblog, "lookup_job_status.error", {'err': str(e)})
+            kblogging.log_event(_log, "lookup_job_status.error", {'err': str(e)})
             self._send_comm_message('job_err', str(e))
 
-        if set_timer:
-            self._lookup_timer = threading.Timer(10, self.lookup_job_status, kwargs={'set_timer':True})
-            self._lookup_timer.start()
+    def lookup_job_status_loop(self):
+        self.lookup_job_status()
+        self._lookup_timer = threading.Timer(10, self.lookup_job_status_loop)
+        self._lookup_timer.start()
 
-    def cancel_job_lookup(self):
+    def cancel_job_lookup_loop(self):
         """
         Cancels a running timer if one's still alive.
         """
@@ -119,6 +125,12 @@ class JobManager(object):
             'tag': job.tag,
             'cell_id': job.cell_id
         })
+
+    def get_job(self, job_id):
+        if job_id in self.running_jobs:
+            return self.running_jobs[job_id]
+        else:
+            raise ValueError('No job present with id {}'.format(job_id))
 
     def _send_comm_message(self, msg_type, content):
         msg = {

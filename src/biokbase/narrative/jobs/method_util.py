@@ -47,3 +47,23 @@ def system_variable(var):
             return m.group(1)
         else:
             return None
+
+def map_inputs_from_state(state, method_spec):
+    """
+    returns a dict of readable (ish) method inputs - those used for the run_method function - to the input values.
+    narrative_system_variables are ignored, so workspace names and tokens shouldn't show up.
+    """
+    input_dict = dict()
+    inputs = state['original_app']['steps'][0]['input_values'][0]
+    spec_inputs = method_spec['behavior']['kb_service_input_mapping']
+    # preprocess so it's O(1) lookup
+    targets_to_inputs = dict()
+    for spec_input in spec_inputs:
+        if 'input_parameter' in spec_input:
+            targets_to_inputs[spec_input['target_property']] = spec_input['input_parameter']
+
+    for target_name in inputs:
+        if target_name in targets_to_inputs:
+            input_dict[targets_to_inputs[target_name]] = inputs[target_name]
+
+    return input_dict

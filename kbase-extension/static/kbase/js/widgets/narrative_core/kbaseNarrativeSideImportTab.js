@@ -14,16 +14,18 @@ define (
 		'kbaseAuthenticatedWidget',
 		'select2',
 		'json!kbase/config/upload_config.json',
-		'util/string'
+		'util/string',
+        'base/js/namespace'
 	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbwidget,
-		kbaseAuthenticatedWidget,
-		select2,
-		transformConfig
+        KBWidget,
+        bootstrap,
+        $,
+        Config,
+        kbaseAuthenticatedWidget,
+        select2,
+        transformConfig,
+        StringUtil,
+        Jupyter
 	) {
     'use strict';
     return KBWidget({
@@ -47,20 +49,20 @@ define (
         types: null,            // {type_name -> type_spec}
         selectedType: null,     // selected type name
         widgetPanel: null,      // div for selected type
-        widgetPanelCard1: null, // first page with importer type combobox (this page will be put on widgetPanel) 
-        widgetPanelCard2: null, // second page with import widget (this page will be put on widgetPanel) 
+        widgetPanelCard1: null, // first page with importer type combobox (this page will be put on widgetPanel)
+        widgetPanelCard2: null, // second page with import widget (this page will be put on widgetPanel)
         infoPanel: null,
         inputWidget: null,      // {methodId -> widget for selected type}
         tabs: null,             // mapping {methodId -> div}
-	fileUploadInProgress: false,
-        
+        fileUploadInProgress: false,
+
         init: function(options) {
             this._super(options);
             this.wsName = Jupyter.narrative.getWorkspaceName();
 
             return this;
         },
-        
+
         render: function() {
             var self = this;
             this.inputWidget = {};
@@ -97,7 +99,7 @@ define (
                                        self.back();
                                     }, this)
                                 );
-            
+
             self.$warningModal.append(
                 $('<div>').addClass('modal-dialog').append(
                     $('<div>').addClass('modal-content').append(
@@ -118,7 +120,7 @@ define (
             this.widgetPanelCard1.append("<div class='kb-cell-run'><h2 class='collapse in'>" +
                     "Import data from your local computer or another data source. First, select the type of data you wish to import." +
                     "</h2></div><hr>");
-            
+
             var $nameDiv = $('<div>')
                            .addClass("kb-method-parameter-name")
                            .css("text-align", "left")
@@ -152,7 +154,7 @@ define (
                 .append($hintDiv)
                 .append('<div style="height: 30px">')
                 .append($('<div>').append($nextButton));
-            
+
             this.widgetPanelCard2 = $('<div style="display: none; margin: 0px;">');
             this.widgetPanel.append(this.widgetPanelCard2);
 
@@ -164,7 +166,7 @@ define (
             this.$mainPanel.append(this.infoPanel);
 
             this.methClient = new NarrativeMethodStore(this.methodStoreURL);
-            this.methClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1}, 
+            this.methClient.list_categories({'load_methods': 0, 'load_apps' : 0, 'load_types' : 1},
                 $.proxy(function(data) {
                     var aTypes = data[3];
                     var methodIds = [];
@@ -182,7 +184,7 @@ define (
                             }
                         }
                     }
-                    self.methClient.get_method_full_info({ 'ids' : methodIds }, 
+                    self.methClient.get_method_full_info({ 'ids' : methodIds },
                         $.proxy(function(fullInfoList) {
                             self.methodFullInfo = {};
                             for (var i in fullInfoList) {
@@ -200,7 +202,7 @@ define (
                                     }
                                     keys.sort(function(a,b) {return self.types[a]["name"].localeCompare(self.types[b]["name"])});
                                     for (var keyPos in keys) {
-                                        addItem(keys[keyPos]);                                      
+                                        addItem(keys[keyPos]);
                                     }
                                     $dropdown.select2({
                                         minimumResultsForSearch: -1,
@@ -276,7 +278,7 @@ define (
                     $cancelButton.show();
                 }
             };
-            
+
             $importButton.click(
                 $.proxy(function(event) {
                     event.preventDefault();
@@ -301,18 +303,18 @@ define (
                         }
                 }, this)
             );
-            
+
             $cancelButton.click(function() {
                 self.stopTimer();
 		if (self.fileUploadInProgress)
 		{
 		    self.getInputWidget().cancelImport();
 		}
-		    
+
                 btnImport(true);
                 self.showInfo("Import job was cancelled");
             });
-            
+
             var $backButton = $('<button>')
                              .attr('id', this.cellId + '-back')
                              .attr('type', 'button')
@@ -337,7 +339,7 @@ define (
             $cancelButton.hide();
             self.widgetPanelCard2.append($buttons);
         },
-        
+
         showTab: function(type, methodPos, $header, $body, numberOfTabs) {
             var self = this;
             var methodId = this.types[type]["import_method_ids"][methodPos];
@@ -346,7 +348,7 @@ define (
             if (!inputWidgetName || inputWidgetName === 'null')
                 inputWidgetName = "kbaseNarrativeMethodInput";
             var methodJson = JSON.stringify(methodSpec);
-            
+
             var $inputDiv = $('<div>');
 
             // These are the 'delete' and 'run' buttons for the cell
@@ -368,7 +370,7 @@ define (
                     .addClass('kb-func-desc')
                     .css({'margin' : '20px 0px 0px 20px', 'display' : 'none'})
                     .append(methodDescr);
-            if (methodDescr && methodDescr != '' && methodDescr != 'none' && 
+            if (methodDescr && methodDescr != '' && methodDescr != 'none' &&
                     methodDescr != methodTitle && (methodDescr + ".") != methodTitle) {
                 $overviewSwitch.click(function(){
                     $methodDescrPanel.toggle();
@@ -386,12 +388,12 @@ define (
                     .append($inputDiv))
                     .append($('<div>')
                     .css({'overflow' : 'hidden', 'margin' : '0px 0px 0px 18px'}));
-                        
+
             var isShown = methodPos == 0;
             var tabName = methodSpec.info.name;
-            var params = {tab: tabName, 
-                          content: tab, 
-                          canDelete : false, 
+            var params = {tab: tabName,
+                          content: tab,
+                          canDelete : false,
                           show: isShown};
             if (numberOfTabs == 1) {
                 this.widgetPanelCard2.append(tab);
@@ -427,7 +429,7 @@ define (
             // var wig = w1({ method: methodJson, isInSidePanel: true });
             var wig = $inputDiv[inputWidgetName]({ method: methodJson, isInSidePanel: true });
 	    this.inputWidget[methodId] = wig;
-            
+
             var onChange = function() {
                 var w = self.getInputWidget();
                 if (self.timer)
@@ -444,10 +446,10 @@ define (
                 var paramId = paramValues[paramPos].id;
                 wig.addInputListener(paramId, onChange);
             }
-            
+
             this.tabs[methodId] = tab;
         },
-        
+
         getSelectedTabId: function() {
             var ret = null;
             for (var tabId in this.tabs) {
@@ -461,7 +463,7 @@ define (
         getInputWidget: function() {
             return this.inputWidget[this.getSelectedTabId()];
         },
-        
+
         back: function() {
             var self = this;
             if (self.timer != null) {
@@ -476,7 +478,7 @@ define (
             this.widgetPanelCard2.css('display', 'none');
             this.widgetPanelCard1.css('display', '');
         },
-        
+
 
         buildTransformParameters: function(objectType, methodId, params) {
             var self = this;
@@ -582,7 +584,7 @@ define (
                 var paramValue = undefined;
 
                 // value overrides all! fetch it first
-                if (paramInfo.value) 
+                if (paramInfo.value)
                     paramValue = paramInfo.value;
                 // if no value, look for param attribute and resolve it
                 else if (paramInfo.param)
@@ -636,7 +638,7 @@ define (
 
 		var paramValueArray = self.getInputWidget().getParameters();
 		var params = {};
-		
+
 		for (var i in methodSpec.parameters) {
                     var paramId = methodSpec.parameters[i].id;
                     var paramValue = paramValueArray[i];
@@ -676,7 +678,7 @@ define (
 		self.fileUploadInProgress = false;
 	    });
         },
-        
+
         asBool: function(val) {
             if (!val)
                 return false;
@@ -726,7 +728,7 @@ define (
             self.timer = setInterval(timeLst, 5000);
             timeLst();
         },
-        
+
         stopTimer: function() {
             var self = this;
             if (self.timer != null) {
@@ -734,7 +736,7 @@ define (
                 self.timer = null;
             }
         },
-        
+
         showError: function(error) {
             console.log(error);
             if (typeof error === 'object' && error.error) {

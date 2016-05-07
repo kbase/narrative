@@ -4,7 +4,7 @@ Tests for the method_util module
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
 import unittest
-from biokbase.narrative.jobmanager.method_util import (
+from biokbase.narrative.jobs.method_util import (
     check_tag,
     system_variable
 )

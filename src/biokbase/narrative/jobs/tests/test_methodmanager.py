@@ -1,7 +1,7 @@
 """
 Tests for the method manager.
 """
-from biokbase.narrative.jobmanager.methodmanager import MethodManager
+from biokbase.narrative.jobs.methodmanager import MethodManager
 import unittest
 from IPython.display import HTML
 

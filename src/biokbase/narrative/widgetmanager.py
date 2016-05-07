@@ -11,7 +11,7 @@ from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.narrative.common.url_config import URLS
 from biokbase.workspace.client import Workspace
 from biokbase.narrative_method_store.client import NarrativeMethodStore
-from biokbase.narrative.jobmanager.method_util import (
+from biokbase.narrative.jobs.method_util import (
     check_tag,
     system_variable
 )
@@ -24,6 +24,9 @@ from jinja2 import Template
 import uuid
 import time
 from pprint import pprint
+
+def get_manager():
+    return _manager
 
 class WidgetManager:
     """
@@ -431,3 +434,5 @@ class WidgetManager:
                                              config=json.dumps(config))
 
         return Javascript(data=js, lib=None, css=None)
+
+_manager = WidgetManager()

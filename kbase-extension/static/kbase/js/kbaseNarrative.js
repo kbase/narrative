@@ -504,6 +504,14 @@ define (
                     this.sidePanel.render();
                     $('#kb-wait-for-ws').remove();
                 }.bind(this));
+
+                $([Jupyter.events]).on('kernel_ready.Kernel',
+                    function() {
+                        console.log('Kernel Ready! Initializing Job Channel...');
+                        this.sidePanel.$jobsWidget.initCommChannel();
+                        // this.initCommChannel();
+                    }.bind(this)
+                );
             }
             else {
                 KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');

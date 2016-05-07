@@ -167,8 +167,8 @@ define (
             // );
 
             $(document).on('methodClicked.Narrative',
-                function(event, method) {
-                    this.buildMethodCell(method);
+                function(event, method, tag) {
+                    this.buildMethodCodeCell(method, tag);
                 }.bind(this)
             );
 
@@ -318,6 +318,30 @@ define (
                 this.$deleteCellModal.show();
             }
         },
+
+        buildMethodCodeCell: function(spec, tag) {
+            var cell = Jupyter.narrative.insertAndSelectCellBelow('code');
+            var methodName = "Unknown method";
+            if (spec && spec.behavior && spec.behavior.kb_service_method) {
+                methodName = spec.behavior.kb_service_method;
+            }
+            var moduleName = "Unknown module";
+            if (spec && spec.behavior && spec.behavior.kb_service_name) {
+                moduleName = spec.behavior.kb_service_name;
+            }
+            var cellMetadata = {
+                'kbase': {
+                    'type': 'method',
+                    'method': {
+                        'version': tag,
+                        'name': methodName,
+                        'module': moduleName
+                    }
+                }
+            };
+            cell.metadata = cellMetadata;
+        },
+
 
         /**
          * @method buildMethodCell

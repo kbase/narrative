@@ -10,7 +10,8 @@ define (
 		'kbaseNarrativeControlPanel',
 		'util/bootstrapDialog',
 		'util/timeFormat',
-		'util/string'
+		'util/string',
+        'base/js/namespace'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -20,7 +21,8 @@ define (
 		kbaseNarrativeControlPanel,
 		BootstrapDialog,
         TimeFormat,
-        StringUtil
+        StringUtil,
+        Jupyter
 	) {
     'use strict';
     return KBWidget({
@@ -66,6 +68,7 @@ define (
             this._super(options);
 
             this.title.append(this.$jobCountBadge);
+
             $(document).on('registerMethod.Narrative', $.proxy(
                 function(e, jobInfo) {
                     this.registerJob(jobInfo, false);
@@ -194,6 +197,83 @@ define (
             }
 
             return this;
+        },
+
+        handleCommMessages: function(msg) {
+            var msgType = msg.content.data.msg_type;
+            if (msgType === 'new_job') {
+                console.log("Adding new job info:");
+                this.registerKernelJob(msg.content.data.content);
+            }
+            else if (msgType === 'job_status') {
+                console.log("updating job status with following info:");
+                console.log(msg.content.data.content);
+                // kind silly, but yet again, it's late on Friday and I want to go home.
+                var status = {},
+                    info = {},
+                    content = msg.content.data.content;
+                for (var job_id in content) {
+                    status[job_id] = content[job_id].state;
+                    info[job_id] = {'spec':{'methodSpec': content[job_id]['spec']}};
+                }
+                this.populateJobsPanel(status, info);
+            }
+            else {
+                console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "'):");
+                console.warn(msg);
+            }
+        },
+
+        initCommChannel: function() {
+            this.commManager = Jupyter.notebook.kernel.comm_manager;
+
+            // init the listener channel.
+            console.info('Registering Job channel with kernel.');
+            Jupyter.notebook.kernel.comm_manager.register_target('KBaseJobs', function(comm, msg) {
+                comm.on_msg(this.handleCommMessages.bind(this));
+            }.bind(this));
+
+            // init the backend with existing jobs.
+            if (this.jobStates === null)
+                this.initJobStates();
+
+            var code = this.getJobInitCode();
+            Jupyter.notebook.kernel.execute(code);
+        },
+
+        getJobInitCode: function() {
+            var jobTuples = [];
+            for (var jobId in this.jobStates) {
+                var jobInfo = this.jobStates[jobId];
+                var source = 'None';
+                if (jobInfo.source) {
+                    source = jobInfo.source;
+                }
+                var inputs = {};
+                if (jobInfo.inputs) {
+                    inputs = jobInfo.inputs;
+                }
+                else if (source !== 'None') {
+                    var cell = Jupyter.narrative.getCellByKbaseId(source);
+                    if (cell && cell.metadata && cell.metadata['kb-cell']) {
+                        var state = cell.metadata['kb-cell']['widget_state'];
+                        if (state.length > 0) {
+                            if (state[0].state.params) {
+                                inputs = state[0].state.params;
+                                //whew.
+                            }
+                        }
+                    }
+                }
+                var tag = 'release';
+                if (jobInfo.tag) {
+                    tag = jobInfo.tag;
+                }
+                jobTuples.push("('" + jobId + "', '" + StringUtil.safeJSONStringify(inputs) + "', '" + tag + "', '" + source + "')");
+
+            }
+            return ["from biokbase.narrative.jobs.jobmanager import JobManager",
+                    "JobManager().initialize_jobs([" + jobTuples.join(',') + "])"].join('\n');
         },
 
         setJobCounter: function(numJobs) {
@@ -397,6 +477,34 @@ define (
 
         /**
          * @method
+         * Similar to registerJob below, this registers a job that was started by the Kernel, then pushed over
+         * the KBaseJobs comm channel. This expects the following elements (will be replaced with null if not present):
+         * id - string, required - will fail if not present
+         * method_id - string
+         * tag - string
+         * version - string
+         * inputs - semi-random object - keys are the input values, values are, well, the inputs
+         * cell_id - string, optional - the id of the KBase cell that started the job
+         */
+        registerKernelJob: function(jobInfo) {
+            if (!Jupyter.notebook || !jobInfo.id)
+                return;
+            if (!Jupyter.notebook.metadata.job_ids) {
+                Jupyter.notebook.metadata.job_ids = {
+                    'methods': []
+                };
+            }
+            if (jobInfo.cell_id) {
+                jobInfo.source = jobInfo.cell_id;
+            }
+            Jupyter.notebook.metadata.job_ids['methods'].push(jobInfo);
+            this.jobStates[jobInfo.id] = $.extend({}, jobInfo, {'status' : null});
+            this.source2Job[jobInfo.source] = jobInfo.id;
+            Jupyter.notebook.save_checkpoint();
+        },
+
+        /**
+         * @method
          * Registers a job with the Narrative. This adds its job id and source of the job (the cell that started it) to
          * the narrative metadata. It also starts caching the state internally to the jobs panel. Once all this is done,
          * so the user doesn't accidentally lose the job, it triggers a narrative save.
@@ -476,12 +584,12 @@ define (
                 this.initJobStates();
 
             // if there's no timer, set one up - this should only happen the first time.
-            if (this.refreshTimer === null) {
-                this.refreshTimer = setInterval(
-                    $.proxy(function() { this.refresh(true, false); }, this),
-                    this.refreshInterval
-                );
-            }
+            // if (this.refreshTimer === null) {
+            //     this.refreshTimer = setInterval(
+            //         $.proxy(function() { this.refresh(true, false); }, this),
+            //         this.refreshInterval
+            //     );
+            // }
 
             // If none of the base Jupyter stuff shows up, then it's not inited yet.
             // Just return silently.

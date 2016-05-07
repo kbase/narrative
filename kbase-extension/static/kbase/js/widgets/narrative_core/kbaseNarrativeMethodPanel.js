@@ -252,8 +252,8 @@ define (
                            .tooltip({
                                 title: 'Search for Apps & Methods',
                                 container: 'body',
-                                delay: { 
-                                    show: Config.get('tooltip').showDelay, 
+                                delay: {
+                                    show: Config.get('tooltip').showDelay,
                                     hide: Config.get('tooltip').hideDelay
                                 }
                             })
@@ -267,10 +267,10 @@ define (
                            .addClass('btn btn-xs btn-default')
                            .append('<span class="glyphicon glyphicon-refresh">')
                            .tooltip({
-                                title: 'Refresh app/method listings', 
+                                title: 'Refresh app/method listings',
                                 container: 'body',
-                                delay: { 
-                                    show: Config.get('tooltip').showDelay, 
+                                delay: {
+                                    show: Config.get('tooltip').showDelay,
                                     hide: Config.get('tooltip').hideDelay
                                 }
                             })
@@ -294,8 +294,8 @@ define (
                 .tooltip({
                     title: toggleTooltipText,
                     container: 'body',
-                    delay: { 
-                        show: Config.get('tooltip').showDelay, 
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
                         hide: Config.get('tooltip').hideDelay
                     }
                 })
@@ -353,7 +353,7 @@ define (
 
             this.$appCatalogBody = $('<div>');
             this.appCatalog = null;
-            
+
             this.$appCatalogContainer = $('<div>')
                                   .append($('<div>')
                                           .addClass('kb-side-header active')
@@ -364,11 +364,11 @@ define (
             this.$slideoutBtn = $('<button>')
                 .addClass('btn btn-xs btn-default')
                 .tooltip({
-                    title: 'Hide / Show App Catalog', 
-                    container: 'body', 
-                    delay: { 
-                        show: Config.get('tooltip').showDelay, 
-                        hide: Config.get('tooltip').hideDelay 
+                    title: 'Hide / Show App Catalog',
+                    container: 'body',
+                    delay: {
+                        show: Config.get('tooltip').showDelay,
+                        hide: Config.get('tooltip').hideDelay
                     }
                 })
                 .append('<span class="fa fa-arrow-right"></span>')
@@ -574,10 +574,10 @@ define (
                     self.methClient.get_method_spec({ids:[method.info.id],tag:self.currentTag})
                         .then(function(spec){
                             // todo: cache this sped into the methods list
-                            self.trigger('methodClicked.Narrative', spec);
+                            self.trigger('methodClicked.Narrative', [spec[0], self.currentTag]);
                         });
                 } else {
-                    self.trigger('methodClicked.Narrative', method);
+                    self.trigger('methodClicked.Narrative', [method, self.currentTag]);
                 }
             };
 
@@ -729,7 +729,7 @@ define (
                                     }, this)));
             var versionStr = 'v'+method.info.ver; // note that method versions are meaningless right now; need to update!
             if (method.info.module_name) {
-                versionStr = '<a href="'+this.options.moduleLink+'/'+method.info.module_name+'" target="_blank">' + 
+                versionStr = '<a href="'+this.options.moduleLink+'/'+method.info.module_name+'" target="_blank">' +
                                 method.info.namespace + '</a> ' + versionStr;
             }
             var $version = $('<span>').addClass("kb-data-list-type").append($star).append(versionStr); // use type because it is a new line
@@ -834,7 +834,7 @@ define (
             // handle methods, we now have to fetch the specs since we don't keep them around
             if (specSet.methods && specSet.methods instanceof Array) {
                 results.methods = {};
-                // we need to fetch some methods, so don't 
+                // we need to fetch some methods, so don't
                 Promise.resolve(this.methClient.get_method_spec({ids: specSet.methods, tag:this.currentTag}))
                     .then(function(specs){
                         for(var k=0; k<specs.length; k++) {
@@ -1120,7 +1120,7 @@ define (
             if (spec.steps) {
                 // ignoring apps right now
                 for (var i=0; i<spec.steps.length; i++) {
-                    var methodSpec = this.methodSpecs[spec.steps[i].method_id]; // don't need to make module LC, because this is for 
+                    var methodSpec = this.methodSpecs[spec.steps[i].method_id]; // don't need to make module LC, because this is for
                                                                                 // apps only so specs cannot be in an SDK module
                     if (!methodSpec || methodSpec === undefined || methodSpec === null) {
                     }

@@ -209,3 +209,9 @@ log "Putting new $SCRIPT_TGT command under $d"
 log "Done installing scripts"
 
 console "Done. Run the narrative from your virtual environment $VIRTUAL_ENV with the command: $SCRIPT_TGT"
+
+log "oh, wait, one more thing...installing nbextensions"
+cd nbextensions
+sh install.sh
+cd ../..
+log "now, done."

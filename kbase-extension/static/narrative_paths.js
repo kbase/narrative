@@ -46,7 +46,24 @@ require.config({
          * New Test Runtime and Widget Framework
          */
         runtimeManager : 'kbase/js/widgetApi/runtimeManager',
+        messageManager : 'kbase/js/widgetApi/messageManager',
         narrativeDataWidget: 'kbase/js/widgetApi/narrativeDataWidget',
+        narrativeDataWidgetIFrame: 'kbase/js/widgetApi/narrativeDataWidgetIFrame',
+        widgetService2: 'kbase/js/widgetApi/widgetService2',
+        
+        /*
+         * From CDN
+         */
+        kb_common: 'http://cdn.kbase.us/cdn/kbase-common-js/1.5.4/',
+        kb_service: 'http://cdn.kbase.us/cdn/kbase-service-clients-js/1.4.0/',
+        uuid: 'http://cdn.kbase.us/cdn/pure-uuid/1.3.0/uuid',
+        //bluebird: 'http://cdn.kbase.us/cdn/bluebird/3.3.4/bluebird',
+        //underscore: 'http://cdn.kbase.us/cdn/underscore/1.8.3/underscore',
+        text:  'http://cdn.kbase.us/cdn/requirejs-text/2.0.14/text',
+        css: 'http://cdn.kbase.us/cdn/require-css/0.1.8/css',
+        'font-awesome': 'http://cdn.kbase.us/cdn/font-awesome/4.3.0/css/font-awesome',
+        
+        
 
         /***
          * CORE NARRATIVE WIDGETS

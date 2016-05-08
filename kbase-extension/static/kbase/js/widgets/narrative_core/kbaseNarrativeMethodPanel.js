@@ -14,9 +14,7 @@
 define (
 	[
 		'kbwidget',
-		'bootstrap',
 		'jquery',
-		'underscore',
 		'bluebird',
 		'handlebars',
 		'narrativeConfig',
@@ -25,27 +23,27 @@ define (
 		'text!kbase/templates/beta_warning_body.html',
 		'kbaseAccordion',
 		'kbaseNarrativeControlPanel',
+                'base/js/namespace',
+                'kb_service/client/narrativeMethodStore',
+                
 		'narrative_core/catalog/kbaseCatalogBrowser',
 		'kbaseNarrative',
 		'catalog-client-api',
-		'kbase-client-api'
+		'kbase-client-api',
+		'bootstrap'
 	], function(
 		KBWidget,
-		bootstrap_g,
 		$,
-		_,
 		Promise,
 		Handlebars,
 		Config,
 		DisplayUtil,
 		BootstrapDialog,
 		BetaWarningTemplate,
-        kbaseAccordion,
+                kbaseAccordion,
 		kbaseNarrativeControlPanel,
-		narrative_core_catalog_kbaseCatalogBrowser,
-		kbaseNarrative,
-		catalog_client_api,
-		kbase_client_api
+                Jupyter,
+                NarrativeMethodStore
 	) {
     'use strict';
     return KBWidget({
@@ -125,7 +123,7 @@ define (
                                 );
 
             this.$searchInput.on('keyup', function (e) {
-                if (e.keyCode == 27) {
+                if (e.keyCode === 27) {
                     this.$searchDiv.toggle({effect: 'blind', duration: 'fast'});
                 }
             }.bind(this));
@@ -276,8 +274,8 @@ define (
                             })
                            .click(function(e) {
                                 var versionTag = 'release';
-                                if(this.versionState=='B') { versionTag='beta'; }
-                                else if(this.versionState=='D') { versionTag='dev'; }
+                                if(this.versionState === 'B') { versionTag='beta'; }
+                                else if(this.versionState === 'D') { versionTag='dev'; }
                                 this.refreshFromService(versionTag);
 
                                 if(this.appCatalog) {
@@ -541,7 +539,7 @@ define (
                                     for(var k=0; k<favs.length; k++) {
                                         var fav = favs[k];
                                         var lookup = fav.id;
-                                        if(fav.module_name_lc != 'nms.legacy') {
+                                        if(fav.module_name_lc !== 'nms.legacy') {
                                             lookup = fav.module_name_lc + '/' + lookup
                                         }
                                         if(self.methodSpecs[lookup]) {
@@ -573,7 +571,7 @@ define (
                 if(!method['spec']) {
                     self.methClient.get_method_spec({ids:[method.info.id],tag:self.currentTag})
                         .then(function(spec){
-                            // todo: cache this sped into the methods list
+                            // todo: cache this spec into the methods list
                             self.trigger('methodClicked.Narrative', [spec[0], self.currentTag]);
                         });
                 } else {
@@ -655,7 +653,7 @@ define (
             // add icon (logo)
             var $logo = $('<div>');
 
-            if(icon=='A') {
+            if(icon === 'A') {
                 $logo.append( DisplayUtil.getAppIcon({ isApp: true , cursor: 'pointer', setColor:true }) );
             } else {
                 if(method.info.icon && method.info.icon.url) {
@@ -674,9 +672,9 @@ define (
                 }, this));
 
             var $star = $('<i>');
-            if(icon=='M') {
+            if(icon === 'M') {
                 if(method.favorite) {
-                    $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;')
+                    $star.addClass('fa fa-star kbcb-star-favorite').append('&nbsp;');
                 } else {
                     $star.addClass('fa fa-star kbcb-star-nonfavorite').append('&nbsp;');
                 }
@@ -685,7 +683,7 @@ define (
                     var params = {};
                     if(method.info.module_name) {
                         params['module_name'] = method.info.module_name;
-                        params['id'] = method.info.id.split('/')[1]
+                        params['id'] = method.info.id.split('/')[1];
                     } else {
                         params['id'] = method.info.id;
                     }
@@ -1007,14 +1005,14 @@ define (
                                             var $opened = $(this).closest('.panel').find('.in');
                                             var $target = $(this).next();
 
-                                            if ($opened != undefined) {
+                                            if ($opened !== undefined) {
                                                 $opened.collapse('hide');
                                                 var $i = $opened.parent().first().find('i');
                                                 $i.removeClass('fa fa-chevron-down');
                                                 $i.addClass('fa fa-chevron-right');
                                             }
 
-                                            if ($target.get(0) != $opened.get(0)) {
+                                            if ($target.get(0) !== $opened.get(0)) {
                                                 $target.collapse('show');
                                                 var $i = $(this).parent().find('i');
                                                 $i.removeClass('fa fa-chevron-right');
@@ -1116,7 +1114,7 @@ define (
                         }
                     }
                 }
-            }
+            };
             if (spec.steps) {
                 // ignoring apps right now
                 for (var i=0; i<spec.steps.length; i++) {
@@ -1131,7 +1129,7 @@ define (
             } else {
                 // this is a method-- things are easy now because this info is returned by the NMS!
                 // if style==object => check both input and output
-                if(style=='input' || style=='object') {
+                if(style === 'input' || style === 'object') {
                     if(spec.info.input_types) {
                         for(var k=0; k<spec.info.input_types.length; k++) {
                             if(spec.info.input_types[k].toLowerCase().indexOf(type) >=0) {
@@ -1139,7 +1137,7 @@ define (
                             }
                         }
                     }
-                } else if (style=='output' || style=='object') {
+                } else if (style === 'output' || style === 'object') {
                     if(spec.info.output_types) {
                         for(var k=0; k<spec.info.output_types.length; k++) {
                             if(spec.info.output_types[k].toLowerCase().indexOf(type) >=0) {
@@ -1186,7 +1184,7 @@ define (
                 for (var id in set) {
                     // have to make sure module names are in LC, annoying, I know!
                     var idTokens = id.split('/');
-                    if(idTokens.length==2) { // has a module name
+                    if(idTokens.length === 2) { // has a module name
                         id = idTokens[0].toLowerCase() + '/' + idTokens[1];
                     }
                     if (!filterFn(fnInput, set[id])) {
@@ -1234,6 +1232,6 @@ define (
         // Temporary pass-through for Jim's gallery widget
         toggleOverlay: function() {
             this.trigger('toggleSidePanelOverlay.Narrative');
-        },
+        }
     });
 });

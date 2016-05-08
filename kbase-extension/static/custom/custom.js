@@ -607,7 +607,7 @@ define(['jquery',
             cells.forEach(function (cell) {
                 fun(cell);
             });
-        }
+        };
 
 
         // Patch the Notebook to return the right name

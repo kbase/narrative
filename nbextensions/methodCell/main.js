@@ -2,19 +2,19 @@
 /*jslint white:true,browser:true*/
 /*
  * KBase Method Cell Extension
- * 
+ *
  * Supports kbase method cells and the kbase cell toolbar.
- * 
+ *
  * Note that, out of our control, this operates under the "module as singleton" model.
  * In this model, the execution of the module the first time per session is the same
  * as creating a global management object.
- * 
+ *
  * Thus we do things like createa a message bus
- * 
+ *
  * @param {type} $
  * @param {type} Jupyter
  * @param {type} html
- * 
+ *
  */
 define([
     'jquery',
@@ -151,6 +151,82 @@ define([
     }
 
     function updatePython(cell) {
+        var method = cell.metadata.kbase.method,
+            params = cell.metadata.kbase.params,
+            cellId = cell.cell_id;
+
+        var methodInputs = pythonifyInputs(method, params, cellId);
+        var pythonCode = [
+            'from biokbase.narrative.jobs.methodmanager import MethodManager',
+            'mm = MethodManager()',
+            'new_job = mm.run_method(\n' + pythonifyInputs(method, params, cellId) + '\n)'
+        ].join('\n');
+        cell.set_text(pythonCode);
+//        cell.execute();
+//        setStatus(cell, 'running');
+    }
+
+    /**
+     * method {object} properties = [tag, name, module, gitCommitHash, version]
+     * params {object} properties = semi-random list of names
+     * cellId {string}
+     *
+     * returns the inputs to biokbase.narrative.jobs.methodmanager.MethodManger.run_method() (whew)
+     * which looks like this:
+     * run_method(method_id, tag='release', version=None, cell_id=None, **kwargs)
+     * where each kwarg is a param input of the form foo="bar", or foo={"bar":"baz"}, or foo=["bar","baz"], etc.
+     * So, return everything but the encapsulating function call.
+     */
+    function pythonifyInputs(method, params, cellId) {
+        var methodId = method.module + '/' + method.name,
+            tag = method.tag,
+            version = method.version;
+
+        var pythonString = '    "' + methodId + '",\n';
+        if (tag) {
+            pythonString += '    tag="' + tag + '",\n';
+        }
+        if (version) {
+            pythonString += '    version="' + version + '",\n';
+        }
+        if (cellId) {
+            pythonString += '    cell_id="' + cellId + '",\n';
+        }
+
+        var kwargs = [];
+        // now the parameters...
+        $.each(params, function(pName, pVal) {
+            // options - either atomic value or list. No hashes, right?
+            var arg = '    ' + pName + '=';
+            if (typeof pVal !== 'object') {
+                if (typeof pVal === 'number') {
+                    arg += pVal;
+                }
+                else {
+                    arg += '"' + pVal + '"';
+                }
+            }
+            else if (pVal instanceof Array) {
+                arg += '[';
+                // assume they're all the same type, either number or string. Because they should be.
+                if (typeof pVal === 'number') {
+                    arg += pVal.join(', ');
+                }
+                else {
+                    arg += '"' + pVal.join('", "') + '"';
+                }
+                arg += ']';
+            }
+            else {
+                arg += '{"huh": "it is a dict."}';
+            }
+            kwargs.push(arg);
+        });
+        pythonString += kwargs.join(',\n');
+        return pythonString;
+    }
+
+    function updatePython_old(cell) {
         var params = JSON.stringify({
             params: cell.metadata.kbase.params,
             method: cell.metadata.kbase.method,
@@ -187,9 +263,9 @@ define([
     }
     function setMeta(cell, group, name, value) {
         /*
-         * This funny business is because the trigger on setting the metadata 
-         * property (via setter and getter in core Cell object) is only invoked 
-         * when the metadata preoperty is actually set -- doesn't count if 
+         * This funny business is because the trigger on setting the metadata
+         * property (via setter and getter in core Cell object) is only invoked
+         * when the metadata preoperty is actually set -- doesn't count if
          * properties of it are.
          */
         var temp = cell.metadata;
@@ -218,9 +294,9 @@ define([
         };
         prototype.setMeta = function(group, name, value) {
             /*
-             * This funny business is because the trigger on setting the metadata 
-             * property (via setter and getter in core Cell object) is only invoked 
-             * when the metadata preoperty is actually set -- doesn't count if 
+             * This funny business is because the trigger on setting the metadata
+             * property (via setter and getter in core Cell object) is only invoked
+             * when the metadata preoperty is actually set -- doesn't count if
              * properties of it are.
              */
             var temp = this.metadata;
@@ -234,9 +310,9 @@ define([
             this.metadata = temp;
         };
     }
-    
+
     // TOOLBAR
-    
+
     function doEditNotebookMetadata() {
         Jupyter.notebook.edit_metadata({
                 notebook: Jupyter.notebook,
@@ -342,7 +418,7 @@ define([
         function credit(toolbarDiv, cell) {
             $(toolbarDiv).append(span({style: {padding: '4px'}}, 'KBase Toolbar'));
         }
-        function status(toolbarDiv, cell) {            
+        function status(toolbarDiv, cell) {
             var status = cell.getMeta('attributes', 'status'),
                 content = span({style: {fontWeight: 'bold'}}, status);
             $(toolbarDiv).append(span({style: {padding: '4px'}}, content));
@@ -382,7 +458,7 @@ define([
                 break;
         }
     }
-    
+
     function makeMethodId(module, name) {
         return [module, name].filter(function (element) {
             return element ? true : false;
@@ -426,7 +502,7 @@ define([
 
             /*
              * Code input area sync.
-             * Defaults to hidden, but we need to reflect the state of the 
+             * Defaults to hidden, but we need to reflect the state of the
              * metadata settings.
              */
             initCodeInputArea(cell);
@@ -454,9 +530,9 @@ define([
             cell.input.after($(kbaseNode));
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);
-            
+
             // set up events.
-            
+
             cellBus.on('submitted', function (message) {
                 updatePython(cell);
             });
@@ -465,7 +541,7 @@ define([
             });
 
             /*
-             * This looks simple, but follow code cell input widget, field widget, 
+             * This looks simple, but follow code cell input widget, field widget,
              * and ultimately the input widget called for by the paramater
              * spec for details...
              */
@@ -474,13 +550,13 @@ define([
              * Essentially this is a "row" of the cell. The code cell, in its natural
              * state, has an input and output area, named "input" and "output_wrapper"
              * The practice established by the ipywidget extension is that an extension
-             * may place another element in the code cell. There doesn't seem to be 
+             * may place another element in the code cell. There doesn't seem to be
              * any documentation for standards -- ipywidgets just places theirs after
-             * the input. We just do the same, although there should be a protocol 
+             * the input. We just do the same, although there should be a protocol
              * for ordering, compatability. Perhaps if we set the code cell subtype,
              * we can assume that no-other type of extension operates on this cell
              * (TODO: see if there is something already in place, I don't think so.)
-             * 
+             *
              */
             return inputWidget.attach(kbaseNode)
                 .then(function () {
@@ -499,8 +575,8 @@ define([
                     /*
                      * Cell events
                      * runstatus - events from the method running manager
-                     * NB need to listen on the main bus, because the cell (so far) 
-                     * talks through the module instance, which itself has a 
+                     * NB need to listen on the main bus, because the cell (so far)
+                     * talks through the module instance, which itself has a
                      * global instance of the mainbus
                      */
                     mainBus.listen({
@@ -531,21 +607,21 @@ define([
             return setupCell(cell);
         }));
     }
-    
+
     function getWorkspaceRef() {
         // TODO: all kbase notebook metadata should be on a kbase top level property;
          var workspaceName = Jupyter.notebook.metadata.ws_name, // Jupyter.notebook.metadata.kbase.ws_name,
              workspaceId;
-         
+
          if (workspaceName) {
              return {workspace: workspaceName};
          }
-        
+
         workspaceId = Jupyter.notebook.metadata.ws_id; // Jupyter.notebook.metadata.kbase.ws_id;
         if (workspaceId) {
             return {id: workspaceId};
         }
-        
+
         throw new Error('workspace name or id is missing from this narrative');
     }
 
@@ -561,20 +637,20 @@ define([
     }
 
     /*
-     * Called directly by Jupyter during the notebook startup process. 
+     * Called directly by Jupyter during the notebook startup process.
      * Called after the notebook is loaded and the dom structure is created.
-     * The job of this call is to mutate the notebook and cells to suite 
+     * The job of this call is to mutate the notebook and cells to suite
      * oneself, set up any services or other things needed for operation of
      * the notebook or cells.
      * The work is carried out asynchronously through an orphan promise.
      */
     function load_ipython_extension() {
         console.log('Loading KBase Method Cell Extension...');
-        
-        // Set the notebook environment. 
+
+        // Set the notebook environment.
         // For instance, we don't want to override the toolbar in the Narrative, but we need to supply our on in a plain notebook.
         env = 'narrative';
-        
+
         // Set up our toolbar extensions.
         setupToolbar();
 

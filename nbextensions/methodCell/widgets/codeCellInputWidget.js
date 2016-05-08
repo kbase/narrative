@@ -25,7 +25,7 @@ define([
     'use strict';
 
     var t = html.tag,
-        div = t('div'), span = t('span'), form = t('form'), button = t('button');
+        div = t('div'), span = t('span'), form = t('form'), button = t('button'), a = t('a');
 
     function factory(config) {
         var container, places,
@@ -33,13 +33,16 @@ define([
             cell = config.cell,
             parentBus = config.bus,
             inputWidgetBus = Bus.make(),
-            runtime = Runtime.make();
+            runtime = Runtime.make(),
+            model = {
+                value: null
+            };
 
         // DATA API
-        function fetchData(methodId, methodVersion) {
+        function fetchData(methodId, methodTag) {
             var methodRef = {
                 ids: [methodId],
-                tag: methodVersion
+                tag: methodTag
             },
             nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
                 token: runtime.authToken()
@@ -50,6 +53,10 @@ define([
                     if (!data[0]) {
                         throw new Error('Method not found');
                     }
+                    // TODO: really the best way to store state?
+                    model.value = {
+                        methodSpec: data[0]
+                    };
                     // Get an input field widget per parameter
                     return data[0].parameters.map(function (parameterSpec) {
                         return ParameterSpec.make({parameterSpec: parameterSpec});
@@ -58,10 +65,43 @@ define([
         }
 
         // RENDER API
+        
+        function makePanel(title, elementName) {
+            return  div({class: 'panel panel-primary'}, [
+                div({class: 'panel-heading'}, [
+                    div({class: 'panel-title'}, title)
+                ]),
+                div({class: 'panel-body'}, [
+                    div({dataElement: elementName, class: 'container-fluid'})
+                ])
+            ]);
+        }
+        
+        function makeCollapsiblePanel(title, elementName) {
+            var collapseId = html.genId();
+            
+            return div({class: 'panel panel-default'}, [
+                div({class: 'panel-heading'}, [
+                    div({class: 'panel-title'}, span({
+                        class: 'collapsed', 
+                        dataToggle: 'collapse', 
+                        dataTarget: '#' + collapseId,
+                        style: {cursor: 'pointer'}
+                    },
+                        title
+                    ))
+                ]),
+                div({id: collapseId, class: 'panel-collapse collapse'}, 
+                    div({class: 'panel-body'}, [
+                        div({dataElement: elementName, class: 'container-fluid'})
+                    ])
+                )
+            ]);
+        }
 
         function renderLayout() {
             var events = Events.make(),
-                content = div({class: 'kbase-extension', style: {display: 'flex', alignItems: 'stretch'}}, [
+                content = div({class: 'kbase-extension kb-method-cell', style: {display: 'flex', alignItems: 'stretch'}}, [
                     div({class: 'prompt', dataElement: 'prompt', style: {display: 'flex', alignItems: 'stretch', width: '14ex', flexDirection: 'column'}}, [
                         div({dataElement: 'status'})
                     ]),
@@ -70,9 +110,9 @@ define([
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             form({dataElement: 'input-widget-form'}, div({class: 'container-fluid'}, [
                                 // Insert fields into here.
-                                div({class: 'panel panel-default'}, [
+                                div({class: 'panel panel-primary'}, [
                                     div({class: 'panel-heading'}, [
-                                        div({class: 'panel-tite'}, 'Toolbar')
+                                        div({class: 'panel-title', dataElement: 'title'})
                                     ]),
                                     div({class: 'panel-body'}, [
                                         button({type: 'button', class: 'btn btn-default', id: events.addEvent({
@@ -83,43 +123,16 @@ define([
                                             })}, 'Reset to Defaults')
                                     ])
                                 ]),
-                                div({class: 'panel panel-default'}, [
-                                    div({class: 'panel-heading'}, [
-                                        div({class: 'panel-tite'}, 'Inputs')
-                                    ]),
-                                    div({class: 'panel-body'}, [
-                                        div({dataElement: 'input-widget-input-fields', class: 'container-fluid'})
-                                    ])
-                                ]),
-                                div({class: 'panel panel-default'}, [
-                                    div({class: 'panel-heading'}, [
-                                        div({class: 'panel-tite'}, 'Outputs')
-                                    ]),
-                                    div({class: 'panel-body'}, [
-                                        div({dataElement: 'input-widget-output-fields', class: 'container-fluid'})
-                                    ])
-                                ]),
-                                div({class: 'panel panel-default'}, [
-                                    div({class: 'panel-heading'}, [
-                                        div({class: 'panel-tite'}, 'Parameters')
-                                    ]),
-                                    div({class: 'panel-body'}, [
-                                        div({dataElement: 'input-widget-parameter-fields', class: 'container-fluid'})
-                                    ])
-                                ]),
-                                div({class: 'panel panel-default'}, [
-                                    div({class: 'panel-heading'}, [
-                                        div({class: 'panel-tite'}, 'Advanced Parameters')
-                                    ]),
-                                    div({class: 'panel-body'}, [
-                                        div({dataElement: 'input-widget-advanced-parameter-fields', class: 'container-fluid'})
-                                    ])
-                                ]),
+                                makePanel('Inputs', 'input-widget-input-fields'),
+                                makePanel('Outputs', 'input-widget-output-fields'),
+                                makePanel('Parameters', 'input-widget-parameter-fields'),
+                                makeCollapsiblePanel('Advanced Parameters', 'input-widget-advanced-parameter-fields'),
                                 // Submit row.
-                                div({dataElement: 'input-widget-controls', class: 'container-fluid'}, [
+                                div({dataElement: 'input-widget-controls', class: 'container-fluid', style: {marginTop: '6px'}}, [
                                     div({class: 'row'}, [
-                                        div({class: 'col-md-3'}),
-                                        div({class: 'col-md-9'}, button({type: 'submit'}, 'Run'))
+                                        div({class: 'col-md-12'}, div({class: 'btn-toolbar text-center', style: {textAlign: 'center', marginTop: '6px'}}, [
+                                            button({type: 'submit', class: 'btn btn-primary'}, 'Run')
+                                        ]))
                                     ])
                                 ])
                             ]))
@@ -130,6 +143,13 @@ define([
                 content: content,
                 events: events
             };
+        }
+        
+        function render() {
+            console.log('RENDER', model);
+            if (model.value) {
+                container.querySelector('[data-element="title"]').innerHTML = model.value.methodSpec.info.name;
+            }
         }
 
         function getParamValue(cell, paramName) {
@@ -357,8 +377,9 @@ define([
 
         function run(params) {
             var widgets = [];
-            return fetchData(params.methodId, params.methodVersion)
+            return fetchData(params.methodId, params.methodTag)
                 .then(function (parameterSpecs) {
+                    render();
                     var inputParams = parameterSpecs.filter(function (spec) {
                         return (spec.spec.ui_class === 'input');
                     }),

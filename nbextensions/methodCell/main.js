@@ -342,8 +342,8 @@ define([
         function credit(toolbarDiv, cell) {
             $(toolbarDiv).append(span({style: {padding: '4px'}}, 'KBase Toolbar'));
         }
-        function status(toolbarDiv, cell) {
-            var status = getMeta(cell, 'attributes', 'status'),
+        function status(toolbarDiv, cell) {            
+            var status = cell.getMeta('attributes', 'status'),
                 content = span({style: {fontWeight: 'bold'}}, status);
             $(toolbarDiv).append(span({style: {padding: '4px'}}, content));
         }
@@ -439,7 +439,7 @@ define([
 
             var cellBus = Bus.make(),
                 methodId = makeMethodId(getMeta(cell, 'method', 'module'), getMeta(cell, 'method', 'name')),
-                version = getMeta(cell, 'method', 'version'),
+                methodTag = getMeta(cell, 'method', 'tag'),
                 inputWidget = CodeCellInputWidget.make({
                     bus: cellBus,
                     cell: cell,
@@ -489,7 +489,7 @@ define([
                 .then(function () {
                     return inputWidget.run({
                         methodId: methodId,
-                        methodVersion: version,
+                        methodTag: methodTag,
                         authToken: runtime.authToken()
                     });
                 })
@@ -594,10 +594,23 @@ define([
             .then(function () {
                 return setupNotebook();
             })
+            .then(function () {
+                // set up event hooks
+                $([Jupyter.events]).on('updated.Cell', function (event, data) {
+                    setupCell(data.cell)
+                        .then(function () {
+                            console.log('Cell created?');
+                        })
+                        .catch(function (err) {
+                            console.error('ERROR creating cell', err);
+                        });
+                });
+                // also delete.Cell, edit_mode.Cell, select.Cell, command_mocd.Cell, output_appended.OutputArea ...
+                // preset_activated.CellToolbar, preset_added.CellToolbar
+            })
             .catch(function (err) {
-                console.error('ERROR', err);
+                console.error('ERROR setting up nodebook', err);
             });
-
     }
 
     // MAIN

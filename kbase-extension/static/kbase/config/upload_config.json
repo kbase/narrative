@@ -545,7 +545,7 @@
     },
 
     "KBaseOntology.OntologyTranslation": {
-        "import_ontologydictionary_tsv_file": {
+        "import_ontologytranslation_tsv_file": {
             "external_type": "TSV.Ontology",
             "kbase_type": "KBaseOntology.OntologyTranslation",
             "object_name": "outputObject",

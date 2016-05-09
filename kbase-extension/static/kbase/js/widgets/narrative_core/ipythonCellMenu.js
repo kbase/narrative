@@ -11,6 +11,9 @@ define([
     'kbaseNarrativeCellMenu'
 ], function ($, celltoolbar, Jupyter, html, KBaseNarrativeCellMenu) {
     "use strict";
+    
+    var t = html.tag,
+        span = html.tag('span');
 
     /*
      * Dealing with metadata
@@ -21,6 +24,9 @@ define([
         cell.metadata = meta;
     }
     function getMeta(cell, group, name) {
+        if (!cell.metadata.kbase) {
+            return;
+        }
         if (!cell.metadata.kbase[group]) {
             return;
         }
@@ -34,6 +40,9 @@ define([
          * properties of it are.
          */
         var temp = cell.metadata;
+        if (!temp.kbase) {
+            temp.kbase = {};
+        }
         if (!temp.kbase[group]) {
             temp.kbase[group] = {};
         }

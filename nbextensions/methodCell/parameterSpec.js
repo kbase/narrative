@@ -63,6 +63,18 @@ define([
         }
 
         function dataType() {
+            /*
+             * Special case here --
+             * is actually an int, although Mike says it can be any type...
+             */
+            switch (spec.field_type) {
+                case 'checkbox':
+                    return 'int';
+            }
+            
+            /*
+             * Otherwise, we rely on text options to provide type information.
+             */
             if (!spec.text_options) {
                 return 'unspecified';
             }
@@ -79,6 +91,62 @@ define([
             }
 
             return 'unspecified';
+        }
+        
+        function nullValue() {
+            if (multipleItems()) {
+                return [];
+            }
+            switch (dataType()) {
+                case 'string':
+                    return '';
+                case 'int':
+                    return null;
+                case 'float':
+                    return null;
+                case 'workspaceObjectReference':
+                    return null;
+                default:
+                    return null;
+            }
+        }
+        
+        /*
+         * Default values are strings.
+         */
+        function defaultToNative(defaultValue) {
+            switch (dataType()) {
+                case 'string':
+                    return defaultValue;
+                case 'int':
+                    return parseInt(defaultValue);
+                case 'float':
+                    return parseFloat(defaultValue);
+                case 'workspaceObjectReference':
+                    return null;
+                default:
+                    // Assume it is a string...
+                    return defaultValue;
+            }
+        }
+        
+        function defaultValue() {
+            var defaultValues = spec.default_values;
+            // No default value and not required? null value
+            if (!defaultValues && !required()) {
+                return nullValue();
+            }
+            if (defaultValues.length === 0) {
+                return nullValue();
+            } 
+            // Singular item?
+            if (!multipleItems()) {
+                return defaultToNative(defaultValues[0]);
+            } else {
+                return defaultValues.map(function (defaultValue) {
+                    return defaultToNative(defaultValue);
+                });
+            }            
         }
         
         function isEmpty(value) {
@@ -131,7 +199,9 @@ define([
             uiClass: uiClass,
             required: required,
             isAdvanced: isAdvanced,
-            isEmpty: isEmpty
+            isEmpty: isEmpty,
+            nullValue: nullValue,
+            defaultValue: defaultValue
         };
     }
 

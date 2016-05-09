@@ -220,18 +220,26 @@ define([
                     switch (fieldType) {
                         case 'text':
                             return SingleTextInputWidget;
-                            break;
                         case 'dropdown':
                             return SingleSelectInputWidget;
-                            break;
                         default:
                             return UndefinedInputWidget;
                     }
-                case 'int':
-                    if (parameterSpec.multipleItems()) {
-                        return MultiIntInputWidget;
+                case 'int':                    
+                    switch (fieldType) {
+                        case 'text':
+                            if (parameterSpec.multipleItems()) {
+                                return MultiIntInputWidget;
+                            }
+                            return SingleTextInputWidget;
+                        case 'checkbox':
+                            return SingleCheckboxInputWidget;
+                        default:
+                            if (parameterSpec.multipleItems()) {
+                                return MultiIntInputWidget;
+                            }
+                            return SingleTextInputWidget;
                     }
-                    return SingleIntInputWidget;
                 case 'float':
                     if (parameterSpec.multipleItems()) {
                         return UndefinedInputWidget;

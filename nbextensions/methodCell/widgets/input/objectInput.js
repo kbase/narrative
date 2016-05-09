@@ -58,7 +58,7 @@ define([
                         selected = true;
                     }
                     return option({
-                        value: objectInfo.ref,
+                        value: objectInfo.name,
                         selected: selected
                     }, objectInfo.name);
                 });
@@ -149,7 +149,7 @@ define([
                     validationResult;
                 validationOptions.required = spec.required();
 
-                validationResult = Validation.validateWorkspaceObjectRef(rawValue, validationOptions);
+                validationResult = Validation.validateWorkspaceObjectName(rawValue, validationOptions);
 
                 return {
                     isValid: validationResult.isValid,

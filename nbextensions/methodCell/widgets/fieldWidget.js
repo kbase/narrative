@@ -125,7 +125,8 @@ define([
         function parameterInfoRules(spec) {
             return table({class: 'table table-striped'}, [
                 tr([th('Required'), td(spec.required() ? 'yes' : 'no')]),
-                tr([th('Type'), td(spec.dataType())]),
+                tr([th('Data type'), td(spec.dataType())]),
+                tr([th('Field type'), td(spec.spec.field_type)]),
                 tr([th('Multiple values?'), td(spec.multipleItems() ? 'yes' : 'no')]),
                 (function () {
                     if (!spec.spec.default_values) {

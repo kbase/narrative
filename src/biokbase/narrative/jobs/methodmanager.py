@@ -233,7 +233,8 @@ class MethodManager(object):
         Returns None if valid, an error string if not.
         """
         # cases - value == list, int, float, others get rejected
-        if not (isinstance(value, basestring) or
+        if value is not None and
+           not (isinstance(value, basestring) or
                 isinstance(value, int) or
                 isinstance(value, float)):
             return "input type not supported - only str, int, float, or list"

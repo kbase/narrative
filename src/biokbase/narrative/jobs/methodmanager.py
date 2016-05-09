@@ -28,7 +28,7 @@ class MethodManager(object):
     njs = clients.get('job_service')
     ws_client = clients.get('workspace')
     spec_manager = SpecManager()
-    _log = kbLogging.get_logger(__name__)
+    _log = kblogging.get_logger(__name__)
     _log.setLevel(logging.INFO)
 
     def __new__(cls):

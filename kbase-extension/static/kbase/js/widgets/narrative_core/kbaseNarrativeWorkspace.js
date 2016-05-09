@@ -320,43 +320,38 @@ define (
         },
 
         buildMethodCodeCell: function(spec, tag) {
-            // TODO: should probably throw an error here
-            // should not even get here!
             var methodName = "Unknown method";
-            // if (spec && spec.behavior && spec.behavior.kb_service_method) {
             if (!spec || !spec.info) {
                 console.error('ERROR build method code cell: ', spec, tag);
                 alert('Sorry, could not find this method');
                 return;
             }
-            // methodName = spec.behavior.kb_service_method;
-            // var moduleName = "Unknown module";
-            //if (spec && spec.behavior && spec.behavior.kb_service_name) {
-            //    // moduleName = spec.behavior.kb_service_name;
-            //    moduleName = spec.info.module_name;
-            // }
-            // TODO: probably should record the git commit hash and/or the version
-            // 
+            // if the id has a '/' in the middle, the "name" is the portion after
+            // the slash.
+            var id = spec.info.id;
+            var slashPos = id.search('/');
+            if (slashPos !== -1)
+                id = id.substring(slashPos + 1);
             var cellMetadata = {
                 kbase: {
                     type: 'method',
                     method: {
                         tag: tag,
-                        name: spec.info.id,
+                        name: id,
                         module: spec.info.module_name,
                         gitCommitHash: spec.info.git_commit_hash,
                         version: spec.info.ver
                     }
                 }
             };
-            // This will also trigger the create.Cell event, which is not very 
+            // This will also trigger the create.Cell event, which is not very
             // useful for us really since we haven't been able to set the
             // metadata yet. Don't worry, I checked, the Jupyter api does not
             // provide a way to set the cell metadata as it is being created.
             var cell = Jupyter.narrative.insertAndSelectCellBelow('code');
-            
+
             cell.metadata = cellMetadata;
-            
+
             // Now we need to invent a way of triggering the cell to set itself up.
             $([Jupyter.events]).trigger('updated.Cell', {
                 cell: cell

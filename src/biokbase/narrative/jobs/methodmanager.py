@@ -94,7 +94,7 @@ class MethodManager(object):
 
         Example:
         --------
-        my_job - mm.run_method('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
+        my_job = mm.run_method('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
         """
 
         # Intro tests:
@@ -251,7 +251,7 @@ class MethodManager(object):
             return 'Given value {} is not a number'.format(value)
 
         # if it's expecting a workspace object, check if that's present, and a valid type
-        if 'allowed_types' in param and not param['is_output']:
+        if 'allowed_types' in param and len(param['allowed_types']) > 0 and not param['is_output']:
             try:
                 info = self.ws_client.get_object_info_new({'objects': [{'workspace':workspace, 'name':value}]})[0]
                 type_ok = False

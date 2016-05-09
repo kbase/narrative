@@ -135,10 +135,11 @@ define([
                     if (spec.spec.default_values.length === 0) {
                         return;
                     }
-                    if (spec.multipleItems()) {
-                        tr([th('Default value'), td(spec.spec.default_values[0])]);
+                    var defaultValues = spec.defaultValue();
+                    if (defaultValues instanceof Array) {
+                        return tr([th('Default value'), td(defaultValues.join('<br>'))]);
                     }
-                    return tr([th('Default value'), td(spec.spec.default_values.join('<br>'))]);
+                    return tr([th('Default value'), td(defaultValues)]);
                 }()),
                 (function () {
                     if (spec.spec.text_options && spec.spec.text_options.valid_ws_types && spec.spec.text_options.valid_ws_types.length > 0) {

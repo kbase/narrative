@@ -98,14 +98,14 @@ define([
                 .prop('title', 'required field')
                 .show();
         }
-        
-         function feedbackError(row) {
+
+        function feedbackError(row) {
             places.$feedback
                 .removeClass()
                 .addClass('kb-method-parameter-required-glyph fa fa-ban')
                 .show();
         }
-        
+
         function parameterInfoContent(spec) {
             return div([
                 div({style: {fontWeight: 'bold'}}, spec.label()),
@@ -115,7 +115,7 @@ define([
         }
         function parameterInfoTypeRules(spec) {
             switch (spec.dataType()) {
-                case 'float': 
+                case 'float':
                     return [
                         tr([th('Min'), td(spec.spec.text_options.min_float)]),
                         tr([th('Max'), td(spec.spec.text_options.max_float)])
@@ -139,6 +139,11 @@ define([
                         tr([th('Default value'), td(spec.spec.default_values[0])]);
                     }
                     return tr([th('Default value'), td(spec.spec.default_values.join('<br>'))]);
+                }()),
+                (function () {
+                    if (spec.spec.text_options && spec.spec.text_options.valid_ws_types && spec.spec.text_options.valid_ws_types.length > 0) {
+                        return tr([th('Valid types'), td(spec.spec.text_options.valid_ws_types.join('<br>'))]);
+                    }
                 }())
             ].concat(parameterInfoTypeRules(spec)));
         }
@@ -185,9 +190,9 @@ define([
             } else {
                 infoTipText = spec.hint() || spec.description();
             }
-            
+
             var infoId = html.genId();
-            
+
             var advanced;
             if (spec.spec.advanced) {
                 advanced = 'advanced-parameter-hidden';
@@ -196,7 +201,7 @@ define([
             }
 
             var content = div({class: ['form-horizontal', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
-                div({class: 'form-group', dataElement: 'field-panel'},[
+                div({class: 'form-group', dataElement: 'field-panel'}, [
                     label({class: 'col-md-3 control-label kb-method-parameter-name'}, [
                         spec.label()
                     ]),
@@ -213,22 +218,22 @@ define([
                                     id: events.addEvent({
                                         type: 'click',
                                         handler: function (e) {
-                                           var info = document.getElementById(infoId);
-                                           if (info.style.display === 'block') {
-                                               info.style.display = 'none';
-                                           } else {
-                                               info.style.display = 'block';
-                                           }
+                                            var info = document.getElementById(infoId);
+                                            if (info.style.display === 'block') {
+                                                info.style.display = 'none';
+                                            } else {
+                                                info.style.display = 'block';
+                                            }
                                         }
                                     })
                                 },
                                     span({class: 'fa fa-info-circle'})
-                                ))
+                                    ))
                             ])
                         ])
                     ])),
-                    div({class: 'col-md-5'},  div({id: infoId, style: {display: 'none'}}, html.makeTabs({
-                            tabs: [
+                    div({class: 'col-md-5'}, div({id: infoId, style: {display: 'none'}}, html.makeTabs({
+                        tabs: [
                             {
                                 label: 'Description',
                                 name: 'description',
@@ -239,24 +244,24 @@ define([
                                 name: 'about',
                                 content: parameterInfoContent(spec)
                             },
-                             {
+                            {
                                 label: 'Rules',
                                 name: 'rules',
                                 content: parameterInfoRules(spec)
                             }
                         ]})))
-                    
+
                 ]),
-                div({class: 'form-group', dataElement: 'error-panel', style: {display: 'none'}}, [                    
-                    div({class:'col-md-2'}),
-                    div({class: 'col-md-5'},  div({
+                div({class: 'form-group', dataElement: 'error-panel', style: {display: 'none'}}, [
+                    div({class: 'col-md-2'}),
+                    div({class: 'col-md-5'}, div({
                         class: ['kb-method-parameter-error-message'].join(' '),
                         dataElement: 'error-message'
                     })),
                     div({class: 'col-md-5'})
                 ])
             ]);
-            
+
             return content;
         }
 

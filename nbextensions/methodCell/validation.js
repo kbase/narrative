@@ -56,6 +56,41 @@ define([
                 parsedValue: value
             };
         }
+        
+        /*
+         * A workspace ref, but using names ... 
+         */
+        function validateWorkspaceObjectNameRef(value, options) {
+            var parsedValue,
+                errorMessage, diagnosis;
+
+            if (typeof value !== 'string') {
+                diagnosis = 'invalid';
+                errorMessage = 'value must be a string in workspace object name format';
+            } else {
+                parsedValue = value.trim();
+                if (!parsedValue) {
+                    if (options.required) {
+                        diagnosis = 'required-missing';
+                        errorMessage = 'value is required';
+                    } else {
+                        diagnosis = 'optional-empty';
+                    }
+                } else if (!/^\d+\/\d+\/\d+/.test(value)) {
+                    diagnosis = 'invalid';
+                    errorMessage = 'Invalid object reference format (#/#/#)';
+                } else {
+                    diagnosis = 'valid';
+                }
+            }
+            return {
+                isValid: errorMessage ? false : true,
+                errorMessage: errorMessage,
+                diagnosis: diagnosis,
+                value: value,
+                parsedValue: parsedValue
+            };
+        }
 
 
         function validateWorkspaceObjectRef(value, options) {

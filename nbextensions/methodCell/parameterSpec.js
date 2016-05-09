@@ -139,6 +139,12 @@ define([
             if (defaultValues.length === 0) {
                 return nullValue();
             } 
+            // also weird case of a default value of the empty string, which is really
+            // the same as null...
+            if (defaultValues[0] === '') {
+                return nullValue();
+            } 
+            
             // Singular item?
             if (!multipleItems()) {
                 return defaultToNative(defaultValues[0]);

@@ -47,6 +47,8 @@ define([
             fieldId = html.genId(),
             bus = config.bus,
             spec = config.parameterSpec;
+        
+        console.log('SPEC', spec);
 
         // options.isOutputName = spec.text_options && spec.text_options.is_output_name;
         options.enabled = true;

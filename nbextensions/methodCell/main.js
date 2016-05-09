@@ -229,7 +229,9 @@ define([
         var pythonString = '    "' + method.id + '",\n';
         
         pythonString += '    tag="' + method.tag + '",\n';
-        pythonString += '    version="' + method.version + '",\n';
+        if (method.tag === 'release') {
+            pythonString += '    version="' + method.version + '",\n';
+        }
         pythonString += '    cell_id="' + cellId + '",\n';
 
         var kwargs = [];

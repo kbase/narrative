@@ -20,6 +20,9 @@ import json
 import logging
 from biokbase.narrative.common import kblogging
 from biokbase.narrative.common.log_common import EVENT_MSG_SEP
+from IPython.display import HTML
+from jinja2 import Template
+import dateutil.parser
 
 class JobManager(object):
     """
@@ -62,8 +65,51 @@ class JobManager(object):
             self.lookup_job_status_loop()
         except Exception, e:
             self._log.setLevel(logging.ERROR)
-            kblogging.log_event(_log, "init_error", {'err': str(e)})
+            kblogging.log_event(self._log, "init_error", {'err': str(e)})
             self._send_comm_message('job_init_err', str(e))
+
+    def list_jobs(self):
+        """
+        List all job ids, their info, and status in a quick HTML format
+        """
+        try:
+            status_set = list()
+            for job_id in self.running_jobs:
+                job_state = self.running_jobs[job_id].full_state()
+                status_set.append(job_state)
+            status_set = sorted(status_set, key=lambda s: dateutil.parser.parse(s['submit_time']))
+            if not len(status_set):
+                return "No running jobs!"
+
+            tmpl = """
+            <table class="table table-bordered table-striped table-condensed">
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Started</th>
+                    <th>Status</th>
+                    <th>Run Time</th>
+                </tr>
+                {% for j in jobs %}
+                <tr>
+                    <td>{{ j.job_id|e }}</td>
+                    <td>{{ j.original_app.steps[0].method_spec_id|e }}</td>
+                    <td>{{ j.submit_time|e }}</td>
+                    <td>{{ j.job_state|e }}</td>
+                    <td>...</td>
+                </tr>
+                {% endfor %}
+            </table>
+            """
+            return HTML(Template(tmpl).render(jobs=status_set))
+
+        except Exception, e:
+            self._log.setLevel(logging.ERROR)
+            kblogging.log_event(self._log, "list_jobs.error", {'err': str(e)})
+            raise
+
+    def get_jobs_list(self):
+        return self.running_jobs.values()
 
     def get_existing_job(self, job_tuple):
         """
@@ -80,7 +126,7 @@ class JobManager(object):
             return Job.from_state(job_state, json.loads(job_tuple[1]), tag=job_tuple[2], cell_id=job_tuple[3])
         except Exception, e:
             self._log.setLevel(logging.ERROR)
-            kblogging.log_event(_log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
+            kblogging.log_event(self._log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
             raise
 
     def lookup_job_status(self):
@@ -99,7 +145,7 @@ class JobManager(object):
             self._send_comm_message('job_status', status_set)
         except Exception, e:
             self._log.setLevel(logging.ERROR)
-            kblogging.log_event(_log, "lookup_job_status.error", {'err': str(e)})
+            kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
             self._send_comm_message('job_err', str(e))
 
     def lookup_job_status_loop(self):

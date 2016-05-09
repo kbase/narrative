@@ -174,7 +174,7 @@ class SpecManager(object):
                 opts = p['text_options']
                 if 'is_output_name' in opts:
                     p_info['is_output'] = opts['is_output_name']
-                if 'valid_ws_types' in opts:
+                if 'valid_ws_types' in opts and len(opts['valid_ws_types']) > 0:
                     p_info['allowed_types'] = opts['valid_ws_types']
                 if 'validate_as' in opts and p_info['type'] != 'checkbox':
                     p_info['type'] = opts['validate_as']
@@ -198,6 +198,9 @@ class SpecManager(object):
 
 
 class MethodUsage(object):
+    """
+    A tiny class for representing method usage in HTML (or as as a pretty string)
+    """
     def __init__(self, usage):
         self.usage = usage
 

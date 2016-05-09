@@ -162,8 +162,8 @@ define([
             'new_job = mm.run_method(\n' + pythonifyInputs(method, params, cellId) + '\n)'
         ].join('\n');
         cell.set_text(pythonCode);
-//        cell.execute();
-//        setStatus(cell, 'running');
+        cell.execute();
+        setStatus(cell, 'running');
     }
 
     /**

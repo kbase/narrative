@@ -232,6 +232,11 @@ class MethodManager(object):
         Tests a value to make sure it's valid.
         Returns None if valid, an error string if not.
         """
+
+        # allow None to pass, we'll just pass it to the method and let it get rejected there.
+        if value is None:
+            return None
+
         # cases - value == list, int, float, others get rejected
         if not (isinstance(value, basestring) or
                 isinstance(value, int) or

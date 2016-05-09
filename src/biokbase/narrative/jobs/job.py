@@ -15,6 +15,11 @@ from biokbase.narrative.common.generic_service_calls import (
 )
 from biokbase.narrative.common.kbjob_manager import KBjobManager
 import json
+from IPython.display import (
+    Javascript,
+    HTML
+)
+from jinja2 import Template
 
 class Job ():
     job_id = None
@@ -120,3 +125,16 @@ class Job ():
         """
         status = self.status()
         return status.lower() in ['completed', 'error', 'suspend']
+
+    def __repr__(self):
+        return u"KBase Narrative Job - " + unicode(self.job_id)
+
+    def _repr_javascript_(self):
+        tmpl = """
+        element.html("<div id='kb-job-{{job_id}}' class='kb-vis-area'></div>");
+
+        require(['jquery', 'kbaseNarrativeJobStatus'], function($, KBaseNarrativeJobStatus) {
+            var w = new KBaseNarrativeJobStatus($('#kb-job-{{job_id}}'), {'jobId': '{{job_id}}'});
+        });
+        """
+        return Template(tmpl).render(job_id=self.job_id)

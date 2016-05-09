@@ -128,7 +128,17 @@ define([
             };
         }
 
-        function validateInteger(value, options) {
+        function validateInteger(value, min, max) {
+            if (value === false) {
+                return 'value must be an integer';
+            } else if (max && max < value) {
+                return 'the maximum value for this parameter is ' + max;
+            } else if (min && min > value) {
+                return 'the minimum value for this parameter is ' + min;
+            }
+        }
+        
+        function validateIntegerField(value, options) {
             var plainValue = value.trim(),
                 parsedValue,
                 errorMessage, diagnosis,
@@ -143,21 +153,14 @@ define([
                     diagnosis = 'optional-empty';
                 }
             } else {
-                parsedValue = toInteger(plainValue);
-                if (parsedValue === false) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'value must be an integer';
-                } else if (max && max < parsedValue) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'the maximum value for this parameter is ' + max;
-                } else if (min && min > parsedValue) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'the minimum value for this parameter is ' + min;
-                } else {
-                    diagnosis = 'valid';
+                try {
+                    parsedValue = toInteger(plainValue);
+                    errorMessage = validateInteger(value, min, max);
+                } catch (error) {
+                    errorMessage = error.message;
                 }
             }
-
+                        
             return {
                 isValid: errorMessage ? false : true,
                 errorMessage: errorMessage,
@@ -250,6 +253,7 @@ define([
             validateWorkspaceObjectName: validateWorkspaceObjectName,
             validateWorkspaceObjectRef: validateWorkspaceObjectRef,
             validateInteger: validateInteger,
+            validateIntegerField: validateIntegerField,
             validateFloat: validateFloat,
             validateText: validateText,
             validateSet: validateSet

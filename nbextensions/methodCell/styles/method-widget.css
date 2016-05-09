@@ -7,26 +7,26 @@
 }
 
 /** new method parameter styling **/
-.kb-method-parameter-panel {
+.kb-method-cell  .kb-method-parameter-panel {
     border-left: 3px solid #fff;
 }
-.kb-method-parameter-panel-hover {
+.kb-method-cell  .kb-method-parameter-panel-hover {
     border-left: 3px solid #428bca;
 }
-.kb-method-parameter-row {
+.kb-method-cell .kb-method-parameter-row {
     margin:0px;
     padding:5px;
     border-radius:5px;
 }
 /* for some reason, the css :hover doesn't work right on this div, so we use jquery to toggle this class */
-.kb-method-parameter-row-hover {
+.kb-method-cell .kb-method-parameter-row-hover {
     background:#F9F9F9;
 }
 
-.kb-method-parameter-row-error {
+.kb-method-cell  .kb-method-parameter-row-error {
     background: #f2dede;
 }
-.kb-method-parameter-error-message {
+.kb-method-cell .kb-method-parameter-error-message {
     padding:5px;
     text-align:center;
     font-family: 'OxygenBold', sans-serif;
@@ -37,7 +37,7 @@
 
 
 /* not sure how to get text in these divs to valign middle... */
-.kb-method-parameter-name {
+.kb-method-cell .kb-method-parameter-name {
     font-family: 'OxygenBold', sans-serif;
     color:#777;
     text-align:right;
@@ -47,16 +47,16 @@
     padding-left:0px;
     white-space: normal;
 }
-.kb-method-parameter-input {
+.kb-method-cell .kb-method-parameter-input {
     vertical-align:middle;
     white-space: nowrap;
     xpadding-left:10px;
 }
-.kb-method-parameter-input input {
+.kb-method-cell .kb-method-parameter-input input {
     font-weight: bold;
 }
 
-.kb-method-parameter-input select.form-control {
+.kb-method-cell .kb-method-parameter-input select.form-control {
     margin: 0;
 }
 
@@ -71,53 +71,50 @@ to accomodate the the icon intruding into its space. This technique makes space
 in the column in which the icon lives, and does this by shrinking the select
 control with padding, and then scooting the icon back into its column.
 */
-.kb-method-parameter-input > div {
+.kb-method-cell .kb-method-parameter-input > div {
     /* allow space for the required (red arrow), satisfied (green checkbox) icon */
     padding-right: 20px;
 }
-.kb-method-parameter-input .kb-method-parameter-accepted-glyph,
-.kb-method-parameter-input .kb-method-parameter-required-glyph {
+.kb-method-cell .kb-method-parameter-input .kb-method-parameter-accepted-glyph,
+.kb-method-cell .kb-method-parameter-input .kb-method-parameter-required-glyph {
     /* This scoots the icon inside */
-    xmargin-left: -15px;
     font-size: 15px;
+    margin-left: 0;
 }
-.kb-method-parameter-hint {
+.kb-method-cell .kb-method-parameter-required-glyph {
+    color: #F44336;
+}
+.kb-method-cell .kb-method-parameter-hint {
     padding-left: 7px;
 }
 
-.kb-parameter-data-selection {
+.kb-method-cell .kb-parameter-data-selection {
     font-weight: bold;
 }
 
-.kb-method-parameter-hint {
+.kb-method-cell .kb-method-parameter-hint {
     color: #777;
     text-align:left;
     margin-top:3px;
 }
 
-.kb-method-parameter-required-glyph {
-    color: #F44336;
-    margin-left:7px;
-}
-.kb-method-parameter-accepted-glyph {
+.kb-method-cell .kb-method-parameter-accepted-glyph {
     color: #4BB856;
-    margin-left:7px;
 }
 
-.kb-method-parameter-info {
+.kb-method-cell .kb-method-parameter-info {
     color: #777;
-    margin-left:7px;
 }
 
-.kb-parameter-data-row-remove {
+.kb-method-cell .kb-parameter-data-row-remove {
     color: #777;
 }
-.kb-parameter-data-row-add {
+.kb-method-cell .kb-parameter-data-row-add {
     color: #777;
 }
 
 
-.kb-method-advanced-options-controller-inactive {
+.kb-method-cell .kb-method-advanced-options-controller-inactive {
     font-family: 'OxygenBold', sans-serif;
     font-style: italic;
     font-size: 10pt;
@@ -125,7 +122,7 @@ control with padding, and then scooting the icon back into its column.
     color: #777;
     text-align: center;
 }
-.kb-method-advanced-options-controller {
+.kb-method-cell .kb-method-advanced-options-controller {
     font-family: 'OxygenBold', sans-serif;
     cursor:pointer;
     font-style: italic;
@@ -134,18 +131,18 @@ control with padding, and then scooting the icon back into its column.
     color: #0088cc;
     text-align: center;
 }
-.kb-method-advanced-options-controller:hover {
+.kb-method-cell .kb-method-advanced-options-controller:hover {
     color: #2a6496;
 }
 
-.kb-method-footer {
+.kb-method-cell .kb-method-footer {
     width: 100%;
     overflow: none;
     background-color: #F5F5F5;
     padding: 10px;
 }
 
-.kb-method-subtitle {
+.kb-method-cell .kb-method-subtitle {
     background-color: #F5F5F5;
     padding: 3px 5px;
 }
@@ -174,4 +171,11 @@ control with padding, and then scooting the icon back into its column.
 
 .unselected .kb-method-cell {
     opacity: 0.5;
+}
+
+.kb-method-cell .advanced-parameter-showing {
+    display: block;
+}
+.kb-method-cell .advanced-parameter-hidden {
+    display: none;
 }

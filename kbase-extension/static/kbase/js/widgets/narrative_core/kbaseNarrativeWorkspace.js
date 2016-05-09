@@ -342,7 +342,7 @@ define (
                     type: 'method',
                     method: {
                         tag: tag,
-                        name: spec.info.id,
+                        name: spec.info.name,
                         module: spec.info.module_name,
                         gitCommitHash: spec.info.git_commit_hash,
                         version: spec.info.ver

@@ -186,8 +186,15 @@ define([
             }
             
             var infoId = html.genId();
+            
+            var advanced;
+            if (spec.spec.advanced) {
+                advanced = 'advanced-parameter-hidden';
+            } else {
+                advanced = '';
+            }
 
-            var content = div({class: 'form-horizontal', style: {marginTop: '8px'}, id: fieldId}, [
+            var content = div({class: ['form-horizontal', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
                 div({class: 'form-group', dataElement: 'field-panel'},[
                     label({class: 'col-md-3 control-label kb-method-parameter-name'}, [
                         spec.label()
@@ -195,7 +202,7 @@ define([
                     div({class: 'col-md-4'}, div({class: 'kb-method-parameter-input'}, [
                         div({class: 'input-group', style: {width: '100%'}}, [
                             div({dataElement: 'input-control'}),
-                            div({class: 'input-group-addon', style: {width: '50px', padding: '0'}}, [
+                            div({class: 'input-group-addon', style: {width: '30px', padding: '0'}}, [
                                 div({dataElement: 'feedback'})
                             ]),
                             div({class: 'input-group-addon', style: {width: '30px', padding: '0'}}, [

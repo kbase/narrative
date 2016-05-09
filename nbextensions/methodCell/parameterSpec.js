@@ -11,6 +11,10 @@ define([
             _required = spec.optional ? false : true,
             isOutputName = spec.text_options && spec.text_options.is_output_name;
         
+        function id() {
+            return spec.id;
+        }
+        
         function name() {
             return spec.id;
         }
@@ -50,6 +54,13 @@ define([
         function type() {
             return spec.type;
         }
+        
+        function isAdvanced() {
+            if (spec.advanced === 1) {
+                return true;
+            }
+            return false;
+        }
 
         function dataType() {
             if (!spec.text_options) {
@@ -69,6 +80,33 @@ define([
 
             return 'unspecified';
         }
+        
+        function isEmpty(value) {
+            if (value === undefined) {
+                return true;
+            }
+            if (value === null) {
+                return true;
+            }
+            switch (dataType()) {
+                case 'string':
+                    if (value.length === 0) {
+                        return true;
+                    } 
+                    break;
+                case 'workspaceObjectReference':
+                    if (value.length === 0) {
+                        return true;
+                    } 
+                    break;
+                case 'workspaceObjectName':
+                    if (value.length === 0) {
+                        return true;
+                    } 
+                    break;
+            }
+            return false
+        }
 
         function uiClass() {
             return spec.ui_class;
@@ -79,7 +117,7 @@ define([
         }
 
         return {
-            id: spec.id,
+            id: id,
             spec: spec,
             name: name,
             label: label,
@@ -91,7 +129,9 @@ define([
             type: type,
             dataType: dataType,
             uiClass: uiClass,
-            required: required
+            required: required,
+            isAdvanced: isAdvanced,
+            isEmpty: isEmpty
         };
     }
 

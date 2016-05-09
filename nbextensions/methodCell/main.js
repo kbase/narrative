@@ -118,7 +118,7 @@ define([
                 return (message.type === 'changed');
             },
             handle: function (message) {
-                setMeta(cell, 'params', parameterSpec.id, message.newValue);
+                setMeta(cell, 'params', parameterSpec.id(), message.newValue);
             }
         });
 
@@ -150,7 +150,8 @@ define([
         return '"' + string + '"';
     }
 
-    function updatePython(cell) {
+    function buildPython(cell) {
+        setStatus(cell, 'building code');
         var params = JSON.stringify({
             params: cell.metadata.kbase.params,
             method: cell.metadata.kbase.method,
@@ -166,8 +167,21 @@ define([
             ],
             pythonCodeString = pythonCode.join('\n');
         cell.set_text(pythonCodeString);
-        cell.execute();
-        setStatus(cell, 'running');
+        setStatus(cell, 'code built');
+        return true;
+    }
+    
+    function resetPython(cell) {
+        cell.set_text('');
+        // setStatus(cell, 'code built');
+        return true;
+    }
+    
+    function runPython(cell) {
+        if (buildPython()) {
+            cell.execute();
+            setStatus(cell, 'running');
+        }
     }
 
 
@@ -210,6 +224,9 @@ define([
         prototype.getMeta = function (group, name) {
             if (!this.metadata.kbase) {
                 return;
+            }
+            if (name === undefined) {
+                return this.metadata.kbase[group];
             }
             if (!this.metadata.kbase[group]) {
                 return;
@@ -458,7 +475,17 @@ define([
             // set up events.
             
             cellBus.on('submitted', function (message) {
-                updatePython(cell);
+                runPython(cell);
+            });
+            cellBus.on('parameters-invalid', function (message) {
+                resetPython(cell);
+                setStatus(cell, 'incomplete');
+                showStatus(cell);
+            });
+            cellBus.on('parameters-validated', function (message) {
+                buildPython(cell);
+                setStatus(cell, 'runnable');
+                showStatus(cell);
             });
             cellBus.on('status', function (message) {
                 setStatus(cell, message.status);

@@ -326,35 +326,20 @@ define (
                 alert('Sorry, could not find this method');
                 return;
             }
-            // if the id has a '/' in the middle, the "name" is the portion after
-            // the slash.
-            var id = spec.info.id;
-            var slashPos = id.search('/');
-            if (slashPos !== -1)
-                id = id.substring(slashPos + 1);
-            var cellMetadata = {
-                kbase: {
-                    type: 'method',
-                    method: {
-                        tag: tag,
-                        name: id,
-                        module: spec.info.module_name,
-                        gitCommitHash: spec.info.git_commit_hash,
-                        version: spec.info.ver
-                    }
-                }
-            };
             // This will also trigger the create.Cell event, which is not very
             // useful for us really since we haven't been able to set the
             // metadata yet. Don't worry, I checked, the Jupyter api does not
             // provide a way to set the cell metadata as it is being created.
             var cell = Jupyter.narrative.insertAndSelectCellBelow('code');
 
-            cell.metadata = cellMetadata;
-
             // Now we need to invent a way of triggering the cell to set itself up.
-            $([Jupyter.events]).trigger('updated.Cell', {
-                cell: cell
+            $([Jupyter.events]).trigger('inserted.Cell', {
+                cell: cell,
+                kbase: {
+                    type: 'method',
+                    methodTag: tag,
+                    methodSpec: spec
+                }
             });
 
         },

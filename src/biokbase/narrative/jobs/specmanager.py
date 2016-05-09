@@ -170,6 +170,9 @@ class SpecManager(object):
             else:
                 p_info['default'] = defaults[0] if len(defaults) > 0 else None
 
+            if 'checkbox_options' in p and len(p['checkbox_options'].keys()) == 2:
+                p_info['checkbox_map'] = [p['checkbox_options']['checked_value'], p['checkbox_options']['unchecked_value']]
+
             if 'text_options' in p:
                 opts = p['text_options']
                 if 'is_output_name' in opts:
@@ -188,8 +191,6 @@ class SpecManager(object):
                     p_info['max_val'] = opts['max_int']
                 if 'regex_constraint' in opts and len(opts['regex_constraint']):
                     p_info['regex_constraint'] = opts['regex_constraint']
-                if 'checkbox_options' in opts and len(opts['checkbox_options'].keys()) == 2:
-                    p_info['checkbox_map'] = [opts['checkbox_options']['checked_value'], opts['checkbox_options']['unchecked_value']]
 
             params.append(p_info)
 

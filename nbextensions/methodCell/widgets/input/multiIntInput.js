@@ -97,7 +97,7 @@ define([
                 var validationOptions = copyProps(spec.spec.text_options, ['min_int', 'max_int']);
 
                 validationOptions.required = spec.required();
-                return Validation.validateInteger(rawValue, validationOptions);
+                return Validation.validateIntegerField(rawValue, validationOptions);
             });
         }
 

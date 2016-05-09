@@ -25,11 +25,12 @@ define([
     './widgets/FieldWidget',
     './runtime',
     './microBus',
+    './parameterSpec',
     'kb_service/utils',
     'kb_service/client/workspace',
     'css!./styles/method-widget.css',
     'bootstrap'
-], function ($, Jupyter, html, Promise, CodeCellInputWidget, FieldWidget, Runtime, Bus, serviceUtils, Workspace) {
+], function ($, Jupyter, html, Promise, CodeCellInputWidget, FieldWidget, Runtime, Bus, ParameterSpec, serviceUtils, Workspace) {
     'use strict';
     var t = html.tag,
         div = t('div'), button = t('button'), span = t('span'), form = t('form'),
@@ -118,7 +119,7 @@ define([
                 return (message.type === 'changed');
             },
             handle: function (message) {
-                setMeta(cell, 'params', parameterSpec.id, message.newValue);
+                setMeta(cell, 'params', parameterSpec.id(), message.newValue);
             }
         });
 
@@ -150,20 +151,18 @@ define([
         return '"' + string + '"';
     }
 
-    function updatePython(cell) {
+    function buildPython(cell) {
         var method = cell.metadata.kbase.method,
             params = cell.metadata.kbase.params,
-            cellId = cell.cell_id;
-
-        var methodInputs = pythonifyInputs(method, params, cellId);
-        var pythonCode = [
-            'from biokbase.narrative.jobs.methodmanager import MethodManager',
-            'mm = MethodManager()',
-            'new_job = mm.run_method(\n' + pythonifyInputs(method, params, cellId) + '\n)'
-        ].join('\n');
+            cellId = cell.cell_id,
+            pythonCode = [
+                'from biokbase.narrative.jobs.methodmanager import MethodManager',
+                'mm = MethodManager()',
+                'new_job = mm.run_method(\n' + pythonifyInputs(method, params, cellId) + '\n)'
+            ].join('\n');
         cell.set_text(pythonCode);
-        cell.execute();
-        setStatus(cell, 'running');
+        
+        return true;
     }
 
     /**
@@ -177,7 +176,7 @@ define([
      * where each kwarg is a param input of the form foo="bar", or foo={"bar":"baz"}, or foo=["bar","baz"], etc.
      * So, return everything but the encapsulating function call.
      */
-    function pythonifyInputs(method, params, cellId) {
+    function xpythonifyInputs(method, params, cellId) {
         var methodId = method.module + '/' + method.name,
             tag = method.tag,
             version = method.version;
@@ -195,29 +194,25 @@ define([
 
         var kwargs = [];
         // now the parameters...
-        $.each(params, function(pName, pVal) {
+        $.each(params, function (pName, pVal) {
             // options - either atomic value or list. No hashes, right?
             var arg = '    ' + pName + '=';
             if (typeof pVal !== 'object') {
                 if (typeof pVal === 'number') {
                     arg += pVal;
-                }
-                else {
+                } else {
                     arg += '"' + pVal + '"';
                 }
-            }
-            else if (pVal instanceof Array) {
+            } else if (pVal instanceof Array) {
                 arg += '[';
                 // assume they're all the same type, either number or string. Because they should be.
                 if (typeof pVal === 'number') {
                     arg += pVal.join(', ');
-                }
-                else {
+                } else {
                     arg += '"' + pVal.join('", "') + '"';
                 }
                 arg += ']';
-            }
-            else {
+            } else {
                 arg += '{"huh": "it is a dict."}';
             }
             kwargs.push(arg);
@@ -226,7 +221,71 @@ define([
         return pythonString;
     }
 
-    function updatePython_old(cell) {
+    function escapeString(stringValue, delimiter) {
+        return stringValue.replace(delimiter, '\\"').replace(/\n/, '\\n');
+    }
+
+    function pythonifyInputs(method, params, cellId) {
+        var pythonString = '    "' + method.id + '",\n';
+        
+        pythonString += '    tag="' + method.tag + '",\n';
+        if (method.tag === 'release') {
+            pythonString += '    version="' + method.version + '",\n';
+        }
+        pythonString += '    cell_id="' + cellId + '",\n';
+
+        var kwargs = [];
+        // now the parameters...
+        Object.keys(params).forEach(function (pName) {
+            // options - either atomic value or list. No hashes, right?
+            var pVal = params[pName],
+                arg = '    ' + pName + '=';
+
+            switch (typeof pVal) {
+                case 'number':
+                    if (pVal === null) {
+                        arg += 'None';
+                    } else {
+                        arg += String(pVal);
+                    }
+                    break;
+                case 'string':
+                    arg += '"' + pVal + '"';
+                    break;
+                case 'object':
+                    if (pVal instanceof Array) {
+                        arg += '[';
+
+                        arg += pVal.map(function (value) {
+                            switch (typeof value) {
+                                case 'number':
+                                    return String(value);
+                                case 'string':
+                                    return escapeString(value, '"');
+                                default:
+                                    throw new Error('Invalid array element of type ' + (typeof value));
+                            }
+                        }).join(', ');
+
+                        // assume they're all the same type, either number or string. Because they should be.
+                        arg += ']';
+                    } else if (pVal === null) {
+                        arg += 'None';
+                    } else {
+                        throw new Error('Objects (dicts) are not supported in paramters');
+                        // arg += '{"huh": "it is a dict."}';
+                    }
+                    break;
+                default:
+                    throw new Error('Unsupported parameter type ' + (typeof pVal));
+            }
+            kwargs.push(arg);
+        });
+        pythonString += kwargs.join(',\n');
+        return pythonString;
+    }
+
+    function buildPython_old(cell) {
         var params = JSON.stringify({
             params: cell.metadata.kbase.params,
             method: cell.metadata.kbase.method,
@@ -242,8 +301,21 @@ define([
             ],
             pythonCodeString = pythonCode.join('\n');
         cell.set_text(pythonCodeString);
-        cell.execute();
-        setStatus(cell, 'running');
+        setStatus(cell, 'code built');
+        return true;
+    }
+
+    function resetPython(cell) {
+        cell.set_text('');
+        // setStatus(cell, 'code built');
+        return true;
+    }
+
+    function runPython(cell) {
+        if (buildPython(cell)) {
+            cell.execute();
+            setStatus(cell, 'running');
+        }
     }
 
 
@@ -256,6 +328,9 @@ define([
         cell.metadata = meta;
     }
     function getMeta(cell, group, name) {
+        if (!cell.metadata.kbase) {
+            return;
+        }
         if (!cell.metadata.kbase[group]) {
             return;
         }
@@ -269,16 +344,21 @@ define([
          * properties of it are.
          */
         var temp = cell.metadata;
-        if (!temp.kbase[group]) {
-            temp.kbase[group] = {};
+        // Handle the case of setting a group to an entire object
+        if (value === undefined) {
+            temp.kbase[group] = name;
+        } else {
+            if (!temp.kbase[group]) {
+                temp.kbase[group] = {};
+            }
+            temp.kbase[group][name] = value;
         }
-        temp.kbase[group][name] = value;
         cell.metadata = temp;
     }
 
     function extendCell(cell) {
         var prototype = Object.getPrototypeOf(cell);
-        prototype.createMeta = function(initial) {
+        prototype.createMeta = function (initial) {
             var meta = this.metadata;
             meta.kbase = initial;
             this.metadata = meta;
@@ -287,12 +367,15 @@ define([
             if (!this.metadata.kbase) {
                 return;
             }
+            if (name === undefined) {
+                return this.metadata.kbase[group];
+            }
             if (!this.metadata.kbase[group]) {
                 return;
             }
             return this.metadata.kbase[group][name];
         };
-        prototype.setMeta = function(group, name, value) {
+        prototype.setMeta = function (group, name, value) {
             /*
              * This funny business is because the trigger on setting the metadata
              * property (via setter and getter in core Cell object) is only invoked
@@ -315,8 +398,8 @@ define([
 
     function doEditNotebookMetadata() {
         Jupyter.notebook.edit_metadata({
-                notebook: Jupyter.notebook,
-                keyboard_manager: Jupyter.notebook.keyboard_manager
+            notebook: Jupyter.notebook,
+            keyboard_manager: Jupyter.notebook.keyboard_manager
         });
     }
     function editNotebookMetadata(toolbarDiv, cell) {
@@ -419,7 +502,7 @@ define([
             $(toolbarDiv).append(span({style: {padding: '4px'}}, 'KBase Toolbar'));
         }
         function status(toolbarDiv, cell) {
-            var status = cell.getMeta('attributes', 'status'),
+            var status = getMeta(cell, 'attributes', 'status'),
                 content = span({style: {fontWeight: 'bold'}}, status);
             $(toolbarDiv).append(span({style: {padding: '4px'}}, content));
         }
@@ -464,6 +547,58 @@ define([
             return element ? true : false;
         }).join('/');
     }
+    
+    function setupParams(cell, methodSpec) {
+        var defaultParams = {};
+        methodSpec.parameters.forEach(function (parameterSpec) {
+            var param = ParameterSpec.make({parameterSpec: parameterSpec}),
+                defaultValue = param.defaultValue();
+                
+            // A default value may be undefined, e.g. if the parameter is required and there is no default value.
+            if (defaultValue !== undefined) {
+                defaultParams[param.id()] = defaultValue;
+            }            
+        });
+        setMeta(cell, 'params', defaultParams);
+    }
+    
+    /*
+     * Should only be called when a cell is first inserted into a narrative.
+     * It creates the correct metadata and then sets up the cell.
+     * 
+     */ 
+    function createCell(cell, methodSpec, methodTag) {
+        
+        return Promise.try(function () {
+            // How about we just use the id and not the module and name?
+            var meta = cell.metadata;
+            meta.kbase = {
+                type: 'method',
+                attributes: {
+                    status: 'new',
+                    created: (new Date()).toUTCString()
+                },
+                method: {
+                    tag: methodTag,
+                    id: methodSpec.info.id,
+                    //name: spec.info.name,
+                    //module: spec.info.module_name,
+                    gitCommitHash: methodSpec.info.git_commit_hash,
+                    version: methodSpec.info.ver
+                }
+            };
+            cell.metadata = meta;
+        })
+            .then(function () {
+                // populate the parameters
+                return setupParams(cell, methodSpec);
+            })
+            .then(function () {
+                return setupCell(cell);
+        });
+
+        
+    }
 
     function setupCell(cell) {
         return Promise.try(function () {
@@ -491,14 +626,14 @@ define([
             };
 
             // Cell metadata is always accessed directly on the metadata object of the cell.
-            if (!cell.metadata.kbase) {
-                createMeta({
-                    attributes: {
-                        status: 'new',
-                        created: (new Date()).toUTCString()
-                    }
-                });
-            }
+            //if (!cell.metadata.kbase) {
+            //    createMeta({
+            //        attributes: {
+            //            status: 'new',
+            //            created: (new Date()).toUTCString()
+            //        }
+            //    });
+           // }
 
             /*
              * Code input area sync.
@@ -514,14 +649,12 @@ define([
             setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
 
             var cellBus = Bus.make(),
-                methodId = makeMethodId(getMeta(cell, 'method', 'module'), getMeta(cell, 'method', 'name')),
+                methodId = getMeta(cell, 'method', 'id'),
                 methodTag = getMeta(cell, 'method', 'tag'),
                 inputWidget = CodeCellInputWidget.make({
                     bus: cellBus,
                     cell: cell,
                     runtime: runtime,
-                    // nmsUrl: 'https://ci.kbase.us/services/narrative_method_store/rpc',
-                    // workspaceUrl: 'https://ci.kbase.us/services/ws',
                     workspaceInfo: workspaceInfo
                 }),
                 kbaseNode = document.createElement('div');
@@ -534,7 +667,17 @@ define([
             // set up events.
 
             cellBus.on('submitted', function (message) {
-                updatePython(cell);
+                runPython(cell);
+            });
+            cellBus.on('parameters-invalid', function (message) {
+                resetPython(cell);
+                setStatus(cell, 'incomplete');
+                showStatus(cell);
+            });
+            cellBus.on('parameters-validated', function (message) {
+                buildPython(cell);
+                setStatus(cell, 'runnable');
+                showStatus(cell);
             });
             cellBus.on('status', function (message) {
                 setStatus(cell, message.status);
@@ -584,7 +727,7 @@ define([
                             return (message.type === 'runstatus');
                         },
                         handle: function (message) {
-                             updateRunStatus(cell, message);
+                            updateRunStatus(cell, message);
                             // console.log('RUNSTATUS', message);
                         }
                     });
@@ -610,12 +753,12 @@ define([
 
     function getWorkspaceRef() {
         // TODO: all kbase notebook metadata should be on a kbase top level property;
-         var workspaceName = Jupyter.notebook.metadata.ws_name, // Jupyter.notebook.metadata.kbase.ws_name,
-             workspaceId;
+        var workspaceName = Jupyter.notebook.metadata.ws_name, // Jupyter.notebook.metadata.kbase.ws_name,
+            workspaceId;
 
-         if (workspaceName) {
-             return {workspace: workspaceName};
-         }
+        if (workspaceName) {
+            return {workspace: workspaceName};
+        }
 
         workspaceId = Jupyter.notebook.metadata.ws_id; // Jupyter.notebook.metadata.kbase.ws_id;
         if (workspaceId) {
@@ -672,14 +815,16 @@ define([
             })
             .then(function () {
                 // set up event hooks
-                $([Jupyter.events]).on('updated.Cell', function (event, data) {
-                    setupCell(data.cell)
-                        .then(function () {
-                            console.log('Cell created?');
-                        })
-                        .catch(function (err) {
-                            console.error('ERROR creating cell', err);
-                        });
+                $([Jupyter.events]).on('inserted.Cell', function (event, data) {
+                    if (data.kbase && data.kbase.type === 'method') {
+                        createCell(data.cell, data.kbase.methodSpec, data.kbase.methodTag)
+                            .then(function () {
+                                console.log('Cell created?');
+                            })
+                            .catch(function (err) {
+                                console.error('ERROR creating cell', err);
+                            });
+                    }
                 });
                 // also delete.Cell, edit_mode.Cell, select.Cell, command_mocd.Cell, output_appended.OutputArea ...
                 // preset_activated.CellToolbar, preset_added.CellToolbar

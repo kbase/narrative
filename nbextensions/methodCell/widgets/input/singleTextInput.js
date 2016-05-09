@@ -121,6 +121,9 @@ define([
          */
         function makeInputControl(currentValue, events, bus) {
             // CONTROL
+            var editPauseTime = 0,
+                editPauseTimer,
+                editPauseInterval = 2000;
             return input({
                 id: events.addEvents({
                     events: [
@@ -147,6 +150,22 @@ define([
                                             diagnosis: result.diagnosis
                                         });
                                     });
+                            }
+                        },
+                        {
+                            type: 'keyup',
+                            handler: function (e) {
+                                editPauseTime = new Date().getTime();
+                                if (editPauseTimer) {
+                                    window.clearTimeout(editPauseTimer);
+                                }
+                                editPauseTimer = window.setTimeout(function () {
+                                    var now = new Date().getTime();
+                                    if ((now - editPauseTime) > editPauseInterval) {
+                                        editPauseTimer = null;
+                                        e.target.dispatchEvent(new Event('change'));
+                                    }
+                                }, 2500);
                             }
                         },
                         {

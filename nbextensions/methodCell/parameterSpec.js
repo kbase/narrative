@@ -11,6 +11,10 @@ define([
             _required = spec.optional ? false : true,
             isOutputName = spec.text_options && spec.text_options.is_output_name;
         
+        function id() {
+            return spec.id;
+        }
+        
         function name() {
             return spec.id;
         }
@@ -50,8 +54,27 @@ define([
         function type() {
             return spec.type;
         }
+        
+        function isAdvanced() {
+            if (spec.advanced === 1) {
+                return true;
+            }
+            return false;
+        }
 
         function dataType() {
+            /*
+             * Special case here --
+             * is actually an int, although Mike says it can be any type...
+             */
+            switch (spec.field_type) {
+                case 'checkbox':
+                    return 'int';
+            }
+            
+            /*
+             * Otherwise, we rely on text options to provide type information.
+             */
             if (!spec.text_options) {
                 return 'unspecified';
             }
@@ -69,6 +92,95 @@ define([
 
             return 'unspecified';
         }
+        
+        function nullValue() {
+            if (multipleItems()) {
+                return [];
+            }
+            switch (dataType()) {
+                case 'string':
+                    return '';
+                case 'int':
+                    return null;
+                case 'float':
+                    return null;
+                case 'workspaceObjectReference':
+                    return null;
+                default:
+                    return null;
+            }
+        }
+        
+        /*
+         * Default values are strings.
+         */
+        function defaultToNative(defaultValue) {
+            switch (dataType()) {
+                case 'string':
+                    return defaultValue;
+                case 'int':
+                    return parseInt(defaultValue);
+                case 'float':
+                    return parseFloat(defaultValue);
+                case 'workspaceObjectReference':
+                    return null;
+                default:
+                    // Assume it is a string...
+                    return defaultValue;
+            }
+        }
+        
+        function defaultValue() {
+            var defaultValues = spec.default_values;
+            // No default value and not required? null value
+            if (!defaultValues && !required()) {
+                return nullValue();
+            }
+            if (defaultValues.length === 0) {
+                return nullValue();
+            } 
+            // also weird case of a default value of the empty string, which is really
+            // the same as null...
+            if (defaultValues[0] === '') {
+                return nullValue();
+            } 
+            
+            // Singular item?
+            if (!multipleItems()) {
+                return defaultToNative(defaultValues[0]);
+            } else {
+                return defaultValues.map(function (defaultValue) {
+                    return defaultToNative(defaultValue);
+                });
+            }            
+        }
+        
+        function isEmpty(value) {
+            if (value === undefined) {
+                return true;
+            }
+            if (value === null) {
+                return true;
+            }
+            switch (dataType()) {
+                case 'string':
+                    if (value.length === 0) {
+                        return true;
+                    } 
+                    break;
+                case 'workspaceObjectReference':
+                    if (value.length === 0) {
+                        return true;
+                    } 
+                    break;
+                case 'workspaceObjectName':
+                    if (value.length === 0) {
+                        return true;
+                    } 
+                    break;
+            }
+            return false
+        }
 
         function uiClass() {
             return spec.ui_class;
@@ -79,7 +191,7 @@ define([
         }
 
         return {
-            id: spec.id,
+            id: id,
             spec: spec,
             name: name,
             label: label,
@@ -91,7 +203,11 @@ define([
             type: type,
             dataType: dataType,
             uiClass: uiClass,
-            required: required
+            required: required,
+            isAdvanced: isAdvanced,
+            isEmpty: isEmpty,
+            nullValue: nullValue,
+            defaultValue: defaultValue
         };
     }
 

@@ -21,7 +21,7 @@ from IPython.display import (
 )
 from jinja2 import Template
 
-class Job ():
+class Job(object):
     job_id = None
     method_id = None
     method_version = None

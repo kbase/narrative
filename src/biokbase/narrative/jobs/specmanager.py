@@ -42,7 +42,18 @@ class SpecManager(object):
         self.check_method(method_id, tag, raise_exception=True)
 
         info = clients.get('narrative_method_store').get_method_full_info({'ids': [method_id], 'tag': tag})[0]
-        return info['description']
+
+        tmpl = """
+        <div class="bg-info" style="padding:15px">
+            <h1>{{info.name}} <small>{{info.module_name}}</small></h1>
+            <p class='lead'>{{info.id}} - v{{info.ver}}</p>
+        </div>
+        <p class='lead'>{{info.subtitle}}</p>
+        <hr>
+        {{info.description}}
+        """
+
+        return HTML(Template(tmpl).render(info=info))
 
     def list_available_methods(self, tag="release"):
         """

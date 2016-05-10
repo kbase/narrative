@@ -19,8 +19,9 @@
 define([
     'jquery',
     'base/js/namespace',
-    'kb_common/html',
     'bluebird',
+    'uuid',
+    'kb_common/html',
     './widgets/codeCellInputWidget',
     './widgets/FieldWidget',
     './runtime',
@@ -30,7 +31,7 @@ define([
     'kb_service/client/workspace',
     'css!./styles/method-widget.css',
     'bootstrap'
-], function ($, Jupyter, html, Promise, CodeCellInputWidget, FieldWidget, Runtime, Bus, ParameterSpec, serviceUtils, Workspace) {
+], function ($, Jupyter, Promise, Uuid, html, CodeCellInputWidget, FieldWidget, Runtime, Bus, ParameterSpec, serviceUtils, Workspace) {
     'use strict';
     var t = html.tag,
         div = t('div'), button = t('button'), span = t('span'), form = t('form'),
@@ -154,7 +155,7 @@ define([
     function buildPython(cell) {
         var method = cell.metadata.kbase.method,
             params = cell.metadata.kbase.params,
-            cellId = cell.cell_id,
+            cellId = cell.metadata.kbase.attributes.id,
             pythonCode = [
                 'from biokbase.narrative.jobs.methodmanager import MethodManager',
                 'mm = MethodManager()',
@@ -392,6 +393,24 @@ define([
             temp.kbase[group][name] = value;
             this.metadata = temp;
         };
+        prototype.pushMeta = function (group, value) {
+            /*
+             * This funny business is because the trigger on setting the metadata
+             * property (via setter and getter in core Cell object) is only invoked
+             * when the metadata preoperty is actually set -- doesn't count if
+             * properties of it are.
+             */
+            var temp = this.metadata;
+            if (!temp.kbase) {
+                temp.kbase = {};
+            }
+            if (!temp.kbase[group]) {
+                temp.kbase[group] = [];
+            }
+            temp.kbase[group].push(value);
+            this.metadata = temp;
+        };
+
     }
 
     // TOOLBAR
@@ -506,6 +525,11 @@ define([
                 content = span({style: {fontWeight: 'bold'}}, status);
             $(toolbarDiv).append(span({style: {padding: '4px'}}, content));
         }
+        function jobStatus(toolbarDiv, cell) {
+            var jobStatus = getMeta(cell, 'attributes', 'jobStatus'),
+                content = span({style: {fontWeight: 'bold'}}, jobStatus);
+            $(toolbarDiv).append(span({style: {padding: '4px'}}, content));
+        }
         function info(toolbarDiv, cell) {
             var id = cell.cell_id,
                 content = span({style: {fontStyle: 'italic'}}, id);
@@ -514,6 +538,7 @@ define([
         Jupyter.CellToolbar.register_callback('kbase-toggle-input', toggleInput);
         Jupyter.CellToolbar.register_callback('kbase-credit', credit);
         Jupyter.CellToolbar.register_callback('kbase-status', status);
+        Jupyter.CellToolbar.register_callback('kbase-job-status', jobStatus);
         Jupyter.CellToolbar.register_callback('kbase-info', info);
         Jupyter.CellToolbar.register_callback('kbase-edit-notebook-metadata', editNotebookMetadata);
 
@@ -575,6 +600,7 @@ define([
             meta.kbase = {
                 type: 'method',
                 attributes: {
+                    id: new Uuid(4).format(),
                     status: 'new',
                     created: (new Date()).toUTCString()
                 },
@@ -667,6 +693,7 @@ define([
             // set up events.
 
             cellBus.on('submitted', function (message) {
+                // Save the document. We need to ensure that the 
                 runPython(cell);
             });
             cellBus.on('parameters-invalid', function (message) {
@@ -682,6 +709,7 @@ define([
             cellBus.on('status', function (message) {
                 setStatus(cell, message.status);
             });
+            
 
             /*
              * This looks simple, but follow code cell input widget, field widget,

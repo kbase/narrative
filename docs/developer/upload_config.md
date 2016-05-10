@@ -80,5 +80,35 @@ Here's an example from the GenBank file uploader:
 ```
 This is sent to the Transform service. It creates a parameter called `contigset_object_name`, that's a non-optional string. It is taken from the value of the parameter with id `contigObject`. If that's not present, then it uses the default parameter of `outputObject`, and appends ".contigset" to the end of that value. If that value isn't present either, then it throws an error, since it is required.
 
-
 ### 3. Annotated Example Config
+As an example, here's the complete config for uploading a KBaseGenomes.Genome object using the import_genome_gbk_file method spec. It's annotated inline, which makes it invalid JSON (so don't copy and paste this), but should help with understanding.
+
+```
+"KBaseGenomes.Genome" : {                         # top level workspace object type
+    "import_genome_gbk_file" : {                  # method spec id (in the narrative_method_specs repo)
+        "external_type" : "Genbank.Genome",       # external data type used in the transform service
+        "kbase_type" : "KBaseGenomes.Genome",     # the KBase type generated (a little redundant, yes)
+        "object_name" : "outputObject",           # the name of the new object - from a method spec parameter
+        "optional_arguments" : {                  
+            "validate" : {},
+            "transform" : {                       # arguments passed to the Transform service
+                "contigset_object_name" : {       # name of the argument
+                    "type" : "string",            # expected argument type
+                    "param" : "contigObject",     # method spec param id to use for the type
+                    "optional" : false,
+                    "default" : {
+                        "param" : "outputObject", # if the contigObject param isn't found use this one
+                        "suffix" : ".contigset"   # and give it this suffix
+                    }
+                }
+            }
+        },
+        "url_mapping" : {                         # the url_mapping to give to the Transform service
+            "Genbank.Genome" : {
+                "type" : "shock",
+                "param" : "gbkFile",
+                "optional" : false
+            }
+        }
+    }
+}

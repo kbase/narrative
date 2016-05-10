@@ -213,8 +213,7 @@ define([
                     dataElement: 'input',
                     checked: checked,
                     value: valueChecked
-                }),
-                booleanString]);
+                })]);
         }
         function autoValidate() {
             return validate()

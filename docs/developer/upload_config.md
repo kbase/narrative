@@ -104,10 +104,10 @@ As an example, here's the complete config for uploading a KBaseGenomes.Genome ob
             }
         },
         "url_mapping" : {                         # the url_mapping to give to the Transform service
-            "Genbank.Genome" : {
-                "type" : "shock",
-                "param" : "gbkFile",
-                "optional" : false
+            "Genbank.Genome" : {                  # one of the types to set a URL for 
+                "type" : "shock",                 # type of 'param' for the URL (prefixes with Shock URL here)
+                "param" : "gbkFile",              # method spec param to use for the URL suffix
+                "optional" : false                # whether this URL is optional
             }
         }
     }

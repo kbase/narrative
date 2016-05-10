@@ -33,7 +33,7 @@ In the general spec below, placeholder names are given in ALL_CAPS_WITH_UNDERSCO
               "ARGUMENT_1" : { {{ARGUMENT_INFO}} },
               "ARGUMENT_2" : { {{ARGUMENT_INFO}} },
               ...
-            }
+            },
             "transform" : {
               "ARGUMENT_1" : { {{ARGUMENT_INFO}} },
               "ARGUMENT_2" : { {{ARGUMENT_INFO}} },
@@ -47,11 +47,11 @@ In the general spec below, placeholder names are given in ALL_CAPS_WITH_UNDERSCO
 }
 ```
 
-`OBJECT_TYPE` = the registered workspace name of a typed object that will be created by the uploader.  
-`METHOD_SPEC_ID` = the id of the method spec that is used to define and map input parameters.
-`optional_arguments.validate` = are sent to the validation step
-`optional_arguments.transform` = are sent to the Transform service
-`url_mapping.EXTERNAL_OBJECT_TYPE` = is used to map the location of the uploaded argument type. Most cases will be in Shock if the user uploaded their data there, but sometimes may be in a given URL string (e.g., if uploading directly from an FTP site).
+  * `OBJECT_TYPE` = the registered workspace name of a typed object that will be created by the uploader.  
+  * `METHOD_SPEC_ID` = the id of the method spec that is used to define and map input parameters.
+  * `optional_arguments.validate` = are sent to the validation step
+  * `optional_arguments.transform` = are sent to the Transform service
+  * `url_mapping` = is used to map the location of the uploaded data files. Most cases will be in Shock if the user uploaded their data there, but sometimes may be in a given URL string (e.g., if uploading directly from an FTP site). The keys of these are set by the configurations in the Transform service.
 
 `{{ARGUMENT_INFO}}`  
 This is a special block that is a reasonably flexible way to add arbitrary arguments to either the uploader, the validator, or the url mapping. It is a set of key-value pairs that tell the importer where to find those parameters. Options are as follows:
@@ -103,7 +103,7 @@ As an example, here's the complete config for uploading a KBaseGenomes.Genome ob
                 }
             }
         },
-        "url_mapping" : {                         # the url_mapping to give to the Transform service
+        "url_mapping" : {                         # the url_mappings to give to the Transform service
             "Genbank.Genome" : {                  # one of the types to set a URL for 
                 "type" : "shock",                 # type of 'param' for the URL (prefixes with Shock URL here)
                 "param" : "gbkFile",              # method spec param to use for the URL suffix

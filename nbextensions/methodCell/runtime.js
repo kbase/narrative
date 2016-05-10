@@ -2,11 +2,35 @@
 /*jslint white:true,browser:true*/
 define([
     'base/js/namespace',
-    'narrativeConfig'
-], function (Jupyter, Config) {
+    'narrativeConfig',
+    './microBus'
+], function (Jupyter, Config, Bus) {
     'use strict';
 
     function factory(config) {
+        
+        function createRuntime() {
+            return {
+                created: new Date(),
+                bus: Bus.make()
+            }
+        }
+
+        /*
+         * The runtime hooks into a window
+         */
+        if (!window.kbaseRuntime) {
+            window.kbaseRuntime = createRuntime();
+        }
+        
+        // Global scope
+        
+        function bus() {
+            return window.kbaseRuntime.bus;
+        }
+        
+        
+        // These are still module scope
 
         function authToken() {
             return Jupyter.narrative.authToken;
@@ -31,11 +55,11 @@ define([
             }
             return configRoot;
         }
-
-
+        
         return {
             authToken: authToken,
-            config: getConfig
+            config: getConfig,
+            bus: bus
         };
     }
 

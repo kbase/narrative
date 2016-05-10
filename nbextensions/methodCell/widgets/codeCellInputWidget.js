@@ -268,6 +268,11 @@ define([
                             return SingleCheckboxInputWidget;
                         case 'textarea':
                             return UndefinedInputWidget;
+                        case 'dropdown':
+                            if (parameterSpec.multipleItems()) {
+                                return UndefinedInputWidget;
+                            }
+                            return SingleSelectInputWidget;
                         case 'custom_button':
                             return UndefinedInputWidget;
                         case 'textsubdata':
@@ -323,7 +328,7 @@ define([
             var params = cell.getMeta('params');
             var errors = model.value.parameters.map(function (parameterSpec) {
                 if (parameterSpec.required()) {
-                    console.log('VAL', parameterSpec.id(), params);
+                    // console.log('VAL', parameterSpec.id(), params);
                     if (parameterSpec.isEmpty(params[parameterSpec.id()])) {
                         return {
                             diagnosis: 'required-missing',
@@ -347,6 +352,8 @@ define([
         function makeFieldWidget(cell, parameterSpec, value) {
             var bus = Bus.make(),
                 inputWidget = getInputWidgetFactory(parameterSpec);
+
+            inputBusMap[cell.metadata.kbase.attributes.id] = bus;
 
             inputBusses.push(bus);
 
@@ -477,7 +484,8 @@ define([
             // Also update the 
         }
 
-        var inputBusses = [];
+        var inputBusses = [],
+            inputBusMap = {};
         function start() {
             return Promise.try(function () {
                 inputWidgetBus.listen({
@@ -508,15 +516,63 @@ define([
                         renderAdvanced();
                     }
                 });
+                
+                runtime.bus().listen({
+                    test: function (message) {
+                        return (message.type === 'jobstatus' && message.jobState.cell_id === cell.metadata.kbase.attributes.id);
+                    },
+                    handle: function (message) {
+                        // console.log('JOBSTATUS', message);
+                        var jobStatus = message.job.state.job_state;
+
+                        // Update current status
+                        cell.setMeta('attributes', 'jobStatus', jobStatus);
+
+                        // Update status history.
+                        
+                        // Okay, don't store multiples of the last event.
+                        var log = cell.metadata.kbase.log;
+                        if (!log) {
+                            log = [];
+                            cell.metadata.kbase.log = log;
+                        }
+                        if (log.length > 0) {
+                            var lastLog = log[log.length - 1];
+                            if (lastLog.data.status === jobStatus) {
+                                if (lastLog.count === undefined) {
+                                    lastLog.count = 0;
+                                }
+                                lastLog.count += 1;
+                                return;
+                            }
+                        }
+                        
+                        cell.pushMeta('log', {
+                            timestamp: new Date(),
+                            event: 'jobstatus',
+                            data: {
+                                status: jobStatus
+                            }
+                        });
+                    }
+                })
+                
                 return null;
             });
         }
 
         function run(params) {
             var widgets = [];
+            // First get the method specs, which is stashed in the model, 
+            // with the parameters returned.
             return fetchData(params.methodId, params.methodTag)
                 .then(function (parameterSpecs) {
+                    // Render the layout.
                     render();
+                
+                    
+                
+                    // Separate out the params into the primary groups.
                     var inputParams = parameterSpecs.filter(function (spec) {
                         return (spec.spec.ui_class === 'input');
                     }),
@@ -531,7 +587,6 @@ define([
 
                 })
                 .spread(function (inputParams, outputParams, parameterParams) {
-                    // First create the row layout
                     return Promise.try(function () {
                         return null;
                     })

@@ -112,7 +112,7 @@ define([
                     validationResult;
 
                 validationOptions.required = spec.required();
-                validationResult = Validation.validateInteger(rawValue, validationOptions);
+                validationResult = Validation.validateIntegerField(rawValue, validationOptions);
 
                 return {
                     isValid: validationResult.isValid,

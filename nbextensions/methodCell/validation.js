@@ -56,6 +56,41 @@ define([
                 parsedValue: value
             };
         }
+        
+        /*
+         * A workspace ref, but using names ... 
+         */
+        function validateWorkspaceObjectNameRef(value, options) {
+            var parsedValue,
+                errorMessage, diagnosis;
+
+            if (typeof value !== 'string') {
+                diagnosis = 'invalid';
+                errorMessage = 'value must be a string in workspace object name format';
+            } else {
+                parsedValue = value.trim();
+                if (!parsedValue) {
+                    if (options.required) {
+                        diagnosis = 'required-missing';
+                        errorMessage = 'value is required';
+                    } else {
+                        diagnosis = 'optional-empty';
+                    }
+                } else if (!/^\d+\/\d+\/\d+/.test(value)) {
+                    diagnosis = 'invalid';
+                    errorMessage = 'Invalid object reference format (#/#/#)';
+                } else {
+                    diagnosis = 'valid';
+                }
+            }
+            return {
+                isValid: errorMessage ? false : true,
+                errorMessage: errorMessage,
+                diagnosis: diagnosis,
+                value: value,
+                parsedValue: parsedValue
+            };
+        }
 
 
         function validateWorkspaceObjectRef(value, options) {
@@ -128,7 +163,17 @@ define([
             };
         }
 
-        function validateInteger(value, options) {
+        function validateInteger(value, min, max) {
+            if (value === false) {
+                return 'value must be an integer';
+            } else if (max && max < value) {
+                return 'the maximum value for this parameter is ' + max;
+            } else if (min && min > value) {
+                return 'the minimum value for this parameter is ' + min;
+            }
+        }
+        
+        function validateIntegerField(value, options) {
             var plainValue = value.trim(),
                 parsedValue,
                 errorMessage, diagnosis,
@@ -143,21 +188,14 @@ define([
                     diagnosis = 'optional-empty';
                 }
             } else {
-                parsedValue = toInteger(plainValue);
-                if (parsedValue === false) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'value must be an integer';
-                } else if (max && max < parsedValue) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'the maximum value for this parameter is ' + max;
-                } else if (min && min > parsedValue) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'the minimum value for this parameter is ' + min;
-                } else {
-                    diagnosis = 'valid';
+                try {
+                    parsedValue = toInteger(plainValue);
+                    errorMessage = validateInteger(value, min, max);
+                } catch (error) {
+                    errorMessage = error.message;
                 }
             }
-
+                        
             return {
                 isValid: errorMessage ? false : true,
                 errorMessage: errorMessage,
@@ -250,6 +288,7 @@ define([
             validateWorkspaceObjectName: validateWorkspaceObjectName,
             validateWorkspaceObjectRef: validateWorkspaceObjectRef,
             validateInteger: validateInteger,
+            validateIntegerField: validateIntegerField,
             validateFloat: validateFloat,
             validateText: validateText,
             validateSet: validateSet

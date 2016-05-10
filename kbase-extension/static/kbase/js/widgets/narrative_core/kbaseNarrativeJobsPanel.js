@@ -1,7 +1,6 @@
 /*global define*/
 /*jslint white: true*/
-define (
-	[
+define ([
 		'kbwidget',
 		'bootstrap',
 		'jquery',
@@ -11,7 +10,8 @@ define (
 		'util/bootstrapDialog',
 		'util/timeFormat',
 		'util/string',
-        'base/js/namespace'
+                'base/js/namespace',
+                'nbextensions/methodCell/runtime'
 	], function(
 		KBWidget,
 		bootstrap,
@@ -22,7 +22,8 @@ define (
 		BootstrapDialog,
         TimeFormat,
         StringUtil,
-        Jupyter
+        Jupyter,
+        Runtime
 	) {
     'use strict';
     return KBWidget({
@@ -201,26 +202,34 @@ define (
 
         handleCommMessages: function(msg) {
             var msgType = msg.content.data.msg_type;
-            if (msgType === 'new_job') {
-                console.log("Adding new job info:");
-                this.registerKernelJob(msg.content.data.content);
-            }
-            else if (msgType === 'job_status') {
-                console.log("updating job status with following info:");
-                console.log(msg.content.data.content);
-                // kind silly, but yet again, it's late on Friday and I want to go home.
-                var status = {},
-                    info = {},
-                    content = msg.content.data.content;
-                for (var job_id in content) {
-                    status[job_id] = content[job_id].state;
-                    info[job_id] = {'spec':{'methodSpec': content[job_id]['spec']}};
-                }
-                this.populateJobsPanel(status, info);
-            }
-            else {
-                console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "'):");
-                console.warn(msg);
+            switch (msgType) {
+                case 'new_job':
+                    console.log("Adding new job info:");
+                    this.registerKernelJob(msg.content.data.content);
+                    break;
+                case 'job_status':
+                    //console.log("updating job status with following info:");
+                    //console.log(msg.content.data.content);
+                    // kind silly, but yet again, it's late on Friday and I want to go home.
+                    var status = {},
+                        info = {},
+                        content = msg.content.data.content;
+                    for (var job_id in content) {
+                        status[job_id] = content[job_id].state;
+                        info[job_id] = {
+                            spec: {
+                                methodSpec: content[job_id].spec
+                            }
+                        };
+                    }
+                    this.populateJobsPanel(status, info, content);
+                    break;
+                case 'job_err':
+                    console.error('Job Error', msg);
+                    break;
+                default:
+                    console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "'):");
+                    console.warn(msg);
             }
         },
 
@@ -765,7 +774,7 @@ define (
          * case where there's more than, say, 20 job elements at once in any given Narrative.
          * We should also expire jobs in a reasonable time, at least from the Narrative.
          */
-        populateJobsPanel: function(fetchedJobStatus, jobInfo) {
+        populateJobsPanel: function(fetchedJobStatus, jobInfo, jobs) {
             // console.log("JOB PANEL: fetched jobs", fetchedJobStatus, jobInfo);
             if (!this.jobStates || Object.keys(this.jobStates).length === 0) {
                 this.showMessage('No running jobs!');
@@ -808,7 +817,7 @@ define (
                         if (this.jobIsIncomplete(this.jobStates[jobId].status))
                             stillRunning++;
                         this.jobStates[jobId].state = fetchedJobStatus[jobId];
-                        this.updateCell(jobId, jobInfo[jobId]);
+                        this.updateCell(jobId, jobInfo[jobId], jobs[jobId]);
                     }
                     // updating the given state first allows us to just pass the id and the status set to
                     // the renderer. If the status set doesn't exist (e.g. we didn't look it up in the
@@ -997,7 +1006,7 @@ define (
          * 'job' = the response from the server about the job. Contains info from the job service
          * 'jobInfo' = the info we know about the running job: its id, associated cell, etc.
          */
-        updateCell: function(jobId, jobInfo) {
+        updateCell: function(jobId, jobInfo, job) {
             var jobState = this.jobStates[jobId];
             var source = jobState.source;
             var jobType = this.jobTypeFromId(jobId);
@@ -1013,12 +1022,24 @@ define (
                 return;
             }
 
-            var $cell = $('#' + source);
-            // don't do anything if we know what the source should be, but we can't find it.
-            if ($cell.length <= 0) {
-                console.error("Unable to find cell with source " + source + " for job id " + jobId + "! Exiting.");
-                return;
-            }
+//            var $cell = $('#' + source);
+//            // don't do anything if we know what the source should be, but we can't find it.
+//            if ($cell.length <= 0) {
+//                console.error("Unable to find cell with source " + source + " for job id " + jobId + "! Exiting.");
+//                return;
+//            }
+
+            // The job "source" is the permanent cell id.
+            var runtime = Runtime.make();
+            // The global runtime bus is a catch all for proving messaging semantics across otherwise unconnected apps.
+            runtime.bus().send({
+                type: 'jobstatus',
+                jobId: jobId,                
+                jobInfo: jobInfo,
+                job: job,
+                jobState: jobState
+            });
+            return;
 
             // if it's running and an NJS job, then it's in an app cell
             if (jobState.state.running_step_id && jobType === 'njs') {

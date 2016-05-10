@@ -167,6 +167,11 @@ class MethodManager(object):
 
         method_name = spec['behavior']['kb_service_method']
         service_name = spec['behavior']['kb_service_name']
+        if 'kb_service_version' in spec['behavior']:
+            service_ver = spec['behavior']['kb_service_version']
+        else:
+            service_ver
+        
         service_ver = spec['behavior']['kb_service_version']
         service_url = spec['behavior']['kb_service_url']
         # 3. set up app structure

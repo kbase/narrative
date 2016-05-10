@@ -149,10 +149,10 @@ define([
         celltoolbar.CellToolbar.register_callback('kbase-edit-notebook-metadata', editNotebookMetadata);
         celltoolbar.CellToolbar.register_callback('kbase.menu', makeKBaseMenu);
         celltoolbar.CellToolbar.register_callback('kbase-status', status);
-        celltoolbar.CellToolbar.register_callback('kbase-log-status', jobStatus);
+        celltoolbar.CellToolbar.register_callback('kbase-job-status', jobStatus);
 
         // default.rawedit for the metadata editor
-        celltoolbar.CellToolbar.register_preset('KBase', ['kbase.menu', 'default.rawedit', 'kbase-toggle-input', 'kbase-edit-notebook-metadata', 'kbase-status', 'kbase-log-status']);
+        celltoolbar.CellToolbar.register_preset('KBase', ['kbase.menu', 'default.rawedit', 'kbase-toggle-input', 'kbase-edit-notebook-metadata', 'kbase-status', 'kbase-job-status']);
     };
     return {register: register};
 });

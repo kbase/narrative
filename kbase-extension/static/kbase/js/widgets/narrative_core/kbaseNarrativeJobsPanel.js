@@ -206,8 +206,8 @@ define (
                 this.registerKernelJob(msg.content.data.content);
             }
             else if (msgType === 'job_status') {
-                console.log("updating job status with following info:");
-                console.log(msg.content.data.content);
+                // console.log("updating job status with following info:");
+                // console.log(msg.content.data.content);
                 // kind silly, but yet again, it's late on Friday and I want to go home.
                 var status = {},
                     info = {},
@@ -1009,7 +1009,7 @@ define (
 
             // don't do anything if we don't know the source cell. it might have been deleted.
             if (!source) {
-                console.error("Unknown input cell for job id " + jobId + "! Exiting.");
+                // console.error("Unknown input cell for job id " + jobId + "! Exiting.");
                 return;
             }
 

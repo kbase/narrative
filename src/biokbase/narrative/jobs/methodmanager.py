@@ -167,7 +167,7 @@ class MethodManager(object):
 
         method_name = spec['behavior']['kb_service_method']
         service_name = spec['behavior']['kb_service_name']
-        service_ver = spec['behavior']['kb_service_version']
+        service_ver = spec['behavior'].get('kb_service_version', None)
         service_url = spec['behavior']['kb_service_url']
         # 3. set up app structure
         app = {'name': 'App wrapper for method ' + method_id,

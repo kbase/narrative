@@ -77,9 +77,13 @@ class JobManager(object):
             for job_id in self.running_jobs:
                 job_state = self.running_jobs[job_id].full_state()
                 status_set.append(job_state)
-            status_set = sorted(status_set, key=lambda s: dateutil.parser.parse(s['submit_time']))
             if not len(status_set):
                 return "No running jobs!"
+            status_set = sorted(status_set, key=lambda s: dateutil.parser.parse(s['submit_time']))
+            for i in range(len(status_set)):
+                status_set[i]['submit_time'] = datetime.datetime.strftime(dateutil.parser.parse(status_set[i]['submit_time']), "%Y %m %d %H:%M:%S")
+                if 'complete_time' in status_set[i]:
+                    status_set[i]['complete_time'] = datetime.datetime.strftime(dateutil.parser.parse(status_set[i]['complete_time']), "%Y %m %d %H:%M:%S")
 
             tmpl = """
             <table class="table table-bordered table-striped table-condensed">
@@ -89,6 +93,7 @@ class JobManager(object):
                     <th>Started</th>
                     <th>Status</th>
                     <th>Run Time</th>
+                    <th>Complete Time</th>
                 </tr>
                 {% for j in jobs %}
                 <tr>
@@ -97,6 +102,7 @@ class JobManager(object):
                     <td>{{ j.submit_time|e }}</td>
                     <td>{{ j.job_state|e }}</td>
                     <td>...</td>
+                    <td>{% if complete_time in j %}{{ j.complete_time|e }}{% else %}Incomplete{% endif %}</td>
                 </tr>
                 {% endfor %}
             </table>

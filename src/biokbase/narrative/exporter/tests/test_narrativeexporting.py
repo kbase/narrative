@@ -50,27 +50,23 @@ class NarrativeExportTesting(unittest.TestCase):
             os.remove(output_file)
 
     @mock.patch('biokbase.narrative.exporter.exporter.NarrativeIO')
-    def test_export(self, mock_io):
+    def test_all_exporting(self, mock_io):
         mock_io.return_value.read_narrative = mock_read_narrative
         mock_io.return_value.test_connection.return_value = ""
         exporter = NarrativeExporter()
-        exporter.export_narrative(test_narrative_ref, output_file)
 
-    @mock.patch('biokbase.narrative.exporter.exporter.NarrativeIO')
-    def test_export_bad_ref(self, mock_io):
-        mock_io.return_value.test_connection.return_value = ""
-        mock_io.return_value.read_narrative = mock_read_narrative
-        exporter = NarrativeExporter()
+        # good!
+        exporter.export_narrative(test_narrative_ref, output_file)
+        self.assertTrue(os.path.isfile(output_file))
+
+        # bad!
         with self.assertRaises(ValueError) as err:
             exporter.export_narrative(bad_narrative_ref, output_file)
 
-    @mock.patch('biokbase.narrative.exporter.exporter.NarrativeIO')
-    def test_export_private_ref(self, mock_io):
-        mock_io.return_value.test_connection.return_value = ""
-        mock_io.return_value.read_narrative = mock_read_narrative
-        exporter = NarrativeExporter()
+        # private!
         with self.assertRaises(PermissionsError) as err:
             exporter.export_narrative(private_narrative_ref, output_file)
+
 
 if __name__ == "__main__":
     unittest.main()

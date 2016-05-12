@@ -559,7 +559,7 @@
 		    },
 		    "input_file_name" : {
 		        "type": "string",
-                        "param" : "oboFile",
+                        "param" : "tsvFile",
                         "optional": false
 		    }
 		}

@@ -565,7 +565,7 @@
 		}
             },
             "url_mapping": {
-                "TSV.Ontology": {
+                "TSV.OntologyTranslation": {
                     "type": "shock",
                     "param": "tsvFile",
                     "optional": false

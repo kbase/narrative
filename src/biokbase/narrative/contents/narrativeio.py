@@ -57,7 +57,7 @@ class KBaseWSManagerMixin(object):
     Manages the connection to the workspace for a user
     """
 
-    ws_uri = 'nooooope' #service.URLS.workspace
+    ws_uri = service.URLS.workspace
     nar_type = 'KBaseNarrative.Narrative'
 
     def __init__(self, *args, **kwargs):

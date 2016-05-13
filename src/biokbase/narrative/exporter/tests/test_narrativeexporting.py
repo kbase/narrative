@@ -43,29 +43,29 @@ narr_file = read_narrative_file(config.get('narrative_refs', 'narr_file'))
 
 class NarrativeExportTesting(unittest.TestCase):
     @classmethod
+    @mock.patch('biokbase.narrative.exporter.exporter.NarrativeIO')
+    def setUpClass(self, mock_io):
+        mock_io.return_value.test_connection.return_value = ""
+        mock_io.return_value.read_narrative = mock_read_narrative
+        self.exporter = NarrativeExporter()
+
+    @classmethod
     def tearDownClass(self):
         # delete generated file
-        pass
         if os.path.isfile(output_file):
             os.remove(output_file)
 
-    @mock.patch('biokbase.narrative.exporter.exporter.NarrativeIO')
-    def test_all_exporting(self, mock_io):
-        mock_io.return_value.read_narrative = mock_read_narrative
-        mock_io.return_value.test_connection.return_value = ""
-        exporter = NarrativeExporter()
-
-        # good!
-        exporter.export_narrative(test_narrative_ref, output_file)
+    def test_export_good(self):
+        self.exporter.export_narrative(test_narrative_ref, output_file)
         self.assertTrue(os.path.isfile(output_file))
 
-        # bad!
+    def test_export_bad(self):
         with self.assertRaises(ValueError) as err:
-            exporter.export_narrative(bad_narrative_ref, output_file)
+            self.exporter.export_narrative(bad_narrative_ref, output_file)
 
-        # private!
+    def test_export_private(self):
         with self.assertRaises(PermissionsError) as err:
-            exporter.export_narrative(private_narrative_ref, output_file)
+            self.exporter.export_narrative(private_narrative_ref, output_file)
 
 
 if __name__ == "__main__":

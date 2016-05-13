@@ -7,6 +7,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 from biokbase.narrative.contents.narrativeio import PermissionsError
 from biokbase.narrative.exporter.exporter import NarrativeExporter
+from biokbase.narrative.tests.util import read_narrative_file
 import unittest
 import os
 import ConfigParser
@@ -14,32 +15,32 @@ import mock
 import sys
 import json
 
-def read_narrative_file(path):
-    try:
-        with open(path, 'r') as f:
-            narr = json.loads(f.read())
-            f.close()
-            return narr
-    except Exception, e:
-        print("Unable to open file {}: {}".format(path, e))
-        sys.exit(1)
-
-def mock_read_narrative(bar):
-    if bar == test_narrative_ref:
-        return narr_file
-    elif bar == bad_narrative_ref:
-        raise ValueError('bad!')
-    elif bar == private_narrative_ref:
-        raise PermissionsError('private!')
-
 output_file = "test.html"
 config = ConfigParser.ConfigParser()
 config.read('test.cfg')
 
+def mock_read_narrative(style):
+    """
+    Mocks the NarrativeIO.read_narrative() function.
+    Style should be one of "good", "bad", or "private".
+
+    A "good" narrative will just return the valid read_narrative()
+    results by loading and returning the given file. (will raise a
+    ValueError if file is None).
+
+    A "bad" narrative will raise a ValueError, and a "private"
+    style will raise a NarrativeIO.PermissionsError.
+    """
+    if style == test_narrative_ref:
+        return read_narrative_file(config.get('narrative_refs', 'narr_file'))
+    elif style == bad_narrative_ref:
+        raise ValueError('Bad Narrative!')
+    elif style == private_narrative_ref:
+        raise PermissionsError('Private Narrative!')
+
 test_narrative_ref = config.get('narrative_refs', 'public')
 private_narrative_ref = config.get('narrative_refs', 'private')
 bad_narrative_ref = config.get('narrative_refs', 'bad')
-narr_file = read_narrative_file(config.get('narrative_refs', 'narr_file'))
 
 class NarrativeExportTesting(unittest.TestCase):
     @classmethod

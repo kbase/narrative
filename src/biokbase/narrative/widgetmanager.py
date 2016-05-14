@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 """
 widgetmanager.py
 
@@ -25,10 +27,7 @@ import uuid
 import time
 from pprint import pprint
 
-def get_manager():
-    return _manager
-
-class WidgetManager:
+class WidgetManager(object):
     """
     Manages data (and other) visualization widgets for use in the KBase Narrative.
 
@@ -58,6 +57,7 @@ class WidgetManager:
     _cell_id_prefix = "kb-vis-"
     _default_input_widget = "kbaseNarrativeDefaultInput"
     _default_output_widget = "kbaseNarrativeDefaultOutput"
+
 
     def __init__(self):
         self.reload_info()
@@ -124,7 +124,7 @@ class WidgetManager:
                 widget_name = method['widgets']['output']
             if widget_name == 'null':
                 if verbose:
-                    print "Ignoring a widget named 'null' in {} - {}".format(tag, method['info']['id'])
+                    print("Ignoring a widget named 'null' in {} - {}".format(tag, method['info']['id']))
                 continue
             out_mapping = method['behavior'].get('kb_service_output_mapping', method['behavior'].get('output_mapping', None))
             if out_mapping is not None:
@@ -191,14 +191,20 @@ class WidgetManager:
                 if widget_name in all_widgets:
                     # if it's already there, just update the allowed_types and allowed_values for some params that have them
                     for p_name in params.keys():
-                        if 'allowed_types' in params:
-                            widget_types = all_widgets[widget_name]['params'].get('allowed_types', set())
-                            widget_types.add(params['allowed_types'])
-                            all_widgets[widget_name]['params']['allowed_types'] = widget_types
-                        if 'allowed_values' in params:
-                            widget_vals = all_widgets[widget_name]['params'].get('allowed_values', set())
-                            widget_vals.add(params['allowed_values'])
-                            all_widgets[widget_name]['params']['allowed_values'] = widget_types
+                        if 'allowed_types' in params[p_name]:
+                            if p_name not in all_widgets[widget_name]['params']:
+                                all_widgets[widget_name]['params'][p_name] = params[p_name]
+                            else:
+                                widget_types = all_widgets[widget_name]['params'].get(p_name, {}).get('allowed_types', set())
+                                widget_types.update(params[p_name]['allowed_types'])
+                                all_widgets[widget_name]['params'][p_name]['allowed_types'] = widget_types
+                        if 'allowed_values' in params[p_name]:
+                            if p_name not in all_widgets[widget_name]['params']:
+                                all_widgets[widget_name]['params'][p_name] = params[p_name]
+                            else:
+                                widget_vals = all_widgets[widget_name]['params'].get(p_name, {}).get('allowed_values', set())
+                                widget_vals.update(params[p_name]['allowed_values'])
+                                all_widgets[widget_name]['params'][p_name]['allowed_values'] = widget_types
                 else:
                     all_widgets[widget_name] = { 'params': params }
 
@@ -235,7 +241,7 @@ class WidgetManager:
         if widget_name not in self.widget_info[tag]:
             raise ValueError("Widget %s not found!" % widget_name)
         params = self.widget_info[tag][widget_name]["params"]
-        print widget_name
+        print(widget_name)
         for p in params:
             if not params[p].get("is_constant", False):
                 p_def = "%s - %s" % (p, params[p]["param_type"])
@@ -243,7 +249,7 @@ class WidgetManager:
                     p_def = p_def + " - is a workspace object where the type is one of: %s" % (json.dumps(params[p]["allowed_types"]))
                 if "allowed_values" in params[p]:
                     p_def = p_def + " - must be one of: %s" % (json.dumps(params[p]["allowed_values"]))
-                print p_def
+                print(p_def)
 
     def get_widget_constants(self, widget_name, tag="release"):
         """
@@ -343,11 +349,6 @@ class WidgetManager:
         auth_required: boolean, default == True
             Whether or not authentication is required for fetching object data
         """
-        from IPython.display import Javascript
-        from jinja2 import Template
-        import json
-        import uuid
-
         #  Interface from Narrative's Python layer.
         #  The template placeholders will be substituted.
         #  widget_name - the registered widget name
@@ -434,5 +435,3 @@ class WidgetManager:
                                              config=json.dumps(config))
 
         return Javascript(data=js, lib=None, css=None)
-
-_manager = WidgetManager()

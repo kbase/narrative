@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 """
 Tests for the WidgetManager class
 """
@@ -6,15 +8,20 @@ __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 import unittest
 from biokbase.narrative.widgetmanager import WidgetManager
 import IPython
+import mock
+from biokbase.narrative.tests.util import read_narrative_file
 
 class WidgetManagerTestCase(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    @mock.patch('biokbase.narrative.widgetmanager.NarrativeMethodStore')
+    def setUpClass(self, mock_njs):
+        mock_njs.return_value.list_methods_spec.return_value = read_narrative_file('data/specs.json')
         self.wm = WidgetManager()
         self.good_widget = "kbaseTabTable"
         self.bad_widget = "notAWidget"
         self.good_tag = "release"
         self.bad_tag = "notATag"
+        print(self.wm.widget_info)
 
     def test_widgetmanager_instantiated(self):
         self.assertIsInstance(self.wm, WidgetManager)

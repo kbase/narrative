@@ -55,8 +55,18 @@ console "Putting new $SCRIPT_TGT command under $d"
 /bin/mv $SCRIPT_TGT $d
 console "Done installing scripts"
 
+NARRATIVE_DIR=$(pwd)
+JUPYTER_CONFIG_DIR=$NARRATIVE_DIR/kbase-extension
+JUPYTER_RUNTIME_DIR=/tmp/jupyter_runtime
+JUPYTER_DATA_DIR=/tmp/jupyter_data
+JUPYTER_PATH=$NARRATIVE_DIR/kbase-extension
+IPYTHONDIR=$NARRATIVE_DIR/kbase-extension/ipython
+HOME=/tmp
+
 console "Installing nbextensions"
-cd nbextensions
-sh install.sh
-cd ../..
+cp -r nbextensions kbase-extension/static
+cd kbase-extension/static/nbextensions
+
+jupyter nbextension install $(pwd)/methodCell --symlink --sys-prefix
+jupyter nbextension enable methodCell/main --sys-prefix
 console "Done installing nbextension"

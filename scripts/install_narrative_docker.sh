@@ -21,9 +21,9 @@ function console () {
 # Install Narrative code
 # ----------------------
 console "Installing biokbase modules"
-cd $NARRATIVE_ROOT_DIR/src 
+cd $NARRATIVE_ROOT_DIR/src
 console "Running local 'setup.py'"
-${PYTHON} setup.py install 
+${PYTHON} setup.py install
 console "Done installing biokbase."
 cd $NARRATIVE_ROOT_DIR
 
@@ -54,3 +54,9 @@ chmod 0755 $SCRIPT_TGT
 console "Putting new $SCRIPT_TGT command under $d"
 /bin/mv $SCRIPT_TGT $d
 console "Done installing scripts"
+
+console "Installing nbextensions"
+cd nbextensions
+sh install.sh
+cd ../..
+console "Done installing nbextension"

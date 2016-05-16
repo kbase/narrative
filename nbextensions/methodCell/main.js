@@ -23,7 +23,7 @@ define([
     'uuid',
     'kb_common/html',
     './widgets/codeCellInputWidget',
-    './widgets/FieldWidget',
+    './widgets/fieldWidget',
     './runtime',
     './microBus',
     './parameterSpec',

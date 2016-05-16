@@ -16,6 +16,9 @@ MAINTAINER Bill Riehl wjriehl@lbl.gov
 
 EXPOSE 8888
 
+# Remove Debian's older Tornado package
+RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y python-tornado
+
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative
 ADD ./kbase-logdb.conf /tmp/kbase-logdb.conf

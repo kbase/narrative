@@ -29,7 +29,7 @@ define([
 
         // Validate configuration.
         // Nothing to do...
-        
+
         options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
         options.multiple = spec.multipleItems();
         options.required = spec.required();
@@ -48,7 +48,7 @@ define([
         function getInputValue() {
             return $container.find('[data-element="input-container"] [data-element="input"]').val();
         }
-        
+
         function setModelValue(value) {
             return Promise.try(function () {
                 if (model.value !== value) {
@@ -70,7 +70,7 @@ define([
                     render();
                 });
         }
-        
+
         function resetModelValue() {
             if (spec.spec.default_values && spec.spec.default_values.length > 0) {
                 setModelValue(spec.spec.default_values[0]);
@@ -114,6 +114,29 @@ define([
             });
         }
 
+        function changeOnPause() {
+            var editPauseTime = 0,
+                editPauseTimer,
+                editPauseInterval = 2000;
+
+            return {
+                type: 'keyup',
+                handler: function (e) {
+                    editPauseTime = new Date().getTime();
+                    if (editPauseTimer) {
+                        window.clearTimeout(editPauseTimer);
+                    }
+                    editPauseTimer = window.setTimeout(function () {
+                        var now = new Date().getTime();
+                        if ((now - editPauseTime) > editPauseInterval) {
+                            editPauseTimer = null;
+                            e.target.dispatchEvent(new Event('change'));
+                        }
+                    }, 2500);
+                }
+            }
+        }
+
         /*
          * Creates the markup
          * Places it into the dom node
@@ -121,9 +144,7 @@ define([
          */
         function makeInputControl(currentValue, events, bus) {
             // CONTROL
-            var editPauseTime = 0,
-                editPauseTimer,
-                editPauseInterval = 2000;
+
             return input({
                 id: events.addEvents({
                     events: [
@@ -138,11 +159,11 @@ define([
                                                 newValue: result.value
                                             });
                                         } else if (result.diagnosis === 'required-missing') {
-                                    bus.send({
-                                        type: 'changed',
-                                        newValue: result.value
-                                    });
-                                }
+                                            bus.send({
+                                                type: 'changed',
+                                                newValue: result.value
+                                            });
+                                        }
                                         setModelValue(result.value);
                                         bus.send({
                                             type: 'validation',
@@ -151,23 +172,7 @@ define([
                                         });
                                     });
                             }
-                        },
-                        {
-                            type: 'keyup',
-                            handler: function (e) {
-                                editPauseTime = new Date().getTime();
-                                if (editPauseTimer) {
-                                    window.clearTimeout(editPauseTimer);
-                                }
-                                editPauseTimer = window.setTimeout(function () {
-                                    var now = new Date().getTime();
-                                    if ((now - editPauseTime) > editPauseInterval) {
-                                        editPauseTimer = null;
-                                        e.target.dispatchEvent(new Event('change'));
-                                    }
-                                }, 2500);
-                            }
-                        },
+                        }, changeOnPause(),
                         {
                             type: 'focus',
                             handler: function (e) {
@@ -211,7 +216,7 @@ define([
                 events: events
             };
         }
-        
+
         function autoValidate() {
             return validate()
                 .then(function (result) {
@@ -243,7 +248,7 @@ define([
             });
         }
 
-         function start() {
+        function start() {
             return Promise.try(function () {
                 bus.on('reset-to-defaults', function (message) {
                     resetModelValue();

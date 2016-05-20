@@ -30,13 +30,6 @@ define([
 
             var devMode = true;
 
-            var $editMetadataButton = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Edit Cell Metadata (dev mode!!)">')
-                .append($('<span class="fa fa-file-o" style="font-size:14pt;">'))
-                .click(function () {
-                    alert('editing metadata....');
-                }
-                .bind(this));
-
             var $deleteBtn = $('<button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" data-placement="left" Title="Delete Cell">')
                 .append($('<span class="fa fa-trash-o" style="font-size:14pt;">'))
                 .click(function () {
@@ -343,7 +336,6 @@ define([
                             .append(this.$jobStateIcon)
                             .append($deleteBtn)
                             .append($dropdownMenu)
-                            .append($editMetadataButton)
                             )
                         )
                     )

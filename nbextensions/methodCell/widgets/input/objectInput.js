@@ -32,7 +32,7 @@ define([
                 availableValues: undefined,
                 value: undefined
             },
-            runtime = Runtime.make();
+        runtime = Runtime.make();
 
         // Validate configuration.
         if (!workspaceId) {
@@ -54,7 +54,7 @@ define([
             if (model.availableValues) {
                 selectOptions = model.availableValues.map(function (objectInfo) {
                     var selected = false;
-                    if (objectInfo.ref === model.value) {
+                    if (objectInfo.name === model.value) {
                         selected = true;
                     }
                     return option({
@@ -145,20 +145,21 @@ define([
                 }
 
                 var rawValue = getInputValue(),
-                    validationOptions = {},
-                    validationResult;
-                validationOptions.required = spec.required();
+                    validationOptions = {
+                        required: spec.required()
+                    };
 
-                validationResult = Validation.validateWorkspaceObjectName(rawValue, validationOptions);
-
-                return {
-                    isValid: validationResult.isValid,
-                    validated: true,
-                    diagnosis: validationResult.diagnosis,
-                    errorMessage: validationResult.errorMessage,
-                    value: validationResult.parsedValue
-                };
-            });
+                return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+            })
+                .then(function (validationResult) {
+                    return {
+                        isValid: validationResult.isValid,
+                        validated: true,
+                        diagnosis: validationResult.diagnosis,
+                        errorMessage: validationResult.errorMessage,
+                        value: validationResult.parsedValue
+                    };
+                });
         }
 
         function getObjectsByType(type) {

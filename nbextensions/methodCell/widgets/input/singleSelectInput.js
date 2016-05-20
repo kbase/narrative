@@ -22,7 +22,11 @@ define([
             parent,
             container,
             $container,
-            bus = config.bus;
+            bus = config.bus,
+            model = {
+                availableValues: null,
+                value: null
+            };
 
         // Validate configuration.
         // Nothing to do...
@@ -31,6 +35,8 @@ define([
         options.multiple = spec.multipleItems();
         options.required = spec.required();
         options.enabled = true;
+        
+        model.availableValues = spec.spec.dropdown_options.options;
 
 
         /*
@@ -81,13 +87,13 @@ define([
             });
         }
 
-         function makeInputControl(currentValue, data, events, bus) {
+         function makeInputControl(events) {
             var selected;
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
-            var selectOptions = data.map(function (item) {
+            var selectOptions = model.availableValues.map(function (item) {
                 selected = false;
-                if (item.value === currentValue) {
+                if (item.value === model.value) {
                     selected = true;
                 }
 
@@ -121,12 +127,16 @@ define([
         }
 
         function render(input) {
-            var events = Events.make(),                
-                initialValue = input.value || config.initialValue,
-                inputControl = makeInputControl(initialValue, spec.spec.dropdown_options.options, events, bus);
+            Promise.try(function () {
+                var events = Events.make(),                
+                    inputControl = makeInputControl(events);
 
-            $container.find('[data-element="input-container"]').html(inputControl);
-            events.attachEvents(container);
+                $container.find('[data-element="input-container"]').html(inputControl);
+                events.attachEvents(container);
+            })
+            .then(function () {
+                autoValidate();
+            })
         }
 
         function layout(events) {
@@ -151,6 +161,36 @@ define([
                     });
                 });
         }
+        
+        function setModelValue(value) {
+            return Promise.try(function () {
+                if (model.value !== value) {
+                    model.value = value;
+                    return true;
+                }
+                return false;
+            })
+                .then(function (changed) {
+                    render();
+                });
+        }
+
+        function unsetModelValue() {
+            return Promise.try(function () {
+                model.value = undefined;
+            })
+                .then(function (changed) {
+                    render();
+                });
+        }
+        
+         function resetModelValue() {
+            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
+                setModelValue(spec.spec.default_values[0]);
+            } else {
+                unsetModelValue();
+            }
+        }
 
 
         // LIFECYCLE API
@@ -159,6 +199,7 @@ define([
             // Normalize the parameter specification settings.
             // TODO: much of this is just silly, we should be able to use the spec 
             //   directly in most places.
+            
         }
 
         function attach(node) {
@@ -177,6 +218,20 @@ define([
 
         function start() {
             return Promise.try(function () {
+                 bus.listen({
+                    test: function (message) {
+                        return (message.type === 'reset-to-defaults');
+                    },
+                    handle: function () {
+                        resetModelValue();
+                    }
+                });
+
+                bus.on('update', function (message) {
+                    setModelValue(message.value);
+                });
+
+                bus.send({type: 'sync'});
             });
         }
 

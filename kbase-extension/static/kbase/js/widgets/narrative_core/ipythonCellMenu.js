@@ -8,8 +8,9 @@ define([
     'notebook/js/celltoolbar',
     'base/js/namespace',
     'kb_common/html',
-    'kbaseNarrativeCellMenu'
-], function ($, celltoolbar, Jupyter, html, KBaseNarrativeCellMenu) {
+    'kbaseNarrativeCellMenu',
+    'kbaseCellToolbarMenu'
+], function ($, celltoolbar, Jupyter, html, KBaseNarrativeCellMenu, KBaseMenu) {
     "use strict";
     
     var t = html.tag,
@@ -50,64 +51,12 @@ define([
         cell.metadata = temp;
     }
 
-    function doEditNotebookMetadata() {
-        Jupyter.notebook.edit_metadata({
-            notebook: Jupyter.notebook,
-            keyboard_manager: Jupyter.notebook.keyboard_manager
-        });
-    }
-    function editNotebookMetadata(toolbarDiv, cell) {
-        if (!cell.metadata.kbase) {
-            return;
-        }
-        if (cell.metadata.kbase.type !== 'method') {
-            return;
-        }
-        var button = html.tag('button'),
-            editButton = button({
-                type: 'button',
-                class: 'btn btn-default btn-xs',
-                dataElement: 'kbase-edit-notebook-metadata'}, [
-                'Edit Notebook Metadata'
-            ]);
-        toolbarDiv.append(editButton);
-        toolbarDiv.find('[data-element="kbase-edit-notebook-metadata"]').on('click', function () {
-            doEditNotebookMetadata(cell);
-        });
-    }
-
-    function initCodeInputArea(cell) {
-        var codeInputArea = cell.input.find('.input_area');
-        if (!cell.kbase.inputAreaDisplayStyle) {
-            cell.kbase.inputAreaDisplayStyle = codeInputArea.css('display');
-        }
-        setMeta(cell, 'user-settings', 'showCodeInputArea', false);
-    }
-
-    function showCodeInputArea(cell) {
-        var codeInputArea = cell.input.find('.input_area');
-        if (getMeta(cell, 'user-settings', 'showCodeInputArea')) {
-            codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);
-        } else {
-            codeInputArea.css('display', 'none');
-        }
-    }
-
-    function toggleCodeInputArea(cell) {
-        /*
-         * the code input area's style is stached for future restoration.
-         */
-        if (getMeta(cell, 'user-settings', 'showCodeInputArea')) {
-            setMeta(cell, 'user-settings', 'showCodeInputArea', false);
-        } else {
-            setMeta(cell, 'user-settings', 'showCodeInputArea', true);
-        }
-        showCodeInputArea(cell);
-        return getMeta(cell, 'user-settings', 'showCodeInputArea');
-    }
-
-    function makeKBaseMenu(div, cell) {
+    function makeKBaseMenux(div, cell) {
         new KBaseNarrativeCellMenu(div, {cell: cell});
+    }
+    function makeKBaseMenu($toolbarNode, cell) {
+        var kbaseMenu = KBaseMenu.make();
+        kbaseMenu.register_callback($toolbarNode, cell);
     }
     function toggleInput(toolbarDiv, cell) {
         if (!cell.metadata.kbase) {
@@ -143,16 +92,15 @@ define([
         $(toolbarDiv).append(span({style: {padding: '4px'}}, content));
     }
 
-
     var register = function (notebook) {
-        celltoolbar.CellToolbar.register_callback('kbase-toggle-input', toggleInput);
-        celltoolbar.CellToolbar.register_callback('kbase-edit-notebook-metadata', editNotebookMetadata);
-        celltoolbar.CellToolbar.register_callback('kbase.menu', makeKBaseMenu);
+       
+        celltoolbar.CellToolbar.register_callback('kbase.menu', makeKBaseMenux);
         celltoolbar.CellToolbar.register_callback('kbase-status', status);
         celltoolbar.CellToolbar.register_callback('kbase-job-status', jobStatus);
+        celltoolbar.CellToolbar.register_callback('kbase-menu', makeKBaseMenu);
 
         // default.rawedit for the metadata editor
-        celltoolbar.CellToolbar.register_preset('KBase', ['kbase.menu', 'default.rawedit', 'kbase-toggle-input', 'kbase-edit-notebook-metadata', 'kbase-status', 'kbase-job-status']);
+        celltoolbar.CellToolbar.register_preset('KBase', ['kbase-menu']);
     };
     return {register: register};
 });

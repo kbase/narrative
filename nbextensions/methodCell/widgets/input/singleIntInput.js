@@ -148,8 +148,8 @@ define([
                                                 type: 'changed',
                                                 newValue: result.value
                                             });
-                                        }
-                                        setModelValue(result.value);
+                                            setModelValue(result.value);
+                                        }                                        
                                         bus.send({
                                             type: 'validation',
                                             errorMessage: result.errorMessage,
@@ -173,6 +173,7 @@ define([
                     ]}),
                 class: 'form-control',
                 dataElement: 'input',
+                dataType: 'int',
                 value: initialControlValue
             });
         }

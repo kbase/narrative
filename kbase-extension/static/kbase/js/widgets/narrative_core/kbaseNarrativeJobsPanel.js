@@ -202,6 +202,20 @@ define ([
 
             return this;
         },
+        
+        updateCellRunStatus: function (msg) {
+            var runtime = Runtime.make();
+            // The global runtime bus is a catch all for proving messaging semantics across otherwise unconnected apps.
+            // note that we need to copy the objects for the message bus since they will otherwise
+            // be modified by incoming updates.
+            function copyObject(obj) {
+                return JSON.parse(JSON.stringify(obj));
+            }
+            runtime.bus().send({
+                type: 'runstatus',
+                data: copyObject(msg)
+            });
+        },
 
         handleCommMessages: function(msg) {
             var msgType = msg.content.data.msg_type;
@@ -224,6 +238,9 @@ define ([
                         };
                     }
                     this.populateJobsPanel(status, info, content);
+                    break;
+                case 'run_status':
+                    this.updateCellRunStatus(msg.content.data.content);
                     break;
                 case 'job_err':
                     console.error('Job Error', msg);
@@ -643,6 +660,15 @@ define ([
             if (!hideLoadingMessage)
                 this.showLoadingMessage('Loading running jobs...');
 
+            
+
+            // console.log(['REFRESH: looking up ' + jobParamList.length]);
+            // console.log(['REFRESH: jobstates:', this.jobStates]);
+            this.startJobPoll();
+            
+        },
+        
+        startJobPoll: function () {
             // This contains all the job info like this:
             // { jobId: {spec: {}, state: {}} }
             var jobInfo = {};
@@ -692,10 +718,7 @@ define ([
                 else
                     this.jobStates[jobId].status = 'error';
             }
-
-            // console.log(['REFRESH: looking up ' + jobParamList.length]);
-            // console.log(['REFRESH: jobstates:', this.jobStates]);
-
+            
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
                                   'print job_manager.poll_jobs([' + jobParamList + '], as_json=True)\n';
@@ -795,7 +818,6 @@ define ([
          * We should also expire jobs in a reasonable time, at least from the Narrative.
          */
         populateJobsPanel: function(fetchedJobStatus, jobInfo, jobs) {
-            // console.log("JOB PANEL: fetched jobs", fetchedJobStatus, jobInfo);
             if (!this.jobStates || Object.keys(this.jobStates).length === 0) {
                 this.showMessage('No running jobs!');
                 this.setJobCounter(0);
@@ -918,6 +940,7 @@ define ([
 
             var status = "Unknown";
             if (jobState)
+                console.log('JOBSTATE', jobState);
                 status = jobState.status.charAt(0).toUpperCase() +
                          jobState.status.substring(1);
             var started = "Unknown";
@@ -1052,12 +1075,17 @@ define ([
             // The job "source" is the permanent cell id.
             var runtime = Runtime.make();
             // The global runtime bus is a catch all for proving messaging semantics across otherwise unconnected apps.
+            // note that we need to copy the objects for the message bus since they will otherwise
+            // be modified by incoming updates.
+            function copyObject(obj) {
+                return JSON.parse(JSON.stringify(obj));
+            }
             runtime.bus().send({
                 type: 'jobstatus',
                 jobId: jobId,
                 jobInfo: jobInfo,
                 job: job,
-                jobState: jobState
+                jobState: copyObject(jobState)
             });
             return;
 

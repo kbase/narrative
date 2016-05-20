@@ -1041,7 +1041,7 @@ define ([
 
             // don't do anything if we don't know the source cell. it might have been deleted.
             if (!source) {
-                console.error("Unknown input cell for job id " + jobId + "! Exiting.");
+                // console.error("Unknown input cell for job id " + jobId + "! Exiting.");
                 return;
             }
 

@@ -247,10 +247,12 @@ define(['jquery',
         };
 
         cell.Cell.prototype.setCellState = function (name, value) {
+            // var metadata = this.metadata;
             if (!this.metadata.kbstate) {
                 this.metadata.kbstate = {};
             }
             this.metadata.kbstate[name] = value;
+            // this.metadata = metadata;
         };
 
         cell.Cell.prototype.toggle = function () {
@@ -423,6 +425,7 @@ define(['jquery',
              */
             $cellNode
                 .on('set-title.cell', function (e, title) {
+                    console.log('SETTING TITLE', title);
                     if (title === undefined) {
                         return;
                     }

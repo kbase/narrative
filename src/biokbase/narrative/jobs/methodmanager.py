@@ -20,6 +20,8 @@ import json
 import re
 from biokbase.narrative.common import kblogging
 import logging
+from ipykernel.comm import Comm
+
 
 class MethodManager(object):
     __instance = None
@@ -30,6 +32,8 @@ class MethodManager(object):
     spec_manager = SpecManager()
     _log = kblogging.get_logger(__name__)
     _log.setLevel(logging.INFO)
+    _comm_channel = None
+
 
     def __new__(cls):
         if MethodManager.__instance is None:
@@ -73,8 +77,8 @@ class MethodManager(object):
         Usable only in the Jupyter notebook.
         """
         return self.spec_manager.list_available_methods(tag)
-
-    def run_method(self, method_id, tag="release", version=None, cell_id=None, **kwargs):
+    
+    def run_method(self, method_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
         Attemps to run the method, returns a Job with the running method info.
         Should *hopefully* also inject that method into the Narrative's metadata.
@@ -96,6 +100,16 @@ class MethodManager(object):
         --------
         my_job = mm.run_method('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
         """
+        
+        self._send_comm_message('run_status', {
+            'event': 'validating_method',
+            'cell_id': cell_id,
+            'run_id': run_id
+        });
+        
+        ### TODO: this needs restructuring so that we can send back validation failure
+        ### messages. Perhaps a separate function and catch the errors, or return an
+        ### error structure.
 
         # Intro tests:
         self.spec_manager.check_method(method_id, tag, raise_exception=True)
@@ -153,6 +167,14 @@ class MethodManager(object):
             # While we're at it, set the default values for any unset parameters that have them
             if p['default'] and p['id'] not in params:
                 params[p['id']] = p['default']
+                
+                
+        self._send_comm_message('run_status', {
+            'event': 'validated_method',
+            'cell_id': cell_id,
+            'run_id': run_id
+        });
+                
 
         # Okay, NOW we can start the show
         input_vals = dict()
@@ -196,6 +218,13 @@ class MethodManager(object):
         }
         self._log.setLevel(logging.INFO)
         kblogging.log_event(self._log, "run_method", log_info)
+        
+        self._send_comm_message('run_status', {        
+            'event': 'launching_job',
+            'cell_id': cell_id,
+            'run_id': run_id
+        });
+
 
         try:
             app_state = self.njs.run_app(app)
@@ -204,11 +233,19 @@ class MethodManager(object):
             self._log.setLevel(logging.ERROR)
             kblogging.log_event(_kblog, "run_method", log_info)
             raise
+        
+        self._send_comm_message('run_status', {              
+            'event': 'launched_job',
+            'cell_id': cell_id,
+            'run_id': run_id,
+            'job_id': app_state['job_id']
+        });
+
 
         new_job = Job(app_state['job_id'], method_id, params, tag=tag, method_version=service_ver, cell_id=cell_id)
         JobManager().register_new_job(new_job)
         # jobmanager.get_manager().register_new_job(new_job)
-        return new_job
+        return new_job    
 
     def _check_parameter(self, param, value, workspace):
         """
@@ -305,3 +342,14 @@ class MethodManager(object):
 
         # Whew. Passed all filters!
         return None
+    
+    def _send_comm_message(self, msg_type, content):
+        msg = {
+            'msg_type': msg_type,
+            'content': content
+        }
+        if not self._comm_channel:
+            self._comm_channel = Comm(target_name='KBaseJobs', data={})
+        self._comm_channel.open()
+        self._comm_channel.send(msg)
+        self._comm_channel.close()

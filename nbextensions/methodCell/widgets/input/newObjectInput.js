@@ -14,11 +14,12 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), input = t('input'), span = t('span'), button = t('button');
+        div = t('div'), input = t('input');
 
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
+            workspaceId = config.workspaceId,
             parent,
             container,
             $container,
@@ -108,20 +109,45 @@ define([
                 }
 
                 var rawValue = getInputValue(),
-                    validationOptions = {},
-                    validationResult;
+                    validationOptions = {
+                        required: spec.required(),
+                        shouldNotExist: true,
+                        workspaceId: workspaceId
+                    };
 
-                validationOptions.required = spec.required();
-                validationResult = Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+                return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
+            })
+                .then(function (validationResult) {
+                    return {
+                        isValid: validationResult.isValid,
+                        validated: true,
+                        diagnosis: validationResult.diagnosis,
+                        errorMessage: validationResult.errorMessage,
+                        value: validationResult.parsedValue
+                    };
+                });
+        }
 
-                return {
-                    isValid: validationResult.isValid,
-                    validated: true,
-                    diagnosis: validationResult.diagnosis,
-                    errorMessage: validationResult.errorMessage,
-                    value: validationResult.parsedValue
-                };
-            });
+        function changeOnPause() {
+            var editPauseTime = 0,
+                editPauseTimer,
+                editPauseInterval = 2000;
+            return {
+                type: 'keyup',
+                handler: function (e) {
+                    editPauseTime = new Date().getTime();
+                    if (editPauseTimer) {
+                        window.clearTimeout(editPauseTimer);
+                    }
+                    editPauseTimer = window.setTimeout(function () {
+                        var now = new Date().getTime();
+                        if ((now - editPauseTime) > editPauseInterval) {
+                            editPauseTimer = null;
+                            e.target.dispatchEvent(new Event('change'));
+                        }
+                    }, 2500);
+                }
+            };
         }
 
         /*
@@ -155,9 +181,17 @@ define([
                                             errorMessage: result.errorMessage,
                                             diagnosis: result.diagnosis
                                         });
+                                    })
+                                    .catch(function (err) {
+                                        console.error('VALIDATION ERROR', err);
+                                        bus.send({
+                                            type: 'validation',
+                                            errorMessage: err.message,
+                                            diagnosis: 'error'
+                                        });
                                     });
                             }
-                        },
+                        }, changeOnPause(),
                         {
                             type: 'focus',
                             handler: function (e) {
@@ -210,9 +244,15 @@ define([
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
+                })
+                .catch(function (err) {
+                    bus.send({
+                        type: 'validation',
+                        errorMessage: err.message,
+                        diagnosis: 'error'
+                    });
                 });
         }
-
 
         // LIFECYCLE API
 

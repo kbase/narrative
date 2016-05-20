@@ -42,6 +42,7 @@ require.config({
         'catalog-client-api'                    : 'kbase/js/api/Catalog',
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',
+        kbaseCellToolbarMenu                    : 'kbase/js/widgets/narrative_core/kbaseCellToolbarMenu',
 
         /**
          * New Test Runtime and Widget Framework

@@ -35,7 +35,7 @@ class JobManager(object):
 
     running_jobs = dict()
     _lookup_timer = None
-    _comm_channel = None
+    _comm = None
     _log = kblogging.get_logger(__name__)
     _log.setLevel(logging.INFO)
 
@@ -43,6 +43,7 @@ class JobManager(object):
         if JobManager.__instance is None:
             JobManager.__instance = object.__new__(cls)
         return JobManager.__instance
+
 
     def initialize_jobs(self, job_tuples):
         """
@@ -230,6 +231,12 @@ class JobManager(object):
         else:
             raise ValueError('No job present with id {}'.format(job_id))
 
+    def _handle_comm_message(self, msg):
+        if 'request_type' in msg['content']['data']:
+            r_type = msg['content']['data']['request_type']
+            if r_type == 'refresh_all':
+                self.lookup_job_status()
+
     def _send_comm_message(self, msg_type, content):
         """
         Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
@@ -239,8 +246,8 @@ class JobManager(object):
             'msg_type': msg_type,
             'content': content
         }
-        if not self._comm_channel:
-            self._comm_channel = Comm(target_name='KBaseJobs', data={})
-        self._comm_channel.open()
-        self._comm_channel.send(msg)
-        self._comm_channel.close()
+        kblogging.log_event(self._log, "sending_a_message", {"comm_message": True})
+        if not self._comm:
+            self._comm = Comm(target_name='KBaseJobs', data={})
+            self._comm.on_msg(self._handle_comm_message)
+        self._comm.send(msg)

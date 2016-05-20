@@ -6,7 +6,7 @@ DS=$( date +%Y%m%d%H%M )
 # This is the name for now, as this is what the Lua provisioner looks for to fire up a Narrative.
 NAR_NAME="kbase/narrative"
 NAR_BASE="kbase/narrbase"
-NAR_BASE_VER="4.3"
+NAR_BASE_VER="4.4"
 NAR_PREREQ="kbase/narrprereq"
 NAR_PREREQ_VER="1.1"
 WEBROOT_DIR="/kb/deployment/services/kbase-ui"
@@ -17,7 +17,7 @@ function usage () {
     printf "options:\n"
     printf "  {-h | --help} \n\tShow these help options.\n"
     printf "  {-e | --env} environment\n\tSet the environment the narrative should use.\n\t"
-    printf "current options are ci, next, prod, appdev (default=ci)\n" 
+    printf "current options are ci, next, prod, appdev (default=ci)\n"
     printf "  {-d | --dev_mode} true/false\n\tSet developer mode true or false (default=true)\n"
 }
 

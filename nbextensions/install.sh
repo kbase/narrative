@@ -1,5 +1,5 @@
 dir=$(pwd)
-narrdir=$(cd ../..;pwd)
+narrdir=$(cd ..;pwd)
 
 export NARRATIVE_DIR=$narrdir
 export JUPYTER_CONFIG_DIR=$narrdir/kbase-extension

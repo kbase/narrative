@@ -63,10 +63,12 @@ class KBaseWSManagerMixin(object):
     def __init__(self, *args, **kwargs):
         if not self.ws_uri:
             raise HTTPError(412, u'Missing KBase workspace service endpoint URI')
+        self.test_connection()
 
+    def test_connection(self):
         try:
-            v = self.ws_client().ver()
-        except Exception as e:
+            self.ws_client().ver()
+        except Exception, e:
             raise HTTPError(500, u'Unable to connect to workspace service at {}: {}'.format(self.ws_uri, e))
 
     def ws_client(self):
@@ -75,7 +77,7 @@ class KBaseWSManagerMixin(object):
     def _test_obj_ref(self, obj_ref):
         m = obj_ref_regex.match(obj_ref)
         if m is None:
-            raise ValueError(u'Narrative object references must be of the format wsid/objid/ver')        
+            raise ValueError(u'Narrative object references must be of the format wsid/objid/ver')
 
     def _ws_err_to_perm_err(self, err):
         if PermissionsError.is_permissions_error(err.message):
@@ -104,7 +106,7 @@ class KBaseWSManagerMixin(object):
     def narrative_exists(self, obj_ref):
         """
         Test if a narrative exists.
-        If we can fetch the narrative info (e.g. the get_object_info from the 
+        If we can fetch the narrative info (e.g. the get_object_info from the
             workspace), then it exists.
         """
         try:
@@ -117,7 +119,7 @@ class KBaseWSManagerMixin(object):
     def read_narrative(self, obj_ref, content=True, include_metadata=True):
         """
         Fetches a Narrative and its object info from the Workspace
-        If content is False, this only returns the Narrative's info 
+        If content is False, this only returns the Narrative's info
         and metadata, otherwise, it returns the whole workspace object.
 
         This is mainly a wrapper around Workspace.get_objects(), except that
@@ -283,7 +285,7 @@ class KBaseWSManagerMixin(object):
 
         This is intended to be the last step of the save process before pushing
         to the workspace. As such, it will do a few things.
-        1. Go through all KBase cells and identify how many of each app and 
+        1. Go through all KBase cells and identify how many of each app and
         method is being used.
         2. Enforce limits on length of each key and value in the metadata
         3. Enforce the overall size of metadata by reducing the number of
@@ -333,7 +335,7 @@ class KBaseWSManagerMixin(object):
         # method.id
         # jupyter.code
         # jupyter.markdown
-        # 
+        #
         # method and path names are limited by their file system, since they're methods. on extFS, Mac,
         # and many others that we care about (like those probably where the Catalog service lives), that's
         # 255 bytes. Don't even care.
@@ -400,7 +402,7 @@ class KBaseWSManagerMixin(object):
         and the name to set for the Narrative. If the current name
         doesn't match the new name, nothing changes.
 
-        There are no restrictions on this name, since it just 
+        There are no restrictions on this name, since it just
         goes into the object's metadata.
 
         Any Exceptions that get thrown should just be auto-raised.
@@ -430,7 +432,7 @@ class KBaseWSManagerMixin(object):
 
         This is just a wrapper around the Workspace list_objects command.
 
-        Raises: PermissionsError, if access is denied; ValueError is ws_id is not 
+        Raises: PermissionsError, if access is denied; ValueError is ws_id is not
         numeric.
         """
         list_obj_params = {'type': self.nar_type,
@@ -497,7 +499,7 @@ class KBaseWSManagerMixin(object):
         currently logged in user. A logged in user can see their own permissions, always, if they exist
         on that narrative.
 
-        Throws a WorkspaceClient.ServerError if not logged in, or 
+        Throws a WorkspaceClient.ServerError if not logged in, or
         if the narrative doesn't exist.
         """
         if user is None:

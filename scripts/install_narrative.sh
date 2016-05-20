@@ -186,32 +186,33 @@ then
     $PYTHON setup.py install >> ${logfile} 2>&1
     cd ..
     rm -rf data_api
+
+
+    # Setup jupyter_narrative script
+    # ------------------------------
+    console "Installing scripts"
+    i=0
+    while read s
+        do
+            echo $s
+            if [ $i = 0 ]
+                then
+                echo d=`pwd`
+                echo e=$(dirname `which python`)
+                i=1
+            fi
+    done < $SCRIPT_TEMPLATE > $SCRIPT_TGT
+    d=$(dirname `which python`)
+    chmod 0755 $SCRIPT_TGT
+    log "Putting new $SCRIPT_TGT command under $d"
+    /bin/mv $SCRIPT_TGT $d
+    log "Done installing scripts"
+
+    log "oh, wait, one more thing...installing nbextensions"
+    cd nbextensions
+    sh install.sh
+    cd ../..
+    log "now, done."
 fi
-
-# Setup jupyter_narrative script
-# ------------------------------
-console "Installing scripts"
-i=0
-while read s
-    do
-        echo $s
-        if [ $i = 0 ]
-            then
-            echo d=`pwd`
-            echo e=$(dirname `which python`)
-            i=1
-        fi
-done < $SCRIPT_TEMPLATE > $SCRIPT_TGT
-d=$(dirname `which python`)
-chmod 0755 $SCRIPT_TGT
-log "Putting new $SCRIPT_TGT command under $d"
-/bin/mv $SCRIPT_TGT $d
-log "Done installing scripts"
-
-log "oh, wait, one more thing...installing nbextensions"
-cd nbextensions
-sh install.sh
-cd ../..
-log "now, done."
 
 console "Done. Run the narrative from your virtual environment $VIRTUAL_ENV with the command: $SCRIPT_TGT"

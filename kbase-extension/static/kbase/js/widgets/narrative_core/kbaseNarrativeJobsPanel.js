@@ -1,30 +1,32 @@
 /*global define*/
 /*jslint white: true*/
 define ([
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbasePrompt',
-		'kbaseNarrativeControlPanel',
-		'util/bootstrapDialog',
-		'util/timeFormat',
-		'util/string',
-                'base/js/namespace',
-                'nbextensions/methodCell/runtime'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbasePrompt,
-		kbaseNarrativeControlPanel,
-		BootstrapDialog,
-        TimeFormat,
-        StringUtil,
-        Jupyter,
-        Runtime
-	) {
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'kbasePrompt',
+    'kbaseNarrativeControlPanel',
+    'util/bootstrapDialog',
+    'util/timeFormat',
+    'util/string',
+    'base/js/namespace',
+    'nbextensions/methodCell/runtime',
+    'services/kernels/comm'
+], function(
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    kbasePrompt,
+    kbaseNarrativeControlPanel,
+    BootstrapDialog,
+    TimeFormat,
+    StringUtil,
+    Jupyter,
+    Runtime,
+    JupyterComm
+) {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeJobsPanel',
@@ -62,8 +64,15 @@ define ([
 
         refreshTimer: null,
         refreshInterval: 10000,
+        comm: null,
 
-        completedStatus: [ 'completed', 'done', 'deleted', 'suspend', 'not_found_error', 'unauthorized_error', 'awe_error' ],
+        completedStatus: [ 'completed',
+                           'done',
+                           'deleted',
+                           'suspend',
+                           'not_found_error',
+                           'unauthorized_error',
+                           'awe_error' ],
 
         init: function(options) {
             this._super(options);
@@ -108,10 +117,6 @@ define ([
 
             var $refreshBtn = $('<button>')
                               .addClass('btn btn-xs btn-default')
-                              .click($.proxy(function(event) {
-                                  $refreshBtn.tooltip('hide');
-                                  this.refresh();
-                              }, this))
                               .append($('<span>')
                                       .addClass('glyphicon glyphicon-refresh'))
                               .tooltip({
@@ -121,17 +126,15 @@ define ([
                                         show: Config.get('tooltip').showDelay,
                                         hide: Config.get('tooltip').hideDelay
                                     }
-                              });
-
-            var $headerDiv = $('<div>')
-                              .append('Jobs')
-                              .append($('<button>')
-                                      .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
-                                      .css({'margin-top': '-4px',
-                                            'margin-right': '4px'})
-                                      .click($.proxy(function(event) { this.refresh(); }, this))
-                                      .append($('<span>')
-                                              .addClass('glyphicon glyphicon-refresh')));
+                              })
+                              .click(function(event) {
+                                  $refreshBtn.tooltip('hide');
+                                  console.log('sending refresh signal');
+                                  if (this.comm) {
+                                      this.comm.send({target_name: 'KBaseJobs',
+                                                      request_type: 'refresh_all'});
+                                  }
+                              }.bind(this));
 
             this.$methodsList = $('<div>');
             this.$appsList = $('<div>');
@@ -222,9 +225,7 @@ define ([
                     this.registerKernelJob(msg.content.data.content);
                     break;
                 case 'job_status':
-                    //console.log("updating job status with following info:");
-                    //console.log(msg.content.data.content);
-                    // kind silly, but yet again, it's late on Friday and I want to go home.
+                    console.log('got job refresh info');
                     var status = {},
                         info = {},
                         content = msg.content.data.content;
@@ -251,20 +252,39 @@ define ([
         },
 
         initCommChannel: function() {
-            this.commManager = Jupyter.notebook.kernel.comm_manager;
-
             // init the listener channel.
             console.info('Registering Job channel with kernel.');
-            Jupyter.notebook.kernel.comm_manager.register_target('KBaseJobs', function(comm, msg) {
-                comm.on_msg(this.handleCommMessages.bind(this));
+            console.info('Checking for existing channel?');
+
+            this.comm = null;
+
+            Jupyter.notebook.kernel.comm_info('KBaseJobs', function(msg) {
+                console.info(msg);
+                if (msg.content && msg.content.comms) {
+                    console.info('Found an existing channel!');
+                    console.info(msg);
+                    // skim the reply for the right id
+                    for (var id in msg.content.comms) {
+                        if (msg.content.comms[id].target_name === 'KBaseJobs') {
+                            this.comm = new JupyterComm.Comm('KBaseJobs', id);
+                            Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
+                            this.comm.on_msg(this.handleCommMessages.bind(this));
+                        }
+                    }
+                }
+                if (this.comm === null) {
+                    Jupyter.notebook.kernel.comm_manager.register_target('KBaseJobs', function(comm, msg) {
+                        this.comm = comm;
+                        comm.on_msg(this.handleCommMessages.bind(this));
+                    }.bind(this));
+                }
+                // init the backend with existing jobs.
+                if (this.jobStates === null)
+                    this.initJobStates();
+
+                var code = this.getJobInitCode();
+                Jupyter.notebook.kernel.execute(code);
             }.bind(this));
-
-            // init the backend with existing jobs.
-            if (this.jobStates === null)
-                this.initJobStates();
-
-            var code = this.getJobInitCode();
-            Jupyter.notebook.kernel.execute(code);
         },
 
         getJobInitCode: function() {
@@ -1062,7 +1082,7 @@ define ([
             }
             runtime.bus().send({
                 type: 'jobstatus',
-                jobId: jobId,                
+                jobId: jobId,
                 jobInfo: jobInfo,
                 job: job,
                 jobState: copyObject(jobState)

@@ -157,8 +157,8 @@ class JobManager(object):
         # remove the prefix (if present) and take the last element in the split
         job_id = job_tuple[0].split(':')[-1]
         try:
-            job_state = clients.get('job_service').check_app_state(job_id)
-            return Job.from_state(job_state, json.loads(job_tuple[1]), tag=job_tuple[2], cell_id=job_tuple[3])
+            job_info = clients.get('job_service').get_job_params(job_id)
+            return Job.from_state(job_info, tag=job_tuple[2], cell_id=job_tuple[3])
         except Exception, e:
             self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})

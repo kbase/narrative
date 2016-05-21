@@ -43,12 +43,12 @@ class Job(object):
         self.inputs = inputs
 
     @classmethod
-    def from_state(Job, state, inputs, tag='release', cell_id=None):
-        return Job(state['job_id'],
-                   state['original_app']['steps'][0]['method_spec_id'],
-                   inputs,
+    def from_state(Job, job_id, job_info, tag='release', cell_id=None):
+        return Job(job_id,
+                   job_info[0]['method'],
+                   job_info[0]['params'],
                    tag=tag,
-                   method_version=state['original_app']['steps'][0]['service'].get('service_version', None),
+                   method_version=state[0].get('service_ver', None),
                    cell_id=cell_id)
 
     def info(self):

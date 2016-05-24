@@ -45,11 +45,31 @@ class Job(object):
 
     @classmethod
     def from_state(Job, job_id, job_info, tag='release', cell_id=None):
+        """
+        Parameters:
+        -----------
+        job_id - string
+            The job's unique identifier as returned at job start time.
+        job_info - dict
+            The job information returned from njs.get_job_params, just the first
+            element of that list (not the extra list with URLs). Should have the following keys:
+            'method': The method id (will be converted from '.' to '/' format)
+            'params': The set of parameters sent to that job.
+            'service_ver': The version of the service that was run.
+        """
+        app_id = job_info.get('method', "Unknown App")
+
+        # Still juggling between Module.method_name and Module/method_name
+        # There should be one and only one / after this is done.
+        # So, if there's a /, do nothing.
+        # If not, change the first . to a /
+        if not '/' in app_id and '.' in app_id:
+            app_id = app_id.replace('.', '/', 1)
         return Job(job_id,
-                   job_info[0]['method'],
-                   job_info[0]['params'],
+                   app_id,
+                   job_info['params'],
                    tag=tag,
-                   app_version=state[0].get('service_ver', None),
+                   app_version=job_info.get('service_ver', None),
                    cell_id=cell_id)
 
     def info(self):
@@ -68,7 +88,7 @@ class Job(object):
             print "Unable to retrieve current running state!"
 
     def app_spec(self):
-        return SpecManager().get_app_spec(self.app_id, self.tag)
+        return SpecManager().get_spec(self.app_id, self.tag)
 
     def status(self):
         return self.njs.check_job(self.job_id)['job_state']

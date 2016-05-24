@@ -132,7 +132,7 @@ class SpecManager(object):
 
         if app_id not in self.app_specs[tag]:
             if raise_exception:
-                raise ValueError('Unknown method id "{}" tagged as "{}"'.format(app_id, tag))
+                raise ValueError('Unknown app id "{}" tagged as "{}"'.format(app_id, tag))
             return False
 
         return True

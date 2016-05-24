@@ -83,7 +83,7 @@ class JobManager(object):
         try:
             status_set = list()
             for job_id in self.running_jobs:
-                job_state = self.running_jobs[job_id].full_state()
+                job_state = self.running_jobs[job_id].state()
                 status_set.append(job_state)
             if not len(status_set):
                 return "No running jobs!"
@@ -156,8 +156,8 @@ class JobManager(object):
         # remove the prefix (if present) and take the last element in the split
         job_id = job_tuple[0].split(':')[-1]
         try:
-            job_info = clients.get('job_service').get_job_params(job_id)
-            return Job.from_state(job_info, tag=job_tuple[2], cell_id=job_tuple[3])
+            job_info = clients.get('job_service').get_job_params(job_id)[0]
+            return Job.from_state(job_id, job_info, tag=job_tuple[2], cell_id=job_tuple[3])
         except Exception, e:
             self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
@@ -172,15 +172,15 @@ class JobManager(object):
         'KBaseJobs' channel.
         """
         status_set = dict()
-        try:
-            for job_id in self.running_jobs:
+        for job_id in self.running_jobs:
+            try:
                 status_set[job_id] = {'state': self.running_jobs[job_id].state(),
                                       'spec': self.running_jobs[job_id].app_spec()}
-            self._send_comm_message('job_status', status_set)
-        except Exception, e:
-            self._log.setLevel(logging.ERROR)
-            kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
-            self._send_comm_message('job_err', str(e))
+            except Exception, e:
+                self._log.setLevel(logging.ERROR)
+                kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+                self._send_comm_message('job_err', str(e))
+        self._send_comm_message('job_status', status_set)
 
     def lookup_job_status_loop(self):
         """

@@ -58,7 +58,7 @@ class Job(object):
         print "Version: {}".format(spec['info']['ver'])
 
         try:
-            state = self.full_state()
+            state = self.state()
             print "Status: {}".format(state['job_state'])
             # inputs = map_inputs_from_state(state, spec)
             print "Inputs:\n------"
@@ -72,18 +72,20 @@ class Job(object):
 
     def status(self):
         return self.njs.check_job(self.job_id)['job_state']
-        return self.full_state()['job_state']
 
-    def input_params(self):
-        return self.njs.get_job_params(self.job_id)
+    def parameters(self):
+        try:
+            return self.njs.get_job_params(self.job_id)
+        except Exception, e:
+            raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
 
-    def full_state(self):
+    def state(self):
         """
         Queries the job service to see the status of the current job.
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
         try:
-            return [self.njs.check_job(self.job_id), self.njs.get_job_params(self.job_id)]
+            return self.njs.check_job(self.job_id)
         except Exception, e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
 
@@ -92,7 +94,7 @@ class Job(object):
         For a complete job, returns the job results.
         An incomplete job throws an exception
         """
-        state = self.full_state()
+        state = self.state()
         if state['job_state'] == 'completed' and state['step_outputs']:
             # prep the output widget params
             widget_params = dict()
@@ -106,8 +108,8 @@ class Job(object):
                 elif 'input_parameter' in out_param:
                     widget_params[p_id] = self.inputs.get(out_param['input_parameter'], None)
                 elif 'service_method_output_path' in out_param:
-                    widget_params[p_id] = get_sub_path(json.loads(state['step_outputs'][self.app_id]), out_param['service_method_output_path'], 0)
-
+                    # widget_params[p_id] = get_sub_path(json.loads(state['step_outputs'][self.app_id]), out_param['service_method_output_path'], 0)
+                    widget_params[p_id] = get_sub_path(state['report'], out_param['service_method_output_path'], 0)
             output_widget = app_spec.get('widgets', {}).get('output', 'kbaseDefaultNarrativeOutput')
             return widgetmanager.get_manager().show_output_widget(output_widget, tag=self.tag, **widget_params)
 

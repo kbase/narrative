@@ -202,7 +202,7 @@ define ([
 
             return this;
         },
-        
+
         updateCellRunStatus: function (msg) {
             var runtime = Runtime.make();
             // The global runtime bus is a catch all for proving messaging semantics across otherwise unconnected apps.
@@ -318,7 +318,7 @@ define ([
                 jobTuples.push("('" + jobId + "', '" + StringUtil.safeJSONStringify(inputs) + "', '" + tag + "', '" + source + "')");
 
             }
-            return ["from biokbase.narrative.jobs.jobmanager import JobManager",
+            return ["from biokbase.narrative.jobs import JobManager",
                     "JobManager().initialize_jobs([" + jobTuples.join(',') + "])"].join('\n');
         },
 
@@ -660,14 +660,14 @@ define ([
             if (!hideLoadingMessage)
                 this.showLoadingMessage('Loading running jobs...');
 
-            
+
 
             // console.log(['REFRESH: looking up ' + jobParamList.length]);
             // console.log(['REFRESH: jobstates:', this.jobStates]);
             this.startJobPoll();
-            
+
         },
-        
+
         startJobPoll: function () {
             // This contains all the job info like this:
             // { jobId: {spec: {}, state: {}} }
@@ -718,7 +718,7 @@ define ([
                 else
                     this.jobStates[jobId].status = 'error';
             }
-            
+
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
                                   'print job_manager.poll_jobs([' + jobParamList + '], as_json=True)\n';

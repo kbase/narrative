@@ -62,19 +62,19 @@ class JobManager(object):
              version tag (string),
              cell id that started the job (string or None))
         """
-        try:
-            for job_tuple in job_tuples:
-                if job_tuple[0] not in self.running_jobs:
+        for job_tuple in job_tuples:
+            if job_tuple[0] not in self.running_jobs:
+                try:
                     self.running_jobs[job_tuple[0]] = self._get_existing_job(job_tuple)
 
-            # only keep one loop at a time in cause this gets called again!
-            if self._lookup_timer is not None:
-                self._lookup_timer.cancel()
-            self.lookup_job_status_loop()
-        except Exception, e:
-            self._log.setLevel(logging.ERROR)
-            kblogging.log_event(self._log, "init_error", {'err': str(e)})
-            self._send_comm_message('job_init_err', str(e))
+                except Exception, e:
+                    self._log.setLevel(logging.ERROR)
+                    kblogging.log_event(self._log, "init_error", {'err': str(e)})
+                    self._send_comm_message('job_init_err', str(e))
+        # only keep one loop at a time in cause this gets called again!
+        if self._lookup_timer is not None:
+            self._lookup_timer.cancel()
+        self.lookup_job_status_loop()
 
     def list_jobs(self):
         """
@@ -174,8 +174,8 @@ class JobManager(object):
         status_set = dict()
         try:
             for job_id in self.running_jobs:
-                status_set[job_id] = {'state': self.running_jobs[job_id].full_state(),
-                                      'spec': self.running_jobs[job_id].method_spec()}
+                status_set[job_id] = {'state': self.running_jobs[job_id].state(),
+                                      'spec': self.running_jobs[job_id].app_spec()}
             self._send_comm_message('job_status', status_set)
         except Exception, e:
             self._log.setLevel(logging.ERROR)
@@ -213,9 +213,9 @@ class JobManager(object):
         # push it forward! create a new_job message.
         self._send_comm_message('new_job', {
             'id': job.job_id,
-            'method_id': job.method_id,
+            'app_id': job.app_id,
             'inputs': job.inputs,
-            'version': job.method_version,
+            'version': job.app_version,
             'tag': job.tag,
             'cell_id': job.cell_id
         })

@@ -226,7 +226,6 @@ define([
         return pythonString;
     }
 
-
     function buildMethodRunner(cell) {
         var method = utils.getMeta(cell, 'methodCell', 'method'),
             params = utils.getMeta(cell, 'methodCell', 'params'),
@@ -239,7 +238,6 @@ define([
 
         return pythonCode;
     }
-
 
     function buildMethodRunnerWithOutput(cell) {
         var method = utils.getMeta(cell, 'methodCell', 'method'),

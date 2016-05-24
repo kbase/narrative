@@ -11,7 +11,6 @@ to fetch it.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
-from biokbase.narrative.common.kbjob_manager import KBjobManager
 import biokbase.narrative.clients as clients
 from .job import Job
 from ipykernel.comm import Comm

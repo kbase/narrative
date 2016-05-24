@@ -355,7 +355,7 @@ class AppManager(object):
                 if not type_ok:
                     return 'Type of data object, {}, does not match allowed types'.format(info[2])
             except Exception as e:
-                return 'Data object named {} not found with this Narrative. (additional info: {})'.format(value, e)
+                return 'Data object named {} not found with this Narrative.'
 
         # if it expects a set of allowed values, check if this one matches
         if 'allowed_values' in param:

@@ -246,8 +246,7 @@ class JobManager(object):
             'msg_type': msg_type,
             'content': content
         }
-        kblogging.log_event(self._log, "sending_a_message", {"comm_message": True})
-        if not self._comm:
+        if self._comm is None:
             self._comm = Comm(target_name='KBaseJobs', data={})
             self._comm.on_msg(self._handle_comm_message)
         self._comm.send(msg)

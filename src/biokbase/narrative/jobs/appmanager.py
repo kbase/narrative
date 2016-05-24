@@ -22,7 +22,6 @@ from biokbase.narrative.common import kblogging
 import logging
 from ipykernel.comm import Comm
 
-
 class AppManager(object):
     """
     The main class for managing how KBase apps get run. This contains functions
@@ -33,7 +32,7 @@ class AppManager(object):
     am = AppManager()
     am.available_apps()
         # show the set of apps with a brief description of each.
-    am.app_usage(app_id)
+    am.app_usage(app_id)ß
         # show how to use a app and set its parameters.
     job = am.run_app(app_id, input1=value1, input2=value2, ...)
         # run an app with given inputs.
@@ -52,6 +51,7 @@ class AppManager(object):
     def __new__(cls):
         if AppManager.__instance is None:
             AppManager.__instance = object.__new__(cls)
+            AppManager.__instance._comm = None
         return AppManager.__instance
 
     def reload(self):
@@ -136,7 +136,7 @@ class AppManager(object):
             'event': 'validating_app',
             'cell_id': cell_id,
             'run_id': run_id
-        });
+        })
 
         ### TODO: this needs restructuring so that we can send back validation failure
         ### messages. Perhaps a separate function and catch the errors, or return an
@@ -204,7 +204,7 @@ class AppManager(object):
             'event': 'validated_method',
             'cell_id': cell_id,
             'run_id': run_id
-        });
+        })
 
 
         # Okay, NOW we can start the show
@@ -255,7 +255,7 @@ class AppManager(object):
             'event': 'launching_job',
             'cell_id': cell_id,
             'run_id': run_id
-        });
+        })
 
         try:
             job_id = self.njs.run_job(job_runner_inputs)
@@ -270,7 +270,7 @@ class AppManager(object):
             'cell_id': cell_id,
             'run_id': run_id,
             'job_id': job_id
-        });
+        })
 
 
         # new_job = Job(app_state['job_id'], app_id, params, tag=tag, method_version=service_ver, cell_id=cell_id)
@@ -395,14 +395,15 @@ class AppManager(object):
         # Whew. Passed all filters!
         return None
 
+    def _handle_comm_message(self, msg):
+        pass
 
     def _send_comm_message(self, msg_type, content):
         msg = {
             'msg_type': msg_type,
             'content': content
         }
-        if not self._comm:
+        if self._comm is None:
             self._comm = Comm(target_name='KBaseJobs', data={})
-        self._comm.open()
+            self._comm.on_msg(self._handle_comm_message)
         self._comm.send(msg)
-        self._comm.close()

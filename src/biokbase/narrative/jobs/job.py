@@ -5,7 +5,6 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
-import biokbase.narrative.widgetmanager as widgetmanager
 from .app_util import (
     system_variable,
     map_inputs_from_state
@@ -82,8 +81,8 @@ class Job(object):
             print "Status: {}".format(state['job_state'])
             # inputs = map_inputs_from_state(state, spec)
             print "Inputs:\n------"
-            for p in self.inputs:
-                print "{}: {}".format(p, inputs[p])
+            for p in self.inputs[0]:
+                print "{}: {}".format(p, self.inputs[0][p])
         except:
             print "Unable to retrieve current running state!"
 
@@ -114,8 +113,9 @@ class Job(object):
         For a complete job, returns the job results.
         An incomplete job throws an exception
         """
+        from biokbase.narrative.widgetmanager import WidgetManager
         state = self.state()
-        if state['job_state'] == 'completed' and state['step_outputs']:
+        if state['job_state'] == 'completed' and 'result' in state:
             # prep the output widget params
             widget_params = dict()
             app_spec = self.app_spec()
@@ -129,9 +129,9 @@ class Job(object):
                     widget_params[p_id] = self.inputs.get(out_param['input_parameter'], None)
                 elif 'service_method_output_path' in out_param:
                     # widget_params[p_id] = get_sub_path(json.loads(state['step_outputs'][self.app_id]), out_param['service_method_output_path'], 0)
-                    widget_params[p_id] = get_sub_path(state['report'], out_param['service_method_output_path'], 0)
+                    widget_params[p_id] = get_sub_path(state['result'], out_param['service_method_output_path'], 0)
             output_widget = app_spec.get('widgets', {}).get('output', 'kbaseDefaultNarrativeOutput')
-            return widgetmanager.get_manager().show_output_widget(output_widget, tag=self.tag, **widget_params)
+            return WidgetManager().show_output_widget(output_widget, tag=self.tag, **widget_params)
 
         else:
             return "Job is incomplete! It has status '{}'".format(state['job_state'])

@@ -26,6 +26,7 @@ from jinja2 import Template
 import uuid
 import time
 from pprint import pprint
+from biokbase.narrative.jobs import SpecManager
 
 class WidgetManager(object):
     """
@@ -58,8 +59,8 @@ class WidgetManager(object):
     _default_input_widget = "kbaseNarrativeDefaultInput"
     _default_output_widget = "kbaseNarrativeDefaultOutput"
 
-
     def __init__(self):
+        self._sm = SpecManager()
         self.reload_info()
 
     def reload_info(self):
@@ -67,7 +68,6 @@ class WidgetManager(object):
         Fetches all widget information from the method store and contains it in this object.
         """
         self.widget_info = self._load_all_widget_info()
-
 
     def _load_all_widget_info(self):
         """
@@ -101,7 +101,8 @@ class WidgetManager(object):
         check_tag(tag, raise_exception=True)
 
         nms = NarrativeMethodStore(URLS.narrative_method_store)
-        methods = nms.list_methods_spec({'tag': tag})
+        # methods = nms.list_methods_spec({'tag': tag})
+        methods = self._sm.app_specs[tag].values()
         all_widgets = dict()
 
         # keys = widget names / namespaced require path / etc.
@@ -204,7 +205,7 @@ class WidgetManager(object):
                             else:
                                 widget_vals = all_widgets[widget_name]['params'].get(p_name, {}).get('allowed_values', set())
                                 widget_vals.update(params[p_name]['allowed_values'])
-                                all_widgets[widget_name]['params'][p_name]['allowed_values'] = widget_types
+                                all_widgets[widget_name]['params'][p_name]['allowed_values'] = widget_vals
                 else:
                     all_widgets[widget_name] = { 'params': params }
 

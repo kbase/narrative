@@ -1,6 +1,6 @@
 import biokbase.narrative.clients as clients
-from .method_util import (
-    method_version_tags,
+from .app_util import (
+    app_version_tags,
     check_tag
 )
 import json
@@ -10,38 +10,38 @@ from IPython.display import HTML
 class SpecManager(object):
     __instance = None
 
-    method_specs = dict()
+    app_specs = dict()
 
     def __new__(cls):
         if SpecManager.__instance is None:
             SpecManager.__instance = object.__new__(cls)
-            SpecManager.__instance.reload_methods()
+            SpecManager.__instance.reload()
         return SpecManager.__instance
 
-    def get_method_spec(self, method_id, tag='release'):
-        self.check_method(method_id, tag, raise_exception=True)
+    def get_spec(self, app_id, tag='release'):
+        self.check_app(app_id, tag, raise_exception=True)
 
-        return self.method_specs[tag][method_id]
+        return self.app_specs[tag][app_id]
 
-    def reload_methods(self):
+    def reload(self):
         """
-        Reloads all method specs into memory from the latest update.
+        Reloads all app specs into memory from the latest update.
         """
-        for tag in method_version_tags:
+        for tag in app_version_tags:
             specs = clients.get('narrative_method_store').list_methods_spec({'tag': tag})
 
             spec_dict = dict()
             for spec in specs:
                 spec_dict[spec['info']['id']] = spec
-            self.method_specs[tag] = spec_dict
+            self.app_specs[tag] = spec_dict
 
-    def method_description(self, method_id, tag='release'):
+    def app_description(self, app_id, tag='release'):
         """
-        Returns the method description as a printable object. Makes it kinda pretty? repr_html, maybe?
+        Returns the app description as a printable object. Makes it kinda pretty? repr_html, maybe?
         """
-        self.check_method(method_id, tag, raise_exception=True)
+        self.check_app(app_id, tag, raise_exception=True)
 
-        info = clients.get('narrative_method_store').get_method_full_info({'ids': [method_id], 'tag': tag})[0]
+        info = clients.get('narrative_method_store').get_method_full_info({'ids': [app_id], 'tag': tag})[0]
 
         tmpl = """
         <div class="bg-info" style="padding:15px">
@@ -52,18 +52,17 @@ class SpecManager(object):
         <hr>
         {{info.description}}
         """
-
         return HTML(Template(tmpl).render(info=info))
 
-    def list_available_methods(self, tag="release"):
+    def available_apps(self, tag="release"):
         """
-        Lists the set of available methods in a pretty HTML way.
+        Lists the set of available apps in a pretty HTML way.
         Usable only in the Jupyter notebook.
         """
         check_tag(tag, raise_exception=True)
 
         tmpl="""
-        <b>Available {{tag}} methods</b><br>
+        <b>Available {{tag}} apps</b><br>
         <table class="table table-striped table-bordered table-condensed">
         <thead>
             <tr>
@@ -72,7 +71,7 @@ class SpecManager(object):
                 <th>Subtitle</th>
             </tr>
         </thead>
-        {% for m in methods %}
+        {% for m in apps %}
             <tr>
                 <td>
                     {{ m.info.id }}
@@ -89,13 +88,13 @@ class SpecManager(object):
         """
 
         return HTML(Template(tmpl).render(tag=tag,
-                                          methods=sorted(list(self.method_specs[tag].values()), key=lambda m: m['info']['id'])))
+                                          apps=sorted(list(self.app_specs[tag].values()), key=lambda m: m['info']['id'])))
 
-    def method_usage(self, method_id, tag='release'):
+    def app_usage(self, app_id, tag='release'):
         """
-        Should show method inputs and outputs. Something like this:
-        Method id
-        Method name
+        Should show app inputs and outputs. Something like this:
+        App id
+        App name
         Subtitle
         Parameters
             1. xxx - string - data object - [type1, type2, type3]
@@ -106,24 +105,24 @@ class SpecManager(object):
             ...
             4. aaa - OUTPUT - ....
         """
-        self.check_method(method_id, tag, raise_exception=True)
+        self.check_app(app_id, tag, raise_exception=True)
 
-        spec = self.method_specs[tag][method_id]
+        spec = self.app_specs[tag][app_id]
 
         # start with basic info
-        usage = {'id': method_id,
+        usage = {'id': app_id,
                  'name': spec['info']['name'],
                  'tag': tag,
                  'subtitle': spec['info']['subtitle'],
                  'ver': spec['info']['ver'],
-                 'params': self.method_params(spec)}
+                 'params': self.app_params(spec)}
 
-        return MethodUsage(usage)
+        return AppUsage(usage)
 
-    def check_method(self, method_id, tag='release', raise_exception=False):
+    def check_app(self, app_id, tag='release', raise_exception=False):
         """
         Checks if a method (and release tag) is available for running and such.
-        If raise_exception==True, and either the tag or method_id are invalid, a ValueError is raised.
+        If raise_exception==True, and either the tag or app_id are invalid, a ValueError is raised.
         If raise_exception==False, and there's something invalid, it just returns False.
         If everything is hunky-dory, it returns True.
         """
@@ -131,14 +130,14 @@ class SpecManager(object):
         if not tag_ok:
             return False
 
-        if method_id not in self.method_specs[tag]:
+        if app_id not in self.app_specs[tag]:
             if raise_exception:
-                raise ValueError('Unknown method id "{}" tagged as "{}"'.format(method_id, tag))
+                raise ValueError('Unknown app id "{}" tagged as "{}"'.format(app_id, tag))
             return False
 
         return True
 
-    def method_params(self, spec):
+    def app_params(self, spec):
         """
         Should return a dict of params with key = id, val =
         {
@@ -209,9 +208,9 @@ class SpecManager(object):
 
 
 
-class MethodUsage(object):
+class AppUsage(object):
     """
-    A tiny class for representing method usage in HTML (or as as a pretty string)
+    A tiny class for representing app usage in HTML (or as a pretty string)
     """
     def __init__(self, usage):
         self.usage = usage

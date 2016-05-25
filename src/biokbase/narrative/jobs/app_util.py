@@ -6,7 +6,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 import os
 import re
 
-method_version_tags = ['release', 'beta', 'dev']
+app_version_tags = ['release', 'beta', 'dev']
 
 def check_tag(tag, raise_exception=False):
     """
@@ -14,9 +14,9 @@ def check_tag(tag, raise_exception=False):
     Returns a boolean.
     if raise_exception == True and the tag is bad, raises a ValueError
     """
-    tag_exists = tag in method_version_tags
+    tag_exists = tag in app_version_tags
     if not tag_exists and raise_exception:
-        raise ValueError("Can't find tag %s - allowed tags are %s" % (tag, ", ".join(method_version_tags)))
+        raise ValueError("Can't find tag %s - allowed tags are %s" % (tag, ", ".join(app_version_tags)))
     else:
         return tag_exists
 
@@ -48,14 +48,14 @@ def system_variable(var):
         else:
             return None
 
-def map_inputs_from_state(state, method_spec):
+def map_inputs_from_state(state, app_spec):
     """
     returns a dict of readable (ish) method inputs - those used for the run_method function - to the input values.
     narrative_system_variables are ignored, so workspace names and tokens shouldn't show up.
     """
     input_dict = dict()
     inputs = state['original_app']['steps'][0]['input_values'][0]
-    spec_inputs = method_spec['behavior']['kb_service_input_mapping']
+    spec_inputs = app_spec['behavior']['kb_service_input_mapping']
     # preprocess so it's O(1) lookup
     targets_to_inputs = dict()
     for spec_input in spec_inputs:

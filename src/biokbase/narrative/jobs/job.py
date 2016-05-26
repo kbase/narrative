@@ -180,7 +180,11 @@ class Job(object):
         element.html("<div id='kb-job-{{job_id}}' class='kb-vis-area'></div>");
 
         require(['jquery', 'kbaseNarrativeJobStatus'], function($, KBaseNarrativeJobStatus) {
-            var w = new KBaseNarrativeJobStatus($('#kb-job-{{job_id}}'), {'jobId': '{{job_id}}'});
+            var w = new KBaseNarrativeJobStatus($('#kb-job-{{job_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}});
         });
         """
-        return Template(tmpl).render(job_id=self.job_id)
+        try:
+            state = self.state()
+        except Exception, e:
+            state = {}
+        return Template(tmpl).render(job_id=self.job_id, state=json.dumps(state))

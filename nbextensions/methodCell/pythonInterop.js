@@ -24,7 +24,7 @@ define([
             }),
             pythonCode = [
                 'from biokbase.narrative.jobs import AppManager',
-                'new_job = AppManager.run_app(\n' + pythonifyInputs(method, params, cellId) + '\n)'
+                'AppManager.run_app(\n' + pythonifyInputs(method, params, cellId) + '\n)'
             ].join('\n');
         cell.set_text(pythonCode);
 
@@ -233,7 +233,7 @@ define([
             runId = new Uuid(4).format(),
             pythonCode = [
                 'from biokbase.narrative.jobs import AppManager',
-                'new_job = AppManager().run_app(\n' + pythonifyInputs(method, params, cellId, runId) + '\n)'
+                'AppManager().run_app(\n' + pythonifyInputs(method, params, cellId, runId) + '\n)'
             ].join('\n');
 
         return pythonCode;
@@ -254,7 +254,7 @@ define([
                 'mm = MethodManager()',
                 'from_javascript = ' + pythonString(runParams, true),
                 'incoming_data = json.loads(from_javascript)',
-                'new_job = AppManager.run_app(\n' + pythonifyInputs(method, params, cellId, runId) + '\n)',
+                'AppManager.run_app(\n' + pythonifyInputs(method, params, cellId, runId) + '\n)',
                 'insert_run_widget(incoming_data[u"cell_id"], incoming_data[u"kbase_cell_id"])'
             ].join('\n');
 

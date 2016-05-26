@@ -19,6 +19,8 @@ from IPython.display import (
     HTML
 )
 from jinja2 import Template
+from ipykernel.comm import Comm
+
 
 class Job(object):
     job_id = None
@@ -26,6 +28,7 @@ class Job(object):
     app_version = None
     cell_id = None
     inputs = None
+    _comm = None
 
     def __init__(self, job_id, app_id, inputs, tag='release', app_version=None, cell_id=None):
         """
@@ -41,6 +44,7 @@ class Job(object):
         # self.job_manager = KBjobManager()
         self.inputs = inputs
         self.njs = clients.get('job_service')
+        self._init_comm()
 
     @classmethod
     def from_state(Job, job_id, job_info, tag='release', cell_id=None):
@@ -153,6 +157,21 @@ class Job(object):
         status = self.status()
         return status.lower() in ['completed', 'error', 'suspend']
 
+    def _init_comm(self):
+        if self._comm is not None:
+            self._comm.close()
+            self._comm = None
+        self._comm = Comm(target_name='KBaseJob-' + self.job_id, data={})
+        self._comm.on_msg(self._handle_comm_message)
+
+    def _handle_comm_message(self, msg):
+        pass
+
+    def _send_comm_message(self, msg_type, msg):
+        if self._comm is None:
+            self.init_comm()
+        self._comm.send({'msg_type':msg_type, 'content':msg})
+
     def __repr__(self):
         return u"KBase Narrative Job - " + unicode(self.job_id)
 
@@ -161,7 +180,11 @@ class Job(object):
         element.html("<div id='kb-job-{{job_id}}' class='kb-vis-area'></div>");
 
         require(['jquery', 'kbaseNarrativeJobStatus'], function($, KBaseNarrativeJobStatus) {
-            var w = new KBaseNarrativeJobStatus($('#kb-job-{{job_id}}'), {'jobId': '{{job_id}}'});
+            var w = new KBaseNarrativeJobStatus($('#kb-job-{{job_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}});
         });
         """
-        return Template(tmpl).render(job_id=self.job_id)
+        try:
+            state = self.state()
+        except Exception, e:
+            state = {}
+        return Template(tmpl).render(job_id=self.job_id, state=json.dumps(state))

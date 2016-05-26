@@ -1,27 +1,37 @@
 define([
     'jquery',
     'kbwidget',
+    'bluebird',
     'bootstrap',
     'narrativeConfig',
     'base/js/namespace',
+    'services/kernels/comm',
     'util/string',
     'handlebars',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'kbaseViewLiveRunLog',
-    'kbaseReportView'
+    'kbaseReportView',
+    'nbextensions/methodCell/microBus',
+    'nbextensions/methodCell/runtime',
+    'text!kbase/templates/job_status_table.html'
 ], function (
     $,
     KBWidget,
+    Promise,
     bootstrap,
     Config,
     Jupyter,
+    JupyterComm,
     StringUtil,
     Handlebars,
     KBaseAuthenticatedWidget,
     KBaseTabs,
     KBaseViewLiveRunLog,
-    KBaseReportView
+    KBaseReportView,
+    Bus,
+    Runtime,
+    JobStatusTableTemplate
 ) {
     'use strict';
     return KBWidget({
@@ -33,17 +43,136 @@ define([
             jobInfo: null,
             statusText: null
         },
+        comm: null,
 
         init: function(options) {
             this._super(options);
+            this.jobId = this.options.jobId;
+            this.state = this.options.state;
+            this.cell = Jupyter.narrative.getCellByKbaseId(this.$elem.attr('id'));
 
-            // this.makeJobStatusPanel(this.jobId, statusText);
-            this.$elem.append(this.options.jobId);
+            console.log('initializing with job id = ' + this.jobId);
+            if (!this.jobId) {
+                this.showError("No Job id provided!");
+                return this;
+            }
+            this.runtime = Runtime.make();
+
+            /**
+             * Initial flow.
+             * 1. Check cell for state. If state's job id matches this widget's then use it and ignore other inputs.
+             * 2. If not, use inputs as initial state.
+             * 3. Initialize layout, set up comm channel and bus.
+             */
+
+            var cellState = this.getCellState();
+            if (cellState) {
+                // use this and not the state input.
+                this.state = cellState;
+            }
+
+            var jobId = this.jobId;
+            this.runtime.bus().listen({
+                test: function(msg) {
+                    // return true;
+                    return (msg.jobId === this.jobId);
+                }.bind(this),
+                handle: function(msg) {
+                    console.log('handling a message', msg);
+                    this.handleJobStatus(msg);
+                }.bind(this)
+            });
+            console.log(this.runtime.bus());
+            // render up the panel's view layer.
+            this.makeJobStatusPanel(this.jobId);
+            // wire up the comm channel and turn it loose.
+            this.initCommChannel();
 
             return this;
         },
 
-        makeJobStatusPanel: function(jobId, jobState, jobInfo, statusText) {
+        getCellState: function() {
+            var metadata = this.cell.metadata;
+            if (this.cell.metadata.kbase) {
+                return cell.metadata.kbase;
+            }
+            else {
+                return null;
+            }
+        },
+
+        setCellState: function() {
+            this.cell.metadata.kbase = {
+                type: 'output',
+                jobId: this.jobId,
+                state: this.state
+            };
+        }
+
+        handleJobStatus: function(message) {
+
+        },
+
+        showError: function(message) {
+            this.$elem.append(message);
+        },
+
+        handleCommMessages: function(msg) {
+            console.info("Job Message!", msg);
+        },
+
+        initCommChannel: function() {
+            var commName = 'KBaseJob-' + this.jobId;
+            Jupyter.notebook.kernel.comm_info(commName, function(msg) {
+                if (msg.content && msg.content.comms) {
+                    // skim the reply for the right id
+                    for (var id in msg.content.comms) {
+                        if (msg.content.comms[id].target_name === commName) {
+                            this.comm = new JupyterComm.Comm(commName, id);
+                            console.info("Job Widget Comm inited!", this.comm);
+                            Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
+                            this.comm.on_msg(this.handleCommMessages.bind(this));
+                        }
+                    }
+                }
+                if (this.comm === null) {
+                    this.comm = new JupyterComm.Comm(commName);
+                    Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
+                    console.info("Job Widget Comm inited manually:", this.comm);
+                    this.comm.on_msg(this.handleCommMessages.bind(this));
+
+                    // Jupyter.notebook.kernel.comm_manager.register_target(commName, function(comm, msg) {
+                    //     this.comm = comm;
+                    //     console.info("Job Widget Comm inited!", this.comm);
+                    //     comm.on_msg(this.handleCommMessages.bind(this));
+                    // }.bind(this));
+                }
+            }.bind(this));
+        },
+
+        updateJobStatusPanel: function(jobInfo, jobState) {
+            info = {
+                jobId: this.jobId,
+                status: "Unknown",
+                creationTime: null,
+                queueTime: null,
+                queuePos: null,
+                execStartTime: null,
+                execEndTime: null,
+                execRunTime: null,
+            }
+        },
+
+        makeJobStatusPanel: function() {
+            this.statusTableTmpl = Handlebars.compile(JobStatusTableTemplate);
+
+            var tableInfo = {
+                jobId: this.jobId,
+
+            }
+            var statusTable = statusTable
+            statusTableTmpl
+
             function makeInfoRow(heading, info) {
                 return $('<tr>').append($('<th>')
                         .append(heading + ':'))

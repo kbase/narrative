@@ -221,11 +221,9 @@ define ([
             var msgType = msg.content.data.msg_type;
             switch (msgType) {
                 case 'new_job':
-                    console.log("Adding new job info:");
                     this.registerKernelJob(msg.content.data.content);
                     break;
                 case 'job_status':
-                    console.log('got job refresh info');
                     var status = {},
                         info = {},
                         content = msg.content.data.content;
@@ -253,16 +251,16 @@ define ([
 
         initCommChannel: function() {
             // init the listener channel.
-            console.info('Registering Job channel with kernel.');
-            console.info('Checking for existing channel?');
+            // console.info('Registering Job channel with kernel.');
+            // console.info('Checking for existing channel?');
 
             this.comm = null;
 
             Jupyter.notebook.kernel.comm_info('KBaseJobs', function(msg) {
-                console.info(msg);
+                // console.info(msg);
                 if (msg.content && msg.content.comms) {
-                    console.info('Found an existing channel!');
-                    console.info(msg);
+                    // console.info('Found an existing channel!');
+                    // console.info(msg);
                     // skim the reply for the right id
                     for (var id in msg.content.comms) {
                         if (msg.content.comms[id].target_name === 'KBaseJobs') {
@@ -939,10 +937,11 @@ define ([
                                .append(jobId));
 
             var status = "Unknown";
-            if (jobState)
-                console.log('JOBSTATE', jobState);
+            if (jobState) {
+                // console.log('JOBSTATE', jobState);
                 status = jobState.status.charAt(0).toUpperCase() +
                          jobState.status.substring(1);
+            }
             var started = "Unknown";
             var position = null;
             var task = null;
@@ -1047,7 +1046,7 @@ define ([
             if (runTime) {
                 $infoTable.append(this.makeInfoRow('Run Time', runTime));
             }
-            if (jobState.state.creation_time) {
+            if (jobState.state && jobState.state.creation_time) {
                 started = $(TimeFormat.prettyTimestamp(jobState.state.creation_time));
                 started.tooltip({
                     container: 'body',

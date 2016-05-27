@@ -7,15 +7,15 @@ define([
     'kb_common/html',
     '../../validation',
     '../../events',
-    '../../dom',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, $, Jupyter, html, Validation, Events, Dom) {
+], function (Promise, $, Jupyter, html, Validation, Events) {
     'use strict';
 
     // Constants
     var t = html.tag,
-        div = t('div'), input = t('input'), span = t('span'), button = t('button');
+        div = t('div'), input = t('input'), span = t('span'), button = t('button'),
+        textarea = t('textarea');
 
     function factory(config) {
         var options = {},
@@ -26,8 +26,9 @@ define([
             bus = config.bus,
             model = {
                 value: undefined
-            },
-        dom;
+            };
+            
+        console.log('TEXTAREA', spec);
 
         // Validate configuration.
         // Nothing to do...
@@ -36,6 +37,7 @@ define([
         options.multiple = spec.multipleItems();
         options.required = spec.required();
         options.enabled = true;
+        options.nRows = spec.spec.textarea_options.n_rows;
 
 
         /*
@@ -48,7 +50,7 @@ define([
          */
 
         function getInputValue() {
-            return dom.getElement('input-container.input').value;
+            return $container.find('[data-element="input-container"] [data-element="input"]').val();
         }
 
         function setModelValue(value) {
@@ -91,14 +93,6 @@ define([
          *
          */
 
-        function copyProps(from, props) {
-            var newObj = {};
-            props.forEach(function (prop) {
-                newObj[prop] = from[prop];
-            });
-            return newObj;
-        }
-
         function validate() {
             return Promise.try(function () {
                 if (!options.enabled) {
@@ -110,11 +104,9 @@ define([
                 }
 
                 var rawValue = getInputValue(),
-                    validationOptions = copyProps(spec.spec.text_options, ['min_int', 'max_int']),
-                    validationResult;
-
-                validationOptions.required = spec.required();
-                validationResult = Validation.validateIntegerField(rawValue, validationOptions);
+                    validationResult = Validation.validateText(rawValue, {
+                        required: options.required
+                    });
 
                 return {
                     isValid: validationResult.isValid,
@@ -126,6 +118,29 @@ define([
             });
         }
 
+        function changeOnPause() {
+            var editPauseTime = 0,
+                editPauseTimer,
+                editPauseInterval = 2000;
+
+            return {
+                type: 'keyup',
+                handler: function (e) {
+                    editPauseTime = new Date().getTime();
+                    if (editPauseTimer) {
+                        window.clearTimeout(editPauseTimer);
+                    }
+                    editPauseTimer = window.setTimeout(function () {
+                        var now = new Date().getTime();
+                        if ((now - editPauseTime) > editPauseInterval) {
+                            editPauseTimer = null;
+                            e.target.dispatchEvent(new Event('change'));
+                        }
+                    }, 2500);
+                }
+            }
+        }
+
         /*
          * Creates the markup
          * Places it into the dom node
@@ -133,57 +148,52 @@ define([
          */
         function makeInputControl(currentValue, events, bus) {
             // CONTROL
-            var initialControlValue,
-                min = spec.spec.text_options.min_int,
-                max = spec.spec.text_options.max_int;
-            if (currentValue) {
-                initialControlValue = String(currentValue);
-            }
-            return div({class: 'input-group', style: {width: '100%'}}, [
-                (min ? div({class: 'input-group-addon', fontFamily: 'monospace'}, String(min) + ' &#8804; ') : ''),
-                input({
-                    id: events.addEvents({
-                        events: [
-                            {
-                                type: 'change',
-                                handler: function (e) {
-                                    validate()
-                                        .then(function (result) {
-                                            if (result.isValid) {
-                                                bus.send({
-                                                    type: 'changed',
-                                                    newValue: result.value
-                                                });
-                                                setModelValue(result.value);
-                                            }
+
+            return textarea({
+                id: events.addEvents({
+                    events: [
+                        {
+                            type: 'change',
+                            handler: function (e) {
+                                validate()
+                                    .then(function (result) {
+                                        if (result.isValid) {
                                             bus.send({
-                                                type: 'validation',
-                                                errorMessage: result.errorMessage,
-                                                diagnosis: result.diagnosis
+                                                type: 'changed',
+                                                newValue: result.value
                                             });
+                                        } else if (result.diagnosis === 'required-missing') {
+                                            bus.send({
+                                                type: 'changed',
+                                                newValue: result.value
+                                            });
+                                        }
+                                        setModelValue(result.value);
+                                        bus.send({
+                                            type: 'validation',
+                                            errorMessage: result.errorMessage,
+                                            diagnosis: result.diagnosis
                                         });
-                                }
-                            },
-                            {
-                                type: 'focus',
-                                handler: function (e) {
-                                    Jupyter.keyboard_manager.disable();
-                                }
-                            },
-                            {
-                                type: 'blur',
-                                handler: function (e) {
-                                    Jupyter.keyboard_manager.enable();
-                                }
+                                    });
                             }
-                        ]}),
-                    class: 'form-control',
-                    dataElement: 'input',
-                    dataType: 'int',
-                    value: initialControlValue
-                }),
-                (max ? div({class: 'input-group-addon', fontFamily: 'monospace'}, ' &#8804; ' + String(max)) : '')
-            ]);
+                        }, changeOnPause(),
+                        {
+                            type: 'focus',
+                            handler: function (e) {
+                                Jupyter.keyboard_manager.disable();
+                            }
+                        },
+                        {
+                            type: 'blur',
+                            handler: function (e) {
+                                Jupyter.keyboard_manager.enable();
+                            }
+                        }
+                    ]}),
+                class: 'form-control',
+                dataElement: 'input',
+                rows: options.nRows || 5
+            }, currentValue);
         }
 
         function render() {
@@ -210,7 +220,7 @@ define([
                 events: events
             };
         }
-        
+
         function autoValidate() {
             return validate()
                 .then(function (result) {
@@ -222,36 +232,50 @@ define([
                 });
         }
 
+
         // LIFECYCLE API
+
+        function init() {
+        }
+
+        function attach(node) {
+            return Promise.try(function () {
+                parent = node;
+                container = node.appendChild(document.createElement('div'));
+                $container = $(container);
+
+                var events = Events.make(),
+                    theLayout = layout(events);
+
+                container.innerHTML = theLayout.content;
+                events.attachEvents(container);
+            });
+        }
 
         function start() {
             return Promise.try(function () {
-                bus.on('run', function (message) {
-                    parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    $container = $(container);
-                    dom = Dom.make({node: container});
-
-                    var events = Events.make(),
-                        theLayout = layout(events);
-
-                    container.innerHTML = theLayout.content;
-                    events.attachEvents(container);
-                    setModelValue(message.value);
-                    
-                    bus.send({type: 'sync'});
-                });
                 bus.on('reset-to-defaults', function (message) {
                     resetModelValue();
                 });
                 bus.on('update', function (message) {
                     setModelValue(message.value);
                 });
+                bus.send({type: 'sync'});
+                return null;
+            });
+        }
+
+        function run(params) {
+            return Promise.try(function () {
+                return setModelValue(params.value);
             });
         }
 
         return {
-            start: start
+            init: init,
+            attach: attach,
+            start: start,
+            run: run
         };
     }
 

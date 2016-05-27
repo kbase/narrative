@@ -105,6 +105,16 @@ define ([
                     }
                 }, this)
             );
+        
+            $(document).on('cancelJob.Narrative', function(e, jobId, callback) {
+                    // If we can't find the job, then it's not being tracked, so we
+                    // should just assume it's gone already and return true to the callback.
+                    if (jobId === undefined && callback)
+                        callback(true);
+                    else if (jobId !== undefined) {
+                        this.deleteJob(jobId, callback);
+                    }
+                }.bind(this));
 
             var $refreshBtn = $('<button>')
                               .addClass('btn btn-xs btn-default')

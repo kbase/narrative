@@ -4,16 +4,17 @@ define([
     'base/js/namespace',
     'narrativeConfig',
     './microBus'
-], function (Jupyter, Config, Bus) {
+], function (Jupyter, Config, Bus, Clock) {
     'use strict';
 
     function factory(config) {
         
         function createRuntime() {
+            var bus = Bus.make();
             return {
                 created: new Date(),
-                bus: Bus.make()
-            }
+                bus: bus
+            };
         }
 
         /*

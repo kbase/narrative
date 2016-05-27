@@ -24,20 +24,21 @@ define([
     'kb_common/html',
     './methodCellController',
     './pythonInterop',
-    './widgets/codeCellInputWidget',
+    './widgets/methodCellWidget',
     './widgets/codeCellRunWidget',
     './widgets/FieldWidget',
     './runtime',
     './microBus',
     './parameterSpec',
     './utils',
+    './clock',
     'kb_service/utils',
     'kb_service/client/workspace',
     'css!./styles/method-widget.css',
     'bootstrap'
 ], function ($, Jupyter, Promise, Uuid, html, MethodCellController, PythonInterop,
-             CodeCellInputWidget, RunWidget, 
-             FieldWidget, Runtime, Bus, ParameterSpec, utils, serviceUtils, Workspace) {
+    MethodCellWidget, RunWidget,
+    FieldWidget, Runtime, Bus, ParameterSpec, utils, Clock, serviceUtils, Workspace) {
     'use strict';
     var t = html.tag,
         div = t('div'), button = t('button'), span = t('span'), form = t('form'),
@@ -171,7 +172,7 @@ define([
     /*
      * Dealing with metadata
      */
-    
+
 
     function extendCell(cell) {
         var prototype = Object.getPrototypeOf(cell);
@@ -313,7 +314,7 @@ define([
      * Sub tasks of cell setup
      */
 
-   
+
 
     // This is copied out of jupyter code.
     function activateToolbar() {
@@ -369,11 +370,206 @@ define([
     }
 
     /*
+     * 
+     * 
+     */
+
+    var appStates = [
+        {
+            state: {
+                mode: 'editing',
+                params: 'incomplete'
+            },
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'complete'
+                },
+                {
+                    mode: 'editing',
+                    params: 'incomplete'
+                }
+            ]
+        },
+        {
+            state: {
+                mode: 'editing',
+                params: 'complete'
+            },
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built'
+                }
+            ]
+        },
+        {
+            state: {
+                mode: 'editing',
+                params: 'complete',
+                code: 'built'
+            },
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'incomplete'
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built'
+                },
+                {
+                    mode: 'processing',
+                    stage: 'launching'                    
+                }
+            ]
+        },
+        {
+            state: {
+                mode: 'processing',
+                stage: 'launching'                
+            },
+            next: [
+                {
+                    mode: 'processing',
+                    stage: 'queued'
+                },
+                {
+                    mode: 'processing',
+                    stage: 'launching'
+                },
+                {
+                    mode: 'error',
+                    stage: 'launching'
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built'
+                }
+            ]
+        },
+        {
+            state: {
+                mode: 'processing',
+                stage: 'queued'
+            },
+            next: [
+                {
+                    mode: 'processing', 
+                    stage: 'running'
+                },
+                {
+                    mode: 'processing',
+                    stage: 'queued'
+                },
+                {
+                    mode: 'error',
+                    stage: 'queued'
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built'
+                }
+            ]
+        },
+        {
+            state: {
+                mode: 'processing',
+                stage: 'running'
+            },
+            next: [
+                {
+                    mode: 'success'                    
+                },
+                {
+                    mode: 'error',
+                    stage: 'running'
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built'
+                }
+            ]
+        },
+        {
+            state: {
+                mode: 'success'
+            },
+            next: [
+                {
+                    mode: 'success'
+                },
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built'
+                }
+            ]
+        },
+        {
+            state: {
+                mode: 'error',
+                stage: 'launching'
+            },
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built'
+                }
+            ]
+
+        },
+        {
+            state: {
+                mode: 'error',
+                stage: 'queued'
+            },
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built'
+                }
+            ]
+
+        },
+        {
+            state: {
+                mode: 'error',
+                stage: 'running'
+            },
+            next: [
+                {
+                    mode: 'editing',
+                    params: 'complete',
+                    code: 'built'
+                }
+            ]
+
+        }
+    ];
+
+    function intialAppState() {
+        return {
+            mode: 'editing'
+        };
+    }
+    function stateTransition(existingState, changes) {
+
+    }
+
+    /*
      * Should only be called when a cell is first inserted into a narrative.
      * It creates the correct metadata and then sets up the cell.
      * 
      */
-    function createCell(cell, methodSpec, methodTag) {
+    function upgradeToMethodCell(cell, methodSpec, methodTag) {
         return Promise.try(function () {
             var meta = cell.metadata;
             meta.kbase = {
@@ -391,7 +587,7 @@ define([
                         tag: methodTag
                     },
                     state: {
-                        edit: null,
+                        edit: 'editing',
                         params: null,
                         code: null,
                         request: null,
@@ -413,8 +609,8 @@ define([
                 });
             });
     }
-    
-     function setupCell(cell) {
+
+    function setupCell(cell) {
         return Promise.try(function () {
             // Only handle kbase cells.
             if (cell.cell_type !== 'code') {
@@ -447,7 +643,7 @@ define([
             var cellBus = Bus.make(),
                 methodId = utils.getMeta(cell, 'methodCell', 'method').id,
                 methodTag = utils.getMeta(cell, 'methodCell', 'method').tag,
-                inputWidget = CodeCellInputWidget.make({
+                methodCellWidget = MethodCellWidget.make({
                     bus: cellBus,
                     cell: cell,
                     runtime: runtime,
@@ -460,15 +656,15 @@ define([
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);
 
-            return inputWidget.init()
+            return methodCellWidget.init()
                 .then(function () {
-                    return inputWidget.attach(kbaseNode);
+                    return methodCellWidget.attach(kbaseNode);
                 })
                 .then(function () {
-                    return inputWidget.start();
+                    return methodCellWidget.start();
                 })
                 .then(function () {
-                    return inputWidget.run({
+                    return methodCellWidget.run({
                         methodId: methodId,
                         methodTag: methodTag,
                         authToken: runtime.authToken()
@@ -477,254 +673,9 @@ define([
                 .then(function () {
                     MethodCellController.start();
                     return {
-                        widget: inputWidget,
+                        widget: methodCellWidget,
                         bus: cellBus
                     };
-                });
-        });
-    }
-    
-    function createCellx(cell, methodSpec, methodTag) {
-        return Promise.try(function () {
-            var meta = cell.metadata;
-            meta.kbase = {
-                type: 'method',
-                state: {
-                    edit: null,
-                    params: null,
-                    code: null,
-                    request: null,
-                    result: null
-                },
-                jobDetails: {
-                    id: null,
-                    state: null,
-                    deleted: null,
-                    submitted: null,
-                    started: null,
-                    completed: null
-                    
-                },
-                runState: {
-                    launch: {
-                        start: null,
-                        finish: null,
-                        elapsed: null
-                    },
-                    queue: {
-                        start: null,
-                        finish: null,
-                        elapsed: null
-                    },
-                    running: {
-                        start: null,
-                        finish: null,
-                        elapsed: null
-                    },
-                    success: {
-                        start: null,
-                        finish: null,
-                        elapsed: null
-                    },
-                    error: {
-                        start: null,
-                        finish: null,
-                        elapsed: null
-                    }
-                },
-                history: [],
-                attributes: {
-                    id: new Uuid(4).format(),
-                    status: 'new',
-                    created: (new Date()).toUTCString()
-                },
-                method: {
-                    tag: methodTag,
-                    id: methodSpec.info.id,
-                    //name: spec.info.name,
-                    //module: spec.info.module_name,
-                    gitCommitHash: methodSpec.info.git_commit_hash,
-                    version: methodSpec.info.ver
-                }
-            };
-            cell.metadata = meta;
-        })
-            .then(function () {
-                // populate the parameters
-                return setupParams(cell, methodSpec);
-            })
-            .then(function () {
-                return setupCell(cell);
-            });
-    }
-
-    function setupCellx(cell) {
-        return Promise.try(function () {
-            // Only handle kbase cells.
-            if (cell.cell_type !== 'code') {
-                console.log('not a code cell!');
-                return;
-            }
-            if (!cell.metadata.kbase) {
-                console.log('not a kbase code cell');
-                return;
-            }
-            if (cell.metadata.kbase.type !== 'method') {
-                console.log('not a kbase method cell, ignoring');
-                return;
-            }
-
-            extendCell(cell);
-
-            MethodCellController.addCell(cell);
-
-            // The kbase property is only used for managing runtime state of the cell
-            // for kbase. Anything to be persistent should be on the metadata.
-            cell.kbase = {
-            };
-
-            // Cell metadata is always accessed directly on the metadata object of the cell.
-            //if (!cell.metadata.kbase) {
-            //    createMeta({
-            //        attributes: {
-            //            status: 'new',
-            //            created: (new Date()).toUTCString()
-            //        }
-            //    });
-            // }
-
-            /*
-             * Code input area sync.
-             * Defaults to hidden, but we need to reflect the state of the
-             * metadata settings.
-             */
-            initCodeInputArea(cell);
-
-            showCodeInputArea(cell);
-
-            // Update metadata.
-            utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
-
-            var cellBus = Bus.make(),
-                methodId = utils.getMeta(cell, 'methodCell', 'method').id,
-                methodTag = utils.getMeta(cell, 'methodCell', 'method').tag,
-                inputWidget = CodeCellInputWidget.make({
-                    bus: cellBus,
-                    cell: cell,
-                    runtime: runtime,
-                    workspaceInfo: workspaceInfo
-                }),
-                kbaseNode = document.createElement('div');
-
-            // Create (above) and place the main container for the input cell.
-            cell.input.after($(kbaseNode));
-            cell.kbase.node = kbaseNode;
-            cell.kbase.$node = $(kbaseNode);
-
-            // set up events.
-
-//            cellBus.on('submitted', function (message) {
-//                // Save the document. We need to ensure that the 
-//                runPython(cell);
-//            });
-
-//            cellBus.on('parameters-invalid', function (message) {
-//                resetPython(cell);
-//                cellBus.send({
-//                    type: 'newstate',
-//                    state: {
-//                        edit: 'editing',
-//                        params: 'incomplete',
-//                        code: 'incomplete-params',
-//                        request: null,
-//                        result: null
-//                    }
-//                });
-//                showStatus(cell);
-//            });
-//            cellBus.on('parameters-validated', function (message) {
-//                buildPython(cell);
-//                cellBus.send({
-//                    type: 'newstate',
-//                    state: {
-//                        edit: 'editing',
-//                        params: 'ok',
-//                        code: 'built',
-//                        request: null,
-//                        result: null
-//                    }
-//                });
-//                setStatus(cell, 'runnable');
-//                showStatus(cell);
-//            });
-//            cellBus.on('status', function (message) {
-//                setStatus(cell, message.status);
-//            });
-
-
-            /*
-             * This looks simple, but follow code cell input widget, field widget,
-             * and ultimately the input widget called for by the paramater
-             * spec for details...
-             */
-            /*
-             * Insert the kbase widget dom node
-             * Essentially this is a "row" of the cell. The code cell, in its natural
-             * state, has an input and output area, named "input" and "output_wrapper"
-             * The practice established by the ipywidget extension is that an extension
-             * may place another element in the code cell. There doesn't seem to be
-             * any documentation for standards -- ipywidgets just places theirs after
-             * the input. We just do the same, although there should be a protocol
-             * for ordering, compatability. Perhaps if we set the code cell subtype,
-             * we can assume that no-other type of extension operates on this cell
-             * (TODO: see if there is something already in place, I don't think so.)
-             *
-             */
-            return inputWidget.init()
-                .then(function () {
-                    return inputWidget.attach(kbaseNode);
-                })
-                .then(function () {
-                    return inputWidget.start();
-                })
-                .then(function () {
-                    return inputWidget.run({
-                        methodId: methodId,
-                        methodTag: methodTag,
-                        authToken: runtime.authToken()
-                    });
-                })
-                .then(function () {
-                    showNotifications(cell);
-                
-                    MethodCellController.start();
-
-                    /*
-                     * Cell events
-                     * runstatus - events from the method running manager
-                     * NB need to listen on the main bus, because the cell (so far)
-                     * talks through the module instance, which itself has a
-                     * global instance of the mainbus
-                     */
-//                    MethodCellController.bus.listen({
-//                        test: function (message) {
-//                            return (message.type === 'runstatus');
-//                        },
-//                        handle: function (message) {
-//                            updateRunStatus(cell, message);
-//                            // console.log('RUNSTATUS', message);
-//                        }
-//                    });
-//                    mainBus.listen({
-//                        test: function (message) {
-//                            return (message.id === 'submitted');
-//                        },
-//                        handle: function (message) {
-//                            // Very simple, since the cell will already have
-//                            // been updated by any input cell changes.
-//                            updatePython(cell);
-//                        }
-//                    });
                 });
         });
     }
@@ -785,7 +736,7 @@ define([
 
         // TODO: get the kbase specific info out of the notebook, specifically
         // the workspace name, ...
-        
+
         setupWorkspace(runtime.config('services.workspace.url'))
             .then(function (wsInfo) {
                 workspaceInfo = serviceUtils.workspaceInfoToObject(wsInfo);
@@ -796,13 +747,13 @@ define([
             })
             .then(function () {
                 // set up event hooks
-            
+
                 // Primary hook for new cell creation.
                 // If the cell has been set with the metadata key kbase.type === 'method'
                 // we have a method cell.
                 $([Jupyter.events]).on('inserted.Cell', function (event, data) {
                     if (data.kbase && data.kbase.type === 'method') {
-                        createCell(data.cell, data.kbase.methodSpec, data.kbase.methodTag)
+                        upgradeToMethodCell(data.cell, data.kbase.methodSpec, data.kbase.methodTag)
                             .then(function () {
                                 console.log('Cell created?');
                             })
@@ -826,9 +777,21 @@ define([
     }
     init();
 
+    var clock = Clock.make({
+        bus: runtime.bus(),
+        resolution: 1000
+    });
+    clock.start();
+    // there is not a service/component lifecycle for the narrative is there? 
+    // so the clock starts, and is never stopped.
+
+//    runtime.bus().on('clock-tick', function (message) {
+//       console.log('TICK', message); 
+//    });
+
     return {
         // This is the sole ipython/jupyter api call
         load_ipython_extension: load_ipython_extension
-        // These are kbase api calls
+            // These are kbase api calls
     };
 });

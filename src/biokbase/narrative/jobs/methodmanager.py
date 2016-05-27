@@ -109,7 +109,21 @@ class MethodManager(object):
         """
         return self.spec_manager.list_available_methods(tag)
     
-    def run_method(self, method_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
+    def run_method(self, *args, **kwargs):
+        #print args
+        #print kwargs
+        try:
+            self.run_method_internal(*args, **kwargs)
+        except Exception, e:
+            self._send_comm_message('run_status', {
+                'event': 'error',
+                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+                'cell_id': kwargs['cell_id'],
+                'run_id': kwargs['run_id'],
+                'error_message': str(e)
+            })
+    
+    def run_method_internal(self, method_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
         Attemps to run the method, returns a Job with the running method info.
         Should *hopefully* also inject that method into the Narrative's metadata.
@@ -134,6 +148,7 @@ class MethodManager(object):
         
         self._send_comm_message('run_status', {
             'event': 'validating_method',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
             'cell_id': cell_id,
             'run_id': run_id
         });
@@ -202,6 +217,7 @@ class MethodManager(object):
                 
         self._send_comm_message('run_status', {
             'event': 'validated_method',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',            
             'cell_id': cell_id,
             'run_id': run_id
         });
@@ -247,6 +263,7 @@ class MethodManager(object):
         
         self._send_comm_message('run_status', {        
             'event': 'launching_job',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',            
             'cell_id': cell_id,
             'run_id': run_id
         });
@@ -262,6 +279,7 @@ class MethodManager(object):
         
         self._send_comm_message('run_status', {              
             'event': 'launched_job',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',                        
             'cell_id': cell_id,
             'run_id': run_id,
             'job_id': app_state['job_id']

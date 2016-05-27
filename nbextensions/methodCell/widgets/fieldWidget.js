@@ -13,8 +13,9 @@ define([
     'bluebird',
     'jquery',
     'kb_common/html',
-    '../events'
-], function (Promise, $, html, Events) {
+    '../events',
+    '../dom'
+], function (Promise, $, html, Events, Dom) {
     'use strict';
     var t = html.tag,
         div = t('div'), span = t('span'), label = t('label'), button = t('button'),
@@ -34,20 +35,23 @@ define([
 
 
     function factory(config) {
-        var places, container,
+        var dom,
+            bus = config.bus,
+            places, container,
             inputControlFactory = config.inputControlFactory,
             inputControl = inputControlFactory.make({
                 bus: config.bus,
                 initialValue: config.initialValue,
                 parameterSpec: config.parameterSpec,
                 workspaceInfo: config.workspaceInfo,
-                workspaceId: config.workspaceId
+                workspaceId: config.workspaceId,
+                fieldSpec: config.fieldSpec
             }),
             options = {},
             fieldId = html.genId(),
             bus = config.bus,
             spec = config.parameterSpec;
-        
+
         // options.isOutputName = spec.text_options && spec.text_options.is_output_name;
         options.enabled = true;
         options.classes = classSets.standard;
@@ -120,6 +124,13 @@ define([
                         tr([th('Min'), td(spec.spec.text_options.min_float)]),
                         tr([th('Max'), td(spec.spec.text_options.max_float)])
                     ];
+                    break;
+                case 'int':
+                    return [
+                        tr([th('Min'), td(spec.spec.text_options.min_int)]),
+                        tr([th('Max'), td(spec.spec.text_options.max_int)])
+                    ];
+                    break;
             }
         }
         function parameterInfoRules(spec) {
@@ -147,6 +158,43 @@ define([
                     }
                 }())
             ].concat(parameterInfoTypeRules(spec)));
+        }
+
+        function parameterInfoLittleTip(spec) {
+            var mult = (spec.multipleItems() ? '[]' : ''),
+                type = spec.dataType();
+            return mult + type;
+        }
+
+        function renderInfoTip() {
+            var infoTipText;
+            if (spec.description() && spec.hint() !== spec.description()) {
+                infoTipText = spec.description();
+            } else {
+                infoTipText = spec.hint() || spec.description();
+            }
+
+            return div([
+                div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
+                div({dataElement: 'big-tip', style: {display: 'none'}}, html.makeTabs({
+                    tabs: [
+                        {
+                            label: 'Description',
+                            name: 'description',
+                            content: infoTipText
+                        },
+                        {
+                            label: 'About',
+                            name: 'about',
+                            content: parameterInfoContent(spec)
+                        },
+                        {
+                            label: 'Rules',
+                            name: 'rules',
+                            content: parameterInfoRules(spec)
+                        }
+                    ]}))
+            ]);
         }
 
         function render(events) {
@@ -185,12 +233,7 @@ define([
 //            }, spec.label());
 
             // HINT (help)
-            var infoTipText;
-            if (spec.description() && spec.hint() !== spec.description()) {
-                infoTipText = spec.description();
-            } else {
-                infoTipText = spec.hint() || spec.description();
-            }
+
 
             var infoId = html.genId();
 
@@ -219,11 +262,18 @@ define([
                                     id: events.addEvent({
                                         type: 'click',
                                         handler: function (e) {
-                                            var info = document.getElementById(infoId);
-                                            if (info.style.display === 'block') {
-                                                info.style.display = 'none';
+                                            var info = document.getElementById(infoId),
+                                                littleTip = info.querySelector('[data-element="little-tip"]'),
+                                                bigTip = info.querySelector('[data-element="big-tip"]');
+                                            // the info button is used to switch between two different 
+                                            // displays -- a compact display of type and a 
+                                            // tabview with richer info to explore.
+                                            if (littleTip.style.display === 'none') {
+                                                bigTip.style.display = 'none';
+                                                littleTip.style.display = 'block';
                                             } else {
-                                                info.style.display = 'block';
+                                                bigTip.style.display = 'block';
+                                                littleTip.style.display = 'none';
                                             }
                                         }
                                     })
@@ -233,24 +283,9 @@ define([
                             ])
                         ])
                     ])),
-                    div({class: 'col-md-5'}, div({id: infoId, style: {display: 'none'}}, html.makeTabs({
-                        tabs: [
-                            {
-                                label: 'Description',
-                                name: 'description',
-                                content: infoTipText
-                            },
-                            {
-                                label: 'About',
-                                name: 'about',
-                                content: parameterInfoContent(spec)
-                            },
-                            {
-                                label: 'Rules',
-                                name: 'rules',
-                                content: parameterInfoRules(spec)
-                            }
-                        ]})))
+                    div({class: 'col-md-5'}, div({id: infoId}, [
+                        renderInfoTip()
+                    ]))
 
                 ]),
                 div({class: 'form-group', dataElement: 'error-panel', style: {display: 'none'}}, [
@@ -268,67 +303,62 @@ define([
 
         // LIFECYCLE
 
-//        function init() {
-//            // A bit more friendly and normalized properties of the parameter spec.
-//            // options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-//            // options.classes g= classSets[options.environment];
-//            options.multiple = spec.multiple();
-//            options.required = spec.required();
-//            // options.isOutputName = spec.text_options && spec.text_options.is_output_name;
-//            options.enabled = true;
-//            // return inputControl.init();
-//        }
-
         function attach(node) {
-            var events = Events.make(),
-                $container;
-            container = node;
-            container.innerHTML = render(events);
-            events.attachEvents(container);
+            return Promise.try(function () {
+                var events = Events.make(),
+                    $container;
+                container = node;
+                container.innerHTML = render(events);
+                events.attachEvents(container);
+                dom = Dom.make({node: container});
 
-            // create the "places" shortcuts.
-            $container = $(container);
-            places = {
-                $field: $container.find('#' + fieldId),
-                $fieldPanel: $container.find('[data-element="field-panel"]'),
-                $input: $container.find('[data-element="input"]'),
-                $error: $container.find('[data-element="error-message"]'),
-                $errorPanel: $container.find('[data-element="error-panel"]'),
-                $feedback: $container.find('[data-element="feedback"]'),
-                $removalButton: $container.find('[data-element="removal-button"]')
-            };
-            return inputControl.attach($container.find('[data-element="input-control"]').get(0));
+                // create the "places" shortcuts.
+                $container = $(container);
+                places = {
+                    $field: $container.find('#' + fieldId),
+                    $fieldPanel: $container.find('[data-element="field-panel"]'),
+                    $input: $container.find('[data-element="input"]'),
+                    $error: $container.find('[data-element="error-message"]'),
+                    $errorPanel: $container.find('[data-element="error-panel"]'),
+                    $feedback: $container.find('[data-element="feedback"]'),
+                    $removalButton: $container.find('[data-element="removal-button"]')
+                };
+                if (inputControl.attach) {
+                    return inputControl.attach($container.find('[data-element="input-control"]').get(0));
+                }
+            });
         }
 
         function start() {
             return Promise.try(function () {
-                bus.listen({
-                    test: function (message) {
-                        return (message.type === 'validation');
-                    },
-                    handle: function (message) {
-                        switch (message.diagnosis) {
-                            case 'valid':
-                                feedbackOk();
-                                clearError();
-                                break;
-                            case 'required-missing':
-                                feedbackRequired();
-                                // setError(message.errorMessage, spec.label());
-                                clearError();
-                                break;
-                            case 'invalid':
-                                feedbackError();
-                                setError(message.errorMessage, spec.label());
-                                break;
-                            case 'optional-empty':
-                                feedbackNone();
-                                clearError();
-                                break;
-                        }
+                bus.on('validation', function (message) {
+                    switch (message.diagnosis) {
+                        case 'valid':
+                            feedbackOk();
+                            clearError();
+                            break;
+                        case 'required-missing':
+                            feedbackRequired();
+                            // setError(message.errorMessage, spec.label());
+                            clearError();
+                            break;
+                        case 'invalid':
+                            feedbackError();
+                            setError(message.errorMessage, spec.label());
+                            break;
+                        case 'optional-empty':
+                            feedbackNone();
+                            clearError();
+                            break;
                     }
                 });
                 if (inputControl.start) {
+                    inputControl.start()
+                        .then(function () {
+                            bus.send('run', {
+                                node: dom.getElement('input-control')
+                            });
+                        });
                     return inputControl.start();
                 }
             });

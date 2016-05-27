@@ -166,7 +166,7 @@ define([
                     }
                     break;
                 default:
-                    throw new Error('Unsupported parameter type ' + (typeof pVal));
+                    throw new Error('Unsupported parameter type ' + (typeof pVal) + ' for param ' + pName);
             }
             kwargs.push(arg);
         });

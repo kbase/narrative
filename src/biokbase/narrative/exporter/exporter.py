@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 """
 Narrative exporter
 """
@@ -22,14 +24,15 @@ class NarrativeExporter():
         self.html_exporter = HTMLExporter(config=c)
         self.html_exporter.template_file = 'narrative'
         self.ws_client = Workspace(URLS.workspace)
+        self.narr_fetcher = NarrativeIO()
 
     def _narrative_template_path(self):
         return os.path.join(os.environ.get('NARRATIVE_DIR', '.'), 'src', 'biokbase', 'narrative', 'exporter', 'templates')
 
     def export_narrative(self, narrative_ref, output_file):
-        narr_fetcher = NarrativeIO()
+        nar = self.narr_fetcher.read_narrative(narrative_ref)
 
-        nar = narr_fetcher.read_narrative(narrative_ref)['data']
+        nar = nar['data']
 
         # # 1. Get the narrative object
         # # (put in try/except)

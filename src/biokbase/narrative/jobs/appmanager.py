@@ -1,5 +1,5 @@
 """
-A module for managing methods, specs, requirements, and for starting jobs.
+A module for managing apps, specs, requirements, and for starting jobs.
 """
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
@@ -9,8 +9,8 @@ from .jobmanager import JobManager
 from .specmanager import SpecManager
 import os
 import biokbase.auth
-from .method_util import (
-    method_version_tags,
+from .app_util import (
+    app_version_tags,
     check_tag,
     system_variable
 )
@@ -22,21 +22,20 @@ from biokbase.narrative.common import kblogging
 import logging
 from ipykernel.comm import Comm
 
-
-class MethodManager(object):
+class AppManager(object):
     """
-    The main class for managing how KBase methods get run. This contains functions
-    for showing method descriptions, their usage (how to invoke various parameters),
-    and, ultimately, for running the method.
+    The main class for managing how KBase apps get run. This contains functions
+    for showing app descriptions, their usage (how to invoke various parameters),
+    and, ultimately, for running the app.
 
     A typical flow might be like this.
-    mm = MethodManager()
-    mm.list_available_methods()
-        # show the set of methods with a brief description of each.
-    mm.method_usage(method_id)
-        # show how to use a method and set its parameters.
-    job = mm.run_method(method_id, input1=value1, input2=value2, ...)
-        # run a method with given inputs.
+    am = AppManager()
+    am.available_apps()
+        # show the set of apps with a brief description of each.
+    am.app_usage(app_id)ß
+        # show how to use a app and set its parameters.
+    job = am.run_app(app_id, input1=value1, input2=value2, ...)
+        # run an app with given inputs.
     """
     __instance = None
 
@@ -46,74 +45,75 @@ class MethodManager(object):
     spec_manager = SpecManager()
     _log = kblogging.get_logger(__name__)
     _log.setLevel(logging.INFO)
-    _comm_channel = None
+    _comm = None
 
 
     def __new__(cls):
-        if MethodManager.__instance is None:
-            MethodManager.__instance = object.__new__(cls)
-        return MethodManager.__instance
+        if AppManager.__instance is None:
+            AppManager.__instance = object.__new__(cls)
+            AppManager.__instance._comm = None
+        return AppManager.__instance
 
-    def reload_methods(self):
+    def reload(self):
         """
-        Reloads all method specs into memory from the Narrative Method Store.
-        Any outputs of method_usage, method_description, or list_available_methods
+        Reloads all app specs into memory from the App Catalog.
+        Any outputs of app_usage, app_description, or available_apps
         should be run again after the update.
         """
-        self.spec_manager.reload_methods()
+        self.spec_manager.reload()
 
-    def method_usage(self, method_id, tag='release'):
+    def app_usage(self, app_id, tag='release'):
         """
-        This shows the list of inputs and outputs for a given method with a given
-        tag. By default, this is done in a pretty HTML way, but this method can be wrapped
+        This shows the list of inputs and outputs for a given app with a given
+        tag. By default, this is done in a pretty HTML way, but this app can be wrapped
         in str() to show a bare formatted string.
 
-        If either the method_id is unknown, or isn't found with the given release tag,
+        If either the app_id is unknown, or isn't found with the given release tag,
         or if the tag is unknown, a ValueError will be raised.
 
         Parameters:
         -----------
-        method_id : string
-            A KBase method id, generally of the format Module_name/method_name
-            (see list_available_methods for a list)
-        tag : Which version of the method to view - either release, beta, or dev (default=release)
+        app_id : string
+            A KBase app id, generally of the format Module_name/app_name
+            (see available_apps for a list)
+        tag : Which version of the app to view - either release, beta, or dev (default=release)
         """
-        return self.spec_manager.method_usage(method_id, tag)
+        return self.spec_manager.app_usage(app_id, tag)
 
 
-    def method_description(self, method_id, tag='release'):
+    def app_description(self, app_id, tag='release'):
         """
-        Returns the method description in a printable HTML format.
+        Returns the app description in a printable HTML format.
 
-        If either the method_id is unknown, or isn't found with the given release tag,
+        If either the app_id is unknown, or isn't found with the given release tag,
         or if the tag is unknown, a ValueError will be raised.
 
         Parameters:
         -----------
-        method_id : string
-            A KBase method id, generally of the format Module_name/method_name
-            (see list_available_methods for a list)
-        tag : Which version of the method to view - either release, beta, or dev (default=release)
+        app_id : string
+            A KBase app id, generally of the format Module_name/app_name
+            (see available_apps for a list)
+        tag : Which version of the app to view - either release, beta, or dev (default=release)
         """
-        return self.spec_manager.method_description(method_id, tag)
+        return self.spec_manager.app_description(app_id, tag)
 
-    def list_available_methods(self, tag="release"):
+    def available_apps(self, tag="release"):
         """
-        Lists the set of available methods for a given tag in a simple table.
+        Lists the set of available apps for a given tag in a simple table.
         If the tag is not found, a ValueError will be raised.
 
         Parameters:
         -----------
-        tag : Which version of the list of methods to view - either release, beta, or dev (default=release)
+        tag : Which version of the list of apps to view - either release, beta, or dev (default=release)
 
         """
-        return self.spec_manager.list_available_methods(tag)
+        return self.spec_manager.available_apps(tag)
     
-    def run_method(self, *args, **kwargs):
-        #print args
-        #print kwargs
+    
+    
+    def run_app(self, *args, **kwargs):
         try:
-            self.run_method_internal(*args, **kwargs)
+            self.run_app_internal(*args, **kwargs)
         except Exception, e:
             self._send_comm_message('run_status', {
                 'event': 'error',
@@ -123,51 +123,51 @@ class MethodManager(object):
                 'error_message': str(e)
             })
     
-    def run_method_internal(self, method_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
+    def run_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
-        Attemps to run the method, returns a Job with the running method info.
-        Should *hopefully* also inject that method into the Narrative's metadata.
+        Attemps to run the app, returns a Job with the running app info.
+        Should *hopefully* also inject that app into the Narrative's metadata.
         Probably need some kind of JavaScript-foo to get that to work.
 
         Parameters:
         -----------
-        method_id - should be from the method spec, e.g. 'build_a_metabolic_model'
+        app_id - should be from the app spec, e.g. 'build_a_metabolic_model'
                     or 'MegaHit/run_megahit'.
         tag - optional, one of [release|beta|dev] (default=release)
         version - optional, a semantic version string. Only released modules have
                   versions, so if the tag is not 'release', and a version is given,
                   a ValueError will be raised.
-        **kwargs - these are the set of parameters to be used with the method.
-                   They can be found by using the method_usage function. If any
-                   non-optional methods are missing, a ValueError will be raised.
+        **kwargs - these are the set of parameters to be used with the app.
+                   They can be found by using the app_usage function. If any
+                   non-optional apps are missing, a ValueError will be raised.
 
         Example:
         --------
-        my_job = mm.run_method('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
+        my_job = mm.run_app('MegaHit/run_megahit', version=">=1.0.0", read_library_name="My_PE_Library", output_contigset_name="My_Contig_Assembly")
         """
-        
+
         self._send_comm_message('run_status', {
-            'event': 'validating_method',
+            'event': 'validating_app',
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
             'cell_id': cell_id,
             'run_id': run_id
-        });
-        
+        })
+
         ### TODO: this needs restructuring so that we can send back validation failure
         ### messages. Perhaps a separate function and catch the errors, or return an
         ### error structure.
 
         # Intro tests:
-        self.spec_manager.check_method(method_id, tag, raise_exception=True)
+        self.spec_manager.check_app(app_id, tag, raise_exception=True)
 
         if version is not None and tag != "release":
-            raise ValueError("Method versions only apply to released method modules!")
+            raise ValueError("App versions only apply to released app modules!")
 
         # Get the spec & params
-        spec = self.spec_manager.get_method_spec(method_id, tag)
+        spec = self.spec_manager.get_spec(app_id, tag)
         if not 'behavior' in spec or not 'kb_service_input_mapping' in spec['behavior']:
-            raise Exception("Only good for SDK-made methods!")
-        spec_params = self.spec_manager.method_params(spec)
+            raise Exception("Only good for SDK-made apps!")
+        spec_params = self.spec_manager.app_params(spec)
 
 
         # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
@@ -179,7 +179,7 @@ class MethodManager(object):
             if not p['optional'] and not p['default'] and not kwargs.get(p['id'], None):
                 missing_params.append(p['id'])
         if len(missing_params):
-            raise ValueError('Missing required parameters {} - try executing method_usage("{}", tag="{}") for more information'.format(json.dumps(missing_params), method_id, tag))
+            raise ValueError('Missing required parameters {} - try executing app_usage("{}", tag="{}") for more information'.format(json.dumps(missing_params), app_id, tag))
 
         # Next, test for extra params that don't make sense
         extra_params = list()
@@ -187,7 +187,7 @@ class MethodManager(object):
             if p not in spec_param_ids:
                 extra_params.append(p)
         if len(extra_params):
-            raise ValueError('Unknown parameters {} - maybe something was misspelled?\nexecute method_usage("{}", tag="{}") for more information'.format(json.dumps(extra_params), method_id, tag))
+            raise ValueError('Unknown parameters {} - maybe something was misspelled?\nexecute app_usage("{}", tag="{}") for more information'.format(json.dumps(extra_params), app_id, tag))
 
         # Now, validate parameter values.
         # Should also check if input (NOT OUTPUT) object variables are present in the current workspace
@@ -213,15 +213,15 @@ class MethodManager(object):
             # While we're at it, set the default values for any unset parameters that have them
             if p['default'] and p['id'] not in params:
                 params[p['id']] = p['default']
-                
-                
+
+
         self._send_comm_message('run_status', {
-            'event': 'validated_method',
+            'event': 'validated_app',
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z',            
             'cell_id': cell_id,
             'run_id': run_id
-        });
-                
+        })
+
 
         # Okay, NOW we can start the show
         input_vals = dict()
@@ -234,62 +234,68 @@ class MethodManager(object):
                 p_value = system_variable(param['narrative_system_variable'])
             input_vals[p_id] = p_value
 
-        method_name = spec['behavior']['kb_service_method']
+        app_name = spec['behavior']['kb_service_method']
         service_name = spec['behavior']['kb_service_name']
         service_ver = spec['behavior'].get('kb_service_version', None)
         service_url = spec['behavior']['kb_service_url']
         # 3. set up app structure
-        app = {'name': 'App wrapper for method ' + method_id,
-               'steps': [{'input_values': [input_vals],
-                          'is_long_running': 1,
-                          'method_spec_id': method_id,
-                          'script': {'has_files': 0, 'method_name': '', 'service_name': ''},
-                          'service': {'method_name': method_name,
-                                      'service_name': service_name,
-                                      'service_url': service_url,
-                                      'service_version': service_ver},
-                          'step_id': method_id,
-                          'type': 'service'}]}
+        # app = {'name': 'App wrapper for method ' + app_id,
+        #        'steps': [{'input_values': [input_vals],
+        #                   'is_long_running': 1,
+        #                   'method_spec_id': app_id,
+        #                   'script': {'has_files': 0, 'method_name': '', 'service_name': ''},
+        #                   'service': {'method_name': method_name,
+        #                               'service_name': service_name,
+        #                               'service_url': service_url,
+        #                               'service_version': service_ver},
+        #                   'step_id': app_id,
+        #                   'type': 'service'}]}
 
+        app_id_dot = app_id.replace('/', '.')
+        job_runner_inputs = {
+            'method' : app_id_dot,
+            'service_ver' : service_ver,
+            'params' : [input_vals]
+        }
 
         log_info = {
-            'method_id': method_id,
+            'app_id': app_id,
             'tag': tag,
             'version': service_ver,
             'username': system_variable('user_id')
         }
         self._log.setLevel(logging.INFO)
-        kblogging.log_event(self._log, "run_method", log_info)
-        
-        self._send_comm_message('run_status', {        
+        kblogging.log_event(self._log, "run_app", log_info)
+
+        self._send_comm_message('run_status', {
             'event': 'launching_job',
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z',            
             'cell_id': cell_id,
             'run_id': run_id
-        });
-
+        })
 
         try:
-            app_state = self.njs.run_app(app)
+            job_id = self.njs.run_job(job_runner_inputs)
         except Exception, e:
             log_info.update({'err': str(e)})
             self._log.setLevel(logging.ERROR)
-            kblogging.log_event(_kblog, "run_method", log_info)
+            kblogging.log_event(_kblog, "run_app", log_info)
             raise
-        
-        self._send_comm_message('run_status', {              
+
+        self._send_comm_message('run_status', {
             'event': 'launched_job',
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z',                        
             'cell_id': cell_id,
             'run_id': run_id,
-            'job_id': app_state['job_id']
-        });
+            'job_id': job_id
+        })
 
 
-        new_job = Job(app_state['job_id'], method_id, params, tag=tag, method_version=service_ver, cell_id=cell_id)
+        # new_job = Job(app_state['job_id'], app_id, params, tag=tag, app_version=service_ver, cell_id=cell_id)
+        new_job = Job(job_id, app_id, params, tag=tag, app_version=service_ver, cell_id=cell_id)
         JobManager().register_new_job(new_job)
         # jobmanager.get_manager().register_new_job(new_job)
-        return new_job    
+        return new_job
 
     def _check_parameter(self, param, value, workspace):
         """
@@ -303,7 +309,7 @@ class MethodManager(object):
         Parameters:
         -----------
         param : dict
-            A dict representing a single KBase Method parameter, generated by the Spec Manager
+            A dict representing a single KBase App parameter, generated by the Spec Manager
         value : any
             A value input by the user
         workspace : string
@@ -330,7 +336,7 @@ class MethodManager(object):
         Parameters:
         -----------
         param : dict
-            A dict representing a single KBase Method parameter, generated by the Spec Manager.
+            A dict representing a single KBase App parameter, generated by the Spec Manager.
             This contains the rules for processing any given values.
         value : any
             A value input by the user - likely either None, int, float, string, or list
@@ -367,7 +373,7 @@ class MethodManager(object):
                 if not type_ok:
                     return 'Type of data object, {}, does not match allowed types'.format(info[2])
             except Exception as e:
-                return 'Data object named {} not found with this Narrative. (additional info: {})'.format(value, e)
+                return 'Data object named {} not found with this Narrative.'
 
         # if it expects a set of allowed values, check if this one matches
         if 'allowed_values' in param:
@@ -406,14 +412,16 @@ class MethodManager(object):
 
         # Whew. Passed all filters!
         return None
-    
+
+    def _handle_comm_message(self, msg):
+        pass
+
     def _send_comm_message(self, msg_type, content):
         msg = {
             'msg_type': msg_type,
             'content': content
         }
-        if not self._comm_channel:
-            self._comm_channel = Comm(target_name='KBaseJobs', data={})
-        self._comm_channel.open()
-        self._comm_channel.send(msg)
-        self._comm_channel.close()
+        if self._comm is None:
+            self._comm = Comm(target_name='KBaseJobs', data={})
+            self._comm.on_msg(self._handle_comm_message)
+        self._comm.send(msg)

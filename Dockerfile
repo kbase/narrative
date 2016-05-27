@@ -11,10 +11,13 @@
 # Made available under the KBase Open Source License
 #
 
-FROM kbase/narrbase:4.3
+FROM kbase/narrbase:4.4
 MAINTAINER Bill Riehl wjriehl@lbl.gov
 
 EXPOSE 8888
+
+# Remove Debian's older Tornado package
+RUN DEBIAN_FRONTEND=noninteractive apt-get remove -y python-tornado
 
 # Copy in the narrative repo
 ADD ./ /kb/dev_container/narrative

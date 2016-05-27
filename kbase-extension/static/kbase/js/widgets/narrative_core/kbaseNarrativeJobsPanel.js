@@ -1,30 +1,32 @@
 /*global define*/
 /*jslint white: true*/
 define ([
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'kbasePrompt',
-		'kbaseNarrativeControlPanel',
-		'util/bootstrapDialog',
-		'util/timeFormat',
-		'util/string',
-                'base/js/namespace',
-                'nbextensions/methodCell/runtime'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		kbasePrompt,
-		kbaseNarrativeControlPanel,
-		BootstrapDialog,
-        TimeFormat,
-        StringUtil,
-        Jupyter,
-        Runtime
-	) {
+    'kbwidget',
+    'bootstrap',
+    'jquery',
+    'narrativeConfig',
+    'kbasePrompt',
+    'kbaseNarrativeControlPanel',
+    'util/bootstrapDialog',
+    'util/timeFormat',
+    'util/string',
+    'base/js/namespace',
+    'nbextensions/methodCell/runtime',
+    'services/kernels/comm'
+], function(
+    KBWidget,
+    bootstrap,
+    $,
+    Config,
+    kbasePrompt,
+    kbaseNarrativeControlPanel,
+    BootstrapDialog,
+    TimeFormat,
+    StringUtil,
+    Jupyter,
+    Runtime,
+    JupyterComm
+) {
     'use strict';
     return KBWidget({
         name: 'kbaseNarrativeJobsPanel',
@@ -62,8 +64,15 @@ define ([
 
         refreshTimer: null,
         refreshInterval: 10000,
+        comm: null,
 
-        completedStatus: [ 'completed', 'done', 'deleted', 'suspend', 'not_found_error', 'unauthorized_error', 'awe_error' ],
+        completedStatus: [ 'completed',
+                           'done',
+                           'deleted',
+                           'suspend',
+                           'not_found_error',
+                           'unauthorized_error',
+                           'awe_error' ],
 
         init: function(options) {
             this._super(options);
@@ -118,10 +127,6 @@ define ([
 
             var $refreshBtn = $('<button>')
                               .addClass('btn btn-xs btn-default')
-                              .click($.proxy(function(event) {
-                                  $refreshBtn.tooltip('hide');
-                                  this.refresh();
-                              }, this))
                               .append($('<span>')
                                       .addClass('glyphicon glyphicon-refresh'))
                               .tooltip({
@@ -131,17 +136,15 @@ define ([
                                         show: Config.get('tooltip').showDelay,
                                         hide: Config.get('tooltip').hideDelay
                                     }
-                              });
-
-            var $headerDiv = $('<div>')
-                              .append('Jobs')
-                              .append($('<button>')
-                                      .addClass('btn btn-xs btn-default kb-ws-refresh-btn')
-                                      .css({'margin-top': '-4px',
-                                            'margin-right': '4px'})
-                                      .click($.proxy(function(event) { this.refresh(); }, this))
-                                      .append($('<span>')
-                                              .addClass('glyphicon glyphicon-refresh')));
+                              })
+                              .click(function(event) {
+                                  $refreshBtn.tooltip('hide');
+                                  console.log('sending refresh signal');
+                                  if (this.comm) {
+                                      this.comm.send({target_name: 'KBaseJobs',
+                                                      request_type: 'refresh_all'});
+                                  }
+                              }.bind(this));
 
             this.$methodsList = $('<div>');
             this.$appsList = $('<div>');
@@ -209,7 +212,7 @@ define ([
 
             return this;
         },
-        
+
         updateCellRunStatus: function (msg) {
             var runtime = Runtime.make();
             // The global runtime bus is a catch all for proving messaging semantics across otherwise unconnected apps.
@@ -228,13 +231,9 @@ define ([
             var msgType = msg.content.data.msg_type;
             switch (msgType) {
                 case 'new_job':
-                    console.log("Adding new job info:");
                     this.registerKernelJob(msg.content.data.content);
                     break;
                 case 'job_status':
-                    //console.log("updating job status with following info:");
-                    //console.log(msg.content.data.content);
-                    // kind silly, but yet again, it's late on Friday and I want to go home.
                     var status = {},
                         info = {},
                         content = msg.content.data.content;
@@ -261,20 +260,39 @@ define ([
         },
 
         initCommChannel: function() {
-            this.commManager = Jupyter.notebook.kernel.comm_manager;
-
             // init the listener channel.
-            console.info('Registering Job channel with kernel.');
-            Jupyter.notebook.kernel.comm_manager.register_target('KBaseJobs', function(comm, msg) {
-                comm.on_msg(this.handleCommMessages.bind(this));
+            // console.info('Registering Job channel with kernel.');
+            // console.info('Checking for existing channel?');
+
+            this.comm = null;
+
+            Jupyter.notebook.kernel.comm_info('KBaseJobs', function(msg) {
+                // console.info(msg);
+                if (msg.content && msg.content.comms) {
+                    // console.info('Found an existing channel!');
+                    // console.info(msg);
+                    // skim the reply for the right id
+                    for (var id in msg.content.comms) {
+                        if (msg.content.comms[id].target_name === 'KBaseJobs') {
+                            this.comm = new JupyterComm.Comm('KBaseJobs', id);
+                            Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
+                            this.comm.on_msg(this.handleCommMessages.bind(this));
+                        }
+                    }
+                }
+                if (this.comm === null) {
+                    Jupyter.notebook.kernel.comm_manager.register_target('KBaseJobs', function(comm, msg) {
+                        this.comm = comm;
+                        comm.on_msg(this.handleCommMessages.bind(this));
+                    }.bind(this));
+                }
+                // init the backend with existing jobs.
+                if (this.jobStates === null)
+                    this.initJobStates();
+
+                var code = this.getJobInitCode();
+                Jupyter.notebook.kernel.execute(code);
             }.bind(this));
-
-            // init the backend with existing jobs.
-            if (this.jobStates === null)
-                this.initJobStates();
-
-            var code = this.getJobInitCode();
-            Jupyter.notebook.kernel.execute(code);
         },
 
         getJobInitCode: function() {
@@ -308,7 +326,7 @@ define ([
                 jobTuples.push("('" + jobId + "', '" + StringUtil.safeJSONStringify(inputs) + "', '" + tag + "', '" + source + "')");
 
             }
-            return ["from biokbase.narrative.jobs.jobmanager import JobManager",
+            return ["from biokbase.narrative.jobs import JobManager",
                     "JobManager().initialize_jobs([" + jobTuples.join(',') + "])"].join('\n');
         },
 
@@ -650,14 +668,14 @@ define ([
             if (!hideLoadingMessage)
                 this.showLoadingMessage('Loading running jobs...');
 
-            
+
 
             // console.log(['REFRESH: looking up ' + jobParamList.length]);
             // console.log(['REFRESH: jobstates:', this.jobStates]);
             this.startJobPoll();
-            
+
         },
-        
+
         startJobPoll: function () {
             // This contains all the job info like this:
             // { jobId: {spec: {}, state: {}} }
@@ -708,7 +726,7 @@ define ([
                 else
                     this.jobStates[jobId].status = 'error';
             }
-            
+
             var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                   'job_manager = KBjobManager()\n' +
                                   'print job_manager.poll_jobs([' + jobParamList + '], as_json=True)\n';
@@ -929,30 +947,40 @@ define ([
                                .append(jobId));
 
             var status = "Unknown";
-            if (jobState)
-                console.log('JOBSTATE', jobState);
+            if (jobState) {
+                // console.log('JOBSTATE', jobState);
                 status = jobState.status.charAt(0).toUpperCase() +
                          jobState.status.substring(1);
+            }
             var started = "Unknown";
             var position = null;
             var task = null;
+
+            /* (Update 5/24/2016)
+             * Okay, new version of state from backend.
+             * keys:
+             * app_id, cell_id, id, inputs, state, status, tag, version
+             * app_id/tag/version = all about that app.
+             * cell_id = cell that inited it.
+             * id = job id
+             * inputs = the actual inputs to run_app
+             * state = the state from njs.check_job - this is the important part.
+             *   - creation_time, exec_start_time, finish_time = all in ms since epoch
+             *   - error (if present)
+             *       - code, message, name (message is the imp't part)
+             *   - finished = 0 or 1
+             *   - job_state = mirror of status
+             *   - position = position in job queue (if present)
+             */
 
             // Calculate run time if applicable
             var completedTime = null;
             var runTime = null;
             if (jobState.state) {
-                if (jobState.state.complete_time) {
-                    completedTime = TimeFormat.prettyTimestamp(jobState.state.complete_time);
-                    if (jobState.state.start_time) {
-                        runTime = TimeFormat.calcTimeDifference(new Date(jobState.state.start_time), new Date(jobState.state.complete_time));
-                    }
-                }
-                else if (jobState.state.ujs_info) {
-                    if (jobState.state.ujs_info[5] !== null) {
-                        completedTime = TimeFormat.prettyTimestamp(jobState.state.ujs_info[5]);
-                        if (jobState.state.ujs_info[3]) {
-                            runTime = TimeFormat.calcTimeDifference(new Date(jobState.state.ujs_info[5]), new Date(jobState.state.ujs_info[3]));
-                        }
+                if (jobState.state.finish_time) {
+                    completedTime = TimeFormat.prettyTimestamp(jobState.state.finish_time);
+                    if (jobState.state.creation_time) {
+                        runTime = TimeFormat.calcTimeDifference(new Date(jobState.state.exec_start_time), new Date(jobState.state.finish_time));
                     }
                 }
             }
@@ -966,24 +994,38 @@ define ([
              * jobstate has step_errors - then at least one step has an error, so we should show them
              * otherwise, no errors, so render their status happily.
              */
-            if (status === 'Suspend' || status === 'Error' || status === 'Unknown' || status === 'Awe_error') {
-                status = this.makeJobErrorButton(jobId, jobInfo, 'Error');
-                $jobDiv.addClass('kb-jobs-error');
+            var errorType = null;
+            switch(status) {
+                case 'Suspend':
+                    errorType = 'Error';
+                    break;
+                case 'Error':
+                    errorType = 'Error';
+                    break;
+                case 'Unknown':
+                    errorType = 'Error';
+                    break;
+                case 'Awe_error':
+                    errorType = 'Error';
+                    break;
+                case 'Deleted':
+                    errorType = 'Deleted';
+                    break;
+                case 'Not_found_error':
+                    errorType = 'Job Not Found';
+                    break;
+                case 'Unauthorized_error':
+                    errorType = 'Unauthorized';
+                    break;
+                case 'Network_error':
+                    status = this.makeJobErrorButton(jobId, jobInfo, 'Network Error');
+                    break;
+                default:
+                    break;
             }
-            else if (status === 'Deleted') {
-                status = this.makeJobErrorButton(jobId, jobInfo, 'Deleted');
+            if (errorType !== null) {
+                status = this.makeJobErrorButton(jobId, jobInfo, errorType);
                 $jobDiv.addClass('kb-jobs-error');
-            }
-            else if (status === 'Not_found_error') {
-                status = this.makeJobErrorButton(jobId, jobInfo, 'Job Not Found');
-                $jobDiv.addClass('kb-jobs-error');
-            }
-            else if (status === 'Unauthorized_error') {
-                status = this.makeJobErrorButton(jobId, jobInfo, 'Unauthorized');
-                $jobDiv.addClass('kb-jobs-error');
-            }
-            else if (status === 'Network_error') {
-                status = this.makeJobErrorButton(jobId, jobInfo, 'Network Error');
             }
             // else if (jobState.state && jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0) {
             //     var $errBtn = this.makeJobErrorButton(jobId, jobInfo);
@@ -1014,8 +1056,8 @@ define ([
             if (runTime) {
                 $infoTable.append(this.makeInfoRow('Run Time', runTime));
             }
-            if (jobState.timestamp) {
-                started = $(TimeFormat.prettyTimestamp(jobState.timestamp));
+            if (jobState.state && jobState.state.creation_time) {
+                started = $(TimeFormat.prettyTimestamp(jobState.state.creation_time));
                 started.tooltip({
                     container: 'body',
                     placement: 'right',
@@ -1072,7 +1114,7 @@ define ([
             }
             runtime.bus().send({
                 type: 'jobstatus',
-                jobId: jobId,                
+                jobId: jobId,
                 jobInfo: jobInfo,
                 job: job,
                 jobState: copyObject(jobState)

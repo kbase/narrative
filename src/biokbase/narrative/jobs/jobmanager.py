@@ -11,7 +11,6 @@ to fetch it.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 __version__ = "0.0.1"
 
-from biokbase.narrative.common.kbjob_manager import KBjobManager
 import biokbase.narrative.clients as clients
 from .job import Job
 from ipykernel.comm import Comm
@@ -35,7 +34,7 @@ class JobManager(object):
 
     running_jobs = dict()
     _lookup_timer = None
-    _comm_channel = None
+    _comm = None
     _log = kblogging.get_logger(__name__)
     _log.setLevel(logging.INFO)
 
@@ -43,6 +42,7 @@ class JobManager(object):
         if JobManager.__instance is None:
             JobManager.__instance = object.__new__(cls)
         return JobManager.__instance
+
 
     def initialize_jobs(self, job_tuples):
         """
@@ -62,19 +62,19 @@ class JobManager(object):
              version tag (string),
              cell id that started the job (string or None))
         """
-        try:
-            for job_tuple in job_tuples:
-                if job_tuple[0] not in self.running_jobs:
+        for job_tuple in job_tuples:
+            if job_tuple[0] not in self.running_jobs:
+                try:
                     self.running_jobs[job_tuple[0]] = self._get_existing_job(job_tuple)
 
-            # only keep one loop at a time in cause this gets called again!
-            if self._lookup_timer is not None:
-                self._lookup_timer.cancel()
-            self.lookup_job_status_loop()
-        except Exception, e:
-            self._log.setLevel(logging.ERROR)
-            kblogging.log_event(self._log, "init_error", {'err': str(e)})
-            self._send_comm_message('job_init_err', str(e))
+                except Exception, e:
+                    self._log.setLevel(logging.ERROR)
+                    kblogging.log_event(self._log, "init_error", {'err': str(e)})
+                    self._send_comm_message('job_init_err', str(e))
+        # only keep one loop at a time in cause this gets called again!
+        if self._lookup_timer is not None:
+            self._lookup_timer.cancel()
+        self.lookup_job_status_loop()
 
     def list_jobs(self):
         """
@@ -83,7 +83,7 @@ class JobManager(object):
         try:
             status_set = list()
             for job_id in self.running_jobs:
-                job_state = self.running_jobs[job_id].full_state()
+                job_state = self.running_jobs[job_id].state()
                 status_set.append(job_state)
             if not len(status_set):
                 return "No running jobs!"
@@ -156,8 +156,8 @@ class JobManager(object):
         # remove the prefix (if present) and take the last element in the split
         job_id = job_tuple[0].split(':')[-1]
         try:
-            job_state = clients.get('job_service').check_app_state(job_id)
-            return Job.from_state(job_state, json.loads(job_tuple[1]), tag=job_tuple[2], cell_id=job_tuple[3])
+            job_info = clients.get('job_service').get_job_params(job_id)[0]
+            return Job.from_state(job_id, job_info, tag=job_tuple[2], cell_id=job_tuple[3])
         except Exception, e:
             self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
@@ -172,15 +172,15 @@ class JobManager(object):
         'KBaseJobs' channel.
         """
         status_set = dict()
-        try:
-            for job_id in self.running_jobs:
-                status_set[job_id] = {'state': self.running_jobs[job_id].full_state(),
-                                      'spec': self.running_jobs[job_id].method_spec()}
-            self._send_comm_message('job_status', status_set)
-        except Exception, e:
-            self._log.setLevel(logging.ERROR)
-            kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
-            self._send_comm_message('job_err', str(e))
+        for job_id in self.running_jobs:
+            try:
+                status_set[job_id] = {'state': self.running_jobs[job_id].state(),
+                                      'spec': self.running_jobs[job_id].app_spec()}
+            except Exception, e:
+                self._log.setLevel(logging.ERROR)
+                kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
+                self._send_comm_message('job_err', str(e))
+        self._send_comm_message('job_status', status_set)
 
     def lookup_job_status_loop(self):
         """
@@ -213,9 +213,9 @@ class JobManager(object):
         # push it forward! create a new_job message.
         self._send_comm_message('new_job', {
             'id': job.job_id,
-            'method_id': job.method_id,
+            'app_id': job.app_id,
             'inputs': job.inputs,
-            'version': job.method_version,
+            'version': job.app_version,
             'tag': job.tag,
             'cell_id': job.cell_id
         })
@@ -230,6 +230,12 @@ class JobManager(object):
         else:
             raise ValueError('No job present with id {}'.format(job_id))
 
+    def _handle_comm_message(self, msg):
+        if 'request_type' in msg['content']['data']:
+            r_type = msg['content']['data']['request_type']
+            if r_type == 'refresh_all':
+                self.lookup_job_status()
+
     def _send_comm_message(self, msg_type, content):
         """
         Sends a ipykernel.Comm message to the KBaseJobs channel with the given msg_type
@@ -239,8 +245,7 @@ class JobManager(object):
             'msg_type': msg_type,
             'content': content
         }
-        if not self._comm_channel:
-            self._comm_channel = Comm(target_name='KBaseJobs', data={})
-        self._comm_channel.open()
-        self._comm_channel.send(msg)
-        self._comm_channel.close()
+        if self._comm is None:
+            self._comm = Comm(target_name='KBaseJobs', data={})
+            self._comm.on_msg(self._handle_comm_message)
+        self._comm.send(msg)

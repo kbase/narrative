@@ -1,16 +1,16 @@
 """
-Tests for the method_util module
+Tests for the app_util module
 """
 __author__ = 'Bill Riehl <wjriehl@lbl.gov>'
 
 import unittest
-from biokbase.narrative.jobs.method_util import (
+from biokbase.narrative.jobs.app_util import (
     check_tag,
     system_variable
 )
 import os
 
-class MethodUtilTestCase(unittest.TestCase):
+class AppUtilTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.good_tag = "release"

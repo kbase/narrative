@@ -92,8 +92,8 @@ define([
 
         getCellState: function() {
             var metadata = this.cell.metadata;
-            if (metadata.kbase) {
-                return metadata.kbase;
+            if (metadata.kbase && metadata.kbase.state) {
+                return metadata.kbase.state;
             }
             else {
                 return null;

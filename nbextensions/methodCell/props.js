@@ -14,7 +14,17 @@ define([
             updateHandler = config.onUpdate,
             timer, api;
         
+        /*
+         * In enabled by setting an update handler via the onUpdate factory 
+         * configuration property, this function should be run whenever the
+         * property is updated. It will then run the update handler callback.
+         * This is a way to enable essentially synchronization of the props
+         * object with some external data source.
+         */
         function run() {
+            if (!updateHandler) {
+                return;
+            }
             if (timer) {
                 return;
             }
@@ -121,6 +131,36 @@ define([
             run();
             return temp[propKey];
         }
+        
+        function pushItem(path, value) {
+            if (typeof path === 'string') {
+                path = path.split('.');
+            }
+            if (path.length === 0) {
+                return;
+            }
+            var propKey = path.pop(),
+                key, temp = obj;
+            while (path.length > 0) {
+                key = path.shift();
+                if (temp[key] === undefined) {
+                    temp[key] = {};
+                }
+                temp = temp[key];
+            }
+            if (temp[propKey] === undefined) {
+                temp[propKey] = [value];
+            } else {
+                if (temp[propKey])
+                if (US.isArray(temp[propKey])) {
+                    temp[propKey].push(value);
+                } else {
+                    throw new Error('Can only push onto an Array');
+                }
+            }
+            run();
+            return temp[propKey];
+        }
 
         function deleteItem(path) {
             if (typeof path === 'string') {
@@ -149,6 +189,7 @@ define([
             getItem: getItem,
             incrItem: incrItem,
             deleteItem: deleteItem,
+            pushItem: pushItem,
             getRawObject: function () {
                 return obj;
             }

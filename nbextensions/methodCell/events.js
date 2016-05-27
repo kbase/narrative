@@ -6,7 +6,9 @@ define([
     'use strict';
 
     function factory(config) {
-        var events = [];
+        var events = [],
+            config = config || {},
+            globalRoot = config.node;
         function addEvent(event) {
             var selector, id;
             if (event.id) {
@@ -51,7 +53,8 @@ define([
             });
             return id;
         }
-        function attachEvents(root) {
+        function attachEvents(eventsRoot) {
+            var root = globalRoot || eventsRoot;            
             events.forEach(function (event) {
                 var node = root.querySelector(event.selector);
                 if (!node) {

@@ -34,18 +34,7 @@ define([
         return consoleText.replace(/\[([\s\S]*?)m/g, '');
     }
 
-    /*
-     * For a given job, returns the log lines after "skip" lines, as an Promise 
-     * which will deliver an array of strings.
-     */
-    function getLogData(jobId, skip) {
-        var command = [
-            'from biokbase.narrative.common.kbjob_manager import KBjobManager',
-            'import json',
-            'job_manager = KBjobManager()',
-            'print json.dumps(job_manager.get_job_logs({"job_id":"' + jobId + '","skip_lines":' + skip + '}))'
-        ];
-
+    function runPython(command) {
         return new Promise(function (resolve, reject) {
             var callbacks = {
                 shell: {
@@ -68,13 +57,11 @@ define([
                             reject(new JobError(message, trace));
                         } else {
                             // console.log('IOPUB', content);
-                            var build_log = JSON.parse(content.content.text);
-                            resolve(build_log.lines);
+                            resolve(JSON.parse(content.content.text));
                         }
                     },
                     clear_output: function (content) {
                         defaultHandler('clear_output', content);
-                        // reject(new Error(' in clear_output'));
                     }
                 },
                 input: function (content) {
@@ -89,7 +76,7 @@ define([
             };
 
             if (Jupyter.notebook.kernel.is_connected()) {
-                Jupyter.notebook.kernel.execute(command.join('\n'), callbacks, options);
+                Jupyter.notebook.kernel.execute(command, callbacks, options);
             } else {
                 console.error('Not looking up jobs - kernel is not connected');
                 reject(new Error('Not looking up jobs - kernel is not connected'));
@@ -97,7 +84,35 @@ define([
         });
     }
 
+    function deleteJob(jobId) {
+        var command = [
+            'from biokbase.narrative.common.kbjob_manager import KBjobManager',
+            'jm = KBjobManager()',
+            'print jm.delete_jobs(["' + jobId + '"], as_json=True)'
+        ].join('\n');
+        return runPython(command);
+    }
+
+    /*
+     * For a given job, returns the log lines after "skip" lines, as an Promise 
+     * which will deliver an array of strings.
+     */
+    function getLogData(jobId, skip) {
+        var command = [
+            'from biokbase.narrative.common.kbjob_manager import KBjobManager',
+            'import json',
+            'job_manager = KBjobManager()',
+            'print json.dumps(job_manager.get_job_logs({"job_id":"' + jobId + '","skip_lines":' + skip + '}))'
+        ].join('\n');
+        return runPython(command)
+            .then(function (data) {
+                return data.lines;
+            });
+    }
+
+
     return {
-        getLogData: getLogData
+        getLogData: getLogData,
+        deleteJob: deleteJob
     };
 });

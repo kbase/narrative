@@ -21,6 +21,7 @@ import re
 from biokbase.narrative.common import kblogging
 import logging
 from ipykernel.comm import Comm
+import datetime
 
 class AppManager(object):
     """
@@ -108,8 +109,22 @@ class AppManager(object):
 
         """
         return self.spec_manager.available_apps(tag)
-
-    def run_app(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
+    
+    
+    
+    def run_app(self, *args, **kwargs):
+        try:
+            self.run_app_internal(*args, **kwargs)
+        except Exception, e:
+            self._send_comm_message('run_status', {
+                'event': 'error',
+                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+                'cell_id': kwargs['cell_id'],
+                'run_id': kwargs['run_id'],
+                'error_message': str(e)
+            })
+    
+    def run_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
         Attemps to run the app, returns a Job with the running app info.
         Should *hopefully* also inject that app into the Narrative's metadata.
@@ -134,6 +149,7 @@ class AppManager(object):
 
         self._send_comm_message('run_status', {
             'event': 'validating_app',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
             'cell_id': cell_id,
             'run_id': run_id
         })
@@ -202,6 +218,7 @@ class AppManager(object):
 
         self._send_comm_message('run_status', {
             'event': 'validated_app',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',            
             'cell_id': cell_id,
             'run_id': run_id
         })
@@ -253,6 +270,7 @@ class AppManager(object):
 
         self._send_comm_message('run_status', {
             'event': 'launching_job',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',            
             'cell_id': cell_id,
             'run_id': run_id
         })
@@ -267,6 +285,7 @@ class AppManager(object):
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',                        
             'cell_id': cell_id,
             'run_id': run_id,
             'job_id': job_id

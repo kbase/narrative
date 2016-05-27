@@ -21,6 +21,7 @@ import re
 from biokbase.narrative.common import kblogging
 import logging
 from ipykernel.comm import Comm
+import datetime
 
 class AppManager(object):
     """

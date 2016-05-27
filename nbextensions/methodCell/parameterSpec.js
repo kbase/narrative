@@ -123,7 +123,7 @@ define([
                 case 'float':
                     return parseFloat(defaultValue);
                 case 'workspaceObjectName':
-                    return null;
+                    return defaultValue;
                 default:
                     // Assume it is a string...
                     return defaultValue;

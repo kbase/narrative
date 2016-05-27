@@ -118,9 +118,9 @@ define ([
             $(document).on('cancelJob.Narrative', function(e, jobId, callback) {
                     // If we can't find the job, then it's not being tracked, so we
                     // should just assume it's gone already and return true to the callback.
-                    if (jobId === undefined && callback)
+                    if (jobId === undefined && callback) {
                         callback(true);
-                    else if (jobId !== undefined) {
+                    } else if (jobId !== undefined) {
                         this.deleteJob(jobId, callback);
                     }
                 }.bind(this));
@@ -423,8 +423,8 @@ define ([
                     payload: {
                         set_next_input: function(content) {
                            self.handleCallback('set_next_input', content);
-                       },
-                    },
+                       }
+                    }
                 },
                 iopub: {
                     output: function(content) {
@@ -434,7 +434,7 @@ define ([
                     },
                     clear_output: function(content) {
                         self.handleCallback('clear_output', content);
-                    },
+                    }
                 },
                 input: function(content) {
                     self.handleCallback('input', content);
@@ -457,7 +457,7 @@ define ([
          * We should *probably* just delete the job anyway, whether there's an error or not.
          */
         deleteResponse: function(msgType, content, jobId) {
-            if (msgType != 'stream') {
+            if (msgType !== 'stream') {
                 console.error('An error occurred while trying to delete a job');
                 this.refresh(false);
                 return;
@@ -475,17 +475,19 @@ define ([
 
             // first, wipe the metadata
             var appIds = Jupyter.notebook.metadata.job_ids.apps;
-            appIds = appIds.filter(function(val) { return val.id !== jobId });
+            appIds = appIds.filter(function(val) { return val.id !== jobId; });
             Jupyter.notebook.metadata.job_ids.apps = appIds;
 
             // ...and from the method list
             var methodIds = Jupyter.notebook.metadata.job_ids.methods;
-            methodIds = methodIds.filter(function(val) { return val.id !== jobId });
+            methodIds = methodIds.filter(function(val) { return val.id !== jobId; });
             Jupyter.notebook.metadata.job_ids.methods = methodIds;
 
             // remove it from the 'cache' in this jobs panel
-            delete this.source2Job[this.jobStates[jobId].source];
-            delete this.jobStates[jobId];
+            if (this.jobStates[jobId]) {
+                delete this.source2Job[this.jobStates[jobId].source];
+                delete this.jobStates[jobId];
+            }
 
             // nuke the removeId
             this.removeId = null;

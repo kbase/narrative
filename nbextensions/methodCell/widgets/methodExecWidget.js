@@ -47,8 +47,8 @@ define([
                     initialValue: false
                 },
                 {
-                    name: 'job-output',
-                    label: 'Job Output',
+                    name: 'job-result',
+                    label: 'Job Result',
                     initialValue: false
                 }
             ];
@@ -79,10 +79,10 @@ define([
             });
         }
 
-        function renderJobOutput() {
+        function renderJobResult() {
             return dom.buildPanel({
-                title: 'Job Output',
-                name: 'job-output',
+                title: 'Job Result',
+                name: 'job-result',
                 hidden: false,
                 type: 'primary',
                 body: div({style: {fontFamily: 'monospace', whiteSpace: 'pre'}, dataElement: 'content'})
@@ -185,7 +185,7 @@ define([
                             span('Success:'),
                             span({
                                 style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                                dataElement: 'message'
+                                dataElement: 'flag'
                             })
                         ]),
                         span({dataElement: 'error', style: {marginLeft: '5px'}}, [
@@ -277,15 +277,15 @@ define([
             dom.getElement(['job-report', 'warnings']).innerHTML = warnings;
         }
         
-        function showJobOutput() {
-            var output = model.getItem('runState.success.outputs');
-            if (!output) {
-                output;
+        function showJobResult() {
+            var result = model.getItem('runState.success.result');
+            if (!result) {
+                return;
             }
             
             // Just spit out json ...
-            var content = JSON.stringify(output, null, 2);
-            dom.setContent('job-output.content', content);
+            var content = JSON.stringify(result, null, 2);
+            dom.setContent('job-result.content', content);
         }
 
         function showJobError() {
@@ -308,14 +308,14 @@ define([
                         body: [
                             dom.makeButton('Show Details', 'toggle-job-details', {events: events}),
                             dom.makeButton('Show Report', 'toggle-job-report', {events: events}),
-                            dom.makeButton('Show Output', 'toggle-job-output', {events: events}),
+                            dom.makeButton('Show Result', 'toggle-job-result', {events: events}),
                             dom.makeButton('Show Log', 'toggle-job-log', {events: events})
                         ]
                     }),
                     renderJobStatus(),
                     renderJobError(),
                     renderJobReport(),
-                    renderJobOutput(),
+                    renderJobResult(),
                     renderJobDetails(),
                     renderJobLog()
                 ]);
@@ -359,38 +359,38 @@ define([
          * final project ... the report_ref, which we can use to get the report!
          * 
          */
-        function updateJobReport(job) {
-            /*
-             * If the job has not completed, there will be not outputs, so we 
-             * can just bail.
-             */
-            if (!job.state.step_outputs || Object.keys(job.state.step_outputs).length === 0) {
-                return;
-            }
-
-            var stepJobIds = job.state.step_job_ids,
-                stepKey = Object.keys(stepJobIds)[0],
-                stepOutput = JSON.parse(job.state.step_outputs[stepKey]),
-                reportRef = stepOutput[0].report_ref,
-                workspace = new Workspace(runtime.config('services.workspace.url'), {
-                    token: runtime.authToken()
-                });
-
-            return workspace.get_objects([{
-                    ref: reportRef
-                }])
-                .then(function (result) {
-                    if (!result[0]) {
-                        return;
-                    }
-                    var report = result[0].data;
-                    // Store it in the metadata.
-                    model.setItem('jobReport', JSON.parse(JSON.stringify(report)));
-                })
-                .catch(function (err) {
-                    console.error('Error getting report', err);
-                });
-        }
+//        function updateJobReport(job) {
+//            /*
+//             * If the job has not completed, there will be not outputs, so we 
+//             * can just bail.
+//             */
+//            if (!job.state.step_outputs || Object.keys(job.state.step_outputs).length === 0) {
+//                return;
+//            }
+//
+//            var stepJobIds = job.state.step_job_ids,
+//                stepKey = Object.keys(stepJobIds)[0],
+//                stepOutput = JSON.parse(job.state.step_outputs[stepKey]),
+//                reportRef = stepOutput[0].report_ref,
+//                workspace = new Workspace(runtime.config('services.workspace.url'), {
+//                    token: runtime.authToken()
+//                });
+//
+//            return workspace.get_objects([{
+//                    ref: reportRef
+//                }])
+//                .then(function (result) {
+//                    if (!result[0]) {
+//                        return;
+//                    }
+//                    var report = result[0].data;
+//                    // Store it in the metadata.
+//                    model.setItem('jobReport', JSON.parse(JSON.stringify(report)));
+//                })
+//                .catch(function (err) {
+//                    console.error('Error getting report', err);
+//                });
+//        }
 
         function getJobReport(reportRef) {
             var workspace = new Workspace(runtime.config('services.workspace.url'), {
@@ -412,16 +412,15 @@ define([
                     console.error('Error getting report', err);
                 });
         }
-
         function updateJobDetails() {
             var jobState = model.getItem('jobState');
             var details = {
                 id: jobState.job_id,
                 status: jobState.job_state,
-                deleted: jobState.is_deleted,
-                submitted: jobState.submit_time,
-                started: jobState.start_time,
-                completed: jobState.complete_time
+                deleted: jobState.is_deleted ? 'yes' : 'no',
+                submitted: format.niceTime(new Date(jobState.creation_time)),
+                started: format.niceTime(new Date(jobState.exec_start_time)),
+                completed: format.niceTime(new Date(jobState.finish_time)),
             };
             model.setItem('jobDetails', details);
         }
@@ -511,10 +510,10 @@ define([
 
             if (state.success) {
                 dom.showElement(['runStatus', 'success']);
-                dom.setContent(['runStatus', 'success', 'message'], state.success.reportRef);
+                dom.setContent(['runStatus', 'success', 'flag'], state.success ? 'yes' : '');
                 // dom.showElement('job-report');
-                showJobReport();
-                showJobOutput();
+                // showJobReport();
+                showJobResult();
             } else {
                 dom.hideElement(['runStatus', 'success']);
                 // dom.hideElement('job-report');
@@ -541,12 +540,12 @@ define([
             }
 
             switch (launchEvent.event) {
-                case 'validating_method':
+                case 'validating_app':
                     temporalState = 'launching';
                     executionState = 'processing';
                     canonicalState = 'validating-request';
                     break;
-                case 'validated_method':
+                case 'validated_app':
                     temporalState = 'launching';
                     executionState = 'processing';
                     canonicalState = 'validated-request';
@@ -632,31 +631,67 @@ define([
              * In the completed state as well there is a job report (not described here at the moment).
              * 
              */
-
+            
+            /*
+             * From the NJSWrapper spec:
+             * 
+        job_id - id of job running method
+        finished - indicates whether job is done (including error cases) or not,
+            if the value is true then either of 'returned_data' or 'detailed_error'
+            should be defined;
+        ujs_url - url of UserAndJobState service used by job service
+        status - tuple returned by UserAndJobState.get_job_status method
+        result - keeps exact copy of what original server method puts
+            in result block of JSON RPC response;
+        error - keeps exact copy of what original server method puts
+            in error block of JSON RPC response;
+        job_state - 'queued', 'in-progress', 'completed', or 'suspend';
+        position - position of the job in execution waiting queue;
+        creation_time, exec_start_time and finish_time - time moments of submission, execution 
+            start and finish events in milliseconds since Unix Epoch.
+ 
+    typedef structure {
+        string job_id;
+        boolean finished;
+        string ujs_url;
+        UnspecifiedObject status;
+        UnspecifiedObject result;
+        JsonRpcError error;
+        string job_state;
+        int position;
+        int creation_time;
+        int exec_start_time;
+        int finish_time;
+    } JobState;
+             */
+            
+            
             /*
              * Determine temrporal state based on timestamps left behind.
              */
-            var temporalState, submitTime, startTime, completedTime,
+            var temporalState = jobState.job_state,
+                submitTime, startTime, completedTime,
                 elapsedQueueTime, elapsedRunTime;
-            if (jobState.submit_time) {
-                submitTime = new Date(jobState.submit_time).getTime();
-                if (jobState.start_time) {
-                    startTime = new Date(jobState.start_time).getTime();
+            if (jobState.creation_time) {
+                submitTime = jobState.creation_time;
+                if (jobState.exec_start_time) {
+                    startTime = jobState.exec_start_time;
                     elapsedQueueTime = startTime - submitTime;
-                    if (jobState.complete_time) {
-                        completedTime = new Date(jobState.complete_time).getTime();
+                    if (jobState.finish_time) {
+                        completedTime = jobState.finish_time;
                         elapsedRunTime = completedTime - startTime;
-                        temporalState = 'completed';
+                        // temporalState = 'completed';
                     } else {
                         elapsedRunTime = now - startTime;
-                        temporalState = 'running';
+                        // we've been  using running, but maybe we should switch.
+                        // temporalState = 'running';
                     }
                 } else {
                     elapsedQueueTime = now - submitTime;
-                    temporalState = 'queued';
+                    // temporalState = 'queued';
                 }
             } else {
-                temporalState = 'preparation';
+                throw new Error('Job state without submission time?');
             }
 
             /*
@@ -664,38 +699,41 @@ define([
              */
             var executionState,
                 error, success,
-                errorInfo1 = getJobError(jobState),
-                errorInfo2 = getJobError2(jobState), errorMessage, errorDetail,
-                errorInfo = errorInfo1 || errorInfo2,
-                reportRef = getJobReportRef(jobState),
-                outputs = getJobOutputs(jobState);
+                // errorInfo1 = getJobError(jobState),
+                // errorInfo2 = getJobError2(jobState), errorMessage, errorDetail,
+                // errorInfo = errorInfo1 || errorInfo2,
+                // reportRef = getJobReportRef(jobState),
+                result = jobState.result,
+                errorInfo = jobState.error;
+                    
             if (errorInfo) {
                 executionState = 'error';
-                if (errorInfo.length > 50) {
-                    errorDetail = errorInfo;
-                    errorMessage = errorInfo.substring(0, 50) + '...';
-                } else {
-                    errorMessage = errorInfo;
-                    errorDetail = '';
-                }
+//                if (errorInfo.length > 50) {
+//                    errorDetail = errorInfo;
+//                    errorMessage = errorInfo.substring(0, 50) + '...';
+//                } else {
+//                    errorMessage = errorInfo;
+//                    errorDetail = '';
+//                }
+                console.log('EXEC ERROR', errorInfo);
                 error = {
                     location: 'job execution',
-                    message: errorMessage,
-                    detail: errorDetail
+                    message: 'message here',
+                    detail: 'detail here'
                 };
-            } else if (reportRef) {
+//            } else if (reportRef) {
+//                executionState = 'success';
+//                success = {
+//                    reportRef: reportRef
+//                };
+//                // hmm, try this.
+//                bus.send('show-job-report', {
+//                    reportRef: reportRef
+//                });
+            } else if (result) {
                 executionState = 'success';
                 success = {
-                    reportRef: reportRef
-                };
-                // hmm, try this.
-                bus.send('show-job-report', {
-                    reportRef: reportRef
-                });
-            } else if (outputs) {
-                executionState = 'success';
-                success = {
-                    outputs: outputs
+                    result: result
                 };
                 
                 
@@ -726,13 +764,13 @@ define([
             // stored in the narrative?
             var canonicalState;
             switch (temporalState) {
-                case 'preparation':
+                case 'lauching':
                     switch (executionState) {
                         case 'processing':
                             canonicalState = 'preparing';
                             break;
                         case 'error':
-                            canonicalState = 'preparationError';
+                            canonicalState = 'launchError';
                             break;
                         default:
                             throw new Error('Invalid execution state ' + executionState + ' for temporal state ' + temporalState);
@@ -750,7 +788,7 @@ define([
                             throw new Error('Invalid execution state ' + executionState + ' for temporal state ' + temporalState);
                     }
                     break;
-                case 'running':
+                case 'in-progress':
                     switch (executionState) {
                         case 'processing':
                             canonicalState = 'running';
@@ -839,36 +877,36 @@ define([
          * 
          * Job errors
          */
-        function getJobError(jobState) {
-            /*
-             * If the job has not completed, there will be not outputs, so we 
-             * can just bail.
-             */
-            if (!jobState.step_errors || Object.keys(jobState.step_errors).length === 0) {
-                return;
-            }
-
-            var stepJobIds = jobState.step_job_ids,
-                stepKey = Object.keys(stepJobIds)[0],
-                stepError = jobState.step_errors[stepKey];
-
-            return stepError;
-        }
-
-        function getJobError2(jobState) {
-            /*
-             * If the job has not completed, there will be not outputs, so we 
-             * can just bail.
-             */
-            if (!jobState.step_errors || Object.keys(jobState.step_errors).length === 0) {
-                return;
-            }
-
-            var stepKey = jobState.running_step_id,
-                stepError = jobState.step_errors[stepKey];
-
-            return stepError;
-        }
+//        function getJobError(jobState) {
+//            /*
+//             * If the job has not completed, there will be not outputs, so we 
+//             * can just bail.
+//             */
+//            if (!jobState.step_errors || Object.keys(jobState.step_errors).length === 0) {
+//                return;
+//            }
+//
+//            var stepJobIds = jobState.step_job_ids,
+//                stepKey = Object.keys(stepJobIds)[0],
+//                stepError = jobState.step_errors[stepKey];
+//
+//            return stepError;
+//        }
+//
+//        function getJobError2(jobState) {
+//            /*
+//             * If the job has not completed, there will be not outputs, so we 
+//             * can just bail.
+//             */
+//            if (!jobState.step_errors || Object.keys(jobState.step_errors).length === 0) {
+//                return;
+//            }
+//
+//            var stepKey = jobState.running_step_id,
+//                stepError = jobState.step_errors[stepKey];
+//
+//            return stepError;
+//        }
 
 //        function getJobReportRef(jobState) {
 //            /*
@@ -887,42 +925,42 @@ define([
 //            return reportRef;
 //        }
 
-        function getJobReportRef(jobState) {
-            /*
-             * If the job has not completed, there will be not outputs, so we 
-             * can just bail.
-             */
-            if (!jobState.step_outputs || Object.keys(jobState.step_outputs).length === 0) {
-                return;
-            }
-
-            var stepJobIds = jobState.step_job_ids,
-                stepKey = Object.keys(stepJobIds)[0],
-                stepOutput = JSON.parse(jobState.step_outputs[stepKey]);
-
-            if (typeof stepOutput[0] === 'object') {
-                return stepOutput[0].report_ref;
-            }
-        }
-
-        function getJobOutputs(jobState) {
-            /*
-             * If the job has not completed, there will be not outputs, so we 
-             * can just bail.
-             */
-            if (!jobState.step_outputs || Object.keys(jobState.step_outputs).length === 0) {
-                return;
-            }
-
-            var stepJobIds = jobState.step_job_ids,
-                stepKey = Object.keys(stepJobIds)[0],
-                stepOutput = JSON.parse(jobState.step_outputs[stepKey]);
-
-
-            if (typeof stepOutput[0] === 'object' && stepOutput[0].report_ref === undefined) {
-                return stepOutput[0];
-            }
-        }
+//        function getJobReportRef(jobState) {
+//            /*
+//             * If the job has not completed, there will be not outputs, so we 
+//             * can just bail.
+//             */
+//            if (!jobState.step_outputs || Object.keys(jobState.step_outputs).length === 0) {
+//                return;
+//            }
+//
+//            var stepJobIds = jobState.step_job_ids,
+//                stepKey = Object.keys(stepJobIds)[0],
+//                stepOutput = JSON.parse(jobState.step_outputs[stepKey]);
+//
+//            if (typeof stepOutput[0] === 'object') {
+//                return stepOutput[0].report_ref;
+//            }
+//        }
+//
+//        function getJobOutputs(jobState) {
+//            /*
+//             * If the job has not completed, there will be not outputs, so we 
+//             * can just bail.
+//             */
+//            if (!jobState.step_outputs || Object.keys(jobState.step_outputs).length === 0) {
+//                return;
+//            }
+//
+//            var stepJobIds = jobState.step_job_ids,
+//                stepKey = Object.keys(stepJobIds)[0],
+//                stepOutput = JSON.parse(jobState.step_outputs[stepKey]);
+//
+//
+//            if (typeof stepOutput[0] === 'object' && stepOutput[0].report_ref === undefined) {
+//                return stepOutput[0];
+//            }
+//        }
 
         function processNewLaunchEvent(launchEvent) {
             // we don't have to handle duplicates.

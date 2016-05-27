@@ -842,14 +842,18 @@ define([
         }
 
         function deleteJob(jobId) {
-            return new Promise(function (resolve) {
+            return new Promise(function (resolve, reject) {
                 // NB the narrative callback code does not pass back error
                 // through the callback -- it is just logged to the console.
                 // Gulp!
                 function callback(value) {
                     resolve(value);
                 }
-                $(document).trigger('cancelJob.Narrative', [jobId, callback]);
+                try {
+                    $(document).trigger('cancelJob.Narrative', [jobId, callback]);
+                } catch (err) {
+                    reject(err);
+                }
             });
         }
 
@@ -925,12 +929,53 @@ define([
                     console.error('Error Deleting Cell', err);
                 });
         }
+        
+
+
+        /*
+         * Cancelling a job is the same as deleting it, and the effect of cancelling the job is the same as re-running it.
+         * 
+         */
+        function doCancel() {
+            var confirmed = dom.confirmDialog('Are you sure you want to Cancel the running job?', 'Yes', 'No way, dude');
+            if (!confirmed) {
+                return;
+            }
+
+            // delete the job
+
+            Promise.try(function () {
+                // If there was an error during the launching/preparation phase,
+                // there will be no job yet.
+                var jobState = model.getItem('exec.jobState');
+                if (jobState) {
+                    return Promise.all([jobState.job_id, deleteJob(jobState.job_id)])
+                        .then(function () {
+                            deleteFromNotebook(jobState.job_id);
+                        });                    
+                }
+            })
+                .then(function () {
+                    // We should really wait for an update to come from the parent!
+
+                    // Remove all of the execution state when we reset the method.
+                    model.deleteItem('exec');
+
+                    // TODO: evaluate the params again before we do this.
+                    fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+
+                    renderUI();
+                })
+                .catch(function (err) {
+                    console.error('Error Deleting Job', err);
+                });            
+        }
 
         function updateFromLaunchEvent(launchEvent) {
             var newFsmState = (function () {
                 switch (launchEvent.event) {
-                    case 'validating_method':
-                    case 'validated_method':
+                    case 'validating_app':
+                    case 'validated_app':
                     case 'launching_job':
                     case 'launched_job':
                         return {mode: 'processing', stage: 'launching'};
@@ -1033,6 +1078,9 @@ define([
                 });
                 bus.on('re-run', function () {
                     doRerun();
+                });
+                bus.on('cancel', function () {
+                    doCancel();
                 });
                 bus.on('remove', function () {
                     doRemove();
@@ -1275,6 +1323,7 @@ define([
                             instance: widget
                         };
                         widget.start();
+                        var x = model.getItem('exec.jobState');
                         bus.send('run', {
                             node: dom.getElement('exec-group.widget'),
                             jobState: model.getItem('exec.jobState')

@@ -87,7 +87,7 @@ define([
             // Some parameter specs have valid_ws_types as an empty set, which 
             // does not mean what it could, it means that it is not an option.
             if (spec.text_options.valid_ws_types && spec.text_options.valid_ws_types.length > 0) {
-                return 'workspaceObjectReference';
+                return 'workspaceObjectName';
             }
 
             return 'unspecified';
@@ -104,7 +104,7 @@ define([
                     return null;
                 case 'float':
                     return null;
-                case 'workspaceObjectReference':
+                case 'workspaceObjectName':
                     return null;
                 default:
                     return null;
@@ -122,8 +122,8 @@ define([
                     return parseInt(defaultValue);
                 case 'float':
                     return parseFloat(defaultValue);
-                case 'workspaceObjectReference':
-                    return null;
+                case 'workspaceObjectName':
+                    return defaultValue;
                 default:
                     // Assume it is a string...
                     return defaultValue;
@@ -164,11 +164,6 @@ define([
             }
             switch (dataType()) {
                 case 'string':
-                    if (value.length === 0) {
-                        return true;
-                    } 
-                    break;
-                case 'workspaceObjectReference':
                     if (value.length === 0) {
                         return true;
                     } 

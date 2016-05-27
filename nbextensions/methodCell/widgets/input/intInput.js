@@ -426,7 +426,7 @@ define([
             }
 
             if (spec.text_options.valid_ws_types) {
-                return 'workspaceObjectReference';
+                return 'workspaceObjectName';
             }
 
             return 'unknown';

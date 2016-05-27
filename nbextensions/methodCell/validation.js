@@ -237,6 +237,7 @@ define([
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = 'optional-empty';
+                    parsedValue = null;
                 }
             } else {
                 try {

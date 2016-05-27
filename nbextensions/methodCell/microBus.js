@@ -96,6 +96,13 @@ define([
          * sending places a message into the queue (bus)
          */
         function send(message, options) {
+            if (typeof message === 'string') {
+                if (options) {
+                    options.type = message;
+                    message = options;                    
+                }
+            }
+            
             queue.push({
                 message: message,
                 envelope: {

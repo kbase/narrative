@@ -35,7 +35,7 @@ define ([
         START_UPDATE_LOOP: 'start_update_loop',
         STOP_JOB_UPDATE: 'stop_job_update',
         START_JOB_UPDATE: 'start_job_update',
-        DELETE_JOB: 'cancel_job',
+        DELETE_JOB: 'delete_job',
 
         name: 'kbaseNarrativeJobsPanel',
         parent : kbaseNarrativeControlPanel,
@@ -87,51 +87,33 @@ define ([
 
             this.title.append(this.$jobCountBadge);
 
-            // $(document).on('registerMethod.Narrative', $.proxy(
-            //     function(e, jobInfo) {
-            //         this.registerJob(jobInfo, false);
+            // $(document).on('cancelJobCell.Narrative', $.proxy(
+            //     function(e, cellId, showPrompt, callback) {
+            //         // Find job based on cellId
+            //         var jobId = this.source2Job[cellId];
+
+            //         // If we can't find the job, then it's not being tracked, so we
+            //         // should just assume it's gone already and return true to the callback.
+            //         if (jobId === undefined && callback)
+            //             callback(true);
+            //         else if (jobId !== undefined) {
+            //             if (showPrompt)
+            //                 this.openJobDeletePrompt(jobId, null, callback);
+            //             else
+            //                 this.deleteJob(jobId, callback);
+            //         }
             //     }, this)
             // );
 
-            // $(document).on('registerApp.Narrative', $.proxy(
-            //     function(e, jobInfo) {
-            //         this.registerJob(jobInfo, true);
-            //     }, this)
-            // );
-
-            // $(document).on('refreshJobs.Narrative', $.proxy(
-            //     // function(e) {
-            //     //     this.refresh();
-            //     // }, this)
-            // );
-
-            $(document).on('cancelJobCell.Narrative', $.proxy(
-                function(e, cellId, showPrompt, callback) {
-                    // Find job based on cellId
-                    var jobId = this.source2Job[cellId];
-
-                    // If we can't find the job, then it's not being tracked, so we
-                    // should just assume it's gone already and return true to the callback.
-                    if (jobId === undefined && callback)
-                        callback(true);
-                    else if (jobId !== undefined) {
-                        if (showPrompt)
-                            this.openJobDeletePrompt(jobId, null, callback);
-                        else
-                            this.deleteJob(jobId, callback);
-                    }
-                }, this)
-            );
-        
-            $(document).on('cancelJob.Narrative', function(e, jobId, callback) {
-                    // If we can't find the job, then it's not being tracked, so we
-                    // should just assume it's gone already and return true to the callback.
-                    if (jobId === undefined && callback) {
-                        callback(true);
-                    } else if (jobId !== undefined) {
-                        this.deleteJob(jobId, callback);
-                    }
-                }.bind(this));
+            // $(document).on('cancelJob.Narrative', function(e, jobId, callback) {
+            //         // If we can't find the job, then it's not being tracked, so we
+            //         // should just assume it's gone already and return true to the callback.
+            //         if (jobId === undefined && callback) {
+            //             callback(true);
+            //         } else if (jobId !== undefined) {
+            //             this.deleteJob(jobId, callback);
+            //         }
+            //     }.bind(this));
 
             var $refreshBtn = $('<button>')
                               .addClass('btn btn-xs btn-default')
@@ -238,6 +220,15 @@ define ([
             });
         },
 
+        sendBusMessage: function(msgType, message) {
+            var runtime = Runtime.make();
+            console.log('sending bus message - ' + msgType, message);
+            runtime.bus().send({
+                type: msgType,
+                data: JSON.parse(JSON.stringify(message))
+            });
+        },
+
         /**
          * Sends a comm message to the JobManager in the kernel.
          * If there's no comm channel ready, tries to set one up first.
@@ -260,7 +251,7 @@ define ([
                 request_type: msgType,
             };
             if (jobId) {
-                msg[job_id] = jobId;
+                msg.job_id = jobId;
             }
             this.comm.send(msg);
         },
@@ -289,14 +280,24 @@ define ([
                     this.populateJobsPanel(status, info, content);
                     break;
                 case 'run_status':
-                    this.updateCellRunStatus(msg.content.data.content);
+                    this.sendBusMessage('job-status', msg.content.data.content);
                     break;
                 case 'job_err':
                     console.error('Job Error', msg);
                     break;
-                case 'job_canceled':
-                    var canceledId = msg.content.data.content.job_id;
-                    console.info('Canceled job ' + canceledId);
+                case 'job_deleted':
+                    var deletedId = msg.content.data.content.job_id;
+                    this.sendBusMessage('job-deleted', {jobId: deletedId});
+                    console.info('Deleted job ' + deletedId);
+                    this.removeDeletedJob(deletedId);
+                    break;
+                case 'job_comm_error':
+                    var content = msg.content.data.content;
+                    if (content) {
+                        if (content.request_type === 'delete_job') {
+                            alert('Job already deleted!');
+                        }
+                    }
                     break;
                 default:
                     console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "'):");
@@ -357,24 +358,11 @@ define ([
                 if (jobInfo.inputs) {
                     inputs = jobInfo.inputs;
                 }
-                // else if (source !== 'None') {
-                //     var cell = Jupyter.narrative.getCellByKbaseId(source);
-                //     if (cell && cell.metadata && cell.metadata['kb-cell']) {
-                //         var state = cell.metadata['kb-cell']['widget_state'];
-                //         if (state.length > 0) {
-                //             if (state[0].state.params) {
-                //                 inputs = state[0].state.params;
-                //                 //whew.
-                //             }
-                //         }
-                //     }
-                // }
                 var tag = 'release';
                 if (jobInfo.tag) {
                     tag = jobInfo.tag;
                 }
                 jobTuples.push("('" + jobId + "', '" + StringUtil.safeJSONStringify(inputs) + "', '" + tag + "', '" + source + "')");
-
             }
             return ["from biokbase.narrative.jobs import JobManager",
                     "JobManager().initialize_jobs([" + jobTuples.join(',') + "])"].join('\n');
@@ -469,10 +457,7 @@ define ([
             // send the comm message.
             this.sendCommMessage(this.DELETE_JOB, jobId);
             // remove the metadata from the notebook.
-
         },
-
-
 
         /**
          * Attempts to delete a job in the backend (by making a kernel call - this lets the kernel decide
@@ -521,53 +506,27 @@ define ([
             Jupyter.notebook.kernel.execute(deleteJobCmd, callbacks, executeOptions);
         },
 
-        /**
-         * @method
-         * When we get the deletion response from the kernel, we should delete the job.
-         * We should *probably* just delete the job anyway, whether there's an error or not.
-         */
-        deleteResponse: function(msgType, content, jobId) {
-            if (msgType !== 'stream') {
-                console.error('An error occurred while trying to delete a job');
-                // this.refresh(false);
-                return;
-            }
-            var result = content.data;
-            try {
-                result = JSON.parse(result);
-            }
-            catch(err) {
-                // ignore and return. assume it failed.
-                // I guess we don't really care if it fails, though, the user just wants that job to go away.
-                // Comment this out for now, until we make some sensible error popup or something.
-                // return false;
+        removeDeletedJob: function(jobId) {
+            // remove the view widget
+            if (this.jobWidgets[jobId]) {
+                this.jobWidgets[jobId].remove();
             }
 
-            // first, wipe the metadata
-            var appIds = Jupyter.notebook.metadata.job_ids.apps;
-            appIds = appIds.filter(function(val) { return val.id !== jobId; });
-            Jupyter.notebook.metadata.job_ids.apps = appIds;
-
-            // ...and from the method list
+            // clean the metadata storage
             var methodIds = Jupyter.notebook.metadata.job_ids.methods;
             methodIds = methodIds.filter(function(val) { return val.id !== jobId; });
             Jupyter.notebook.metadata.job_ids.methods = methodIds;
 
-            // remove it from the 'cache' in this jobs panel
+            // clean this widget's internal state
             if (this.jobStates[jobId]) {
                 delete this.source2Job[this.jobStates[jobId].source];
                 delete this.jobStates[jobId];
             }
-
-            // nuke the removeId
             this.removeId = null;
 
-            // save the narrative!
-            Jupyter.notebook.save_checkpoint();
+            // save the narrative.
+            Jupyter.narrative.saveNarrative();
 
-
-            // this.refresh(false);
-            return true;
         },
 
         /**
@@ -625,43 +584,6 @@ define ([
             Jupyter.notebook.save_checkpoint();
         },
 
-        /**
-         * @method
-         * @obsolete
-         * Registers a job with the Narrative. This adds its job id and source of the job (the cell that started it) to
-         * the narrative metadata. It also starts caching the state internally to the jobs panel. Once all this is done,
-         * so the user doesn't accidentally lose the job, it triggers a narrative save.
-         */
-        registerJob: function(jobInfo, isApp) {
-            // // Check to make sure the Narrative has been instantiated to begin with.
-            // if (!Jupyter || !Jupyter.notebook || !Jupyter.notebook.kernel || !Jupyter.notebook.metadata)
-            //     return;
-
-            // // If the job ids hasn't been inited yet, or it was done in the old way (as an array) then do it.
-            // if (!Jupyter.notebook.metadata.job_ids ||
-            //     Object.prototype.toString.call(Jupyter.notebook.metadata.job_ids) === '[object Array]') {
-            //     Jupyter.notebook.metadata.job_ids = {
-            //         'methods' : [],
-            //         'apps' : []
-            //     };
-            // }
-            // // Double-check that it has the right properties
-            // if (!Jupyter.notebook.metadata.job_ids['methods'])
-            //     Jupyter.notebook.metadata.job_ids['methods'] = [];
-            // if (!Jupyter.notebook.metadata.job_ids['apps'])
-            //     Jupyter.notebook.metadata.job_ids['apps'] = [];
-
-            // var type = isApp ? 'apps' : 'methods';
-            // Jupyter.notebook.metadata.job_ids[type].push(jobInfo);
-            // // put a stub in the job states
-            // this.jobStates[jobInfo.id] = $.extend({}, jobInfo, {'status' : null, '$elem' : 'null'});
-            // this.source2Job[jobInfo.source] = jobInfo.id;
-            // // save the narrative!
-            // Jupyter.notebook.save_checkpoint();
-
-            // this.refresh();
-        },
-
         /*
          * For now, ':' is the delimiter.
          * Anything before ':' is the job type.
@@ -698,167 +620,6 @@ define ([
             return true;
         },
 
-        /**
-         * @method
-         */
-        // refresh: function(hideLoadingMessage, initStates) {
-        //     // console.log('JOB PANEL: refresh');
-        //     if (this.jobStates === null || initStates)
-        //         this.initJobStates();
-
-        //     // if there's no timer, set one up - this should only happen the first time.
-        //     // if (this.refreshTimer === null) {
-        //     //     this.refreshTimer = setInterval(
-        //     //         $.proxy(function() { this.refresh(true, false); }, this),
-        //     //         this.refreshInterval
-        //     //     );
-        //     // }
-
-        //     // If none of the base Jupyter stuff shows up, then it's not inited yet.
-        //     // Just return silently.
-        //     if (!Jupyter || !Jupyter.notebook || !Jupyter.notebook.kernel ||
-        //         !Jupyter.notebook.metadata || !Jupyter.notebook.kernel.is_connected())
-        //         return;
-
-        //     // If we don't have any job ids, or it's length is zero, just show a
-        //     // message and return.
-        //     if (!Jupyter.notebook.metadata.job_ids ||
-        //         Jupyter.notebook.metadata.job_ids.length === 0 ||
-        //         Object.keys(this.jobStates).length === 0) {
-        //         this.populateJobsPanel();
-        //         return;
-        //     }
-
-        //     // If we're in readonly mode, don't lookup job info.
-        //     if (!Jupyter.narrative || Jupyter.narrative.readonly === true) {
-        //         return;
-        //     }
-
-        //     if (!hideLoadingMessage)
-        //         this.showLoadingMessage('Loading running jobs...');
-
-
-
-        //     // console.log(['REFRESH: looking up ' + jobParamList.length]);
-        //     // console.log(['REFRESH: jobstates:', this.jobStates]);
-        //     this.startJobPoll();
-
-        // },
-
-        // startJobPoll: function () {
-        //     // This contains all the job info like this:
-        //     // { jobId: {spec: {}, state: {}} }
-        //     var jobInfo = {};
-        //     // This contains the list of lookup parameters for each job.
-        //     // We pass back all specs/parameters so the back end can munge them into the right
-        //     // output structures.
-        //     var jobParamList = [];
-
-        //     for (var jobId in this.jobStates) {
-        //         var jobState = this.jobStates[jobId];
-        //         // if the job's incomplete, we have to go get it.
-        //         var jobIncomplete = this.jobIsIncomplete(jobState.status);
-
-        //         // The type dictates what cell it came from and how to deal with the inputs.
-        //         var jobType = this.jobTypeFromId(jobId);
-        //         var specInfo = null;
-        //         var $sourceCell = $('#' + jobState.source);
-        //         if ($sourceCell.length > 0) {  // if the source cell is there (kind of a jQuery trick).
-        //             // if it's an NJS job, then it's an App cell, so fetch all that info.
-        //             if (jobType === "njs") {
-        //                 specInfo = $sourceCell.kbaseNarrativeAppCell('getSpecAndParameterInfo');
-        //                 if (specInfo && jobIncomplete) {
-        //                     jobParamList.push("['" + jobId + "', " +
-        //                                       "'" + StringUtil.safeJSONStringify(specInfo.appSpec) + "', " +
-        //                                       "'" + StringUtil.safeJSONStringify(specInfo.methodSpecs) + "', " +
-        //                                       "'" + StringUtil.safeJSONStringify(specInfo.parameterValues) + "']");
-        //                 }
-        //             }
-        //             // otherwise, it's a method cell, so fetch info that way.
-        //             else {
-        //                 // console.log('JOB PANEL: looking up spec info for ' + jobState.source);
-        //                 specInfo = $sourceCell.kbaseNarrativeMethodCell('getSpecAndParameterInfo');
-        //                 // console.log('JOB PANEL: ', specInfo);
-        //                 if (jobIncomplete) {
-        //                     if (specInfo) {
-        //                         jobParamList.push("['" + jobId + "', " +
-        //                                           "'" + StringUtil.safeJSONStringify(specInfo.methodSpec) + "', " +
-        //                                           "'" + StringUtil.safeJSONStringify(specInfo.parameterValues) + "']");
-        //                     }
-        //                     else {
-        //                         jobParamList.push("['" + jobId + "']");
-        //                     }
-        //                 }
-        //             }
-        //             jobInfo[jobId] = { 'spec': specInfo };
-        //         }
-        //         else
-        //             this.jobStates[jobId].status = 'error';
-        //     }
-
-        //     var pollJobsCommand = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
-        //                           'job_manager = KBjobManager()\n' +
-        //                           'print job_manager.poll_jobs([' + jobParamList + '], as_json=True)\n';
-
-        //     var self = this;
-        //     var callbacks = {
-        //         shell: {
-        //             reply: function(content) {
-        //                 self.handleCallback('reply', content);
-        //             },
-        //             payload: {
-        //                 set_next_input: function(content) {
-        //                    self.handleCallback('set_next_input', content);
-        //                },
-        //             },
-        //         },
-        //         iopub: {
-        //             output: function(content) {
-        //                 self.parseKernelResponse(content, jobInfo);
-        //             },
-        //             clear_output: function(content) {
-        //                 self.handleCallback('clear_output', content);
-        //             },
-        //         },
-        //         input: function(content) {
-        //             self.handleCallback('input', content);
-        //         }
-        //     };
-
-        //     var executeOptions = {
-        //         silent: true,
-        //         user_expressions: {},
-        //         allow_stdin: false,
-        //         store_history: false
-        //     };
-
-        //     // console.log('JOB PANEL: calling kernel about jobs');
-
-        //     if (Jupyter.notebook.kernel.is_connected())
-        //         Jupyter.notebook.kernel.execute(pollJobsCommand, callbacks, executeOptions);
-        //     else {
-        //         console.log('Not looking up jobs - kernel is not connected.')
-        //     }
-        // },
-
-        /**
-         * @method
-         * Get the kernel response and render it if it's valid.
-         */
-        // parseKernelResponse: function(content, jobInfo) {
-        //     // if it's not a datastream, display some kind of error, and return.
-        //     if (content.msg_type !== 'stream') {
-        //         this.showError('Sorry, an error occurred while loading the job list.');
-        //         return;
-        //     }
-        //     var buffer = content.content.text;
-        //     if (buffer.length > 0) {
-        //         var jobStatus = JSON.parse(buffer);
-        //         this.populateJobsPanel(jobStatus, jobInfo);
-        //     }
-        //     this.$loadingPanel.hide();
-        //     this.$jobsPanel.show();
-        // },
 
         /**
          * @method
@@ -936,7 +697,12 @@ define ([
                         if (this.jobIsIncomplete(this.jobStates[jobId].status))
                             stillRunning++;
                         this.jobStates[jobId].state = fetchedJobStatus[jobId];
-                        this.updateCell(jobId, jobInfo[jobId], jobs[jobId]);
+                        this.sendBusMessage('job-status', {
+                            jobId: jobId,
+                            jobInfo: jobInfo[jobId],
+                            job: jobs[jobId],
+                            jobState: this.jobStates[jobId]
+                        });
                     }
                     // updating the given state first allows us to just pass the id and the status set to
                     // the renderer. If the status set doesn't exist (e.g. we didn't look it up in the
@@ -983,7 +749,7 @@ define ([
              * 3. have no job
              *    - just return null. nothing invokes this like that, anyway
              */
-            var jobType = this.jobTypeFromId(jobId);
+            // var jobType = this.jobTypeFromId(jobId);
 
             var $jobDiv = $('<div>')
                           .addClass('kb-data-list-obj-row');
@@ -993,21 +759,24 @@ define ([
             //     type=njs: appSpec, methodSpecs
             //     type=method: methodSpec
             // }
-            var specType = null;
-            switch(jobType) {
-                case 'njs':
-                    specType = 'appSpec';
-                    break;
-                case 'method':
-                    specType = 'methodSpec';
-                    break;
-                default:
-                    specType = 'methodSpec';
-                    break;
-            }
+            var specType = 'methodSpec';
+            // var specType = null;
+            // switch(jobType) {
+            //     case 'njs':
+            //         specType = 'appSpec';
+            //         break;
+            //     case 'method':
+            //         specType = 'methodSpec';
+            //         break;
+            //     default:
+            //         specType = 'methodSpec';
+            //         break;
+            // }
 
             // get the job's name from its spec
-            var jobName = "Unknown " + ((jobType === 'njs') ? "App" : "Method");
+            // var jobName = "Unknown " + ((jobType === 'njs') ? "App" : "Method");
+            var jobName = "Unknown Method";
+
             if (jobInfo && jobInfo.spec && jobInfo.spec[specType] && jobInfo.spec[specType].info)
                 jobName = jobInfo.spec[specType].info.name;
 
@@ -1102,19 +871,14 @@ define ([
                 status = this.makeJobErrorButton(jobId, jobInfo, errorType);
                 $jobDiv.addClass('kb-jobs-error');
             }
-            // else if (jobState.state && jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0) {
-            //     var $errBtn = this.makeJobErrorButton(jobId, jobInfo);
-            //     status = $('<span>').append(status + ' ')
-            //                         .append($errBtn);
-            // }
             else {
-                if (jobType === "njs" && jobState.state) {
-                    var stepId = jobState.state.running_step_id;
-                    if (stepId) {
-                        var stepSpec = getStepSpec(stepId, jobInfo.spec.appSpec);
-                        task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
-                    }
-                }
+                // if (jobType === "njs" && jobState.state) {
+                //     var stepId = jobState.state.running_step_id;
+                //     if (stepId) {
+                //         var stepSpec = getStepSpec(stepId, jobInfo.spec.appSpec);
+                //         task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
+                //     }
+                // }
                 if (jobState.state && jobState.state.position !== undefined && jobState.state.position !== null && jobState.state.position > 0)
                     position = jobState.state.position;
                 if (completedTime)
@@ -1148,116 +912,6 @@ define ([
                    .append($infoTable);
             return $jobDiv;
         },
-
-        /**
-         * @method
-         * Updates the status of the cell the given job is associated with. This figures out
-         * which cell type it needs to talk to, then sends a message to that cell.
-         * 'job' = the response from the server about the job. Contains info from the job service
-         * 'jobInfo' = the info we know about the running job: its id, associated cell, etc.
-         */
-        updateCell: function(jobId, jobInfo, job) {
-            var jobState = this.jobStates[jobId];
-            var source = jobState.source;
-            var jobType = this.jobTypeFromId(jobId);
-
-            // console.log(['UPDATE_CELL', jobId, jobInfo]);
-            var status = '';
-            if (jobState.status)
-                status = jobState.status.toLowerCase();
-
-            // don't do anything if we don't know the source cell. it might have been deleted.
-            if (!source) {
-                // console.error("Unknown input cell for job id " + jobId + "! Exiting.");
-                return;
-            }
-
-            // The job "source" is the permanent cell id.
-            var runtime = Runtime.make();
-            // The global runtime bus is a catch all for proving messaging semantics across otherwise unconnected apps.
-            // note that we need to copy the objects for the message bus since they will otherwise
-            // be modified by incoming updates.
-            function copyObject(obj) {
-                return JSON.parse(JSON.stringify(obj));
-            }
-            runtime.bus().send({
-                type: 'jobstatus',
-                jobId: jobId,
-                jobInfo: jobInfo,
-                job: job,
-                jobState: copyObject(jobState)
-            });
-            return;
-
-            // other statuses - network_error, not_found_error, unauthorized_error, etc. - are ignored for now.
-        },
-
-        /**
-         * Internally "completes" a job by serializing its final state in the job metadata
-         * and updating the total queue time and run time that it went through.
-         * This'll have to make its way to the object metadata on save, as well.
-         * Maybe it should trigger a save?
-         */
-        // completeJob: function(jobId, jobState) {
-        //     // from the jobState, need 3 things:
-        //     // jobState.state.complete_time
-        //     // jobState.state.start_time
-        //     // jobState.state.submit_time
-
-        //     // these are all a little off (due to clock skew)
-        //     // from the click time. so don't use that.
-        //     var state = jobState.state;
-        //     if (state) {
-        //         var compTime = null;
-        //         var startTime = null;
-        //         var subTime = null;
-
-        //         if (state.ujs_info) {
-        //             if (state.ujs_info[5])
-        //                 compTime = state.ujs_info[5];
-        //             if (state.ujs_info[3])
-        //                 startTime = state.ujs_info[3];
-        //         }
-        //         else {
-        //             if (state.complete_time)
-        //                 compTime = state.complete_time;
-        //             if (state.start_time)
-        //                 startTime = state.start_time;
-        //             if (state.submit_time)
-        //                 subTime = state.submit_time;
-        //         }
-
-        //         var queueTime = 0;
-        //         var runTime = 0;
-        //         // 1. calc total queue time
-        //         if (startTime && subTime) {
-        //             queueTime = new Date(startTime) - new Date(subTime);
-        //         }
-        //         if (compTime && startTime) {
-        //             runTime = new Date(compTime) - new Date(startTime);
-        //         }
-        //         if (Jupyter.notebook.metadata.job_ids.job_usage) {
-        //             Jupyter.notebook.metadata.job_ids.job_usage.run_time += runTime;
-        //             Jupyter.notebook.metadata.job_ids.job_usage.queue_time += queueTime;
-        //         }
-        //         else {
-        //             Jupyter.notebook.metadata.job_ids.job_usage = {
-        //                 run_time : runTime,
-        //                 queue_time : queueTime
-        //             };
-        //         }
-        //         // I kinda hate how I did this to begin with, but here's the least-resistant path.
-        //         // We basically have to search. Lame.
-        //         for (var i=0; i<Jupyter.notebook.metadata.job_ids.apps.length; i++) {
-        //             if (Jupyter.notebook.metadata.job_ids.apps[i].id === jobId)
-        //                 Jupyter.notebook.metadata.job_ids.apps[i] = jobState;
-        //         }
-        //         for (var i=0; i<Jupyter.notebook.metadata.job_ids.methods.length; i++) {
-        //             if (Jupyter.notebook.metadata.job_ids.methods[i].id === jobId)
-        //                 Jupyter.notebook.metadata.job_ids.methods[i] = jobState;
-        //         }
-        //     }
-        // },
 
         /**
          * @method
@@ -1344,20 +998,20 @@ define ([
                             // contort that into the method name
                             // gotta search for it in the spec for the method id, first.
                             var methodName = "Unknown method: " + stepId;
-                            if (this.jobTypeFromId(jobId) === "njs") {
-                                var methodId = null;
-                                for (var i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
-                                    if (stepId === jobInfo.spec.appSpec.steps[i].step_id) {
-                                        methodId = jobInfo.spec.appSpec.steps[i].method_id;
-                                        break;
-                                    }
-                                }
-                                if (methodId)
-                                    methodName = jobInfo.spec.methodSpecs[methodId].info.name;
-                            }
-                            else {
-                                methodName = jobInfo.spec.methodSpec.info.name;
-                            }
+                            // if (this.jobTypeFromId(jobId) === "njs") {
+                            //     var methodId = null;
+                            //     for (var i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
+                            //         if (stepId === jobInfo.spec.appSpec.steps[i].step_id) {
+                            //             methodId = jobInfo.spec.appSpec.steps[i].method_id;
+                            //             break;
+                            //         }
+                            //     }
+                            //     if (methodId)
+                            //         methodName = jobInfo.spec.methodSpecs[methodId].info.name;
+                            // }
+                            // else {
+                            methodName = jobInfo.spec.methodSpec.info.name;
+                            // }
                             errorText.append($('<b>').append('In ' + methodName + ':<br>'))
                                      .append(jobState.state.step_errors[stepId] + '<br><br>');
                         }

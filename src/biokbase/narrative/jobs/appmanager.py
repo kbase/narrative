@@ -109,9 +109,9 @@ class AppManager(object):
 
         """
         return self.spec_manager.available_apps(tag)
-    
-    
-    
+
+
+
     def run_app(self, *args, **kwargs):
         try:
             self.run_app_internal(*args, **kwargs)
@@ -123,7 +123,7 @@ class AppManager(object):
                 'run_id': kwargs['run_id'],
                 'error_message': str(e)
             })
-    
+
     def run_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
         Attemps to run the app, returns a Job with the running app info.
@@ -218,7 +218,7 @@ class AppManager(object):
 
         self._send_comm_message('run_status', {
             'event': 'validated_app',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',            
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
             'cell_id': cell_id,
             'run_id': run_id
         })
@@ -270,7 +270,7 @@ class AppManager(object):
 
         self._send_comm_message('run_status', {
             'event': 'launching_job',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',            
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
             'cell_id': cell_id,
             'run_id': run_id
         })
@@ -285,7 +285,7 @@ class AppManager(object):
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',                        
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
             'cell_id': cell_id,
             'run_id': run_id,
             'job_id': job_id
@@ -293,7 +293,7 @@ class AppManager(object):
 
 
         # new_job = Job(app_state['job_id'], app_id, params, tag=tag, app_version=service_ver, cell_id=cell_id)
-        new_job = Job(job_id, app_id, params, tag=tag, app_version=service_ver, cell_id=cell_id)
+        new_job = Job(job_id, app_id, [params], tag=tag, app_version=service_ver, cell_id=cell_id)
         JobManager().register_new_job(new_job)
         # jobmanager.get_manager().register_new_job(new_job)
         return new_job

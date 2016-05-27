@@ -286,24 +286,24 @@ class JobManager(object):
                 if job_id is not None:
                     self._running_jobs[job_id]['refresh'] = True
 
-            elif r_type == 'cancel_job':
+            elif r_type == 'delete_job':
                 if job_id is not None:
                     try:
-                        self.cancel_job(job_id)
+                        self.delete_job(job_id)
                     except Exception, e:
                         pass
 
-    def cancel_job(self, job_id):
+    def delete_job(self, job_id):
         """
         If the job_id doesn't exist, raises a ValueError.
-        If the cancel fails and throws an error, that just gets raised, too.
+        If the deletion fails and throws an error, that just gets raised, too.
         """
         if job_id is None:
-            raise ValueError('Need a job_id to cancel!')
+            raise ValueError('Need a job_id to delete!')
         job = self.get_job(job_id)
         job.cancel()
         del self._running_jobs[job_id]
-        self._send_comm_message('job_canceled', {'job_id': job_id})
+        self._send_comm_message('job_deleted', {'job_id': job_id})
 
     def _send_comm_message(self, msg_type, content):
         """

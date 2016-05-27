@@ -92,8 +92,8 @@ define([
 
         getCellState: function() {
             var metadata = this.cell.metadata;
-            if (this.cell.metadata.kbase) {
-                return cell.metadata.kbase;
+            if (metadata.kbase) {
+                return metadata.kbase;
             }
             else {
                 return null;
@@ -101,11 +101,13 @@ define([
         },
 
         setCellState: function() {
-            this.cell.metadata.kbase = {
+            var metadata = this.cell.metadata;
+            metadata['kbase'] = {
                 type: 'output',
                 jobId: this.jobId,
                 state: this.state
             };
+            this.cell.metadata = metadata;
         },
 
         handleJobStatus: function(message) {

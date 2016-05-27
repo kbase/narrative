@@ -43,7 +43,7 @@ class Job(object):
         self.cell_id = cell_id
         # self.job_manager = KBjobManager()
         self.inputs = inputs
-        self.njs = clients.get('job_service')
+        self._njs = clients.get('job_service')
         self._init_comm()
 
     @classmethod
@@ -94,11 +94,11 @@ class Job(object):
         return SpecManager().get_spec(self.app_id, self.tag)
 
     def status(self):
-        return self.njs.check_job(self.job_id)['job_state']
+        return self._njs.check_job(self.job_id)['job_state']
 
     def parameters(self):
         try:
-            return self.njs.get_job_params(self.job_id)
+            return self._njs.get_job_params(self.job_id)
         except Exception, e:
             raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
 
@@ -108,7 +108,7 @@ class Job(object):
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
         try:
-            return self.njs.check_job(self.job_id)
+            return self._njs.check_job(self.job_id)
         except Exception, e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
 
@@ -146,6 +146,7 @@ class Job(object):
     def cancel(self):
         """
         Cancels a currently running job. Fails silently if there's no job running.
+        (No way to cancel something started with run_job right now).
         """
         pass
 

@@ -29,6 +29,14 @@ define ([
 ) {
     'use strict';
     return KBWidget({
+        COMM_NAME: 'KBaseJobs',
+        ALL_STATUS: 'all_status',
+        STOP_UPDATE_LOOP: 'stop_update_loop',
+        START_UPDATE_LOOP: 'start_update_loop',
+        STOP_JOB_UPDATE: 'stop_job_update',
+        START_JOB_UPDATE: 'start_job_update',
+        DELETE_JOB: 'cancel_job',
+
         name: 'kbaseNarrativeJobsPanel',
         parent : kbaseNarrativeControlPanel,
         version: '0.0.1',
@@ -220,6 +228,33 @@ define ([
             });
         },
 
+        /**
+         * Sends a comm message to the JobManager in the kernel.
+         * If there's no comm channel ready, tries to set one up first.
+         * @param msgType {string} - one of (prepend with this.)
+         *   ALL_STATUS,
+         *   STOP_UPDATE_LOOP,
+         *   START_UPDATE_LOOP,
+         *   STOP_JOB_UPDATE,
+         *   START_JOB_UPDATE,
+         *   DELETE_JOB
+         * @param jobId {string} - optional - a job id to send along with the
+         * message, where appropriate.
+         */
+        sendCommMessage: function(msgType, jobId) {
+            if (!this.comm) {
+                this.initCommChannel(function() { this.sendCommMessage(msgType, jobId); }.bind(this));
+            }
+            var msg = {
+                target_name: this.COMM_NAME,
+                request_type: msgType,
+            };
+            if (jobId) {
+                msg[job_id] = jobId;
+            }
+            this.comm.send(msg);
+        },
+
         handleCommMessages: function(msg) {
             var msgType = msg.content.data.msg_type;
             switch (msgType) {
@@ -237,12 +272,8 @@ define ([
                                 methodSpec: content[jobId].spec
                             }
                         };
-                        if (status[jobId].finished === 1 && this.comm) {
-                            this.comm.send({
-                                target_name: 'KBaseJobs',
-                                request_type: 'stop_job_update',
-                                job_id: jobId
-                            });
+                        if (status[jobId].finished === 1) {
+                            this.sendCommMessage(this.STOP_JOB_UPDATE, jobId);
                         }
                     }
                     this.populateJobsPanel(status, info, content);
@@ -263,29 +294,31 @@ define ([
             }
         },
 
-        initCommChannel: function() {
-            // init the listener channel.
-            // console.info('Registering Job channel with kernel.');
-            // console.info('Checking for existing channel?');
-
+        /**
+         * Initializes the comm channel to the back end.
+         * Takes a callback to be executed once the channel's up, since the Jupyter
+         * async kernel methods don't seem to play well with Promises.
+         * (At least, I couldn't get them to work - Bill 5/27/2016)
+         */
+        initCommChannel: function(callback) {
             this.comm = null;
 
-            Jupyter.notebook.kernel.comm_info('KBaseJobs', function(msg) {
+            Jupyter.notebook.kernel.comm_info(this.COMM_NAME, function(msg) {
                 // console.info(msg);
                 if (msg.content && msg.content.comms) {
                     // console.info('Found an existing channel!');
                     // console.info(msg);
                     // skim the reply for the right id
                     for (var id in msg.content.comms) {
-                        if (msg.content.comms[id].target_name === 'KBaseJobs') {
-                            this.comm = new JupyterComm.Comm('KBaseJobs', id);
+                        if (msg.content.comms[id].target_name === this.COMM_NAME) {
+                            this.comm = new JupyterComm.Comm(this.COMM_NAME, id);
                             Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
                             this.comm.on_msg(this.handleCommMessages.bind(this));
                         }
                     }
                 }
                 if (this.comm === null) {
-                    Jupyter.notebook.kernel.comm_manager.register_target('KBaseJobs', function(comm, msg) {
+                    Jupyter.notebook.kernel.comm_manager.register_target(this.COMM_NAME, function(comm, msg) {
                         this.comm = comm;
                         comm.on_msg(this.handleCommMessages.bind(this));
                     }.bind(this));
@@ -296,6 +329,9 @@ define ([
 
                 var code = this.getJobInitCode();
                 Jupyter.notebook.kernel.execute(code);
+                if (callback) {
+                    callback();
+                }
             }.bind(this));
         },
 
@@ -409,11 +445,31 @@ define ([
         },
 
         /**
+         * Deletes a job with two steps.
+         * 1. Sends a comm message to the job manager to delete the job.
+         * 2. Removes the job info from the Narrative's metadata.
+         * 3. Removes the little job widget from the job panel.
+         * 4. Sends a bus message that the job's been deleted to whatever's listening.
+         */
+        deleteJob: function(jobId) {
+            if (!jobId) {
+                // bomb silently if there's no job id.
+                return;
+            }
+            // send the comm message.
+            this.sendCommMessage(this.DELETE_JOB, jobId);
+            // remove the metadata from the notebook.
+
+        },
+
+
+
+        /**
          * Attempts to delete a job in the backend (by making a kernel call - this lets the kernel decide
          * what kind of job it is and how to stop/delete it).
          * When it gets a response, it then clears the job from the Jobs list.
          */
-        deleteJob: function(jobId, callback) {
+        xdeleteJob: function(jobId, callback) {
             var deleteJobCmd = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
                                'jm = KBjobManager()\n' +
                                'print jm.delete_jobs(["' + jobId + '"], as_json=True)\n';
@@ -1121,64 +1177,6 @@ define ([
             });
             return;
 
-            // // if it's running and an NJS job, then it's in an app cell
-            // if (jobState.state.running_step_id && jobType === 'njs') {
-            //     $cell.kbaseNarrativeAppCell('setRunningStep', jobState.state.running_step_id);
-            // }
-            // // if it's a ujs or method job, then it's a method cell
-            // else if (jobType === 'ujs' || jobType === 'method') {
-            //     // assume we have 'in-progress' or 'running' vs. 'complete' or 'done'
-            //     var submitState = 'complete';
-            //     if (status.indexOf('run') != -1 || status.indexOf('progress') != -1 || status.indexOf('started') != -1)
-            //         submitState = 'running';
-            //     else if (status.indexOf('queue') != -1 || status.indexOf('submit') != -1)
-            //         submitState = 'submitted';
-            //     $cell.kbaseNarrativeMethodCell('changeState', submitState,
-            //             {'job_id': jobId, 'job_state': jobState, 'job_info': jobInfo});
-            // }
-            // // if we have outputs, those need to be passed along
-            // if (jobState.state.widget_outputs && Object.keys(jobState.state.widget_outputs).length > 0) {
-            //     if (jobType === 'njs') {
-            //         for (var key in jobState.state.widget_outputs) {
-            //             if (jobState.state.widget_outputs.hasOwnProperty(key)) {
-            //                 try {
-            //                     $cell.kbaseNarrativeAppCell('setStepOutput', key, jobState.state.widget_outputs[key]);
-            //                 }
-            //                 catch (err) {
-            //                     console.log(["ERROR'D APP OUTPUT", err]);
-            //                 }
-            //             }
-            //         }
-            //     }
-            //     else {
-            //         try {
-            //             // console.log('setting method cell output for ', source, jobState.state.widget_outputs);
-            //             $cell.kbaseNarrativeMethodCell('setOutput', { 'cellId' : source, 'result' : jobState.state.widget_outputs });
-            //         }
-            //         catch (err) {
-            //             console.log(["ERROR'D METHOD OUTPUT", err]);
-            //         }
-            //     }
-            // }
-            // // if it's an error, then we need to signal the cell
-            // if (status === "error" || status === "suspend") { // || (jobState.state.step_errors && Object.keys(jobState.state.step_errors).length !== 0)) {
-            //     if (jobType === 'njs') {
-            //         $cell.kbaseNarrativeAppCell('setRunningState', 'error');
-            //     }
-            //     else {
-            //         $cell.kbaseNarrativeMethodCell('changeState', 'error',
-            //                 {'job_id': jobId, 'job_state': jobState, 'job_info': jobInfo});
-            //     }
-            //     this.completeJob(jobId, this.jobStates[jobId]);
-            // }
-            // // ...and if it's done, we need to signal that, too. Note that it can be both (i.e. done with errors)
-            // if (status.indexOf('complete') !== -1 || status.indexOf('done') !== -1) {
-            //     if (jobType === 'njs') {
-            //         $cell.kbaseNarrativeAppCell('setRunningState', 'complete');
-            //     }
-            //     this.completeJob(jobId, this.jobStates[jobId]);
-            // }
-
             // other statuses - network_error, not_found_error, unauthorized_error, etc. - are ignored for now.
         },
 
@@ -1188,66 +1186,66 @@ define ([
          * This'll have to make its way to the object metadata on save, as well.
          * Maybe it should trigger a save?
          */
-        completeJob: function(jobId, jobState) {
-            // from the jobState, need 3 things:
-            // jobState.state.complete_time
-            // jobState.state.start_time
-            // jobState.state.submit_time
+        // completeJob: function(jobId, jobState) {
+        //     // from the jobState, need 3 things:
+        //     // jobState.state.complete_time
+        //     // jobState.state.start_time
+        //     // jobState.state.submit_time
 
-            // these are all a little off (due to clock skew)
-            // from the click time. so don't use that.
-            var state = jobState.state;
-            if (state) {
-                var compTime = null;
-                var startTime = null;
-                var subTime = null;
+        //     // these are all a little off (due to clock skew)
+        //     // from the click time. so don't use that.
+        //     var state = jobState.state;
+        //     if (state) {
+        //         var compTime = null;
+        //         var startTime = null;
+        //         var subTime = null;
 
-                if (state.ujs_info) {
-                    if (state.ujs_info[5])
-                        compTime = state.ujs_info[5];
-                    if (state.ujs_info[3])
-                        startTime = state.ujs_info[3];
-                }
-                else {
-                    if (state.complete_time)
-                        compTime = state.complete_time;
-                    if (state.start_time)
-                        startTime = state.start_time;
-                    if (state.submit_time)
-                        subTime = state.submit_time;
-                }
+        //         if (state.ujs_info) {
+        //             if (state.ujs_info[5])
+        //                 compTime = state.ujs_info[5];
+        //             if (state.ujs_info[3])
+        //                 startTime = state.ujs_info[3];
+        //         }
+        //         else {
+        //             if (state.complete_time)
+        //                 compTime = state.complete_time;
+        //             if (state.start_time)
+        //                 startTime = state.start_time;
+        //             if (state.submit_time)
+        //                 subTime = state.submit_time;
+        //         }
 
-                var queueTime = 0;
-                var runTime = 0;
-                // 1. calc total queue time
-                if (startTime && subTime) {
-                    queueTime = new Date(startTime) - new Date(subTime);
-                }
-                if (compTime && startTime) {
-                    runTime = new Date(compTime) - new Date(startTime);
-                }
-                if (Jupyter.notebook.metadata.job_ids.job_usage) {
-                    Jupyter.notebook.metadata.job_ids.job_usage.run_time += runTime;
-                    Jupyter.notebook.metadata.job_ids.job_usage.queue_time += queueTime;
-                }
-                else {
-                    Jupyter.notebook.metadata.job_ids.job_usage = {
-                        run_time : runTime,
-                        queue_time : queueTime
-                    };
-                }
-                // I kinda hate how I did this to begin with, but here's the least-resistant path.
-                // We basically have to search. Lame.
-                for (var i=0; i<Jupyter.notebook.metadata.job_ids.apps.length; i++) {
-                    if (Jupyter.notebook.metadata.job_ids.apps[i].id === jobId)
-                        Jupyter.notebook.metadata.job_ids.apps[i] = jobState;
-                }
-                for (var i=0; i<Jupyter.notebook.metadata.job_ids.methods.length; i++) {
-                    if (Jupyter.notebook.metadata.job_ids.methods[i].id === jobId)
-                        Jupyter.notebook.metadata.job_ids.methods[i] = jobState;
-                }
-            }
-        },
+        //         var queueTime = 0;
+        //         var runTime = 0;
+        //         // 1. calc total queue time
+        //         if (startTime && subTime) {
+        //             queueTime = new Date(startTime) - new Date(subTime);
+        //         }
+        //         if (compTime && startTime) {
+        //             runTime = new Date(compTime) - new Date(startTime);
+        //         }
+        //         if (Jupyter.notebook.metadata.job_ids.job_usage) {
+        //             Jupyter.notebook.metadata.job_ids.job_usage.run_time += runTime;
+        //             Jupyter.notebook.metadata.job_ids.job_usage.queue_time += queueTime;
+        //         }
+        //         else {
+        //             Jupyter.notebook.metadata.job_ids.job_usage = {
+        //                 run_time : runTime,
+        //                 queue_time : queueTime
+        //             };
+        //         }
+        //         // I kinda hate how I did this to begin with, but here's the least-resistant path.
+        //         // We basically have to search. Lame.
+        //         for (var i=0; i<Jupyter.notebook.metadata.job_ids.apps.length; i++) {
+        //             if (Jupyter.notebook.metadata.job_ids.apps[i].id === jobId)
+        //                 Jupyter.notebook.metadata.job_ids.apps[i] = jobState;
+        //         }
+        //         for (var i=0; i<Jupyter.notebook.metadata.job_ids.methods.length; i++) {
+        //             if (Jupyter.notebook.metadata.job_ids.methods[i].id === jobId)
+        //                 Jupyter.notebook.metadata.job_ids.methods[i] = jobState;
+        //         }
+        //     }
+        // },
 
         /**
          * @method

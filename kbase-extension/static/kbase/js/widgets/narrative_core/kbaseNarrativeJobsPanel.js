@@ -31,6 +31,7 @@ define ([
     return KBWidget({
         COMM_NAME: 'KBaseJobs',
         ALL_STATUS: 'all_status',
+        JOB_STATUS: 'job_status',
         STOP_UPDATE_LOOP: 'stop_update_loop',
         START_UPDATE_LOOP: 'start_update_loop',
         STOP_JOB_UPDATE: 'stop_job_update',
@@ -130,10 +131,7 @@ define ([
                               .click(function(event) {
                                   $refreshBtn.tooltip('hide');
                                   console.log('sending refresh signal');
-                                  if (this.comm) {
-                                      this.comm.send({target_name: 'KBaseJobs',
-                                                      request_type: 'all_status'});
-                                  }
+                                  this.sendCommMessage(this.ALL_STATUS);
                               }.bind(this));
 
             this.$methodsList = $('<div>');
@@ -202,6 +200,7 @@ define ([
                 this.initJobStates();
                 // this.refresh();
             }
+            this.handleBusMessages();
 
             return this;
         },
@@ -229,6 +228,28 @@ define ([
             });
         },
 
+        handleBusMessages: function(msg) {
+            var runtime = Runtime.make();
+            runtime.bus().listen({
+                test: function(msg) {
+                    return (msg.jobId ? true : false);
+                }.bind(this),
+                handle: function(msg) {
+                    switch(msg.type) {
+                        case 'request-job-deletion':
+                            this.deleteJob(msg.jobId);
+                            break;
+                        case 'request-job-status':
+                            this.sendCommMessage(this.JOB_STATUS, msg.jobId);
+                            break;
+                    }
+
+                    console.log('handling a message', msg);
+                    this.handleJobStatus(msg);
+                }.bind(this)
+            });
+        },
+
         /**
          * Sends a comm message to the JobManager in the kernel.
          * If there's no comm channel ready, tries to set one up first.
@@ -245,6 +266,7 @@ define ([
         sendCommMessage: function(msgType, jobId) {
             if (!this.comm) {
                 this.initCommChannel(function() { this.sendCommMessage(msgType, jobId); }.bind(this));
+                return;
             }
             var msg = {
                 target_name: this.COMM_NAME,
@@ -313,15 +335,20 @@ define ([
          */
         initCommChannel: function(callback) {
             this.comm = null;
+            // init the backend with existing jobs.
+            if (this.jobStates === null)
+                this.initJobStates();
 
+            console.info('looking up comm info');
             Jupyter.notebook.kernel.comm_info(this.COMM_NAME, function(msg) {
+                console.info('got info');
                 // console.info(msg);
                 if (msg.content && msg.content.comms) {
-                    // console.info('Found an existing channel!');
-                    // console.info(msg);
                     // skim the reply for the right id
                     for (var id in msg.content.comms) {
                         if (msg.content.comms[id].target_name === this.COMM_NAME) {
+                            console.info('Found an existing channel!');
+                            console.info(msg);
                             this.comm = new JupyterComm.Comm(this.COMM_NAME, id);
                             Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
                             this.comm.on_msg(this.handleCommMessages.bind(this));
@@ -329,15 +356,13 @@ define ([
                     }
                 }
                 if (this.comm === null) {
+                    console.info('setting up a new channel - ' + this.COMM_NAME);
                     Jupyter.notebook.kernel.comm_manager.register_target(this.COMM_NAME, function(comm, msg) {
+                        console.info('new channel set up - ', comm)
                         this.comm = comm;
                         comm.on_msg(this.handleCommMessages.bind(this));
                     }.bind(this));
                 }
-                // init the backend with existing jobs.
-                if (this.jobStates === null)
-                    this.initJobStates();
-
                 var code = this.getJobInitCode();
                 Jupyter.notebook.kernel.execute(code);
                 if (callback) {

@@ -70,7 +70,6 @@ class JobManager(object):
                     self._running_jobs[job_tuple[0]] = {'refresh': True, 'job': self._get_existing_job(job_tuple)}
 
                 except Exception, e:
-                    self._log.setLevel(logging.ERROR)
                     kblogging.log_event(self._log, "init_error", {'err': str(e)})
                     self._send_comm_message('job_init_err', str(e))
             else:
@@ -78,7 +77,7 @@ class JobManager(object):
         # only keep one loop at a time in cause this gets called again!
         if self._lookup_timer is not None:
             self._lookup_timer.cancel()
-        self.lookup_job_status_loop()
+        self._lookup_job_status_loop()
 
     def list_jobs(self):
         """
@@ -136,7 +135,6 @@ class JobManager(object):
             return HTML(Template(tmpl).render(jobs=status_set))
 
         except Exception, e:
-            self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "list_jobs.error", {'err': str(e)})
             raise
 
@@ -163,15 +161,27 @@ class JobManager(object):
             job_info = clients.get('job_service').get_job_params(job_id)[0]
             return Job.from_state(job_id, job_info, tag=job_tuple[2], cell_id=job_tuple[3])
         except Exception, e:
-            self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
             raise
 
-    def lookup_job_status(self, ignore_refresh_flag=False):
+    def _lookup_job_status(self, job_id):
         """
-        Starts the job status lookup. This then optionally spawns a timer that
-        looks up the status again after a few seconds.
+        Will raise a ValueError if job_id doesn't exist.
+        Sends the status over the comm channel as the usual job_status message.
+        """
+        job = self.get_job(job_id)
+        if job is None:
+            raise ValueError('job "{}" not found!'.format(job_id))
+        status = {job_id: {
+                     'state': job.state(),
+                     'spec': job.app_spec()
+                 }}
+        self._send_comm_message('job_status', status)
 
+
+    def _lookup_all_job_status(self, ignore_refresh_flag=False):
+        """
+        Looks up status for all jobs.
         Once job info is acquired, it gets pushed to the front end over the
         'KBaseJobs' channel.
         """
@@ -189,13 +199,13 @@ class JobManager(object):
         if len(status_set) > 0:
             self._send_comm_message('job_status', status_set)
 
-    def lookup_job_status_loop(self):
+    def _lookup_job_status_loop(self):
         """
         Initialize a loop that will look up job info. This uses a Timer thread on a 10
         second loop to update things.
         """
-        self.lookup_job_status()
-        self._lookup_timer = threading.Timer(10, self.lookup_job_status_loop)
+        self._lookup_all_job_status()
+        self._lookup_timer = threading.Timer(10, self._lookup_job_status_loop)
         self._lookup_timer.start()
 
     def cancel_job_lookup_loop(self):
@@ -245,6 +255,9 @@ class JobManager(object):
         * all_status
             refresh all jobs that are flagged to be looked up. Will send a
             message back with all lookup status.
+        * job_status
+            refresh the single job given in the 'job_id' field. Sends a message
+            back with that single job's status, or an error message.
         * stop_update_loop
             stop the running refresh loop, if there's one going (might be
             one more pass, depending on the thread state)
@@ -269,14 +282,18 @@ class JobManager(object):
                 return
 
             if r_type == 'all_status':
-                self.lookup_job_status(ignore_refresh_flag=True)
+                self._lookup_all_job_status(ignore_refresh_flag=True)
+
+            elif r_type == 'job_status':
+                if job_id is not None:
+                    self._lookup_job_status(job_id)
 
             elif r_type == 'stop_update_loop':
                 if self._lookup_timer is not None:
                     self._lookup_timer.cancel()
 
             elif r_type == 'start_update_loop':
-                self.lookup_job_status_loop()
+                self._lookup_job_status_loop()
 
             elif r_type == 'stop_job_update':
                 if job_id is not None:

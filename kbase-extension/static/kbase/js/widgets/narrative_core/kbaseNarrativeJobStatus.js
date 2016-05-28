@@ -7,6 +7,7 @@ define([
     'base/js/namespace',
     'services/kernels/comm',
     'util/string',
+    'util/timeFormat',
     'handlebars',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
@@ -24,6 +25,7 @@ define([
     Jupyter,
     JupyterComm,
     StringUtil,
+    TimeFormat,
     Handlebars,
     KBaseAuthenticatedWidget,
     KBaseTabs,
@@ -64,7 +66,6 @@ define([
              * 2. If not, use inputs as initial state.
              * 3. Initialize layout, set up comm channel and bus.
              */
-
             var cellState = this.getCellState();
             if (cellState && cellState.jobId === this.jobId) {
                 // use this and not the state input.
@@ -74,7 +75,7 @@ define([
             this.runtime.bus().listen({
                 test: function(msg) {
                     // return true;
-                    return (msg.jobId === this.jobId);
+                    return (msg.data && msg.data.jobId === this.jobId);
                 }.bind(this),
                 handle: function(msg) {
                     console.log('handling a message', msg);
@@ -83,11 +84,46 @@ define([
             });
             console.log(this.runtime.bus());
             // render up the panel's view layer.
-            this.makeJobStatusPanel();
+            this.initializeView();
+            this.updateView();
             // wire up the comm channel and turn it loose.
             this.initCommChannel();
 
             return this;
+        },
+
+        initializeView: function() {
+            /* Tabs with 3 parts.
+             * Initial = Status.
+             * Second = Console.
+             * Third = View Inputs
+             */
+            var header = this.makeHeader();
+            var body = this.makeBody();
+            var statusPanel = this.makeJobStatusPanel();
+            this.$elem.append(header);
+            this.$elem.append(body);
+            body.append(statusPanel);
+            this.view = {
+                header: header,
+                statusPanel: statusPanel,
+                body: body
+            };
+        },
+
+        updateView: function() {
+            console.log('updating view...');
+            this.view.statusPanel.remove();
+            this.view.statusPanel = this.updateJobStatusPanel();
+            this.view.body.append($(this.view.statusPanel));
+        },
+
+        makeBody: function() {
+            return $('<div>');
+        },
+
+        makeHeader: function() {
+            return $('<div>').append("Head-row");
         },
 
         getCellState: function() {
@@ -111,11 +147,11 @@ define([
         },
 
         handleJobStatus: function(message) {
-            if (message.type !== 'jobstatus')
+            if (message.type !== 'job-status')
                 return;
-            this.state = message.jobState.state;
+            this.state = message.data.jobState.state;
             this.setCellState();
-            this.updateJobStatusPanel();
+            this.updateView();
         },
 
         showError: function(message) {
@@ -145,12 +181,6 @@ define([
                     Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
                     console.info("Job Widget Comm inited manually:", this.comm);
                     this.comm.on_msg(this.handleCommMessages.bind(this));
-
-                    // Jupyter.notebook.kernel.comm_manager.register_target(commName, function(comm, msg) {
-                    //     this.comm = comm;
-                    //     console.info("Job Widget Comm inited!", this.comm);
-                    //     comm.on_msg(this.handleCommMessages.bind(this));
-                    // }.bind(this));
                 }
             }.bind(this));
         },
@@ -159,20 +189,19 @@ define([
             var info = {
                 jobId: this.jobId,
                 status: this.state.job_state,
-                creationTime: this.state.creation_time,
-                queueTime: this.state.exec_start_time - this.state.creation_time,
+                creationTime: TimeFormat.readableTimestamp(this.state.creation_time),
+                queueTime: TimeFormat.calcTimeDifference(this.state.creation_time, this.state.exec_start_time) + " " + (this.state.exec_start_time - this.state.creation_time),
                 queuePos: this.state.position ? this.state.position : null,
-                execStartTime: this.state.exec_start_time,
-                execEndTime: this.state.finish_time,
-                execRunTime: this.state.finish_time - this.state.execStartTime
+                execStartTime: TimeFormat.readableTimestamp(this.state.exec_start_time),
+                execEndTime: TimeFormat.readableTimestamp(this.state.finish_time),
+                execRunTime: TimeFormat.calcTimeDifference(this.state.finish_time, this.state.exec_start_time)
             };
-            this.$elem.empty().append(this.statusTableTmpl(info));
-
+            return $(this.statusTableTmpl(info));
         },
 
         makeJobStatusPanel: function() {
             this.statusTableTmpl = Handlebars.compile(JobStatusTableTemplate);
-            this.updateJobStatusPanel();
+            return this.updateJobStatusPanel();
 
             // var tableInfo = {
             //     jobId: this.jobId,

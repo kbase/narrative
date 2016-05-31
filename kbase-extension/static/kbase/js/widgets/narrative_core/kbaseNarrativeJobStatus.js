@@ -211,10 +211,16 @@ define([
                 creationTime: TimeFormat.readableTimestamp(this.state.creation_time),
                 queueTime: TimeFormat.calcTimeDifference(this.state.creation_time, this.state.exec_start_time),
                 queuePos: this.state.position ? this.state.position : null,
-                execStartTime: TimeFormat.readableTimestamp(this.state.exec_start_time),
-                execEndTime: TimeFormat.readableTimestamp(this.state.finish_time),
-                execRunTime: TimeFormat.calcTimeDifference(this.state.finish_time, this.state.exec_start_time)
             };
+
+            if (this.state.exec_start_time) {
+                info.execStartTime = TimeFormat.readableTimestamp(this.state.exec_start_time);
+            }
+            if (this.state.finish_time) {
+                info.execEndTime = TimeFormat.readableTimestamp(this.state.finish_time);
+                info.execRunTime = TimeFormat.calcTimeDifference(this.state.finish_time, this.state.exec_start_time);
+            }
+
             return $(this.statusTableTmpl(info));
         },
 

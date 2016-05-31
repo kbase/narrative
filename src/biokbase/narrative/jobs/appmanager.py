@@ -114,7 +114,7 @@ class AppManager(object):
 
     def run_app(self, *args, **kwargs):
         try:
-            self.run_app_internal(*args, **kwargs)
+            return self.run_app_internal(*args, **kwargs)
         except Exception, e:
             self._send_comm_message('run_status', {
                 'event': 'error',
@@ -123,6 +123,7 @@ class AppManager(object):
                 'run_id': kwargs['run_id'],
                 'error_message': str(e)
             })
+            raise
 
     def run_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """

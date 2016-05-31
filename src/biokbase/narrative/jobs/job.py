@@ -181,11 +181,22 @@ class Job(object):
         element.html("<div id='kb-job-{{job_id}}' class='kb-vis-area'></div>");
 
         require(['jquery', 'kbaseNarrativeJobStatus'], function($, KBaseNarrativeJobStatus) {
-            var w = new KBaseNarrativeJobStatus($('#kb-job-{{job_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}});
+            var w = new KBaseNarrativeJobStatus($('#kb-job-{{job_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}, 'info': {{info}}});
         });
         """
         try:
             state = self.state()
+            spec = self.app_spec()
+            info = {
+                'app_id': spec['info']['id'],
+                'version': spec['info'].get('ver', None),
+                'name': spec['info']['name']
+            }
         except Exception, e:
             state = {}
-        return Template(tmpl).render(job_id=self.job_id, state=json.dumps(state))
+            info = {
+                'app_id': None,
+                'version': None,
+                'name': 'Unknown App'
+            }
+        return Template(tmpl).render(job_id=self.job_id, state=json.dumps(state), info=json.dumps(info))

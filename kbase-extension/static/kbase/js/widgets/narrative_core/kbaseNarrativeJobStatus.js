@@ -15,7 +15,8 @@ define([
     'kbaseReportView',
     'nbextensions/methodCell/microBus',
     'nbextensions/methodCell/runtime',
-    'text!kbase/templates/job_status_table.html'
+    'text!kbase/templates/job_status_table.html',
+    'text!kbase/templates/job_status_header.html'
 ], function (
     $,
     KBWidget,
@@ -33,7 +34,8 @@ define([
     KBaseReportView,
     Bus,
     Runtime,
-    JobStatusTableTemplate
+    JobStatusTableTemplate,
+    HeaderTemplate
 ) {
     'use strict';
     return KBWidget({
@@ -51,6 +53,9 @@ define([
             this._super(options);
             this.jobId = this.options.jobId;
             this.state = this.options.state;
+            // expects:
+            // name, id, version for appInfo
+            this.appInfo = this.options.info;
             this.cell = Jupyter.narrative.getCellByKbaseId(this.$elem.attr('id'));
 
             console.log('initializing with job id = ' + this.jobId);
@@ -102,13 +107,26 @@ define([
             var body = this.makeBody();
             var statusPanel = this.makeJobStatusPanel();
             this.$elem.append(header);
-            this.$elem.append(body);
             body.append(statusPanel);
             this.view = {
                 header: header,
                 statusPanel: statusPanel,
                 body: body
             };
+            var $tabDiv = $('<div>');
+            var tabs = new KBaseTabs($tabDiv, {
+                tabs: [
+                    {
+                        tab: 'Status',
+                        content: body,
+                    },
+                    {
+                        tab: 'Console',
+                        content: $('<div>').append('not done yet...')
+                    }
+                ]
+            });
+            this.$elem.append($tabDiv);
         },
 
         updateView: function() {
@@ -123,7 +141,8 @@ define([
         },
 
         makeHeader: function() {
-            return $('<div>').append("Head-row");
+            var tmpl = Handlebars.compile(HeaderTemplate);
+            return $(tmpl(this.appInfo));
         },
 
         getCellState: function() {
@@ -190,7 +209,7 @@ define([
                 jobId: this.jobId,
                 status: this.state.job_state,
                 creationTime: TimeFormat.readableTimestamp(this.state.creation_time),
-                queueTime: TimeFormat.calcTimeDifference(this.state.creation_time, this.state.exec_start_time) + " " + (this.state.exec_start_time - this.state.creation_time),
+                queueTime: TimeFormat.calcTimeDifference(this.state.creation_time, this.state.exec_start_time),
                 queuePos: this.state.position ? this.state.position : null,
                 execStartTime: TimeFormat.readableTimestamp(this.state.exec_start_time),
                 execEndTime: TimeFormat.readableTimestamp(this.state.finish_time),

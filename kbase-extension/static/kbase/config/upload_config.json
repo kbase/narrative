@@ -546,7 +546,7 @@
 
     "KBaseOntology.OntologyTranslation": {
         "import_ontologytranslation_tsv_file": {
-            "external_type": "TSV.Ontology",
+            "external_type": "TSV.OntologyTranslation",
             "kbase_type": "KBaseOntology.OntologyTranslation",
             "object_name": "outputObject",
             "optional_arguments": {
@@ -559,13 +559,13 @@
 		    },
 		    "input_file_name" : {
 		        "type": "string",
-                        "param" : "oboFile",
+                        "param" : "tsvFile",
                         "optional": false
 		    }
 		}
             },
             "url_mapping": {
-                "TSV.Ontology": {
+                "TSV.OntologyTranslation": {
                     "type": "shock",
                     "param": "tsvFile",
                     "optional": false

@@ -19,6 +19,7 @@ define([
     'kbase-client-api',
     'kbaseNarrativePrestart',
     'ipythonCellMenu',
+    'base/js/namespace',
     'base/js/events',
     'notebook/js/notebook',
     'util/display',
@@ -38,6 +39,7 @@ function($,
          kbaseClient,
          kbaseNarrativePrestart,
          kbaseCellToolbar,
+         Jupyter,
          events,
          Notebook,
          DisplayUtil,
@@ -70,6 +72,8 @@ function($,
         this.dataViewers = null;
         this.profileClient = new UserProfile(Config.url('user_profile'));
         this.cachedUserIds = {};
+        this.workspaceRef = null;
+        this.workspaceId = null;
 
         Jupyter.keyboard_manager.disable();
         return this;
@@ -134,7 +138,7 @@ function($,
             placement : "bottom",
             content: function() {
                 // we do not allow users to leave thier narratives untitled
-                if (Jupyter && Jupyter.notebook) {
+                if (Jupyter.notebook) {
                     var narrName = Jupyter.notebook.notebook_name;
                     if (narrName.trim().toLowerCase()==='untitled' || narrName.trim().length === 0) {
                         Jupyter.save_widget.rename_notebook({notebook: Jupyter.notebook}); //"Your Narrative must be named before you can share it with others.", false);
@@ -398,7 +402,7 @@ function($,
 
         this.authToken = $('#signin-button').kbaseLogin('token');
 
-        if (Jupyter && Jupyter.notebook && Jupyter.notebook.metadata) {
+        if (Jupyter.notebook && Jupyter.notebook.metadata) {
             var creatorId = Jupyter.notebook.metadata.creator || 'KBase User';
             DisplayUtil.displayRealName(creatorId, $('#kb-narr-creator'));
 
@@ -408,6 +412,11 @@ function($,
         if (this.getWorkspaceName() !== null) {
             this.initSharePanel();
 
+            var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
+            if (wsInfo && wsInfo.length === 3) {
+                this.workspaceRef = wsInfo[1] + '/' + wsInfo[2];
+                this.workspaceId = wsInfo[1];
+            }
             var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
             // init the controller
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({

@@ -505,7 +505,7 @@ class LifecycleSubject(object):
                     unprefixed_app_id = app_id.split(':')[1]
                 job_manager.register_job(unprefixed_app_id)
             except Exception as e:
-                # It should be logged somehow 
+                # It should be logged somehow
                 to_log = type(e).__name__ + ': ' + str(e) + '\n' + traceback.format_exc()
                 self._event('debug', to_log)
             self._event('register_app', app_id)

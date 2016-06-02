@@ -1339,8 +1339,18 @@ function($,
                 var newNarMetadata = newNarObj.info[10];
                 newNarMetadata.name = newName;
                 newNarMetadata.ws_name = newWsName;
+                newNarMetadata.job_info = JSON.stringify({queue_time: 0, running: 0, completed: 0, run_time: 0, error: 0});
+
                 newNarObj.data.metadata.name = newName;
                 newNarObj.data.metadata.ws_name = newWsName;
+                newNarObj.data.metadata.job_ids = {
+                    apps: [],
+                    methods: [],
+                    job_usage: {
+                        queue_time: 0,
+                        run_time: 0
+                    }
+                };
 
                 // 2 promises here.
                 // First updates the metadata so it points to the right new workspace

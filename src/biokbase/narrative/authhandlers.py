@@ -32,7 +32,6 @@ if os.environ.get('KBASE_DEBUG', False):
     app_log.setLevel(logging.DEBUG)
 
 auth_cookie_name = "kbase_session"
- # all_cookies = (auth_cookie_name, backup_cookie)
 
 class KBaseLoginHandler(LoginHandler):
     """KBase-specific login handler.
@@ -55,10 +54,6 @@ class KBaseLoginHandler(LoginHandler):
         kbase_env.client_ip = client_ip
 
         auth_cookie = self.cookies.get(auth_cookie_name, None)
-        # found_cookies = [self.cookies[c] for c in all_cookies
-        #                  if c in self.cookies]
-        app_log.info("cookie?")
-        app_log.info(auth_cookie.value)
         if auth_cookie:
             # Push the cookie
             cookie_val = urllib.unquote(auth_cookie.value)

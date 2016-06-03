@@ -1021,12 +1021,12 @@ function($,
                 .click(function(e) {
                     setButtonWorking(true);
                     $newNameInput.val(Jupyter.notebook.get_notebook_name() + ' - Copy')
-                    $alertContainer.show();
+                    $alertContainer.slideDown();
                 });
 
             var $newNameInput = $('<input type="text">')
                 .addClass('form-control')
-                .tooltip({title: 'Gotta have a name!',
+                .tooltip({title: 'Please enter a name.',
                           container: 'body',
                           placement: 'right',
                           trigger: 'manual'})
@@ -1082,7 +1082,8 @@ function($,
                              .append('Cancel')
                              .click(function () {
                                 $doCopyBtn.prop('disabled', false);
-                                $alertContainer.hide();
+                                $alertContainer.slideUp();
+                                $newNameInput.tooltip('hide');
                                 setButtonWorking(false);
                              });
 
@@ -1097,175 +1098,7 @@ function($,
             ).hide();
 
             return $initCopyBtn;
-
-            // var self = this;
-            // var active = '<span class="fa fa-copy"></span> Copy This Narrative';
-            // var $working = $('<span>').append("Copying Narrative...");
-
-            // var $btn = $('<button>').addClass('kb-primary-btn')
-            //     .append(active)
-            //     .on('click', function (e) {
-            //         e.stopPropagation();
-            //         $(this).prop('disabled', true).empty().append($working);
-            //         self.copyThisNarrative($alertContainer, active, null)
-            //         .then(function(result) {
-            //             console.log(result);
-            //         });
-            //     });
-            // return $btn;
         },
-
-        // xcopyThisNarrative: function ($dialog, active, $jump_btn) {
-        //     var self = this;
-        //     $dialog.empty(); // in case user canceled earlier
-        //     self.ws.get_workspace_info({workspace: self.ws_name},
-        //         function (ws_info) {
-        //             self.ws.get_object_info_new({objects: [{ref: ws_info[0] + '/' + ws_info[8]['narrative']}], includeMetadata: 1},
-        //                 function (object_info_list) {
-        //                     var object_info = object_info_list[0];
-        //                     var $newNameInput = $('<input type="text">')
-        //                         .addClass('form-control')
-        //                         .val(ws_info[8]['narrative_nice_name'] + ' - Copy')
-        //                         .on('focus', function () {
-        //                             Jupyter.narrative.disableKeyboardManager();
-        //                         })
-        //                         .on('blur', function () {
-        //                             Jupyter.narrative.enableKeyboardManager();
-        //                         });
-
-
-        //                     var $cancelBtn = $('<button>')
-        //                                      .addClass('kb-default-btn')
-        //                                      .append('Cancel')
-        //                                      .click(function () {
-        //                                         $copyNarButton.prop('disabled', false).empty().append(active);
-        //                                         self.$copyThisNarrBtn.prop('disabled', false).empty().append(active);
-        //                                         $dialog.empty();
-        //                                      });
-
-        //                     var $copyNarButton = $('<button>').addClass('kb-primary-btn')
-
-        //                     // $dialog.append(
-        //                     //     $('<div>').append(
-        //                     //     $('<div>').append("Enter a name for the new Narrative"))
-        //                     //     .append($('<div>').append($newNameInput))
-        //                     //     .append($('<button>').addClass('btn btn-info')
-        //                             .css({'margin-top': '10px'})
-        //                             .append('Copy')
-        //                             .click(function () {
-        //                                 var $thisBtn = $(this);
-        //                                 $thisBtn.prop('disabled', true);
-        //                                 var newMeta = ws_info[8];
-        //                                 newMeta['narrative_nice_name'] = $newNameInput.val();
-
-        //                                 var id = new Date().getTime();
-        //                                 var ws_name = self.my_user_id + ":" + id;
-
-        //                                 self.ws.clone_workspace({
-        //                                     wsi: {id: ws_info[0]},
-        //                                     workspace: ws_name,
-        //                                     meta: newMeta
-        //                                 },
-        //                                     function (new_ws_info) {
-        //                                         // we have to match based on names because when cloning, the object id is not preserved!!! arg!
-        //                                         var new_narrative_ref = new_ws_info[0] + "/" + object_info[1]; //new_ws_info[8].narrative;
-        //                                         // ok, a lot of work just to update the narrative name in the metadata
-        //                                         self.ws.get_objects([{ref: new_narrative_ref}],
-        //                                             function (data) {
-        //                                                 data = data[0]; // only one thing should be returned
-        //                                                 var new_nar_metadata = data.info[10];
-        //                                                 new_nar_metadata.name = newMeta['narrative_nice_name'];
-        //                                                 new_nar_metadata.ws_name = ws_name;
-        //                                                 data.data.metadata.name = newMeta['narrative_nice_name'];
-        //                                                 data.data.metadata.ws_name = ws_name;
-
-        //                                                 // set workspace metadata to point to the correct object id since they can change on clone!!
-        //                                                 self.ws.alter_workspace_metadata({
-        //                                                     wsi: {id: new_ws_info[0]},
-        //                                                     new : {'narrative': String(data.info[0])}
-        //                                                 },
-        //                                                     function () {
-        //                                                         // so much work just to update this name!
-        //                                                         self.ws.save_objects({id: new_ws_info[0], objects: [
-        //                                                                 {
-        //                                                                     type: data.info[2],
-        //                                                                     data: data.data,
-        //                                                                     provenance: data.provenance,
-        //                                                                     name: data.info[1],
-        //                                                                     meta: new_nar_metadata
-        //                                                                 }
-        //                                                             ]},
-        //                                                             function (info) {
-        //                                                                 console.log('copying complete', info);
-        //                                                                 $dialog.empty();
-        //                                                                 if (active) {
-        //                                                                     $thisBtn.prop('disabled', false).empty().append(active);
-        //                                                                     self.refresh();
-        //                                                                 }
-        //                                                                 if ($jump_btn) {
-        //                                                                     var name = info[0][10].name;
-        //                                                                     var copy_id = "ws." + info[0][6] + ".obj." + info[0][0];
-        //                                                                     var oldpath = window.location.pathname;
-        //                                                                     var parts = oldpath.split('/');
-        //                                                                     parts.pop();                    // pop off old id
-        //                                                                     parts.push(copy_id);            // add new one
-        //                                                                     var newpath = parts.join('/'); // rejoin as a path
-        //                                                                     var newurl = window.location.protocol + '//' + window.location.host + newpath;
-        //                                                                     $dialog.append($('<div>').html('Created new copy: <i>' + name + '</i>'));
-        //                                                                     $dialog.append($jump_btn);
-        //                                                                     $jump_btn.click(function () {
-        //                                                                         window.location.replace(newurl);
-        //                                                                     });
-        //                                                                 }
-        //                                                             },
-        //                                                             function (error) {
-        //                                                                 console.error(error);
-        //                                                                 $dialog.empty();
-        //                                                                 $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! Copied successfully, but error on data update. " + error.error.message));
-        //                                                             });
-
-        //                                                     },
-        //                                                     function (error) {
-        //                                                         console.error(error);
-        //                                                         $dialog.empty();
-        //                                                         $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! Copied successfully, but error on data update. " + error.error.message));
-        //                                                     });
-
-
-        //                                             },
-        //                                             function (error) {
-        //                                                 console.error(error);
-        //                                                 $dialog.empty();
-        //                                                 $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! Copied successfully, but error on rename. " + error.error.message));
-        //                                             })
-        //                                     },
-        //                                     function (error) {
-        //                                         console.error(error);
-        //                                         $dialog.empty();
-        //                                         $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! " + error.error.message));
-        //                                     });
-        //                             });
-        //                     $dialog.append(
-        //                         $('<div>').append(
-        //                         $('<div>').append("Enter a name for the new Narrative"))
-        //                         .append($('<div>').append($newNameInput))
-        //                         .append($copyNarButton)
-        //                         .append(active ? $cancelBtn : ''));
-        //                 },
-        //                 function (error) {
-        //                     // error with get_object_info_new
-        //                     console.error(error);
-        //                     $dialog.empty();
-        //                     $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! " + error.error.message));
-        //                 });
-        //         },
-        //         function (error) {
-        //             // error with get_workspace_info
-        //             console.error(error);
-        //             $dialog.empty();
-        //             $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! " + error.error.message));
-        //         });
-        // },
 
         copyThisNarrative: function (newName) { //$dialog, active, $jumpBtn) {
             /* $dialog = element to use as a a dialog area for status, etc.
@@ -1298,10 +1131,20 @@ function($,
              * Just chain together a small pile of ws promises.
              */
 
+            var preCheckError = null;
+            // this.workspaceRef = null;
             if (!this.ws) {
-                return;
+                preCheckError = "Cannot copy - please sign in again.";
             }
-
+            else if (!this.workspaceRef) {
+                preCheckError = "Cannot copy - cannot find Narrative id. Please refresh the page and try again.";
+            }
+            else if (!this.workspaceId) {
+                preCheckError = "Cannot copy - cannot find Narrative data id. Please refresh the page and try again.";
+            }
+            if (preCheckError) {
+                return Promise.reject(preCheckError);
+            }
             // name of the narrative object in the workspace. used for closure.
             var narObjName;
             var newWsName = this.my_user_id + ':' + new Date().getTime();
@@ -1311,6 +1154,8 @@ function($,
                 // add the 'narrative' field later.
             };
             var newWsId;
+
+
 
             // start with getting the object info (we just need the object name)
             return Promise.resolve(this.ws.get_object_info_new({
@@ -1356,8 +1201,8 @@ function($,
                 // First updates the metadata so it points to the right new workspace
                 // Second saves the newly twiddled narrative.
                 return Promise.all([
-                    Promise.resolve(this.ws.alter_workspace_metadat({
-                        wsi: { id: newWsId },
+                    Promise.resolve(this.ws.alter_workspace_metadata({
+                        wsi: { id: null }, //newWsId },
                         new: { 'narrative': String(newNarObj.info[0])}
                     })),
                     Promise.resolve(this.ws.save_objects({
@@ -1381,16 +1226,24 @@ function($,
             .catch(function(error) {
                 //do stuff....
                 console.error(error);
+                var errMessage = "Sorry, an error occurred while copying.";
+                if (error.error && error.error.message) {
+                    //try to parse...
+                    var msg = error.error.message;
+
+                }
                 // if it got to the point that it made a copy,
                 // delete it so it's out of the way - it's broken
                 // if it got here without finishing.
                 if (newWsId) {
                     console.log('deleting new incomplete copy - ' + newWsId);
-                    Promise.resolve(this.ws.delete_workspace({id: newWsId}))
+                    return Promise.resolve(this.ws.delete_workspace({id: newWsId}))
                     .then(function() {
+                        return Promise.reject(error);
                     });
                 }
-                throw error;
+                return Promise.reject(error);
+                // throw error;
             }.bind(this));
         },
 

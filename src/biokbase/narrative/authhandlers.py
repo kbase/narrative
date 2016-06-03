@@ -31,9 +31,8 @@ if Application.initialized:
 if os.environ.get('KBASE_DEBUG', False):
     app_log.setLevel(logging.DEBUG)
 
-auth_cookie_name = "kbase_narr_session"
-backup_cookie = "kbase_session"
-all_cookies = (auth_cookie_name, backup_cookie)
+auth_cookie_name = "kbase_session"
+ # all_cookies = (auth_cookie_name, backup_cookie)
 
 class KBaseLoginHandler(LoginHandler):
     """KBase-specific login handler.
@@ -54,14 +53,18 @@ class KBaseLoginHandler(LoginHandler):
         ua = http_headers.get('User-Agent', 'unknown')
         # save client ip in environ for later logging
         kbase_env.client_ip = client_ip
-        found_cookies = [self.cookies[c] for c in all_cookies
-                         if c in self.cookies]
-        if found_cookies:
+
+        auth_cookie = self.cookies.get(auth_cookie_name, None)
+        # found_cookies = [self.cookies[c] for c in all_cookies
+        #                  if c in self.cookies]
+        app_log.info("cookie?")
+        app_log.info(auth_cookie.value)
+        if auth_cookie:
             # Push the cookie
-            cookie_val = urllib.unquote(found_cookies[0].value)
+            cookie_val = urllib.unquote(auth_cookie.value)
             cookie_obj = {
                 k: v.replace('EQUALSSIGN', '=').replace('PIPESIGN', '|')
-                for k, v in cookie_regex.findall(cookie_val) 
+                for k, v in cookie_regex.findall(cookie_val)
             }
             if app_log.isEnabledFor(logging.DEBUG):
                 app_log.debug("kbase cookie = {}".format(cookie_val))

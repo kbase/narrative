@@ -74,6 +74,7 @@ function($,
         this.cachedUserIds = {};
         this.workspaceRef = null;
         this.workspaceId = null;
+        this.sidePanel = null;
 
         Jupyter.keyboard_manager.disable();
         return this;
@@ -417,16 +418,16 @@ function($,
                 this.workspaceRef = wsInfo[1] + '/' + wsInfo[2];
                 this.workspaceId = wsInfo[1];
             }
-            var $sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
+            this.sidePanel = $('#kb-side-panel').kbaseNarrativeSidePanel({ autorender: false });
             // init the controller
             this.narrController = $('#notebook_panel').kbaseNarrativeWorkspace({
                 ws_id: this.getWorkspaceName()
             });
             this.narrController.render()
             .finally(function() {
-                $sidePanel.render();
+                this.sidePanel.render();
                 $('#kb-wait-for-ws').remove();
-            });
+            }.bind(this));
         }
         else {
             KBFatal('Narrative.init', 'Unable to locate workspace name from the Narrative object!');

@@ -1016,6 +1016,8 @@ function($,
                 }
             };
 
+            /* Clicking this should disable it, then show the passed $alertContainer
+             */
             var $initCopyBtn = $('<button>')
                 .addClass('kb-primary-btn')
                 .click(function(e) {
@@ -1024,6 +1026,10 @@ function($,
                     $alertContainer.slideDown();
                 });
 
+            /* This is the input box for the new narrative name.
+             * Gets pre-populated with the current narrative name + "- copy"
+             * When empty, prompts to enter a name with a tooltip, and disables the copy btn.
+             */
             var $newNameInput = $('<input type="text">')
                 .addClass('form-control')
                 .tooltip({title: 'Please enter a name.',
@@ -1050,6 +1056,9 @@ function($,
 
             var $errorMessage = $('<div>').css({'color': '#F44336'});
 
+            /*
+             * Does the actual copy and displays the error if that happens.
+             */
             var $doCopyBtn = $('<button>')
                              .addClass('kb-primary-btn')
                              .append('Copy')
@@ -1100,39 +1109,22 @@ function($,
             return $initCopyBtn;
         },
 
-        copyThisNarrative: function (newName) { //$dialog, active, $jumpBtn) {
-            /* $dialog = element to use as a a dialog area for status, etc.
-             * active =
-             * $jumpBtn = button to add on copy completion (optional)
-             * Steps.
-             * 1. Get this workspace's info (get_workspace_info)
-             * 2. Use that to get the object info for this narrative (get_object_info_new)
-             * 3. From there, use the narrative_nice_name field to pre-populate the text input field for the copy's name.
-             * 4. User interaction!
-             *    a. User hits cancel = clear the field, remove input and buttons, return.
-             *    b. User hits copy = goto 5.
-             * 5. Clone the workspace - clone_workspace
-             * 6. Find the reference to the newly copied metadata - generally ws object name.
-             * 7. Update Narrative object in the new workspace with different metadata, ws name, etc.
-             *    (call alter_workspace_metadata, save_objects)
-             * 8. Done! If there's a $jumpBtn, add it to the $dialog
-             */
-
-            /**
-             * Okay, so, refactor.
-             * 1. Viewer part and UI behavior.
-             * User hits "Copy" button - creates textfield pre-populated with name
-             * User can hit 'Cancel' - clears name, hides textfield.
-             * User hits 'Copy' - does the copy.
-             * We already have the name and extant metadata from Jupyter.narrative and Jupyter.notebook.metadata.
-             *
-             * 2. Biz logic.
-             * We just need the old name, really, then the rest can be automatic.
-             * Just chain together a small pile of ws promises.
-             */
-
+        /**
+         * @method
+         * @private
+         * Copies the existing Narrative into a new one with a new name.
+         * Performs the following chained async steps.
+         * 0. Preflight - makes sure the user's logged in, and we have the
+         *    required workspace ref for the narrative.
+         * 1. Get the Narrative object. with ws.get_objects
+         * 2. Clone the workspace, but LEAVE OUT the current Narrative. We'll make a new one
+         *    that isn't littered by previous versions that'll be broken on revert.
+         * 3. Update the narrative object with references to the new workspace, strip out
+         *    any existing jobs, and save it to the new workspace.
+         * 4. Update the new workspace's metadata so it references the new Narrative.
+         */
+        copyThisNarrative: function (newName) {
             var preCheckError = null;
-            // this.workspaceRef = null;
             if (!this.ws) {
                 preCheckError = "Cannot copy - please sign in again.";
             }
@@ -1154,41 +1146,34 @@ function($,
                 // add the 'narrative' field later.
             };
             var newWsId;
+            var newNarId;
+            var currentNarrative;
 
-
-
-            // start with getting the object info (we just need the object name)
-            return Promise.resolve(this.ws.get_object_info_new({
-                objects: [{'ref': this.workspaceRef}],
-                includeMetadata: 1
-            }))
-            .then(function(narInfo) {
-                narObjName = narInfo[0][1];
-
-                // next, clone the workspace.
+            // start with getting the existing narrative object.
+            return Promise.resolve(this.ws.get_objects([{ref: this.workspaceRef}]))
+            .then(function(narrativeObject) {
+                // stash the object in a variable with scope external to the Promise.
+                currentNarrative = narrativeObject[0];
+                // next clone the workspace EXCEPT for this object.
                 return Promise.resolve(this.ws.clone_workspace({
-                    wsi: {id: this.workspaceId},
+                    wsi: { id: this.workspaceId },
                     workspace: newWsName,
-                    meta: newWsMeta
-                }));
+                    meta: newWsMeta,
+                    exclude: [{ objid: currentNarrative.info[0] }]
+                }))
             }.bind(this))
             .then(function(newWsInfo) {
-                // now, fetch the new narrative object so we can muck with
-                // its metadata.
+                // pop the newWsId into a variable available by closure in the next step.
                 newWsId = newWsInfo[0];
-                return Promise.resolve(this.ws.get_objects([{'ref': newWsId + '/' + narObjName}]));
-            }.bind(this))
-            .then(function(newNarObj) {
                 // update the ref inside the narrative object and the new workspace metadata.
-                newNarObj = newNarObj[0]; // only one thing should be returned
-                var newNarMetadata = newNarObj.info[10];
+                var newNarMetadata = currentNarrative.info[10];
                 newNarMetadata.name = newName;
                 newNarMetadata.ws_name = newWsName;
                 newNarMetadata.job_info = JSON.stringify({queue_time: 0, running: 0, completed: 0, run_time: 0, error: 0});
 
-                newNarObj.data.metadata.name = newName;
-                newNarObj.data.metadata.ws_name = newWsName;
-                newNarObj.data.metadata.job_ids = {
+                currentNarrative.data.metadata.name = newName;
+                currentNarrative.data.metadata.ws_name = newWsName;
+                currentNarrative.data.metadata.job_ids = {
                     apps: [],
                     methods: [],
                     job_usage: {
@@ -1196,47 +1181,53 @@ function($,
                         run_time: 0
                     }
                 };
-
-                // 2 promises here.
-                // First updates the metadata so it points to the right new workspace
-                // Second saves the newly twiddled narrative.
-                return Promise.all([
-                    Promise.resolve(this.ws.alter_workspace_metadata({
-                        wsi: { id: null }, //newWsId },
-                        new: { 'narrative': String(newNarObj.info[0])}
-                    })),
-                    Promise.resolve(this.ws.save_objects({
-                        id: newWsId,
-                        objects: [{
-                            type: newNarObj.info[2],
-                            data: newNarObj.data,
-                            provenance: newNarObj.provenance,
-                            name: newNarObj.info[1],
-                            meta: newNarMetadata
-                        }]
-                    }))
-                ]);
+                // save the shiny new Narrative so it's at version 1
+                return Promise.resolve(this.ws.save_objects({
+                    id: newWsId,
+                    objects: [{
+                        type: currentNarrative.info[2],
+                        data: currentNarrative.data,
+                        provenance: currentNarrative.provenance,
+                        name: currentNarrative.info[1],
+                        meta: newNarMetadata
+                    }]
+                }));
+            }.bind(this))
+            .then(function(newNarInfo) {
+                // now, just update the workspace metadata to point
+                // to the new narrative object
+                newNarId = newNarInfo[0][0]
+                return Promise.resolve(this.ws.alter_workspace_metadata({
+                    wsi: { id: newWsId },
+                    new: { narrative: String(newNarId) }
+                }))
             }.bind(this))
             .then(function(results) {
                 return {
                     status: 'success',
-                    url: window.location.origin + '/narrative/ws.' + newWsId + '.' + results[1][0][0]
+                    url: window.location.origin + '/narrative/ws.' + newWsId + '.obj.' + newNarId
                 };
             })
             .catch(function(error) {
-                //do stuff....
                 console.error(error);
                 var errMessage = "Sorry, an error occurred while copying.";
                 if (error.error && error.error.message) {
                     //try to parse...
-                    var msg = error.error.message;
+                    // search for function that failed in error.
+                    if (error.error.error) {
+                        var trace = error.error.error;
+                        // in order:
+                        if (trace.search('getObjectInfoNew') > -1) {
 
+                        }
+                    }
+                    var msg = error.error.message;
                 }
                 // if it got to the point that it made a copy,
                 // delete it so it's out of the way - it's broken
                 // if it got here without finishing.
                 if (newWsId) {
-                    console.log('deleting new incomplete copy - ' + newWsId);
+                    console.log('Deleting new incomplete copy - ' + newWsId);
                     return Promise.resolve(this.ws.delete_workspace({id: newWsId}))
                     .then(function() {
                         return Promise.reject(error);
@@ -1390,6 +1381,7 @@ function($,
             }
             return $container;
         },
+
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
         getTimeStampStr: function (objInfoTimeStamp) {
             var date = new Date(objInfoTimeStamp);

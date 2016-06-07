@@ -8,7 +8,6 @@ define([
     'base/js/dialog',
     '../parameterSpec',
     '../runtime',
-    '../microBus',
     '../events',
     'kb_common/html',
     '../props',
@@ -27,7 +26,6 @@ define([
     dialog,
     ParameterSpec,
     Runtime,
-    Bus,
     Events,
     html,
     Props,
@@ -100,6 +98,32 @@ define([
                     {
                         mode: 'processing',
                         stage: 'launching'
+                    },
+                    {
+                        mode: 'processing',
+                        stage: 'queued'
+                    },
+                    {
+                        mode: 'processing',
+                        stage: 'running'
+                    },
+                    {
+                        mode: 'success'
+                    },
+                    {
+                        mode: 'error',
+                        stage: 'launching'
+                    },
+                    {
+                        mode: 'error',
+                        stage: 'queued'
+                    },
+                    {
+                        mode: 'error',
+                        stage: 'running'
+                    },
+                    {
+                        mode: 'error'
                     }
                 ]
             },
@@ -119,9 +143,12 @@ define([
                     },
                     messages: [
                         {
-                            widget: 'paramsWidget',
-                            message: {
-                                type: 'sync-all-parameters'
+                            widget: 'paramsDisplayWidget',
+                            message: {},
+                            address: {
+                                key: {
+                                    type: 'sync-all-parameters'
+                                }
                             }
                         }
                     ]
@@ -333,7 +360,32 @@ define([
                         code: 'built'
                     }
                 ]
-
+            },
+            // Just a plain error state ... not sure how we get here...
+            {
+                state: {
+                    mode: 'error'
+                },
+                ui: {
+                    buttons: {
+                        enabled: ['re-run', 'toggle-developer-options', 'remove'],
+                        disabled: ['run', 'cancel']
+                    },
+                    elements: {
+                        show: ['parameters-display-group', 'exec-group'],
+                        hide: ['parameters-group']
+                    }
+                },
+                next: [
+                    {
+                        mode: 'error'
+                    },
+                    {
+                        mode: 'editing',
+                        params: 'complete',
+                        code: 'built'
+                    }
+                ]
             }
         ];
 
@@ -342,8 +394,8 @@ define([
             workspaceInfo = config.workspaceInfo,
             cell = config.cell,
             parentBus = config.bus,
-            inputWidgetBus = Bus.make(),
             runtime = Runtime.make(),
+            inputWidgetBus = runtime.bus().makeChannelBus(),
             env = {},
             model,
             // HMM. Sync with metadata, or just keep everything there?
@@ -360,7 +412,7 @@ define([
         /*
          * Fetch the method spec for a given method and store the spec in the model.
          * As well, process and store the parameters in the model as well.
-         * 
+         *
          * @param {type} methodId
          * @param {type} methodTag
          * @returns {unresolved}
@@ -493,14 +545,13 @@ define([
         }
 
         function showAboutMethod() {
-            console.log('METHOD SPEC', env.methodSpec);
             dom.setContent('about-method.name', env.methodSpec.info.name);
             dom.setContent('about-method.summary', env.methodSpec.info.subtitle);
             dom.setContent('about-method.version', env.methodSpec.info.ver);
             dom.setContent('about-method.git-commit-hash', env.methodSpec.info.git_commit_hash || dom.na());
             dom.setContent('about-method.authors', env.methodSpec.info.authors.join('<br>'));
             var methodRef = [env.methodSpec.info.namespace || 'l.m', env.methodSpec.info.id].filter(toBoolean).join('/'),
-                link = a({href: '/#appcatalog/app/' + methodRef, target: '_blank'}, 'Catalog Page');           
+                link = a({href: '/#appcatalog/app/' + methodRef, target: '_blank'}, 'Catalog Page');
             dom.setContent('about-method.catalog-link', link);
         }
 
@@ -613,25 +664,24 @@ define([
              * If the model does not contain a value, and it is required, record that failure
              * If there are any failures, the validation feails.
              * And return the set of failures.
-             * 
-             * FOR NOW: let us assume that values only get into the model if 
+             *
+             * FOR NOW: let us assume that values only get into the model if
              * they are valid.
              * All we need to do now then is to ensure that all required fields are present,
              * and missing fields get their default "nullish" value.
-             * 
+             *
              * Also FOR NOW: we don't have a model of what "blank" is for a field, so we use this:
              * - for strings, empty string or undefined
              * - for ints, undefined
              * - for floats, undefined
              * - for sets, empty array
              * - for object refs, empty string (we should check if refs are valid here as well, but not yet.)
-             * 
-             * 
+             *
+             *
              */
             var params = model.getItem('params'),
                 errors = env.parameters.map(function (parameterSpec) {
                     if (parameterSpec.required()) {
-                        // console.log('VAL', parameterSpec.id(), params);
                         if (parameterSpec.isEmpty(params[parameterSpec.id()])) {
                             return {
                                 diagnosis: 'required-missing',
@@ -645,7 +695,6 @@ define([
                 }
                 return false;
             });
-            // console.log('VALIDATION', errors, (errors.length === 0));
             return {
                 isValid: (errors.length === 0),
                 errors: errors
@@ -758,7 +807,7 @@ define([
         // WIDGETS
 
         function showWidget(name, widgetModule, path) {
-            var bus = Bus.make(),
+            var bus = runtime.bus().makeChannelBus(),
                 widget = widgetModule.make({
                     bus: bus,
                     workspaceInfo: workspaceInfo
@@ -769,25 +818,13 @@ define([
                 instance: widget
             };
             widget.start();
-            bus.send({
-                type: 'attach',
+            bus.emit('attach', {
                 node: dom.getElement(path)
             });
         }
 
-        function sendWidget(name, message) {
-            var widget = widgets[name];
-            if (!widget) {
-                throw new Error('Widget ' + name + ' is not registered');
-            }
-
-            widget.bus.send(message);
-        }
-
-
-
         /*
-         * 
+         *
          * Render the UI according to the FSM
          */
         function renderUI() {
@@ -814,7 +851,7 @@ define([
             // Emit messages for this state.
             if (state.ui.messages) {
                 state.ui.messages.forEach(function (message) {
-                    widgets[message.widget].bus.send(message.message);
+                    widgets[message.widget].bus.send(message.message, message.address);
                 });
             }
         }
@@ -872,10 +909,14 @@ define([
                 var jobState = model.getItem('exec.jobState');
                 if (jobState) {
                     return Promise.all([jobState.job_id, deleteJob(jobState.job_id)]);
+                } else {
+                    return [null];
                 }
             })
                 .spread(function (jobId) {
-                    deleteJobFromNotebook(jobId);
+                    if (jobId) {
+                        deleteJobFromNotebook(jobId);
+                    }
                 })
                 .then(function () {
                     // We should really wait for an update to come from the parent!
@@ -929,12 +970,12 @@ define([
                     console.error('Error Deleting Cell', err);
                 });
         }
-        
+
 
 
         /*
          * Cancelling a job is the same as deleting it, and the effect of cancelling the job is the same as re-running it.
-         * 
+         *
          */
         function doCancel() {
             var confirmed = dom.confirmDialog('Are you sure you want to Cancel the running job?', 'Yes', 'No way, dude');
@@ -951,8 +992,8 @@ define([
                 if (jobState) {
                     return Promise.all([jobState.job_id, deleteJob(jobState.job_id)])
                         .then(function () {
-                            deleteFromNotebook(jobState.job_id);
-                        });                    
+                            deleteJobFromNotebook(jobState.job_id);
+                        });
                 }
             })
                 .then(function () {
@@ -968,7 +1009,7 @@ define([
                 })
                 .catch(function (err) {
                     console.error('Error Deleting Job', err);
-                });            
+                });
         }
 
         function updateFromLaunchEvent(launchEvent) {
@@ -987,9 +1028,6 @@ define([
             }());
             fsm.newState(newFsmState);
             renderUI();
-
-            return;
-
         }
 
         function updateFromJobState(jobState) {
@@ -1007,7 +1045,11 @@ define([
                             return {mode: 'success'};
                         case 'suspend':
                         case 'error':
-                            return {mode: 'error', stage: currentState.state.stage};
+                            if (currentState.state.stage) {
+                                return {mode: 'error', stage: currentState.state.stage};
+                            } else {
+                                return {mode: 'error'};
+                            }
                         default:
                             throw new Error('Invalid job state ' + jobState.job_state);
                     }
@@ -1088,30 +1130,23 @@ define([
 
                 // Events from widgets...
 
-                parentBus.listen({
-                    test: function (message) {
-                        return (message.type === 'newstate');
-                    },
-                    handle: function (message) {
-                        console.log('GOT NEWSTATE', message);
-                    }
+                parentBus.on('newstate', function (message) {
+                    console.log('GOT NEWSTATE', message);
                 });
 
                 parentBus.on('reset-to-defaults', function () {
-                    bus.send({
-                        type: 'reset-to-defaults'
-                    });
+                    bus.emit('reset-to-defaults');
                 });
 
                 runtime.bus().listen({
-                    test: function (message) {
-                        if (message.type === 'runstatus') {
-                            console.log('RUNSTATUS', message);
-                        }
-                        return (message.type === 'runstatus' && message.data.cell_id === utils.getMeta(cell, 'attributes', 'id'));
+                    channel: {
+                        cell: utils.getMeta(cell, 'attributes', 'id')
+                    },
+                    key: {
+                        type: 'runstatus'
                     },
                     handle: function (message) {
-                        updateFromLaunchEvent(message.data); // +++
+                        updateFromLaunchEvent(message.data);
                         utils.pushMeta(cell, 'methodCell.exec.log', {
                             timestamp: new Date(),
                             event: 'runstatus',
@@ -1124,7 +1159,7 @@ define([
 
                         // Forward to the exec widget
                         if (widgets.execWidget) {
-                            widgets.execWidget.bus.send('launch-event', {
+                            widgets.execWidget.bus.emit('launch-event', {
                                 data: message.data
                             });
                         }
@@ -1133,8 +1168,11 @@ define([
                 });
 
                 runtime.bus().listen({
-                    test: function (message) {
-                        return (message.type === 'jobstatus' && message.jobState.cell_id === utils.getMeta(cell, 'attributes', 'id'));
+                    channel: {
+                        cell: utils.getMeta(cell, 'attributes', 'id')
+                    },
+                    key: {
+                        type: 'jobstatus'
                     },
                     handle: function (message) {
 
@@ -1147,8 +1185,14 @@ define([
                             model.setItem('exec.jobState', message.job.state);
                             // Forward the job info to the exec widget if it is available. (it should be!)
                             if (widgets.execWidget) {
-                                widgets.execWidget.bus.send('job-state', {
+                                widgets.execWidget.bus.emit('job-state', {
                                     jobState: message.job.state
+                                });
+                            }
+                        } else {
+                            if (widgets.execWidget) {
+                                widgets.execWidget.bus.emit('job-state-updated', {
+                                    jobId: message.job.state.job_id
                                 });
                             }
                         }
@@ -1213,6 +1257,23 @@ define([
                     }
                 });
 
+                // Listen for interesting narrative jquery events...
+                // dataUpdated.Narrative is emitted by the data sidebar list
+                // after it has fetched and updated its data. Not the best of
+                // triggers that the ws has changed, not the worst.
+                $(document).on('dataUpdated.Narrative', function () {
+                    // Tell each cell that the workspace has been updated.
+                    // This is what is interesting, no?
+                    // we can just broadcast this on the runtime bus
+//                    runtime.bus().send({
+//                        type: 'workspace-changed'
+//                    });
+                    console.log('sending workspace changed event');
+                    // runtime.bus().send('workspace-changed');
+                    widgets.paramsInputWidget.bus.emit('workspace-changed');
+                    //widgets.paramsDisplayWidget.bus.send('workspace-changed');
+                });
+
                 // Initialize display
                 showCodeInputArea();
 
@@ -1222,7 +1283,7 @@ define([
         }
 
         function run(params) {
-            // First get the method specs, which is stashed in the model, 
+            // First get the method specs, which is stashed in the model,
             // with the parameters returned.
             return syncMethodSpec(params.methodId, params.methodTag)
                 .then(function () {
@@ -1230,29 +1291,33 @@ define([
 
                     // Set up the Params Input Widget
                     (function () {
-                        var bus = Bus.make(),
+                        var bus = runtime.bus().makeChannelBus(),
                             widget = MethodParamsWidget.make({
                                 bus: bus,
                                 workspaceInfo: workspaceInfo
                             });
-                        widgets.paramsWidget = {
+                        widgets.paramsInputWidget = {
                             path: ['parameters-group', 'widget'],
                             // module: widgetModule,
                             bus: bus,
                             instance: widget
                         };
                         widget.start();
-                        bus.send({
-                            type: 'run',
+                        bus.emit('run', {
                             node: dom.getElement(['parameters-group', 'widget']),
                             parameters: env.parameters
                         });
                         bus.on('parameter-sync', function (message) {
                             var value = model.getItem(['params', message.parameter]);
                             bus.send({
-                                type: 'update',
                                 parameter: message.parameter,
                                 value: value
+                            }, {
+                                // This points the update back to a listener on this key
+                                key: {
+                                    type: 'update',
+                                    parameter: message.parameter
+                                }
                             });
                         });
                         bus.on('parameter-changed', function (message) {
@@ -1269,16 +1334,17 @@ define([
                             }
                         });
 
+
                     }());
 
                     // Set up the Param Display Widget
                     (function () {
-                        var bus = Bus.make(),
+                        var bus = runtime.bus().makeChannelBus(),
                             widget = MethodParamsViewWidget.make({
                                 bus: bus,
                                 workspaceInfo: workspaceInfo
                             });
-                        widgets.paramsWidget = {
+                        widgets.paramsDisplayWidget = {
                             path: ['parameters-display-group', 'widget'],
                             // module: widgetModule,
                             bus: bus,
@@ -1287,24 +1353,39 @@ define([
                         bus.on('sync-all-parameters', function () {
                             var params = model.getItem('params');
                             Object.keys(params).forEach(function (key) {
+
                                 bus.send({
-                                    type: 'update',
                                     parameter: key,
                                     value: params[key]
+                                }, {
+                                    // This points the update back to a listener on this key
+                                    key: {
+                                        type: 'update',
+                                        parameter: key
+                                    }
                                 });
+
+                                //bus.emit('update', {
+                                //    parameter: key,
+                                //    value: params[key]
+                                //});
                             });
                         });
                         bus.on('parameter-sync', function (message) {
                             var value = model.getItem(['params', message.parameter]);
                             bus.send({
-                                type: 'update',
                                 parameter: message.parameter,
                                 value: value
+                            }, {
+                                // This points the update back to a listener on this key
+                                key: {
+                                    type: 'update',
+                                    parameter: message.parameter
+                                }
                             });
                         });
                         widget.start();
-                        bus.send({
-                            type: 'run',
+                        bus.emit('run', {
                             node: dom.getElement(['parameters-display-group', 'widget']),
                             parameters: env.parameters
                         });
@@ -1312,7 +1393,7 @@ define([
 
                     // Set up the Execution Widget
                     (function () {
-                        var bus = Bus.make(),
+                        var bus = runtime.bus().makeChannelBus(),
                             widget = MethodExecWidget.make({
                                 bus: bus,
                                 workspaceInfo: workspaceInfo
@@ -1324,10 +1405,10 @@ define([
                         };
                         widget.start();
                         var x = model.getItem('exec.jobState');
-                        bus.send('run', {
+                        bus.emit('run', {
                             node: dom.getElement('exec-group.widget'),
                             jobState: model.getItem('exec.jobState')
-                                // jobInfo: 
+                                // jobInfo:
                         });
                     }());
 

@@ -19,11 +19,12 @@ define([
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
-            parent,
             container,
             $container,
             bus = config.bus,
-            model = [];
+            model = {
+                value: []
+            };
 
         // Validate configuration.
         // Nothing to do...
@@ -35,23 +36,62 @@ define([
 
 
         function normalizeModel() {
-            var newModel = model.filter(function (item) {
+            var newModel = model.value.filter(function (item) {
                 return item ? true : false;
             });
-            model = newModel;
-        }
-        function syncModel(value) {
-            model = [];
-            config.initialValue.forEach(function (item) {
-                model.push(item);
-            });
-            normalizeModel();
+            model.value = newModel;
         }
 
-        if (config.initialValue) {
-            syncModel(config.initialValue);
+        function setModelValue(value, index) {
+            return Promise.try(function () {
+                if (index !== undefined) {
+                    if (value) {
+                        model.value[index] = value;
+                    } else {
+                        delete model.value[index];
+                    }
+                } else {
+                    if (value) {
+                        model.value = value.map(function (item) {
+                            return item;
+                        });
+                    } else {
+                        unsetModelValue();
+                    }
+                }
+                normalizeModel();
+            })
+                .then(function () {
+                    render();
+                });
         }
 
+        function addModelValue(value) {
+            return Promise.try(function () {
+                model.value.push(value);
+            })
+                .then(function () {
+                    render();
+                });
+
+        }
+
+        function unsetModelValue() {
+            return Promise.try(function () {
+                model.value = [];
+            })
+                .then(function (changed) {
+                    render();
+                });
+        }
+
+        function resetModelValue() {
+            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
+                setModelValue(spec.spec.default_values);
+            } else {
+                unsetModelValue();
+            }
+        }
 
         /*
          * If the parameter is optional, and is empty, return null.
@@ -94,10 +134,10 @@ define([
                     };
                 }
 
-                var validationOptions = copyProps(spec.spec.text_options, ['min_int', 'max_int']);
+                var validationOptions = copyProps(spec.spec.text_options, ['regexp_constraint', 'min_length', 'max_length']);
 
                 validationOptions.required = spec.required();
-                return Validation.validateIntString(rawValue, validationOptions);
+                return Validation.validateTextString(rawValue, validationOptions);
             });
         }
 
@@ -126,16 +166,16 @@ define([
                                         .then(function (result) {
                                             if (result.isValid) {
                                                 if (index === 'add') {
-                                                    model.push(result.parsedValue);
+                                                    addModelValue(result.parsedValue);
                                                 } else {
-                                                    index = parseInt(index);
-                                                    model[index] = result.parsedValue;
+                                                    index = parseInt(index, 10);
+                                                    setModelValue(result.parsedValue, index);
                                                 }
                                                 normalizeModel();
 
                                                 bus.send({
                                                     type: 'changed',
-                                                    newValue: model
+                                                    newValue: model.value
                                                 });
                                             }
                                             bus.send({
@@ -143,6 +183,10 @@ define([
                                                 errorMessage: result.errorMessage,
                                                 diagnosis: result.diagnosis
                                             });
+                                            return null;
+                                        })
+                                        .catch(function (err) {
+                                            console.error(err);
                                         });
                                 }
                             },
@@ -166,9 +210,9 @@ define([
                     value: currentValue
                 });
             if (index === 'add') {
-                preButton = div({class: 'input-group-addon', style: {width: '10ex'}}, 'Add');
-                postButton = div({class: 'input-group-addon'}, button({
-                    class: 'btn btn-primary btn-xs',
+                preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, '');
+                postButton = div({class: 'input-group-addon', style: {padding: '0'}}, button({
+                    class: 'btn btn-primary btn-link btn-xs',
                     type: 'button',
                     style: {width: '4ex'},
                     id: events.addEvent({type: 'click', handler: function (e) {
@@ -176,19 +220,17 @@ define([
                         }})
                 }, '+'));
             } else {
-                preButton = div({class: 'input-group-addon', style: {width: '10ex'}}, index + '.');
-                postButton = div({class: 'input-group-addon'}, button({
-                    class: 'btn btn-danger btn-xs',
+                preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, String(index + 1) + '.');
+                postButton = div({class: 'input-group-addon', style: {padding: '0'}}, button({
+                    class: 'btn btn-danger btn-link btn-xs',
                     type: 'button',
                     style: {width: '4ex'},
                     dataIndex: String(index),
                     id: events.addEvent({type: 'click', handler: function (e) {
-                            var index = e.target.getAttribute('data-index');
-                            var control = container.querySelector('input[data-index="' + index + '"]');
+                            var index = e.target.getAttribute('data-index'),
+                                control = container.querySelector('input[data-index="' + index + '"]');
                             control.value = '';
                             control.dispatchEvent(new Event('change'));
-
-                            // alert('delete me ' + control.value);
                         }})
                 }, 'x'));
             }
@@ -201,7 +243,7 @@ define([
 
         function render(input) {
             var events = Events.make(),
-                items = model.map(function (value, index) {
+                items = model.value.map(function (value, index) {
                     return makeInputControl(value, index, events, bus);
                 });
 
@@ -225,7 +267,7 @@ define([
             };
         }
         function autoValidate() {
-            return Promise.all(model.map(function (value, index) {
+            return Promise.all(model.value.map(function (value, index) {
                 // could get from DOM, but the model is the same.
                 var rawValue = container.querySelector('[data-index="' + index + '"]').value;
                 // console.log('VALIDATE', value);
@@ -280,27 +322,23 @@ define([
 
         function start() {
             return Promise.try(function () {
-                bus.listen({
-                    test: function (message) {
-                        return (message.type === 'changed');
-                    },
-                    handle: function (message) {
-                        render();
-                    }
+                bus.on('reset-to-defaults', function (message) {
+                    resetModelValue();
                 });
+                bus.on('update', function (message) {
+                    setModelValue(message.value);
+                });
+                bus.on('refresh', function () {
+
+                });
+                bus.emit('sync');
             });
         }
 
-        function run(input) {
+        function run(params) {
             return Promise.try(function () {
-                if (input.value) {
-                    syncModel(input.value);
-                }
-                return render(input);
-            })
-                .then(function () {
-                    return autoValidate();
-                });
+                // nothing to do now... we are ... reactive.
+            });
         }
 
         return {

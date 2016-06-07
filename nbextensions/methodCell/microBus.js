@@ -24,11 +24,20 @@
 define([
 ], function () {
     'use strict';
+    var instanceId = 0;
+    function newInstance() {
+        instanceId += 1;
+        return instanceId;
+    }
+    
     function factory(config) {
         var listeners = [],
             queue = [],
             interval = 0,
-            timer;
+            timer,
+            instanceId = newInstance();
+        
+        
         function testListener(message, tester) {
             try {
                 return tester(message);
@@ -48,9 +57,12 @@ define([
             var processing = queue;
             queue = [];
             processing.forEach(function (item) {
+                //console.log('processing ' + item.message.type, instanceId, item);
                 listeners.forEach(function (listener) {
                     if (testListener(item.message, listener.test)) {
+                        //console.log('handling ' + item.message.type, instanceId, item);
                         letListenerHandle(item.message, listener.handle);
+                        //console.log('done ' + item.message.type, instanceId, item);
                     }
                 });
             });
@@ -97,10 +109,11 @@ define([
          */
         function send(message, options) {
             if (typeof message === 'string') {
-                if (options) {
-                    options.type = message;
-                    message = options;                    
+                if (!options) {
+                    options = {};
                 }
+                options.type = message;
+                message = options;
             }
             
             queue.push({

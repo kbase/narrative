@@ -26,14 +26,6 @@ define([
             bus = config.bus,
             model;
 
-        // Validate configuration.
-        // Nothing to do...
-
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
-        options.enabled = true;
-        
         // DATA 
         
         function getObject(value) {
@@ -99,7 +91,7 @@ define([
                 bus.on('update', function (message) {
                     model.setItem('value', message.value);
                 });
-                bus.send({type: 'sync'});
+                bus.emit('sync');
             });
         }
 

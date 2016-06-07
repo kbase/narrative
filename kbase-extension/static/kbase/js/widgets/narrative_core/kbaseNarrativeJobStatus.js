@@ -12,7 +12,7 @@ define([
     'kbaseTabs',
     'kbaseViewLiveRunLog',
     'kbaseReportView',
-    'nbextensions/methodCell/microBus',
+    'nbextensions/methodCell/miniBus',
     'nbextensions/methodCell/runtime',
     'text!kbase/templates/job_status_table.html'
 ], function (
@@ -77,11 +77,11 @@ define([
                     return (msg.jobId === this.jobId);
                 }.bind(this),
                 handle: function(msg) {
-                    console.log('handling a message', msg);
+                    // console.log('handling a message', msg);
                     this.handleJobStatus(msg);
                 }.bind(this)
             });
-            console.log(this.runtime.bus());
+            // console.log(this.runtime.bus());
             // render up the panel's view layer.
             this.makeJobStatusPanel();
             // wire up the comm channel and turn it loose.

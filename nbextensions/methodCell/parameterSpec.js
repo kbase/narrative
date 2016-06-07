@@ -70,6 +70,14 @@ define([
             switch (spec.field_type) {
                 case 'checkbox':
                     return 'int';
+                case 'dropdown':
+                    if (spec.allow_multiple) {
+                        return '[]string';
+                    } else {
+                        return 'string';
+                    }
+                case 'textsubdata':
+                    return 'subdata';
             }
             
             /*
@@ -79,15 +87,34 @@ define([
                 return 'unspecified';
             }
             var validateAs = spec.text_options.validate_as;
-            type;
             if (validateAs) {
-                return validateAs;
+                if (spec.allow_multiple) {
+                    return '[]' + validateAs;
+                } 
+                else return validateAs;
             }
 
             // Some parameter specs have valid_ws_types as an empty set, which 
             // does not mean what it could, it means that it is not an option.
             if (spec.text_options.valid_ws_types && spec.text_options.valid_ws_types.length > 0) {
-                return 'workspaceObjectName';
+                if (spec.allow_multiple) {
+                    return '[]workspaceObjectName';
+                } else {
+                    return 'workspaceObjectName';
+                }
+            }
+            
+            // Okay, if it has no specific type assigned (validate_as), and is
+            // not flagged from the various properties above by grousing through
+            // the text_options, we assume it is a string.
+
+            switch (spec.field_type) {
+                case 'text':
+                    if (spec.allow_multiple) {
+                        return '[]string';
+                    } else {
+                        return 'string';
+                    }
             }
 
             return 'unspecified';
@@ -184,6 +211,140 @@ define([
         function required() {
             return _required;
         }
+        
+         function getConstraints() {
+            var fieldType = spec.field_type;
+
+            // NOTE:
+            // field_type is text or dropdown, but does not always correspond to the 
+            // type of control to build. E.g. selecting a workspace object is actually
+            // a dropdown even though the field_type is 'text'.
+
+            switch (dataType()) {
+                case 'string':
+                case 'text':
+                    switch (fieldType) {
+                        case 'text':
+                            return {    
+                                required: required(),
+                                defaultValue: defaultValue(),
+                                min: spec.text_options.min_length,
+                                max: spec.text_options.max_length
+                            };
+                        case 'dropdown':
+                            return {                                
+                            };
+                        default:
+                            throw new Error('Unknown text param field type');
+                    }
+                case 'int':
+                    switch (fieldType) {
+                        case 'text':
+                            return {                                
+                            };
+                        case 'checkbox':
+                            return {                                
+                            };
+                        default:
+                            return {                                
+                            };
+                    }
+                case 'float':
+                    return {                                
+                    };
+                case 'workspaceObjectName':
+                    switch (uiClass()) {
+                        case 'input':                            
+                            return {
+                                required: required(),
+                                types: spec.text_options.valid_ws_types,
+                                defaultValue: defaultValue()
+                            };
+                        case 'output':
+                            return {
+                                required: required(),
+                                types: spec.text_options.valid_ws_types,
+                                defaultValue: defaultValue()
+                            };
+                        case 'parameter':
+                            return {
+                                required: required(),
+                                types: spec.text_options.valid_ws_types,
+                                defaultValue: defaultValue()
+                            };
+                        default:
+                            throw new Error('Unknown workspaceObjectName ui class');
+                    }
+                case '[]workspaceObjectName':
+                    switch (uiClass()) {
+                        case 'input':                            
+                            return {
+                                required: required(),
+                                types: spec.text_options.valid_ws_types,
+                                defaultValues: defaultValue()
+                            };
+                        case 'parameter':
+                            return {
+                                required: required(),
+                                types: spec.text_options.valid_ws_types,
+                                defaultValues: defaultValue(),
+                            };
+                        default:
+                            throw new Error('Unknown []workspaceObjectName ui class');
+                    }                    
+                case '[]string':
+                    switch (fieldType) {
+                        case 'dropdown':
+                            return {                                
+                            };
+                        case 'text':
+                            return {
+                                required: required()
+                            }
+                        default:
+                            throw new Error('Unknown []string field type: ' + fieldType);
+                    }                    
+                case 'unspecified':
+                    // a bunch of field types are untyped:
+                    switch (fieldType) {
+                        case 'text':
+                            return {                                
+                            };
+                        case 'checkbox':
+                            return {                                
+                            };
+                        case 'textarea':
+                            return {                                
+                            };
+                        case 'dropdown':
+                            return {                                
+                            };
+                        case 'custom_button':
+                            return {                                
+                            };
+                        case 'textsubdata':
+                            return {                                
+                            };
+                        case 'file':
+                            return {                                
+                            };
+                        case 'custom_textsubdata':
+                            return {                                
+                            };
+                        case 'custom_widget':
+                            return {                                
+                            };
+                        case 'tab':
+                            return {                                
+                            };
+                        default:
+                            throw new Error('Unknown unspecified field type');
+                    }
+                default:
+                    throw new Error('Unknown data type');
+
+            }
+        }
 
         return {
             id: id,
@@ -202,7 +363,8 @@ define([
             isAdvanced: isAdvanced,
             isEmpty: isEmpty,
             nullValue: nullValue,
-            defaultValue: defaultValue
+            defaultValue: defaultValue,
+            getConstraints: getConstraints
         };
     }
 

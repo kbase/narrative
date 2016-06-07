@@ -2,14 +2,13 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'jquery',
-    'base/js/namespace',
     'kb_common/html',
     '../../validation',
     '../../events',
+    '../../dom',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, $, Jupyter, html, Validation, Events) {
+], function (Promise, html, Validation, Events, Dom) {
     'use strict';
 
     // Constants
@@ -20,8 +19,8 @@ define([
         var options = {},
             spec = config.parameterSpec,
             parent,
+            dom,
             container,
-            $container,
             bus = config.bus,
             model = {
                 availableValues: null,
@@ -30,12 +29,12 @@ define([
 
         // Validate configuration.
         // Nothing to do...
-        
+
         options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
         options.multiple = spec.multipleItems();
         options.required = spec.required();
         options.enabled = true;
-        
+
         model.availableValues = spec.spec.dropdown_options.options;
 
 
@@ -49,7 +48,16 @@ define([
          */
 
         function getInputValue() {
-            return $container.find('[data-element="input-container"] [data-element="input"]').val();
+            var control = dom.getElement('input-container.input'),
+                selected = control.selectedOptions;
+            
+            if (selected.length === 0) {
+                return;
+            }
+            
+            // we are modeling a single string value, so we always just get the 
+            // first selected element, which is all there should be!
+            return selected.item(0).value;
         }
 
         /*
@@ -73,7 +81,7 @@ define([
                 }
 
                 var rawValue = getInputValue(),
-                    validationResult = Validation.validateText(rawValue, {
+                    validationResult = Validation.validateTextString(rawValue, {
                         required: options.required
                     });
 
@@ -87,25 +95,23 @@ define([
             });
         }
 
-         function makeInputControl(events) {
-            var selected;
-            // There is an input control, and a dropdown,
-            // TODO select2 after we get a handle on this...
-            var selectOptions = model.availableValues.map(function (item) {
-                selected = false;
-                if (item.value === model.value) {
-                    selected = true;
-                }
+        function makeInputControl(events) {
+            var selected,
+                selectOptions = model.availableValues.map(function (item) {
+                    selected = false;
+                    if (item.value === model.value) {
+                        selected = true;
+                    }
 
-                return option({
-                    value: item.value,
-                    selected: selected
-                }, item.display);
-            });
+                    return option({
+                        value: item.value,
+                        selected: selected
+                    }, item.display);
+                });
 
             // CONTROL
             return select({
-                id: events.addEvent({type: 'change', handler: function (e) {
+                id: events.addEvent({type: 'change', handler: function () {
                         validate()
                             .then(function (result) {
                                 if (result.isValid) {
@@ -128,15 +134,15 @@ define([
 
         function render(input) {
             Promise.try(function () {
-                var events = Events.make(),                
+                var events = Events.make(),
                     inputControl = makeInputControl(events);
-
-                $container.find('[data-element="input-container"]').html(inputControl);
+                    
+                dom.setContent('input-container', inputControl);
                 events.attachEvents(container);
             })
-            .then(function () {
-                autoValidate();
-            })
+                .then(function () {
+                    autoValidate();
+                });
         }
 
         function layout(events) {
@@ -150,7 +156,7 @@ define([
                 events: events
             };
         }
-        
+
         function autoValidate() {
             validate()
                 .then(function (result) {
@@ -161,7 +167,7 @@ define([
                     });
                 });
         }
-        
+
         function setModelValue(value) {
             return Promise.try(function () {
                 if (model.value !== value) {
@@ -183,8 +189,8 @@ define([
                     render();
                 });
         }
-        
-         function resetModelValue() {
+
+        function resetModelValue() {
             if (spec.spec.default_values && spec.spec.default_values.length > 0) {
                 setModelValue(spec.spec.default_values[0]);
             } else {
@@ -195,60 +201,41 @@ define([
 
         // LIFECYCLE API
 
-        function init() {
-            // Normalize the parameter specification settings.
-            // TODO: much of this is just silly, we should be able to use the spec 
-            //   directly in most places.
-            
-        }
-
-        function attach(node) {
-            return Promise.try(function () {
-                parent = node;
-                container = node.appendChild(document.createElement('div'));
-                $container = $(container);
-
-                var events = Events.make(),
-                    theLayout = layout(events);
-
-                container.innerHTML = theLayout.content;
-                events.attachEvents(container);
-            });
-        }
-
         function start() {
             return Promise.try(function () {
-                 bus.listen({
-                    test: function (message) {
-                        return (message.type === 'reset-to-defaults');
-                    },
-                    handle: function () {
+                bus.on('run', function (message) {
+                    parent = message.node;
+                    container = parent.appendChild(document.createElement('div'));
+                    dom = Dom.make({node: container});
+
+                    var events = Events.make(),
+                        theLayout = layout(events);
+
+                    container.innerHTML = theLayout.content;
+                    events.attachEvents(container);
+
+                    bus.on('reset-to-defaults', function () {
                         resetModelValue();
-                    }
+                    });
+                    bus.on('update', function (message) {
+                        setModelValue(message.value);
+                    });
+                    bus.emit('sync');
                 });
-
-                bus.on('update', function (message) {
-                    setModelValue(message.value);
-                });
-
-                bus.send({type: 'sync'});
             });
         }
 
-        function run(input) {
-            return Promise.try(function () {
-                return render(input);
-            })
-            .then(function () {
-                return autoValidate();
-            });
-        }
+//        function run(input) {
+//            return Promise.try(function () {
+//                return render(input);
+//            })
+//            .then(function () {
+//                return autoValidate();
+//            });
+//        }
 
         return {
-            init: init,
-            attach: attach,
-            start: start,
-            run: run
+            start: start
         };
     }
 

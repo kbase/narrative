@@ -148,7 +148,7 @@ define([
                                 case 'number':
                                     return String(value);
                                 case 'string':
-                                    return escapeString(value, '"');
+                                    return '"' + escapeString(value, '"') + '"';
                                 default:
                                     throw new Error('Invalid array element of type ' + (typeof value));
                             }

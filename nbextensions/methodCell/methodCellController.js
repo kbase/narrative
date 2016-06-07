@@ -2,7 +2,7 @@
 /*jslint white:true,browser:true*/
 
 define([
-    './microBus'
+    './miniBus'
 ], function (Bus) {
     'use strict';
 

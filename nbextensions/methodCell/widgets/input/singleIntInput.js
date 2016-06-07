@@ -114,7 +114,7 @@ define([
                     validationResult;
 
                 validationOptions.required = spec.required();
-                validationResult = Validation.validateIntegerField(rawValue, validationOptions);
+                validationResult = Validation.validateIntString(rawValue, validationOptions);
 
                 return {
                     isValid: validationResult.isValid,
@@ -239,7 +239,7 @@ define([
                     events.attachEvents(container);
                     setModelValue(message.value);
                     
-                    bus.send({type: 'sync'});
+                    bus.emit('sync');
                 });
                 bus.on('reset-to-defaults', function (message) {
                     resetModelValue();

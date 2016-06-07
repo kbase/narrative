@@ -2,14 +2,15 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'jquery',
     'base/js/namespace',
     'kb_common/html',
     '../../validation',
     '../../events',
+    '../../runtime',
+    '../../dom',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, $, Jupyter, html, Validation, Events) {
+], function (Promise, Jupyter, html, Validation, Events, Runtime, Dom) {
     'use strict';
 
     // Constants
@@ -22,11 +23,12 @@ define([
             workspaceId = config.workspaceId,
             parent,
             container,
-            $container,
             bus = config.bus,
             model = {
                 value: undefined
-            };
+            },
+            dom,
+            runtime = Runtime.make();
 
         // Validate configuration.
         // Nothing to do...
@@ -47,7 +49,7 @@ define([
          */
 
         function getInputValue() {
-            return $container.find('[data-element="input-container"] [data-element="input"]').val();
+            return dom.getElement('input-container.input').value;
         }
 
         function setModelValue(value) {
@@ -84,19 +86,11 @@ define([
          *
          * Text fields can occur in multiples.
          * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
+         * or as a special case of multiple-entry --
          * with a min-items of 1 and max-items of 1.
-         * 
+         *
          *
          */
-
-        function copyProps(from, props) {
-            var newObj = {};
-            props.forEach(function (prop) {
-                newObj[prop] = from[prop];
-            });
-            return newObj;
-        }
 
         function validate() {
             return Promise.try(function () {
@@ -112,7 +106,9 @@ define([
                     validationOptions = {
                         required: spec.required(),
                         shouldNotExist: true,
-                        workspaceId: workspaceId
+                        workspaceId: workspaceId,
+                        authToken: runtime.authToken(),
+                        workspaceServiceUrl: runtime.config('services.workspace.url')
                     };
 
                 return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
@@ -162,30 +158,25 @@ define([
                     events: [
                         {
                             type: 'change',
-                            handler: function (e) {
+                            handler: function () {
                                 validate()
                                     .then(function (result) {
                                         if (result.isValid) {
-                                            bus.send({
-                                                type: 'changed',
+                                            bus.emit('changed', {
                                                 newValue: result.value
                                             });
                                         } else if (result.diagnosis === 'required-missing') {
-                                            bus.send({
-                                                type: 'changed',
+                                            bus.emit('changed', {
                                                 newValue: result.value
                                             });
                                         }
-                                        bus.send({
-                                            type: 'validation',
+                                        bus.emit('validation', {
                                             errorMessage: result.errorMessage,
                                             diagnosis: result.diagnosis
                                         });
                                     })
                                     .catch(function (err) {
-                                        console.error('VALIDATION ERROR', err);
-                                        bus.send({
-                                            type: 'validation',
+                                        bus.emit('validation', {
                                             errorMessage: err.message,
                                             diagnosis: 'error'
                                         });
@@ -194,13 +185,13 @@ define([
                         }, changeOnPause(),
                         {
                             type: 'focus',
-                            handler: function (e) {
+                            handler: function () {
                                 Jupyter.keyboard_manager.disable();
                             }
                         },
                         {
                             type: 'blur',
-                            handler: function (e) {
+                            handler: function () {
                                 Jupyter.keyboard_manager.enable();
                             }
                         }
@@ -216,7 +207,7 @@ define([
                 var events = Events.make(),
                     inputControl = makeInputControl(model.value, events, bus);
 
-                $container.find('[data-element="input-container"]').html(inputControl);
+                dom.setContent('input-container', inputControl);
                 events.attachEvents(container);
             })
                 .then(function () {
@@ -239,15 +230,13 @@ define([
         function autoValidate() {
             return validate()
                 .then(function (result) {
-                    bus.send({
-                        type: 'validation',
+                    bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
                 })
                 .catch(function (err) {
-                    bus.send({
-                        type: 'validation',
+                    bus.emit('validation', {
                         errorMessage: err.message,
                         diagnosis: 'error'
                     });
@@ -256,49 +245,52 @@ define([
 
         // LIFECYCLE API
 
-        function init() {
-        }
-
-        function attach(node) {
-            return Promise.try(function () {
-                parent = node;
-                container = node.appendChild(document.createElement('div'));
-                $container = $(container);
-
-                var events = Events.make(),
-                    theLayout = layout(events);
-
-                container.innerHTML = theLayout.content;
-                events.attachEvents(container);
-            });
-        }
-
         function start() {
             return Promise.try(function () {
-                bus.on('reset-to-defaults', function (message) {
-                    resetModelValue();
-                });
-                bus.on('update', function (message) {
-                    setModelValue(message.value);
-                });
-                bus.on('refresh', function () {
+                bus.on('run', function (message) {
+                    parent = message.node;
+                    container = parent.appendChild(document.createElement('div'));
+                    dom = Dom.make({node: container});
 
-                });
-                bus.send({type: 'sync'});
-            });
-        }
+                    var events = Events.make(),
+                        theLayout = layout(events);
 
-        function run(params) {
-            return Promise.try(function () {
-                // nothing to do now... we are ... reactive.
+                    container.innerHTML = theLayout.content;
+                    events.attachEvents(container);
+
+
+                    bus.on('reset-to-defaults', function (message) {
+                        resetModelValue();
+                    });
+                    bus.on('update', function (message) {
+                        setModelValue(message.value);
+                    });
+                    bus.on('refresh', function () {
+
+                    });
+                    bus.on('workspace-changed', function (message) {
+                        console.log('workspace updated!!!');
+                    });
+
+                    //runtime.bus().receive({
+                    //    test: function (message) {
+                    //        return (message.type === 'workspace-updated');
+                    //    },
+                    //    handle: function (message) {
+                    //        console.log('received here too...');
+                    //    }
+                    //});
+
+                    //runtime.bus().on('workspace-updated', function () {
+                    //    console.log('received here too...');
+                    //})
+                    bus.emit('sync');
+                });
             });
         }
 
         return {
-            init: init,
-            attach: attach,
-            start: start,
-            run: run
+            start: start
         };
     }
 

@@ -107,7 +107,7 @@ define([
         function newState(nextState) {
             var state = findNextState(currentState.next, nextState);
             if (!state) {
-                console.error(nextState, currentState);
+                console.error(JSON.parse(JSON.stringify(nextState)), JSON.parse(JSON.stringify(currentState)));
                 throw new Error('Cannot find the new state');
             }
 

@@ -4,14 +4,16 @@ define([
     'jquery',
     'bluebird',
     'kb_common/html',
+    'kb_common/utils',
     'kb_service/client/workspace',
     'kb_service/utils',
     '../../validation',
     '../../events',
     '../../runtime',
+    '../../dom',
     'bootstrap',
     'css!font-awesome'
-], function ($, Promise, html, Workspace, serviceUtils, Validation, Events, Runtime) {
+], function ($, Promise, html, utils, Workspace, serviceUtils, Validation, Events, Runtime, Dom) {
     'use strict';
 
     // Constants
@@ -21,13 +23,13 @@ define([
 
     function factory(config) {
         var options = {},
-            spec = config.parameterSpec,
+            constraints = config.parameterSpec.getConstraints(),
             parent,
             container,
-            $container,
             workspaceId = config.workspaceId,
             bus = config.bus,
             runCount = 0,
+            dom,
             model = {
                 availableValues: undefined,
                 value: undefined
@@ -41,12 +43,8 @@ define([
         //if (!workspaceUrl) {
         //    throw new Error('Workspace url is required for the object widget');
         //}
-
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
         options.enabled = true;
-
+        
         function makeInputControl(events, bus) {
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
@@ -70,18 +68,17 @@ define([
                         validate()
                             .then(function (result) {
                                 if (result.isValid) {
-                                    bus.send({
-                                        type: 'changed',
+                                    model.value = result.value;
+                                    bus.emit('changed', {
                                         newValue: result.value
                                     });
                                 } else if (result.diagnosis === 'required-missing') {
-                                    bus.send({
-                                        type: 'changed',
+                                    model.value = result.value;
+                                    bus.emit('changed', {
                                         newValue: result.value
                                     });
                                 }
-                                bus.send({
-                                    type: 'validation',
+                                bus.emit('validation', {
                                     errorMessage: result.errorMessage,
                                     diagnosis: result.diagnosis
                                 });
@@ -101,7 +98,14 @@ define([
          * values.
          */
         function getInputValue() {
-            return $container.find('[data-element="input-container"] [data-element="input"]').val();
+            var control = dom.getElement('input-container.input'),
+                selected = control.selectedOptions;
+            if (selected.length === 0) {
+                return;
+            }
+            // we are modeling a single string value, so we always just get the 
+            // first selected element, which is all there should be!
+            return selected.item(0).value;
         }
 
         function setModelValue(value) {
@@ -127,8 +131,8 @@ define([
         }
 
         function resetModelValue() {
-            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
-                setModelValue(spec.spec.default_values[0]);
+            if (constraints.defaultValue) {
+                setModelValue(constraints.defaultValue);
             } else {
                 unsetModelValue();
             }
@@ -146,7 +150,9 @@ define([
 
                 var rawValue = getInputValue(),
                     validationOptions = {
-                        required: spec.required()
+                        required: constraints.required,
+                        authToken: runtime.authToken(),
+                        workspaceServiceUrl: runtime.config('services.workspace.url')
                     };
 
                 return Validation.validateWorkspaceObjectName(rawValue, validationOptions);
@@ -178,7 +184,7 @@ define([
         }
 
         function fetchData() {
-            var types = spec.spec.text_options.valid_ws_types;
+            var types = constraints.types;
             return Promise.all(types.map(function (type) {
                 return getObjectsByType(type);
             }))
@@ -210,11 +216,11 @@ define([
                     inputControl = makeInputControl(events, bus),
                     content = div({class: 'input-group', style: {width: '100%'}}, inputControl);
 
-                $container.find('[data-element="input-container"]').html(content);
+                dom.setContent('input-container', content);
                 events.attachEvents(container);
             })
                 .then(function () {
-                    return autoValidate();
+                    // return autoValidate();
                 });
         }
 
@@ -238,60 +244,80 @@ define([
         function autoValidate() {
             return validate()
                 .then(function (result) {
-                    bus.send({
-                        type: 'validation',
+                    bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
                 });
         }
 
-        // LIFECYCLE API
-
-        function init() {
-        }
-
-        function attach(node) {
-            return Promise.try(function () {
-                parent = node;
-                container = node.appendChild(document.createElement('div'));
-                $container = $(container);
-
-                var events = Events.make(),
-                    theLayout = layout(events);
-
-                container.innerHTML = theLayout.content;
-                events.attachEvents(container);
-            });
-        }
-
-        function start() {
-            return Promise.try(function () {
-                bus.on('reset-to-defaults', function (message) {
-                    resetModelValue();
-                });
-                bus.on('update', function (message) {
-                    setModelValue(message.value);
-                });
-                bus.send({type: 'sync'});
-            });
-        }
-
-        function run(params) {
-            return Promise.try(function () {
-                return fetchData(params);
-            })
+        /*
+         * Handle the workspace being updated and reflecting that correctly
+         * in the ui.
+         * Re-fetch available values, if different than existing, then
+         * rebuild the control. If there is a current value and it is no longer
+         * available, issue a warning
+         */
+        function doWorkspaceChanged() {
+            // there are a few thin
+            fetchData()
                 .then(function (data) {
-                    model.availableValues = data;
-                    render();
+                    // compare to availableData.
+                    if (!utils.isEqual(data, model.availableValues)) {
+                        model.availableValues = data;
+                        var matching = model.availableValues.filter(function (value) {
+                            if (value.name === model.value) {
+                                return true;
+                            }
+                            return false;
+                        })
+                        if (matching.length === 0) {
+                            model.value = null;
+                        }
+                        render();
+                    }
                 });
+
+        }
+
+        // LIFECYCLE API
+        function start() {
+            return Promise.try(function () {                
+                bus.on('run', function (message) {                    
+                    parent = message.node;
+                    container = parent.appendChild(document.createElement('div'));
+                    dom = Dom.make({node: container});
+
+                    var events = Events.make(),
+                        theLayout = layout(events);
+                        
+                    container.innerHTML = theLayout.content;
+                    events.attachEvents(container);
+                        
+                    return fetchData()
+                        .then(function (data) {
+                            model.availableValues = data;
+                            render();
+                        })
+                        .then(function () {
+
+                            bus.on('reset-to-defaults', function (message) {
+                                resetModelValue();
+                            });
+                            bus.on('update', function (message) {
+                                setModelValue(message.value);
+                            });
+                            bus.on('workspace-changed', function (message) {
+                                doWorkspaceChanged();
+                            });
+                            bus.emit('sync');
+                        });
+                    });
+            });
         }
 
         return {
-            init: init,
-            attach: attach,
-            start: start,
-            run: run
+            start: start
         };
     }
 

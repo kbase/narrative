@@ -142,10 +142,14 @@ define (
                         // but without some heavy rewiring, it's difficult
                         // to track when some event occurred.
                         // So, dirty bit it is.
-                        this.refreshFunctionInputs(!this.inputsRendered);
-                        if (!this.inputsRendered) {
-                            this.loadAllRecentCellStates();
-                            this.trigger('refreshJobs.Narrative');
+                        try {
+                            this.refreshFunctionInputs(!this.inputsRendered);
+                            if (!this.inputsRendered) {
+                                this.loadAllRecentCellStates();
+                                this.trigger('refreshJobs.Narrative');
+                            }
+                        } catch (ex) {
+                            console.error('Error handling dataUpdated', ex);
                         }
 
                         this.inputsRendered = true;

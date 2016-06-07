@@ -55,7 +55,7 @@ define([
                 bus.on('update', function (message) {
                     model.setItem('value', message.value);
                 });
-                bus.send({type: 'sync'});
+                bus.emit('sync');
             });
         }
 

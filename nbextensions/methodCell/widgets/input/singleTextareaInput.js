@@ -104,7 +104,7 @@ define([
                 }
 
                 var rawValue = getInputValue(),
-                    validationResult = Validation.validateText(rawValue, {
+                    validationResult = Validation.validateTextString(rawValue, {
                         required: options.required
                     });
 
@@ -138,7 +138,7 @@ define([
                         }
                     }, 2500);
                 }
-            }
+            };
         }
 
         /*
@@ -260,7 +260,7 @@ define([
                 bus.on('update', function (message) {
                     setModelValue(message.value);
                 });
-                bus.send({type: 'sync'});
+                bus.emit('sync');
                 return null;
             });
         }

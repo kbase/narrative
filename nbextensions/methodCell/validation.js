@@ -2,9 +2,8 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    './runtime',
     'kb_service/client/workspace'
-], function (Promise, Runtime, Workspace) {
+], function (Promise, Workspace) {
     'use strict';
 
     function Validators() {
@@ -26,12 +25,14 @@ define([
             }
         }
 
-        function toFloat(value) {
-            var floatValue = parseFloat(value);
-            if (isNaN(floatValue)) {
-                return false;
+        function isEmptyString(value) {
+            if (value === null) {
+                return true;
             }
-            return floatValue;
+            if (typeof value === 'string' && value.trim() === '') {
+                return true;
+            }
+            return false;
         }
 
         function validateSet(value, options) {
@@ -101,7 +102,6 @@ define([
             };
         }
 
-
         function validateWorkspaceObjectRef(value, options) {
             var parsedValue,
                 errorMessage, diagnosis;
@@ -134,11 +134,10 @@ define([
             };
         }
 
-        function workspaceObjectExists(workspaceId, objectName) {
-            var runtime = Runtime.make(),
-                workspace = new Workspace(runtime.config('services.workspace.url'), {
-                    token: runtime.authToken()
-                });
+        function workspaceObjectExists(workspaceId, objectName, authToken, serviceUrl) {
+            var workspace = new Workspace(serviceUrl, {
+                token: authToken
+            });
 
             /*
              * Crude to ignore errors, but we are checking for existence, which under
@@ -194,7 +193,7 @@ define([
                         diagnosis = 'invalid';
                         errorMessage = 'object names can only include the symbols _ - . |';
                     } else if (options.shouldNotExist) {
-                        return workspaceObjectExists(options.workspaceId, parsedValue)
+                        return workspaceObjectExists(options.workspaceId, parsedValue, options.authToken, options.workspaceServiceUrl)
                             .then(function (exists) {
                                 if (exists) {
                                     errorMessage = 'an object already exists with this name';
@@ -224,22 +223,25 @@ define([
             }
         }
 
-        function validateIntegerField(value, options) {
-            var plainValue = value.trim(),
+        function validateIntString(value, options) {
+            var plainValue,
                 parsedValue,
                 errorMessage, diagnosis = 'valid',
                 min = options.min_int,
                 max = options.max_int;
 
-            if (!plainValue) {
+            if (isEmptyString(value)) {
                 if (options.required) {
                     diagnosis = 'required-missing';
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = 'optional-empty';
-                    parsedValue = null;
                 }
+            } else if (typeof value !== 'string') {
+                diagnosis = 'invalid';
+                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
             } else {
+                plainValue = value.trim();
                 try {
                     parsedValue = toInteger(plainValue);
                     errorMessage = validateInteger(parsedValue, min, max);
@@ -248,6 +250,8 @@ define([
                 }
                 if (errorMessage) {
                     diagnosis = 'invalid';
+                } else {
+                    diagnosis = 'valid';
                 }
             }
 
@@ -261,34 +265,49 @@ define([
             };
         }
 
-        function validateFloat(value, options) {
-            var plainValue = value.trim(),
+        function validateFloat(value, min, max) {
+            if (isNaN(value)) {
+                return 'value must be numeric';
+            }
+            if (!isFinite(value)) {
+                return 'value must be a finite float';
+            }
+            if (max && max < value) {
+                return 'the maximum value for this parameter is ' + max;
+            }
+            if (min && min > value) {
+                return 'the minimum value for this parameter is ' + min;
+            }
+        }
+
+        function validateFloatString(value, options) {
+            var normalizedValue,
                 parsedValue,
                 errorMessage, diagnosis,
                 min = options.min_float,
                 max = options.max_float;
 
-            if (!plainValue) {
+            if (isEmptyString(value)) {
                 if (options.required) {
                     diagnosis = 'required-missing';
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = 'optional-empty';
                 }
+            } else if (typeof value !== 'string') {
+                diagnosis = 'invalid';
+                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
             } else {
-                parsedValue = parseFloat(plainValue);
-                if (isNaN(parsedValue)) {
+                try {
+                    normalizedValue = value.trim();
+                    parsedValue = parseFloat(normalizedValue);
+                    errorMessage = validateFloat(parsedValue, min, max);
+                } catch (error) {
+                    errorMessage = error.message;
+                }
+                if (errorMessage) {
+                    parsedValue = undefined;
                     diagnosis = 'invalid';
-                    errorMessage = 'value must be numeric';
-                } else if (!isFinite(parsedValue)) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'value must be a finite float';
-                } else if (max && max < parsedValue) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'the maximum value for this parameter is ' + max;
-                } else if (min && min > parsedValue) {
-                    diagnosis = 'invalid';
-                    errorMessage = 'the minimum value for this parameter is ' + min;
                 } else {
                     diagnosis = 'valid';
                 }
@@ -298,36 +317,42 @@ define([
                 errorMessage: errorMessage,
                 diagnosis: diagnosis,
                 value: value,
-                plainValue: plainValue,
+                normalizedValue: normalizedValue,
                 parsedValue: parsedValue
             };
         }
 
-        function validateText(value, options) {
-            var parsedValue = value.trim(),
-                errorMessage, diagnosis,
+        function validateTextString(value, options) {
+            var parsedValue,
+                errorMessage, diagnosis = 'valid',
                 minLength = options.min_length,
                 maxLength = options.max_length,
                 regexp = options.regexp_constraint ? new RegExp(regexp) : false;
 
-            if (!parsedValue) {
+            if (isEmptyString(value)) {
                 if (options.required) {
                     diagnosis = 'required-missing';
                     errorMessage = 'value is required';
                 } else {
                     diagnosis = 'optional-empty';
                 }
-            } else if (parsedValue.length < minLength) {
+            } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
-                errorMessage = 'the minimum length for this parameter is ' + minLength;
-            } else if (parsedValue.length > maxLength) {
-                diagnosis = 'invalid';
-                errorMessage = 'the maximum length for this parameter is ' + maxLength;
-            } else if (regexp && !regexp.test(parsedValue)) {
-                diagnosis = 'invalid';
-                errorMessage = 'The text value did not match the regular expression constraint ' + options.regexp_constraint;
+                errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
             } else {
-                diagnosis = 'valid';
+                parsedValue = value.trim();
+                if (parsedValue.length < minLength) {
+                    diagnosis = 'invalid';
+                    errorMessage = 'the minimum length for this parameter is ' + minLength;
+                } else if (parsedValue.length > maxLength) {
+                    diagnosis = 'invalid';
+                    errorMessage = 'the maximum length for this parameter is ' + maxLength;
+                } else if (regexp && !regexp.test(parsedValue)) {
+                    diagnosis = 'invalid';
+                    errorMessage = 'The text value did not match the regular expression constraint ' + options.regexp_constraint;
+                } else {
+                    diagnosis = 'valid';
+                }
             }
 
             return {
@@ -339,17 +364,64 @@ define([
             };
         }
 
+        function validateStringSet(set, options) {
+            var errorMessage, diagnosis,
+                parsedSet;
+            // values are raw, no parsing.
+
+            if (set === null) {
+                if (options.required) {
+                    diagnosis = 'required-missing';
+                    errorMessage = 'value is required';
+                } else {
+                    diagnosis = 'optional-empty';
+                }
+            } else {
+                parsedSet = set.filter(function (setValue) {
+                    return !isEmptyString(setValue);
+                });
+                if (parsedSet.length === 0) {
+                    if (options.required) {
+                        diagnosis = 'required-missing';
+                        errorMessage = 'value is required';
+                    } else {
+                        diagnosis = 'optional-empty';
+                    }
+                } else if (options.values) {
+                    var matchedSet = parsedSet.filter(function (setValue) {
+                        return (options.values.indexOf(setValue) >= 0);
+                    });
+                    if (matchedSet.length !== parsedSet.length) {
+                        diagnosis = 'invalid';
+                        errorMessage = 'Value not in the set';
+                    } else {
+                        diagnosis = 'valid';
+                    }
+                }
+            }
+
+            return {
+                isValid: errorMessage ? false : true,
+                errorMessage: errorMessage,
+                diagnosis: diagnosis,
+                value: set,
+                parsedValue: parsedSet
+            };
+        }
+
         return {
             validateWorkspaceObjectName: validateWorkspaceObjectName,
             validateWorkspaceObjectRef: validateWorkspaceObjectRef,
             validateInteger: validateInteger,
-            validateIntegerField: validateIntegerField,
+            validateIntString: validateIntString,
+            validateIntegerField: validateIntString,
             validateFloat: validateFloat,
-            validateText: validateText,
-            validateSet: validateSet
+            validateFloatString: validateFloatString,
+            validateTextString: validateTextString,
+            validateSet: validateSet,
+            validateStringSet: validateStringSet
         };
     }
-
 
     return Validators();
 });

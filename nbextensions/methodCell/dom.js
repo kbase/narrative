@@ -13,7 +13,9 @@ define([
         var container = config.node,
             bus = config.bus;
 
-
+        /*
+         * Just a wrapper around querySelector
+         */
         function getElement(names) {
             if (typeof names === 'string') {
                 names = names.split('.');
@@ -57,8 +59,8 @@ define([
         function addButtonClickEvent(events, eventName) {
             return events.addEvent({
                 type: 'click',
-                handler: function () {
-                    bus.send({type: eventName});
+                handler: function (e) {
+                    bus.send({event: e}, {key: {type: eventName}});
                 }
             });
         }
@@ -190,7 +192,7 @@ define([
                 node.innerHTML = content;
             }
         }
-        
+
         function na() {
             return span({style: {fontStyle: 'italic', color: 'orange'}}, 'NA');
         }

@@ -112,7 +112,7 @@ define([
                     validationResult;
 
                 validationOptions.required = spec.required();
-                validationResult = Validation.validateFloat(rawValue, validationOptions);
+                validationResult = Validation.validateFloatString(rawValue, validationOptions);
 
                 return {
                     isValid: validationResult.isValid,
@@ -243,7 +243,7 @@ define([
                 bus.on('update', function (message) {
                     setModelValue(message.value);
                 });
-                bus.send({type: 'sync'});
+                bus.emit('sync');
             });
         }
 

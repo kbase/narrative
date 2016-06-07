@@ -56,13 +56,14 @@ require.config({
         /*
          * From CDN
          */
-        kb_common: 'https://narrative-dev.kbase.us/cdn/kbase-common-js/1.5.4/',
-        kb_service: 'https://narrative-dev.kbase.us/cdn/kbase-service-clients-js/1.4.0/',
-        uuid: 'https://narrative-dev.kbase.us/cdn/pure-uuid/1.3.0/uuid',
-        text:  'https://narrative-dev.kbase.us/cdn/requirejs-text/2.0.14/text',
-        css: 'https://narrative-dev.kbase.us/cdn/require-css/0.1.8/css',
-        'font-awesome': 'https://narrative-dev.kbase.us/cdn/font-awesome/4.3.0/css/font-awesome',
-
+        kb_common: 'http://cdn.kbase.us/cdn/kbase-common-js/1.5.4/',
+        kb_service: 'http://cdn.kbase.us/cdn/kbase-service-clients-js/1.4.0/',
+        uuid: 'http://cdn.kbase.us/cdn/pure-uuid/1.3.0/uuid',
+        // TODO: we need to reconcile Jupyter and KBase external deps
+        // text:  'http://cdn.kbase.us/cdn/requirejs-text/2.0.14/text',
+        css: 'http://cdn.kbase.us/cdn/require-css/0.1.8/css',
+        'font-awesome': 'http://cdn.kbase.us/cdn/font-awesome/4.3.0/css/font-awesome',
+        handlebars: 'http://cdn.kbase.us/cdn/handlebars/4.0.5/handlebars',
 
 
         /***

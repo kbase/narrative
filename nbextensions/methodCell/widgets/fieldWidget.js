@@ -3,9 +3,9 @@
 /*
  * The Field Widget has two main jobs:
  * - render an input within within a layout
- * - provide reaction to input widget events to give user feedback 
- * 
- * The first goal is accomplished through the usual widget machineral - attach, start, run, stop. 
+ * - provide reaction to input widget events to give user feedback
+ *
+ * The first goal is accomplished through the usual widget machineral - attach, start, run, stop.
  * The second through a simple message bus in which the input widget emits from a set
  * of events which reflect the state of the input after user interaction.
  */
@@ -20,6 +20,7 @@ define([
     var t = html.tag,
         div = t('div'), span = t('span'), label = t('label'), button = t('button'),
         table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
+        textarea = t('textarea'),
         classSets = {
             standard: {
                 nameColClass: 'col-md-2',
@@ -110,6 +111,12 @@ define([
                 .show();
         }
 
+        function rawSpec(spec) {
+            return div([
+                textarea({class: 'form-control'}, JSON.stringify(spec, false, 3))
+            ]);
+        }
+
         function parameterInfoContent(spec) {
             return div([
                 div({style: {fontWeight: 'bold'}}, spec.label()),
@@ -126,10 +133,18 @@ define([
                     ];
                     break;
                 case 'int':
-                    return [
-                        tr([th('Min'), td(spec.spec.text_options.min_int)]),
-                        tr([th('Max'), td(spec.spec.text_options.max_int)])
-                    ];
+                    // just for now ...
+                    if (spec.spec.field_type === 'checkbox') {
+                        return [
+                            tr([th('Min'), td(String(0))]),
+                            tr([th('Max'), td(String(1))])
+                        ];
+                    } else {                    
+                        return [
+                            tr([th('Min'), td(spec.spec.text_options.min_int)]),
+                            tr([th('Max'), td(spec.spec.text_options.max_int)])
+                        ];
+                    }
                     break;
             }
         }
@@ -161,9 +176,10 @@ define([
         }
 
         function parameterInfoLittleTip(spec) {
-            var mult = (spec.multipleItems() ? '[]' : ''),
-                type = spec.dataType();
-            return mult + type;
+            return spec.dataType();
+            //var mult = (spec.multipleItems() ? '[]' : ''),
+            //    type = spec.dataType();
+            //return mult + type;
         }
 
         function renderInfoTip() {
@@ -192,6 +208,11 @@ define([
                             label: 'Rules',
                             name: 'rules',
                             content: parameterInfoRules(spec)
+                        },
+                        {
+                            label: 'Spec',
+                            name: 'spec',
+                            content: rawSpec(spec)
                         }
                     ]}))
             ]);
@@ -217,7 +238,7 @@ define([
             }
 
             // INPUT (control with feedback)
-            // Note -- here is where we 
+            // Note -- here is where we
             inputCol = div({class: [options.classes.inputColClass, 'kb-method-parameter-input'].join(' ')}, [
                 div({style: {width: '100%', display: 'inline-block'}}, [
                     div({dataElement: 'input-control'})
@@ -228,7 +249,7 @@ define([
             ]);
 
             // FIELD NAME
-//            nameCol = div({class: options.classes.nameColClass}, 
+//            nameCol = div({class: options.classes.nameColClass},
 //                class: [options.classes.nameColClass, 'kb-method-parameter-name'].join(' ')
 //            }, spec.label());
 
@@ -265,8 +286,8 @@ define([
                                             var info = document.getElementById(infoId),
                                                 littleTip = info.querySelector('[data-element="little-tip"]'),
                                                 bigTip = info.querySelector('[data-element="big-tip"]');
-                                            // the info button is used to switch between two different 
-                                            // displays -- a compact display of type and a 
+                                            // the info button is used to switch between two different
+                                            // displays -- a compact display of type and a
                                             // tabview with richer info to explore.
                                             if (littleTip.style.display === 'none') {
                                                 bigTip.style.display = 'none';
@@ -353,13 +374,12 @@ define([
                     }
                 });
                 if (inputControl.start) {
-                    inputControl.start()
+                    return inputControl.start()
                         .then(function () {
-                            bus.send('run', {
+                            bus.emit('run', {
                                 node: dom.getElement('input-control')
                             });
                         });
-                    return inputControl.start();
                 }
             });
         }

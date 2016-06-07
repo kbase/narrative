@@ -23,48 +23,32 @@ define([
         // Validate configuration.
         // Nothing to do...
 
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
         options.required = spec.required();
-        options.enabled = true;
 
         function render() {
-            var value = model.getItem('value'),
-                displayValue;
-            console.log('MULTI TEXT', value);
-            if (value === null || value.length === 0) {
+            var values = model.getItem('values'), displayValue;
+            if (values === null) {
                 displayValue = span({style: {fontStyle: 'italic', color: 'orange'}}, 'NA');
             } else {
-                displayValue = span(value.join('<br/>'));
+                displayValue = values.map(function (value) {                    
+                    return span({style: {fontFamily: 'monospace', fontWeight: 'bold', color: 'gray'}}, String(value));
+                }).join(', ');
             }
             container.innerHTML = div({class: 'form-control-static'}, displayValue);
         }
 
         // LIFECYCLE API
 
-        function init() {
-        }
-
-        function attach(node) {
-            return Promise.try(function () {
-                container = node;
-            });
-        }
-
         function start() {
             return Promise.try(function () {
-                bus.on('update', function (message) {
-                    model.setItem('value', message.value);
+                bus.on('run', function (message) {
+                    container = message.node;
+                    bus.emit('sync');
                 });
-                bus.emit('sync');
-            });
-        }
-
-        function run(params) {
-            return Promise.try(function () {
-//                model.value = params.value;
-//                var result = render();
-//                container.innerHTML = result.content;
+                bus.on('update', function (message) {
+                    model.setItem('values', message.value);
+                });
+                
             });
         }
         
@@ -75,10 +59,7 @@ define([
         });
 
         return {
-            init: init,
-            attach: attach,
-            start: start,
-            run: run
+            start: start
         };
     }
 

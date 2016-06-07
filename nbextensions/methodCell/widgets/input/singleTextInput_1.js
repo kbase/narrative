@@ -60,7 +60,7 @@ define([
             }
 
             var rawValue = getInputValue(),
-                validationResult = Validation.validateText(rawValue, {
+                validationResult = Validation.validateTextString(rawValue, {
                     required: options.required
                 });
 

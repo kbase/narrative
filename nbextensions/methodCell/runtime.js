@@ -3,7 +3,7 @@
 define([
     'base/js/namespace',
     'narrativeConfig',
-    './microBus'
+    './monoBus'
 ], function (Jupyter, Config, Bus, Clock) {
     'use strict';
 

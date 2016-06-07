@@ -47,7 +47,7 @@ define([
             workspaceUrl = config.workspaceUrl,
             authToken = config.authToken || null,
             commBus = config.commBus;
-        
+
         // Validate configuration.
         if (!workspaceId) {
             throw new Error('Workspace id required for the object widget');
@@ -55,7 +55,7 @@ define([
         if (!workspaceUrl) {
             throw new Error('Workspace url is required for the object widget');
         }
-        
+
         /*
          * If the parameter is optional, and is empty, return null.
          * If it allows multiple values, wrap single results in an array
@@ -136,7 +136,7 @@ define([
                     row = rows[index],
                     fieldType,
                     validationResult;
-                    
+
                 // Validate if we need to.
                 if (options.required && index === 0 && !value) {
                     errorMessage = 'required field ' + spec.ui_name + ' missing';
@@ -147,7 +147,7 @@ define([
                     // is met.
                     if (spec.text_options && spec.text_options.valid_ws_types) {
                         // Entry of workspace object names.
-                        // TODO any reason this can't be typed like int and float?         
+                        // TODO any reason this can't be typed like int and float?
                         validationResult = Validation.validateObjectRef(value);
                         if (!validationResult.isValid) {
                             errorMessage = validationResult.errorMessage;
@@ -201,7 +201,7 @@ define([
                 return row;
             });
         }
-        
+
         function getObjectsByType(type) {
             var workspace = new Workspace(workspaceUrl, {
                 token: authToken
@@ -215,9 +215,9 @@ define([
                         return serviceUtils.objectInfoToObject(objectInfo);
                     });
                 });
-                
+
         }
-        
+
         function fetchData() {
             var types = spec.text_options.valid_ws_types;
             return Promise.all(types.map(function (type) {
@@ -250,8 +250,8 @@ define([
                 placeholder = spec.text_options.placeholder.replace(/(\r\n|\n|\r)/gm, '');
             }
             defaultValue = defaultValue || '';
-            
-            
+
+
             // There is an input control, and a dropdown,
             // TODO select2 after we get a handle on this...
             var selectOptions = data.map(function (objectInfo) {
@@ -259,13 +259,13 @@ define([
                     value: objectInfo.ref
                 }, objectInfo.name);
             });
-            
-            
+
+
             selectControl = select({
                 id: events.addEvent({type: 'change', handler: function (e) {
                     var result = validate();
                     if (result.isValid) {
-                        commBus.send('changed', {
+                        commBus.emit('changed', {
                            value: result.value
                         });
                     }
@@ -381,7 +381,7 @@ define([
             events.attachEvents($container.get(0));
 
             // Now we keep a handy copy of nodes around.
-            // In truth, we could implement this as an api and avoid this junk, which also 
+            // In truth, we could implement this as an api and avoid this junk, which also
             // embeds a lot of jquery/dom nonsense.
             var $field = $container.find('#' + rowId);
 
@@ -414,8 +414,8 @@ define([
                 if (spec.default_values) {
                     defaultValues = spec.default_values;
                     // TODO!!!
-                    // the condition for using the first defaultvalue in the defaultValues 
-                    // array is suspect ... 
+                    // the condition for using the first defaultvalue in the defaultValues
+                    // array is suspect ...
                     // this says we use the default value if it is not an empty string or set as undefined
                     // (because it can't really be undefined or we would not be here)
                     // so this basically collapses to if it is an empty string use an empty string, otherwise
@@ -500,7 +500,7 @@ define([
         function description() {
             return spec.description;
         }
-        
+
         function info() {
             return table({class: 'table table-striped'}, [
                 tr([
@@ -580,7 +580,7 @@ define([
 
         function init() {
             // Normalize the parameter specification settings.
-            // TODO: much of this is just silly, we should be able to use the spec 
+            // TODO: much of this is just silly, we should be able to use the spec
             //   directly in most places.
             options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
             options.classes = classSets[options.environment];

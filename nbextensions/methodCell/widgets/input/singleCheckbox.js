@@ -286,7 +286,7 @@ define([
                     setModelValue(message.value);
                 });
 
-                bus.send({type: 'sync'});
+                bus.emit('sync');
                 return null;
                 // return resetModelValue();
             });

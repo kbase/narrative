@@ -53,7 +53,7 @@ define([
 //                bus.on('update', function (message) {
 //                    model.value = message.value;
 //                });
-//                bus.send({type: 'sync'});
+//                bus.emit('sync');
 //                return null;
             });
         }

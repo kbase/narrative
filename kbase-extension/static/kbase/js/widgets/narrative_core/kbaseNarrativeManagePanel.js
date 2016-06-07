@@ -1160,7 +1160,7 @@ function($,
                     workspace: newWsName,
                     meta: newWsMeta,
                     exclude: [{ objid: currentNarrative.info[0] }]
-                }))
+                }));
             }.bind(this))
             .then(function(newWsInfo) {
                 // pop the newWsId into a variable available by closure in the next step.
@@ -1196,11 +1196,11 @@ function($,
             .then(function(newNarInfo) {
                 // now, just update the workspace metadata to point
                 // to the new narrative object
-                newNarId = newNarInfo[0][0]
+                newNarId = newNarInfo[0][0];
                 return Promise.resolve(this.ws.alter_workspace_metadata({
                     wsi: { id: newWsId },
                     new: { narrative: String(newNarId) }
-                }))
+                }));
             }.bind(this))
             .then(function(results) {
                 return {

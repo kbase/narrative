@@ -827,7 +827,7 @@ define ([
                                .append(jobId));
 
             var status = "Unknown";
-            if (jobState) {
+            if (jobState && jobState.status) {
                 // console.log('JOBSTATE', jobState);
                 status = jobState.status.charAt(0).toUpperCase() +
                          jobState.status.substring(1);

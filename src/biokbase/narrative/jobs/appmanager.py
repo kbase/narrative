@@ -197,11 +197,19 @@ class AppManager(object):
         # Should also check if input (NOT OUTPUT) object variables are present in the current workspace
         workspace = system_variable('workspace')
         param_errors = list()
+        ws_input_refs = list()
         for p in spec_params:
             if p['id'] in kwargs:
-                err = self._check_parameter(p, kwargs[p['id']], workspace)
+                (wsref, err) = self._check_parameter(p, kwargs[p['id']], workspace)
                 if err is not None:
                     param_errors.append("{} - {}".format(p['id'], err))
+                if wsref is not None:
+                    if isinstance(wsref, list):
+                        for ref in wsref:
+                            if ref is not None:
+                                ws_input_refs.append(ref)
+                    else:
+                        ws_input_refs.append(wsref)
         if len(param_errors):
             raise ValueError('Parameter value errors found! {}'.format(json.dumps(param_errors)))
 
@@ -226,7 +234,6 @@ class AppManager(object):
             'run_id': run_id
         })
 
-
         # Okay, NOW we can start the show
         input_vals = dict()
         for param in spec['behavior']['kb_service_input_mapping']:
@@ -242,18 +249,6 @@ class AppManager(object):
         service_name = spec['behavior']['kb_service_name']
         service_ver = spec['behavior'].get('kb_service_version', None)
         service_url = spec['behavior']['kb_service_url']
-        # 3. set up app structure
-        # app = {'name': 'App wrapper for method ' + app_id,
-        #        'steps': [{'input_values': [input_vals],
-        #                   'is_long_running': 1,
-        #                   'method_spec_id': app_id,
-        #                   'script': {'has_files': 0, 'method_name': '', 'service_name': ''},
-        #                   'service': {'method_name': method_name,
-        #                               'service_name': service_name,
-        #                               'service_url': service_url,
-        #                               'service_version': service_ver},
-        #                   'step_id': app_id,
-        #                   'type': 'service'}]}
 
         app_id_dot = service_name + '.' + service_method
         # app_id_dot = app_id.replace('/', '.')
@@ -262,6 +257,8 @@ class AppManager(object):
             'service_ver' : service_ver,
             'params' : [input_vals]
         }
+        if len(ws_input_refs) > 0:
+            job_runner_inputs['source_ws_objects'] = ws_input_refs
 
         log_info = {
             'app_id': app_id,
@@ -321,15 +318,18 @@ class AppManager(object):
             The name of the current workspace to search against (if needed)
         """
         if param['allow_multiple'] and isinstance(value, list):
+            ws_refs = list()
             error_list = list()
             for v in value:
-                err = self._validate_param_value(param, v, workspace)
+                (ref, err) = self._validate_param_value(param, v, workspace)
                 if err:
                     error_list.append(err)
+                if ref:
+                    ws_refs.append(ref)
             if len(error_list):
                 return ", ".join(error_list)
             else:
-                return None
+                return (ws_refs, None)
         return self._validate_param_value(param, value, workspace)
 
 
@@ -349,74 +349,77 @@ class AppManager(object):
             The name of the current workspace to test workspace object types against, if
             required by the parameter.
         """
+        # The workspace reference for the parameter. Can be None, and returned as such.
+        ws_ref = None
 
         # allow None to pass, we'll just pass it to the method and let it get rejected there.
         if value is None:
-            return None
+            return (ws_ref, None)
 
         # cases - value == list, int, float, others get rejected
         if not (isinstance(value, basestring) or
                 isinstance(value, int) or
                 isinstance(value, float)):
-            return "input type not supported - only str, int, float, or list"
+            return (ws_ref, "input type not supported - only str, int, float, or list")
 
         # check types. basestring is pretty much anything (it'll just get casted),
         # but ints, floats, or lists are funky.
         if param['type'] == 'int' and not isinstance(value, int):
-            return 'Given value {} is not an int'.format(value)
+            return (ws_ref, 'Given value {} is not an int'.format(value))
         elif param['type'] == 'float' and not (isinstance(value, float) or isinstance(value, int)):
-            return 'Given value {} is not a number'.format(value)
+            return (ws_ref, 'Given value {} is not a number'.format(value))
 
         # if it's expecting a workspace object, check if that's present, and a valid type
         if 'allowed_types' in param and len(param['allowed_types']) > 0 and not param['is_output']:
             try:
                 info = self.ws_client.get_object_info_new({'objects': [{'workspace':workspace, 'name':value}]})[0]
+                ws_ref = "{}/{}/{}".format(info[6], info[0], info[4])
                 type_ok = False
                 for t in param['allowed_types']:
                     if re.match(t, info[2]):
                         type_ok = True
                 if not type_ok:
-                    return 'Type of data object, {}, does not match allowed types'.format(info[2])
+                    return (ws_ref, 'Type of data object, {}, does not match allowed types'.format(info[2]))
             except Exception as e:
-                return 'Data object named {} not found with this Narrative.'
+                return (ws_ref, 'Data object named {} not found with this Narrative.')
 
         # if it expects a set of allowed values, check if this one matches
         if 'allowed_values' in param:
             if value not in param['allowed_values']:
-                return "Given value is not permitted in the allowed set."
+                return (ws_ref, "Given value is not permitted in the allowed set.")
 
         # if it expects a numerical value in a certain range, check that.
         if 'max_val' in param:
             try:
                 if float(value) > param['max_val']:
-                    return "Given value {} should be <= {}".format(value, param['max_val'])
+                    return (ws_ref, "Given value {} should be <= {}".format(value, param['max_val']))
             except:
-                return "Given value {} must be a number".format(value)
+                return (ws_ref, "Given value {} must be a number".format(value))
 
         if 'min_val' in param:
             try:
                 if float(value) < param['min_val']:
-                    return "Given value {} should be >= {}".format(value, param['min_val'])
+                    return (ws_ref, "Given value {} should be >= {}".format(value, param['min_val']))
             except:
-                return "Given value {} must be a number".format(value)
+                return (ws_ref, "Given value {} must be a number".format(value))
 
         # if it's an output object, make sure it follows the data object rules.
         if param['is_output']:
             if re.search('\s', value):
-                return "Spaces are not allowed in data object names."
+                return (ws_ref, "Spaces are not allowed in data object names.")
             if re.match('^\d+$', value):
-                return "Data objects cannot be just a number."
+                return (ws_ref, "Data objects cannot be just a number.")
             if not re.match('^[a-z0-9|\.|\||_\-]*$', value, re.IGNORECASE):
-                return "Data object names can only include symbols: _ - . |"
+                return (ws_ref, "Data object names can only include symbols: _ - . |")
 
         # Last, regex. not being used in any extant specs, but cover it anyway.
         if 'regex_constraint' in param:
             for regex in regex_constraint:
                 if not re.match(regex_constraint, value):
-                    return 'Value {} does not match required regex {}'.format(value, regex)
+                    return (ws_ref, 'Value {} does not match required regex {}'.format(value, regex))
 
         # Whew. Passed all filters!
-        return None
+        return (ws_ref, None)
 
     def _handle_comm_message(self, msg):
         pass

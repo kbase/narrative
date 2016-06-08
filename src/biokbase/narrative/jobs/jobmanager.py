@@ -315,6 +315,9 @@ class JobManager(object):
                     first_line = msg['content']['data'].get('first_line', 0)
                     num_lines = msg['content']['data'].get('num_lines', None)
                     self._get_job_logs(job_id, first_line=first_line, num_lines=num_lines)
+            else:
+                self._send_comm_message('job_comm_error', {'message': 'Unknown message', 'request_type': r_type})
+                raise ValueError('Unknown KBaseJobs message "{}"'.format(r_type))
 
     def _get_job_logs(self, job_id, first_line=0, num_lines=None):
         job = self.get_job(job_id)

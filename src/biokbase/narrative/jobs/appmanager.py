@@ -114,18 +114,20 @@ class AppManager(object):
 
     def run_app(self, *args, **kwargs):
         try:
-            return self.run_app_internal(*args, **kwargs)
+            return self._run_app_internal(*args, **kwargs)
         except Exception, e:
+            cell_id = kwargs.get('cell_id', None)
+            run_id = kwargs.get('run_id', None)
             self._send_comm_message('run_status', {
                 'event': 'error',
                 'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-                'cell_id': kwargs['cell_id'],
-                'run_id': kwargs['run_id'],
+                'cell_id': cell_id,
+                'run_id': run_id,
                 'error_message': str(e)
             })
             raise
 
-    def run_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
+    def _run_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
         Attemps to run the app, returns a Job with the running app info.
         Should *hopefully* also inject that app into the Narrative's metadata.
@@ -236,7 +238,7 @@ class AppManager(object):
                 p_value = system_variable(param['narrative_system_variable'])
             input_vals[p_id] = p_value
 
-        app_name = spec['behavior']['kb_service_method']
+        service_method = spec['behavior']['kb_service_method']
         service_name = spec['behavior']['kb_service_name']
         service_ver = spec['behavior'].get('kb_service_version', None)
         service_url = spec['behavior']['kb_service_url']
@@ -253,7 +255,8 @@ class AppManager(object):
         #                   'step_id': app_id,
         #                   'type': 'service'}]}
 
-        app_id_dot = app_id.replace('/', '.')
+        app_id_dot = service_name + '.' + service_method
+        # app_id_dot = app_id.replace('/', '.')
         job_runner_inputs = {
             'method' : app_id_dot,
             'service_ver' : service_ver,

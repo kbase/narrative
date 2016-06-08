@@ -175,6 +175,8 @@ class SpecManager(object):
                 p_info['allowed_values'] = [True, False]
 
             defaults = p['default_values']
+            # remove any empty strings, because that's silly
+            defaults = [x for x in defaults if x]
             if p_info['allow_multiple']:
                 p_info['default'] = defaults
             else:

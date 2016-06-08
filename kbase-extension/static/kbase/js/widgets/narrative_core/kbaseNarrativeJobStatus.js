@@ -15,8 +15,11 @@ define([
     'kbaseReportView',
     'nbextensions/methodCell/microBus',
     'nbextensions/methodCell/runtime',
-    'text!kbase/templates/job_status_table.html',
-    'text!kbase/templates/job_status_header.html'
+    'text!kbase/templates/job_status/status_table.html',
+    'text!kbase/templates/job_status/header.html',
+    'text!kbase/templates/job_status/log_panel.html',
+    'text!kbase/templates/job_status/log_line.html',
+    'css!kbase/css/kbaseJobLog.css'
 ], function (
     $,
     KBWidget,
@@ -35,7 +38,10 @@ define([
     Bus,
     Runtime,
     JobStatusTableTemplate,
-    HeaderTemplate
+    HeaderTemplate,
+    LogPanelTemplate,
+    LogLineTemplate,
+    JobLogCss
 ) {
     'use strict';
     return KBWidget({
@@ -92,7 +98,10 @@ define([
             this.initializeView();
             this.updateView();
             // wire up the comm channel and turn it loose.
-            this.initCommChannel();
+            // $([Jupyter.events]).on('kernel_ready.Kernel', function() {
+            //     this.initCommChannel();
+            // }.bind(this));
+            // this.initCommChannel();
 
             return this;
         },
@@ -113,6 +122,7 @@ define([
                 statusPanel: statusPanel,
                 body: body
             };
+            this.logsView = this.makeLogsPanel();
             var $tabDiv = $('<div>');
             var tabs = new KBaseTabs($tabDiv, {
                 tabs: [
@@ -121,8 +131,8 @@ define([
                         content: body,
                     },
                     {
-                        tab: 'Console',
-                        content: $('<div>').append('not done yet...')
+                        tab: 'Logs',
+                        content: this.logsView
                     }
                 ]
             });
@@ -166,43 +176,54 @@ define([
         },
 
         handleJobStatus: function(message) {
-            if (message.type !== 'job-status')
-                return;
-            this.state = message.data.jobState.state;
-            this.setCellState();
-            this.updateView();
+            switch (message.type) {
+                case 'job-status':
+                    this.state = message.data.jobState.state;
+                    this.setCellState();
+                    this.updateView();
+                    break;
+                case 'job-logs':
+                    this.updateLogs(message.data.logs);
+                    break;
+                default:
+                    break;
+            }
         },
 
         showError: function(message) {
             this.$elem.append(message);
         },
 
-        handleCommMessages: function(msg) {
-            console.info("Job Message!", msg);
-        },
+        // handleCommMessages: function(msg) {
+        //     console.info("Job Message!", msg);
+        // },
 
-        initCommChannel: function() {
-            var commName = 'KBaseJob-' + this.jobId;
-            Jupyter.notebook.kernel.comm_info(commName, function(msg) {
-                if (msg.content && msg.content.comms) {
-                    // skim the reply for the right id
-                    for (var id in msg.content.comms) {
-                        if (msg.content.comms[id].target_name === commName) {
-                            this.comm = new JupyterComm.Comm(commName, id);
-                            console.info("Job Widget Comm inited!", this.comm);
-                            Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
-                            this.comm.on_msg(this.handleCommMessages.bind(this));
-                        }
-                    }
-                }
-                if (this.comm === null) {
-                    this.comm = new JupyterComm.Comm(commName);
-                    Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
-                    console.info("Job Widget Comm inited manually:", this.comm);
-                    this.comm.on_msg(this.handleCommMessages.bind(this));
-                }
-            }.bind(this));
-        },
+        // initCommChannel: function() {
+        //     var commName = 'KBaseJob-' + this.jobId;
+        //     console.log('initializing job status channel - ' + commName);
+        //     Jupyter.notebook.kernel.comm_info(commName, function(msg) {
+        //         if (msg.content && msg.content.comms) {
+        //             // skim the reply for the right id
+        //             for (var id in msg.content.comms) {
+        //                 if (msg.content.comms[id].target_name === commName) {
+        //                     this.comm = new JupyterComm.Comm(commName, id);
+        //                     console.info("Job Widget Comm inited!", this.comm);
+        //                     Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
+        //                     this.comm.on_msg(this.handleCommMessages.bind(this));
+        //                 }
+        //             }
+        //         }
+        //         if (this.comm === null) {
+        //             this.comm = new JupyterComm.Comm(commName);
+        //             Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
+        //             console.info("Job Widget Comm inited manually:", this.comm);
+        //             this.comm.on_msg(this.handleCommMessages.bind(this));
+        //         }
+        //         this.runtime.bus().send({
+
+        //         })
+        //     }.bind(this));
+        // },
 
         updateJobStatusPanel: function() {
             var info = {
@@ -227,56 +248,29 @@ define([
         makeJobStatusPanel: function() {
             this.statusTableTmpl = Handlebars.compile(JobStatusTableTemplate);
             return this.updateJobStatusPanel();
-
-            // var tableInfo = {
-            //     jobId: this.jobId,
-            // }
-
-            // function makeInfoRow(heading, info) {
-            //     return $('<tr>').append($('<th>')
-            //             .append(heading + ':'))
-            //             .append($('<td>')
-            //             .append(info));
-            // }
-
-            // var $infoTable = $('<table class="table table-bordered">')
-            //         .append(makeInfoRow('Job Id', jobId))
-            //         .append(makeInfoRow('Status', statusText));
-            // if (jobState && jobState.state) {
-            //     var state = jobState.state;
-            //     var creationTime = state.start_timestamp;
-            //     var execStartTime = null;
-            //     var finishTime = null;
-            //     var posInQueue = null;
-            //     // console.log(state.step_stats);
-            //     if (state.step_stats) {
-            //         for (var key in state.step_stats) {
-            //             if (state.step_stats.hasOwnProperty(key)) {
-            //                 var stats = state.step_stats[key];
-            //                 // console.log(key, stats);
-            //                 if (stats['creation_time'])
-            //                     creationTime = stats['creation_time'];
-            //                 execStartTime = stats['exec_start_time'];
-            //                 finishTime = stats['finish_time'];
-            //                 posInQueue = stats['pos_in_queue'];
-            //             }
-            //         }
-            //     }
-            //     if (creationTime)
-            //         $infoTable.append(makeInfoRow('Submitted', this.readableTimestamp(creationTime)));
-            //     if (creationTime && execStartTime)
-            //         $infoTable.append(makeInfoRow('Time in queue', ((execStartTime - creationTime) / 1000.0) + " sec."));
-            //     if (posInQueue)
-            //         $infoTable.append(makeInfoRow('Position in queue', posInQueue));
-            //     if (execStartTime)
-            //         $infoTable.append(makeInfoRow('Execution Started', this.readableTimestamp(execStartTime)));
-            //     if (finishTime)
-            //         $infoTable.append(makeInfoRow('Execution Finished', this.readableTimestamp(finishTime)));
-            //     if (execStartTime && finishTime)
-            //         $infoTable.append(makeInfoRow('Execution Time', ((finishTime - execStartTime) / 1000.0) + " sec."));
-            // }
-
-            // return $infoTable;
         },
+
+        updateLogs: function(logs) {
+            var firstLine = logs.first;
+            for (var i=0; i<logs.lines.length; i++) {
+                this.logsView.find('#kblog-panel').append($(this.logLineTmpl({lineNum: (i+1), log: logs.lines[i]})));
+            }
+        },
+
+        makeLogsPanel: function() {
+            var logsPanelTmpl = Handlebars.compile(LogPanelTemplate);
+            this.logLineTmpl = Handlebars.compile(LogLineTemplate);
+            var $logsPanel = $(logsPanelTmpl());
+            $logsPanel.find('#kblog-play').click(function() {
+                this.runtime.bus().send({
+                    type: 'request-job-log',
+                    jobId: this.jobId,
+                    options: {
+                        first_line: 0
+                    }
+                })
+            }.bind(this));
+            return $logsPanel;
+        }
     });
 });

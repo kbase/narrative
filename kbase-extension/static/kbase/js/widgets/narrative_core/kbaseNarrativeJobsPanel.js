@@ -37,6 +37,7 @@ define ([
         STOP_JOB_UPDATE: 'stop_job_update',
         START_JOB_UPDATE: 'start_job_update',
         DELETE_JOB: 'delete_job',
+        JOB_LOGS: 'job_logs',
 
         name: 'kbaseNarrativeJobsPanel',
         parent : kbaseNarrativeControlPanel,
@@ -242,10 +243,10 @@ define ([
                         case 'request-job-status':
                             this.sendCommMessage(this.JOB_STATUS, msg.jobId);
                             break;
+                        case 'request-job-log':
+                            this.sendCommMessage(this.JOB_LOGS, msg.jobId, msg.options);
+                            break;
                     }
-
-                    console.log('handling a message', msg);
-                    this.handleJobStatus(msg);
                 }.bind(this)
             });
         },
@@ -259,13 +260,14 @@ define ([
          *   START_UPDATE_LOOP,
          *   STOP_JOB_UPDATE,
          *   START_JOB_UPDATE,
-         *   DELETE_JOB
+         *   DELETE_JOB,
+         *   JOB_LOGS
          * @param jobId {string} - optional - a job id to send along with the
          * message, where appropriate.
          */
-        sendCommMessage: function(msgType, jobId) {
+        sendCommMessage: function(msgType, jobId, options) {
             if (!this.comm) {
-                this.initCommChannel(function() { this.sendCommMessage(msgType, jobId); }.bind(this));
+                this.initCommChannel(function() { this.sendCommMessage(msgType, jobId, options); }.bind(this));
                 return;
             }
             var msg = {
@@ -274,6 +276,9 @@ define ([
             };
             if (jobId) {
                 msg.job_id = jobId;
+            }
+            if (options) {
+                msg = $.extend({}, msg, options);
             }
             this.comm.send(msg);
         },
@@ -313,6 +318,12 @@ define ([
                     console.info('Deleted job ' + deletedId);
                     this.removeDeletedJob(deletedId);
                     break;
+                case 'job_logs':
+                    var jobId = msg.content.data.content.job_id;
+                    this.sendBusMessage('job-logs', {
+                        jobId: jobId,
+                        logs: msg.content.data.content
+                    });
                 case 'job_comm_error':
                     var content = msg.content.data.content;
                     if (content) {

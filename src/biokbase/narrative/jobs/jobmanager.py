@@ -310,6 +310,20 @@ class JobManager(object):
                     except Exception, e:
                         pass
 
+            elif r_type == 'job_logs':
+                if job_id is not None:
+                    first_line = msg['content']['data'].get('first_line', 0)
+                    num_lines = msg['content']['data'].get('num_lines', None)
+                    self._get_job_logs(job_id, first_line=first_line, num_lines=num_lines)
+
+    def _get_job_logs(self, job_id, first_line=0, num_lines=None):
+        job = self.get_job(job_id)
+        if job is None:
+            raise ValueError('job "{}" not found!'.format(job_id))
+
+        (max_lines, log_slice) = job.log(first_line=first_line, num_lines=num_lines)
+        self._send_comm_message('job_logs', {'job_id': job_id, 'first': first_line, 'max_lines': max_lines, 'lines': log_slice})
+
     def delete_job(self, job_id):
         """
         If the job_id doesn't exist, raises a ValueError.

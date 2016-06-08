@@ -28,7 +28,8 @@ class Job(object):
     app_version = None
     cell_id = None
     inputs = None
-    _comm = None
+    # _comm = None
+    _job_logs = list()
 
     def __init__(self, job_id, app_id, inputs, tag='release', app_version=None, cell_id=None):
         """
@@ -44,7 +45,6 @@ class Job(object):
         # self.job_manager = KBjobManager()
         self.inputs = inputs
         self._njs = clients.get('job_service')
-        self._init_comm()
 
     @classmethod
     def from_state(Job, job_id, job_info, tag='release', cell_id=None):
@@ -140,8 +140,28 @@ class Job(object):
         else:
             return "Job is incomplete! It has status '{}'".format(state['job_state'])
 
-    def log(self):
-        pass
+    def log(self, first_line=0, num_lines=None):
+        """
+        first_line = first line of log to return (0-indexed)
+        last_line = last line to return (if None, return everything)
+        """
+        self._update_log()
+        num_available_lines = len(self._job_logs)
+
+        if first_line < 0:
+            first_line = 0
+        if num_lines is None:
+            num_lines = num_available_lines - first_line
+
+        if first_line >= num_available_lines or num_lines <= 0:
+            return list()
+        return (num_available_lines, self._job_logs[first_line:first_line+num_lines])
+
+
+    def _update_log(self):
+        log_update = self._njs.get_job_logs({'job_id': self.job_id, 'skip_lines': len(self._job_logs)})
+        if log_update['lines']:
+            self._job_logs = self._job_logs + log_update['lines']
 
     def cancel(self):
         """
@@ -158,20 +178,29 @@ class Job(object):
         status = self.status()
         return status.lower() in ['completed', 'error', 'suspend']
 
-    def _init_comm(self):
-        if self._comm is not None:
-            self._comm.close()
-            self._comm = None
-        self._comm = Comm(target_name='KBaseJob-' + self.job_id, data={})
-        self._comm.on_msg(self._handle_comm_message)
+    # def _init_comm(self):
+    #     if self._comm is not None:
+    #         self._comm.close()
+    #         self._comm = None
+    #     self._comm = Comm(target_name='KBaseJob-' + self.job_id, data={})
+    #     self._comm.on_msg(self._handle_comm_message)
 
-    def _handle_comm_message(self, msg):
-        pass
+    # def _handle_comm_message(self, msg):
+    #     print(msg)
+    #     self._send_comm_message('test', {'you':'pass'})
+    #     if 'request_type' in msg['content']['data']:
+    #         r_type = msg['content']['data']['request_type']
 
-    def _send_comm_message(self, msg_type, msg):
-        if self._comm is None:
-            self.init_comm()
-        self._comm.send({'msg_type':msg_type, 'content':msg})
+    #         if r_type == 'log':
+    #             first_line = msg['content']['data'].get('first_line', 0)
+    #             num_lines = msg['content']['data'].get('num_lines', None)
+    #             log_slice = self.log(first_line, num_lines)
+    #             self._send_comm_message('log', {'first': first_line, 'max_lines': len(self._job_logs), 'lines': log_slice})
+
+    # def _send_comm_message(self, msg_type, msg):
+    #     if self._comm is None:
+    #         self.init_comm()
+    #     self._comm.send({'msg_type':msg_type, 'content':msg})
 
     def __repr__(self):
         return u"KBase Narrative Job - " + unicode(self.job_id)

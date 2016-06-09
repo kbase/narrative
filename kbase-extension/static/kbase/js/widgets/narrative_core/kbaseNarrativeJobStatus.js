@@ -89,7 +89,7 @@ define([
                     return (msg.data && msg.data.jobId === this.jobId);
                 }.bind(this),
                 handle: function(msg) {
-                    console.log('handling a message', msg);
+                    // console.log('handling a message', msg);
                     this.handleJobStatus(msg);
                 }.bind(this)
             });
@@ -140,7 +140,7 @@ define([
         },
 
         updateView: function() {
-            console.log('updating view...');
+            // console.log('updating view...');
             this.view.statusPanel.remove();
             this.view.statusPanel = this.updateJobStatusPanel();
             this.view.body.append($(this.view.statusPanel));
@@ -185,6 +185,9 @@ define([
                 case 'job-logs':
                     this.updateLogs(message.data.logs);
                     break;
+                case 'job-log-deleted':
+                    window.alert('Job has been deleted. No log available.');
+                    break;
                 default:
                     break;
             }
@@ -193,37 +196,6 @@ define([
         showError: function(message) {
             this.$elem.append(message);
         },
-
-        // handleCommMessages: function(msg) {
-        //     console.info("Job Message!", msg);
-        // },
-
-        // initCommChannel: function() {
-        //     var commName = 'KBaseJob-' + this.jobId;
-        //     console.log('initializing job status channel - ' + commName);
-        //     Jupyter.notebook.kernel.comm_info(commName, function(msg) {
-        //         if (msg.content && msg.content.comms) {
-        //             // skim the reply for the right id
-        //             for (var id in msg.content.comms) {
-        //                 if (msg.content.comms[id].target_name === commName) {
-        //                     this.comm = new JupyterComm.Comm(commName, id);
-        //                     console.info("Job Widget Comm inited!", this.comm);
-        //                     Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
-        //                     this.comm.on_msg(this.handleCommMessages.bind(this));
-        //                 }
-        //             }
-        //         }
-        //         if (this.comm === null) {
-        //             this.comm = new JupyterComm.Comm(commName);
-        //             Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
-        //             console.info("Job Widget Comm inited manually:", this.comm);
-        //             this.comm.on_msg(this.handleCommMessages.bind(this));
-        //         }
-        //         this.runtime.bus().send({
-
-        //         })
-        //     }.bind(this));
-        // },
 
         updateJobStatusPanel: function() {
             var info = {

@@ -86,36 +86,7 @@ define ([
 
         init: function(options) {
             this._super(options);
-
             this.title.append(this.$jobCountBadge);
-
-            // $(document).on('cancelJobCell.Narrative', $.proxy(
-            //     function(e, cellId, showPrompt, callback) {
-            //         // Find job based on cellId
-            //         var jobId = this.source2Job[cellId];
-
-            //         // If we can't find the job, then it's not being tracked, so we
-            //         // should just assume it's gone already and return true to the callback.
-            //         if (jobId === undefined && callback)
-            //             callback(true);
-            //         else if (jobId !== undefined) {
-            //             if (showPrompt)
-            //                 this.openJobDeletePrompt(jobId, null, callback);
-            //             else
-            //                 this.deleteJob(jobId, callback);
-            //         }
-            //     }, this)
-            // );
-
-            // $(document).on('cancelJob.Narrative', function(e, jobId, callback) {
-            //         // If we can't find the job, then it's not being tracked, so we
-            //         // should just assume it's gone already and return true to the callback.
-            //         if (jobId === undefined && callback) {
-            //             callback(true);
-            //         } else if (jobId !== undefined) {
-            //             this.deleteJob(jobId, callback);
-            //         }
-            //     }.bind(this));
 
             var $refreshBtn = $('<button>')
                               .addClass('btn btn-xs btn-default')
@@ -222,7 +193,7 @@ define ([
 
         sendBusMessage: function(msgType, message) {
             var runtime = Runtime.make();
-            console.log('sending bus message - ' + msgType, message);
+            // console.log('sending bus message - ' + msgType, message);
             runtime.bus().send({
                 type: msgType,
                 data: JSON.parse(JSON.stringify(message))
@@ -327,10 +298,21 @@ define ([
                 case 'job_comm_error':
                     var content = msg.content.data.content;
                     if (content) {
+                        switch (content.request_type) {
+                            case 'delete_job':
+                                alert('Job already deleted!');
+                                break;
+                            case 'job_logs':
+                                this.sendBusMessage('job-log-deleted', {jobId: content.job_id});
+                                break;
+                            default:
+                                break;
+                        }
                         if (content.request_type === 'delete_job') {
                             alert('Job already deleted!');
                         }
                     }
+                    console.error('Error from job comm:', msg);
                     break;
                 default:
                     console.warn("Unhandled KBaseJobs message from kernel (type='" + msgType + "'):");
@@ -350,15 +332,15 @@ define ([
             if (this.jobStates === null)
                 this.initJobStates();
 
-            console.info('looking up comm info');
+            console.info('Jobs Panel: looking up comm info');
             Jupyter.notebook.kernel.comm_info(this.COMM_NAME, function(msg) {
-                console.info('got info');
+                console.info('Jobs Panel: got info');
                 // console.info(msg);
                 if (msg.content && msg.content.comms) {
                     // skim the reply for the right id
                     for (var id in msg.content.comms) {
                         if (msg.content.comms[id].target_name === this.COMM_NAME) {
-                            console.info('Found an existing channel!');
+                            console.info('Jobs Panel: Found an existing channel!');
                             console.info(msg);
                             this.comm = new JupyterComm.Comm(this.COMM_NAME, id);
                             Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
@@ -367,9 +349,9 @@ define ([
                     }
                 }
                 if (this.comm === null) {
-                    console.info('setting up a new channel - ' + this.COMM_NAME);
+                    console.info('Jobs Panel: setting up a new channel - ' + this.COMM_NAME);
                     Jupyter.notebook.kernel.comm_manager.register_target(this.COMM_NAME, function(comm, msg) {
-                        console.info('new channel set up - ', comm)
+                        console.info('Jobs Panel: new channel set up - ', comm)
                         this.comm = comm;
                         comm.on_msg(this.handleCommMessages.bind(this));
                     }.bind(this));
@@ -390,15 +372,17 @@ define ([
                 if (jobInfo.source) {
                     source = jobInfo.source;
                 }
-                var inputs = {};
-                if (jobInfo.inputs) {
-                    inputs = jobInfo.inputs;
-                }
+                var appId = jobInfo.app_id;
+                // var inputs = {};
+                // if (jobInfo.inputs) {
+                //     inputs = jobInfo.inputs;
+                // }
                 var tag = 'release';
                 if (jobInfo.tag) {
                     tag = jobInfo.tag;
                 }
-                jobTuples.push("('" + jobId + "', '" + StringUtil.safeJSONStringify(inputs) + "', '" + tag + "', '" + source + "')");
+                // jobTuples.push("('" + jobId + "', '" + StringUtil.safeJSONStringify(inputs) + "', '" + tag + "', '" + source + "')");
+                jobTuples.push("('" + jobId + "', '" + appId + "', '" + tag + "', '" + source + "')");
             }
             return ["from biokbase.narrative.jobs import JobManager",
                     "JobManager().initialize_jobs([" + jobTuples.join(',') + "])"].join('\n');

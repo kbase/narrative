@@ -47,7 +47,7 @@ class Job(object):
         self._njs = clients.get('job_service')
 
     @classmethod
-    def from_state(Job, job_id, job_info, tag='release', cell_id=None):
+    def from_state(Job, job_id, job_info, app_id, tag='release', cell_id=None):
         """
         Parameters:
         -----------
@@ -56,18 +56,22 @@ class Job(object):
         job_info - dict
             The job information returned from njs.get_job_params, just the first
             element of that list (not the extra list with URLs). Should have the following keys:
-            'method': The method id (will be converted from '.' to '/' format)
             'params': The set of parameters sent to that job.
             'service_ver': The version of the service that was run.
+        app_id - string
+            Used in place of job_info.method. This is the actual method spec that was used to
+            start the job. Can be None, but Bad Things might happen.
+        tag - string
+            The Tag (release, beta, dev) used to start the job.
+        cell_id - the cell associated with the job (optional)
         """
-        app_id = job_info.get('method', "Unknown App")
-
+        # app_id = job_info.get('method', "Unknown App")
         # Still juggling between Module.method_name and Module/method_name
         # There should be one and only one / after this is done.
         # So, if there's a /, do nothing.
         # If not, change the first . to a /
-        if not '/' in app_id and '.' in app_id:
-            app_id = app_id.replace('.', '/', 1)
+        # if not '/' in app_id and '.' in app_id:
+        #     app_id = app_id.replace('.', '/', 1)
         return Job(job_id,
                    app_id,
                    job_info['params'],

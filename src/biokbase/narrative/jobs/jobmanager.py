@@ -60,7 +60,7 @@ class JobManager(object):
         -----------
         job_tuples: A list of 4-tuples representing Jobs. The format is:
             (job_id (string),
-             set of job inputs (as a JSON string),
+             app_id (string, Module/method - this is the app spec id)
              version tag (string),
              cell id that started the job (string or None))
         """
@@ -159,7 +159,7 @@ class JobManager(object):
         job_id = job_tuple[0].split(':')[-1]
         try:
             job_info = clients.get('job_service').get_job_params(job_id)[0]
-            return Job.from_state(job_id, job_info, tag=job_tuple[2], cell_id=job_tuple[3])
+            return Job.from_state(job_id, job_info, app_id=job_tuple[1], tag=job_tuple[2], cell_id=job_tuple[3])
         except Exception, e:
             kblogging.log_event(self._log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
             raise
@@ -273,6 +273,8 @@ class JobManager(object):
         """
 
         if 'request_type' in msg['content']['data']:
+            self._log.setLevel(logging.INFO)
+            kblogging.log_event(self._log, "handle_message", msg['content']['data'])
             r_type = msg['content']['data']['request_type']
             job_id = msg['content']['data'].get('job_id', None)
             if job_id is not None and job_id not in self._running_jobs:
@@ -314,6 +316,7 @@ class JobManager(object):
                 if job_id is not None:
                     first_line = msg['content']['data'].get('first_line', 0)
                     num_lines = msg['content']['data'].get('num_lines', None)
+                    kblogging.log_event(self._log, "job_info_msg", {'job_id':job_id, 'first_line':first_line, 'num_lines':num_lines if num_lines is not None else "None"})
                     self._get_job_logs(job_id, first_line=first_line, num_lines=num_lines)
                 else:
                     raise ValueError('Need a job id to fetch jobs!')
@@ -327,6 +330,7 @@ class JobManager(object):
             raise ValueError('job "{}" not found!'.format(job_id))
 
         (max_lines, log_slice) = job.log(first_line=first_line, num_lines=num_lines)
+        kblogging.log_event(self._log, "get_job_logs", {'job_id':job_id, 'first_line':first_line, 'num_lines':num_lines if num_lines is not None else "None", 'max_lines':max_lines})
         self._send_comm_message('job_logs', {'job_id': job_id, 'first': first_line, 'max_lines': max_lines, 'lines': log_slice})
 
     def delete_job(self, job_id):

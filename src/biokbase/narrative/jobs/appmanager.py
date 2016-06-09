@@ -197,6 +197,8 @@ class AppManager(object):
         # Should also check if input (NOT OUTPUT) object variables are present in the current workspace
         workspace = system_variable('workspace')
         param_errors = list()
+        # If they're workspace objects, track their refs in a list we'll pass to run_job as
+        # a separate param to track provenance.
         ws_input_refs = list()
         for p in spec_params:
             if p['id'] in kwargs:
@@ -281,7 +283,7 @@ class AppManager(object):
         except Exception, e:
             log_info.update({'err': str(e)})
             self._log.setLevel(logging.ERROR)
-            kblogging.log_event(_kblog, "run_app", log_info)
+            kblogging.log_event(self._log, "run_app", log_info)
             raise
 
         self._send_comm_message('run_status', {
@@ -421,15 +423,5 @@ class AppManager(object):
         # Whew. Passed all filters!
         return (ws_ref, None)
 
-    def _handle_comm_message(self, msg):
-        pass
-
     def _send_comm_message(self, msg_type, content):
-        msg = {
-            'msg_type': msg_type,
-            'content': content
-        }
-        if self._comm is None:
-            self._comm = Comm(target_name='KBaseJobs', data={})
-            self._comm.on_msg(self._handle_comm_message)
-        self._comm.send(msg)
+        JobManager()._send_comm_message(msg_type, content)

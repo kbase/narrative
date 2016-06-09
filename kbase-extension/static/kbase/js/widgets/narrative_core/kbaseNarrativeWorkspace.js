@@ -345,9 +345,9 @@ define (
             
             // console.log('SPEC', spec);
             var cellType = this.determineMethodCellType(spec);
-            if (cellType === 'view') {
-                alert('Sorry, view cells are not yet supported');
-            }
+            //if (cellType === 'view') {
+            //    alert('Sorry, view cells are not yet supported');
+           // }
             
             // This will also trigger the create.Cell event, which is not very
             // useful for us really since we haven't been able to set the
@@ -381,7 +381,7 @@ define (
             if (!spec.parameters.some(function (parameter) {
                 return (parameter.ui_class === 'output');
             })) {
-                return 'standalone';
+                return 'view';
             };
             
             console.error('ERROR - could not determine cell type', spec);

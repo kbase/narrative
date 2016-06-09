@@ -668,11 +668,15 @@ define([
                     });
                 })
                 .then(function () {
-                    MethodCellController.start();
+                    // MethodCellController.start();
                     return {
                         widget: methodCellWidget,
                         bus: cellBus
                     };
+                })
+                .catch(function (err) {
+                    console.error('ERROR starting method cell', err);
+                    alert('Error starting method cell');
                 });
         });
     }

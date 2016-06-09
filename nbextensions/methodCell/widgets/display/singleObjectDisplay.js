@@ -76,33 +76,18 @@ define([
         }
 
         // LIFECYCLE API
-
-        function init() {
-        }
-
-        function attach(node) {
-            return Promise.try(function () {
-                container = node;
-            });
-        }
-
         function start() {
             return Promise.try(function () {
-                bus.on('update', function (message) {
-                    model.setItem('value', message.value);
+                bus.on('run', function (message) {
+                    container = message.node;
+                    bus.on('update', function (message) {
+                        model.setItem('value', message.value);
+                    });
+                    bus.emit('sync');
                 });
-                bus.emit('sync');
             });
         }
 
-        function run(params) {
-            return Promise.try(function () {
-//                model.value = params.value;
-//                var result = render();
-//                container.innerHTML = result.content;
-            });
-        }
-        
         model = Props.make({
             onUpdate: function (props) {
                 render();
@@ -110,10 +95,7 @@ define([
         });
 
         return {
-            init: init,
-            attach: attach,
-            start: start,
-            run: run
+            start: start
         };
     }
 

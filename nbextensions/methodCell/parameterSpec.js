@@ -10,11 +10,11 @@ define([
             multiple = spec.allow_multiple ? true : false,
             _required = spec.optional ? false : true,
             isOutputName = spec.text_options && spec.text_options.is_output_name;
-        
+
         function id() {
             return spec.id;
         }
-        
+
         function name() {
             return spec.id;
         }
@@ -54,12 +54,22 @@ define([
         function type() {
             return spec.type;
         }
-        
+
         function isAdvanced() {
             if (spec.advanced === 1) {
                 return true;
             }
             return false;
+        }
+
+        function customTextSubdata() {
+            // try dispatching on name...
+            switch (spec.id) {
+                case 'input_property_x':
+                    return 'sample_property';
+                case 'input_property_y':
+                    return 'sample_property';
+            }
         }
 
         function dataType() {
@@ -78,8 +88,13 @@ define([
                     }
                 case 'textsubdata':
                     return 'subdata';
+                case 'custom_textsubdata':
+                    var custom = customTextSubdata();
+                    if (custom) {
+                        return custom;
+                    }
             }
-            
+
             /*
              * Otherwise, we rely on text options to provide type information.
              */
@@ -90,8 +105,8 @@ define([
             if (validateAs) {
                 if (spec.allow_multiple) {
                     return '[]' + validateAs;
-                } 
-                else return validateAs;
+                } else
+                    return validateAs;
             }
 
             // Some parameter specs have valid_ws_types as an empty set, which 
@@ -103,7 +118,7 @@ define([
                     return 'workspaceObjectName';
                 }
             }
-            
+
             // Okay, if it has no specific type assigned (validate_as), and is
             // not flagged from the various properties above by grousing through
             // the text_options, we assume it is a string.
@@ -119,7 +134,7 @@ define([
 
             return 'unspecified';
         }
-        
+
         function nullValue() {
             if (multipleItems()) {
                 return [];
@@ -137,7 +152,7 @@ define([
                     return null;
             }
         }
-        
+
         /*
          * Default values are strings.
          */
@@ -156,7 +171,7 @@ define([
                     return defaultValue;
             }
         }
-        
+
         function defaultValue() {
             var defaultValues = spec.default_values;
             // No default value and not required? null value
@@ -165,13 +180,13 @@ define([
             }
             if (defaultValues.length === 0) {
                 return nullValue();
-            } 
+            }
             // also weird case of a default value of the empty string, which is really
             // the same as null...
             if (defaultValues[0] === '') {
                 return nullValue();
-            } 
-            
+            }
+
             // Singular item?
             if (!multipleItems()) {
                 return defaultToNative(defaultValues[0]);
@@ -179,9 +194,9 @@ define([
                 return defaultValues.map(function (defaultValue) {
                     return defaultToNative(defaultValue);
                 });
-            }            
+            }
         }
-        
+
         function isEmpty(value) {
             if (value === undefined) {
                 return true;
@@ -193,12 +208,12 @@ define([
                 case 'string':
                     if (value.length === 0) {
                         return true;
-                    } 
+                    }
                     break;
                 case 'workspaceObjectName':
                     if (value.length === 0) {
                         return true;
-                    } 
+                    }
                     break;
             }
             return false
@@ -211,8 +226,8 @@ define([
         function required() {
             return _required;
         }
-        
-         function getConstraints() {
+
+        function getConstraints() {
             var fieldType = spec.field_type;
 
             // NOTE:
@@ -225,14 +240,14 @@ define([
                 case 'text':
                     switch (fieldType) {
                         case 'text':
-                            return {    
+                            return {
                                 required: required(),
                                 defaultValue: defaultValue(),
                                 min: spec.text_options.min_length,
                                 max: spec.text_options.max_length
                             };
                         case 'dropdown':
-                            return {                                
+                            return {
                             };
                         default:
                             throw new Error('Unknown text param field type');
@@ -240,21 +255,21 @@ define([
                 case 'int':
                     switch (fieldType) {
                         case 'text':
-                            return {                                
+                            return {
                             };
                         case 'checkbox':
-                            return {                                
+                            return {
                             };
                         default:
-                            return {                                
+                            return {
                             };
                     }
                 case 'float':
-                    return {                                
+                    return {
                     };
                 case 'workspaceObjectName':
                     switch (uiClass()) {
-                        case 'input':                            
+                        case 'input':
                             return {
                                 required: required(),
                                 types: spec.text_options.valid_ws_types,
@@ -277,7 +292,7 @@ define([
                     }
                 case '[]workspaceObjectName':
                     switch (uiClass()) {
-                        case 'input':                            
+                        case 'input':
                             return {
                                 required: required(),
                                 types: spec.text_options.valid_ws_types,
@@ -291,11 +306,11 @@ define([
                             };
                         default:
                             throw new Error('Unknown []workspaceObjectName ui class');
-                    }                    
+                    }
                 case '[]string':
                     switch (fieldType) {
                         case 'dropdown':
-                            return {                                
+                            return {
                             };
                         case 'text':
                             return {
@@ -303,39 +318,131 @@ define([
                             }
                         default:
                             throw new Error('Unknown []string field type: ' + fieldType);
-                    }                    
+                    }
+                case 'subdata':
+                    return {
+                        multiple: false,
+                        // The parameter containing the object name we derive data from
+                        referredParameter: spec.subdata_selection.parameter_id,
+                        // The "included" parameter to for the workspace call
+                        subdataIncluded: spec.subdata_selection.subdata_included,
+                        // These are for navigating the results.
+
+                        // This is the property path to the part of the subdata
+                        // we want to deal with.
+                        path: spec.subdata_selection.path_to_subdata,
+                        // This is used to pluck a value off of the leaf array
+                        // items, object properties (if object), object values (if 'value'),
+                        // or otherwise just use the property key. This becomes the "id"
+                        // of the subdata item.
+                        selectionId: spec.subdata_selection.selection_id,
+                        // Used to generate a description for each item. Becomes the "desc".
+                        displayTemplate: spec.subdata_selection.description_template
+                    }
+                    break;
+                case 'xxinput_property_x':
+                    return {
+                        defaultValue: defaultValue(),
+                        referredParameter: 'input_sample_property_matrix',
+                        subdataIncluded: 'metadata/column_metadata',
+                        path: 'metadata/column_metadata',
+                        // custom function to collect
+                        mapper: {
+                            before: function () {
+                                return {
+                                    collected: {}
+                                };
+                            },
+                            during: function (values, state) {
+                                values.forEach(function (value) {
+                                    if (value.entity === 'Condition') {
+                                        state.collected[value.property_name] = true;
+                                    }
+                                });
+                            },
+                            after: function (state) {
+                                return Object.keys(state.collected).map(function (key) {
+                                    return {
+                                        id: key,
+                                        desc: key
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    break;
+                case 'sample_property':
+                    return {
+                        required: required(),
+                        defaultValue: defaultValue(),
+                        referredParameter: 'input_sample_property_matrix',
+                        subdataIncluded: 'metadata/column_metadata',
+                        subdataPath: 'metadata.column_metadata',
+                        // custom function to collect
+                        map: function (subdata) {
+                            var collected = {};
+                            Object.keys(subdata).forEach(function (key) {
+                                    var id, name, column = subdata[key];
+                                    column.forEach(function (value) {
+                                        if (value.category === 'DataSeries' && value.property_name === 'SeriesID') {
+                                            id = value.property_value;
+                                        } else if (value.category === 'Property' && value.property_name === 'Name') {
+                                            name = value.property_value;
+                                        }
+                                        if (id && name) {
+                                            collected[id] = name;
+                                        }
+                                    });
+                                });
+                                return Object.keys(collected).map(function (key) {
+                                    return {
+                                        id: key,
+                                        desc: collected[key]
+                                    }
+                                })
+                                    .sort(function (a, b) {
+                                        if (a.desc < b.desc) {
+                                            return -1;
+                                        } else if (a.desc > b.desc) {
+                                            return 1;
+                                        }
+                                        return 0;
+                                    });
+                        }
+                    }
+                    break;
                 case 'unspecified':
                     // a bunch of field types are untyped:
                     switch (fieldType) {
                         case 'text':
-                            return {                                
+                            return {
                             };
                         case 'checkbox':
-                            return {                                
+                            return {
                             };
                         case 'textarea':
-                            return {                                
+                            return {
                             };
                         case 'dropdown':
-                            return {                                
+                            return {
                             };
                         case 'custom_button':
-                            return {                                
+                            return {
                             };
                         case 'textsubdata':
-                            return {                                
+                            return {
                             };
                         case 'file':
-                            return {                                
+                            return {
                             };
                         case 'custom_textsubdata':
-                            return {                                
+                            return {
                             };
                         case 'custom_widget':
-                            return {                                
+                            return {
                             };
                         case 'tab':
-                            return {                                
+                            return {
                             };
                         default:
                             throw new Error('Unknown unspecified field type');

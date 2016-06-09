@@ -31,10 +31,13 @@ define([
             runCount = 0,
             dom,
             model = {
+                blacklistValues: undefined,
                 availableValues: undefined,
                 value: undefined
             },
         runtime = Runtime.make();
+    
+        model.blacklistValues = config.blacklist || [];
 
         // Validate configuration.
         if (!workspaceId) {
@@ -50,7 +53,15 @@ define([
             // TODO select2 after we get a handle on this...
             var selectOptions;
             if (model.availableValues) {
-                selectOptions = model.availableValues.map(function (objectInfo) {
+                selectOptions = model.availableValues
+                    .filter(function (objectInfo) {
+                        if (model.blacklistValues) {
+                            return !model.blacklistValues.some(function (value) {
+                                return (value === objectInfo.name);
+                            });
+                        }
+                    })
+                    .map(function (objectInfo) {
                     var selected = false;
                     if (objectInfo.name === model.value) {
                         selected = true;

@@ -12,7 +12,6 @@ define([
     'kbaseTabs',
     'kbaseViewLiveRunLog',
     'kbaseReportView',
-    'nbextensions/methodCell/miniBus',
     'nbextensions/methodCell/runtime',
     'text!kbase/templates/job_status_table.html'
 ], function (
@@ -29,7 +28,6 @@ define([
     KBaseTabs,
     KBaseViewLiveRunLog,
     KBaseReportView,
-    Bus,
     Runtime,
     JobStatusTableTemplate
 ) {

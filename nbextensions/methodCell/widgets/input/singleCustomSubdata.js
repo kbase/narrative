@@ -51,12 +51,11 @@ define([
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
-            subdataOptions = spec.spec.textsubdata_options,
+            constraints = config.parameterSpec.getConstraints(),
             parent,
             container,
             $container,
             workspaceId = config.workspaceId,
-            subdata = spec.textsubdata_options,
             bus = config.bus,
             runCount = 0,
             model,
@@ -80,7 +79,7 @@ define([
         //}
 
         options.enabled = true;
-        
+
         function buildOptions() {
             var availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [],
@@ -90,10 +89,10 @@ define([
             }
             return selectOptions.concat(availableValues.map(function (availableValue) {
                 var selected = false,
-                    optionLabel = availableValue.id,
+                    optionLabel = availableValue.desc,
                     optionValue = availableValue.id;
                 // TODO: pull the value out of the object
-                if (value.indexOf(availableValue.id) >= 0) {
+                if (value === availableValue.id) {
                     selected = true;
                 }
                 return option({
@@ -102,12 +101,17 @@ define([
                 }, optionLabel);
             }));
         }
-        
+
         function buildCount() {
             var availableValues = model.getItem('availableValues') || [],
-                value = model.getItem('value') || [];
+                value = model.getItem('value') || null;
             
-            return String(value.length) + ' / ' + String(availableValues.length) + ' items';
+            if (value) {
+                return  '1 / ' + String(availableValues.length) + ' items';
+            } else {
+                return  '0 / ' + String(availableValues.length) + ' items';
+                
+            }
         }
 
         function makeInputControl(events, bus) {
@@ -119,12 +123,12 @@ define([
                 availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [];
 
-            if (subdataOptions.multiselection) {
+            if (constraints.multiselection) {
                 size = 10;
                 multiple = true;
             }
             if (!availableValues) {
-                return p({class: 'form-control-static', style: {fontStyle: 'italic', whiteSpace: 'normal', padding: '3px', border: '1px silver solid'}}, 'Items will be available after selecting a value for ' + subdataOptions.subdata_selection.parameter_id);
+                return p({class: 'form-control-static', style: {fontStyle: 'italic', whiteSpace: 'normal', padding: '3px', border: '1px silver solid'}}, 'Items will be available after selecting a value for ' + constraints.referredParameter);
             }
             //if (availableValues.length === 0) {
             //    return 'No items found';
@@ -168,7 +172,7 @@ define([
                 }, selectOptions)
             ]);
         }
-        
+
         /*
          * Given an existing input control, and new model state, update the
          * control to suite the new data.
@@ -182,11 +186,11 @@ define([
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
-                case 'value': 
+                case 'value':
                     // just change the selections.
                     var count = buildCount();
                     dom.setContent('input-control.count', count);
-                    
+
                     break;
                 case 'availableValues':
                     // rebuild the options
@@ -195,15 +199,15 @@ define([
                         count = buildCount();
                     dom.setContent('input-control.input', options);
                     dom.setContent('input-control.count', count);
-                    
+
                     break;
                 case 'referenceObjectName':
                     // refetch the available values
                     // set available values
                     // update input control for available values
                     // set value to null
-                    
-                
+
+
             }
         }
 
@@ -222,18 +226,18 @@ define([
             }
             var input = control.selectedOptions,
                 i, values = [];
-            for (i = 0; i < input.length; i += 1) {
-                values.push(input.item(i).value);
+            
+            if (control.selectedOptions.length === 0) {
+                return;
             }
-            // cute ... allows selecting multiple values but does not expect a sequence...
-            return values;
+            return control.selectedOptions.item(0).value;
         }
 
         function resetModelValue() {
-            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
+            if (constraints.defaultValue) {
                 // nb i'm assuming here that this set of strings is actually comma
                 // separated string on the other side.
-                model.setItem('value', spec.spec.default_values[0].split(','));
+                model.setItem('value', constraints.defaultValue);
             } else {
                 model.setItem('value', null);
             }
@@ -251,10 +255,10 @@ define([
 
                 var rawValue = getInputValue(),
                     validationOptions = {
-                        required: spec.required()
+                        required: constraints.required
                     };
 
-                return Validation.validateStringSet(rawValue, validationOptions);
+                return Validation.validateText(rawValue, validationOptions);
             })
                 .then(function (validationResult) {
                     return {
@@ -276,7 +280,7 @@ define([
         }
 
         // safe, but ugly.
-        
+
         function fetchData() {
             if (!model.getItem('referenceObjectName')) {
                 return [];
@@ -284,87 +288,19 @@ define([
             var workspace = new Workspace(runtime.config('services.workspace.url'), {
                 token: runtime.authToken()
             }),
-                options = spec.spec.textsubdata_options,
                 subObjectIdentity = {
                     ref: workspaceId + '/' + model.getItem('referenceObjectName'),
-                    included: options.subdata_selection.subdata_included
+                    included: [constraints.subdataIncluded]
                 };
             return workspace.get_object_subset([
                 subObjectIdentity
             ])
-                .then(function (results) {
-                    // We have only one ref, so should just be one result.
-                    var values = [],
-                        selectionId = options.subdata_selection.selection_id,
-                        descriptionTemplate = Handlebars.compile(options.subdata_selection.description_template);
-                    results.forEach(function (result) {
-                        if (!result) {
-                            return;
-                        }
-                        var subdata = getProp(result.data, options.subdata_selection.path_to_subdata);
-
-                        if (subdata instanceof Array) {
-                            // For arrays we pluck off the "selectionId" property from
-                            // each item.
-                            subdata.forEach(function (datum) {
-                                values.push({
-                                    id: datum[selectionId],
-                                    desc: descriptionTemplate(datum), // TODO
-                                    objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
-                                    objectName: result.info[1]
-                                });
-                            });
-                        } else {
-                            Object.keys(subdata).forEach(function (key) {
-                                var datum = subdata[key],
-                                    id;
-
-                                if (selectionId) {
-                                    switch (typeof datum) {
-                                        case 'object':
-                                            id = datum[selectionId];
-                                            break;
-                                        case 'string':
-                                        case 'number':
-                                            if (selectionId === 'value') {
-                                                id = datum;
-                                            } else {
-                                                id = key;
-                                            }
-                                            break;
-                                        default:
-                                            id = key;
-                                    }
-                                } else {
-                                    id = key;
-                                }
-
-                                values.push({
-                                    id: id,
-                                    desc: descriptionTemplate(datum), // todo
-                                    objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
-                                    objectName: result.info[1]
-                                });
-                            });
-                        }
-                    });
-                    return values;
-                })
-                .then(function (data) {
-                    // sort by id now.
-                    data.sort(function (a, b) {
-                        if (a.id > b.id) {
-                            return 1;
-                        }
-                        if (a.id < b.id) {
-                            return -1;
-                        }
-                        return 0;
-                    });
-                    return data;
+                .then(function (result) {
+                    var subdata = Props.make({data: result[0].data}).getItem(constraints.subdataPath);
+                    return constraints.map(subdata);
                 });
         }
-        
+
         function syncAvailableValues() {
             return Promise.try(function () {
                 return fetchData();
@@ -458,7 +394,7 @@ define([
             //                });
 
             bus.on('parameter-changed', function (message) {
-                if (message.parameter === subdataOptions.subdata_selection.parameter_id) {
+                if (message.parameter === constraints.referredParameter) {
                     var newValue = message.newValue;
                     if (message.newValue === '') {
                         newValue = null;
@@ -469,7 +405,7 @@ define([
                             updateInputControl('availableValues');
                         })
                         .catch(function (err) {
-                                console.error('ERROR syncing available values', err);
+                            console.error('ERROR syncing available values', err);
                         });
                 }
             });
@@ -503,9 +439,9 @@ define([
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
-                    
+
                     render();
-                    
+
                     events.attachEvents(container);
 
                     registerEvents();

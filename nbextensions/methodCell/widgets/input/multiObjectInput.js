@@ -9,9 +9,10 @@ define([
     '../../dom',
     '../../runtime', 
     './singleObjectInput',
+    '../display/singleObjectDisplay',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, Jupyter, html, Validation, Events, Dom, Runtime, SingleObjectInputWidget) {
+], function (Promise, Jupyter, html, Validation, Events, Dom, Runtime, SingleObjectInputWidget, SingleObjectDisplayWidget) {
     'use strict';
 
     // Constants
@@ -172,9 +173,15 @@ define([
                     workspaceId: config.workspaceId,
                     fieldSpec: config.fieldSpec
                 }),
+                displayWidget = SingleObjectDisplayWidget.make({
+                    bus: inputBus,
+                    parameterSpec: spec,
+                    workspaceInfo: config.workspaceInfo,
+                    workspaceId: config.workspaceId
+                }),
                 widgetWrapper = {
                     id: widgetId,
-                    instance: inputWidget,
+                    instance: displayWidget,
                     bus: inputBus,
                     index: index
                 },
@@ -248,6 +255,7 @@ define([
                     spec: spec,
                     workspaceInfo: config.workspaceInfo,
                     workspaceId: config.workspaceId,
+                    blacklist: model.value,
                     fieldSpec: config.fieldSpec
                 }),
                 placeholder = div({id: widgetId});

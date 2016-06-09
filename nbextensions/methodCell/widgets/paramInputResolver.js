@@ -14,6 +14,7 @@ define([
     './input/singleCheckbox',
     './input/singleFloatInput',
     './input/singleSubdata',
+    './input/singleCustomSubdata',
     './input/singleTextareaInput'
 ], function (
     SingleTextInputWidget,
@@ -28,6 +29,7 @@ define([
     SingleCheckboxInputWidget,
     SingleFloatInputWidget,
     SingleSubdataWidget,
+    SingleCustomSubdataWidget,
     SingleTextareaInputWidget
     ) {
     'use strict';
@@ -221,14 +223,18 @@ define([
                             return UndefinedInputWidget;
                         default:
                             return UndefinedInputWidget;
-                    }                               
+                    }    
+                case 'subdata': 
+                    return SingleSubdataWidget;
                 case '[]string':
                     switch (fieldType) {
                         case 'dropdown':
                             return UndefinedInputWidget;
                         default:
                             return MultiTextInputWidget;
-                    }                    
+                    }
+                case 'sample_property':
+                    return SingleCustomSubdataWidget;
                 case 'unspecified':
                     // a bunch of field types are untyped:
                     switch (fieldType) {

@@ -15,10 +15,7 @@ define([
     '../pythonInterop',
     '../utils',
     '../dom',
-    '../fsm',
-    './methodExecWidget',
-    './methodParamsWidget',
-    './methodParamsViewWidget'
+    '../fsm'
 ], function (
     $,
     Promise,
@@ -33,10 +30,8 @@ define([
     PythonInterop,
     utils,
     Dom,
-    Fsm,
-    MethodExecWidget,
-    MethodParamsWidget,
-    MethodParamsViewWidget) {
+    Fsm
+    ) {
     'use strict';
     var t = html.tag,
         div = t('div'), span = t('span'), a = t('a'),
@@ -1282,139 +1277,190 @@ define([
             });
         }
 
+        function findInputWidget(requestedInputWidget) {
+            console.log('INPUT WIDGET', requestedInputWidget);
+            var defaultModule = 'nbextensions/methodCell/widgets/methodParamsWidget';
+
+            if (requestedInputWidget === null) {
+                return defaultModule;
+            }
+            // Yes, the string literal 'null' can slip through
+            if (requestedInputWidget === 'null') {
+                return defaultModule;
+            }
+            
+            return 'nbextensions/methodCell/widgets/inputWidgets/' + requestedInputWidget;
+        }
+
+        function loadInputWidget() {
+            return new Promise(function (resolve, reject) {
+                var inputWidget = env.methodSpec.widgets.input,
+                    selectedWidget = findInputWidget(inputWidget);
+
+                if (!selectedWidget) {
+                    reject('Cannot find the requested input widget ' + inputWidget);
+                }
+
+                require([selectedWidget], function (Widget) {
+                    var bus = runtime.bus().makeChannelBus(),
+                        widget = Widget.make({
+                            bus: bus,
+                            workspaceInfo: workspaceInfo
+                        });
+                    widgets.paramsInputWidget = {
+                        path: ['parameters-group', 'widget'],
+                        // module: widgetModule,
+                        bus: bus,
+                        instance: widget
+                    };
+                    widget.start();
+                    bus.emit('run', {
+                        node: dom.getElement(['parameters-group', 'widget']),
+                        parameters: env.parameters
+                    });
+                    bus.on('parameter-sync', function (message) {
+                        var value = model.getItem(['params', message.parameter]);
+                        bus.send({
+                            parameter: message.parameter,
+                            value: value
+                        }, {
+                            // This points the update back to a listener on this key
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter
+                            }
+                        });
+                    });
+                    bus.on('parameter-changed', function (message) {
+                        model.setItem(['params', message.parameter], message.newValue);
+                        var validationResult = validateModel();
+                        if (validationResult.isValid) {
+                            buildPython(cell);
+                            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+                            renderUI();
+                        } else {
+                            resetPython(cell);
+                            fsm.newState({mode: 'editing', params: 'incomplete'});
+                            renderUI();
+                        }
+                    });
+                    resolve();
+                }, function (err) {
+                    console.log('ERROR', err);
+                    reject(err);
+                });
+            });
+        }
+
+        function loadInputViewWidget() {
+            return new Promise(function (resolve, reject) {
+                require([
+                    'nbextensions/methodCell/widgets/methodParamsViewWidget'
+                ], function (Widget) {
+                    var bus = runtime.bus().makeChannelBus(),
+                        widget = Widget.make({
+                            bus: bus,
+                            workspaceInfo: workspaceInfo
+                        });
+                    widgets.paramsDisplayWidget = {
+                        path: ['parameters-display-group', 'widget'],
+                        // module: widgetModule,
+                        bus: bus,
+                        instance: widget
+                    };
+                    bus.on('sync-all-parameters', function () {
+                        var params = model.getItem('params');
+                        Object.keys(params).forEach(function (key) {
+
+                            bus.send({
+                                parameter: key,
+                                value: params[key]
+                            }, {
+                                // This points the update back to a listener on this key
+                                key: {
+                                    type: 'update',
+                                    parameter: key
+                                }
+                            });
+
+                            //bus.emit('update', {
+                            //    parameter: key,
+                            //    value: params[key]
+                            //});
+                        });
+                    });
+                    bus.on('parameter-sync', function (message) {
+                        var value = model.getItem(['params', message.parameter]);
+                        bus.send({
+                            parameter: message.parameter,
+                            value: value
+                        }, {
+                            // This points the update back to a listener on this key
+                            key: {
+                                type: 'update',
+                                parameter: message.parameter
+                            }
+                        });
+                    });
+                    widget.start();
+                    bus.emit('run', {
+                        node: dom.getElement(['parameters-display-group', 'widget']),
+                        parameters: env.parameters
+                    });
+
+                    resolve();
+                }, function (err) {
+                    console.log('ERROR', err);
+                    reject(err);
+                });
+            });
+        }
+
+        function loadExecutionWidget() {
+            return new Promise(function (resolve, reject) {
+                require([
+                    'nbextensions/methodCell/widgets/methodExecWidget'
+                ], function (Widget) {
+                    var bus = runtime.bus().makeChannelBus(),
+                        widget = Widget.make({
+                            bus: bus,
+                            workspaceInfo: workspaceInfo
+                        });
+                    widgets.execWidget = {
+                        path: ['exec-group', 'widget'],
+                        bus: bus,
+                        instance: widget
+                    };
+                    widget.start();
+                    var x = model.getItem('exec.jobState');
+                    bus.emit('run', {
+                        node: dom.getElement('exec-group.widget'),
+                        jobState: model.getItem('exec.jobState')
+                            // jobInfo:
+                    });
+                    resolve();
+                }, function (err) {
+                    console.log('ERROR', err);
+                    reject(err);
+                });
+            });
+        }
+
         function run(params) {
             // First get the method specs, which is stashed in the model,
             // with the parameters returned.
             return syncMethodSpec(params.methodId, params.methodTag)
                 .then(function () {
                     cell.setMeta('attributes', 'title', env.methodSpec.info.name);
-
-                    // Set up the Params Input Widget
-                    (function () {
-                        var bus = runtime.bus().makeChannelBus(),
-                            widget = MethodParamsWidget.make({
-                                bus: bus,
-                                workspaceInfo: workspaceInfo
-                            });
-                        widgets.paramsInputWidget = {
-                            path: ['parameters-group', 'widget'],
-                            // module: widgetModule,
-                            bus: bus,
-                            instance: widget
-                        };
-                        widget.start();
-                        bus.emit('run', {
-                            node: dom.getElement(['parameters-group', 'widget']),
-                            parameters: env.parameters
-                        });
-                        bus.on('parameter-sync', function (message) {
-                            var value = model.getItem(['params', message.parameter]);
-                            bus.send({
-                                parameter: message.parameter,
-                                value: value
-                            }, {
-                                // This points the update back to a listener on this key
-                                key: {
-                                    type: 'update',
-                                    parameter: message.parameter
-                                }
-                            });
-                        });
-                        bus.on('parameter-changed', function (message) {
-                            model.setItem(['params', message.parameter], message.newValue);
-                            var validationResult = validateModel();
-                            if (validationResult.isValid) {
-                                buildPython(cell);
-                                fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-                                renderUI();
-                            } else {
-                                resetPython(cell);
-                                fsm.newState({mode: 'editing', params: 'incomplete'});
-                                renderUI();
-                            }
-                        });
-
-
-                    }());
-
-                    // Set up the Param Display Widget
-                    (function () {
-                        var bus = runtime.bus().makeChannelBus(),
-                            widget = MethodParamsViewWidget.make({
-                                bus: bus,
-                                workspaceInfo: workspaceInfo
-                            });
-                        widgets.paramsDisplayWidget = {
-                            path: ['parameters-display-group', 'widget'],
-                            // module: widgetModule,
-                            bus: bus,
-                            instance: widget
-                        };
-                        bus.on('sync-all-parameters', function () {
-                            var params = model.getItem('params');
-                            Object.keys(params).forEach(function (key) {
-
-                                bus.send({
-                                    parameter: key,
-                                    value: params[key]
-                                }, {
-                                    // This points the update back to a listener on this key
-                                    key: {
-                                        type: 'update',
-                                        parameter: key
-                                    }
-                                });
-
-                                //bus.emit('update', {
-                                //    parameter: key,
-                                //    value: params[key]
-                                //});
-                            });
-                        });
-                        bus.on('parameter-sync', function (message) {
-                            var value = model.getItem(['params', message.parameter]);
-                            bus.send({
-                                parameter: message.parameter,
-                                value: value
-                            }, {
-                                // This points the update back to a listener on this key
-                                key: {
-                                    type: 'update',
-                                    parameter: message.parameter
-                                }
-                            });
-                        });
-                        widget.start();
-                        bus.emit('run', {
-                            node: dom.getElement(['parameters-display-group', 'widget']),
-                            parameters: env.parameters
-                        });
-                    }());
-
-                    // Set up the Execution Widget
-                    (function () {
-                        var bus = runtime.bus().makeChannelBus(),
-                            widget = MethodExecWidget.make({
-                                bus: bus,
-                                workspaceInfo: workspaceInfo
-                            });
-                        widgets.execWidget = {
-                            path: ['exec-group', 'widget'],
-                            bus: bus,
-                            instance: widget
-                        };
-                        widget.start();
-                        var x = model.getItem('exec.jobState');
-                        bus.emit('run', {
-                            node: dom.getElement('exec-group.widget'),
-                            jobState: model.getItem('exec.jobState')
-                                // jobInfo:
-                        });
-                    }());
-
+                    return Promise.all([
+                        loadInputWidget(),
+                        loadInputViewWidget(),
+                        loadExecutionWidget()
+                    ]);
+                })
+                .then(function () {
                     // this will not change, so we can just render it here.
                     showAboutMethod();
-
                     renderUI();
                 });
         }

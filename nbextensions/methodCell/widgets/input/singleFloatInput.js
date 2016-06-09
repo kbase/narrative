@@ -19,6 +19,7 @@ define([
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
+            constraints = config.parameterSpec.getConstraints(),
             parent,
             container,
             $container,
@@ -30,9 +31,6 @@ define([
         // Validate configuration.
         // Nothing to do...
 
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
         options.enabled = true;
 
 

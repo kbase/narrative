@@ -322,7 +322,7 @@ define([
             };
         }
 
-        function validateTextString(value, options) {
+        function validateText(value, options) {
             var parsedValue,
                 errorMessage, diagnosis = 'valid',
                 minLength = options.min_length,
@@ -338,6 +338,7 @@ define([
                 }
             } else if (typeof value !== 'string') {
                 diagnosis = 'invalid';
+                console.error('VALIDATION', value);
                 errorMessage = 'value must be a string (it is of type "' + (typeof value) + '")';
             } else {
                 parsedValue = value.trim();
@@ -364,7 +365,7 @@ define([
             };
         }
 
-        function validateStringSet(set, options) {
+        function validateTextSet(set, options) {
             var errorMessage, diagnosis,
                 parsedSet;
             // values are raw, no parsing.
@@ -397,6 +398,9 @@ define([
                     } else {
                         diagnosis = 'valid';
                     }
+                } else {
+                    // no more validation, just having a set is ok.
+                    diagnosis = 'valid';
                 }
             }
 
@@ -417,9 +421,11 @@ define([
             validateIntegerField: validateIntString,
             validateFloat: validateFloat,
             validateFloatString: validateFloatString,
-            validateTextString: validateTextString,
+            validateTextString: validateText,
+            validateText: validateText,
             validateSet: validateSet,
-            validateStringSet: validateStringSet
+            validateStringSet: validateTextSet,
+            validateTextSet: validateTextSet,
         };
     }
 

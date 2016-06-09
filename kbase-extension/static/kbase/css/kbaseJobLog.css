@@ -1,0 +1,41 @@
+#kblog-header {
+    margin: 5px 0 5px 0;
+}
+
+#kblog-panel {
+    background-color: #F5F5F5;
+    border: 1px solid #CECECE;
+    height: 350px;
+    padding: 5px;
+    resize: vertical;
+    overflow: auto;
+    color: #000;
+    vertical-align: top;
+}
+
+.kblog-line {
+    position: relative;
+    display: block;
+    font-family: "Monaco", monospace;
+    font-size: 9pt;
+}
+
+.kblog-line-num {
+    position: absolute;
+    font-size: 9pt;
+    color: rgb(153, 153, 153);
+    width: 25px;
+    text-align: right;
+}
+
+.kblog-text {
+    word-wrap: break-word;
+    position: relative;
+    padding-left: 32px;
+
+}
+
+.kb-error {
+    background-color: rgba(200, 0, 0, 0.2);
+    color: #660000;
+}

@@ -313,7 +313,13 @@ define([
             this.currentLogLength = logs.lines.length;
             this.logsView.find('#kblog-spinner').hide();
             if (this.doLogLoop) {
-                this.looper = setTimeout(function() { this.sendLogRequest('latest', true); }.bind(this), 2000);
+                // don't bother looping if we're complete.
+                if (this.state.job_state === 'suspend' || this.state.job_state === 'completed') {
+                    this.logsView.find('#kblog-stop').click();
+                }
+                else {
+                    this.looper = setTimeout(function() { this.sendLogRequest('latest', true); }.bind(this), 2000);
+                }
             }
             // var lastPos = this.logsView.find('#kblog-panel').children().last().
             // this.logsView.find('#kblog-panel').children().last().scrollTop=0;

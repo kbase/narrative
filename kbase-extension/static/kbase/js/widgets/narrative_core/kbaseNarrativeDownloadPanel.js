@@ -106,11 +106,11 @@ define (
             }],
 
             'KBaseOntology.OntologyDictionary':[{
-                name: "OBO", external_type: 'OBO.Ontology', transform_options: {}
+			name: "OBO", external_type: 'OBO.Ontology', transform_options: { "output_file_name": "Toy.obo" }
             }],
 
             'KBaseOntology.OntologyTranslation':[{
-                name: "TSV", external_type: 'TSV.Ontology', transform_options: {}
+			name: "TSV", external_type: 'TSV.OntologyTranslation', transform_options: { "output_file_name" : "Toy.tsv" }
             }]
         },
 

@@ -1,7 +1,7 @@
 __all__ = ['magics', 'ws_util', 'common', 'handlers', 'contents', 'services']
 
 from semantic_version import Version
-__version__ = Version("2.0.7")
+__version__ = Version("2.0.8")
 version = lambda: __version__
 
 # if run directly:

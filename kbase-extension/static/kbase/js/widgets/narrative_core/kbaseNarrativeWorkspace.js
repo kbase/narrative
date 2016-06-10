@@ -261,21 +261,112 @@ define (
                 placement: 'bottom'
             });
 
+            /* This is the input box for the new narrative name.
+             * Gets pre-populated with the current narrative name + "- copy"
+             * When empty, prompts to enter a name with a tooltip, and disables the copy btn.
+             */
+            var $newNameInput = $('<input type="text">')
+                .addClass('form-control')
+                .tooltip({title: 'Please enter a name.',
+                          container: 'body',
+                          placement: 'right',
+                          trigger: 'manual'})
+                .on('focus', function () {
+                    Jupyter.narrative.disableKeyboardManager();
+                })
+                .on('blur', function () {
+                    Jupyter.narrative.enableKeyboardManager();
+                })
+                .on('input', function() {
+                    var v = $newNameInput.val();
+                    if (!v) {
+                        $newNameInput.tooltip('show');
+                        $doCopyBtn.prop('disabled', true);
+                    }
+                    else {
+                        $newNameInput.tooltip('hide');
+                        $doCopyBtn.prop('disabled', false);
+                    }
+                });
+
+            var $errorMessage = $('<div>').css({'color': '#F44336', 'padding-top': '5px'});
+
+            /*
+             * Does the actual copy and displays the error if that happens.
+             */
+            var $doCopyBtn = $('<button>')
+                             .addClass('kb-primary-btn')
+                             .append('Copy')
+                             .click(function(e) {
+                                $errorMessage.empty();
+                                $doCopyBtn.prop('disabled', true);
+                                $cancelBtn.prop('disabled', true);
+                                Jupyter.narrative.sidePanel.$narrativesWidget.copyThisNarrative($newNameInput.val())
+                                .then(function(result) {
+                                    Jupyter.narrative.sidePanel.$narrativesWidget.refresh();
+                                    console.log(result);
+                                    // show go-to button
+                                    $cancelBtn.html('Close');
+                                    $jumpButton.click(function() {
+                                        window.location.href = result.url;
+                                    });
+                                    $jumpButton.show();
+                                    $doCopyBtn.prop('disabled', false);
+                                    $cancelBtn.prop('disabled', false);
+                                }.bind(this))
+                                .catch(function(error) {
+                                    if (error && error.error && error.error.message) {
+                                        $errorMessage.append(error.error.message);
+                                    }
+                                    else if (typeof error === 'string') {
+                                        $errorMessage.append(error);
+                                    }
+                                    else {
+                                        $errorMessage.append('Sorry, an error occurred while copying. Please try again.');
+                                    }
+                                    $doCopyBtn.prop('disabled', false);
+                                    $cancelBtn.prop('disabled', false);
+                                })
+                             }.bind(this));
+
+            var $cancelBtn = $('<button>')
+                             .addClass('kb-default-btn')
+                             .append('Cancel')
+                             .click(function() {
+                                $newNameInput.tooltip('hide');
+                                this.copyModal.hide();
+                             }.bind(this));
+
+
+            var $jumpButton = $('<button>')
+                              .addClass('btn btn-info')
+                              .text('Open the new Narrative');
+
+            var $copyModalBody = $('<div>')
+                                 .append($('<div>').append("Enter a name for the new Narrative"))
+                                 .append($('<div>').append($newNameInput))
+                                 .append($errorMessage)
+                                 .append($jumpButton);
+
             this.copyModal = new BootstrapDialog({
                 title: 'Copy a narrative',
-                body: $('<div>'),
-                closeButton: true
+                body: $copyModalBody,
+                closeButton: true,
+                buttons: [
+                    $doCopyBtn,
+                    $cancelBtn
+                ]
             });
 
-            $('#kb-view-only-copy').click(function () {
+            $('#kb-view-only-copy').click(function() {
+                $jumpButton.hide();
+                $doCopyBtn.prop('disabled', false);
+                $cancelBtn.prop('disabled', false);
+                $cancelBtn.html('Cancel');
+                $newNameInput.val(Jupyter.notebook.get_notebook_name() + ' - Copy');
                 this.copyModal.show();
-                var $panel = this.copyModal.getBody();
-                var $jump = $('<div>').css({'margin-top': '20px'})
-                                      .append($("<button>").addClass('btn btn-info')
-                                              .text("Open this narrative"));
-                $(document).trigger('copyThis.Narrative', [$panel, null, $jump]);
-                return '';
             }.bind(this));
+
         },
 
         initDeleteCellModal: function() {

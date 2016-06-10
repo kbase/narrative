@@ -3,32 +3,28 @@
  * @author Michael Sneddon <mwsneddon@lbl.gov>
  * @public
  */
-define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'narrativeConfig',
-		'narrativeManager',
-		'util/display',
-		'bluebird',
-		'kbaseNarrativeControlPanel',
-		'api/NewWorkspace'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Config,
-		NarrativeManager,
-		DisplayUtil,
-		Promise,
-		kbaseNarrativeControlPanel,
-		api_NewWorkspace
-	) {
+define(['jquery',
+        'base/js/namespace',
+        'narrativeConfig',
+        'narrativeManager',
+        'util/display',
+        'bluebird',
+        'kbwidget',
+        'kbaseNarrativeControlPanel',
+        'api/NewWorkspace'],
+function($,
+         Jupyter,
+         Config,
+         NarrativeManager,
+         DisplayUtil,
+         Promise,
+         KBWidget,
+         ControlPanel,
+         NewWorkspace) {
     'use strict';
-    return KBWidget({
+    return new KBWidget({
         name: "kbaseNarrativeManagePanel",
-        parent : kbaseNarrativeControlPanel,
+        parent : ControlPanel,
         version: "1.0.0",
         wsClient: null,
         table: null,
@@ -59,25 +55,30 @@ define (
         init: function (options) {
             this._super(options);
 
-            this.$mainPanel = $('<div>')//.css({'height':'600px'});
+            this.$mainPanel = $('<div>');
             this.body().append(this.$mainPanel);
 
+            // the string name of the workspace.
             this.ws_name = Jupyter.narrative.getWorkspaceName();
 
+            // the workspace ref of this Narrative object. (w/o version)
+            this.workspaceRef = Jupyter.narrative.workspaceRef;
+            this.workspaceId = Jupyter.narrative.workspaceId;
+
             $(document).on(
-                'copyThis.Narrative', $.proxy(function (e, panel, active, jump) {
+                'copyThis.Narrative', function (e, panel, active, jump) {
                     console.debug("CopyThisNarrative triggered, params=",
                         {panel: panel, active: active, jump: jump});
-                    this.copyThisNarrative(panel, active, jump);
-                }, this)
+                    this.copyThisNarrative(panel, active, jump)
+                }.bind(this)
             );
 
             $([Jupyter.events]).on(
-                'notebook_saved.Notebook', $.proxy(function (e) {
+                'notebook_saved.Notebook', function (e) {
                     this.refresh();
-                }, this)
+                }.bind(this)
             );
-            
+
             // doesn't need a title, so just hide it to avoid padding.
             // yes, it's a hack. mea culpa.
             this.$elem.find('.kb-title').hide();
@@ -100,7 +101,7 @@ define (
             return this;
         },
         refresh: function () {
-            if (!self.$narPanel) {
+            if (!this.$narPanel) {
                 this.renderHeader();
             }
             this.loadDataAndRenderPanel();
@@ -117,6 +118,17 @@ define (
             var narRefsToLookup = [];
             var wsPermsToLookup = [];
             this.showLoading();
+
+            /**
+             * Loading and rendering flow.
+             * 1. Get users workspace infos (owned and shared, not global)
+             * 2. Look at metadata for 'narrative' tag - if present, that ws has a Narrative.
+             *    a. Add the object id in that tag to the narRefsToLookUp var.
+             *    b. Add that ws to wsPermsToLookup
+             * 3. Make a pile of Promises.
+             *    a. One to fetch all object info for those Narratives (assuming it's under 10000, that'll get fixed if it gets larger)
+             *    b. One for each batch of 1000 workspaces to get permissions for
+             */
             var wsInfoProm = Promise.resolve(this.ws.list_workspace_info({excludeGlobal: 1}));
 
             var narDataProm = wsInfoProm
@@ -177,6 +189,9 @@ define (
                     }
                 }
                 var newProms = []
+                /*
+                 * set up Promises - first is for all Narrative object info, rest are for WS permissions
+                 */
                 if (narRefsToLookup.length > 0) {
                     var objInfoProm = Promise.resolve(this.ws.get_object_info_new({objects: narRefsToLookup, includeMetadata: 1, ignoreErrors: 1}));
                     newProms.push(objInfoProm);
@@ -188,26 +203,44 @@ define (
                 return Promise.all(newProms);
             }.bind(this))
             .then(function(results) { //objList = results[0], rest are permList chunks
+                /*
+                 * Now we have a set of objects and permissions for each narrative.
+                 * The arrays are in the same order, so keep them parallel when the permission list gets merged.
+                 */
                 var objList = results.shift();
                 var permList = [];
                 for (var i=0; i<results.length; i++) {
                     permList = permList.concat(results[i].perms);
                 }
+                // If no narratives, we're done!
                 if (!objList)
                     return;
 
                 var errorProms = [];
+                /*
+                 * Go through each object and permission pair, merge them together in this.allNarData.
+                 * If it's not a Narrative object, then create an error.
+                 * In the end, allNarData will be a list like this:
+                 * {
+                 *   nar_info: { get_object_info_new result },
+                 *   perms : { get_permissions_mass result },
+                 *   error : boolean
+                 * }
+                 */
                 for (var i = 0; i < objList.length; i++) {
                     this.allNarData[i].perms = permList[i];
                     if (objList[i] !== null && objList[i][2].indexOf('KBaseNarrative.Narrative') === 0) {
                         this.allNarData[i].nar_info = objList[i];
                     } else {
+                        // If this isn't a KBaseNarrative.Narrative, then it's wrong!
+                        // look up the object, and expect to see an error.
+                        // This is all done as a set of promises, so they'll get dealt with when theyre returned.
                         this.allNarData[i].error = true;
                         var errorIndex = i;
 
                         errorProms.push(Promise.resolve(this.ws.get_object_info_new({
-                            objects: [narRefsToLookup[errorIndex]], 
-                            includeMetadata: 1, 
+                            objects: [narRefsToLookup[errorIndex]],
+                            includeMetadata: 1,
                             ignoreErrors: 0
                         }))
                         .then(function(error_obj_info) {
@@ -218,27 +251,29 @@ define (
                             } else {
                                 // could give an error message here stating that the workspace is pointing to a non-narrative object
                                 //this.allNarData[errorIndex].error_msg = error.error.message;
-                            }                                
+                            }
                         }.bind(this))
                         .catch(function(error) {
                             this.allNarData[errorIndex].error_msg = error.error.message;
-                            this.allNarData[errorIndex].$div = null;                                
+                            this.allNarData[errorIndex].$div = null;
                         }.bind(this)));
                     }
                 }
                 return Promise.all(errorProms);
             }.bind(this))
             .then(function() {
+                // At this stage, this.allNarData should be fully populated.
                 this.renderPanel();
             }.bind(this))
             .catch(function(error) {
                 console.error(error);
             });
-
         },
+
         showLoading: function () {
             this.$narPanel.html('<br><center><img src="' + this.options.loadingImage + '"/></center><br>');
         },
+
         renderHeader: function () {
             var self = this;
             if (self.$mainPanel) {
@@ -256,6 +291,7 @@ define (
                 self.$mainPanel.append(self.$narPanel);
             }
         },
+
         advancedSetNarLookup: {},
         sortNarrativesFunc: function (a, b) {
             if (a.error && b.error) {
@@ -273,6 +309,7 @@ define (
                 return 1;  // sort by date
             return 0;
         },
+
         renderPanel: function () {
             var self = this,
                 divider = '<hr class="kb-data-list-row-hr">';
@@ -476,11 +513,11 @@ define (
                     .tooltip({title: 'View narrative history to revert changes', 'container': 'body'})
                     .append(
                         $('<span>')
-                        .addClass('fa fa-history')                       
+                        .addClass('fa fa-history')
                         )
                     .click(function (e) {
                         e.stopPropagation();
-                    
+
                         var opened = self.toggleInteractionPanel($interactionPanel, 'history');
                         if (!opened) {
                             return;
@@ -566,7 +603,7 @@ define (
                     .attr('data-button', 'copy')
                     .append(
                         $('<span>')
-                        .addClass('fa fa-copy')                        
+                        .addClass('fa fa-copy')
                         )
                     .click(function (e) {
                         e.stopPropagation();
@@ -580,14 +617,10 @@ define (
                             .addClass('form-control')
                             .val(ws_info[8].narrative_nice_name + ' - Copy')
                             .on('focus', function () {
-                                if (Jupyter && Jupyter.narrative) {
-                                    Jupyter.narrative.disableKeyboardManager();
-                                }
+                                Jupyter.narrative.disableKeyboardManager();
                             })
                             .on('blur', function () {
-                                if (Jupyter && Jupyter.narrative) {
-                                    Jupyter.narrative.enableKeyboardManager();
-                                }
+                                Jupyter.narrative.enableKeyboardManager();
                             });
 
                         var $copyDiv = $('<div>')
@@ -783,7 +816,7 @@ define (
                         $('<span>')
                         .addClass('panel-title')
                         .attr('data-element', 'title')
-                        )                    
+                        )
                     .append(
                         $('<button>')
                         .attr('type', 'button')
@@ -949,181 +982,262 @@ define (
             //.append($alertContainer)
             //.append($shareContainer);
 
-            var $narDivContainer = $('<div>')                
+            var $narDivContainer = $('<div>')
                 .append($narDiv);
 
             return $narDivContainer;
         },
+
         makeCopyThisNarrativeBtn: function ($alertContainer) {
-            var self = this;
-            var active = '<span class="fa fa-copy"></span> Copy This Narrative';
-//            var $active = $('<span>').addClass('fa fa-copy').append(" Copy Narrative");
-            var $working = $('<span>').append("Copying Narrative...");
+            /* Flow -
+             * 1. Click button.
+             * 2. Button goes dim, turns into "Copying.." message.
+             * 3. Shows input area, pre-populates with name.
+             * 4. Shows "Copy" and "Cancel" buttons.
+             * 5. text area below those for errors.
+             * 6. Click "Copy" - shows 'copying...' text in message area
+             *    - error? show error in message area
+             *    - success? hide everything, clear text, refresh()
+             * 7. Click "Cancel" - same as success.
+             */
 
-            var $btn = $('<button>').addClass('kb-primary-btn')
-                .append(active)
-                .on('click', function (e) {
-                    e.stopPropagation();
-                    $(this).prop('disabled', true).empty().append($working);
-                    self.copyThisNarrative($alertContainer, active, null);
+            var setButtonWorking = function(isWorking) {
+                if (isWorking) {
+                    $initCopyBtn.prop('disabled', true)
+                                 .empty()
+                                 .append('Copying Narrative...');
+                }
+                else {
+                    $initCopyBtn.prop('disabled', false)
+                                 .empty()
+                                 .append('<span class="fa fa-copy"></span> Copy This Narrative');
+                    $doCopyBtn.prop('disabled', false);
+                    $cancelBtn.prop('disabled', false);
+                }
+            };
+
+            /* Clicking this should disable it, then show the passed $alertContainer
+             */
+            var $initCopyBtn = $('<button>')
+                .addClass('kb-primary-btn')
+                .click(function(e) {
+                    setButtonWorking(true);
+                    $newNameInput.val(Jupyter.notebook.get_notebook_name() + ' - Copy')
+                    $alertContainer.slideDown();
                 });
-            return $btn;
-        },
-        copyThisNarrative: function ($dialog, active, $jump_btn) {
-            var self = this;
-            $dialog.empty(); // in case user canceled earlier
-            self.ws.get_workspace_info({workspace: self.ws_name},
-                function (ws_info) {
-                    self.ws.get_object_info_new({objects: [{ref: ws_info[0] + '/' + ws_info[8]['narrative']}], includeMetadata: 1},
-                        function (object_info_list) {
-                            var object_info = object_info_list[0];
-                            var $newNameInput = $('<input type="text">')
-                                .addClass('form-control')
-                                .val(ws_info[8]['narrative_nice_name'] + ' - Copy')
-                                .on('focus', function () {
-                                    if (Jupyter && Jupyter.narrative) {
-                                        Jupyter.narrative.disableKeyboardManager();
+
+            /* This is the input box for the new narrative name.
+             * Gets pre-populated with the current narrative name + "- copy"
+             * When empty, prompts to enter a name with a tooltip, and disables the copy btn.
+             */
+            var $newNameInput = $('<input type="text">')
+                .addClass('form-control')
+                .tooltip({title: 'Please enter a name.',
+                          container: 'body',
+                          placement: 'right',
+                          trigger: 'manual'})
+                .on('focus', function () {
+                    Jupyter.narrative.disableKeyboardManager();
+                })
+                .on('blur', function () {
+                    Jupyter.narrative.enableKeyboardManager();
+                })
+                .on('input', function() {
+                    var v = $newNameInput.val();
+                    if (!v) {
+                        $newNameInput.tooltip('show');
+                        $doCopyBtn.prop('disabled', true);
+                    }
+                    else {
+                        $newNameInput.tooltip('hide');
+                        $doCopyBtn.prop('disabled', false);
+                    }
+                });
+
+            var $errorMessage = $('<div>').css({'color': '#F44336'});
+
+            /*
+             * Does the actual copy and displays the error if that happens.
+             */
+            var $doCopyBtn = $('<button>')
+                             .addClass('kb-primary-btn')
+                             .append('Copy')
+                             .click(function(e) {
+
+                                $errorMessage.empty();
+                                $doCopyBtn.prop('disabled', true);
+                                $cancelBtn.prop('disabled', true);
+                                this.copyThisNarrative($newNameInput.val())
+                                .then(function(result) {
+                                    $alertContainer.hide();
+                                    setButtonWorking(false);
+                                    this.refresh();
+                                    console.log(result);
+                                }.bind(this))
+                                .catch(function(error) {
+                                    if (error && error.error && error.error.message) {
+                                        $errorMessage.append(error.error.message);
                                     }
+                                    else {
+                                        $errorMessage.append('Sorry, an error occurred while copying. Please try again.');
+                                    }
+                                    $doCopyBtn.prop('disabled', false);
+                                    $cancelBtn.prop('disabled', false);
                                 })
-                                .on('blur', function () {
-                                    if (Jupyter && Jupyter.narrative) {
-                                        Jupyter.narrative.enableKeyboardManager();
-                                    }
-                                });
+                             }.bind(this))
 
+            var $cancelBtn = $('<button>')
+                             .addClass('kb-default-btn')
+                             .append('Cancel')
+                             .click(function () {
+                                $doCopyBtn.prop('disabled', false);
+                                $alertContainer.slideUp();
+                                $newNameInput.tooltip('hide');
+                                setButtonWorking(false);
+                             });
 
-                            var $cancelBtn = $('<button>')
-                                             .addClass('kb-default-btn')
-                                             .append('Cancel')
-                                             .click(function () {
-                                                $copyNarButton.prop('disabled', false).empty().append(active);
-                                                self.$copyThisNarrBtn.prop('disabled', false).empty().append(active);
-                                                $dialog.empty();
-                                             });
+            setButtonWorking(false);
+            $alertContainer.append(
+                $('<div>')
+                .append($('<div>').append("Enter a name for the new Narrative"))
+                .append($('<div>').append($newNameInput))
+                .append($doCopyBtn)
+                .append($cancelBtn)
+                .append($errorMessage)
+            ).hide();
 
-                            var $copyNarButton = $('<button>').addClass('kb-primary-btn')
-
-                            // $dialog.append(
-                            //     $('<div>').append(
-                            //     $('<div>').append("Enter a name for the new Narrative"))
-                            //     .append($('<div>').append($newNameInput))
-                            //     .append($('<button>').addClass('btn btn-info')
-                                    .css({'margin-top': '10px'})
-                                    .append('Copy')
-                                    .click(function () {
-                                        var $thisBtn = $(this);
-                                        $thisBtn.prop('disabled', true);
-                                        var newMeta = ws_info[8];
-                                        newMeta['narrative_nice_name'] = $newNameInput.val();
-
-                                        var id = new Date().getTime();
-                                        var ws_name = self.my_user_id + ":" + id;
-
-                                        self.ws.clone_workspace({
-                                            wsi: {id: ws_info[0]},
-                                            workspace: ws_name,
-                                            meta: newMeta
-                                        },
-                                            function (new_ws_info) {
-                                                // we have to match based on names because when cloning, the object id is not preserved!!! arg!
-                                                var new_narrative_ref = new_ws_info[0] + "/" + object_info[1]; //new_ws_info[8].narrative;
-                                                // ok, a lot of work just to update the narrative name in the metadata
-                                                self.ws.get_objects([{ref: new_narrative_ref}],
-                                                    function (data) {
-                                                        data = data[0]; // only one thing should be returned
-                                                        var new_nar_metadata = data.info[10];
-                                                        new_nar_metadata.name = newMeta['narrative_nice_name'];
-                                                        new_nar_metadata.ws_name = ws_name;
-                                                        data.data.metadata.name = newMeta['narrative_nice_name'];
-                                                        data.data.metadata.ws_name = ws_name;
-
-                                                        // set workspace metadata to point to the correct object id since they can change on clone!!
-                                                        self.ws.alter_workspace_metadata({
-                                                            wsi: {id: new_ws_info[0]},
-                                                            new : {'narrative': String(data.info[0])}
-                                                        },
-                                                            function () {
-                                                                // so much work just to update this name!
-                                                                self.ws.save_objects({id: new_ws_info[0], objects: [
-                                                                        {
-                                                                            type: data.info[2],
-                                                                            data: data.data,
-                                                                            provenance: data.provenance,
-                                                                            name: data.info[1],
-                                                                            meta: new_nar_metadata
-                                                                        }
-                                                                    ]},
-                                                                    function (info) {
-                                                                        console.log('copying complete', info);
-                                                                        $dialog.empty();
-                                                                        if (active) {
-                                                                            $thisBtn.prop('disabled', false).empty().append(active);
-                                                                            self.refresh();
-                                                                        }
-                                                                        if ($jump_btn) {
-                                                                            var name = info[0][10].name;
-                                                                            var copy_id = "ws." + info[0][6] + ".obj." + info[0][0];
-                                                                            var oldpath = window.location.pathname;
-                                                                            var parts = oldpath.split('/');
-                                                                            parts.pop();                    // pop off old id
-                                                                            parts.push(copy_id);            // add new one
-                                                                            var newpath = parts.join('/'); // rejoin as a path
-                                                                            var newurl = window.location.protocol + '//' + window.location.host + newpath;
-                                                                            $dialog.append($('<div>').html('Created new copy: <i>' + name + '</i>'));
-                                                                            $dialog.append($jump_btn);
-                                                                            $jump_btn.click(function () {
-                                                                                window.location.replace(newurl);
-                                                                            });
-                                                                        }
-                                                                    },
-                                                                    function (error) {
-                                                                        console.error(error);
-                                                                        $dialog.empty();
-                                                                        $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! Copied successfully, but error on data update. " + error.error.message));
-                                                                    });
-
-                                                            },
-                                                            function (error) {
-                                                                console.error(error);
-                                                                $dialog.empty();
-                                                                $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! Copied successfully, but error on data update. " + error.error.message));
-                                                            });
-
-
-                                                    },
-                                                    function (error) {
-                                                        console.error(error);
-                                                        $dialog.empty();
-                                                        $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! Copied successfully, but error on rename. " + error.error.message));
-                                                    })
-                                            },
-                                            function (error) {
-                                                console.error(error);
-                                                $dialog.empty();
-                                                $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! " + error.error.message));
-                                            });
-                                    });
-                            $dialog.append(
-                                $('<div>').append(
-                                $('<div>').append("Enter a name for the new Narrative"))
-                                .append($('<div>').append($newNameInput))
-                                .append($copyNarButton)
-                                .append(active ? $cancelBtn : ''));
-                        },
-                        function (error) {
-                            // error with get_object_info_new
-                            console.error(error);
-                            $dialog.empty();
-                            $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! " + error.error.message));
-                        });
-                },
-                function (error) {
-                    // error with get_workspace_info
-                    console.error(error);
-                    $dialog.empty();
-                    $dialog.append($('<span>').css({'color': '#F44336'}).append("Error! " + error.error.message));
-                });
+            return $initCopyBtn;
         },
+
+        /**
+         * @method
+         * @private
+         * Copies the existing Narrative into a new one with a new name.
+         * Performs the following chained async steps.
+         * 0. Preflight - makes sure the user's logged in, and we have the
+         *    required workspace ref for the narrative.
+         * 1. Get the Narrative object. with ws.get_objects
+         * 2. Clone the workspace, but LEAVE OUT the current Narrative. We'll make a new one
+         *    that isn't littered by previous versions that'll be broken on revert.
+         * 3. Update the narrative object with references to the new workspace, strip out
+         *    any existing jobs, and save it to the new workspace.
+         * 4. Update the new workspace's metadata so it references the new Narrative.
+         */
+        copyThisNarrative: function (newName) {
+            var preCheckError = null;
+            if (!this.ws) {
+                preCheckError = "Cannot copy - please sign in again.";
+            }
+            else if (!this.workspaceRef) {
+                preCheckError = "Cannot copy - cannot find Narrative id. Please refresh the page and try again.";
+            }
+            else if (!this.workspaceId) {
+                preCheckError = "Cannot copy - cannot find Narrative data id. Please refresh the page and try again.";
+            }
+            if (preCheckError) {
+                return Promise.reject(preCheckError);
+            }
+            // name of the narrative object in the workspace. used for closure.
+            var narObjName;
+            var newWsName = this.my_user_id + ':' + new Date().getTime();
+            var newWsMeta = {
+                is_temporary: 'false',
+                narrative_nice_name: newName
+                // add the 'narrative' field later.
+            };
+            var newWsId;
+            var newNarId;
+            var currentNarrative;
+
+            // start with getting the existing narrative object.
+            return Promise.resolve(this.ws.get_objects([{ref: this.workspaceRef}]))
+            .then(function(narrativeObject) {
+                // stash the object in a variable with scope external to the Promise.
+                currentNarrative = narrativeObject[0];
+                // next clone the workspace EXCEPT for this object.
+                return Promise.resolve(this.ws.clone_workspace({
+                    wsi: { id: this.workspaceId },
+                    workspace: newWsName,
+                    meta: newWsMeta,
+                    exclude: [{ objid: currentNarrative.info[0] }]
+                }));
+            }.bind(this))
+            .then(function(newWsInfo) {
+                // pop the newWsId into a variable available by closure in the next step.
+                newWsId = newWsInfo[0];
+                // update the ref inside the narrative object and the new workspace metadata.
+                var newNarMetadata = currentNarrative.info[10];
+                newNarMetadata.name = newName;
+                newNarMetadata.ws_name = newWsName;
+                newNarMetadata.job_info = JSON.stringify({queue_time: 0, running: 0, completed: 0, run_time: 0, error: 0});
+
+                currentNarrative.data.metadata.name = newName;
+                currentNarrative.data.metadata.ws_name = newWsName;
+                currentNarrative.data.metadata.job_ids = {
+                    apps: [],
+                    methods: [],
+                    job_usage: {
+                        queue_time: 0,
+                        run_time: 0
+                    }
+                };
+                // save the shiny new Narrative so it's at version 1
+                return Promise.resolve(this.ws.save_objects({
+                    id: newWsId,
+                    objects: [{
+                        type: currentNarrative.info[2],
+                        data: currentNarrative.data,
+                        provenance: currentNarrative.provenance,
+                        name: currentNarrative.info[1],
+                        meta: newNarMetadata
+                    }]
+                }));
+            }.bind(this))
+            .then(function(newNarInfo) {
+                // now, just update the workspace metadata to point
+                // to the new narrative object
+                newNarId = newNarInfo[0][0];
+                return Promise.resolve(this.ws.alter_workspace_metadata({
+                    wsi: { id: newWsId },
+                    new: { narrative: String(newNarId) }
+                }));
+            }.bind(this))
+            .then(function(results) {
+                return {
+                    status: 'success',
+                    url: window.location.origin + '/narrative/ws.' + newWsId + '.obj.' + newNarId
+                };
+            })
+            .catch(function(error) {
+                console.error(error);
+                var errMessage = "Sorry, an error occurred while copying.";
+                if (error.error && error.error.message) {
+                    //try to parse...
+                    // search for function that failed in error.
+                    if (error.error.error) {
+                        var trace = error.error.error;
+                        // in order:
+                        if (trace.search('getObjectInfoNew') > -1) {
+
+                        }
+                    }
+                    var msg = error.error.message;
+                }
+                // if it got to the point that it made a copy,
+                // delete it so it's out of the way - it's broken
+                // if it got here without finishing.
+                if (newWsId) {
+                    console.log('Deleting new incomplete copy - ' + newWsId);
+                    return Promise.resolve(this.ws.delete_workspace({id: newWsId}))
+                    .then(function() {
+                        return Promise.reject(error);
+                    });
+                }
+                return Promise.reject(error);
+                // throw error;
+            }.bind(this));
+        },
+
         makeNewNarrativeBtn: function () {
             var self = this;
             var active = '<span class="fa fa-plus"></span> New Narrative';
@@ -1267,6 +1381,7 @@ define (
             }
             return $container;
         },
+
         // edited from: http://stackoverflow.com/questions/3177836/how-to-format-time-since-xxx-e-g-4-minutes-ago-similar-to-stack-exchange-site
         getTimeStampStr: function (objInfoTimeStamp) {
             var date = new Date(objInfoTimeStamp);

@@ -40,6 +40,11 @@
     white-space: nowrap;
 }
 
+.kb-error .kblog-line-num {
+    color: #F00;
+    font-weight: bold;
+}
+
 .kblog-text {
     word-wrap: break-word;
     position: relative;

@@ -226,21 +226,15 @@ define([
             var $logsPanel = $(logsPanelTmpl());
             $logsPanel.find('#kblog-play').click(function() {
                 this.sendLogRequest('latest');
-                $logsPanel.find('#kblog-back').prop('disabled', true);
-                $logsPanel.find('#kblog-top').prop('disabled', true);
-                $logsPanel.find('#kblog-bottom').prop('disabled', true);
-                $logsPanel.find('#kblog-forward').prop('disabled', true);
-                $logsPanel.find('#kblog-play').prop('disabled', true);
+                $logsPanel.find('button[id!="kblog-stop"]').prop('disabled', true);
+                $logsPanel.find('#kblog-stop').prop('disabled', false);
                 this.doLogLoop = true;
             }.bind(this));
             $logsPanel.find('#kblog-stop').click(function() {
                 if (this.looper)
                     clearTimeout(this.looper);
-                $logsPanel.find('#kblog-back').prop('disabled', false);
-                $logsPanel.find('#kblog-top').prop('disabled', false);
-                $logsPanel.find('#kblog-bottom').prop('disabled', false);
-                $logsPanel.find('#kblog-forward').prop('disabled', false);
-                $logsPanel.find('#kblog-play').prop('disabled', false);
+                $logsPanel.find('button[id!="kblog-stop"]').prop('disabled', false);
+                $logsPanel.find('#kblog-stop').prop('disabled', true);
                 this.doLogLoop = false;
             }.bind(this));
             $logsPanel.find('#kblog-top').click(function() {

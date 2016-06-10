@@ -116,6 +116,9 @@ define (
         // Used for mapping from user id -> user name without having to it
         // up again every time.
         this.cachedUserIds = {};
+        this.workspaceRef = null;
+        this.workspaceId = null;
+        this.sidePanel = null;
 
         // The set of currently instantiated KBase Widgets.
         // key = cell id, value = Widget object itself.
@@ -493,6 +496,12 @@ define (
             }
             if (this.getWorkspaceName() !== null) {
                 this.initSharePanel();
+
+                var wsInfo = window.location.href.match(/ws\.(\d+)\.obj\.(\d+)/);
+                if (wsInfo && wsInfo.length === 3) {
+                    this.workspaceRef = wsInfo[1] + '/' + wsInfo[2];
+                    this.workspaceId = wsInfo[1];
+                }
 
                 this.sidePanel = new KBaseNarrativeSidePanel($('#kb-side-panel'), { autorender: false });
                 // init the controller

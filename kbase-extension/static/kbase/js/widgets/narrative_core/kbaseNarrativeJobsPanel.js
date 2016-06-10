@@ -38,6 +38,7 @@ define ([
         START_JOB_UPDATE: 'start_job_update',
         DELETE_JOB: 'delete_job',
         JOB_LOGS: 'job_logs',
+        JOB_LOGS_LATEST: 'job_logs_latest',
 
         name: 'kbaseNarrativeJobsPanel',
         parent : kbaseNarrativeControlPanel,
@@ -217,6 +218,8 @@ define ([
                         case 'request-job-log':
                             this.sendCommMessage(this.JOB_LOGS, msg.jobId, msg.options);
                             break;
+                        case 'request-latest-job-log':
+                            this.sendCommMessage(this.JOB_LOGS_LATEST, msg.jobId, msg.options);
                     }
                 }.bind(this)
             });
@@ -293,8 +296,10 @@ define ([
                     var jobId = msg.content.data.content.job_id;
                     this.sendBusMessage('job-logs', {
                         jobId: jobId,
-                        logs: msg.content.data.content
+                        logs: msg.content.data.content,
+                        latest: msg.content.data.content.latest
                     });
+                    break;
                 case 'job_comm_error':
                     var content = msg.content.data.content;
                     if (content) {

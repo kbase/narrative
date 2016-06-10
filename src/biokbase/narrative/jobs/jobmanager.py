@@ -316,13 +316,33 @@ class JobManager(object):
                 if job_id is not None:
                     first_line = msg['content']['data'].get('first_line', 0)
                     num_lines = msg['content']['data'].get('num_lines', None)
-                    kblogging.log_event(self._log, "job_info_msg", {'job_id':job_id, 'first_line':first_line, 'num_lines':num_lines if num_lines is not None else "None"})
                     self._get_job_logs(job_id, first_line=first_line, num_lines=num_lines)
                 else:
                     raise ValueError('Need a job id to fetch jobs!')
+
+            elif r_type == 'job_logs_latest':
+                if job_id is not None:
+                    num_lines = msg['content']['data'].get('num_lines', None)
+                    self._get_latest_job_logs(job_id, num_lines=num_lines)
+
             else:
                 self._send_comm_message('job_comm_error', {'message': 'Unknown message', 'request_type': r_type})
                 raise ValueError('Unknown KBaseJobs message "{}"'.format(r_type))
+
+    def _get_latest_job_logs(self, job_id, num_lines=None):
+        job = self.get_job(job_id)
+        if job is None:
+            raise ValueError('job "{}" not found while fetching logs!'.format(job_id))
+
+        (max_lines, logs) = job.log()
+
+        first_line = 0
+        if num_lines is not None and max_lines > num_lines:
+            first_line = max_lines - num_lines + 1
+            logs = logs[first_line-1:]
+        kblogging.log_event(self._log, "get_recent_job_logs", {'job_id': job_id, 'first_line': first_line, 'num_lines':num_lines if num_lines is not None else 'None', 'max_lines': max_lines})
+        self._send_comm_message('job_logs', {'job_id': job_id, 'first': first_line, 'max_lines': max_lines, 'lines': logs, 'latest': True})
+
 
     def _get_job_logs(self, job_id, first_line=0, num_lines=None):
         job = self.get_job(job_id)
@@ -331,7 +351,7 @@ class JobManager(object):
 
         (max_lines, log_slice) = job.log(first_line=first_line, num_lines=num_lines)
         kblogging.log_event(self._log, "get_job_logs", {'job_id':job_id, 'first_line':first_line, 'num_lines':num_lines if num_lines is not None else "None", 'max_lines':max_lines})
-        self._send_comm_message('job_logs', {'job_id': job_id, 'first': first_line, 'max_lines': max_lines, 'lines': log_slice})
+        self._send_comm_message('job_logs', {'job_id': job_id, 'first': first_line, 'max_lines': max_lines, 'lines': log_slice, 'latest': False})
 
     def delete_job(self, job_id):
         """

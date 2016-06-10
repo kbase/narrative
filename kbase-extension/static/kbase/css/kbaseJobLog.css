@@ -39,3 +39,12 @@
     background-color: rgba(200, 0, 0, 0.2);
     color: #660000;
 }
+
+#kblog-msg {
+    margin-top: 5px;
+}
+
+#kblog-err {
+    margin-top: 5px;
+    color: #660000;
+}

@@ -12,8 +12,8 @@ from .app_util import (
 from biokbase.narrative.common.generic_service_calls import (
     get_sub_path
 )
-# from biokbase.narrative.common.kbjob_manager import KBjobManager
 import json
+import uuid
 from IPython.display import (
     Javascript,
     HTML
@@ -146,8 +146,26 @@ class Job(object):
 
     def log(self, first_line=0, num_lines=None):
         """
-        first_line = first line of log to return (0-indexed)
-        last_line = last line to return (if None, return everything)
+        Fetch a list of Job logs from the Job Service.
+        This returns a 2-tuple (number of available log lines, list of log lines)
+        Each log 'line' is a dict with two properties:
+        is_error - boolean
+            True if the line reflects an error returned by the method (e.g. stdout)
+        line - string
+            The actual log line
+        Parameters:
+        -----------
+        first_line - int
+            First line of log to return (0-indexed). If < 0, starts at the beginning. If > total lines,
+            returns an empty list.
+        num_lines - int or None
+            Limit on the number of lines to return (if None, return everything). If <= 0, returns no lines.
+        Usage:
+        ------
+        The parameters are kwargs, so the following cases can be true:
+        log() - returns all available log lines
+        log(first_line=5) - returns every line available starting with line 5
+        log(num_lines=100) - returns the first 100 lines (or all lines available if < 100)
         """
         self._update_log()
         num_available_lines = len(self._job_logs)
@@ -156,9 +174,11 @@ class Job(object):
             first_line = 0
         if num_lines is None:
             num_lines = num_available_lines - first_line
+        if num_lines < 0:
+            num_lines = 0
 
         if first_line >= num_available_lines or num_lines <= 0:
-            return list()
+            return (num_available_lines, list())
         return (num_available_lines, self._job_logs[first_line:first_line+num_lines])
 
 
@@ -182,39 +202,15 @@ class Job(object):
         status = self.status()
         return status.lower() in ['completed', 'error', 'suspend']
 
-    # def _init_comm(self):
-    #     if self._comm is not None:
-    #         self._comm.close()
-    #         self._comm = None
-    #     self._comm = Comm(target_name='KBaseJob-' + self.job_id, data={})
-    #     self._comm.on_msg(self._handle_comm_message)
-
-    # def _handle_comm_message(self, msg):
-    #     print(msg)
-    #     self._send_comm_message('test', {'you':'pass'})
-    #     if 'request_type' in msg['content']['data']:
-    #         r_type = msg['content']['data']['request_type']
-
-    #         if r_type == 'log':
-    #             first_line = msg['content']['data'].get('first_line', 0)
-    #             num_lines = msg['content']['data'].get('num_lines', None)
-    #             log_slice = self.log(first_line, num_lines)
-    #             self._send_comm_message('log', {'first': first_line, 'max_lines': len(self._job_logs), 'lines': log_slice})
-
-    # def _send_comm_message(self, msg_type, msg):
-    #     if self._comm is None:
-    #         self.init_comm()
-    #     self._comm.send({'msg_type':msg_type, 'content':msg})
-
     def __repr__(self):
         return u"KBase Narrative Job - " + unicode(self.job_id)
 
     def _repr_javascript_(self):
         tmpl = """
-        element.html("<div id='kb-job-{{job_id}}' class='kb-vis-area'></div>");
+        element.html("<div id='{{elem_id}}' class='kb-vis-area'></div>");
 
         require(['jquery', 'kbaseNarrativeJobStatus'], function($, KBaseNarrativeJobStatus) {
-            var w = new KBaseNarrativeJobStatus($('#kb-job-{{job_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}, 'info': {{info}}});
+            var w = new KBaseNarrativeJobStatus($('#{{elem_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}, 'info': {{info}}});
         });
         """
         try:
@@ -232,4 +228,4 @@ class Job(object):
                 'version': None,
                 'name': 'Unknown App'
             }
-        return Template(tmpl).render(job_id=self.job_id, state=json.dumps(state), info=json.dumps(info))
+        return Template(tmpl).render(job_id=self.job_id, elem_id='kb-job-{}-{}'.format(self.job_id, uuid.uuid4()), state=json.dumps(state), info=json.dumps(info))

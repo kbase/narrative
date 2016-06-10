@@ -5,7 +5,6 @@ define([
     'bootstrap',
     'narrativeConfig',
     'base/js/namespace',
-    'services/kernels/comm',
     'util/string',
     'util/timeFormat',
     'handlebars',
@@ -27,7 +26,6 @@ define([
     bootstrap,
     Config,
     Jupyter,
-    JupyterComm,
     StringUtil,
     TimeFormat,
     Handlebars,
@@ -44,7 +42,7 @@ define([
     JobLogCss
 ) {
     'use strict';
-    return KBWidget({
+    return new KBWidget({
         name: 'kbaseNarrativeJobStatus',
         parent: KBaseAuthenticatedWidget,
         version: '0.0.1',
@@ -53,7 +51,13 @@ define([
             jobInfo: null,
             statusText: null
         },
-        comm: null,
+        pendingLogRequest: false,   // got a log request pending? (used for keeping log instances separate)
+        pendingLogStart: 0,         // pending top line number we're expecting.
+        maxLineRequest: 100,        // max number of lines to request
+        maxLogLine: 0,              // max log lines available (as of last push)
+        currentLogStart: 0,         // current first line in viewer
+        currentLogLength: 0,        // current number of lines
+        maxLogLines: 200,           // num lines before we start trimming
 
         init: function(options) {
             this._super(options);
@@ -75,7 +79,7 @@ define([
              * Initial flow.
              * 1. Check cell for state. If state's job id matches this widget's then use it and ignore other inputs.
              * 2. If not, use inputs as initial state.
-             * 3. Initialize layout, set up comm channel and bus.
+             * 3. Initialize layout, set up bus.
              */
             var cellState = this.getCellState();
             if (cellState && cellState.jobId === this.jobId) {
@@ -85,23 +89,15 @@ define([
 
             this.runtime.bus().listen({
                 test: function(msg) {
-                    // return true;
                     return (msg.data && msg.data.jobId === this.jobId);
                 }.bind(this),
                 handle: function(msg) {
-                    // console.log('handling a message', msg);
                     this.handleJobStatus(msg);
                 }.bind(this)
             });
-            console.log(this.runtime.bus());
             // render up the panel's view layer.
             this.initializeView();
             this.updateView();
-            // wire up the comm channel and turn it loose.
-            // $([Jupyter.events]).on('kernel_ready.Kernel', function() {
-            //     this.initCommChannel();
-            // }.bind(this));
-            // this.initCommChannel();
 
             return this;
         },
@@ -183,7 +179,9 @@ define([
                     this.updateView();
                     break;
                 case 'job-logs':
-                    this.updateLogs(message.data.logs);
+                    if (this.pendingLogRequest && (this.pendingLogLine === message.data.logs.first || this.pendingLogLine === 'latest' && message.data.logs.latest)) {
+                        this.updateLogs(message.data.logs);
+                    }
                     break;
                 case 'job-log-deleted':
                     window.alert('Job has been deleted. No log available.');
@@ -222,27 +220,109 @@ define([
             return this.updateJobStatusPanel();
         },
 
-        updateLogs: function(logs) {
-            var firstLine = logs.first;
-            for (var i=0; i<logs.lines.length; i++) {
-                this.logsView.find('#kblog-panel').append($(this.logLineTmpl({lineNum: (i+1), log: logs.lines[i]})));
-            }
-        },
-
         makeLogsPanel: function() {
             var logsPanelTmpl = Handlebars.compile(LogPanelTemplate);
             this.logLineTmpl = Handlebars.compile(LogLineTemplate);
             var $logsPanel = $(logsPanelTmpl());
             $logsPanel.find('#kblog-play').click(function() {
+                this.sendLogRequest('latest');
+                $logsPanel.find('#kblog-back').prop('disabled', true);
+                $logsPanel.find('#kblog-top').prop('disabled', true);
+                $logsPanel.find('#kblog-bottom').prop('disabled', true);
+                $logsPanel.find('#kblog-forward').prop('disabled', true);
+                $logsPanel.find('#kblog-play').prop('disabled', true);
+                this.doLogLoop = true;
+            }.bind(this));
+            $logsPanel.find('#kblog-stop').click(function() {
+                if (this.looper)
+                    clearTimeout(this.looper);
+                $logsPanel.find('#kblog-back').prop('disabled', false);
+                $logsPanel.find('#kblog-top').prop('disabled', false);
+                $logsPanel.find('#kblog-bottom').prop('disabled', false);
+                $logsPanel.find('#kblog-forward').prop('disabled', false);
+                $logsPanel.find('#kblog-play').prop('disabled', false);
+                this.doLogLoop = false;
+            }.bind(this));
+            $logsPanel.find('#kblog-top').click(function() {
+                // go to beginning.
+                this.sendLogRequest(0);
+            }.bind(this));
+            $logsPanel.find('#kblog-back').click(function() {
+                // go back a chunk.
+                this.sendLogRequest(Math.max(this.currentLogStart - this.maxLineRequest, 0));
+            }.bind(this));
+            $logsPanel.find('#kblog-forward').click(function() {
+                // go forward a chunk.
+                this.sendLogRequest(this.currentLogStart + this.currentLogLength);
+            }.bind(this));
+            $logsPanel.find('#kblog-bottom').click(function() {
+                // go to end.
+                this.sendLogRequest('latest');
+            }.bind(this));
+            $logsPanel.find('#kblog-spinner').hide();
+            // $logsPanel.find('#kblog-panel').scroll(function(e) {
+            //     console.log('scrolling happened!');
+            // });
+            $logsPanel.find("#kblog-header")
+                      .children()
+                      .tooltip()
+                      .on('click', function(e) { console.log(e); $(e.currentTarget).tooltip('hide'); });
+            return $logsPanel;
+        },
+
+        sendLogRequest: function(firstLine) {
+            console.log('sending ' + firstLine + ' request');
+            this.logsView.find('#kblog-spinner').show();
+            this.pendingLogRequest = true;
+            this.pendingLogLine = firstLine;
+            if (typeof firstLine === 'string' && firstLine === 'latest') {
+                this.runtime.bus().send({
+                    type: 'request-latest-job-log',
+                    jobId: this.jobId,
+                    options: {
+                        num_lines: this.maxLineRequest
+                    }
+                });
+            }
+            else {
                 this.runtime.bus().send({
                     type: 'request-job-log',
                     jobId: this.jobId,
                     options: {
-                        first_line: 0
+                        first_line: this.pendingLogLine,
+                        num_lines: this.maxLineRequest
                     }
-                })
-            }.bind(this));
-            return $logsPanel;
+                });
+            }
+        },
+
+        showLogMessage: function(message) {
+            this.logsView.find("#kblog-msg").html(message);
+        },
+
+        updateLogs: function(logs) {
+            this.pendingLogRequest = false;
+            if (logs.max_lines > this.maxLogLines) {
+                this.showLogMessage("Showing lines " + (logs.first+1) + " to " + (logs.first + logs.lines.length) + " of " + logs.max_lines);
+            }
+            if (logs.first === null || logs.first === undefined || !logs.lines) {
+                return;
+            }
+            this.logsView.find('#kblog-panel').empty();
+            var firstLine = logs.first;
+            for (var i=0; i<logs.lines.length; i++) {
+                // logs.lines[i].line = logs.lines[i].line.trim().replace('\n', '');
+                this.logsView.find('#kblog-panel').append($(this.logLineTmpl({lineNum: (firstLine+i+1), log: logs.lines[i]})));
+            }
+            this.maxLogLine = logs.maxLines;
+            this.currentLogStart = logs.first;
+            this.currentLogLength = logs.lines.length;
+            this.logsView.find('#kblog-spinner').hide();
+            if (this.doLogLoop) {
+                this.looper = setTimeout(function() { this.sendLogRequest('latest', true); }.bind(this), 2000);
+            }
+            // var lastPos = this.logsView.find('#kblog-panel').children().last().
+            // this.logsView.find('#kblog-panel').children().last().scrollTop=0;
         }
     });
 });

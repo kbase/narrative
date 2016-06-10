@@ -20,19 +20,31 @@
     font-size: 9pt;
 }
 
-.kblog-line-num {
+.kblog-num-wrapper {
     position: absolute;
+    background: none !important;
+    border: none !important;
     font-size: 9pt;
-    color: rgb(153, 153, 153);
-    width: 25px;
+    z-index: 4;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+
+.kblog-line-num {
+    left: 0;
+    position: relative;
+    min-width: 25px;
     text-align: right;
+    color: #999;
+    white-space: nowrap;
 }
 
 .kblog-text {
     word-wrap: break-word;
     position: relative;
     padding-left: 32px;
-
+    z-index: 2;
 }
 
 .kb-error {

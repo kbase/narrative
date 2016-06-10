@@ -3,6 +3,15 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.1.0 (more notes will follow).
 
+### Version 2.0.8
+__Changes__
+- Numerous small fixes to text and layout of various widgets.
+- Genome view deals with plants and eukaryota better.
+- Proteome comparison widget uses SVG now.
+- Tree browser widget is properly clickable again.
+- Ontologies, Assemblies, and GenomeAnnotations are uploadable.
+- Fixed several issues with Narrative copying (see JIRA tickets KBASE-2034, KBASE-4140, KBASE-4154, KBASE-4159, NAR-849, and NAR-850).
+
 ### Version 2.0.7
 __Changes__
 - Fixed data subsetting parameter input.
@@ -178,7 +187,7 @@ __Changes__
 - Renamed CSV Transform API arguments to TSV
 
 __Bugfixes__
-- JIRA KBASE-1411 fix - render issue for protein comparison widget 
+- JIRA KBASE-1411 fix - render issue for protein comparison widget
 - Fixed case where genome object doesn't have any contig info.
 
 ### Version 0.5.7 - 2/9/2015
@@ -267,7 +276,7 @@ __Changes__
   - Added test script for the backend shutdown command to verify it's only possible for an authenticated user to only shut down their own narrative
   - Added improvements to suggested next steps functionality - now it should pull from the method store instead of being hard-coded
   - Added custom icons for several datatypes
-  
+
 __Bugfixes__
 - JIRA NAR-586 - fixed error with quotation marks not being used correctly in App info boxes, and links not being rendered properly
 - Fixed several font mismatch issues - in kernel menu, new/copy narrative buttons, error buttons

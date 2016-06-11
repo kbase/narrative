@@ -4,28 +4,36 @@ define ([
     'kbwidget',
     'bootstrap',
     'jquery',
+    'handlebars',
     'narrativeConfig',
     'kbasePrompt',
     'kbaseNarrativeControlPanel',
+    'kbaseAccordion',
     'util/bootstrapDialog',
     'util/timeFormat',
     'util/string',
     'base/js/namespace',
     'nbextensions/methodCell/runtime',
-    'services/kernels/comm'
+    'services/kernels/comm',
+    'text!kbase/templates/job_panel/job_info.html',
+    'text!kbase/templates/job_panel/job_error.html'
 ], function(
     KBWidget,
     bootstrap,
     $,
+    Handlebars,
     Config,
     kbasePrompt,
     kbaseNarrativeControlPanel,
+    kbaseAccordion,
     BootstrapDialog,
     TimeFormat,
     StringUtil,
     Jupyter,
     Runtime,
-    JupyterComm
+    JupyterComm,
+    JobInfoTemplate,
+    JobErrorTemplate
 ) {
     'use strict';
     return KBWidget({
@@ -73,8 +81,6 @@ define ([
          */
         source2Job: {},
 
-        refreshTimer: null,
-        refreshInterval: 10000,
         comm: null,
 
         completedStatus: [ 'completed',
@@ -88,7 +94,8 @@ define ([
         init: function(options) {
             this._super(options);
             this.title.append(this.$jobCountBadge);
-
+            this.jobInfoTmpl = Handlebars.compile(JobInfoTemplate);
+            this.jobErrorTmpl = Handlebars.compile(JobErrorTemplate);
             var $refreshBtn = $('<button>')
                               .addClass('btn btn-xs btn-default')
                               .append($('<span>')
@@ -378,15 +385,10 @@ define ([
                     source = jobInfo.source;
                 }
                 var appId = jobInfo.app_id;
-                // var inputs = {};
-                // if (jobInfo.inputs) {
-                //     inputs = jobInfo.inputs;
-                // }
                 var tag = 'release';
                 if (jobInfo.tag) {
                     tag = jobInfo.tag;
                 }
-                // jobTuples.push("('" + jobId + "', '" + StringUtil.safeJSONStringify(inputs) + "', '" + tag + "', '" + source + "')");
                 jobTuples.push("('" + jobId + "', '" + appId + "', '" + tag + "', '" + source + "')");
             }
             return ["from biokbase.narrative.jobs import JobManager",
@@ -451,7 +453,6 @@ define ([
 
             if (jobState) {
                 jobState = jobState.toLowerCase();
-                var jobState = jobState.toLowerCase();
                 if (jobState === 'queued' || jobState === 'running' || jobState === 'in-progress') {
                     warningText = "This job is currently running on KBase servers! Removing it will attempt to stop the running job.";
                 }
@@ -482,53 +483,6 @@ define ([
             // send the comm message.
             this.sendCommMessage(this.DELETE_JOB, jobId);
             // remove the metadata from the notebook.
-        },
-
-        /**
-         * Attempts to delete a job in the backend (by making a kernel call - this lets the kernel decide
-         * what kind of job it is and how to stop/delete it).
-         * When it gets a response, it then clears the job from the Jobs list.
-         */
-        xdeleteJob: function(jobId, callback) {
-            var deleteJobCmd = 'from biokbase.narrative.common.kbjob_manager import KBjobManager\n' +
-                               'jm = KBjobManager()\n' +
-                               'print jm.delete_jobs(["' + jobId + '"], as_json=True)\n';
-
-            var self = this;
-            var callbacks = {
-                shell: {
-                    reply: function(content) {
-                        self.handleCallback('reply', content);
-                    },
-                    payload: {
-                        set_next_input: function(content) {
-                           self.handleCallback('set_next_input', content);
-                       }
-                    }
-                },
-                iopub: {
-                    output: function(content) {
-                        var response = self.deleteResponse(content.msg_type, content, jobId);
-                        if (callback)
-                            callback(response);
-                    },
-                    clear_output: function(content) {
-                        self.handleCallback('clear_output', content);
-                    }
-                },
-                input: function(content) {
-                    self.handleCallback('input', content);
-                }
-            };
-
-            var executeOptions = {
-                silent: true,
-                user_expressions: {},
-                allow_stdin: false,
-                store_history: false
-            };
-
-            Jupyter.notebook.kernel.execute(deleteJobCmd, callbacks, executeOptions);
         },
 
         removeDeletedJob: function(jobId) {
@@ -583,8 +537,8 @@ define ([
 
         /**
          * @method
-         * Similar to registerJob below, this registers a job that was started by the Kernel, then pushed over
-         * the KBaseJobs comm channel. This expects the following elements (will be replaced with null if not present):
+         * This registers a job that was started by the Kernel, then pushed over the KBaseJobs comm channel.
+         * This expects the following elements (will be replaced with null if not present):
          * id - string, required - will fail if not present
          * method_id - string
          * tag - string
@@ -609,19 +563,6 @@ define ([
             Jupyter.notebook.save_checkpoint();
         },
 
-        /*
-         * For now, ':' is the delimiter.
-         * Anything before ':' is the job type.
-         */
-        jobTypeFromId: function(jobId) {
-            if (jobId.indexOf(':') === -1)
-                return 'ujs';
-            else {
-                var type = jobId.split(':')[0];
-                return type.toLowerCase();
-            }
-        },
-
         /**
          * There are a few different status options that show a job is complete vs.
          * incomplete. We mark ones as "running" for our purpose if they do not
@@ -630,35 +571,8 @@ define ([
          * @private
          */
         jobIsIncomplete: function(status) {
-            if (!status)
-                return true;
-
             status = status.toLowerCase();
-            // if status matches any of the possible cases in this.completedStatus,
-            // return true
-            for (var i=0; i<this.completedStatus.length; i++) {
-                if (status.indexOf(this.completedStatus[i]) !== -1)
-                    return false;
-            }
-            if (status === 'error')
-                return false;
-            return true;
-        },
-
-
-        /**
-         * @method
-         * Generic callback handler for the Jupyter kernel.
-         */
-        handleCallback: function(call, content) {
-            if (content.status === 'error') {
-                this.showError(content);
-            }
-            else {
-                // commented out for now
-                // console.debug('kbaseJobManagerPanel.' + call);
-                // console.debug(content);
-            }
+            return (status === 'in-progress' || status === 'queued');
         },
 
         /**
@@ -737,7 +651,6 @@ define ([
                     }
                     this.jobWidgets[jobId] = this.renderJob(jobId, jobInfo[jobId]);
                     this.$jobsList.append(this.jobWidgets[jobId]);
-                    // $jobsList.append(this.renderJob(jobId, jobInfo[jobId]));
                 }
                 this.setJobCounter(stillRunning);
             }
@@ -756,7 +669,6 @@ define ([
                 return null;
             };
 
-            // get the state from this.jobStates[jobInfo.]
             var jobState = this.jobStates[jobId];
 
             /* Cases:
@@ -774,50 +686,17 @@ define ([
              * 3. have no job
              *    - just return null. nothing invokes this like that, anyway
              */
-            // var jobType = this.jobTypeFromId(jobId);
-
-            var $jobDiv = $('<div>')
-                          .addClass('kb-data-list-obj-row');
-            // jobinfo: {
-            //     state: { id, source, target, timestamp, $elem, status },
-            //     spec: { appSpec?, methodSpec?, methodSpecs?, parameterValues }
-            //     type=njs: appSpec, methodSpecs
-            //     type=method: methodSpec
-            // }
-            var specType = 'methodSpec';
-            // var specType = null;
-            // switch(jobType) {
-            //     case 'njs':
-            //         specType = 'appSpec';
-            //         break;
-            //     case 'method':
-            //         specType = 'methodSpec';
-            //         break;
-            //     default:
-            //         specType = 'methodSpec';
-            //         break;
-            // }
 
             // get the job's name from its spec
             // var jobName = "Unknown " + ((jobType === 'njs') ? "App" : "Method");
-            var jobName = "Unknown Method";
+            var jobName = "Unknown App";
 
-            if (jobInfo && jobInfo.spec && jobInfo.spec[specType] && jobInfo.spec[specType].info)
-                jobName = jobInfo.spec[specType].info.name;
-
-            var $jobInfoDiv = $('<div class="kb-data-list-name kb-data-list-job-name">')
-                               .append(jobName);
-            var $jobControlDiv = $('<span class="pull-right">')
-                                 .append(this.makeJobClearButton(jobId, jobState.status))
-                                 .append('<br>')
-                                 .append(this.makeScrollToButton(jobState.source));
-            $jobInfoDiv.append($jobControlDiv)
-                       .append($('<div style="font-size:75%">')
-                               .append(jobId));
+            if (jobInfo && jobInfo.spec && jobInfo.spec.methodSpec && jobInfo.spec.methodSpec.info) {
+                jobName = jobInfo.spec.methodSpec.info.name;
+            }
 
             var status = "Unknown";
             if (jobState && jobState.status) {
-                // console.log('JOBSTATE', jobState);
                 status = jobState.status.charAt(0).toUpperCase() +
                          jobState.status.substring(1);
             }
@@ -845,7 +724,11 @@ define ([
             // Calculate run time if applicable
             var completedTime = null;
             var runTime = null;
+            var startedTime = null;
             if (jobState.state) {
+                if (jobState.state.creation_time) {
+                    startedTime = TimeFormat.prettyTimestamp(jobState.state.creation_time);
+                }
                 if (jobState.state.finish_time) {
                     completedTime = TimeFormat.prettyTimestamp(jobState.state.finish_time);
                     if (jobState.state.creation_time) {
@@ -864,6 +747,7 @@ define ([
              * otherwise, no errors, so render their status happily.
              */
             var errorType = null;
+            var netError = false;
             switch(status) {
                 case 'Suspend':
                     errorType = 'Error';
@@ -887,66 +771,54 @@ define ([
                     errorType = 'Unauthorized';
                     break;
                 case 'Network_error':
-                    status = this.makeJobErrorButton(jobId, jobInfo, 'Network Error');
+                    // status = this.makeJobErrorButton(jobId, jobInfo, 'Network Error');
+                    errorType = 'Network Error';
                     break;
                 default:
                     break;
             }
-            if (errorType !== null) {
-                status = this.makeJobErrorButton(jobId, jobInfo, errorType);
-                $jobDiv.addClass('kb-jobs-error');
-            }
-            else {
-                // if (jobType === "njs" && jobState.state) {
-                //     var stepId = jobState.state.running_step_id;
-                //     if (stepId) {
-                //         var stepSpec = getStepSpec(stepId, jobInfo.spec.appSpec);
-                //         task = jobInfo.spec.methodSpecs[stepSpec.method_id].info.name;
-                //     }
-                // }
-                if (jobState.state && jobState.state.position !== undefined && jobState.state.position !== null && jobState.state.position > 0)
-                    position = jobState.state.position;
-                if (completedTime)
-                    status += ' ' + completedTime;
+            if (jobState.state &&
+                jobState.state.position !== undefined &&
+                jobState.state.position !== null &&
+                jobState.state.position > 0) {
+                position = jobState.state.position;
             }
 
-            var $infoTable = $('<table class="kb-jobs-info-table">')
-                             .append(this.makeInfoRow('Status', status));
-            if (task !== null)
-                $infoTable.append(this.makeInfoRow('Task', task));
-            if (position !== null && status.toLowerCase().indexOf('queue') != -1)
-                $infoTable.append(this.makeInfoRow('Queue Position', position));
-
-            if (runTime) {
-                $infoTable.append(this.makeInfoRow('Run Time', runTime));
+            var jobRenderObj = {
+                name: jobName,
+                hasCell: jobState.cell_id,
+                jobId: jobId,
+                status: new Handlebars.SafeString(status),
+                runTime: runTime,
+                position: position,
+                startedTime: startedTime ? new Handlebars.SafeString(startedTime) : null,
+                completedTime: completedTime ? new Handlebars.SafeString(completedTime) : null,
+                error: errorType,
+            };
+            var $jobDiv = $(this.jobInfoTmpl(jobRenderObj));
+            $jobDiv.find('[data-toggle="tooltip"]').tooltip({
+                container: 'body',
+                placement: 'right',
+                delay: {
+                    show: Config.get('tooltip').showDelay,
+                    hide: Config.get('tooltip').hideDelay
+                }
+            });
+            if (errorType) {
+                $jobDiv.find('.kb-jobs-error-btn').click(function(e) {
+                    this.triggerJobErrorButton(jobId, jobInfo, errorType);
+                }.bind(this));
             }
-            if (jobState.state && jobState.state.creation_time) {
-                started = $(TimeFormat.prettyTimestamp(jobState.state.creation_time));
-                started.tooltip({
-                    container: 'body',
-                    placement: 'right',
-                    delay: {
-                        show: Config.get('tooltip').showDelay,
-                        hide: Config.get('tooltip').hideDelay
-                    }
+            if (jobState.cell_id) {
+                $jobDiv.find('span.fa-location-arrow').click(function(e) {
+                    var cell = Jupyter.narrative.getCellByKbaseId(jobState.cell_id);
+                    Jupyter.narrative.scrollToCell(cell, true);
                 });
-                $infoTable.append(this.makeInfoRow('Started', started));
             }
-
-            $jobDiv.append($jobInfoDiv)
-                   .append($infoTable);
+            $jobDiv.find('span.fa-times').click(function(e) {
+                this.openJobDeletePrompt(jobId, status);
+            }.bind(this));
             return $jobDiv;
-        },
-
-        /**
-         * @method
-         * Dummy convenience method to make a little table row.
-         */
-        makeInfoRow: function(heading, info) {
-            return $('<tr>').append($('<th>')
-                                    .append(heading + ':'))
-                            .append($('<td>')
-                                    .append(info));
         },
 
         /**
@@ -959,199 +831,53 @@ define ([
          * @param {object} jobInfo - the job info object - main keys are 'state' and 'specs'
          * @param {string} btnText - the text of the button. If empty or null, the button just gets a /!\ icon.
          */
-        makeJobErrorButton: function(jobId, jobInfo, btnText) {
+        triggerJobErrorButton: function(jobId, jobInfo, errorType) {
             var jobState = this.jobStates[jobId];
             var removeText = "Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?";
             var headText = "An error has been detected in this job!";
             var errorText = "The KBase servers are reporting an error for this job:";
             var errorType = "Unknown";
 
-            var $errBtn = $('<div>')
-                          .addClass('btn btn-danger btn-xs kb-jobs-error-btn')
-                          .append('<span class="fa fa-warning" style="color:white"></span>');
-            if (btnText)
-                $errBtn.append(' ' + btnText);
-            $errBtn.click($.proxy(function(e) {
-                this.removeId = jobId;
-                /* 1. jobState.source doesn't exist = not pointed at a cell
-                 * 2. $('#jobState.source') doesn't exist = cell is missing
-                 * 3. jobstate.state.error is a string.
-                 * 4. jobstate.state is missing.
-                 */
-                if (!jobState || !jobState.source) {
-                    errorText = "This job is not associated with a Running Cell.";
-                    errorType = "Unknown Cell";
-                }
-                else if ($('#' + jobState.source).length === 0) {
-                    errorText = "The App Cell associated with this job can no longer be found in your Narrative.";
-                    errorType = "Missing Cell";
-                }
-                else if (btnText === 'Deleted') {
-                    errorText = "This job has already been deleted from KBase Servers.";
-                    errorType = "Invalid Job";
-                }
-                else if (btnText === 'Job Not Found') {
-                    errorText = "This job was not found to be running on KBase Servers. It may have been deleted, or may not be started yet.";
-                    errorType = "Invalid Job";
-                }
-                else if (btnText === 'Unauthorized') {
-                    errorText = "You do not have permission to view information about this job.";
-                    errorType = "Unauthorized";
-                }
-                else if (btnText === 'Network Error') {
-                    errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
-                    errorType = "Network";
-                }
-                else if (jobState.state.error) {
-                    errorText = $('<div class="kb-jobs-error-modal">').append(jobState.state.error);
-                    errorType = "Runtime";
-                    if (jobState.state.error === 'awe_error')
-                        errorType = 'AWE Error';
-                }
-
-                /* error types:
-                 * 1. jobState.state.error is a real string. Just cough it up.
-                 * 2. jobState.state is missing
-                 * 3. jobInfo is partly missing (e.g., lost the cell that it should point to)
-                 * 4. jobInfo is still partly missing (e.g., dont' know what cell it should point to)
-                 */
-                else if (Object.keys(jobState.state.step_errors).length !== 0) {
-                    errorType = "Runtime";
-                    errorText = $('<div class="kb-jobs-error-modal">');
-                    for (var stepId in jobState.state.step_errors) {
-                        if (jobState.state.step_errors.hasOwnProperty(stepId)) {
-                            // contort that into the method name
-                            // gotta search for it in the spec for the method id, first.
-                            var methodName = "Unknown method: " + stepId;
-                            // if (this.jobTypeFromId(jobId) === "njs") {
-                            //     var methodId = null;
-                            //     for (var i=0; i<jobInfo.spec.appSpec.steps.length; i++) {
-                            //         if (stepId === jobInfo.spec.appSpec.steps[i].step_id) {
-                            //             methodId = jobInfo.spec.appSpec.steps[i].method_id;
-                            //             break;
-                            //         }
-                            //     }
-                            //     if (methodId)
-                            //         methodName = jobInfo.spec.methodSpecs[methodId].info.name;
-                            // }
-                            // else {
-                            methodName = jobInfo.spec.methodSpec.info.name;
-                            // }
-                            errorText.append($('<b>').append('In ' + methodName + ':<br>'))
-                                     .append(jobState.state.step_errors[stepId] + '<br><br>');
-                        }
-                    }
-                }
-
-                var $errorTable = $('<table class="table table-bordered">')
-                                  .append(this.makeInfoRow('Id', jobId))
-                                  .append(this.makeInfoRow('Type', errorType))
-                                  .append(this.makeInfoRow('Error', errorText));
-
-                this.jobsModal.setTitle('Job Error');
-                var $modalBody = $('<div>').append(headText)
-                                           .append($errorTable);
-                if (jobState.state.traceback) {
-                    var $tb = $('<div>');
-                     new kbaseAccordion($tb, {
-                        elements: [{
-                            title: 'Detailed Error Information',
-                            body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.traceback)
-                        }]
-                    });
-                    // this.$jobsModalBody.append($tb);
-                    $modalBody.append($tb);
-                }
-
-                $modalBody.append($('<div>').append(removeText));
-                this.jobsModal.setBody($modalBody);
-                this.jobsModal.show();
-
-            }, this));
-            return $errBtn;
-        },
-
-
-        /**
-         * @method
-         * @private
-         * Makes a little 'x' button to delete a job.
-         * @param {string} jobId
-         * @param {string} jobStatus
-         */
-        makeJobClearButton: function(jobId, jobStatus) {
-            return $('<span data-toggle="tooltip" title="Remove Job" data-placement="left">')
-                   .addClass('btn-xs kb-data-list-more-btn pull-right fa fa-times')
-                   .css({'cursor':'pointer'})
-                   .click($.proxy(function() {
-                       this.openJobDeletePrompt(jobId, jobStatus);
-                   }, this))
-                   .tooltip();
-        },
-
-        /**
-         * @method
-         * @private
-         * Makes a little arrow button to scroll from a job to the associated app/method cell
-         */
-        makeScrollToButton: function(sourceId) {
-            return $('<span data-toggle="tooltip" title="Scroll To App" data-placement="left">')
-                   .addClass('btn-xs kb-data-list-more-btn pull-right fa fa-location-arrow')
-                   .css({'cursor':'pointer'})
-                   .click(function(e) {
-                       if (sourceId) {
-                           var cell = Jupyter.narrative.getCellByKbaseId(sourceId);
-                           Jupyter.narrative.scrollToCell(cell, true);
-                       }
-                   })
-                   .tooltip();
-        },
-
-        /**
-         * Shows an error text message on top of the panel. All other pieces are hidden.
-         * @param {string} error - the text of the error message
-         * @private
-         */
-        showError: function(error) {
-            var $errorHeader = $('<div>')
-                               .addClass('alert alert-danger')
-                               .append('<b>Sorry, an error occurred while loading KBase jobs.</b><br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=Narrative%20jobs20loading%20error">help@kbase.us</a> with the information below.');
-
-            this.$errorPanel.empty();
-            this.$errorPanel.append($errorHeader);
-
-            // If it's a string, just dump the string.
-            if (typeof error === 'string') {
-                this.$errorPanel.append($('<div>').append(error));
+            this.removeId = jobId;
+            if (errorType === 'Deleted') {
+                errorText = "This job has already been deleted from KBase Servers.";
+                errorType = "Invalid Job";
+            }
+            else if (errorType === 'Job Not Found') {
+                errorText = "This job was not found to be running on KBase Servers. It may have been deleted, or may not be started yet.";
+                errorType = "Invalid Job";
+            }
+            else if (errorType === 'Unauthorized') {
+                errorText = "You do not have permission to view information about this job.";
+            }
+            else if (errorType === 'Network Error') {
+                errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
+            }
+            else if (jobState.state.error) {
+                errorText = new Handlebars.SafeString('<div class="kb-jobs-error-modal">' + jobState.state.error.message + '</div>');
+                errorType = jobState.state.error.name;
+                // if (jobState.state.error === 'awe_error')
+                //     errorType = 'AWE Error';
             }
 
-            // If it's an object, expect an error object as returned by the execute_reply callback from the Jupyter kernel.
-            else if (typeof error === 'object') {
-                var $details = $('<div>');
-                $details.append($('<div>').append('<b>Type:</b> ' + error.ename))
-                        .append($('<div>').append('<b>Value:</b> ' + error.evalue));
+            var $modalBody = $(this.jobErrorTmpl({
+                jobId: jobId,
+                errorType: errorType,
+                errorText: errorText,
+                hasTraceback: jobState.state.error.error ? true : false
+            }));
 
-                var $tracebackDiv = $('<div>')
-                                 .addClass('kb-function-error-traceback');
-                for (var i=0; i<error.traceback.length; i++) {
-                    error.traceback[i] = error.traceback[i].replace(/\[\d(;\d+)?m/g, '');
-                    $tracebackDiv.append(error.traceback[i] + "<br>");
-                }
-
-                var $tracebackPanel = $('<div>');
-                var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
-
-                this.$errorPanel.append($details)
-                                .append($tracebackPanel);
-                 new kbaseAccordion($tracebackPanel, { elements : tracebackAccordion });
+            if (jobState.state.error.error) {
+                new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
+                    elements: [{
+                        title: 'Detailed Error Information',
+                        body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.error.error)
+                    }]
+                });
             }
-            if (this.refreshTimer)
-                clearTimeout(this.refreshTimer);
 
-            this.$jobsPanel.hide();
-            this.$loadingPanel.hide();
-            this.$errorPanel.show();
-        },
-
+            this.jobsModal.setBody($modalBody);
+            this.jobsModal.show();
+        }
     });
 });

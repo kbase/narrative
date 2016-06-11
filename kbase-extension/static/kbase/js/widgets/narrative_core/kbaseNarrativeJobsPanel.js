@@ -93,6 +93,7 @@ define ([
             this.title.append(this.$jobCountBadge);
             this.jobInfoTmpl = Handlebars.compile(JobInfoTemplate);
             this.jobErrorTmpl = Handlebars.compile(JobErrorTemplate);
+            this.runtime = Runtime.make();
             var $refreshBtn = $('<button>')
                               .addClass('btn btn-xs btn-default')
                               .append($('<span>')
@@ -107,7 +108,6 @@ define ([
                               })
                               .click(function(event) {
                                   $refreshBtn.tooltip('hide');
-                                  console.log('sending refresh signal');
                                   this.sendCommMessage(this.ALL_STATUS);
                               }.bind(this));
 
@@ -181,32 +181,15 @@ define ([
             return this;
         },
 
-        // updateCellRunStatus: function (msg) {
-        //     var runtime = Runtime.make();
-        //     // The global runtime bus is a catch all for proving messaging semantics across otherwise unconnected apps.
-        //     // note that we need to copy the objects for the message bus since they will otherwise
-        //     // be modified by incoming updates.
-        //     function copyObject(obj) {
-        //         return JSON.parse(JSON.stringify(obj));
-        //     }
-        //     runtime.bus().send({
-        //         type: 'runstatus',
-        //         data: copyObject(msg)
-        //     });
-        // },
-
         sendBusMessage: function(msgType, message) {
-            var runtime = Runtime.make();
-            // console.log('sending bus message - ' + msgType, message);
-            runtime.bus().send({
+            this.runtime.bus().send({
                 type: msgType,
                 data: JSON.parse(JSON.stringify(message))
             });
         },
 
         handleBusMessages: function(msg) {
-            var runtime = Runtime.make();
-            runtime.bus().listen({
+            this.runtime.bus().listen({
                 test: function(msg) {
                     return (msg.jobId ? true : false);
                 }.bind(this),
@@ -593,9 +576,6 @@ define ([
                 this.setJobCounter(0);
                 return;
             }
-
-            // Instantiate a shiny new panel to hold job info.
-            // var $jobsList = $('<div>').addClass('kb-jobs-items');
 
             // If we don't have any running jobs, just leave a message.
             if (Object.keys(this.jobStates).length === 0) {

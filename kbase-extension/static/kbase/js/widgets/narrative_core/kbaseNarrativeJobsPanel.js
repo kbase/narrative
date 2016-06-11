@@ -56,8 +56,6 @@ define ([
             autopopulate: true,
             title: 'Jobs',
         },
-        $jobCountBadge: $('<span>')
-                        .addClass('label label-danger'),
         title: $('<span>Jobs </span>'),
         // these are the elements that contain running apps and methods
         $appsList: null,
@@ -80,19 +78,18 @@ define ([
          * }
          */
         source2Job: {},
-
         comm: null,
-
-        completedStatus: [ 'completed',
-                           'done',
-                           'deleted',
-                           'suspend',
-                           'not_found_error',
-                           'unauthorized_error',
-                           'awe_error' ],
+        // completedStatus: [ 'completed',
+        //                    'done',
+        //                    'deleted',
+        //                    'suspend',
+        //                    'not_found_error',
+        //                    'unauthorized_error',
+        //                    'awe_error' ],
 
         init: function(options) {
             this._super(options);
+            this.$jobCountBadge = $('<span>').addClass('label label-danger'),
             this.title.append(this.$jobCountBadge);
             this.jobInfoTmpl = Handlebars.compile(JobInfoTemplate);
             this.jobErrorTmpl = Handlebars.compile(JobErrorTemplate);
@@ -178,26 +175,25 @@ define ([
 
             if (this.options.autopopulate) {
                 this.initJobStates();
-                // this.refresh();
             }
             this.handleBusMessages();
 
             return this;
         },
 
-        updateCellRunStatus: function (msg) {
-            var runtime = Runtime.make();
-            // The global runtime bus is a catch all for proving messaging semantics across otherwise unconnected apps.
-            // note that we need to copy the objects for the message bus since they will otherwise
-            // be modified by incoming updates.
-            function copyObject(obj) {
-                return JSON.parse(JSON.stringify(obj));
-            }
-            runtime.bus().send({
-                type: 'runstatus',
-                data: copyObject(msg)
-            });
-        },
+        // updateCellRunStatus: function (msg) {
+        //     var runtime = Runtime.make();
+        //     // The global runtime bus is a catch all for proving messaging semantics across otherwise unconnected apps.
+        //     // note that we need to copy the objects for the message bus since they will otherwise
+        //     // be modified by incoming updates.
+        //     function copyObject(obj) {
+        //         return JSON.parse(JSON.stringify(obj));
+        //     }
+        //     runtime.bus().send({
+        //         type: 'runstatus',
+        //         data: copyObject(msg)
+        //     });
+        // },
 
         sendBusMessage: function(msgType, message) {
             var runtime = Runtime.make();
@@ -396,9 +392,7 @@ define ([
         },
 
         setJobCounter: function(numJobs) {
-            this.$jobCountBadge.empty();
-            if (numJobs > 0)
-                this.$jobCountBadge.append(numJobs);
+            this.$jobCountBadge.html(numJobs > 0 ? numJobs : '');
         },
 
         /**
@@ -442,9 +436,8 @@ define ([
          *
          * @param {object} jobId
          * @param {object} jobState
-         * @param {function} callback - a callback to invoke when finished.
          */
-        openJobDeletePrompt: function(jobId, jobState, callback) {
+        openJobDeletePrompt: function(jobId, jobState) {
             if (!jobId)
                 return;
 
@@ -464,7 +457,6 @@ define ([
             this.jobsModal.setTitle('Remove Job?');
             this.removeId = jobId;
 
-            this.deleteCallback = callback;
             this.jobsModal.show();
         },
 
@@ -477,12 +469,10 @@ define ([
          */
         deleteJob: function(jobId) {
             if (!jobId) {
-                // bomb silently if there's no job id.
                 return;
             }
             // send the comm message.
             this.sendCommMessage(this.DELETE_JOB, jobId);
-            // remove the metadata from the notebook.
         },
 
         removeDeletedJob: function(jobId) {
@@ -498,6 +488,10 @@ define ([
 
             // clean this widget's internal state
             if (this.jobStates[jobId]) {
+                // if it wasn't complete, we likely have an invalid number in the badge.
+                if (this.jobIsIncomplete(this.jobStates[jobId].status)) {
+                    this.setJobCounter(Number(this.$jobCountBadge.html())-1);
+                }
                 delete this.source2Job[this.jobStates[jobId].source];
                 delete this.jobStates[jobId];
             }
@@ -505,7 +499,6 @@ define ([
 
             // save the narrative.
             Jupyter.narrative.saveNarrative();
-
         },
 
         /**
@@ -642,15 +635,15 @@ define ([
                             job: jobs[jobId],
                             jobState: this.jobStates[jobId]
                         });
+                        // updating the given state first allows us to just pass the id and the status set to
+                        // the renderer. If the status set doesn't exist (e.g. we didn't look it up in the
+                        // kernel), then that's just undefined and the renderer can deal.
+                        if (this.jobWidgets[jobId]) {
+                            this.jobWidgets[jobId].remove();
+                        }
+                        this.jobWidgets[jobId] = this.renderJob(jobId, jobInfo[jobId]);
+                        this.$jobsList.append(this.jobWidgets[jobId]);
                     }
-                    // updating the given state first allows us to just pass the id and the status set to
-                    // the renderer. If the status set doesn't exist (e.g. we didn't look it up in the
-                    // kernel), then that's just undefined and the renderer can deal.
-                    if (this.jobWidgets[jobId]) {
-                        this.jobWidgets[jobId].remove();
-                    }
-                    this.jobWidgets[jobId] = this.renderJob(jobId, jobInfo[jobId]);
-                    this.$jobsList.append(this.jobWidgets[jobId]);
                 }
                 this.setJobCounter(stillRunning);
             }
@@ -661,14 +654,6 @@ define ([
         },
 
         renderJob: function(jobId, jobInfo) {
-            var getStepSpec = function(id, spec) {
-                for (var i=0; i<spec.steps.length; i++) {
-                    if (id === spec.steps[i].step_id)
-                        return spec.steps[i];
-                }
-                return null;
-            };
-
             var jobState = this.jobStates[jobId];
 
             /* Cases:
@@ -688,9 +673,7 @@ define ([
              */
 
             // get the job's name from its spec
-            // var jobName = "Unknown " + ((jobType === 'njs') ? "App" : "Method");
             var jobName = "Unknown App";
-
             if (jobInfo && jobInfo.spec && jobInfo.spec.methodSpec && jobInfo.spec.methodSpec.info) {
                 jobName = jobInfo.spec.methodSpec.info.name;
             }
@@ -771,7 +754,6 @@ define ([
                     errorType = 'Unauthorized';
                     break;
                 case 'Network_error':
-                    // status = this.makeJobErrorButton(jobId, jobInfo, 'Network Error');
                     errorType = 'Network Error';
                     break;
                 default:

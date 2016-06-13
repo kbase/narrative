@@ -7,7 +7,7 @@
         return this;
       }
     },
-    
+
     session: {
       value: null,
       writable: true
@@ -19,10 +19,7 @@
     cookieName: {
       value: 'kbase_session'
     },
-    narrCookieName: {
-      value: 'kbase_narr_session'
-    },
-    
+
     // Note that THIS session just uses the original kbase
     // session object without transforming it to the canonical form
     // used in the real kbaseSession
@@ -31,8 +28,8 @@
         return this.sessionObject;
       }
     },
-   
-    
+
+
     importSessionFromCookie: {
       value: function () {
          var sessionCookie = $.cookie(this.cookieName);
@@ -41,18 +38,18 @@
         }
         // first pass just break out the string into fields.
         var session = this.decodeToken(sessionCookie);
-        
+
         if (! (session.kbase_sessionid && session.un && session.user_id && session.token) ) {
           this.removeAuth();
           return null;
         }
-        
+
         session.token = session.token.replace(/PIPESIGN/g, '|').replace(/EQUALSSIGN/g, '=');
 
         // now we have a session object equivalent to the one returned by the auth service.
-        
+
         session.tokenObject = this.decodeToken(session.token);
-        
+
         if (this.validateSession(session)) {
           return session;
         } else {
@@ -77,7 +74,7 @@
       value: function (s) {
         if (!s || s.length === 0) {
           return null;
-        }        
+        }
         var session = this.decodeToken(s);
         if (!session) {
           return null;
@@ -92,7 +89,7 @@
         return session;
       }
     },
-    
+
     validateSession: {
       value: function (sessionObject) {
         if (sessionObject === undefined) {
@@ -112,9 +109,9 @@
         return true;
       }
     },
-    
+
     hasExpired : {
-      value: function (sessionObject) {          
+      value: function (sessionObject) {
           var expirySec = sessionObject.tokenObject.expiry;
           if (!expirySec) {
             return false;
@@ -136,12 +133,11 @@
       value: function() {
         $.removeCookie(this.cookieName, {path: '/'});
         $.removeCookie(this.cookieName, {path: '/', domain: 'kbase.us'});
-        $.removeCookie(this.narrCookieName, {path: '/', domain: 'kbase.us'});
         // For compatability
         localStorage.removeItem(this.cookieName);
       }
     }
-    
+
   });
   $.KBaseSessionSync = SessionSync;
 }(jQuery));

@@ -26,7 +26,7 @@ define([
     './pythonInterop',
     './widgets/methodCellWidget',
     './widgets/codeCellRunWidget',
-    './widgets/FieldWidget',
+    './widgets/fieldWidget',
     './runtime',
     './microBus',
     './parameterSpec',
@@ -54,7 +54,7 @@ define([
 //        throw new Error('No authorization implemented for this environment: ' + env);
 //    }
 
-    // We maintain a map of method cells for quick lookup. Strangely, Jupyter does not 
+    // We maintain a map of method cells for quick lookup. Strangely, Jupyter does not
     // seem to offer a method of lookup up cells by the (temporary) cell.cell_id.
     // Here we use cell.metadata.kbase.attributes.id
 
@@ -125,7 +125,7 @@ define([
 //        var code = PythonInterop.buildMethodRunner(cell);
 //        cell.set_text(code);
 //    }
-//    
+//
 //
 //    function resetPython(cell) {
 //        cell.set_text('');
@@ -162,7 +162,7 @@ define([
 ////                });
 ////                setStatus(cell, 'running');
 ////            })
-////            
+////
 ////            .catch(function (err) {
 ////                console.error('BOO', err, args);
 ////            });
@@ -370,8 +370,8 @@ define([
     }
 
     /*
-     * 
-     * 
+     *
+     *
      */
 
     var appStates = [
@@ -422,14 +422,14 @@ define([
                 },
                 {
                     mode: 'processing',
-                    stage: 'launching'                    
+                    stage: 'launching'
                 }
             ]
         },
         {
             state: {
                 mode: 'processing',
-                stage: 'launching'                
+                stage: 'launching'
             },
             next: [
                 {
@@ -458,7 +458,7 @@ define([
             },
             next: [
                 {
-                    mode: 'processing', 
+                    mode: 'processing',
                     stage: 'running'
                 },
                 {
@@ -483,7 +483,7 @@ define([
             },
             next: [
                 {
-                    mode: 'success'                    
+                    mode: 'success'
                 },
                 {
                     mode: 'error',
@@ -567,7 +567,7 @@ define([
     /*
      * Should only be called when a cell is first inserted into a narrative.
      * It creates the correct metadata and then sets up the cell.
-     * 
+     *
      */
     function upgradeToMethodCell(cell, methodSpec, methodTag) {
         return Promise.try(function () {
@@ -782,11 +782,11 @@ define([
         resolution: 1000
     });
     clock.start();
-    // there is not a service/component lifecycle for the narrative is there? 
+    // there is not a service/component lifecycle for the narrative is there?
     // so the clock starts, and is never stopped.
 
 //    runtime.bus().on('clock-tick', function (message) {
-//       console.log('TICK', message); 
+//       console.log('TICK', message);
 //    });
 
     return {

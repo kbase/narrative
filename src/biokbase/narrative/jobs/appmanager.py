@@ -109,22 +109,25 @@ class AppManager(object):
 
         """
         return self.spec_manager.available_apps(tag)
-    
-    
-    
+
+
+
     def run_app(self, *args, **kwargs):
         try:
-            self.run_app_internal(*args, **kwargs)
+            return self._run_app_internal(*args, **kwargs)
         except Exception, e:
+            cell_id = kwargs.get('cell_id', None)
+            run_id = kwargs.get('run_id', None)
             self._send_comm_message('run_status', {
                 'event': 'error',
                 'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-                'cell_id': kwargs['cell_id'],
-                'run_id': kwargs['run_id'],
+                'cell_id': cell_id,
+                'run_id': run_id,
                 'error_message': str(e)
             })
-    
-    def run_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
+            raise
+
+    def _run_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
         Attemps to run the app, returns a Job with the running app info.
         Should *hopefully* also inject that app into the Narrative's metadata.
@@ -194,11 +197,21 @@ class AppManager(object):
         # Should also check if input (NOT OUTPUT) object variables are present in the current workspace
         workspace = system_variable('workspace')
         param_errors = list()
+        # If they're workspace objects, track their refs in a list we'll pass to run_job as
+        # a separate param to track provenance.
+        ws_input_refs = list()
         for p in spec_params:
             if p['id'] in kwargs:
-                err = self._check_parameter(p, kwargs[p['id']], workspace)
+                (wsref, err) = self._check_parameter(p, kwargs[p['id']], workspace)
                 if err is not None:
                     param_errors.append("{} - {}".format(p['id'], err))
+                if wsref is not None:
+                    if isinstance(wsref, list):
+                        for ref in wsref:
+                            if ref is not None:
+                                ws_input_refs.append(ref)
+                    else:
+                        ws_input_refs.append(wsref)
         if len(param_errors):
             raise ValueError('Parameter value errors found! {}'.format(json.dumps(param_errors)))
 
@@ -218,11 +231,10 @@ class AppManager(object):
 
         self._send_comm_message('run_status', {
             'event': 'validated_app',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',            
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
             'cell_id': cell_id,
             'run_id': run_id
         })
-
 
         # Okay, NOW we can start the show
         input_vals = dict()
@@ -235,29 +247,20 @@ class AppManager(object):
                 p_value = system_variable(param['narrative_system_variable'])
             input_vals[p_id] = p_value
 
-        app_name = spec['behavior']['kb_service_method']
+        service_method = spec['behavior']['kb_service_method']
         service_name = spec['behavior']['kb_service_name']
         service_ver = spec['behavior'].get('kb_service_version', None)
         service_url = spec['behavior']['kb_service_url']
-        # 3. set up app structure
-        # app = {'name': 'App wrapper for method ' + app_id,
-        #        'steps': [{'input_values': [input_vals],
-        #                   'is_long_running': 1,
-        #                   'method_spec_id': app_id,
-        #                   'script': {'has_files': 0, 'method_name': '', 'service_name': ''},
-        #                   'service': {'method_name': method_name,
-        #                               'service_name': service_name,
-        #                               'service_url': service_url,
-        #                               'service_version': service_ver},
-        #                   'step_id': app_id,
-        #                   'type': 'service'}]}
 
-        app_id_dot = app_id.replace('/', '.')
+        app_id_dot = service_name + '.' + service_method
+        # app_id_dot = app_id.replace('/', '.')
         job_runner_inputs = {
             'method' : app_id_dot,
             'service_ver' : service_ver,
             'params' : [input_vals]
         }
+        if len(ws_input_refs) > 0:
+            job_runner_inputs['source_ws_objects'] = ws_input_refs
 
         log_info = {
             'app_id': app_id,
@@ -270,7 +273,7 @@ class AppManager(object):
 
         self._send_comm_message('run_status', {
             'event': 'launching_job',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',            
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
             'cell_id': cell_id,
             'run_id': run_id
         })
@@ -280,12 +283,12 @@ class AppManager(object):
         except Exception, e:
             log_info.update({'err': str(e)})
             self._log.setLevel(logging.ERROR)
-            kblogging.log_event(_kblog, "run_app", log_info)
+            kblogging.log_event(self._log, "run_app", log_info)
             raise
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',                        
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
             'cell_id': cell_id,
             'run_id': run_id,
             'job_id': job_id
@@ -293,7 +296,7 @@ class AppManager(object):
 
 
         # new_job = Job(app_state['job_id'], app_id, params, tag=tag, app_version=service_ver, cell_id=cell_id)
-        new_job = Job(job_id, app_id, params, tag=tag, app_version=service_ver, cell_id=cell_id)
+        new_job = Job(job_id, app_id, [params], tag=tag, app_version=service_ver, cell_id=cell_id)
         JobManager().register_new_job(new_job)
         # jobmanager.get_manager().register_new_job(new_job)
         return new_job
@@ -317,15 +320,18 @@ class AppManager(object):
             The name of the current workspace to search against (if needed)
         """
         if param['allow_multiple'] and isinstance(value, list):
+            ws_refs = list()
             error_list = list()
             for v in value:
-                err = self._validate_param_value(param, v, workspace)
+                (ref, err) = self._validate_param_value(param, v, workspace)
                 if err:
                     error_list.append(err)
+                if ref:
+                    ws_refs.append(ref)
             if len(error_list):
                 return ", ".join(error_list)
             else:
-                return None
+                return (ws_refs, None)
         return self._validate_param_value(param, value, workspace)
 
 
@@ -345,84 +351,77 @@ class AppManager(object):
             The name of the current workspace to test workspace object types against, if
             required by the parameter.
         """
+        # The workspace reference for the parameter. Can be None, and returned as such.
+        ws_ref = None
 
         # allow None to pass, we'll just pass it to the method and let it get rejected there.
         if value is None:
-            return None
+            return (ws_ref, None)
 
         # cases - value == list, int, float, others get rejected
         if not (isinstance(value, basestring) or
                 isinstance(value, int) or
                 isinstance(value, float)):
-            return "input type not supported - only str, int, float, or list"
+            return (ws_ref, "input type not supported - only str, int, float, or list")
 
         # check types. basestring is pretty much anything (it'll just get casted),
         # but ints, floats, or lists are funky.
         if param['type'] == 'int' and not isinstance(value, int):
-            return 'Given value {} is not an int'.format(value)
+            return (ws_ref, 'Given value {} is not an int'.format(value))
         elif param['type'] == 'float' and not (isinstance(value, float) or isinstance(value, int)):
-            return 'Given value {} is not a number'.format(value)
+            return (ws_ref, 'Given value {} is not a number'.format(value))
 
         # if it's expecting a workspace object, check if that's present, and a valid type
         if 'allowed_types' in param and len(param['allowed_types']) > 0 and not param['is_output']:
             try:
                 info = self.ws_client.get_object_info_new({'objects': [{'workspace':workspace, 'name':value}]})[0]
+                ws_ref = "{}/{}/{}".format(info[6], info[0], info[4])
                 type_ok = False
                 for t in param['allowed_types']:
                     if re.match(t, info[2]):
                         type_ok = True
                 if not type_ok:
-                    return 'Type of data object, {}, does not match allowed types'.format(info[2])
+                    return (ws_ref, 'Type of data object, {}, does not match allowed types'.format(info[2]))
             except Exception as e:
-                return 'Data object named {} not found with this Narrative.'
+                return (ws_ref, 'Data object named {} not found with this Narrative.')
 
         # if it expects a set of allowed values, check if this one matches
         if 'allowed_values' in param:
             if value not in param['allowed_values']:
-                return "Given value is not permitted in the allowed set."
+                return (ws_ref, "Given value is not permitted in the allowed set.")
 
         # if it expects a numerical value in a certain range, check that.
         if 'max_val' in param:
             try:
                 if float(value) > param['max_val']:
-                    return "Given value {} should be <= {}".format(value, param['max_val'])
+                    return (ws_ref, "Given value {} should be <= {}".format(value, param['max_val']))
             except:
-                return "Given value {} must be a number".format(value)
+                return (ws_ref, "Given value {} must be a number".format(value))
 
         if 'min_val' in param:
             try:
                 if float(value) < param['min_val']:
-                    return "Given value {} should be >= {}".format(value, param['min_val'])
+                    return (ws_ref, "Given value {} should be >= {}".format(value, param['min_val']))
             except:
-                return "Given value {} must be a number".format(value)
+                return (ws_ref, "Given value {} must be a number".format(value))
 
         # if it's an output object, make sure it follows the data object rules.
         if param['is_output']:
             if re.search('\s', value):
-                return "Spaces are not allowed in data object names."
+                return (ws_ref, "Spaces are not allowed in data object names.")
             if re.match('^\d+$', value):
-                return "Data objects cannot be just a number."
+                return (ws_ref, "Data objects cannot be just a number.")
             if not re.match('^[a-z0-9|\.|\||_\-]*$', value, re.IGNORECASE):
-                return "Data object names can only include symbols: _ - . |"
+                return (ws_ref, "Data object names can only include symbols: _ - . |")
 
         # Last, regex. not being used in any extant specs, but cover it anyway.
         if 'regex_constraint' in param:
             for regex in regex_constraint:
                 if not re.match(regex_constraint, value):
-                    return 'Value {} does not match required regex {}'.format(value, regex)
+                    return (ws_ref, 'Value {} does not match required regex {}'.format(value, regex))
 
         # Whew. Passed all filters!
-        return None
-
-    def _handle_comm_message(self, msg):
-        pass
+        return (ws_ref, None)
 
     def _send_comm_message(self, msg_type, content):
-        msg = {
-            'msg_type': msg_type,
-            'content': content
-        }
-        if self._comm is None:
-            self._comm = Comm(target_name='KBaseJobs', data={})
-            self._comm.on_msg(self._handle_comm_message)
-        self._comm.send(msg)
+        JobManager()._send_comm_message(msg_type, content)

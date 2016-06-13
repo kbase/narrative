@@ -12,8 +12,8 @@ from .app_util import (
 from biokbase.narrative.common.generic_service_calls import (
     get_sub_path
 )
-# from biokbase.narrative.common.kbjob_manager import KBjobManager
 import json
+import uuid
 from IPython.display import (
     Javascript,
     HTML
@@ -28,7 +28,8 @@ class Job(object):
     app_version = None
     cell_id = None
     inputs = None
-    _comm = None
+    # _comm = None
+    _job_logs = list()
 
     def __init__(self, job_id, app_id, inputs, tag='release', app_version=None, cell_id=None):
         """
@@ -43,11 +44,10 @@ class Job(object):
         self.cell_id = cell_id
         # self.job_manager = KBjobManager()
         self.inputs = inputs
-        self.njs = clients.get('job_service')
-        self._init_comm()
+        self._njs = clients.get('job_service')
 
     @classmethod
-    def from_state(Job, job_id, job_info, tag='release', cell_id=None):
+    def from_state(Job, job_id, job_info, app_id, tag='release', cell_id=None):
         """
         Parameters:
         -----------
@@ -56,18 +56,22 @@ class Job(object):
         job_info - dict
             The job information returned from njs.get_job_params, just the first
             element of that list (not the extra list with URLs). Should have the following keys:
-            'method': The method id (will be converted from '.' to '/' format)
             'params': The set of parameters sent to that job.
             'service_ver': The version of the service that was run.
+        app_id - string
+            Used in place of job_info.method. This is the actual method spec that was used to
+            start the job. Can be None, but Bad Things might happen.
+        tag - string
+            The Tag (release, beta, dev) used to start the job.
+        cell_id - the cell associated with the job (optional)
         """
-        app_id = job_info.get('method', "Unknown App")
-
+        # app_id = job_info.get('method', "Unknown App")
         # Still juggling between Module.method_name and Module/method_name
         # There should be one and only one / after this is done.
         # So, if there's a /, do nothing.
         # If not, change the first . to a /
-        if not '/' in app_id and '.' in app_id:
-            app_id = app_id.replace('.', '/', 1)
+        # if not '/' in app_id and '.' in app_id:
+        #     app_id = app_id.replace('.', '/', 1)
         return Job(job_id,
                    app_id,
                    job_info['params'],
@@ -94,11 +98,11 @@ class Job(object):
         return SpecManager().get_spec(self.app_id, self.tag)
 
     def status(self):
-        return self.njs.check_job(self.job_id)['job_state']
+        return self._njs.check_job(self.job_id)['job_state']
 
     def parameters(self):
         try:
-            return self.njs.get_job_params(self.job_id)
+            return self._njs.get_job_params(self.job_id)
         except Exception, e:
             raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
 
@@ -108,7 +112,7 @@ class Job(object):
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
         try:
-            return self.njs.check_job(self.job_id)
+            return self._njs.check_job(self.job_id)
         except Exception, e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
 
@@ -140,12 +144,53 @@ class Job(object):
         else:
             return "Job is incomplete! It has status '{}'".format(state['job_state'])
 
-    def log(self):
-        pass
+    def log(self, first_line=0, num_lines=None):
+        """
+        Fetch a list of Job logs from the Job Service.
+        This returns a 2-tuple (number of available log lines, list of log lines)
+        Each log 'line' is a dict with two properties:
+        is_error - boolean
+            True if the line reflects an error returned by the method (e.g. stdout)
+        line - string
+            The actual log line
+        Parameters:
+        -----------
+        first_line - int
+            First line of log to return (0-indexed). If < 0, starts at the beginning. If > total lines,
+            returns an empty list.
+        num_lines - int or None
+            Limit on the number of lines to return (if None, return everything). If <= 0, returns no lines.
+        Usage:
+        ------
+        The parameters are kwargs, so the following cases can be true:
+        log() - returns all available log lines
+        log(first_line=5) - returns every line available starting with line 5
+        log(num_lines=100) - returns the first 100 lines (or all lines available if < 100)
+        """
+        self._update_log()
+        num_available_lines = len(self._job_logs)
+
+        if first_line < 0:
+            first_line = 0
+        if num_lines is None:
+            num_lines = num_available_lines - first_line
+        if num_lines < 0:
+            num_lines = 0
+
+        if first_line >= num_available_lines or num_lines <= 0:
+            return (num_available_lines, list())
+        return (num_available_lines, self._job_logs[first_line:first_line+num_lines])
+
+
+    def _update_log(self):
+        log_update = self._njs.get_job_logs({'job_id': self.job_id, 'skip_lines': len(self._job_logs)})
+        if log_update['lines']:
+            self._job_logs = self._job_logs + log_update['lines']
 
     def cancel(self):
         """
         Cancels a currently running job. Fails silently if there's no job running.
+        (No way to cancel something started with run_job right now).
         """
         pass
 
@@ -157,34 +202,30 @@ class Job(object):
         status = self.status()
         return status.lower() in ['completed', 'error', 'suspend']
 
-    def _init_comm(self):
-        if self._comm is not None:
-            self._comm.close()
-            self._comm = None
-        self._comm = Comm(target_name='KBaseJob-' + self.job_id, data={})
-        self._comm.on_msg(self._handle_comm_message)
-
-    def _handle_comm_message(self, msg):
-        pass
-
-    def _send_comm_message(self, msg_type, msg):
-        if self._comm is None:
-            self.init_comm()
-        self._comm.send({'msg_type':msg_type, 'content':msg})
-
     def __repr__(self):
         return u"KBase Narrative Job - " + unicode(self.job_id)
 
     def _repr_javascript_(self):
         tmpl = """
-        element.html("<div id='kb-job-{{job_id}}' class='kb-vis-area'></div>");
+        element.html("<div id='{{elem_id}}' class='kb-vis-area'></div>");
 
         require(['jquery', 'kbaseNarrativeJobStatus'], function($, KBaseNarrativeJobStatus) {
-            var w = new KBaseNarrativeJobStatus($('#kb-job-{{job_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}});
+            var w = new KBaseNarrativeJobStatus($('#{{elem_id}}'), {'jobId': '{{job_id}}', 'state': {{state}}, 'info': {{info}}});
         });
         """
         try:
             state = self.state()
+            spec = self.app_spec()
+            info = {
+                'app_id': spec['info']['id'],
+                'version': spec['info'].get('ver', None),
+                'name': spec['info']['name']
+            }
         except Exception, e:
             state = {}
-        return Template(tmpl).render(job_id=self.job_id, state=json.dumps(state))
+            info = {
+                'app_id': None,
+                'version': None,
+                'name': 'Unknown App'
+            }
+        return Template(tmpl).render(job_id=self.job_id, elem_id='kb-job-{}-{}'.format(self.job_id, uuid.uuid4()), state=json.dumps(state), info=json.dumps(info))

@@ -114,8 +114,8 @@ define([
             });
             myBus.emit('talk', {say: 'hello'});
         });
-        
-        
+
+
         it('Send and receive a test based message over a channel bus', function (done) {
             var bus = Bus.make(),
                 myBus = bus.makeChannelBus();
@@ -137,11 +137,11 @@ define([
             });
             myBus.bus().emit('talk', {say: 'hello'});
         });
-        
+
         it('Send and receive a test based message over the main bus on a new channel from a channel bus', function (done) {
             var bus = Bus.make(),
                 myBus = bus.makeChannelBus();
-                
+
             myBus.bus().listen({
                 channel: 'my-new-channel',
                 test: function (message) {
@@ -155,30 +155,110 @@ define([
             myBus.bus().send({
                 test: '123'
             },
-            {
-                channel: 'my-new-channel'
-            });
+                {
+                    channel: 'my-new-channel'
+                });
         });
 
     });
-        it('Send and receive a test based message over a channel bus', function (done) {
-            var bus = Bus.make(),
-                myBus = bus.makeChannelBus();
-               
-            myBus.listen({
-                test: function (message) {
-                    return (message.language === 'english');
-                },
-                handle: function (message) {
-                    expect(message.greeting).toEqual('hello');
-                    done();
-                }
-            });
-            myBus.send({
-                language: 'english',
-                greeting: 'hello'
-            });
-        });
+    it('Send and receive a test based message over a channel bus', function (done) {
+        var bus = Bus.make(),
+            myBus = bus.makeChannelBus();
 
+        myBus.listen({
+            test: function (message) {
+                return (message.language === 'english');
+            },
+            handle: function (message) {
+                expect(message.greeting).toEqual('hello');
+                done();
+            }
+        });
+        myBus.send({
+            language: 'english',
+            greeting: 'hello'
+        });
+    });
+
+
+    it('Channel bus Request/response', function (done) {
+        var bus = Bus.make(),
+            bus1 = bus.makeChannelBus(),
+            bus2 = bus.makeChannelBus(),
+            data = {
+                key1: 'value1'
+            };
+        // responder 1
+
+        bus1.respond({
+            key: {
+                type: 'get-value'
+            },
+            handle: function (message) {
+                return {
+                    value: data[message.propertyName]
+                };
+            }
+        });
+        bus1.request({
+            propertyName: 'key1'
+        }, {
+            key: {
+                type: 'get-value'
+            }
+        })
+            .then(function (response) {
+                expect(response.value).toEqual('value1');
+                done();
+            });
+    });
+
+    it('Nested bus Request/response', function (done) {
+        var bus = Bus.make(),
+            bus1 = bus.makeChannelBus(),
+            bus2 = bus.makeChannelBus(),
+            data = {
+                key1: 'value1'
+            };
+        // responder 1
+
+        bus1.respond({
+            key: {
+                type: 'get-value'
+            },
+            handle: function (message) {
+                return {
+                    value: data[message.propertyName]
+                };
+            }
+        });
+        bus2.respond({
+            key: {
+                type: 'get-value'
+            },
+            handle: function (message) {
+                return  bus1.request({
+                    propertyName: 'key1'
+                }, {
+                    key: {
+                        type: 'get-value'
+                    }
+                });
+            }
+        });
+ 
+
+        bus2.request({
+            propertyName: 'key1'
+        }, {
+            key: {
+                type: 'get-value'
+            }
+        })
+            .then(function (response) {
+                expect(response.value).toEqual('value1');
+                done();
+            });
+    });
 
 });

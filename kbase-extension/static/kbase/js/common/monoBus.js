@@ -35,8 +35,8 @@ define([
             interval = 0,
             timer,
             instanceId = newInstance(),
-            channels = {};
-
+            channels = {},
+            doLogMessages = false;
 
         // CHANNELS
 
@@ -68,7 +68,7 @@ define([
             }
             return channels[name];
         }
-
+        
         function getChannel(name) {
             var channel = channels[name];
             if (!channel) {
@@ -76,9 +76,9 @@ define([
             }
             return channel;
         }
-        
-        function removeChannel(name){
-            delete channel[name];
+
+        function removeChannel(name) {
+            delete channels[name];
         }
 
         // LISTENING
@@ -97,6 +97,9 @@ define([
                 return;
             }
             listeners.forEach(function (listener) {
+                if (doLogMessages) {
+                    console.log('PROCESSING KEY LISTENER', channel, item);
+                }
                 letListenerHandle(item, listener.handle);
             });
         }
@@ -155,16 +158,20 @@ define([
             }
 
             // All listeners are registered globally.
-            listenerRegistry[id] = listener;
+            // listenerRegistry[id] = listener;
 
             return id;
         }
-
+        
         // PROCESSING ENGINE 
 
         function processTestListeners(channel, item) {
             channel.testListeners.forEach(function (listener) {
+                if (doLogMessages) {
+                    console.log('PROCESSING TEST LISTENER?', channel, item);
+                }
                 if (testListener(item, listener.test)) {
+                    console.log('PROCESSING TEST LISTENER!', channel, item);
                     letListenerHandle(item, listener.handle);
                 }
             });
@@ -176,8 +183,14 @@ define([
                 var channel = getChannel(item.envelope.channel);
 
                 if (item.envelope.key) {
+                    if (doLogMessages) {
+                        console.log('PROCESSING KEY', channel, item);
+                    }
                     processKeyListeners(channel, item);
                 } else {
+                    if (doLogMessages) {
+                        console.log('PROCESSING TEST', channel, item);
+                    }
                     processTestListeners(channel, item);
                 }
             });
@@ -226,6 +239,9 @@ define([
 
             envelope.channel = address.channel || 'default';
 
+            if (doLogMessages) {
+                console.log('SEND', message, envelope);
+            }
             sendQueue.push({
                 message: message,
                 envelope: envelope
@@ -312,6 +328,14 @@ define([
             });
         }
 
+        function logMessages(doLog) {
+            if (doLog) {
+                doLogMessages = true;
+            } else {
+                doLogMessages = false;
+            }
+        }
+
 
 
         // CHANNEL BUS
@@ -326,7 +350,7 @@ define([
                 channel = ensureChannel(channelName);
 
             function on(type, handler) {
-                listen({
+                return listen({
                     channel: channelName,
                     key: {type: type},
                     handle: handler
@@ -337,25 +361,40 @@ define([
                 if (message === undefined) {
                     message = {};
                 }
-                send(message, {
+                return send(message, {
                     channel: channelName,
                     key: {type: type}
                 });
             }
-            
+
             function channelSend(message, address) {
                 address = address || {};
                 address.channel = channelName;
-                send(message, address);
+                return send(message, address);
             }
-            
+
             function channelListen(spec) {
                 spec.channel = channelName;
-                listen(spec);
+                return listen(spec);
+            }
+
+            function channelRequest(message, address) {
+                address = address || {};
+                address.channel = channelName;
+                return request(message, address);
+            }
+
+            function channelRespond(spec) {
+                spec.channel = channelName;
+                return respond(spec);
             }
 
             function bus() {
                 return api;
+            }
+            
+            function stop() {
+                removeChannel(channelName);
             }
 
             return {
@@ -363,13 +402,16 @@ define([
                 emit: emit,
                 bus: bus,
                 listen: channelListen,
-                send: channelSend
+                send: channelSend,
+                respond: channelRespond,
+                request: channelRequest,
+                stop: stop
             };
         }
-        
+
         // MANAGEMENT
-        
-        
+
+
 
         // MAIN
         makeChannel('default');
@@ -383,9 +425,9 @@ define([
             on: on,
             emit: emit,
             makeChannelBus: makeChannelBus,
-            
             makeChannel: makeChannel,
-            removeChannel: removeChannel
+            removeChannel: removeChannel,
+            logMessages: logMessages
         };
 
         return api;

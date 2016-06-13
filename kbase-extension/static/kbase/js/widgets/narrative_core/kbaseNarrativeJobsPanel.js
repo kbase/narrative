@@ -11,7 +11,7 @@ define([
     'util/timeFormat',
     'util/string',
     'base/js/namespace',
-    'nbextensions/methodCell/runtime',
+    'common/runtime',
     'services/kernels/comm'
 ], function (
     KBWidget,

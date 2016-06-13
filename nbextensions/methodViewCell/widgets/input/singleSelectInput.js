@@ -3,9 +3,9 @@
 define([
     'bluebird',
     'kb_common/html',
-    '../../validation',
-    '../../events',
-    '../../dom',
+    'common/validation',
+    'common/events',
+    'common/dom',
     'bootstrap',
     'css!font-awesome'
 ], function (Promise, html, Validation, Events, Dom) {

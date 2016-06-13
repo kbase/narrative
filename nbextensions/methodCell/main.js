@@ -22,151 +22,34 @@ define([
     'bluebird',
     'uuid',
     'kb_common/html',
-    './methodCellController',
-    './pythonInterop',
     './widgets/methodCellWidget',
-    './widgets/codeCellRunWidget',
-    './widgets/FieldWidget',
-    './runtime',
-    './miniBus',
-    './parameterSpec',
-    './utils',
-    './clock',
+    'common/runtime',
+    'common/parameterSpec',
+    'common/utils',
+    'common/clock',
     'kb_service/utils',
     'kb_service/client/workspace',
     'css!./styles/method-widget.css',
     'bootstrap'
-], function ($, Jupyter, Promise, Uuid, html, MethodCellController, PythonInterop,
-    MethodCellWidget, RunWidget,
-    FieldWidget, Runtime, Bus, ParameterSpec, utils, Clock, serviceUtils, Workspace) {
+], function (
+    $,
+    Jupyter,
+    Promise,
+    Uuid,
+    html,
+    MethodCellWidget,
+    Runtime,
+    ParameterSpec,
+    utils,
+    Clock,
+    serviceUtils,
+    Workspace
+    ) {
     'use strict';
     var t = html.tag,
-        div = t('div'), button = t('button'), span = t('span'), form = t('form'),
         workspaceInfo,
         env,
         runtime = Runtime.make();
-
-//    function getAuthToken() {
-//        if (env === 'narrative') {
-//            return Jupyter.narrative.authToken;
-//        }
-//        throw new Error('No authorization implemented for this environment: ' + env);
-//    }
-
-    // We maintain a map of method cells for quick lookup. Strangely, Jupyter does not
-    // seem to offer a method of lookup up cells by the (temporary) cell.cell_id.
-    // Here we use cell.metadata.kbase.attributes.id
-
-
-//    function showNotifications(cell) {
-//        // Update comment if any
-//        if (!cell.metadata.kbase.notifications) {
-//            return;
-//        }
-//
-//        var notificationsNode = cell.kbase.$node.find('[data-element="body"] [data-element="notifications"]'),
-//            content;
-//
-//        cell.metadata.kbase.notifications.forEach(function (notification) {
-//            content = div({class: 'alert alert-' + notification.type, dataDismiss: 'alert'}, [
-//                notification.message,
-//                button({type: 'button', class: 'close', dataDismiss: 'alert', ariaLabel: 'Close'}, [
-//                    span({ariaHidden: 'true'}, '&times;')
-//                ])
-//            ]);
-//            notificationsNode.append(content);
-//        });
-//    }
-//
-//    function addNotification(cell, type, message) {
-//        if (!cell.metadata.kbase.notifications) {
-//            cell.metadata.kbase.notifications = [];
-//        }
-//        cell.metadata.kbase.notifications.push({
-//            type: type,
-//            message: message
-//        });
-//        showNotifications(cell);
-//    }
-
-//    function findElement(cell, path) {
-//        var selector = path.map(function (segment) {
-//            return '[data-element="' + segment + '"]';
-//        }).join(' '),
-//            node = cell.kbase.$node.find(selector);
-//
-//        return node;
-//    }
-
-//    function showStatus(cell) {
-//        var status = utils.getMeta(cell, 'attributes', 'status') || 'n/a',
-//            node = findElement(cell, ['prompt', 'status']);
-//        node.text(status);
-//    }
-
-//    function setStatus(cell, status) {
-//        utils.setMeta(cell, 'attributes', 'status', status);
-//    }
-//
-//    function getStatus(cell) {
-//        return utils.getMeta(cell, 'attributes', 'status');
-//    }
-//
-//
-//    function getParamValue(cell, paramName) {
-//        if (!cell.metadata.kbase.params) {
-//            return;
-//        }
-//        return cell.metadata.kbase.params[paramName];
-//    }
-//
-//    function buildPython(cell) {
-//        var code = PythonInterop.buildMethodRunner(cell);
-//        cell.set_text(code);
-//    }
-//
-//
-//    function resetPython(cell) {
-//        cell.set_text('');
-//    }
-//
-//
-//    function insertRunWidget(cellId, kbaseCellid) {
-//        var args = {
-//            cellId: cellId,
-//            kbaseCellId: kbaseCellid
-//        };
-//        console.log('inserting widget', args);
-//        var widget = RunWidget.make(args);
-//        return widget.attach(args)
-//            .then(function () {
-//                console.log('IT WORKED');
-//            });
-//    }
-//
-//    function runPython(cell) {
-//            cell.execute();
-//            utils.setMeta(cell, 'jobState', {
-//                runState: 'launched',
-//                startTime: new Date().getTime()
-//            });
-//            setStatus(cell, 'running');
-//
-////        return insertRunWidget(cell.cell_id, utils.getMeta(cell, 'attributes', 'id'))
-////            .then(function () {
-////                cell.execute();
-////                utils.setMeta(cell, 'jobState', {
-////                    runState: 'launched',
-////                    startTime: new Date().getTime()
-////                });
-////                setStatus(cell, 'running');
-////            })
-////
-////            .catch(function (err) {
-////                console.error('BOO', err, args);
-////            });
-//    }
-
 
     /*
      * Dealing with metadata
@@ -233,86 +116,6 @@ define([
 
     }
 
-    // TOOLBAR
-//
-//    function doEditNotebookMetadata() {
-//        Jupyter.notebook.edit_metadata({
-//            notebook: Jupyter.notebook,
-//            keyboard_manager: Jupyter.notebook.keyboard_manager
-//        });
-//    }
-//    function editNotebookMetadata(toolbarDiv, cell) {
-//        if (!cell.metadata.kbase) {
-//            return;
-//        }
-//        if (cell.metadata.kbase.type !== 'method') {
-//            return;
-//        }
-//        var button = html.tag('button'),
-//            editButton = button({
-//                type: 'button',
-//                class: 'btn btn-default btn-xs',
-//                dataElement: 'kbase-edit-notebook-metadata'}, [
-//                'Edit Notebook Metadata'
-//            ]);
-//        $(toolbarDiv).append(editButton);
-//        $(toolbarDiv).find('[data-element="kbase-edit-notebook-metadata"]').on('click', function () {
-//            doEditNotebookMetadata(cell);
-//        });
-//    }
-
-//    function initCodeInputArea(cell) {
-//        var codeInputArea = cell.input.find('.input_area');
-//        if (!cell.kbase.inputAreaDisplayStyle) {
-//            cell.kbase.inputAreaDisplayStyle = codeInputArea.css('display');
-//        }
-//        utils.setMeta(cell, 'user-settings', 'showCodeInputArea', false);
-//    }
-//
-//    function showCodeInputArea(cell) {
-//        var codeInputArea = cell.input.find('.input_area');
-//        if (utils.getMeta(cell, 'user-settings', 'showCodeInputArea')) {
-//            codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);
-//        } else {
-//            codeInputArea.css('display', 'none');
-//        }
-//    }
-
-//    function toggleCodeInputArea(cell) {
-//        var codeInputArea = cell.input.find('.input_area');
-//        /*
-//         * the code input area's style is stached for future restoration.
-//         */
-//        if (utils.getMeta(cell, 'user-settings', 'showCodeInputArea')) {
-//            utils.setMeta(cell, 'user-settings', 'showCodeInputArea', false);
-//        } else {
-//            utils.setMeta(cell, 'user-settings', 'showCodeInputArea', true);
-//        }
-//        showCodeInputArea(cell);
-//        return utils.getMeta(cell, 'user-settings', 'showCodeInputArea');
-//    }
-
-//    function addJob(cell, job_id) {
-//        var jobRec = {
-//            jobId: job_id,
-//            added: (new Date()).toUTCString(),
-//            lastUpdated: (new Date()).toUTCString()
-//        },
-//        jobs;
-//        if (!utils.getMeta(cell, 'attributes', 'jobs')) {
-//            jobs = [];
-//        } else {
-//            jobs = utils.getMeta(cell, 'attributes', 'jobs');
-//        }
-//        jobs.push(jobRec);
-//        console.log('jobs', jobs);
-//        utils.setMeta(cell, 'attributes', 'jobs', jobs);
-//    }
-
-    /*
-     * Sub tasks of cell setup
-     */
-
 
 
     // This is copied out of jupyter code.
@@ -323,35 +126,7 @@ define([
         Jupyter.notebook.metadata.celltoolbar = toolbarName;
     }
 
-//    function updateRunStatus(cell, data) {
-//        // console.log('RUNSTATUS', data);
-//        var jobState = cell.getMeta('jobState');
-//        switch (data.status) {
-//            case 'error':
-//                jobState.runState = 'completed';
-//                jobState.resultState = 'error';
-//                jobState.endTime = new Date().getTime();
-//                cell.setMeta('jobState', jobState);
-//                // utils.setMeta(cell, 'attributes', 'status', 'job:' + data.status);
-//                addNotification(cell, 'danger', data.message);
-//                break;
-//            case 'job_started':
-//                jobState.runState = 'running';
-//                jobState.resultState = 'started';
-//                // jobState.endTime = new Date().getTime();
-//
-//                addJob(cell, data.job_id);
-//                // utils.setMeta(cell, 'attributes', 'status', 'job_started');
-//                // TODO: tell the job manager? or perhaps it already knows.
-//                break;
-//        }
-//    }
 
-//    function makeMethodId(module, name) {
-//        return [module, name].filter(function (element) {
-//            return element ? true : false;
-//        }).join('/');
-//    }
 
     // TODO: move into method cell widget and invoke with an event 'reset-to-default-values'
     function setupParams(cell, methodSpec) {
@@ -625,8 +400,6 @@ define([
 
             extendCell(cell);
 
-            MethodCellController.addCell(cell);
-
             // The kbase property is only used for managing runtime state of the cell
             // for kbase. Anything to be persistent should be on the metadata.
             cell.kbase = {
@@ -795,4 +568,6 @@ define([
         load_ipython_extension: load_ipython_extension
             // These are kbase api calls
     };
+}, function (err) {
+    console.log('ERROR loading methodCell main', err);
 });

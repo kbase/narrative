@@ -4,9 +4,9 @@ define([
     'bluebird',
     'base/js/namespace',
     'kb_common/html',
-    '../../validation',
-    '../../events',
-    '../../dom',
+    'common/validation',
+    'common/events',
+    'common/dom',
     'bootstrap',
     'css!font-awesome'
 ], function (Promise, Jupyter, html, Validation, Events, Dom) {
@@ -105,7 +105,7 @@ define([
 
                 var rawValue = getInputValue(),
                     validationResult = Validation.validateTextString(rawValue, {
-                        required: options.required
+                        required: constraints.required
                     });
 
                 return {

@@ -6,16 +6,18 @@ define([
     'bluebird',
     'base/js/namespace',
     'base/js/dialog',
-    '../parameterSpec',
-    '../runtime',
-    '../events',
+    'common/parameterSpec',
+    'common/runtime',
+    'common/events',
     'kb_common/html',
-    '../props',
+    'common/props',
     'kb_service/client/narrativeMethodStore',
-    '../pythonInterop',
-    '../utils',
-    '../dom',
-    '../fsm'
+    'common/pythonInterop',
+    'common/utils',
+    'common/dom',
+    'common/fsm',
+    'google-code-prettify/prettify',
+    'css!google-code-prettify/prettify.css'
 ], function (
     $,
     Promise,
@@ -30,12 +32,14 @@ define([
     PythonInterop,
     utils,
     Dom,
-    Fsm
+    Fsm,
+    PR
     ) {
     'use strict';
     var t = html.tag,
         div = t('div'), span = t('span'), a = t('a'),
         table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
+        pre = t('pre'),
         appStates = [
             {
                 state: {
@@ -503,7 +507,21 @@ define([
             dom.setContent('fsm-bar.content', content);
         }
 
-        function renderAboutMethod() {
+
+
+        function renderMethodSpec() {
+//            if (!env.methodSpec) {
+//                return;
+//            }
+//            var specText = JSON.stringify(env.methodSpec, false, 3),
+//                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return pre({
+                dataElement: 'spec',
+                class: 'prettyprint lang-json', 
+                style: {fontSize: '80%'}});
+        }
+
+        function renderMethodSummary() {
             return table({class: 'table table-striped'}, [
                 tr([
                     th('Name'),
@@ -532,6 +550,23 @@ define([
             ]);
         }
 
+        function renderAboutMethod() {
+            return html.makeTabs({
+                tabs: [
+                    {
+                        label: 'Summary',
+                        name: 'summary',
+                        content: renderMethodSummary()
+                    },
+                    {
+                        label: 'Spec',
+                        name: 'spec',
+                        content: renderMethodSpec()
+                    }
+                ]
+            });
+        }
+
         function toBoolean(value) {
             if (value && value !== null) {
                 return true;
@@ -540,6 +575,7 @@ define([
         }
 
         function showAboutMethod() {
+            console.log('METHOD SPEC', env.methodSpec);
             dom.setContent('about-method.name', env.methodSpec.info.name);
             dom.setContent('about-method.summary', env.methodSpec.info.subtitle);
             dom.setContent('about-method.version', env.methodSpec.info.ver);
@@ -548,6 +584,16 @@ define([
             var methodRef = [env.methodSpec.info.namespace || 'l.m', env.methodSpec.info.id].filter(toBoolean).join('/'),
                 link = a({href: '/#appcatalog/app/' + methodRef, target: '_blank'}, 'Catalog Page');
             dom.setContent('about-method.catalog-link', link);
+        }
+
+        function showMethodSpec() {
+            if (!env.methodSpec) {
+                return;
+            }
+            var specText = JSON.stringify(env.methodSpec, false, 3),
+                fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
+                content = pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedText);
+            dom.setContent('about-method.spec', content);
         }
 
         function renderLayout() {
@@ -1265,7 +1311,8 @@ define([
 //                    });
                     console.log('sending workspace changed event');
                     // runtime.bus().send('workspace-changed');
-                    widgets.paramsInputWidget.bus.emit('workspace-changed');
+                    runtime.bus().emit('workspace-changed');
+                    // widgets.paramsInputWidget.bus.emit('workspace-changed');
                     //widgets.paramsDisplayWidget.bus.send('workspace-changed');
                 });
 
@@ -1278,8 +1325,8 @@ define([
         }
 
         function findInputWidget(requestedInputWidget) {
-            console.log('INPUT WIDGET', requestedInputWidget);
             var defaultModule = 'nbextensions/methodCell/widgets/methodParamsWidget';
+            return defaultModule;
 
             if (requestedInputWidget === null) {
                 return defaultModule;
@@ -1288,7 +1335,7 @@ define([
             if (requestedInputWidget === 'null') {
                 return defaultModule;
             }
-            
+
             return 'nbextensions/methodCell/widgets/inputWidgets/' + requestedInputWidget;
         }
 
@@ -1331,6 +1378,39 @@ define([
                             }
                         });
                     });
+
+                    bus.respond({
+                        key: {
+                            type: 'get-parameter'
+                        },
+                        handle: function (message) {
+                            // console.log('Getting?', message);
+                            // console.log(model.getItem('params'));
+                            return {
+                                value: model.getItem(['params', message.parameterName])
+                            };
+                        }
+                    });
+
+                    bus.respond({
+                        key: 'test',
+                        handle: function (message) {
+                            return true;
+                        }
+                    });
+
+//                    bus.on('get-parameter-value', function (message) {
+//                        var value = model.getItem(['params', message.parameter]);
+//                        bus.send({
+//                            parameter: message.parameter,
+//                            value: value
+//                        }, {
+//                            key: {
+//                                type: 'parameter-value',
+//                                parameter: message.parameter
+//                            }
+//                        });
+//                    });
                     bus.on('parameter-changed', function (message) {
                         model.setItem(['params', message.parameter], message.newValue);
                         var validationResult = validateModel();
@@ -1461,6 +1541,8 @@ define([
                 .then(function () {
                     // this will not change, so we can just render it here.
                     showAboutMethod();
+                    showMethodSpec();
+                    PR.prettyPrint(null, container);
                     renderUI();
                 });
         }
@@ -1487,4 +1569,6 @@ define([
             return factory(config);
         }
     };
+}, function (err) {
+    console.log('ERROR loading methodCell methodCellWidget', err);
 });

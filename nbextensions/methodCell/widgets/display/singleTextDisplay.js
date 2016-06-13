@@ -3,7 +3,7 @@
 define([
     'bluebird',
     'kb_common/html',
-    '../../props',
+    'common/props',
     'bootstrap',
     'css!font-awesome'
 ], function (Promise, html, Props) {

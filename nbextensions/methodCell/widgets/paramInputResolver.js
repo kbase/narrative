@@ -196,6 +196,14 @@ define([
                             }
                             return SingleIntInputWidget;
                     }
+                case '[]int':
+                    switch (fieldType) {
+                        case 'checkbox':
+                            return UndefinedInputWidget;
+                        case 'text':
+                        default:
+                            return MultiIntInputWidget;
+                    }
                 case 'float':
                     if (parameterSpec.multipleItems()) {
                         return UndefinedInputWidget;
@@ -261,7 +269,7 @@ define([
                             }
                             return SingleSubdataWidget;
                         case 'file':
-                            return UndefinedInputWidget;
+                            throw new Error('"file" parameter type is not supported');
                         case 'custom_textsubdata':
                             console.log('CUSTOM_TEXTSUBDATA', parameterSpec);
                             if (parameterSpec.multipleItems()) {

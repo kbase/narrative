@@ -3,8 +3,8 @@
 define([
     'jquery',
     'kb_common/html',
-    '../../validation',
-    '../../events',
+    'common/validation',
+    'common/events',
     'bootstrap',
     'css!font-awesome'
 ], function ($, html, Validation, Events) {

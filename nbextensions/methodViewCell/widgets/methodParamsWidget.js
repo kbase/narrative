@@ -6,14 +6,14 @@ define([
     // CDN
     'kb_common/html',
     // LOCAL
-    '../dom',
-    '../events',
-    '../props',
+    'common/dom',
+    'common/events',
+    'common/props',
     // Wrapper for inputs
     './inputWrapperWidget',
     './fieldWidget',
     './paramInputResolver',
-    '../runtime'
+    'common/runtime'
         // All the input widgets
 
 ], function (
@@ -86,13 +86,13 @@ define([
         // RENDERING
 
         function makeFieldWidget(parameterSpec, value) {
-            var bus = runtime.bus().makeChannelBus(),
+            var fieldBus = runtime.bus().makeChannelBus(),
                 inputWidget = paramResolver.getInputWidgetFactory(parameterSpec);
 
-            inputBusses.push(bus);
+            inputBusses.push(fieldBus);
 
             // Forward all changed parameters to the controller. That is our main job!
-            bus.on('changed', function (message) {
+            fieldBus.on('changed', function (message) {
                 parentBus.emit('parameter-changed', {
                     parameter: parameterSpec.id(),
                     newValue: message.newValue
@@ -101,10 +101,44 @@ define([
 
 
             // An input widget may ask for the current model value at any time.
-            bus.on('sync', function () {
+            fieldBus.on('sync', function () {
                 parentBus.emit('parameter-sync', {
                     parameter: parameterSpec.id()
                 });
+            });
+            
+            /*
+             * Or in fact any parameter value at any time...
+             */
+            fieldBus.on('get-parameter-value', function (message) {
+                parentBus.request({
+                   parameter: message.parameter 
+                }, {
+                    key: 'get-parameter-value'
+                })
+                    .then(function (message) {
+                        bus.emit('parameter-value', {
+                            parameter: message.parameter
+                        });
+                    });
+            });
+            
+            //bus.on('parameter-value', function (message) {
+            //    bus.emit('parameter-value', message);
+            //});
+            
+            fieldBus.respond({
+                key: {
+                    type: 'get-parameter'
+                },
+                handle: function (message) {
+                    console.log('GOT?', message);
+                    return parentBus.request(message, {
+                        key: {
+                            type: 'get-parameter'
+                        }
+                    });
+                }
             });
 
             // Just pass the update along to the input widget.
@@ -134,7 +168,7 @@ define([
                     useRowHighight: true,
                     initialValue: value,
                     parameterSpec: parameterSpec,
-                    bus: bus,
+                    bus: fieldBus,
                     workspaceId: workspaceInfo.id
                 })
             };
@@ -174,8 +208,8 @@ define([
                         ]
                     }),
                     dom.makePanel('Inputs', 'input-fields'),
-                    dom.makePanel('Outputs', 'output-fields'),
-                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden'})]), 'parameter-fields')
+                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden'})]), 'parameter-fields'),
+                    dom.makePanel('Outputs', 'output-fields')
                 ]);
 
             return {
@@ -314,7 +348,7 @@ define([
                                 });
                                 rowWidget.attach(rowNode);
                             } catch (ex) {
-                                console.error('Error making paramter field widget', ex);
+                                console.error('Error making parameter field widget', ex);
                                 var errorDisplay = div({style: {border: '1px red solid'}}, [
                                     ex.message
                                 ]);

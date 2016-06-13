@@ -13,8 +13,8 @@ define([
     'bluebird',
     'jquery',
     'kb_common/html',
-    '../events',
-    '../dom'
+    'common/events',
+    'common/dom'
 ], function (Promise, $, html, Events, Dom) {
     'use strict';
     var t = html.tag,
@@ -191,7 +191,7 @@ define([
             }
 
             return div([
-                div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
+                // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
                 div({dataElement: 'big-tip', style: {display: 'none'}}, html.makeTabs({
                     tabs: [
                         {
@@ -215,6 +215,11 @@ define([
                             content: rawSpec(spec)
                         }
                     ]}))
+            ]);
+        }
+        function renderLabelTip() {
+            return div([
+                div({dataElement: 'little-tip', style: {display: 'none'}}, parameterInfoLittleTip(spec))
             ]);
         }
 
@@ -270,7 +275,7 @@ define([
                     label({class: 'col-md-3 control-label kb-method-parameter-name'}, [
                         spec.label()
                     ]),
-                    div({class: 'col-md-4'}, div({class: 'kb-method-parameter-input'}, [
+                    div({class: 'col-md-9'}, div({class: 'kb-method-parameter-input'}, [
                         div({class: 'input-group', style: {width: '100%'}}, [
                             div({dataElement: 'input-control'}),
                             div({class: 'input-group-addon', style: {width: '30px', padding: '0'}}, [
@@ -284,16 +289,16 @@ define([
                                         type: 'click',
                                         handler: function (e) {
                                             var info = document.getElementById(infoId),
-                                                littleTip = info.querySelector('[data-element="little-tip"]'),
-                                                bigTip = info.querySelector('[data-element="big-tip"]');
+                                                littleTip = container.querySelector('[data-element="little-tip"]'),
+                                                bigTip = container.querySelector('[data-element="big-tip"]');
                                             // the info button is used to switch between two different
                                             // displays -- a compact display of type and a
                                             // tabview with richer info to explore.
                                             if (littleTip.style.display === 'none') {
-                                                bigTip.style.display = 'none';
+                                                bigTip.style.display = 'block';
                                                 littleTip.style.display = 'block';
                                             } else {
-                                                bigTip.style.display = 'block';
+                                                bigTip.style.display = 'none';
                                                 littleTip.style.display = 'none';
                                             }
                                         }
@@ -303,8 +308,15 @@ define([
                                     ))
                             ])
                         ])
-                    ])),
-                    div({class: 'col-md-5'}, div({id: infoId}, [
+                    ]))
+                    
+
+                ]),
+                div({class: 'row', dataElement: 'info-panel'}, [
+                    label({class: 'col-md-3'}, [
+                        renderLabelTip()
+                    ]),
+                    div({class: 'col-md-9'}, div({id: infoId}, [
                         renderInfoTip()
                     ]))
 

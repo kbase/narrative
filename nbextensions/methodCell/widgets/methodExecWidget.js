@@ -3,12 +3,12 @@
 
 define([
     'uuid',
-    '../props',
-    '../utils',
-    '../jobs',
-    '../dom',
-    '../runtime',
-    '../events',
+    'common/props',
+    'common/utils',
+    'common/jobs',
+    'common/dom',
+    'common/runtime',
+    'common/events',
     'kb_common/format',
     'kb_common/html',
     'kb_service/client/workspace'
@@ -568,8 +568,9 @@ define([
                     canonicalState = 'launch-error';
                     error = {
                         location: 'launching',
+                        type: launchEvent.error_type,
                         message: launchEvent.error_message,
-                        detail: 'An error occurred while launching the method'
+                        detail: launchEvent.error_stacktrace
                     };
                     break;
                 default:

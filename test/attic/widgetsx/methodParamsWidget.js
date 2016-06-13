@@ -6,14 +6,14 @@ define([
     // CDN
     'kb_common/html',
     // LOCAL
-    '../../dom',
-    '../../events',
-    '../../props',
+    '../dom',
+    '../events',
+    '../props',
     // Wrapper for inputs
-    '../inputWrapperWidget',
-    '../fieldWidget',
-    '../paramInputResolver',
-    '../../runtime'
+    './inputWrapperWidget',
+    './fieldWidget',
+    './paramInputResolver',
+    '../runtime'
         // All the input widgets
 
 ], function (

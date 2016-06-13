@@ -4,10 +4,10 @@ define([
     'bluebird',
     'base/js/namespace',
     'kb_common/html',
-    '../../validation',
-    '../../events',
-    '../../runtime',
-    '../../dom',
+    'common/validation',
+    'common/events',
+    'common/runtime',
+    'common/dom',
     'bootstrap',
     'css!font-awesome'
 ], function (Promise, Jupyter, html, Validation, Events, Runtime, Dom) {

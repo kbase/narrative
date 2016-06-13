@@ -5,8 +5,8 @@ define([
     'kb_common/html',
     'kb_service/client/workspace',
     'kb_service/utils',
-    '../../runtime',
-    '../../props',
+    'common/runtime',
+    'common/props',
     'bootstrap',
     'css!font-awesome'
 ], function (Promise, html, Workspace, serviceUtils, Runtime, Props) {

@@ -326,7 +326,7 @@ define([
                 channel = ensureChannel(channelName);
 
             function on(type, handler) {
-                listen({
+                return listen({
                     channel: channelName,
                     key: {type: type},
                     handle: handler
@@ -337,7 +337,7 @@ define([
                 if (message === undefined) {
                     message = {};
                 }
-                send(message, {
+                return send(message, {
                     channel: channelName,
                     key: {type: type}
                 });
@@ -346,12 +346,25 @@ define([
             function channelSend(message, address) {
                 address = address || {};
                 address.channel = channelName;
-                send(message, address);
+                return send(message, address);
             }
             
             function channelListen(spec) {
                 spec.channel = channelName;
-                listen(spec);
+                return listen(spec);
+            }
+            
+            function channelRequest(message, address) {
+                console.log('REQUEST2', message, address);
+                address = address || {};
+                address.channel = channelName;
+                return request(message, address);
+            }
+            
+            function channelRespond(spec) {
+
+                spec.channel = channelName;
+                return respond(spec);
             }
 
             function bus() {
@@ -363,7 +376,9 @@ define([
                 emit: emit,
                 bus: bus,
                 listen: channelListen,
-                send: channelSend
+                send: channelSend,
+                respond: channelRespond,
+                request: channelRequest
             };
         }
         

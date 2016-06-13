@@ -5,8 +5,8 @@ define([
     'bluebird',
     'notebook/js/outputarea',
     'kb_common/html',
-    '../events',
-    '../utils',
+    'common/events',
+    'common/utils',
     '../methodCellController'
 ], function (Promise, OutputArea, html, Events, utils, MethodCellController) {
     'use strict';

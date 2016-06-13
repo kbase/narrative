@@ -12,7 +12,7 @@ define([
     'kbaseTabs',
     'kbaseViewLiveRunLog',
     'kbaseReportView',
-    'nbextensions/methodCell/runtime',
+    'common/runtime',
     'text!kbase/templates/job_status_table.html'
 ], function (
     $,

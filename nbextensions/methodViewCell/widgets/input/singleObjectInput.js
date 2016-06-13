@@ -7,10 +7,10 @@ define([
     'kb_common/utils',
     'kb_service/client/workspace',
     'kb_service/utils',
-    '../../validation',
-    '../../events',
-    '../../runtime',
-    '../../dom',
+    'common/validation',
+    'common/events',
+    'common/runtime',
+    'common/dom',
     'bootstrap',
     'css!font-awesome'
 ], function ($, Promise, html, utils, Workspace, serviceUtils, Validation, Events, Runtime, Dom) {

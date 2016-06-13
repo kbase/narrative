@@ -64,6 +64,9 @@ require.config({
         css: 'http://cdn.kbase.us/cdn/require-css/0.1.8/css',
         'font-awesome': 'http://cdn.kbase.us/cdn/font-awesome/4.3.0/css/font-awesome',
         handlebars: 'http://cdn.kbase.us/cdn/handlebars/4.0.5/handlebars',
+        'google-code-prettify': 'http://cdn.kbase.us/cdn/google-code-prettify/1.2.0/',
+        
+        common: 'kbase/js/common/',
 
 
         /***

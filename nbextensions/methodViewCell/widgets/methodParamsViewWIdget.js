@@ -6,10 +6,10 @@ define([
     // CDN
     'kb_common/html',
     // LOCAL
-    '../dom',
-    '../runtime',
-    '../events',
-    '../props',
+    'common/dom',
+    'common/runtime',
+    'common/events',
+    'common/props',
     // Wrapper for inputs
     './inputWrapperWidget',
     './fieldWidget',
@@ -142,8 +142,8 @@ define([
                         ]
                     }),
                     dom.makePanel('Inputs', 'input-fields'),
-                    dom.makePanel('Outputs', 'output-fields'),
-                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden'})]), 'parameter-fields')
+                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden'})]), 'parameter-fields'),
+                    dom.makePanel('Outputs', 'output-fields')
                 ]);
 
             return {

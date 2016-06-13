@@ -5,8 +5,8 @@ define([
     'jquery',
     'base/js/namespace',
     'kb_common/html',
-    '../../validation',
-    '../../events',
+    'common/validation',
+    'common/events',
     'bootstrap',
     'css!font-awesome'
 ], function (Promise, $, Jupyter, html, Validation, Events) {

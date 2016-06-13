@@ -22,6 +22,7 @@ from biokbase.narrative.common import kblogging
 import logging
 from ipykernel.comm import Comm
 import datetime
+import traceback
 
 class AppManager(object):
     """
@@ -33,7 +34,7 @@ class AppManager(object):
     am = AppManager()
     am.available_apps()
         # show the set of apps with a brief description of each.
-    am.app_usage(app_id)ß
+    am.app_usage(app_id)
         # show how to use a app and set its parameters.
     job = am.run_app(app_id, input1=value1, input2=value2, ...)
         # run an app with given inputs.
@@ -116,12 +117,17 @@ class AppManager(object):
         try:
             self.run_app_internal(*args, **kwargs)
         except Exception, e:
+            e_type = type(e).__name__
+            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
+            e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
             self._send_comm_message('run_status', {
                 'event': 'error',
                 'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
                 'cell_id': kwargs['cell_id'],
                 'run_id': kwargs['run_id'],
-                'error_message': str(e)
+                'error_message': e_message,
+                'error_type': e_type,
+                'error_stacktrace': e_trace
             })
     
     def run_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
@@ -167,7 +173,7 @@ class AppManager(object):
         # Get the spec & params
         spec = self.spec_manager.get_spec(app_id, tag)
         if not 'behavior' in spec or not 'kb_service_input_mapping' in spec['behavior']:
-            raise Exception("Only good for SDK-made apps!")
+            raise Exception("This method is !")
         spec_params = self.spec_manager.app_params(spec)
 
 
@@ -238,6 +244,9 @@ class AppManager(object):
         app_name = spec['behavior']['kb_service_method']
         service_name = spec['behavior']['kb_service_name']
         service_ver = spec['behavior'].get('kb_service_version', None)
+        #if (service_ver == None):
+        #    raise ValueError('Invalid method - service version (behavior.kb_service_version) not found in spec')
+        
         service_url = spec['behavior']['kb_service_url']
         # 3. set up app structure
         # app = {'name': 'App wrapper for method ' + app_id,
@@ -280,7 +289,7 @@ class AppManager(object):
         except Exception, e:
             log_info.update({'err': str(e)})
             self._log.setLevel(logging.ERROR)
-            kblogging.log_event(_kblog, "run_app", log_info)
+            kblogging.log_event(self._log, "run_app", log_info)
             raise
 
         self._send_comm_message('run_status', {

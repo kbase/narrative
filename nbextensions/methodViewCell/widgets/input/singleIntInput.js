@@ -5,9 +5,9 @@ define([
     'jquery',
     'base/js/namespace',
     'kb_common/html',
-    '../../validation',
-    '../../events',
-    '../../dom',
+    'common/validation',
+    'common/events',
+    'common/dom',
     'bootstrap',
     'css!font-awesome'
 ], function (Promise, $, Jupyter, html, Validation, Events, Dom) {
@@ -32,9 +32,6 @@ define([
         // Validate configuration.
         // Nothing to do...
 
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
         options.enabled = true;
 
 
@@ -150,14 +147,12 @@ define([
                                     validate()
                                         .then(function (result) {
                                             if (result.isValid) {
-                                                bus.send({
-                                                    type: 'changed',
+                                                bus.emit('changed', {
                                                     newValue: result.value
                                                 });
                                                 setModelValue(result.value);
                                             }
-                                            bus.send({
-                                                type: 'validation',
+                                            bus.emit('validation', {
                                                 errorMessage: result.errorMessage,
                                                 diagnosis: result.diagnosis
                                             });
@@ -221,7 +216,7 @@ define([
                     });
                 });
         }
-
+        
         // LIFECYCLE API
 
         function start() {

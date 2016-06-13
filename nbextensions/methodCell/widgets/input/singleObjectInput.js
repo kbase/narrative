@@ -7,10 +7,10 @@ define([
     'kb_common/utils',
     'kb_service/client/workspace',
     'kb_service/utils',
-    '../../validation',
-    '../../events',
-    '../../runtime',
-    '../../dom',
+    'common/validation',
+    'common/events',
+    'common/runtime',
+    'common/dom',
     'bootstrap',
     'css!font-awesome'
 ], function ($, Promise, html, utils, Workspace, serviceUtils, Validation, Events, Runtime, Dom) {
@@ -318,7 +318,10 @@ define([
                             bus.on('update', function (message) {
                                 setModelValue(message.value);
                             });
-                            bus.on('workspace-changed', function (message) {
+                            //bus.on('workspace-changed', function (message) {
+                            //    doWorkspaceChanged();
+                            //});
+                            runtime.bus().on('workspace-changed', function (message) {
                                 doWorkspaceChanged();
                             });
                             bus.emit('sync');

@@ -5,8 +5,8 @@ define([
     'kb_common/html',
     'kb_service/client/workspace',
     'kb_service/utils',
-    '../../runtime',
-    '../../props',
+    'common/runtime',
+    'common/props',
     'bootstrap',
     'css!font-awesome'
 ], function (Promise, html, Workspace, serviceUtils, Runtime, Props) {
@@ -60,17 +60,10 @@ define([
             getObject()
                 .then(function (objectInfo) {
                     // console.log('OBJECT INFO', objectInfo);            
-                    container.innerHTML = div([
-                        div(objectInfo.name),
-                        div(objectInfo.typeName  + 'v' + objectInfo.typeMajorVersion + '.' + objectInfo.typeMinorVersion + ' (' + objectInfo.typeModule + ') '),
-                        div(objectInfo.save_date)
-                        
-                    ])
-                        
-                        div([
-                        String(model.getItem('value')),
-                        '-',
-                        objectInfo.name
+                    container.innerHTML = div({style: {padding: '3px', border: '1px solid gray', backgroundColor: '#eeeeee'}}, [
+                        div({style: {fontWeight: 'bold'}}, objectInfo.name),
+                        div({style: {fontStyle: 'italic'}}, objectInfo.typeName  + ' v' + objectInfo.typeMajorVersion + '.' + objectInfo.typeMinorVersion + ' (' + objectInfo.typeModule + ') '),
+                        div({style: {fontStyle: 'italic'}}, objectInfo.save_date)                        
                     ]);
                 });
         }

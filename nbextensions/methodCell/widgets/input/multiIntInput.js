@@ -2,14 +2,16 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'jquery',
     'base/js/namespace',
     'kb_common/html',
-    '../../validation',
-    '../../events',
+    'common/validation',
+    'common/events',
+    'common/dom',
+    'common/runtime',
+    './singleIntInput',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, $, Jupyter, html, Validation, Events) {
+], function (Promise, Jupyter, html, Validation, Events, Dom, Runtime, SingleIntInputWidget) {
     'use strict';
 
     // Constants
@@ -19,39 +21,72 @@ define([
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
-            parent,
             container,
-            $container,
+            parent,
             bus = config.bus,
-            model = [];
-
-        // Validate configuration.
-        // Nothing to do...
-
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
-        options.enabled = true;
-
+            dom,
+            model = {
+                value: []
+            },
+        runtime = Runtime.make(),
+            widgets = [];
 
         function normalizeModel() {
-            var newModel = model.filter(function (item) {
+            var newModel = model.value.filter(function (item) {
                 return item ? true : false;
             });
-            model = newModel;
-        }
-        function syncModel(value) {
-            model = [];
-            config.initialValue.forEach(function (item) {
-                model.push(item);
-            });
-            normalizeModel();
+            model.value = newModel;
         }
 
-        if (config.initialValue) {
-            syncModel(config.initialValue);
+        function setModelValue(value, index) {
+            return Promise.try(function () {
+                if (index !== undefined) {
+                    if (value) {
+                        model.value[index] = value;
+                    } else {
+                        model.value.splice(index, 1);
+                    }
+                } else {
+                    if (value) {
+                        model.value = value.map(function (item) {
+                            return item;
+                        });
+                    } else {
+                        unsetModelValue();
+                    }
+                }
+                normalizeModel();
+            })
+                .then(function () {
+                    render();
+                });
         }
 
+        function addModelValue(value) {
+            return Promise.try(function () {
+                model.value.push(value);
+            })
+                .then(function () {
+                    render();
+                });
+        }
+
+        function unsetModelValue() {
+            return Promise.try(function () {
+                model.value = [];
+            })
+                .then(function (changed) {
+                    render();
+                });
+        }
+
+        function resetModelValue() {
+            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
+                setModelValue(spec.spec.default_values);
+            } else {
+                unsetModelValue();
+            }
+        }
 
         /*
          * If the parameter is optional, and is empty, return null.
@@ -63,7 +98,7 @@ define([
          */
 
         function getInputValue() {
-            return $container.find('[data-element="input-container"] [data-element="input"]').val();
+            return dom.getElement('input-container.input').value;
         }
 
         /*
@@ -94,10 +129,10 @@ define([
                     };
                 }
 
-                var validationOptions = copyProps(spec.spec.text_options, ['min_int', 'max_int']);
+                var validationOptions = copyProps(spec.spec.text_options, ['regexp_constraint', 'min_length', 'max_length']);
 
                 validationOptions.required = spec.required();
-                return Validation.validateIntString(rawValue, validationOptions);
+                return Validation.validateTextString(rawValue, validationOptions);
             });
         }
 
@@ -110,106 +145,186 @@ define([
          * Places it into the dom node
          * Hooks up event listeners
          */
-        function makeInputControl(currentValue, index, events, bus) {
+
+
+
+        function makeSingleInputControl(currentValue, index, events, bus) {
             // CONTROL
             var preButton, postButton,
-                control = input({
-                    id: events.addEvents({
-                        events: [
-                            {
-                                type: 'change',
-                                handler: function (e) {
-                                    var control = e.target,
-                                        value = control.value,
-                                        index = control.getAttribute('data-index');
-                                    validate(value)
-                                        .then(function (result) {
-                                            if (result.isValid) {
-                                                if (index === 'add') {
-                                                    model.push(result.parsedValue);
-                                                } else {
-                                                    index = parseInt(index);
-                                                    model[index] = result.parsedValue;
-                                                }
-                                                normalizeModel();
+                widgetId = html.genId(),
+                inputBus = runtime.bus().makeChannelBus(),
+                inputWidget = SingleIntInputWidget.make({
+                    bus: inputBus,
+                    // initialValue: config.initialValue,
+                    parameterSpec: spec,
+                    spec: spec,
+                    fieldSpec: config.fieldSpec
+                }),
+//                displayWidget = SingleObjectDisplayWidget.make({
+//                    bus: inputBus,
+//                    parameterSpec: spec,
+//                    workspaceInfo: config.workspaceInfo,
+//                    workspaceId: config.workspaceId
+//                }),
+                widgetWrapper = {
+                    id: widgetId,
+                    instance: inputWidget,
+                    bus: inputBus,
+                    index: index
+                },
+            placeholder = div({id: widgetId}),
+                errorRow;
 
-                                                bus.send({
-                                                    type: 'changed',
-                                                    newValue: model
-                                                });
-                                            }
-                                            bus.send({
-                                                type: 'validation',
-                                                errorMessage: result.errorMessage,
-                                                diagnosis: result.diagnosis
-                                            });
-                                        });
-                                }
-                            },
-                            {
-                                type: 'focus',
-                                handler: function (e) {
-                                    Jupyter.keyboard_manager.disable();
-                                }
-                            },
-                            {
-                                type: 'blur',
-                                handler: function (e) {
-                                    Jupyter.keyboard_manager.enable();
-                                }
-                            }
-                        ]}),
-                    type: 'text',
-                    class: 'form-control',
-                    dataElement: 'input',
-                    dataIndex: String(index),
-                    value: currentValue
+            widgets.push(widgetWrapper);
+
+            // set up listeners for the input
+            inputBus.on('sync', function (message) {
+                var value = model.value[index];
+                if (value) {
+                    inputBus.emit('update', {
+                        value: value
+                    });
+                }
+            });
+//            inputBus.on('validation', function (message) {
+//                if (message.diagnosis === 'optional-empty') {
+//                    // alert('delete me!');
+//                    model.value.splice(widgetWrapper.index, 1);
+//                    bus.emit('changed', {
+//                        newValue: model.value
+//                    });
+//                    render();
+//                }
+//            });
+            inputBus.on('changed', function (message) {
+                model.value[index] = message.newValue;
+                // TODO: validate the main control...
+                bus.emit('changed', {
+                    newValue: model.value
                 });
-            if (index === 'add') {
-                preButton = div({class: 'input-group-addon', style: {width: '10ex'}}, 'Add');
-                postButton = div({class: 'input-group-addon'}, button({
-                    class: 'btn btn-primary btn-xs',
-                    type: 'button',
-                    style: {width: '4ex'},
-                    id: events.addEvent({type: 'click', handler: function (e) {
-                            // alert('add me');
-                        }})
-                }, '+'));
-            } else {
-                preButton = div({class: 'input-group-addon', style: {width: '10ex'}}, index + '.');
-                postButton = div({class: 'input-group-addon'}, button({
-                    class: 'btn btn-danger btn-xs',
-                    type: 'button',
-                    style: {width: '4ex'},
-                    dataIndex: String(index),
-                    id: events.addEvent({type: 'click', handler: function (e) {
-                            var index = e.target.getAttribute('data-index');
-                            var control = container.querySelector('input[data-index="' + index + '"]');
-                            control.value = '';
-                            control.dispatchEvent(new Event('change'));
+            });
 
-                            // alert('delete me ' + control.value);
-                        }})
-                }, 'x'));
-            }
-            return div({class: 'input-group'}, [
-                preButton,
-                control,
-                postButton
+            preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, String(index + 1) + '.');
+            postButton = div({class: 'input-group-addon', style: {padding: '0'}}, button({
+                class: 'btn btn-danger btn-link btn-xs',
+                type: 'button',
+                style: {width: '4ex'},
+                dataIndex: String(index),
+                id: events.addEvent({type: 'click', handler: function (e) {
+                        // no, we don't need to consult the control, we just remove 
+                        // it...
+                        model.value.splice(widgetWrapper.index, 1);
+                        //var index = e.target.getAttribute('data-index'),
+                        //    control = container.querySelector('input[data-index="' + index + '"]');
+                        //control.value = '';
+                        //control.dispatchEvent(new Event('change'));
+                        bus.emit('changed', {
+                            newValue: model.value
+                        });
+                        render();
+                    }})
+            }, 'x'));
+            return div({dataElement: 'input-row', dataIndex: String(index), style: {width: '100%'}}, [
+                div({class: 'input-group'}, [
+                    preButton,
+                    placeholder,
+                    postButton
+                ])
             ]);
         }
 
-        function render(input) {
-            var events = Events.make(),
-                items = model.map(function (value, index) {
-                    return makeInputControl(value, index, events, bus);
-                });
+        function makeNewInputControl(currentValue, events, bus) {
+            // CONTROL
+            var preButton, postButton,
+                widgetId = html.genId(),
+                inputBus = runtime.bus().makeChannelBus(),
+                inputWidget = SingleIntInputWidget.make({
+                    bus: inputBus,
+                    // initialValue: config.initialValue,
+                    parameterSpec: spec,
+                    spec: spec,
+                    fieldSpec: config.fieldSpec
+                }),
+                    errorRow,
+                placeholder = div({id: widgetId});
 
-            items = items.concat(makeInputControl('', 'add', events, bus));
+            widgets.push({
+                id: widgetId,
+                instance: inputWidget,
+                bus: inputBus
+            });
+
+            inputBus.on('changed', function (message) {
+                model.value.push(message.newValue);
+
+                // TODO: and insert a new row ...
+
+                // first attempt, re-render the whole shebang.
+                render();
+
+                // TODO: validate the main control...
+                bus.emit('changed', {
+                    newValue: model.value
+                });
+            });
+
+            preButton = div({class: 'input-group-addon', style: {width: '5ex', padding: '0'}}, '');
+            postButton = div({class: 'input-group-addon', style: {padding: '0'}}, button({
+                class: 'btn btn-primary btn-link btn-xs',
+                type: 'button',
+                style: {width: '4ex'},
+                id: events.addEvent({type: 'click', handler: function (e) {
+                        // alert('add me');
+                    }})
+            }, '+'));
+
+            return div({dataElement: 'input-row', style: {width: '100%'}}, [
+                div({class: 'input-group'}, [
+                    preButton,
+                    placeholder,
+                    postButton
+                ])
+            ]);
+        }
+
+        function makeInputControl(events, bus) {
+            var items = model.value.map(function (value, index) {
+                return makeSingleInputControl(value, index, events, bus);
+            });
+
+
+            items = items.concat(makeNewInputControl('', events, bus));
 
             var content = items.join('\n');
+            return content;
+        }
 
-            $container.find('[data-element="input-container"]').html(content);
+        function render() {
+
+            // if we have input widgets already, tear them down.
+
+            widgets.forEach(function (widget) {
+                widget.bus.emit('stop');
+
+                // TODO figure out how to remove unused channels.
+                // widget.bus.done();
+            });
+            widgets = [];
+            // we don't have to wait for anything...
+
+            var events = Events.make(),
+                control = makeInputControl(events, bus);
+
+            dom.setContent('input-container', control);
+            widgets.forEach(function (widget) {
+                widget.instance.start()
+                    .then(function () {
+                        widget.bus.emit('run', {
+                            debug: true,
+                            node: document.querySelector('#' + widget.id)
+                        });
+                    });
+            });
             events.attachEvents(container);
         }
 
@@ -225,7 +340,7 @@ define([
             };
         }
         function autoValidate() {
-            return Promise.all(model.map(function (value, index) {
+            return Promise.all(model.value.map(function (value, index) {
                 // could get from DOM, but the model is the same.
                 var rawValue = container.querySelector('[data-index="' + index + '"]').value;
                 // console.log('VALIDATE', value);
@@ -236,78 +351,61 @@ define([
                     // validation here, and update the individual rows
                     // for now -- just create one mega message.
                     var errorMessages = [],
-                        validation;
+                        validationMessage;
                     results.forEach(function (result, index) {
                         if (result.errorMessage) {
                             errorMessages.push(result.errorMessage + ' in item ' + index);
                         }
                     });
                     if (errorMessages.length) {
-                        validation = {
-                            type: 'validation',
+                        validationMessage = {
                             diagnosis: 'invalid',
                             errorMessage: errorMessages.join('<br/>')
                         };
                     } else {
-                        validation = {
-                            type: 'validation',
+                        validationMessage = {
                             diagnosis: 'valid'
                         };
                     }
-                    bus.send(validation);
+                    bus.emit('validation', validationMessage);
+
                 });
         }
 
 
         // LIFECYCLE API
 
-        function init() {
-        }
-
-        function attach(node) {
-            return Promise.try(function () {
-                parent = node;
-                container = node.appendChild(document.createElement('div'));
-                $container = $(container);
-
-                var events = Events.make(),
-                    theLayout = layout(events);
-
-                container.innerHTML = theLayout.content;
-                events.attachEvents(container);
-            });
-        }
-
         function start() {
             return Promise.try(function () {
-                bus.listen({
-                    test: function (message) {
-                        return (message.type === 'changed');
-                    },
-                    handle: function (message) {
-                        render();
-                    }
+                // runtime.bus().logMessages(true);
+
+                bus.on('run', function (message) {
+                    parent = message.node;
+                    container = parent.appendChild(document.createElement('div'));
+                    dom = Dom.make({node: container});
+
+                    var events = Events.make(),
+                        theLayout = layout(events);
+
+                    container.innerHTML = theLayout.content;
+                    events.attachEvents(container);
+
+                    bus.on('reset-to-defaults', function (message) {
+                        resetModelValue();
+                    });
+                    bus.on('update', function (message) {
+                        setModelValue(message.value);
+                    });
+                    bus.on('refresh', function () {
+
+                    });
+                    bus.emit('sync');
                 });
             });
-        }
-
-        function run(input) {
-            return Promise.try(function () {
-                if (input.value) {
-                    syncModel(input.value);
-                }
-                return render(input);
-            })
-                .then(function () {
-                    return autoValidate();
-                });
         }
 
         return {
-            init: init,
-            attach: attach,
-            start: start,
-            run: run
+            start: start
         };
     }
 

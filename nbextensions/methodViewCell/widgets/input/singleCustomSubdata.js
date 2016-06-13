@@ -6,11 +6,11 @@ define([
     'handlebars',
     'kb_common/html',
     'kb_service/client/workspace',
-    '../../validation',
-    '../../events',
-    '../../runtime',
-    '../../dom',
-    '../../props',
+    'common/validation',
+    'common/events',
+    'common/runtime',
+    'common/dom',
+    'common/props',
     'bootstrap',
     'css!font-awesome'
 ], function (

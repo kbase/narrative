@@ -6,11 +6,11 @@ define([
     'handlebars',
     'kb_common/html',
     'kb_service/client/workspace',
-    '../../validation',
-    '../../events',
-    '../../runtime',
-    '../../dom',
-    '../../props',
+    'common/validation',
+    'common/events',
+    'common/runtime',
+    'common/dom',
+    'common/props',
     'bootstrap',
     'css!font-awesome'
 ], function (
@@ -44,9 +44,10 @@ define([
 
     // Constants
     var t = html.tag,
-        div = t('div'), p = t('p'),
-        select = t('select'),
-        option = t('option');
+        div = t('div'), p = t('p'), span = t('span'),
+        select = t('select'), input = t('input'),
+        table = t('table'), tr = t('tr'), td = t('td'),
+        option = t('option'), button = t('button');
 
     function factory(config) {
         var options = {},
@@ -80,7 +81,7 @@ define([
         //}
 
         options.enabled = true;
-        
+
         function buildOptions() {
             var availableValues = model.getItem('availableValues'),
                 value = model.getItem('value') || [],
@@ -102,12 +103,188 @@ define([
                 }, optionLabel);
             }));
         }
-        
+
         function buildCount() {
             var availableValues = model.getItem('availableValues') || [],
                 value = model.getItem('value') || [];
-            
+
             return String(value.length) + ' / ' + String(availableValues.length) + ' items';
+        }
+
+        function filterItems(items, filter) {
+            if (!filter) {
+                return items;
+            }
+            var re = new RegExp(filter);
+            return items.filter(function (item) {
+                if (item.label.match(re, 'i')) {
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        function doFilterItems() {
+            var items = model.getItem('availableValues', []),
+                filteredItems = filterItems(items, model.getItem('filter'));
+            model.setItem('filteredAvailableItems', filteredItems);
+        }
+        
+        function didChange() {
+            validate()
+                .then(function (result) {
+                    if (result.isValid) {
+                        model.setItem('value', result.value);
+                        updateInputControl('value');
+                        bus.emit('changed', {
+                            newValue: result.value
+                        });
+                    } else if (result.diagnosis === 'required-missing') {
+                        model.setItem('value', result.value);
+                        updateInputControl('value');
+                        bus.emit('changed', {
+                            newValue: result.value
+                        });
+                    }
+                    bus.emit('validation', {
+                        errorMessage: result.errorMessage,
+                        diagnosis: result.diagnosis
+                    });
+                });
+        }
+
+        function doAddItem(id) {
+            var selectedItems = model.getItem('selectedItems');
+            selectedItems.push(id);
+            model.setItem('selectedItems', selectedItems);
+            didChange();           
+        }
+        
+        function doRemoveSelectedItem(itemToRemove) {
+            var selectedItems = model.getItem('selectedItems'),
+                newSelectedItems = selectedItems.filter(function (selectedItem) {
+                    return (selectedItem !== itemToRemove);
+                });
+                
+            model.setItem('selectedItems', newSelectedItems);
+            didChange();            
+        }
+
+
+
+        function renderAvailableItems(events) {
+            var items = model.getItem('filteredAvailableItems', []),
+                from = model.getItem('showFrom'),
+                to = model.getItem('showTo'),
+                itemsToShow = items.slice(from, to);
+
+            dom.setContent('available-items-count', String(items.length));
+
+            var content = itemsToShow.map(function (item, index) {
+                return div({style: {border: '1px green dashed'}}, [
+                    table({style: {width: '100%'}}, tr([
+                        td({style: {width: '10px', padding: '2px', backgroundColor: 'gray', color: 'white'}}, String(from + index + 1)),
+                        td({style: {whiteSpace: 'normal'}}, item.label),
+                        td({style: {width: '40px'}}, [
+                            button({
+                                class: 'btn btn-default',
+                                type: 'button',
+                                dataItemId: item.id,
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function (e) {
+                                        doAddItem(item.id);
+                                    }
+                                })}, '&gt;')
+                        ])
+                    ]))
+                ]);
+            })
+                .join('\n');
+
+            dom.setContent('available-items', content);
+            dom.setContent('filtered-items-count', items.length);
+        }
+        
+        function renderSelectedItems(events) {
+            var selectedItems = model.getItem('selectedItems') || [],
+                content = selectedItems.map(function (item) {
+                    return div({style: {border: '1px blue dashed'}}, [
+                        table({style: {width: '100%'}}, tr([
+                            td({style: {width: '40px'}}, [
+                                button({
+                                    class: 'btn btn-default',
+                                    type: 'button',
+                                    id: events.addEvent({
+                                        type: 'click',
+                                        handler:  function () {
+                                            doRemoveSelectedItem(item);
+                                        }
+                                    })
+                                }, '&lt;')
+                            ]),
+                            td(item)
+                        ]))
+                    ]);
+                }).join('\n');
+            dom.setContent('selected-items', content);
+        }
+
+        function setPageStart(newFrom) {
+            var from = model.getItem('showFrom'),
+                to = model.getItem('to'),
+                newTo,
+                total = model.getItem('filteredAvailableItems', []).length,
+                pageSize = 5;
+
+            if (newFrom <= 0) {
+                newFrom = 0;
+            } else if (newFrom >= total) {
+                newFrom = total - pageSize;
+                if (newFrom < 0) {
+                    newFrom = 0;
+                }
+            }
+
+            if (newFrom !== from) {
+                model.setItem('showFrom', newFrom);
+            }
+
+            newTo = newFrom + pageSize;
+            if (newTo >= total) {
+                newTo = total;
+            }
+            if (newTo !== to) {
+                model.setItem('showTo', newTo);
+            }
+        }
+
+        function movePageStart(diff) {
+            setPageStart(model.getItem('showFrom') + diff);
+        }
+
+        function doPreviousPage() {
+            movePageStart(-5);
+        }
+        function doNextPage() {
+            movePageStart(5);
+        }
+        function doFirstPage() {
+            setPageStart(0);
+        }
+        function doLastPage() {
+            setPageStart(model.getItem('filteredAvailableItems').length);
+        }
+        function doSearchKeyUp(e) {
+            if (e.target.value.length > 2) {
+                model.setItem('filter', e.target.value);
+                doFilterItems();
+            } else {
+                if (model.getItem('filter')) {
+                    model.setItem('filter', null);
+                    doFilterItems();
+                }
+            }
         }
 
         function makeInputControl(events, bus) {
@@ -131,6 +308,106 @@ define([
             //}
 
             selectOptions = buildOptions();
+
+            return div([
+                div({class: 'row'}, [
+                    div({class: 'col-md-6'}, [
+                        'Available Features'
+                    ]),
+                    div({class: 'col-md-6'}, [
+                        'Selected'
+                    ])
+                ]),
+                div({class: 'row'}, [
+                    div({class: 'col-md-3'}, [
+                        div({class: ''}, [
+                            input({
+                                class: 'form-contol',
+                                style: {width: '100%'},
+                                placeholder: 'search',
+                                value: model.getItem('filter') || '',
+                                id: events.addEvent({
+                                    type: 'keyup',
+                                    handler: function (e) {
+                                        doSearchKeyUp(e);
+                                    }
+                                })
+                            })
+                        ])
+                    ]),
+                    div({class: 'col-md-3', style: {textAlign: 'center'}}, [
+                        span({dataElement: 'filtered-items-count'}), ' filtered, ',
+                        span({dataElement: 'available-items-count'}), ' elements'
+                    ]),
+                    div({class: 'col-md-6'}, [
+                    ])
+                ]),
+                div({class: 'row'}, [
+                    div({class: 'col-md-6'}, [
+                        div([
+                            button({
+                                type: 'button',
+                                class: 'btn btn-default',
+                                style: {xwidth: '100%'},
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function () {
+                                        doFirstPage();
+                                    }
+                                })
+                            }, 'top'),
+                            button({
+                                class: 'btn btn-default',
+                                type: 'button',
+                                style: {xwidth: '50%'},
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function () {
+                                        doPreviousPage();
+                                    }
+                                })
+                            }, '^'),
+                            button({
+                                class: 'btn btn-default',
+                                type: 'button',
+                                style: {xwidth: '100%'},
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function () {
+                                        doNextPage();
+                                    }
+                                })
+                            }, 'v'),
+                            button({
+                                type: 'button',
+                                class: 'btn btn-default',
+                                style: {xwidth: '100%'},
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function () {
+                                        doLastPage();
+                                    }
+                                })
+                            }, 'bottom')
+                        ]),
+                    ]),
+                    div({class: 'col-md-6'}, [
+                    ])
+                ]),
+                div({class: 'row'}, [
+                    div({class: 'col-md-6'}, [
+                        div({style: {border: '1px red solid', xheight: '100px'}, dataElement: 'available-items'})
+                    ]),
+                    div({class: 'col-md-6'}, [
+                        div({
+                            style: {
+                                border: '1px red solid', xheight: '100px'
+                            },
+                            dataElement: 'selected-items'
+                        })
+                    ])
+                ])
+            ]);
 
             // CONTROL
             return div({style: {border: '1px silver solid'}}, [
@@ -168,7 +445,7 @@ define([
                 }, selectOptions)
             ]);
         }
-        
+
         /*
          * Given an existing input control, and new model state, update the
          * control to suite the new data.
@@ -182,11 +459,11 @@ define([
          */
         function updateInputControl(changedProperty) {
             switch (changedProperty) {
-                case 'value': 
+                case 'value':
                     // just change the selections.
                     var count = buildCount();
                     dom.setContent('input-control.count', count);
-                    
+
                     break;
                 case 'availableValues':
                     // rebuild the options
@@ -195,15 +472,15 @@ define([
                         count = buildCount();
                     dom.setContent('input-control.input', options);
                     dom.setContent('input-control.count', count);
-                    
+
                     break;
                 case 'referenceObjectName':
                     // refetch the available values
                     // set available values
                     // update input control for available values
                     // set value to null
-                    
-                
+
+
             }
         }
 
@@ -216,17 +493,18 @@ define([
          * values.
          */
         function getInputValue() {
-            var control = dom.getElement('input-container.input');
-            if (!control) {
-                return null;
-            }
-            var input = control.selectedOptions,
-                i, values = [];
-            for (i = 0; i < input.length; i += 1) {
-                values.push(input.item(i).value);
-            }
-            // cute ... allows selecting multiple values but does not expect a sequence...
-            return values;
+//            var control = dom.getElement('input-container.input');
+//            if (!control) {
+//                return null;
+//            }
+//            var input = control.selectedOptions,
+//                i, values = [];
+//            for (i = 0; i < input.length; i += 1) {
+//                values.push(input.item(i).value);
+//            }
+//            // cute ... allows selecting multiple values but does not expect a sequence...
+//            return values;
+            return model.getItem('selectedItems');
         }
 
         function resetModelValue() {
@@ -276,7 +554,19 @@ define([
         }
 
         // safe, but ugly.
-        
+
+        function makeLabel(item, showSourceObjectName) {
+            return span({style: {wordWrap: 'break-word'}}, [
+                span({style: {fontWeight: 'bold'}}, item.id),
+                item.desc,
+                (function () {
+                    if (showSourceObjectName && item.objectName) {
+                        return div({style: {padding: '4em', fontStyle: 'italic'}}, item.objectName);
+                    }
+                })
+            ]);
+        }
+
         function fetchData() {
             if (!model.getItem('referenceObjectName')) {
                 return [];
@@ -293,10 +583,21 @@ define([
                 subObjectIdentity
             ])
                 .then(function (results) {
+                    // alert('done!');
                     // We have only one ref, so should just be one result.
                     var values = [],
                         selectionId = options.subdata_selection.selection_id,
-                        descriptionTemplate = Handlebars.compile(options.subdata_selection.description_template);
+                        descriptionFields = options.subdata_selection.selection_description || [],
+                        descriptionTemplateText = options.subdata_selection.description_template,
+                        descriptionTemplate, label;
+
+                    if (!descriptionTemplateText) {
+                        descriptionTemplateText = descriptionFields.map(function (field) {
+                            return '{{' + field + '}}';
+                        }).join(' - ');
+                    }
+
+                    descriptionTemplate = Handlebars.compile(descriptionTemplateText);
                     results.forEach(function (result) {
                         if (!result) {
                             return;
@@ -342,13 +643,17 @@ define([
                                 values.push({
                                     id: id,
                                     desc: descriptionTemplate(datum), // todo
+                                    // desc: id,
                                     objectRef: [result.info[6], result.info[0], result.info[4]].join('/'),
                                     objectName: result.info[1]
                                 });
                             });
                         }
                     });
-                    return values;
+                    return values.map(function (item) {
+                        item.label = makeLabel(item, options.show_src_obj);
+                        return item;
+                    });
                 })
                 .then(function (data) {
                     // sort by id now.
@@ -364,13 +669,14 @@ define([
                     return data;
                 });
         }
-        
+
         function syncAvailableValues() {
             return Promise.try(function () {
                 return fetchData();
             })
                 .then(function (data) {
                     model.setItem('availableValues', data);
+                    doFilterItems();
                 });
         }
 
@@ -402,6 +708,9 @@ define([
                     }, inputControl);
 
                 dom.setContent('input-container', content);
+                renderAvailableItems(events);
+                renderSelectedItems(events);
+
                 events.attachEvents(container);
             })
                 .then(function () {
@@ -432,21 +741,29 @@ define([
         }
 
         function registerEvents() {
+            /*
+             * Issued when thre is a need to have all params reset to their
+             * default value.
+             */
             bus.on('reset-to-defaults', function (message) {
                 resetModelValue();
                 // TODO: this should really be set when the linked field is reset...
                 model.setItem('availableValues', []);
                 model.setItem('referenceObjectName', null);
+                doFilterItems();
                 updateInputControl('availableValues');
                 updateInputControl('value');
             });
+
+            /*
+             * Issued when there is an update for this param.
+             */
             bus.on('update', function (message) {
                 model.setItem('value', message.value);
                 updateInputControl('value');
             });
             // NEW
-            // Called when for an update to any param. This is necessary for
-            // any parameter which has a dependency upon any other.
+
 
             //                bus.receive({
             //                    test: function (message) {
@@ -457,8 +774,25 @@ define([
             //                   bus }
             //                });
 
-            bus.on('parameter-changed', function (message) {
-                if (message.parameter === subdataOptions.subdata_selection.parameter_id) {
+
+
+            //bus.on('parameter-changed', function (message) {
+            //    if (message.parameter === subdataOptions.subdata_selection.parameter_id) {
+
+            /* 
+             * Called when for an update to any param. This is necessary for
+             * any parameter which has a dependency upon any other.
+             * 
+             */
+            // bus.on('parameter')
+
+
+            bus.listen({
+                key: {
+                    type: 'parameter-changed',
+                    parameter: subdataOptions.subdata_selection.parameter_id
+                },
+                handle: function (message) {
                     var newValue = message.newValue;
                     if (message.newValue === '') {
                         newValue = null;
@@ -469,7 +803,7 @@ define([
                             updateInputControl('availableValues');
                         })
                         .catch(function (err) {
-                                console.error('ERROR syncing available values', err);
+                            console.error('ERROR syncing available values', err);
                         });
                 }
             });
@@ -485,6 +819,21 @@ define([
 //                setReferenceValue(message.objectRef);
 //            });
             bus.emit('sync');
+
+            bus.request({
+                parameterName: spec.id()
+            }, {
+                key: {
+                    type: 'get-parameter'
+                }
+            })
+                .then(function (message) {
+                    console.log('Now i got it again', message);
+                });
+
+
+
+
         }
 
         // LIFECYCLE API
@@ -503,12 +852,63 @@ define([
                         theLayout = layout(events);
 
                     container.innerHTML = theLayout.content;
-                    
+//                    
+//                    bus.request({
+//                        parameter: subdataOptions.subdata_selection.parameter_id
+//                    }, {
+//                        type: 'get-parameter'
+//                    })
+//                        .then(function (message) {                            
+//                            model.setItem('referenceObjectName', message.value);
+//                            render();
+//                        })
+//                        .catch(function (err) {
+//                            console.error('ERROR getting parameter ' + subdataOptions.subdata_selection.parameter_id);
+//                        });
+//                    
+
                     render();
-                    
+
+
                     events.attachEvents(container);
 
                     registerEvents();
+
+                    // Get initial data.
+                    // Weird, but will make it look nicer.
+                    Promise.all([
+                        bus.request({
+                            parameterName: spec.id()
+                        },
+                            {
+                                key: {
+                                    type: 'get-parameter'
+                                }
+                            }),
+                        bus.request({
+                            parameterName: subdataOptions.subdata_selection.parameter_id
+                        },
+                            {
+                                key: {
+                                    type: 'get-parameter'
+                                }
+                            })
+                    ])
+                        .spread(function (paramValue, referencedParamValue) {
+                           console.log('Got them!', paramValue.value, referencedParamValue.value);
+                            model.setItem('selectedItems', paramValue.value);
+                            updateInputControl('value');
+
+                            model.setItem('referenceObjectName', referencedParamValue.value);
+                            return syncAvailableValues()
+                                .then(function () {
+                                    updateInputControl('availableValues');
+                                })
+                                .catch(function (err) {
+                                    console.error('ERROR syncing available values', err);
+                                });
+
+                        });
                 });
             });
         }
@@ -519,13 +919,16 @@ define([
             data: {
                 referenceObjectName: null,
                 availableValues: [],
-                value: null
+                selectedItems: [],
+                value: null,
+                showFrom: 0,
+                showTo: 5
             }
-            //,
-            //onUpdate: function (props) {
-            //    // render();
-            //    updateInputControl(props);
-            // }
+            ,
+            onUpdate: function (props) {
+                render();
+                // updateInputControl(props);
+            }
         });
 
         return {

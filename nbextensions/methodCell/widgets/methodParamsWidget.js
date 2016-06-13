@@ -6,14 +6,14 @@ define([
     // CDN
     'kb_common/html',
     // LOCAL
-    '../dom',
-    '../events',
-    '../props',
+    'common/dom',
+    'common/events',
+    'common/props',
     // Wrapper for inputs
     './inputWrapperWidget',
     './fieldWidget',
     './paramInputResolver',
-    '../runtime'
+    'common/runtime'
         // All the input widgets
 
 ], function (
@@ -86,13 +86,13 @@ define([
         // RENDERING
 
         function makeFieldWidget(parameterSpec, value) {
-            var bus = runtime.bus().makeChannelBus(),
+            var fieldBus = runtime.bus().makeChannelBus(),
                 inputWidget = paramResolver.getInputWidgetFactory(parameterSpec);
 
-            inputBusses.push(bus);
+            inputBusses.push(fieldBus);
 
             // Forward all changed parameters to the controller. That is our main job!
-            bus.on('changed', function (message) {
+            fieldBus.on('changed', function (message) {
                 parentBus.emit('parameter-changed', {
                     parameter: parameterSpec.id(),
                     newValue: message.newValue
@@ -101,12 +101,46 @@ define([
 
 
             // An input widget may ask for the current model value at any time.
-            bus.on('sync', function () {
+            fieldBus.on('sync', function () {
                 parentBus.emit('parameter-sync', {
                     parameter: parameterSpec.id()
                 });
             });
-
+            
+            /*
+             * Or in fact any parameter value at any time...
+             */
+            fieldBus.on('get-parameter-value', function (message) {
+                parentBus.request({
+                   parameter: message.parameter 
+                }, {
+                    key: 'get-parameter-value'
+                })
+                    .then(function (message) {
+                        bus.emit('parameter-value', {
+                            parameter: message.parameter
+                        });
+                    });
+            });
+            
+            //bus.on('parameter-value', function (message) {
+            //    bus.emit('parameter-value', message);
+            //});
+            
+            fieldBus.respond({
+                key: {
+                    type: 'get-parameter'
+                },
+                handle: function (message) {
+                    // console.log('GOT?', message);
+                    return parentBus.request(message, {
+                        key: {
+                            type: 'get-parameter'
+                        }
+                    });
+                }
+            });
+            
             // Just pass the update along to the input widget.
             parentBus.listen({
                 key: {
@@ -114,7 +148,7 @@ define([
                     parameter: parameterSpec.id()
                 },
                 handle: function (message) {
-                    bus.emit('update', {
+                    fieldBus.emit('update', {
                         value: message.value
                     });
                 }
@@ -134,7 +168,7 @@ define([
                     useRowHighight: true,
                     initialValue: value,
                     parameterSpec: parameterSpec,
-                    bus: bus,
+                    bus: fieldBus,
                     workspaceId: workspaceInfo.id
                 })
             };
@@ -143,8 +177,11 @@ define([
         function renderAdvanced() {
             var advancedInputs = container.querySelectorAll('[data-advanced-parameter]');
             if (advancedInputs.length === 0) {
+                dom.setContent('advanced-hidden-message', '');
+                dom.disableButton('toggle-advanced');
                 return;
             }
+            dom.enableButton('toggle-advanced');
             var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
                 addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
             for (var i = 0; i < advancedInputs.length; i += 1) {
@@ -159,7 +196,18 @@ define([
             var button = container.querySelector('[data-button="toggle-advanced"]');
             button.innerHTML = (settings.showAdvanced ? 'Hide Advanced' : 'Show Advanced (' + advancedInputs.length + ' hidden)');
 
-            // Also update the
+            // Also update the count in the paramters.
+            var message;
+            if (settings.showAdvanced) {
+                dom.setContent('advanced-hidden-message', '');
+            } else {
+                if (advancedInputs.length > 1) {
+                    message = String(advancedInputs.length) + ' advanced parameters hidden';
+                } else {
+                    message = String(advancedInputs.length) + ' advanced parameter hidden';
+                }
+                dom.setContent('advanced-hidden-message', '(' + message + ')');
+            }
         }
 
         function renderLayout() {
@@ -173,9 +221,9 @@ define([
                             dom.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
                         ]
                     }),
-                    dom.makePanel('Inputs', 'input-fields'),
-                    dom.makePanel('Outputs', 'output-fields'),
-                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden'})]), 'parameter-fields')
+                    dom.makePanel('Input Objects', 'input-fields'),
+                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 'parameter-fields'),
+                    dom.makePanel('Output Objects', 'output-fields')
                 ]);
 
             return {
@@ -222,7 +270,7 @@ define([
                 settings.showAdvanced = !settings.showAdvanced;
                 renderAdvanced();
             });
-            parentBus.on('workspace-changed', function () {
+            runtime.bus().on('workspace-changed', function () {
                 // tell each input widget about this amazing event!
                 widgets.forEach(function (widget) {
                     widget.bus.emit('workspace-changed');
@@ -250,7 +298,7 @@ define([
             return Promise.resolve()
                 .then(function () {
                     if (inputParams.length === 0) {
-                        places.inputFields.innerHTML = 'No inputs';
+                        places.inputFields.innerHTML = 'No input objects for this method';
                     } else {
                         return Promise.all(inputParams.map(function (spec) {
                             try {
@@ -275,7 +323,7 @@ define([
                 })
                 .then(function () {
                     if (outputParams.length === 0) {
-                        places.outputFields.innerHTML = 'No outputs';
+                        places.outputFields.innerHTML = 'No output objects for this method';
                     } else {
                         return Promise.all(outputParams.map(function (spec) {
                             try {
@@ -300,7 +348,7 @@ define([
                 })
                 .then(function () {
                     if (parameterParams.length === 0) {
-                        places.parameterFields.innerHTML = 'No parameters';
+                        dom.setContent('parameter-fields', 'No parameters for this method');
                     } else {
                         return Promise.all(parameterParams.map(function (spec) {
                             try {
@@ -314,7 +362,7 @@ define([
                                 });
                                 rowWidget.attach(rowNode);
                             } catch (ex) {
-                                console.error('Error making paramter field widget', ex);
+                                console.error('Error making parameter field widget', ex);
                                 var errorDisplay = div({style: {border: '1px red solid'}}, [
                                     ex.message
                                 ]);
@@ -365,7 +413,13 @@ define([
                 // TODO: use the new key address and subscription
                 // mechanism to make this more efficient.
                 inputBusses.forEach(function (bus) {
-                    bus.emit('parameter-changed', message);
+                    bus.send(message, {
+                        key: {
+                            type: 'parameter-changed',
+                            parameter: message.parameter
+                        }
+                    });
+                    // bus.emit('parameter-changed', message);
                 });
             });
 

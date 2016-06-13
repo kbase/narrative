@@ -3,12 +3,12 @@
 
 define([
     'uuid',
-    '../props',
-    '../utils',
-    '../jobs',
-    '../dom',
-    '../runtime',
-    '../events',
+    'common/props',
+    'common/utils',
+    'common/jobs',
+    'common/dom',
+    'common/runtime',
+    'common/events',
     'kb_common/format',
     'kb_common/html',
     'kb_service/client/workspace'

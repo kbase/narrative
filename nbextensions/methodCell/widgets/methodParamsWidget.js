@@ -6,37 +6,38 @@ define([
     // CDN
     'kb_common/html',
     // LOCAL
-    '../dom',
-    '../microBus',
-    '../events',
-    '../props',
+    'common/dom',
+    'common/events',
+    'common/props',
     // Wrapper for inputs
     './inputWrapperWidget',
     './fieldWidget',
-    './paramResolver'
-    // All the input widgets
-    
+    './paramInputResolver',
+    'common/runtime'
+        // All the input widgets
+
 ], function (
     Promise,
     html,
     Dom,
-    Bus,
     Events,
     Props,
     //Wrappers
     RowWidget,
     FieldWidget,
-    ParamResolver
+    ParamResolver,
+    Runtime
+
     // Input widgets
     ) {
     'use strict';
 
     var t = html.tag,
-        form = t('form'), span = t('span');
+        form = t('form'), span = t('span'), div = t('div');
 
     function factory(config) {
-        var parentBus = config.bus,
-            cellId = config.cellId,
+        var runtime = Runtime.make(),
+            parentBus = config.bus,
             workspaceInfo = config.workspaceInfo,
             container,
             dom,
@@ -47,18 +48,20 @@ define([
             paramResolver = ParamResolver.make(),
             settings = {
                 showAdvanced: null
-            };
+            },
+        widgets = [];
+
 
         // DATA
         /*
-         * 
+         *
          * Evaluates the parameter spec to determine which input widget needs to be
          * invoked, but doesn't know what the widget does.
          * Provides the communication bus for each input to route info to the widget
          * and out of it.
-         * 
+         *
          *  In terms of widgets it looks like this:
-         *  
+         *
          *  InputCellWidget
          *    inputWidgets
          *      FieldWidget
@@ -78,20 +81,19 @@ define([
          * - data type - (text, int, float, workspaceObject (ref, name)
          * - input method - input, select
          */
-        
+
 
         // RENDERING
 
         function makeFieldWidget(parameterSpec, value) {
-            var bus = Bus.make(),
+            var fieldBus = runtime.bus().makeChannelBus(null, 'A field widget'),
                 inputWidget = paramResolver.getInputWidgetFactory(parameterSpec);
 
-            inputBusses.push(bus);
+            inputBusses.push(fieldBus);
 
             // Forward all changed parameters to the controller. That is our main job!
-            bus.on('changed', function (message) {
-                parentBus.send({
-                    type: 'parameter-changed',
+            fieldBus.on('changed', function (message) {
+                parentBus.emit('parameter-changed', {
                     parameter: parameterSpec.id(),
                     newValue: message.newValue
                 });
@@ -99,44 +101,91 @@ define([
 
 
             // An input widget may ask for the current model value at any time.
-            bus.on('sync', function () {
-                parentBus.send({
-                    type: 'parameter-sync',
+            fieldBus.on('sync', function () {
+                parentBus.emit('parameter-sync', {
                     parameter: parameterSpec.id()
                 });
             });
-
-            // Just pass the update along to the input widget.
-            parentBus.listen({
-                test: function (message) {
-                    return (message.type === 'update' && message.parameter === parameterSpec.id());
+            
+            /*
+             * Or in fact any parameter value at any time...
+             */
+            fieldBus.on('get-parameter-value', function (message) {
+                parentBus.request({
+                   parameter: message.parameter 
+                }, {
+                    key: 'get-parameter-value'
+                })
+                    .then(function (message) {
+                        bus.emit('parameter-value', {
+                            parameter: message.parameter
+                        });
+                    });
+            });
+            
+            //bus.on('parameter-value', function (message) {
+            //    bus.emit('parameter-value', message);
+            //});
+            
+            fieldBus.respond({
+                key: {
+                    type: 'get-parameter'
                 },
                 handle: function (message) {
-                    bus.send(message);
+                    console.log('GOT?', message);
+                    if (message.parameterName) {
+                        return parentBus.request(message, {
+                            key: {
+                                type: 'get-parameter'
+                            }
+                        });
+                    } else {
+                        return null;
+                    }
                 }
             });
+            
+            // Just pass the update along to the input widget.
+            parentBus.listen({
+                key: {
+                    type: 'update',
+                    parameter: parameterSpec.id()
+                },
+                handle: function (message) {
+                    fieldBus.emit('update', {
+                        value: message.value
+                    });
+                }
+            });
+
 
             // just forward...
             //bus.on('newstate', function (message) {
             //    inputWidgetBus.send(message);
             //});
 
-            return FieldWidget.make({
-                inputControlFactory: inputWidget,
-                showHint: true,
-                useRowHighight: true,
-                initialValue: value,
-                parameterSpec: parameterSpec,
+            return {
                 bus: bus,
-                workspaceId: workspaceInfo.id
-            });
+                widget: FieldWidget.make({
+                    inputControlFactory: inputWidget,
+                    showHint: true,
+                    useRowHighight: true,
+                    initialValue: value,
+                    parameterSpec: parameterSpec,
+                    bus: fieldBus,
+                    workspaceId: workspaceInfo.id
+                })
+            };
         }
 
         function renderAdvanced() {
             var advancedInputs = container.querySelectorAll('[data-advanced-parameter]');
             if (advancedInputs.length === 0) {
+                dom.setContent('advanced-hidden-message', '');
+                dom.disableButton('toggle-advanced');
                 return;
             }
+            dom.enableButton('toggle-advanced');
             var removeClass = (settings.showAdvanced ? 'advanced-parameter-hidden' : 'advanced-parameter-showing'),
                 addClass = (settings.showAdvanced ? 'advanced-parameter-showing' : 'advanced-parameter-hidden');
             for (var i = 0; i < advancedInputs.length; i += 1) {
@@ -151,7 +200,18 @@ define([
             var button = container.querySelector('[data-button="toggle-advanced"]');
             button.innerHTML = (settings.showAdvanced ? 'Hide Advanced' : 'Show Advanced (' + advancedInputs.length + ' hidden)');
 
-            // Also update the 
+            // Also update the count in the paramters.
+            var message;
+            if (settings.showAdvanced) {
+                dom.setContent('advanced-hidden-message', '');
+            } else {
+                if (advancedInputs.length > 1) {
+                    message = String(advancedInputs.length) + ' advanced parameters hidden';
+                } else {
+                    message = String(advancedInputs.length) + ' advanced parameter hidden';
+                }
+                dom.setContent('advanced-hidden-message', '(' + message + ')');
+            }
         }
 
         function renderLayout() {
@@ -165,9 +225,9 @@ define([
                             dom.makeButton('Reset to Defaults', 'reset-to-defaults', {events: events})
                         ]
                     }),
-                    dom.makePanel('Inputs', 'input-fields'),
-                    dom.makePanel('Outputs', 'output-fields'),
-                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden'})]), 'parameter-fields')
+                    dom.makePanel('Input Objects', 'input-fields'),
+                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 'parameter-fields'),
+                    dom.makePanel('Output Objects', 'output-fields')
                 ]);
 
             return {
@@ -200,13 +260,11 @@ define([
         function attachEvents() {
             bus.on('reset-to-defaults', function () {
                 inputBusses.forEach(function (inputBus) {
-                    inputBus.send({
-                        type: 'reset-to-defaults'
-                    });
+                    inputBus.emit('reset-to-defaults');
                 });
             });
             bus.on('toggle-advanced', function () {
-                // we can just do that here? Or defer to the inputs? 
+                // we can just do that here? Or defer to the inputs?
                 // I don't know ...
                 //inputBusses.forEach(function (bus) {
                 //    bus.send({
@@ -216,109 +274,18 @@ define([
                 settings.showAdvanced = !settings.showAdvanced;
                 renderAdvanced();
             });
+            runtime.bus().on('workspace-changed', function () {
+                // tell each input widget about this amazing event!
+                widgets.forEach(function (widget) {
+                    widget.bus.emit('workspace-changed');
+                });
+            });
         }
 
         // LIFECYCLE API
 
-        function runx(params) {
-            var widgets = [];
-            // First get the method specs, which is stashed in the model, 
-            // with the parameters returned.
-            return fetchData(params.methodId, params.methodTag)
-                .then(function (parameterSpecs) {
-                    // Render the layout.
-                    render();
-                    cell.setMeta('attributes', 'title', model.value.methodSpec.info.name);
-
-                    // Separate out the params into the primary groups.
-                    var inputParams = parameterSpecs.filter(function (spec) {
-                        return (spec.spec.ui_class === 'input');
-                    }),
-                        outputParams = parameterSpecs.filter(function (spec) {
-                            return (spec.spec.ui_class === 'output');
-                        }),
-                        parameterParams = parameterSpecs.filter(function (spec) {
-                            return (spec.spec.ui_class === 'parameter');
-                        });
-
-                    return [inputParams, outputParams, parameterParams];
-
-                })
-                .spread(function (inputParams, outputParams, parameterParams) {
-                    return Promise.try(function () {
-                        return null;
-                    })
-                        .then(function () {
-                            if (inputParams.length === 0) {
-                                places.inputFields.innerHTML = 'No inputs';
-                            } else {
-                                return Promise.all(inputParams.map(function (spec) {
-                                    var fieldWidget = makeFieldWidget(cell, spec, meta.getItem(['params', spec.name()])),
-                                        rowWidget = RowWidget.make({widget: fieldWidget, spec: spec}),
-                                        rowNode = document.createElement('div');
-                                    places.inputFields.appendChild(rowNode);
-                                    widgets.push(rowWidget);
-                                    rowWidget.attach(rowNode);
-                                }));
-                            }
-                        })
-                        .then(function () {
-                            if (outputParams.length === 0) {
-                                places.outputFields.innerHTML = 'No outputs';
-                            } else {
-                                return Promise.all(outputParams.map(function (spec) {
-                                    var fieldWidget = makeFieldWidget(cell, spec, meta.getItem(['params', spec.name()])),
-                                        rowWidget = RowWidget.make({widget: fieldWidget, spec: spec}),
-                                        rowNode = document.createElement('div');
-                                    places.outputFields.appendChild(rowNode);
-                                    widgets.push(rowWidget);
-                                    rowWidget.attach(rowNode);
-                                }));
-                            }
-                        })
-                        .then(function () {
-                            if (parameterParams.length === 0) {
-                                places.parameterFields.innerHTML = 'No parameters';
-                            } else {
-                                return Promise.all(parameterParams.map(function (spec) {
-                                    var fieldWidget = makeFieldWidget(cell, spec, meta.getItem(['params', spec.name()])),
-                                        rowWidget = RowWidget.make({widget: fieldWidget, spec: spec}),
-                                        rowNode = document.createElement('div');
-                                    places.parameterFields.appendChild(rowNode);
-                                    widgets.push(rowWidget);
-                                    rowWidget.attach(rowNode);
-                                }));
-                            }
-                        });
-                })
-                .then(function () {
-                    return widgets.map(function (widget) {
-                        return widget.start();
-                    });
-                })
-                .then(function () {
-                    return widgets.map(function (widget) {
-                        return widget.run(params);
-                    });
-                })
-                .then(function () {
-                    renderAdvanced();
-                    cell.kbase.$node.find('[data-element="input-widget-form"]').on('submit', function (e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        parentBus.send({
-                            type: 'submitted'
-                        });
-                    });
-                    // if this is the first time running this widget, the edit state will be 
-                    // null. Well, we are now editing, so set it.
-                    // updateQuickState({edit: 'editing'});
-                });
-        }
-
         function renderParameters(params) {
-            var widgets = [];
-            // First get the method specs, which is stashed in the model, 
+            // First get the method specs, which is stashed in the model,
             // with the parameters returned.
             // Separate out the params into the primary groups.
             var params = model.getItem('parameters'),
@@ -335,54 +302,87 @@ define([
             return Promise.resolve()
                 .then(function () {
                     if (inputParams.length === 0) {
-                        places.inputFields.innerHTML = 'No inputs';
+                        places.inputFields.innerHTML = 'No input objects for this app';
                     } else {
                         return Promise.all(inputParams.map(function (spec) {
-                            var fieldWidget = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
-                                rowWidget = RowWidget.make({widget: fieldWidget, spec: spec}),
-                                rowNode = document.createElement('div');
-                            places.inputFields.appendChild(rowNode);
-                            widgets.push(rowWidget);
-                            rowWidget.attach(rowNode);
+                            try {
+                                var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
+                                    rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
+                                    rowNode = document.createElement('div');
+                                places.inputFields.appendChild(rowNode);
+                                widgets.push({
+                                    widget: rowWidget,
+                                    bus: result.bus
+                                });
+                                rowWidget.attach(rowNode);
+                            } catch (ex) {
+                                console.error('Error making input field widget', ex);
+                                var errorDisplay = div({style: {border: '1px red solid'}}, [
+                                    ex.message
+                                ]);
+                                places.inputFields.appendChild(dom.createNode(errorDisplay));
+                            }
                         }));
                     }
                 })
                 .then(function () {
                     if (outputParams.length === 0) {
-                        places.outputFields.innerHTML = 'No outputs';
+                        places.outputFields.innerHTML = 'No output objects for this app';
                     } else {
                         return Promise.all(outputParams.map(function (spec) {
-                            var fieldWidget = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
-                                rowWidget = RowWidget.make({widget: fieldWidget, spec: spec}),
-                                rowNode = document.createElement('div');
-                            places.outputFields.appendChild(rowNode);
-                            widgets.push(rowWidget);
-                            rowWidget.attach(rowNode);
+                            try {
+                                var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
+                                    rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
+                                    rowNode = document.createElement('div');
+                                places.outputFields.appendChild(rowNode);
+                                widgets.push({
+                                    widget: rowWidget,
+                                    bus: result.bus
+                                });
+                                rowWidget.attach(rowNode);
+                            } catch (ex) {
+                                console.error('Error making output field widget', ex);
+                                var errorDisplay = div({style: {border: '1px red solid'}}, [
+                                    ex.message
+                                ]);
+                                places.outputFields.appendChild(dom.createNode(errorDisplay));
+                            }
                         }));
                     }
                 })
                 .then(function () {
                     if (parameterParams.length === 0) {
-                        places.parameterFields.innerHTML = 'No parameters';
+                        dom.setContent('parameter-fields', 'No parameters for this app');
                     } else {
                         return Promise.all(parameterParams.map(function (spec) {
-                            var fieldWidget = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
-                                rowWidget = RowWidget.make({widget: fieldWidget, spec: spec}),
-                                rowNode = document.createElement('div');
-                            places.parameterFields.appendChild(rowNode);
-                            widgets.push(rowWidget);
-                            rowWidget.attach(rowNode);
+                            try {
+                                var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
+                                    rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
+                                    rowNode = document.createElement('div');
+                                places.parameterFields.appendChild(rowNode);
+                                widgets.push({
+                                    widget: rowWidget,
+                                    bus: result.bus
+                                });
+                                rowWidget.attach(rowNode);
+                            } catch (ex) {
+                                console.error('Error making parameter field widget', ex);
+                                var errorDisplay = div({style: {border: '1px red solid'}}, [
+                                    ex.message
+                                ]);
+                                places.parameterFields.appendChild(dom.createNode(errorDisplay));
+                            }
                         }));
                     }
                 })
                 .then(function () {
                     return Promise.all(widgets.map(function (widget) {
-                        return widget.start();
+                        return widget.widget.start();
                     }));
                 })
                 .then(function () {
                     return Promise.all(widgets.map(function (widget) {
-                        return widget.run(params);
+                        return widget.widget.run(params);
                     }));
                 })
                 .then(function () {
@@ -392,7 +392,7 @@ define([
 
         function start() {
             // send parent the ready message
-            parentBus.send('ready');
+            parentBus.emit('ready');
 
             // parent will send us our initial parameters
             parentBus.on('run', function (message) {
@@ -411,6 +411,23 @@ define([
                         console.error('ERROR in start', err);
                     });
             });
+
+            parentBus.on('parameter-changed', function (message) {
+                // Also, tell each of our inputs that a param has changed.
+                // TODO: use the new key address and subscription
+                // mechanism to make this more efficient.
+                inputBusses.forEach(function (bus) {
+                    bus.send(message, {
+                        key: {
+                            type: 'parameter-changed',
+                            parameter: message.parameter
+                        }
+                    });
+                    // bus.emit('parameter-changed', message);
+                });
+            });
+
+
         }
 
         function stop() {
@@ -419,7 +436,7 @@ define([
 
         // CONSTRUCTION
 
-        bus = Bus.make();
+        bus = runtime.bus().makeChannelBus(null, 'A method params widget');
 
 
         return {

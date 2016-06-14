@@ -3,23 +3,26 @@
 /*
  * The Field Widget has two main jobs:
  * - render an input within within a layout
- * - provide reaction to input widget events to give user feedback 
- * 
- * The first goal is accomplished through the usual widget machineral - attach, start, run, stop. 
+ * - provide reaction to input widget events to give user feedback
+ *
+ * The first goal is accomplished through the usual widget machineral - attach, start, run, stop.
  * The second through a simple message bus in which the input widget emits from a set
  * of events which reflect the state of the input after user interaction.
  */
 define([
     'bluebird',
     'jquery',
+    'google-code-prettify/prettify',
     'kb_common/html',
-    '../events',
-    '../dom'
-], function (Promise, $, html, Events, Dom) {
+    'common/events',
+    'common/dom',
+    'css!google-code-prettify/prettify.css'
+], function (Promise, $, PR, html, Events, Dom) {
     'use strict';
     var t = html.tag,
         div = t('div'), span = t('span'), label = t('label'), button = t('button'),
-        table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
+        table = t('table'), tr = t('tr'), th = t('th'), td = t('td'), pre = t('pre'),
+        textarea = t('textarea'),
         classSets = {
             standard: {
                 nameColClass: 'col-md-2',
@@ -110,8 +113,14 @@ define([
                 .show();
         }
 
+        function rawSpec(spec) {
+            var specText = JSON.stringify(spec, false, 3),
+                fixedSpec = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedSpec);
+        }
+
         function parameterInfoContent(spec) {
-            return div([
+            return div({style: {padding: '4px'}}, [
                 div({style: {fontWeight: 'bold'}}, spec.label()),
                 div({style: {fontStyle: 'italic'}}, spec.name()),
                 div({style: {fontSize: '80%'}}, spec.description())
@@ -124,15 +133,21 @@ define([
                         tr([th('Min'), td(spec.spec.text_options.min_float)]),
                         tr([th('Max'), td(spec.spec.text_options.max_float)])
                     ];
-                    break;
                 case 'int':
+                    // just for now ...
+                    if (spec.spec.field_type === 'checkbox') {
+                        return [
+                            tr([th('Min'), td(String(0))]),
+                            tr([th('Max'), td(String(1))])
+                        ];
+                    }
                     return [
                         tr([th('Min'), td(spec.spec.text_options.min_int)]),
                         tr([th('Max'), td(spec.spec.text_options.max_int)])
                     ];
-                    break;
             }
         }
+        
         function parameterInfoRules(spec) {
             return table({class: 'table table-striped'}, [
                 tr([th('Required'), td(spec.required() ? 'yes' : 'no')]),
@@ -161,11 +176,81 @@ define([
         }
 
         function parameterInfoLittleTip(spec) {
-            var mult = (spec.multipleItems() ? '[]' : ''),
-                type = spec.dataType();
-            return mult + type;
+            return spec.dataType();
+            //var mult = (spec.multipleItems() ? '[]' : ''),
+            //    type = spec.dataType();
+            //return mult + type;
         }
+        
+        function reverse(arr) {
+            var newArray = [], i, len = arr.length;
+            for (i = len-1; i >= 0; i -= 1) {
+                newArray.push(arr[i]);
+            }
+            return newArray;
+        }
+        
+        function makeTabs(arg) {
+            var tag = html.tag,
+                ul = tag('ul'),
+                li = tag('li'),
+                a = tag('a'),
+                div = tag('div'),
+                tabsId = arg.id,
+                tabsAttribs = {},
+                tabClasses = ['nav', 'nav-tabs'],
+                tabs, tabStyle = {}, activeIndex;
 
+            if (tabsId) {
+                tabsAttribs.id = tabsId;
+            }
+            arg.tabs.forEach(function (tab) {
+                tab.id = html.genId();
+            });
+            if (arg.alignRight) {
+                tabs = reverse(arg.tabs);
+                tabStyle.float = 'right';
+                activeIndex = tabs.length - 1;
+            } else {
+                tabs = arg.tabs;
+                activeIndex = 0;
+            }
+            return div(tabsAttribs, [
+                ul({class: tabClasses.join(' '), role: 'tablist'},
+                    tabs.map(function (tab, index) {
+                        var attribs = {
+                            role: 'presentation'
+                        };
+                        if (index === activeIndex) {
+                            attribs.class = 'active';
+                        }
+                        attribs.style = tabStyle;
+                        return li(attribs, a({
+                            href: '#' + tab.id,
+                            ariaControls: 'home',
+                            role: 'tab',
+                            dataToggle: 'tab'
+                        }, tab.label));
+                    })),
+                div({class: 'tab-content'},
+                    arg.tabs.map(function (tab, index) {
+                        var attribs = {
+                            role: 'tabpanel',
+                            class: 'tab-pane',
+                            id: tab.id
+                        };
+                        if (tab.name) {
+                            attribs['data-name'] = tab.name;
+                        }
+                        if (index === 0) {
+                            attribs.class += ' active';
+                        }
+                        return div(attribs, tab.content);
+                    })
+                    )
+            ]);
+        }
+        
         function renderInfoTip() {
             var infoTipText;
             if (spec.description() && spec.hint() !== spec.description()) {
@@ -175,13 +260,14 @@ define([
             }
 
             return div([
-                div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
-                div({dataElement: 'big-tip', style: {display: 'none'}}, html.makeTabs({
+                // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
+                div({dataElement: 'big-tip', style: {display: 'none'}}, makeTabs({
+                    alignRight: true,
                     tabs: [
                         {
                             label: 'Description',
                             name: 'description',
-                            content: infoTipText
+                            content: div({style: {padding: '4px'}}, infoTipText)
                         },
                         {
                             label: 'About',
@@ -192,10 +278,20 @@ define([
                             label: 'Rules',
                             name: 'rules',
                             content: parameterInfoRules(spec)
+                        },
+                        {
+                            label: 'Spec',
+                            name: 'spec',
+                            content: rawSpec(spec)
                         }
                     ]}))
             ]);
         }
+//        function renderLabelTip() {
+//            return div([
+//                div({dataElement: 'little-tip', style: {display: 'none'}}, parameterInfoLittleTip(spec))
+//            ]);
+//        }
 
         function render(events) {
             var placeholder = '',
@@ -217,7 +313,7 @@ define([
             }
 
             // INPUT (control with feedback)
-            // Note -- here is where we 
+            // Note -- here is where we
             inputCol = div({class: [options.classes.inputColClass, 'kb-method-parameter-input'].join(' ')}, [
                 div({style: {width: '100%', display: 'inline-block'}}, [
                     div({dataElement: 'input-control'})
@@ -228,7 +324,7 @@ define([
             ]);
 
             // FIELD NAME
-//            nameCol = div({class: options.classes.nameColClass}, 
+//            nameCol = div({class: options.classes.nameColClass},
 //                class: [options.classes.nameColClass, 'kb-method-parameter-name'].join(' ')
 //            }, spec.label());
 
@@ -244,12 +340,12 @@ define([
                 advanced = '';
             }
 
-            var content = div({class: ['form-horizontal', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
+            var content = div({class: ['xform-horizontal', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
                 div({class: 'form-group', dataElement: 'field-panel'}, [
-                    label({class: 'col-md-3 control-label kb-method-parameter-name'}, [
-                        spec.label()
+                    label({class: 'xcol-md-12 xcontrol-label kb-method-parameter-name'}, [
+                        spec.label() || spec.id()
                     ]),
-                    div({class: 'col-md-4'}, div({class: 'kb-method-parameter-input'}, [
+                    div({class: 'xcol-md-12'}, div({class: 'xkb-method-parameter-input'}, [
                         div({class: 'input-group', style: {width: '100%'}}, [
                             div({dataElement: 'input-control'}),
                             div({class: 'input-group-addon', style: {width: '30px', padding: '0'}}, [
@@ -262,18 +358,18 @@ define([
                                     id: events.addEvent({
                                         type: 'click',
                                         handler: function (e) {
-                                            var info = document.getElementById(infoId),
-                                                littleTip = info.querySelector('[data-element="little-tip"]'),
-                                                bigTip = info.querySelector('[data-element="big-tip"]');
-                                            // the info button is used to switch between two different 
-                                            // displays -- a compact display of type and a 
+                                            var // info = document.getElementById(infoId),
+                                                // littleTip = container.querySelector('[data-element="little-tip"]'),
+                                                bigTip = container.querySelector('[data-element="big-tip"]');
+                                            // the info button is used to switch between two different
+                                            // displays -- a compact display of type and a
                                             // tabview with richer info to explore.
-                                            if (littleTip.style.display === 'none') {
-                                                bigTip.style.display = 'none';
-                                                littleTip.style.display = 'block';
-                                            } else {
+                                            if (bigTip.style.display === 'none') {
                                                 bigTip.style.display = 'block';
-                                                littleTip.style.display = 'none';
+                                                // littleTip.style.display = 'block';
+                                            } else {
+                                                bigTip.style.display = 'none';
+                                                // littleTip.style.display = 'none';
                                             }
                                         }
                                     })
@@ -282,8 +378,15 @@ define([
                                     ))
                             ])
                         ])
-                    ])),
-                    div({class: 'col-md-5'}, div({id: infoId}, [
+                    ]))
+
+
+                ]),
+                div({class: 'row', dataElement: 'info-panel'}, [
+//                    label({class: 'col-md-3'}, [
+//                        renderLabelTip()
+//                    ]),
+                    div({class: 'col-md-12', style: {paddingBottom: '10px'}}, div({id: infoId}, [
                         renderInfoTip()
                     ]))
 
@@ -311,6 +414,10 @@ define([
                 container.innerHTML = render(events);
                 events.attachEvents(container);
                 dom = Dom.make({node: container});
+                // TODO: use the pattern in which the redner returns an object,
+                // which includes events and other functions to be run after
+                // content is added to the dom.
+                PR.prettyPrint(null, container);
 
                 // create the "places" shortcuts.
                 $container = $(container);
@@ -353,13 +460,12 @@ define([
                     }
                 });
                 if (inputControl.start) {
-                    inputControl.start()
+                    return inputControl.start()
                         .then(function () {
-                            bus.send('run', {
+                            bus.emit('run', {
                                 node: dom.getElement('input-control')
                             });
                         });
-                    return inputControl.start();
                 }
             });
         }

@@ -195,7 +195,10 @@ class JobManager(object):
             except Exception, e:
                 self._log.setLevel(logging.ERROR)
                 kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
-                self._send_comm_message('job_err', str(e))
+                self._send_comm_message('job_err', {
+                    'job_id': job_id,
+                    'message': str(e)
+                })
         if len(status_set) > 0:
             self._send_comm_message('job_status', status_set)
 

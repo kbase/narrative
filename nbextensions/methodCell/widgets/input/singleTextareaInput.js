@@ -5,8 +5,8 @@ define([
     'jquery',
     'base/js/namespace',
     'kb_common/html',
-    '../../validation',
-    '../../events',
+    'common/validation',
+    'common/events',
     'bootstrap',
     'css!font-awesome'
 ], function (Promise, $, Jupyter, html, Validation, Events) {
@@ -33,9 +33,6 @@ define([
         // Validate configuration.
         // Nothing to do...
 
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
         options.enabled = true;
         options.nRows = spec.spec.textarea_options.n_rows;
 
@@ -104,7 +101,7 @@ define([
                 }
 
                 var rawValue = getInputValue(),
-                    validationResult = Validation.validateText(rawValue, {
+                    validationResult = Validation.validateTextString(rawValue, {
                         required: options.required
                     });
 
@@ -138,7 +135,7 @@ define([
                         }
                     }, 2500);
                 }
-            }
+            };
         }
 
         /*
@@ -260,7 +257,7 @@ define([
                 bus.on('update', function (message) {
                     setModelValue(message.value);
                 });
-                bus.send({type: 'sync'});
+                bus.emit('sync');
                 return null;
             });
         }

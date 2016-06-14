@@ -142,10 +142,14 @@ define (
                         // but without some heavy rewiring, it's difficult
                         // to track when some event occurred.
                         // So, dirty bit it is.
-                        this.refreshFunctionInputs(!this.inputsRendered);
-                        if (!this.inputsRendered) {
-                            this.loadAllRecentCellStates();
-                            this.trigger('refreshJobs.Narrative');
+                        try {
+                            this.refreshFunctionInputs(!this.inputsRendered);
+                            if (!this.inputsRendered) {
+                                this.loadAllRecentCellStates();
+                                this.trigger('refreshJobs.Narrative');
+                            }
+                        } catch (ex) {
+                            console.error('Error handling dataUpdated', ex);
                         }
 
                         this.inputsRendered = true;
@@ -417,6 +421,25 @@ define (
                 alert('Sorry, could not find this method');
                 return;
             }
+            
+            // For now, dispatch on the type of method cell here. This is really 
+            // just a handler for the event emitted when a user clicks on
+            // a method in the side panel, so there is no processing of anything
+            // yet, really. 
+            // An alternative is that the event emitted could be specialized based on the
+            // type of method.
+            
+            // To boot, there does not appear to be a spec property dedicated to
+            // defining the "type" of method.
+            // So, for kicks, we are using the presence of the word "view" in the 
+            // spec name, as well as the absence of any output paramters.
+            
+            // console.log('SPEC', spec);
+            var cellType = this.determineMethodCellType(spec);
+            //if (cellType === 'view') {
+            //    alert('Sorry, view cells are not yet supported');
+           // }
+            
             // This will also trigger the create.Cell event, which is not very
             // useful for us really since we haven't been able to set the
             // metadata yet. Don't worry, I checked, the Jupyter api does not
@@ -427,12 +450,33 @@ define (
             $([Jupyter.events]).trigger('inserted.Cell', {
                 cell: cell,
                 kbase: {
-                    type: 'method',
+                    type: cellType,
                     methodTag: tag,
                     methodSpec: spec
                 }
             });
-
+        },
+        
+        determineMethodCellType: function (spec) {
+            if ((spec.behavior.kb_service_method && spec.behavior.kb_service_name) ||
+                (spec.behavior.script_module && spec.behavior.script_name)) {
+                return 'method';
+            }
+            
+            if (spec.info.categories.some(function (category) {
+                return (category === 'viewers');
+            })) {
+                return 'view';
+            }
+            
+            if (!spec.parameters.some(function (parameter) {
+                return (parameter.ui_class === 'output');
+            })) {
+                return 'view';
+            };
+            
+            console.error('ERROR - could not determine cell type', spec);
+            throw new Error('Could not determine cell type');
         },
 
 

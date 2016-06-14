@@ -3,7 +3,7 @@
 define([
     'bluebird',
     'kb_common/html',
-    '../../props',
+    'common/props',
     'bootstrap',
     'css!font-awesome'
 ], function (Promise, html, Props) {
@@ -48,7 +48,7 @@ define([
                 bus.on('update', function (message) {
                     model.setItem('value', message.value);
                 });
-                bus.send({type: 'sync'});
+                bus.emit('sync');
             });
         }
 

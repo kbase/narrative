@@ -2,41 +2,34 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'jquery',
     'base/js/namespace',
     'kb_common/html',
-    '../../validation',
-    '../../events',
-    '../../dom',
+    'common/validation',
+    'common/events',
+    'common/dom',
+    'common/props',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, $, Jupyter, html, Validation, Events, Dom) {
+], function (Promise, Jupyter, html, Validation, Events, Dom, Props) {
     'use strict';
 
     // Constants
     var t = html.tag,
-        div = t('div'), input = t('input'), span = t('span'), button = t('button');
+        div = t('div'), input = t('input');
 
     function factory(config) {
         var options = {},
             spec = config.parameterSpec,
             parent,
             container,
-            $container,
             bus = config.bus,
-            model = {
-                value: undefined
-            },
-        dom;
+            model,
+            dom;
 
         // Validate configuration.
         // Nothing to do...
 
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
         options.enabled = true;
-
 
         /*
          * If the parameter is optional, and is empty, return null.
@@ -51,33 +44,11 @@ define([
             return dom.getElement('input-container.input').value;
         }
 
-        function setModelValue(value) {
-            return Promise.try(function () {
-                if (model.value !== value) {
-                    model.value = value;
-                    return true;
-                }
-                return false;
-            })
-                .then(function (changed) {
-                    render();
-                });
-        }
-
-        function unsetModelValue() {
-            return Promise.try(function () {
-                model.value = undefined;
-            })
-                .then(function (changed) {
-                    render();
-                });
-        }
-
         function resetModelValue() {
             if (spec.spec.default_values && spec.spec.default_values.length > 0) {
-                setModelValue(spec.spec.default_values[0]);
+                model.setItem('value', spec.spec.default_values[0]);
             } else {
-                unsetModelValue();
+                model.setItem('value', undefined);
             }
         }
 
@@ -114,7 +85,7 @@ define([
                     validationResult;
 
                 validationOptions.required = spec.required();
-                validationResult = Validation.validateIntegerField(rawValue, validationOptions);
+                validationResult = Validation.validateIntString(rawValue, validationOptions);
 
                 return {
                     isValid: validationResult.isValid,
@@ -139,59 +110,68 @@ define([
             if (currentValue) {
                 initialControlValue = String(currentValue);
             }
-            return div({class: 'input-group', style: {width: '100%'}}, [
-                (min ? div({class: 'input-group-addon', fontFamily: 'monospace'}, String(min) + ' &#8804; ') : ''),
-                input({
-                    id: events.addEvents({
-                        events: [
-                            {
-                                type: 'change',
-                                handler: function (e) {
-                                    validate()
-                                        .then(function (result) {
-                                            if (result.isValid) {
-                                                bus.send({
-                                                    type: 'changed',
-                                                    newValue: result.value
+            return div({style: {width: '100%'}, dataElement: 'input-wrapper'}, [
+                div({class: 'input-group', style: {width: '100%'}}, [
+                    (min ? div({class: 'input-group-addon', fontFamily: 'monospace'}, String(min) + ' &#8804; ') : ''),
+                    input({
+                        id: events.addEvents({
+                            events: [
+                                {
+                                    type: 'change',
+                                    handler: function (e) {
+                                        validate()
+                                            .then(function (result) {
+                                                if (result.isValid) {
+                                                    model.setItem('value', result.value);
+                                                    bus.emit('changed', {
+                                                        newValue: result.value
+                                                    });
+                                                } else if (result.diagnosis === 'required-missing') {
+                                                    model.setItem('value', result.value);
+                                                    bus.emit('changed', {
+                                                        newValue: result.value
+                                                    });
+                                                } else {
+                                                    // show error message -- new!
+                                                    dom.setContent('input-container.message', result.errorMessage);
+                                                }
+                                                bus.emit('validation', {
+                                                    errorMessage: result.errorMessage,
+                                                    diagnosis: result.diagnosis
                                                 });
-                                                setModelValue(result.value);
-                                            }
-                                            bus.send({
-                                                type: 'validation',
-                                                errorMessage: result.errorMessage,
-                                                diagnosis: result.diagnosis
                                             });
-                                        });
+                                    }
+                                },
+                                {
+                                    type: 'focus',
+                                    handler: function (e) {
+                                        Jupyter.keyboard_manager.disable();
+                                    }
+                                },
+                                {
+                                    type: 'blur',
+                                    handler: function (e) {
+                                        Jupyter.keyboard_manager.enable();
+                                    }
                                 }
-                            },
-                            {
-                                type: 'focus',
-                                handler: function (e) {
-                                    Jupyter.keyboard_manager.disable();
-                                }
-                            },
-                            {
-                                type: 'blur',
-                                handler: function (e) {
-                                    Jupyter.keyboard_manager.enable();
-                                }
-                            }
-                        ]}),
-                    class: 'form-control',
-                    dataElement: 'input',
-                    dataType: 'int',
-                    value: initialControlValue
-                }),
-                (max ? div({class: 'input-group-addon', fontFamily: 'monospace'}, ' &#8804; ' + String(max)) : '')
+                            ]}),
+                        class: 'form-control',
+                        dataElement: 'input',
+                        dataType: 'int',
+                        value: initialControlValue
+                    }),
+                    (max ? div({class: 'input-group-addon', fontFamily: 'monospace'}, ' &#8804; ' + String(max)) : '')
+                ]),
+                div({dataElement: 'message', style: {backgroundColor: 'red', color: 'white'}})
             ]);
         }
 
         function render() {
             Promise.try(function () {
                 var events = Events.make(),
-                    inputControl = makeInputControl(model.value, events, bus);
+                    inputControl = makeInputControl(model.getItem('value'), events, bus);
 
-                $container.find('[data-element="input-container"]').html(inputControl);
+                dom.setContent('input-container', inputControl);
                 events.attachEvents(container);
             })
                 .then(function () {
@@ -210,12 +190,11 @@ define([
                 events: events
             };
         }
-        
+
         function autoValidate() {
             return validate()
                 .then(function (result) {
-                    bus.send({
-                        type: 'validation',
+                    bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
@@ -228,8 +207,7 @@ define([
             return Promise.try(function () {
                 bus.on('run', function (message) {
                     parent = message.node;
-                    container = parent.appendChild(document.createElement('div'));
-                    $container = $(container);
+                    container = parent.appendChild(document.createElement('div'));                    
                     dom = Dom.make({node: container});
 
                     var events = Events.make(),
@@ -237,18 +215,31 @@ define([
 
                     container.innerHTML = theLayout.content;
                     events.attachEvents(container);
-                    setModelValue(message.value);
-                    
-                    bus.send({type: 'sync'});
+                    model.setItem('value', message.value);
+
+                    bus.on('reset-to-defaults', function (message) {
+                        resetModelValue();
+                    });
+                    bus.on('update', function (message) {
+                        model.setItem('value', message.value);
+                    });
+                    bus.on('stop', function () {
+                        bus.stop();
+                    })
+                    bus.emit('sync');
                 });
-                bus.on('reset-to-defaults', function (message) {
-                    resetModelValue();
-                });
-                bus.on('update', function (message) {
-                    setModelValue(message.value);
-                });
+
             });
         }
+
+        model = Props.make({
+            data: {
+                value: null
+            },
+            onUpdate: function (props) {
+                render();
+            }
+        });
 
         return {
             start: start

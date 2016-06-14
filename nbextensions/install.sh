@@ -11,5 +11,12 @@ export IPYTHONDIR=$narrdir/kbase-extension/ipython
 echo 'Root dir'
 echo ${dir}
 
-jupyter nbextension install ${dir}/methodCell --symlink --sys-prefix
-jupyter nbextension enable methodCell/main --sys-prefix
+#jupyter nbextension disable methodCell/main --sys-prefix
+#jupyter nbextension uninstall ${dir}/methodCell --symlink --sys-prefix
+#jupyter nbextension install ${dir}/methodCell --symlink --sys-prefix
+#jupyter nbextension enable methodCell/main --sys-prefix
+
+#jupyter nbextension disable methodViewCell/main --sys-prefix
+#jupyter nbextension uninstall ${dir}/methodViewCell --sys-prefix
+jupyter nbextension install ${dir}/methodViewCell --symlink --sys-prefix
+jupyter nbextension enable methodViewCell/main --sys-prefix

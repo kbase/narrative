@@ -2,17 +2,17 @@
 /*jslint white:true,browser:true*/
 
 define([
-    '../microBus',
-    '../props',
-    '../utils',
-    '../jobs',
-    '../dom',
-    '../runtime',
-    '../events',
+    'uuid',
+    'common/props',
+    'common/utils',
+    'common/jobs',
+    'common/dom',
+    'common/runtime',
+    'common/events',
     'kb_common/format',
     'kb_common/html',
-    'kb_service/client/workspace',
-], function (Bus, Props, utils, Jobs, Dom, Runtime, Events, format, html, Workspace) {
+    'kb_service/client/workspace'
+], function (Uuid, Props, utils, Jobs, Dom, Runtime, Events, format, html, Workspace) {
     'use strict';
 
     var t = html.tag,
@@ -24,7 +24,7 @@ define([
     function factory(config) {
         var api,
             runtime = Runtime.make(),
-            bus = Bus.make(),
+            bus = runtime.bus().makeChannelBus(null, 'Bus for exec widget'),
             parentBus = config.bus,
             container,
             listeners = [],
@@ -98,6 +98,7 @@ define([
                 body: [
                     table({class: 'table table-striped', style: {tableLayout: 'fixed'}}, [
                         tr([th({style: {width: '15%'}}, 'Error in'), td({dataElement: 'location', style: {width: '85%'}})]),
+                        tr([th('Type'), td({dataElement: 'type'})]),
                         tr([th('Message'), td({dataElement: 'message'})]),
                         tr([th('Detail'), td([div({dataElement: 'detail', style: {overflowX: 'scroll', whiteSpace: 'pre'}})])])
                     ])
@@ -524,6 +525,7 @@ define([
                 dom.setContent(['runStatus', 'error', 'flag'], 'yes');
                 dom.showElement(['run-error']);
                 dom.setContent(['run-error', 'location'], state.error.location);
+                dom.setContent(['run-error', 'type'], state.error.type);
                 dom.setContent(['run-error', 'message'], state.error.message);
                 dom.setContent(['run-error', 'detail'], state.error.detail);
                 // console.log('ERROR', state.error);
@@ -566,8 +568,9 @@ define([
                     canonicalState = 'launch-error';
                     error = {
                         location: 'launching',
+                        type: launchEvent.error_type,
                         message: launchEvent.error_message,
-                        detail: 'An error occurred while launching the method'
+                        detail: launchEvent.error_stacktrace
                     };
                     break;
                 default:
@@ -715,11 +718,30 @@ define([
 //                    errorMessage = errorInfo;
 //                    errorDetail = '';
 //                }
-                console.log('EXEC ERROR', errorInfo);
+                var errorId = new Uuid(4).format();
+                console.log('EXEC ERROR', errorId, errorInfo);
+                
+                var errorType, errorMessage, errorDetail;
+                if (errorInfo.error) {
+                    // Classic KBase rpc error message
+                    errorType = errorInfo.name;
+                    errorMessage = errorInfo.message;
+                    errorDetail = errorInfo.error;
+                } else if (errorInfo.name) {
+                    errorType = 'unknown';
+                    errorMessage = errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
+                    errorDetail = 'This error occurred during execution of the method job.';
+                } else {
+                    errorType = 'unknown';
+                    errorMessage = 'Unknown error (check console for ' + errorId + ')';
+                    errorDetail = 'There is no further information about this error';
+                }
+                
                 error = {
                     location: 'job execution',
-                    message: 'message here',
-                    detail: 'detail here'
+                    type: errorType,
+                    message: errorMessage,
+                    detail: errorDetail
                 };
 //            } else if (reportRef) {
 //                executionState = 'success';
@@ -850,13 +872,13 @@ define([
             // These methods are guaranteed to only happen once, and we should
             // get every single event.
             switch (runMessage.event) {
-                case 'validating_method':
+                case 'validating_app':
                     runState.state = 'validating',
                         runState.launch = {
                             start: new Date().getTime()
                         };
                     break;
-                case 'validated_method':
+                case 'validated_app':
                     runState.state = 'validated';
                     runState.launch.elapsed = now - runState.launch.start;
                     break;
@@ -969,8 +991,8 @@ define([
 
             var launchState = model.getItem('launchState');
             if (!launchState) {
-                if (launchEvent.event !== 'validating_method') {
-                    console.warn('Initializing launch time without validating_method (' + launchEvent.event + ')');
+                if (launchEvent.event !== 'validating_app') {
+                    console.warn('Initializing launch time without validating_app (' + launchEvent.event + ')');
                 }
                 launchState = {
                     startTime: new Date(launchEvent.event_at).getTime(),
@@ -1050,10 +1072,15 @@ define([
                 showToggleElement(toggle.name);
             });
             parentBus.on('job-state', function (message) {
+                console.log('EXEC got it!', message);
                 processNewJobState(message.jobState);
             });
+            // not sure if this is the wisest thing to do...
+            parentBus.on('job-state-updated', function (message) {
+                model.setItem('jobStateLastUpdatedTime', new Date().getTime());
+            });
             parentBus.on('launch-event', function (message) {
-                processNewLaunchEvent(message.data);
+                processNewLaunchEvent(message);
             });
             bus.on('show-job-report', function (message) {
                 getJobReport(message.reportRef)
@@ -1066,6 +1093,7 @@ define([
             runtime.bus().on('clock-tick', function () {
                 // only update the ui on clock tick if we are currently running
                 // a job. TODO: the clock should be disconnected.
+                // console.log('tick');
                 var runState = model.getItem('runState');
                 if (runState && runState.executionState === 'processing') {
                     updateRunStateFromJobState();
@@ -1093,7 +1121,8 @@ define([
 
         function stop() {
             listeners.forEach(function (listener) {
-                parentBus.remove(listener);
+                // TODO: make this work
+                // parentBus.remove(listener);
             });
         }
 

@@ -6,39 +6,27 @@ define([
     // CDN
     'kb_common/html',
     // LOCAL
-    '../dom',
-    '../microBus',
-    '../events',
-    '../props',
+    'common/dom',
+    'common/runtime',
+    'common/events',
+    'common/props',
     // Wrapper for inputs
     './inputWrapperWidget',
     './fieldWidget',
     // Display widgets
-    './display/singleTextDisplay',
-    './display/multiTextDisplay',
-    './display/undefinedDisplay',
-    './display/objectDisplay',
-    './display/singleSelectDisplay',
-    './display/singleCheckboxDisplay',
-    './display/singleIntDisplay'
+    './paramDisplayResolver'
+
 ], function (
     Promise,
     html,
     Dom,
-    Bus,
+    Runtime,
     Events,
     Props,
     //Wrappers
     RowWidget,
     FieldWidget,
-    // Display widgets
-    SingleTextDisplayWidget,
-    MultiTextDisplayWidget,
-    UndefinedDisplayWidget,
-    ObjectDisplayWidget,
-    SingleSelectDisplay,
-    SingleCheckboxDisplay,
-    SingleIntDisplay
+    ParamResolver
     ) {
     'use strict';
 
@@ -46,7 +34,8 @@ define([
         form = t('form'), span = t('span');
 
     function factory(config) {
-        var parentBus = config.bus,
+        var runtime = Runtime.make(),
+            parentBus = config.bus,
             cellId = config.cellId,
             workspaceInfo = config.workspaceInfo,
             container,
@@ -57,142 +46,57 @@ define([
             inputBusses = [],
             settings = {
                 showAdvanced: null
-            };
+            },
+
+            paramResolver = ParamResolver.make();
 
         // DATA
-        
+
         /*
          * The input control widget is selected based on these parameters:
          * - data type - (text, int, float, workspaceObject (ref, name)
          * - input method - input, select
          */
-        function getInputWidgetFactory(parameterSpec) {
-            var dataType = parameterSpec.dataType(),
-                spec = parameterSpec.spec,
-                fieldType = spec.field_type;
 
-            // NOTE:
-            // field_type is text or dropdown, but does not always correspond to the 
-            // type of control to build. E.g. selecting a workspace object is actually
-            // a dropdown even though the field_type is 'text'.
-
-            switch (dataType) {
-                case 'string':
-                case 'text':
-                    if (parameterSpec.multipleItems()) {
-                        return SingleTextDisplayWidget;
-                    }
-                    switch (fieldType) {
-                        case 'text':
-                            return SingleTextDisplayWidget;
-                        case 'dropdown':
-                            return SingleSelectDisplay;
-                        default:
-                            return UndefinedDisplayWidget;
-                    }
-                case 'int':
-                    switch (fieldType) {
-                        case 'text':
-                            if (parameterSpec.multipleItems()) {
-                                return UndefinedDisplayWidget;
-                            }
-                            return SingleIntDisplay;
-                        case 'checkbox':
-                            return SingleCheckboxDisplay;
-                        default:
-                            if (parameterSpec.multipleItems()) {
-                                return UndefinedDisplayWidget;
-                            }
-                            return UndefinedDisplayWidget;
-                    }
-                case 'float':
-                    if (parameterSpec.multipleItems()) {
-                        return UndefinedDisplayWidget;
-                    }
-                    return SingleTextDisplayWidget;
-                case 'workspaceObjectName':
-                    switch (parameterSpec.uiClass()) {
-                        case 'input':
-                            return ObjectDisplayWidget;
-                        case 'output':
-                            return SingleTextDisplayWidget;
-                        case 'parameter':
-                            return ObjectDisplayWidget;
-                        default:
-                            return ObjectDisplayWidget;
-                    }
-                case 'unspecified':
-                    // a bunch of field types are untyped:
-                    switch (fieldType) {
-                        case 'text':
-                            if (parameterSpec.multipleItems()) {
-                                return MultiTextDisplayWidget;
-                            }
-                            return SingleTextDisplayWidget;
-                        case 'checkbox':
-                            return SingleCheckboxDisplay;
-                        case 'textarea':
-                            return UndefinedDisplayWidget;
-                        case 'dropdown':
-                            if (parameterSpec.multipleItems()) {
-                                return UndefinedDisplayWidget;
-                            }
-                            return SingleSelectDisplay;
-                        case 'custom_button':
-                            return UndefinedDisplayWidget;
-                        case 'textsubdata':
-                            console.log('TEXTSUBDATA', parameterSpec);
-                            if (parameterSpec.multipleItems()) {
-                                return UndefinedDisplayWidget;
-                            }
-                            return UndefinedDisplayWidget;
-                        case 'file':
-                            return UndefinedDisplayWidget;
-                        case 'custom_textsubdata':
-                            console.log('CUSTOM_TEXTSUBDATA', parameterSpec);
-                            if (parameterSpec.multipleItems()) {
-                                return UndefinedDisplayWidget;
-                            }
-                            return UndefinedDisplayWidget;
-                        case 'custom_widget':
-                            return UndefinedDisplayWidget;
-                        case 'tab':
-                            return UndefinedDisplayWidget;
-                        default:
-                            return UndefinedDisplayWidget;
-                    }
-                default:
-                    return UndefinedDisplayWidget;
-                    // return makeUnknownInput;
-            }
-        }
 
         // RENDERING
 
         function makeFieldWidget(parameterSpec, value) {
-            var bus = Bus.make(),
-                inputWidget = getInputWidgetFactory(parameterSpec);
-            
+            var bus = runtime.bus().makeChannelBus(null, 'Params view input bus comm widget'),
+                inputWidget = paramResolver.getWidgetFactory(parameterSpec);
+
             inputBusses.push(bus);
 
             // An input widget may ask for the current model value at any time.
             bus.on('sync', function () {
-                parentBus.send({
-                    type: 'parameter-sync',
+                parentBus.emit('parameter-sync', {
                     parameter: parameterSpec.id()
                 });
             });
+            
+            parentBus.listen({
+              key: {
+                type: 'update',
+                parameter: parameterSpec.id()
+              },
+              handle: function (message) {
+                bus.emit('update', {
+                  value: message.value
+                });
+              }
+            });
 
             // Just pass the update along to the input widget.
-            parentBus.listen({
-                test: function (message) {
-                    var pass = (message.type === 'update' && message.parameter === parameterSpec.id());
-                    return pass;
-                },
-                handle: function (message) {                    
-                    bus.send(message);
-                }
-            });
+            // TODO: commented out, is it even used?
+            // parentBus.listen({
+            //     test: function (message) {
+            //         var pass = (message.type === 'update' && message.parameter === parameterSpec.id());
+            //         return pass;
+            //     },
+            //     handle: function (message) {
+            //         bus.send(message);
+            //     }
+            // });
 
             return FieldWidget.make({
                 inputControlFactory: inputWidget,
@@ -224,7 +128,7 @@ define([
             var button = container.querySelector('[data-button="toggle-advanced"]');
             button.innerHTML = (settings.showAdvanced ? 'Hide Advanced' : 'Show Advanced (' + advancedInputs.length + ' hidden)');
 
-            // Also update the 
+            // Also update the
         }
 
         function renderLayout() {
@@ -238,8 +142,8 @@ define([
                         ]
                     }),
                     dom.makePanel('Inputs', 'input-fields'),
-                    dom.makePanel('Outputs', 'output-fields'),
-                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden'})]), 'parameter-fields')
+                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden'})]), 'parameter-fields'),
+                    dom.makePanel('Outputs', 'output-fields')
                 ]);
 
             return {
@@ -287,7 +191,7 @@ define([
 
         function renderParameters(params) {
             var widgets = [];
-            // First get the method specs, which is stashed in the model, 
+            // First get the method specs, which is stashed in the model,
             // with the parameters returned.
             // Separate out the params into the primary groups.
             var params = model.getItem('parameters'),
@@ -361,7 +265,7 @@ define([
 
         function start() {
             // send parent the ready message
-            parentBus.send('ready');
+            parentBus.emit('ready');
 
             // parent will send us our initial parameters
             parentBus.on('run', function (message) {
@@ -388,7 +292,7 @@ define([
 
         // CONSTRUCTION
 
-        bus = Bus.make();
+        bus = runtime.bus().makeChannelBus(null, 'params view own bus');
 
 
         return {

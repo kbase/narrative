@@ -12,8 +12,7 @@ define([
     'kbaseTabs',
     'kbaseViewLiveRunLog',
     'kbaseReportView',
-    'nbextensions/methodCell/microBus',
-    'nbextensions/methodCell/runtime',
+    'common/runtime',
     'text!kbase/templates/job_status/status_table.html',
     'text!kbase/templates/job_status/header.html',
     'text!kbase/templates/job_status/log_panel.html',
@@ -33,7 +32,6 @@ define([
     KBaseTabs,
     KBaseViewLiveRunLog,
     KBaseReportView,
-    Bus,
     Runtime,
     JobStatusTableTemplate,
     HeaderTemplate,
@@ -86,15 +84,70 @@ define([
                 // use this and not the state input.
                 this.state = cellState;
             }
-
-            this.runtime.bus().listen({
-                test: function(msg) {
-                    return (msg.data && msg.data.jobId === this.jobId);
-                }.bind(this),
-                handle: function(msg) {
-                    this.handleJobStatus(msg);
+            
+            
+            var bus = this.runtime.bus();
+            
+            bus.listen({
+                channel: {
+                    jobId: this.jobId
+                },
+                key: {
+                    type: 'job-status'
+                },
+                handle: function (message) {
+                    this.handleJobStatus(message);
                 }.bind(this)
             });
+            
+          
+            bus.listen({
+                channel: {
+                    jobId: this.jobId
+                },
+                key: {
+                    type: 'job-logs'
+                },
+                handle: function (message) {
+                    this.handleJobLogs(message);
+                }.bind(this)
+            });
+            
+            bus.listen({
+                channel: {
+                    jobId: this.jobId
+                },
+                key: {
+                    type: 'job-log-deleted'
+                },
+                handle: function (message) {
+                    this.handleJobLogDeleted(message);
+                }.bind(this)
+            });
+            
+            
+            
+//            this.runtime.bus().on('job-status', function (message) {
+//                this.handleJobStatus(message);
+//            }.bind(this));
+//
+//            this.runtime.bus().on('job-logs', function (message) {
+//                this.handleJobLogs(message);
+//            }.bind(this));
+//
+//            this.runtime.bus().on('job-log-deleted', function (message) {
+//                this.handleJobLogDeleted(message);
+//            }.bind(this));
+
+//            this.runtime.bus().listen({
+//                test: function(msg) {
+//                    return (msg.data && msg.data.jobId === this.jobId);
+//                }.bind(this),
+//                handle: function(msg) {
+//                    this.handleJobStatus(msg);
+//                }.bind(this)
+//            });
+//            
             // render up the panel's view layer.
             this.initializeView();
             this.updateView();
@@ -170,26 +223,43 @@ define([
             };
             this.cell.metadata = metadata;
         },
-
-        handleJobStatus: function(message) {
-            switch (message.type) {
-                case 'job-status':
-                    this.state = message.data.jobState.state;
-                    this.setCellState();
-                    this.updateView();
-                    break;
-                case 'job-logs':
-                    if (this.pendingLogRequest && (this.pendingLogLine === message.data.logs.first || this.pendingLogLine === 'latest' && message.data.logs.latest)) {
-                        this.updateLogs(message.data.logs);
-                    }
-                    break;
-                case 'job-log-deleted':
-                    window.alert('Job has been deleted. No log available.');
-                    break;
-                default:
-                    break;
+        
+        handleJobStatus: function (message) {
+            console.log('HANDLE JOB STATUS', message);
+            this.state = message.jobState.state;
+            this.setCellState();
+            this.updateView();
+        },
+        
+        handleJobLogs: function (message) {
+            if (this.pendingLogRequest && (this.pendingLogLine === message.logs.first || this.pendingLogLine === 'latest' && message.logs.latest)) {
+                this.updateLogs(message.logs);
             }
         },
+        
+        handleJobLogDeleted: function (message) {
+            window.alert('Job has been deleted. No log available.');
+        },
+
+//        handleJobStatus: function(message) {
+//            switch (message.type) {
+//                case 'job-status':
+//                    this.state = message.data.jobState.state;
+//                    this.setCellState();
+//                    this.updateView();
+//                    break;
+//                case 'job-logs':
+//                    if (this.pendingLogRequest && (this.pendingLogLine === message.data.logs.first || this.pendingLogLine === 'latest' && message.data.logs.latest)) {
+//                        this.updateLogs(message.data.logs);
+//                    }
+//                    break;
+//                case 'job-log-deleted':
+//                    window.alert('Job has been deleted. No log available.');
+//                    break;
+//                default:
+//                    break;
+//            }
+//        },
 
         showError: function(message) {
             this.$elem.append(message);
@@ -270,8 +340,7 @@ define([
             this.pendingLogRequest = true;
             this.pendingLogLine = firstLine;
             if (typeof firstLine === 'string' && firstLine === 'latest') {
-                this.runtime.bus().send({
-                    type: 'request-latest-job-log',
+                this.runtime.bus().emit('request-latest-job-log', {
                     jobId: this.jobId,
                     options: {
                         num_lines: this.maxLineRequest
@@ -279,8 +348,7 @@ define([
                 });
             }
             else {
-                this.runtime.bus().send({
-                    type: 'request-job-log',
+                this.runtime.bus().emit('request-job-log', {
                     jobId: this.jobId,
                     options: {
                         first_line: this.pendingLogLine,

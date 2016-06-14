@@ -2,14 +2,14 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'jquery',
     'base/js/namespace',
     'kb_common/html',
-    '../../validation',
-    '../../events',
+    'common/validation',
+    'common/events',
+    'common/dom',
     'bootstrap',
     'css!font-awesome'
-], function (Promise, $, Jupyter, html, Validation, Events) {
+], function (Promise, Jupyter, html, Validation, Events, Dom) {
     'use strict';
 
     // Constants
@@ -18,21 +18,25 @@ define([
 
     function factory(config) {
         var options = {},
-            spec = config.parameterSpec,
+            constraints,
             parent,
             container,
-            $container,
             bus = config.bus,
+            dom,
             model = {
                 value: undefined
             };
 
+        if (config.parameterSpec) {
+            constraints = config.parameterSpec.getConstraints();
+        } else {
+            constraints = config.constraints;
+        }
+        
+        // 
         // Validate configuration.
         // Nothing to do...
 
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
         options.enabled = true;
 
 
@@ -46,7 +50,7 @@ define([
          */
 
         function getInputValue() {
-            return $container.find('[data-element="input-container"] [data-element="input"]').val();
+            return dom.getElement('input-container.input').value;
         }
 
         function setModelValue(value) {
@@ -72,8 +76,8 @@ define([
         }
 
         function resetModelValue() {
-            if (spec.spec.default_values && spec.spec.default_values.length > 0) {
-                setModelValue(spec.spec.default_values[0]);
+            if (constraints.defaultValue) {
+                setModelValue(constraints.defaultValue);
             } else {
                 unsetModelValue();
             }
@@ -100,8 +104,8 @@ define([
                 }
 
                 var rawValue = getInputValue(),
-                    validationResult = Validation.validateText(rawValue, {
-                        required: options.required
+                    validationResult = Validation.validateTextString(rawValue, {
+                        required: constraints.required
                     });
 
                 return {
@@ -114,9 +118,9 @@ define([
             });
         }
 
+        var editPauseTimer;
         function changeOnPause() {
             var editPauseTime = 0,
-                editPauseTimer,
                 editPauseInterval = 2000;
 
             return {
@@ -134,7 +138,7 @@ define([
                         }
                     }, 2500);
                 }
-            }
+            };
         }
 
         /*
@@ -151,28 +155,30 @@ define([
                         {
                             type: 'change',
                             handler: function (e) {
+                                if (editPauseTimer) {
+                                    window.clearTimeout(editPauseTimer);
+                                    editPauseTimer = null;
+                                }
                                 validate()
                                     .then(function (result) {
                                         if (result.isValid) {
-                                            bus.send({
-                                                type: 'changed',
+                                            bus.emit('changed', {
                                                 newValue: result.value
                                             });
                                         } else if (result.diagnosis === 'required-missing') {
-                                            bus.send({
-                                                type: 'changed',
+                                            bus.emit('changed', {
                                                 newValue: result.value
                                             });
                                         }
                                         setModelValue(result.value);
-                                        bus.send({
-                                            type: 'validation',
+                                        bus.emit('validation', {
                                             errorMessage: result.errorMessage,
                                             diagnosis: result.diagnosis
                                         });
                                     });
                             }
-                        }, changeOnPause(),
+                        }, 
+                        // changeOnPause(),
                         {
                             type: 'focus',
                             handler: function (e) {
@@ -197,7 +203,7 @@ define([
                 var events = Events.make(),
                     inputControl = makeInputControl(model.value, events, bus);
 
-                $container.find('[data-element="input-container"]').html(inputControl);
+                dom.setContent('input-container', inputControl);
                 events.attachEvents(container);
             })
                 .then(function () {
@@ -220,8 +226,7 @@ define([
         function autoValidate() {
             return validate()
                 .then(function (result) {
-                    bus.send({
-                        type: 'validation',
+                    bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });
@@ -231,47 +236,33 @@ define([
 
         // LIFECYCLE API
 
-        function init() {
-        }
-
-        function attach(node) {
-            return Promise.try(function () {
-                parent = node;
-                container = node.appendChild(document.createElement('div'));
-                $container = $(container);
-
-                var events = Events.make(),
-                    theLayout = layout(events);
-
-                container.innerHTML = theLayout.content;
-                events.attachEvents(container);
-            });
-        }
-
         function start() {
             return Promise.try(function () {
-                bus.on('reset-to-defaults', function (message) {
-                    resetModelValue();
-                });
-                bus.on('update', function (message) {
-                    setModelValue(message.value);
-                });
-                bus.send({type: 'sync'});
-                return null;
-            });
-        }
+                bus.on('run', function (message) {
+                    
+                    parent = message.node;
+                    container = parent.appendChild(document.createElement('div'));
+                    dom = Dom.make({node: message.node});
 
-        function run(params) {
-            return Promise.try(function () {
-                return setModelValue(params.value);
+                    var events = Events.make(),
+                        theLayout = layout(events);
+
+                    container.innerHTML = theLayout.content;
+                    events.attachEvents(container);
+                    
+                    bus.on('reset-to-defaults', function (message) {
+                        resetModelValue();
+                    });
+                    bus.on('update', function (message) {
+                        setModelValue(message.value);
+                    });
+                    bus.emit('sync');
+                });
             });
         }
 
         return {
-            init: init,
-            attach: attach,
-            start: start,
-            run: run
+            start: start
         };
     }
 

@@ -25,6 +25,7 @@ define (
 		'kbaseNarrativeControlPanel',
                 'base/js/namespace',
                 'kb_service/client/narrativeMethodStore',
+                'uuid',
                 
 		'narrative_core/catalog/kbaseCatalogBrowser',
 		'kbaseNarrative',
@@ -43,7 +44,8 @@ define (
                 kbaseAccordion,
 		kbaseNarrativeControlPanel,
                 Jupyter,
-                NarrativeMethodStore
+                NarrativeMethodStore,
+                Uuid
 	) {
     'use strict';
     return KBWidget({
@@ -573,7 +575,12 @@ define (
                         .then(function(spec){
                             // todo: cache this spec into the methods list
                             self.trigger('methodClicked.Narrative', [spec[0], self.currentTag]);
-                        });
+                        })
+                        .catch(function (err) {
+                            var errorId = new Uuid(4).format();
+                            console.error('Error getting method spec #' + errorId, err, method, self.currentTag);
+                            alert('Error getting method spec, see console for error info #' + errorId);
+                        })
                 } else {
                     self.trigger('methodClicked.Narrative', [method, self.currentTag]);
                 }

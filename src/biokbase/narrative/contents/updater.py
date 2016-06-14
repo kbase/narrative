@@ -10,11 +10,14 @@ It should be noted here that if an update occurs, job ids will no longer be avai
 import uuid
 import json
 import re
+from narrative_test_helper import (
+    fetch_narrative
+)
 
 def update_needed(narrative):
     # simple enough - if there's a "kbase" block
     # in the metadata, it's been updated.
-    return 'kbase' in narrative['metadata']
+    return 'kbase' not in narrative['metadata']
 
 def update_narrative(narrative):
     """
@@ -29,7 +32,7 @@ def update_narrative(narrative):
         cell = update_cell(cell)
         if cell.get('metadata', {}).get('kbase', {}).get('updated', False):
             updated_cells.add(idx)
-    narrative.metadata = update_metadata(narrative.metadata)
+    narrative['metadata'] = update_metadata(narrative['metadata'])
     return narrative
 
 def update_cell(cell):
@@ -41,7 +44,7 @@ def update_cell(cell):
     if kb-cell.type == function_input , go to update_method_cell
     if kb-cell.type == function_output , go to update_output_cell
     """
-    if cell.get('cell_type', None) is not 'markdown':
+    if cell.get('cell_type', None) != 'markdown':
         return cell
     meta = cell['metadata']
 
@@ -118,14 +121,14 @@ def update_method_cell(cell):
         'type': 'method',
         'attributes': {
             'id': uuid.uuid4(),
-            'status': ...,
+            'status': 'new',
             'created': widget_state.get('time', None),          # default to last saved time
             'lastLoaded': widget_state.get('time', None),
         },
         'methodCell': {
             'method': {
                 'id': method_info.get('id', 'unknown'),
-                'gitCommitHash': method_info.get('git_commit_hash', None)
+                'gitCommitHash': method_info.get('git_commit_hash', None),
                 'version': method_info.get('ver', None),
                 'tag': 'release'
             },
@@ -169,7 +172,7 @@ def update_output_cell(cell):
     # Grab the source, parse it, build a new viewer for it,
     # put that in a code cell, and execute it.
     # ... maybe directly change the output area? Might be easier ...
-    pass
+    return cell
 
 def update_metadata(metadata):
     """

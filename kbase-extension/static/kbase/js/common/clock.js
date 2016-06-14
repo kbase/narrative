@@ -15,8 +15,7 @@ define([
            ticks = 0;
            timer = window.setInterval(function () {
                ticks += 1;
-               bus.send({
-                   type: 'clock-tick',
+               bus.emit('clock-tick', {
                    resolution: resolution,
                    count: ticks
                });

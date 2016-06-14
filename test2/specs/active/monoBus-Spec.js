@@ -1,7 +1,7 @@
 /*global define,describe,it,expect*/
 /*jslint white:true,browser:true*/
 define([
-    'monoBus'
+    'common/monoBus'
 ], function (Bus) {
     'use strict';
 

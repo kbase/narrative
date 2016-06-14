@@ -27,6 +27,7 @@ define([
     'common/parameterSpec',
     'common/utils',
     'common/clock',
+//    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
     'css!./styles/method-widget.css',
@@ -410,7 +411,7 @@ define([
 
             // TODO: the code cell input widget should instantiate its state
             // from the cell!!!!
-            var cellBus = runtime.bus().makeChannelBus(),
+            var cellBus = runtime.bus().makeChannelBus(null, 'Parent comm for The Cell Bus'),
                 methodId = utils.getMeta(cell, 'methodCell', 'method').id,
                 methodTag = utils.getMeta(cell, 'methodCell', 'method').tag,
                 methodCellWidget = MethodCellWidget.make({
@@ -556,6 +557,7 @@ define([
         resolution: 1000
     });
     clock.start();
+    // runtime.bus().logMessages(true);
     // there is not a service/component lifecycle for the narrative is there?
     // so the clock starts, and is never stopped.
 

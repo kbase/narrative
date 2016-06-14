@@ -1088,6 +1088,11 @@ define([
 
         function start() {
             return Promise.try(function () {
+                // disable for now
+                container.innerHTML = 'View widgets not supported now';
+                return;
+                
+                
                 var bus = inputWidgetBus;
 
                 /*
@@ -1473,6 +1478,7 @@ define([
         function run(params) {
             // First get the method specs, which is stashed in the model,
             // with the parameters returned.
+            return;
             return syncMethodSpec(params.methodId, params.methodTag)
                 .then(function () {
                     cell.setMeta('attributes', 'title', env.methodSpec.info.name);

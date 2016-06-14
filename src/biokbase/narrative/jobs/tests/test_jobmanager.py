@@ -7,3 +7,5 @@ import unittest
 import mock
 from biokbase.narrative.jobs import JobManager
 
+jm = JobManager()
+jm.initialize_jobs([])

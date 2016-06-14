@@ -62,7 +62,7 @@ define([
         // RENDERING
 
         function makeFieldWidget(parameterSpec, value) {
-            var bus = runtime.bus().makeChannelBus(),
+            var bus = runtime.bus().makeChannelBus(null, 'Params view input bus comm widget'),
                 inputWidget = paramResolver.getWidgetFactory(parameterSpec);
 
             inputBusses.push(bus);
@@ -292,7 +292,7 @@ define([
 
         // CONSTRUCTION
 
-        bus = runtime.bus().makeChannelBus();
+        bus = runtime.bus().makeChannelBus(null, 'params view own bus');
 
 
         return {

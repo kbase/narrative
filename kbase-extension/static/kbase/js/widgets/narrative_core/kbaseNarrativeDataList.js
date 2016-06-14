@@ -47,7 +47,7 @@ define (
             profile_page_url: Config.url('profile_page'),
 
             loadingImage: Config.get('loading_gif'),
-            methodStoreURL: Config.url('narrative_method_store'), 
+            methodStoreURL: Config.url('narrative_method_store'),
 
             ws_chunk_size: 10000, // this is the limit of the number of objects to retrieve from the ws on each pass
             ws_max_objs_to_fetch: 75000, // this is the total limit of the number of objects before we stop trying to get more
@@ -290,7 +290,7 @@ define (
         /**
          * @method
          * @param {string} error - the error string to show
-         * 
+         *
          * This empties out the main data div and injects an error into it.
          * Used mainly when lookups fail.
          */
@@ -317,16 +317,16 @@ define (
                     }))
                     .then(function(infoList) {
                         // object_info:
-                        // [0] : obj_id objid 
-                        // [1] : obj_name name 
+                        // [0] : obj_id objid
+                        // [1] : obj_name name
                         // [2] : type_string type
-                        // [3] : timestamp save_date 
-                        // [4] : int version 
+                        // [3] : timestamp save_date
+                        // [4] : int version
                         // [5] : username saved_by
-                        // [6] : ws_id wsid 
-                        // [7] : ws_name workspace 
+                        // [6] : ws_id wsid
+                        // [7] : ws_name workspace
                         // [8] : string chsum
-                        // [9] : int size 
+                        // [9] : int size
                         // [10] : usermeta meta
                         for (var i=0; i<infoList.length; i++) {
                             // skip narrative objects
@@ -908,7 +908,7 @@ define (
                     obj = _.findWhere(self.objectList, {key: key}),
                     info = self.createInfoObject(obj.info),
                     cell, cellIndex, placement;
-                    
+
                 if (e.target.getAttribute('cellIs') === 'below') {
                     cell = $(e.target.nextSibling).data().cell;
                     placement = 'above';

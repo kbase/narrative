@@ -1,23 +1,15 @@
-/*global require*/
-/*jslint white:true,browser:true*/
-
-var allTestFiles = [];
-var TEST_REGEXP = /(spec|test)\.js$/i;
-
-// Get a list of all the test files to include
-Object.keys(window.__karma__.files).forEach(function (file) {
-    if (TEST_REGEXP.test(file)) {
-        // Normalize paths to RequireJS module names.
-        // If you require sub-dependencies of test files to be loaded as-is (requiring file extension)
-        // then do not normalize the paths
-        var normalizedTestModule = file.replace(/^\/base\/|\.js$/g, '');
-        allTestFiles.push(normalizedTestModule);
+var tests = [];
+for (var file in window.__karma__.files) {
+    if (window.__karma__.files.hasOwnProperty(file)) {
+        if (/-[sS]pec\.js$/.test(file)) {
+            tests.push(file);
+        }
     }
-});
+}
 
 require.config({
     // Karma serves files under /base, which is the basePath from your config file
-    baseUrl: '/base',
+    baseUrl: '/base/kbase-extension/static/kbase/js',
     paths: {
         kb_common: 'http://cdn.kbase.us/cdn/kbase-common-js/1.5.4/',
         kb_service: 'http://cdn.kbase.us/cdn/kbase-service-clients-js/1.4.0/',
@@ -29,7 +21,7 @@ require.config({
         jquery: 'http://cdn.kbase.us/cdn/jquery/2.2.2/jquery'
     },
     // dynamically load all test files
-    deps: allTestFiles,
+    deps: tests,
     // we have to kickoff jasmine, as it is asynchronous
     callback: window.__karma__.start
 });

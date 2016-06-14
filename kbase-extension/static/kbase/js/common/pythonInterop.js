@@ -123,6 +123,7 @@ define([
 
         var kwargs = [];
         // now the parameters...
+        console.log('PYTHONIFY', params);
         Object.keys(params).forEach(function (pName) {
             // options - either atomic value or list. No hashes, right?
             var pVal = params[pName],
@@ -226,11 +227,8 @@ define([
         return pythonString;
     }
 
-    function buildMethodRunner(cell) {
-        var method = utils.getMeta(cell, 'methodCell', 'method'),
-            params = utils.getMeta(cell, 'methodCell', 'params'),
-            cellId = utils.getMeta(cell, 'attributes').id,
-            runId = new Uuid(4).format(),
+    function buildAppRunner(cellId, method, params) {
+        var runId = new Uuid(4).format(),
             pythonCode = [
                 'from biokbase.narrative.jobs import AppManager',
                 'AppManager().run_app(\n' + pythonifyInputs(method, params, cellId, runId) + '\n)'
@@ -263,6 +261,6 @@ define([
 
 
     return {
-        buildMethodRunner: buildMethodRunner
+        buildAppRunner: buildAppRunner
     };
 });

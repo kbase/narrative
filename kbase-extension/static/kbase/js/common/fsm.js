@@ -14,15 +14,17 @@ define([
 
     function objectEqual(a, b) {
         var keysA = Object.keys(a),
-            keysB = Object.keys(b);
+            keysB = Object.keys(b),
+            diff;
         if (keysA.length !== keysB.length) {
             return false;
         }
-        if (keysA.some(function (key) {
+        diff = keysA.some(function (key) {
             if (a[key] !== b[key]) {
                 return true;
             }
-        })) {
+        });
+        if (diff) {
             return false;
         }
         return true;
@@ -99,7 +101,7 @@ define([
             if (foundStates.length === 1) {
                 return foundStates[0];
             }
-            if (foundStates.length > 2) {
+            if (foundStates.length > 1) {
                 throw new Error('Multiple next states found');
             }            
         }

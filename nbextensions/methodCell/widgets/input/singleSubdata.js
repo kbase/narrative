@@ -129,7 +129,7 @@ define([
                 filteredItems = filterItems(items, model.getItem('filter'));
             model.setItem('filteredAvailableItems', filteredItems);
         }
-        
+
         function didChange() {
             validate()
                 .then(function (result) {
@@ -157,55 +157,51 @@ define([
             var selectedItems = model.getItem('selectedItems');
             selectedItems.push(id);
             model.setItem('selectedItems', selectedItems);
-            didChange();           
+            didChange();
         }
-        
+
         function doRemoveSelectedItem(itemToRemove) {
             var selectedItems = model.getItem('selectedItems'),
                 newSelectedItems = selectedItems.filter(function (selectedItem) {
                     return (selectedItem !== itemToRemove);
                 });
-                
+
             model.setItem('selectedItems', newSelectedItems);
-            didChange();            
+            didChange();
         }
-
-
 
         function renderAvailableItems(events) {
             var items = model.getItem('filteredAvailableItems', []),
                 from = model.getItem('showFrom'),
                 to = model.getItem('showTo'),
-                itemsToShow = items.slice(from, to);
-
-            dom.setContent('available-items-count', String(items.length));
-
-            var content = itemsToShow.map(function (item, index) {
-                return div({style: {border: '1px green dashed'}}, [
-                    table({style: {width: '100%'}}, tr([
-                        td({style: {width: '10px', padding: '2px', backgroundColor: 'gray', color: 'white'}}, String(from + index + 1)),
-                        td({style: {whiteSpace: 'normal'}}, item.label),
-                        td({style: {width: '40px'}}, [
-                            button({
-                                class: 'btn btn-default',
-                                type: 'button',
-                                dataItemId: item.id,
-                                id: events.addEvent({
-                                    type: 'click',
-                                    handler: function (e) {
-                                        doAddItem(item.id);
-                                    }
-                                })}, '&gt;')
-                        ])
-                    ]))
-                ]);
-            })
+                itemsToShow = items.slice(from, to),
+                content = itemsToShow.map(function (item, index) {
+                    return div({style: {border: '1px green dashed'}}, [
+                        table({style: {width: '100%'}}, tr([
+                            td({style: {width: '10px', padding: '2px', backgroundColor: 'gray', color: 'white'}}, String(from + index + 1)),
+                            td({style: {whiteSpace: 'normal'}}, item.label),
+                            td({style: {width: '40px'}}, [
+                                button({
+                                    class: 'btn btn-default',
+                                    type: 'button',
+                                    dataItemId: item.id,
+                                    id: events.addEvent({
+                                        type: 'click',
+                                        handler: function () {
+                                            doAddItem(item.id);
+                                        }
+                                    })}, '&gt;')
+                            ])
+                        ]))
+                    ]);
+                })
                 .join('\n');
 
+            dom.setContent('available-items-count', String(items.length));
             dom.setContent('available-items', content);
             dom.setContent('filtered-items-count', items.length);
         }
-        
+
         function renderSelectedItems(events) {
             var selectedItems = model.getItem('selectedItems') || [],
                 content = selectedItems.map(function (item) {
@@ -217,7 +213,7 @@ define([
                                     type: 'button',
                                     id: events.addEvent({
                                         type: 'click',
-                                        handler:  function () {
+                                        handler: function () {
                                             doRemoveSelectedItem(item);
                                         }
                                     })
@@ -808,6 +804,27 @@ define([
                 }
             });
 
+            bus.listen({
+                key: {
+                    type: 'parameter-value',
+                    parameter: subdataOptions.subdata_selection.parameter_id
+                },
+                handle: function (message) {
+                    var newValue = message.newValue;
+                    if (message.newValue === '') {
+                        newValue = null;
+                    }
+                    model.setItem('referenceObjectName', newValue);
+                    syncAvailableValues()
+                        .then(function () {
+                            updateInputControl('availableValues');
+                        })
+                        .catch(function (err) {
+                            console.error('ERROR syncing available values', err);
+                        });
+                }
+            });
+
             // This control has a dependency relationship in that its
             // selection of available values is dependent upon a sub-property
             // of an object referenced by another parameter.
@@ -895,7 +912,7 @@ define([
                             })
                     ])
                         .spread(function (paramValue, referencedParamValue) {
-                           console.log('Got them!', paramValue.value, referencedParamValue.value);
+                            console.log('Got them!', paramValue.value, referencedParamValue.value);
                             model.setItem('selectedItems', paramValue.value);
                             updateInputControl('value');
 
@@ -908,6 +925,9 @@ define([
                                     console.error('ERROR syncing available values', err);
                                 });
 
+                        })
+                        .catch(function (err) {
+                            console.error('ERROR fetching initial data', err);
                         });
                 });
             });

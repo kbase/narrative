@@ -20,19 +20,19 @@
                 "search": false
             },
             "se_reads": {
-                "name": "RNA-Seq Reads (single end)",
+                "name": "RNA-seq Reads (single-end)",
                 "type": "KBaseAssembly.SingleEndLibrary",
                 "ws": "PlantCSGenomes",
                 "search": false
             },
             "pe_reads": {
-                "name": "RNA-Seq Reads (paired end)",
+                "name": "RNA-seq Reads (paired-end)",
                 "type": "KBaseAssembly.PairedEndLibrary",
                 "ws": "PlantCSGenomes",
                 "search": false
             },
             "plant_rnaseq_anno": {
-                "name": "Plant RNA-Seq Annotation",
+                "name": "Plant RNA-seq Annotations",
                 "type": "KBaseRNASeq.ReferenceAnnotation",
                 "ws": "PlantCSGenomes",
                 "search": false
@@ -59,8 +59,8 @@
                 {
                     "name": [
                         "ContigSet"
-                    ], 
-                    "displayName": "Example Contig Sets", 
+                    ],
+                    "displayName": "Example Contig Sets",
                     "header": "A set of DNA sequences"
                 },
                 {
@@ -88,7 +88,7 @@
                     "name": [
                         "ExpressionMatrix"
                     ],
-                    "displayName": "Example ExpressionMatrix", 
+                    "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
                 },
                 {
@@ -122,19 +122,19 @@
                 "search": false
             },
             "se_reads": {
-                "name": "RNA-Seq Reads (single end)",
+                "name": "RNA-seq Reads (single-end)",
                 "type": "KBaseAssembly.SingleEndLibrary",
                 "ws": "PlantCSGenomes",
                 "search": false
             },
             "pe_reads": {
-                "name": "RNA-Seq Reads (paired end)",
+                "name": "RNA-seq Reads (paired-end)",
                 "type": "KBaseAssembly.PairedEndLibrary",
                 "ws": "PlantCSGenomes",
                 "search": false
             },
             "plant_rnaseq_anno": {
-                "name": "Plant RNA-Seq Annotation",
+                "name": "Plant RNA-seq Annotations",
                 "type": "KBaseRNASeq.ReferenceAnnotation",
                 "ws": "PlantCSGenomes",
                 "search": false
@@ -161,8 +161,8 @@
                 {
                     "name": [
                         "ContigSet"
-                    ], 
-                    "displayName": "Example Contig Sets", 
+                    ],
+                    "displayName": "Example Contig Sets",
                     "header": "A set of DNA sequences"
                 },
                 {
@@ -190,7 +190,7 @@
                     "name": [
                         "ExpressionMatrix"
                     ],
-                    "displayName": "Example ExpressionMatrix", 
+                    "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
                 },
                 {
@@ -224,19 +224,19 @@
                 "search": false
             },
             "se_reads": {
-                "name": "RNA-Seq Reads (single end)",
+                "name": "RNA-seq Reads (single-end)",
                 "type": "KBaseAssembly.SingleEndLibrary",
                 "ws": "PlantCSGenomes",
                 "search": false
             },
             "pe_reads": {
-                "name": "RNA-Seq Reads (paired end)",
+                "name": "RNA-seq Reads (paired-end)",
                 "type": "KBaseAssembly.PairedEndLibrary",
                 "ws": "PlantCSGenomes",
                 "search": false
             },
             "plant_rnaseq_anno": {
-                "name": "Plant RNA-Seq Annotation",
+                "name": "Plant RNA-seq Annotations",
                 "type": "KBaseRNASeq.ReferenceAnnotation",
                 "ws": "PlantCSGenomes",
                 "search": false
@@ -263,8 +263,8 @@
                 {
                     "name": [
                         "ContigSet"
-                    ], 
-                    "displayName": "Example Contig Sets", 
+                    ],
+                    "displayName": "Example Contig Sets",
                     "header": "A set of DNA sequences"
                 },
                 {
@@ -292,7 +292,7 @@
                     "name": [
                         "ExpressionMatrix"
                     ],
-                    "displayName": "Example ExpressionMatrix", 
+                    "displayName": "Example ExpressionMatrix",
                     "header": "Gene expression data in a gene vs. condition matrix"
                 },
                 {

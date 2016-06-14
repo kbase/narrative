@@ -166,10 +166,6 @@ define([
                         stage: 'running'
                     },
                     {
-                        mode: 'processing',
-                        stage: 'queued'
-                    },
-                    {
                         mode: 'success'
                     },
                     {
@@ -394,7 +390,7 @@ define([
             cell = config.cell,
             parentBus = config.bus,
             runtime = Runtime.make(),
-            inputWidgetBus = runtime.bus().makeChannelBus(),
+            inputWidgetBus = runtime.bus().makeChannelBus(null, 'A method cell widget'),
             env = {},
             model,
             // HMM. Sync with metadata, or just keep everything there?
@@ -433,10 +429,15 @@ define([
                     // TODO: really the best way to store state?
                     env.methodSpec = data[0];
                     // Get an input field widget per parameter
-                    var parameters = data[0].parameters.map(function (parameterSpec) {
-                        return ParameterSpec.make({parameterSpec: parameterSpec});
+                    var parameterMap = {},
+                        parameters = data[0].parameters.map(function (parameterSpec) {
+                        // tee hee
+                        var param = ParameterSpec.make({parameterSpec: parameterSpec});
+                        parameterMap[param.id()] = param;
+                        return param;
                     });
                     env.parameters = parameters;
+                    env.parameterMap = parameterMap;
                     return parameters;
                 });
         }
@@ -509,7 +510,7 @@ define([
 
 
 
-        function renderMethodSpec() {
+        function renderAppSpec() {
 //            if (!env.methodSpec) {
 //                return;
 //            }
@@ -517,15 +518,23 @@ define([
 //                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({
                 dataElement: 'spec',
-                class: 'prettyprint lang-json', 
+                class: 'prettyprint lang-json',
                 style: {fontSize: '80%'}});
         }
 
-        function renderMethodSummary() {
+        function renderAppSummary() {
             return table({class: 'table table-striped'}, [
                 tr([
                     th('Name'),
                     td({dataElement: 'name'})
+                ]),
+                tr([
+                    th('Module'),
+                    td({dataElement: 'module'})
+                ]),
+                tr([
+                    th('Id'),
+                    td({dataElement: 'id'})
                 ]),
                 tr([
                     th('Version'),
@@ -550,18 +559,18 @@ define([
             ]);
         }
 
-        function renderAboutMethod() {
+        function renderAboutApp() {
             return html.makeTabs({
                 tabs: [
                     {
                         label: 'Summary',
                         name: 'summary',
-                        content: renderMethodSummary()
+                        content: renderAppSummary()
                     },
                     {
                         label: 'Spec',
                         name: 'spec',
-                        content: renderMethodSpec()
+                        content: renderAppSpec()
                     }
                 ]
             });
@@ -574,26 +583,34 @@ define([
             return false;
         }
 
-        function showAboutMethod() {
-            console.log('METHOD SPEC', env.methodSpec);
-            dom.setContent('about-method.name', env.methodSpec.info.name);
-            dom.setContent('about-method.summary', env.methodSpec.info.subtitle);
-            dom.setContent('about-method.version', env.methodSpec.info.ver);
-            dom.setContent('about-method.git-commit-hash', env.methodSpec.info.git_commit_hash || dom.na());
-            dom.setContent('about-method.authors', env.methodSpec.info.authors.join('<br>'));
-            var methodRef = [env.methodSpec.info.namespace || 'l.m', env.methodSpec.info.id].filter(toBoolean).join('/'),
+        function showAboutApp() {
+            var appSpec = env.methodSpec;
+            console.log('METHOD SPEC', appSpec);
+            dom.setContent('about-app.name', appSpec.info.name);
+            dom.setContent('about-app.module', appSpec.info.namespace || dom.na());
+            dom.setContent('about-app.id', appSpec.info.id);
+            dom.setContent('about-app.summary', appSpec.info.subtitle);
+            dom.setContent('about-app.version', appSpec.info.ver);
+            dom.setContent('about-app.git-commit-hash', appSpec.info.git_commit_hash || dom.na());
+            dom.setContent('about-app.authors', (function () {
+                if (appSpec.info.authors && appSpec.info.authors.length > 0) {
+                    return appSpec.info.authors.join('<br>')
+                }
+                return dom.na();
+            }()));
+            var methodRef = [appSpec.info.namespace || 'l.m', appSpec.info.id].filter(toBoolean).join('/'),
                 link = a({href: '/#appcatalog/app/' + methodRef, target: '_blank'}, 'Catalog Page');
-            dom.setContent('about-method.catalog-link', link);
+            dom.setContent('about-app.catalog-link', link);
         }
 
-        function showMethodSpec() {
+        function showAppSpec() {
             if (!env.methodSpec) {
                 return;
             }
             var specText = JSON.stringify(env.methodSpec, false, 3),
                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
                 content = pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedText);
-            dom.setContent('about-method.spec', content);
+            dom.setContent('about-app.spec', content);
         }
 
         function renderLayout() {
@@ -646,11 +663,11 @@ define([
                                 }),
                                 dom.buildCollapsiblePanel({
                                     title: 'About',
-                                    name: 'about-method',
+                                    name: 'about-app',
                                     hidden: false,
                                     type: 'default',
                                     body: [
-                                        div({dataElement: 'about-method'}, renderAboutMethod())
+                                        div({dataElement: 'about-app'}, renderAboutApp())
                                     ]
                                 }),
                                 dom.buildPanel({
@@ -742,8 +759,8 @@ define([
             };
         }
 
-        function buildPython(cell) {
-            var code = PythonInterop.buildMethodRunner(cell);
+        function buildPython(cell, cellId, method, params) {
+            var code = PythonInterop.buildAppRunner(cellId, method, params);
             cell.set_text(code);
         }
 
@@ -848,7 +865,7 @@ define([
         // WIDGETS
 
         function showWidget(name, widgetModule, path) {
-            var bus = runtime.bus().makeChannelBus(),
+            var bus = runtime.bus().makeChannelBus(null, 'Bus for showWidget'),
                 widget = widgetModule.make({
                     bus: bus,
                     workspaceInfo: workspaceInfo
@@ -924,14 +941,25 @@ define([
                 // NB the narrative callback code does not pass back error
                 // through the callback -- it is just logged to the console.
                 // Gulp!
-                function callback(value) {
-                    resolve(value);
-                }
-                try {
-                    $(document).trigger('cancelJob.Narrative', [jobId, callback]);
-                } catch (err) {
-                    reject(err);
-                }
+
+                // This is now fire and forget.
+                // TODO: close the loop on this.
+                runtime.bus().emit('request-job-deletion', {
+                    jobId: jobId
+                });
+                return;
+
+
+//                
+//                
+//                function callback(value) {
+//                    resolve(value);
+//                }
+//                try {
+//                    $(document).trigger('cancelJob.Narrative', [jobId, callback]);
+//                } catch (err) {
+//                    reject(err);
+//                }
             });
         }
 
@@ -1033,7 +1061,7 @@ define([
                 if (jobState) {
                     return Promise.all([jobState.job_id, deleteJob(jobState.job_id)])
                         .then(function () {
-                            deleteJobFromNotebook(jobState.job_id);
+                            return deleteJobFromNotebook(jobState.job_id);
                         });
                 }
             })
@@ -1053,18 +1081,23 @@ define([
                 });
         }
 
-        function updateFromLaunchEvent(launchEvent) {
+        function updateFromLaunchEvent(message) {
             var newFsmState = (function () {
-                switch (launchEvent.event) {
+                switch (message.event) {
                     case 'validating_app':
                     case 'validated_app':
                     case 'launching_job':
+                        return {mode: 'processing', stage: 'launching'};
+                        break;
                     case 'launched_job':
+                        // NEW: start listening for jobs.
+                        console.log('Starting to listen for job id', message);
+                        startListeningForJobMessages(message.job_id);
                         return {mode: 'processing', stage: 'launching'};
                     case 'error':
                         return {mode: 'error', stage: 'launching'};
                     default:
-                        throw new Error('Invalid launch state ' + launchEvent.event);
+                        throw new Error('Invalid launch state ' + message.event);
                 }
             }());
             fsm.newState(newFsmState);
@@ -1088,9 +1121,8 @@ define([
                         case 'error':
                             if (currentState.state.stage) {
                                 return {mode: 'error', stage: currentState.state.stage};
-                            } else {
-                                return {mode: 'error'};
                             }
+                            return {mode: 'error'};
                         default:
                             throw new Error('Invalid job state ' + jobState.job_state);
                     }
@@ -1130,6 +1162,49 @@ define([
                 };
                 return null;
             });
+        }
+
+        function startListeningForJobMessages(jobId) {
+            var jobChannelId = JSON.stringify({
+                    jobId: jobId
+                });
+            console.log('Starting to listen for job messages', jobChannelId);
+            
+            runtime.bus().listen({
+                channel: jobChannelId,
+                key: {
+                    type: 'job-status'
+                },
+                handle: function (message) {
+                    console.log('JOB STATUS', message);
+                    // Store the most recent job status (jobInfo) in the model and thus metadata.
+                    // console.log('JOBSTATUS', message.job.state);
+                    updateFromJobState(message.job.state);
+
+                    var existingState = model.getItem('exec.jobState');
+                    if (!existingState || existingState.job_state !== message.job.state.job_state) {
+                        model.setItem('exec.jobState', message.job.state);
+                        // Forward the job info to the exec widget if it is available. (it should be!)
+                        if (widgets.execWidget) {
+                            widgets.execWidget.bus.emit('job-state', {
+                                jobState: message.job.state
+                            });
+                        }
+                    } else {
+                        if (widgets.execWidget) {
+                            console.log('SENDING job state updated to exec widget', message.job.state.job_id);
+                            widgets.execWidget.bus.emit('job-state-updated', {
+                                jobId: message.job.state.job_id
+                            });
+                        }
+                    }
+                    model.setItem('exec.jobStateUpdated', new Date().getTime());
+                }
+            });
+        }
+
+        function stopListeningForJobMessages() {
+            // TODO
         }
 
         function start() {
@@ -1179,15 +1254,63 @@ define([
                     bus.emit('reset-to-defaults');
                 });
 
-                runtime.bus().listen({
-                    channel: {
+
+                // We need to listen for job-status messages is we are loading
+                // a cell that has a running job.
+
+                // TODO: inform the job manager that we are ready to receive
+                // messages for this job?
+                // At present the job manager will start doing this after it
+                // loads the narrative and has inspected the jobs in its metadata.
+                // But this is a race condition -- and it is probably better
+                // if the cell invokes this response and then can receive either
+                // the start of the job-status message stream or a response indicating
+                // that the job has completed, after which we don't need to 
+                // listen any further.
+
+                // get the status
+
+                // if we are in a running state, start listening for jobs
+                var state = model.getItem('fsm.currentState');
+
+                if (state) {
+                    switch (state.mode) {
+                        case 'editing':
+                        case 'launching':
+                        case 'processing':
+                            switch (state.stage) {
+                                case 'launching':
+                                    // nothing to do.
+                                    break;
+                                case 'queued':
+                                case 'running':
+                                    startListeningForJobMessages(model.getItem('exec.jobState.job_id'));
+                                    break;
+                            }
+                            break;
+                        case 'success':
+                        case 'error':
+                            // do nothing for now
+                    }
+                }
+
+
+                // console.log('INITIAL STATE IS ', state);
+
+
+                // TODO: only turn this on when we need it!
+                var cellChannel = JSON.stringify({
                         cell: utils.getMeta(cell, 'attributes', 'id')
-                    },
+                    });
+                runtime.bus().makeChannelBus(cellChannel, 'A cell channel');
+                runtime.bus().listen({
+                    channel: cellChannel,
                     key: {
-                        type: 'runstatus'
+                        type: 'run-status'
                     },
                     handle: function (message) {
-                        updateFromLaunchEvent(message.data);
+                        console.log('RUN-STATUS', message);
+                        updateFromLaunchEvent(message);
                         utils.pushMeta(cell, 'methodCell.exec.log', {
                             timestamp: new Date(),
                             event: 'runstatus',
@@ -1200,103 +1323,102 @@ define([
 
                         // Forward to the exec widget
                         if (widgets.execWidget) {
-                            widgets.execWidget.bus.emit('launch-event', {
-                                data: message.data
-                            });
+                            widgets.execWidget.bus.emit('launch-event', message);
                         }
 
                     }
                 });
 
-                runtime.bus().listen({
-                    channel: {
-                        cell: utils.getMeta(cell, 'attributes', 'id')
-                    },
-                    key: {
-                        type: 'jobstatus'
-                    },
-                    handle: function (message) {
-
-                        // Store the most recent job status (jobInfo) in the model and thus metadata.
-                        // console.log('JOBSTATUS', message.job.state);
-                        updateFromJobState(message.job.state);
-
-                        var existingState = model.getItem('exec.jobState');
-                        if (!existingState || existingState.job_state !== message.job.state.job_state) {
-                            model.setItem('exec.jobState', message.job.state);
-                            // Forward the job info to the exec widget if it is available. (it should be!)
-                            if (widgets.execWidget) {
-                                widgets.execWidget.bus.emit('job-state', {
-                                    jobState: message.job.state
-                                });
-                            }
-                        } else {
-                            if (widgets.execWidget) {
-                                widgets.execWidget.bus.emit('job-state-updated', {
-                                    jobId: message.job.state.job_id
-                                });
-                            }
-                        }
-                        model.setItem('exec.jobStateUpdated', new Date().getTime());
-
-
-
-                        // Evaluate the job state to generate our derived "quickStatus" used to control
-                        // the ui...
-
-
-                        // SKIP for now
-                        return;
-
-                        model.setItem('job', {
-                            updatedAt: new Date().getTime(),
-                            info: message.job
-                        });
-
-                        var jobStatus = message.job.state.job_state;
-
-                        // Update current status
-                        updateRunJobStatus();
-
-                        renderRunStatus();
-
-                        updateJobDetails(message);
-                        // updateJobLog(message);
-
-                        updateJobReport(message.job);
-
-                        // and yet another job state thing. This one takes care
-                        // the general state of the job state communication
-
-                        // Update status history.
-
-                        // Okay, don't store multiples of the last event.
-                        var log = cell.metadata.kbase.log;
-                        if (!log) {
-                            log = [];
-                            cell.metadata.kbase.log = log;
-                        }
-                        if (log.length > 0) {
-                            var lastLog = log[log.length - 1];
-                            if (lastLog.data.status === jobStatus) {
-                                if (lastLog.count === undefined) {
-                                    lastLog.count = 0;
-                                }
-                                lastLog.count += 1;
-                                return;
-                            }
-                        }
-
-                        utils.pushMeta(cell, 'methodCell.exec.log', {
-                            timestamp: new Date(),
-                            event: 'jobstatus',
-                            data: {
-                                jobId: message.jobId,
-                                status: jobStatus
-                            }
-                        });
-                    }
-                });
+//                runtime.bus().listen({
+//                    channel: {
+//                        cell: utils.getMeta(cell, 'attributes', 'id')
+//                    },
+//                    key: {
+//                        type: 'job-status',
+//                        jobId: 
+//                    },
+//                    handle: function (message) {
+//
+//                        // Store the most recent job status (jobInfo) in the model and thus metadata.
+//                        // console.log('JOBSTATUS', message.job.state);
+//                        updateFromJobState(message.job.state);
+//
+//                        var existingState = model.getItem('exec.jobState');
+//                        if (!existingState || existingState.job_state !== message.job.state.job_state) {
+//                            model.setItem('exec.jobState', message.job.state);
+//                            // Forward the job info to the exec widget if it is available. (it should be!)
+//                            if (widgets.execWidget) {
+//                                widgets.execWidget.bus.emit('job-state', {
+//                                    jobState: message.job.state
+//                                });
+//                            }
+//                        } else {
+//                            if (widgets.execWidget) {
+//                                widgets.execWidget.bus.emit('job-state-updated', {
+//                                    jobId: message.job.state.job_id
+//                                });
+//                            }
+//                        }
+//                        model.setItem('exec.jobStateUpdated', new Date().getTime());
+//
+//
+//
+//                        // Evaluate the job state to generate our derived "quickStatus" used to control
+//                        // the ui...
+//
+//
+//                        // SKIP for now
+//                        return;
+//
+//                        model.setItem('job', {
+//                            updatedAt: new Date().getTime(),
+//                            info: message.job
+//                        });
+//
+//                        var jobStatus = message.job.state.job_state;
+//
+//                        // Update current status
+//                        updateRunJobStatus();
+//
+//                        renderRunStatus();
+//
+//                        updateJobDetails(message);
+//                        // updateJobLog(message);
+//
+//                        updateJobReport(message.job);
+//
+//                        // and yet another job state thing. This one takes care
+//                        // the general state of the job state communication
+//
+//                        // Update status history.
+//
+//                        // Okay, don't store multiples of the last event.
+//                        var log = cell.metadata.kbase.log;
+//                        if (!log) {
+//                            log = [];
+//                            cell.metadata.kbase.log = log;
+//                        }
+//                        if (log.length > 0) {
+//                            var lastLog = log[log.length - 1];
+//                            if (lastLog.data.status === jobStatus) {
+//                                if (lastLog.count === undefined) {
+//                                    lastLog.count = 0;
+//                                }
+//                                lastLog.count += 1;
+//                                return;
+//                            }
+//                        }
+//
+//                        utils.pushMeta(cell, 'methodCell.exec.log', {
+//                            timestamp: new Date(),
+//                            event: 'jobstatus',
+//                            data: {
+//                                jobId: message.jobId,
+//                                status: jobStatus
+//                            }
+//                        });
+//                    }
+//                });
 
                 // Listen for interesting narrative jquery events...
                 // dataUpdated.Narrative is emitted by the data sidebar list
@@ -1315,6 +1437,8 @@ define([
                     // widgets.paramsInputWidget.bus.emit('workspace-changed');
                     //widgets.paramsDisplayWidget.bus.send('workspace-changed');
                 });
+
+
 
                 // Initialize display
                 showCodeInputArea();
@@ -1339,6 +1463,41 @@ define([
             return 'nbextensions/methodCell/widgets/inputWidgets/' + requestedInputWidget;
         }
 
+        function exportParams() {
+
+            // For each param.
+
+            // if certain limited conditions apply
+
+            // transform the params from the fundamental types
+
+            // to something more suitable for the app params.
+
+            // This is necessary because some params, like subdata, have a
+            // natural storage as array, but are supposed to be provided as 
+            // a string with comma separators
+            var params = model.getItem('params'),
+                paramSpecs = env.parameters,
+                paramsToExport = {};
+
+            Object.keys(params).forEach(function (key) {
+                var value = params[key],
+                    paramSpec = env.parameterMap[key];
+                    
+                console.log('param spec', paramSpec);
+                if (paramSpec.spec.field_type === 'textsubdata') {
+                    console.log('GOT ITTT', value);
+                    if (value) {
+                        value = value.join(',');
+                    }
+                }
+                
+                paramsToExport[key] = value;
+            });
+
+            return paramsToExport;
+        }
+
         function loadInputWidget() {
             return new Promise(function (resolve, reject) {
                 var inputWidget = env.methodSpec.widgets.input,
@@ -1349,7 +1508,7 @@ define([
                 }
 
                 require([selectedWidget], function (Widget) {
-                    var bus = runtime.bus().makeChannelBus(),
+                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo
@@ -1360,7 +1519,6 @@ define([
                         bus: bus,
                         instance: widget
                     };
-                    widget.start();
                     bus.emit('run', {
                         node: dom.getElement(['parameters-group', 'widget']),
                         parameters: env.parameters
@@ -1384,18 +1542,10 @@ define([
                             type: 'get-parameter'
                         },
                         handle: function (message) {
-                            // console.log('Getting?', message);
-                            // console.log(model.getItem('params'));
+                            console.log('Getting?', message, model.getItem('params'));
                             return {
                                 value: model.getItem(['params', message.parameterName])
                             };
-                        }
-                    });
-
-                    bus.respond({
-                        key: 'test',
-                        handle: function (message) {
-                            return true;
                         }
                     });
 
@@ -1415,7 +1565,7 @@ define([
                         model.setItem(['params', message.parameter], message.newValue);
                         var validationResult = validateModel();
                         if (validationResult.isValid) {
-                            buildPython(cell);
+                            buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('method'), exportParams());
                             fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
                             renderUI();
                         } else {
@@ -1424,6 +1574,7 @@ define([
                             renderUI();
                         }
                     });
+                    widget.start();
                     resolve();
                 }, function (err) {
                     console.log('ERROR', err);
@@ -1437,7 +1588,7 @@ define([
                 require([
                     'nbextensions/methodCell/widgets/methodParamsViewWidget'
                 ], function (Widget) {
-                    var bus = runtime.bus().makeChannelBus(),
+                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for load input view widget'),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo
@@ -1501,7 +1652,7 @@ define([
                 require([
                     'nbextensions/methodCell/widgets/methodExecWidget'
                 ], function (Widget) {
-                    var bus = runtime.bus().makeChannelBus(),
+                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for load exec widget'),
                         widget = Widget.make({
                             bus: bus,
                             workspaceInfo: workspaceInfo
@@ -1540,8 +1691,8 @@ define([
                 })
                 .then(function () {
                     // this will not change, so we can just render it here.
-                    showAboutMethod();
-                    showMethodSpec();
+                    showAboutApp();
+                    showAppSpec();
                     PR.prettyPrint(null, container);
                     renderUI();
                 });

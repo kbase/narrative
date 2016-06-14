@@ -29,6 +29,7 @@ define([
 
     function factory(config) {
         var api,
+            config = config || {},
             listenerRegistry = {},
             sendQueue = [],
             requestMap = [],
@@ -36,7 +37,8 @@ define([
             timer,
             instanceId = newInstance(),
             channels = {},
-            doLogMessages = false;
+            doLogMessages = false,
+            strictMode = config.strict;
 
         // CHANNELS
 
@@ -47,24 +49,34 @@ define([
          * Channels are implemented as property of envelopes and addresses.
          */
 
-        function makeChannel(name) {
-            if (channels[name]) {
-                throw new Error('A channel with name "' + name + '" already exists');
+        function makeChannel(spec) {
+            if (channels[spec.name]) {                
+                throw new Error('A channel with name "' + spec.name + '" already exists');
             }
-
-            channels[name] = {
+            if (!spec.description) {
+                if (strictMode) {
+                    throw new Error('Channel description is required');
+                } else {
+                    console.warn('Channel created without description');
+                }
+            }
+            console.log('MAKING CHANNEL', spec);
+            channels[spec.name] = {
+                name: spec.name,
+                description: spec.description,
                 created: new Date(),
                 messageCount: 0,
                 listeners: [],
                 keyListeners: {},
                 testListeners: []
             };
-            return channels[name];
+            return channels[spec.name];
         }
 
         function ensureChannel(name) {
             if (!channels[name]) {
-                makeChannel(name);
+                console.warn('Channel implicitly created', name);
+                makeChannel({name: name});
             }
             return channels[name];
         }
@@ -92,16 +104,19 @@ define([
         }
 
         function processKeyListeners(channel, item) {
-            var listeners = channel.keyListeners[item.envelope.key];
+            var listeners = channel.keyListeners[item.envelope.key],
+                handled = false;
             if (!listeners) {
                 return;
             }
             listeners.forEach(function (listener) {
+                handled = true;
                 if (doLogMessages) {
                     console.log('PROCESSING KEY LISTENER', channel, item);
                 }
                 letListenerHandle(item, listener.handle);
             });
+            return handled;
         }
 
         function testListener(item, tester) {
@@ -155,10 +170,9 @@ define([
                 listener.test = spec.test;
                 listener.handle = spec.handle;
                 channel.testListeners.push(listener);
+            } else {
+                console.warn('listen: nothing to listen on (test or key)');
             }
-
-            // All listeners are registered globally.
-            // listenerRegistry[id] = listener;
 
             return id;
         }
@@ -166,32 +180,39 @@ define([
         // PROCESSING ENGINE 
 
         function processTestListeners(channel, item) {
+            var handled = false;
             channel.testListeners.forEach(function (listener) {
                 if (doLogMessages) {
                     console.log('PROCESSING TEST LISTENER?', channel, item);
                 }
                 if (testListener(item, listener.test)) {
+                    handled = true;
                     console.log('PROCESSING TEST LISTENER!', channel, item);
                     letListenerHandle(item, listener.handle);
                 }
             });
+            return handled;
         }
         function processPending() {
             var processingQueue = sendQueue;
             sendQueue = [];
             processingQueue.forEach(function (item) {
-                var channel = getChannel(item.envelope.channel);
+                var channel = getChannel(item.envelope.channel),
+                    handled;
 
                 if (item.envelope.key) {
                     if (doLogMessages) {
                         console.log('PROCESSING KEY', channel, item);
                     }
-                    processKeyListeners(channel, item);
+                    handled = processKeyListeners(channel, item);
                 } else {
                     if (doLogMessages) {
                         console.log('PROCESSING TEST', channel, item);
                     }
-                    processTestListeners(channel, item);
+                    handled = processTestListeners(channel, item);
+                }
+                if (!handled) {
+                    console.warn('No listeners handled message', item, channel);
                 }
             });
         }
@@ -260,8 +281,8 @@ define([
             var originalHandle = spec.handle;
             function newHandle(message, envelope) {
                 try {
-                    var result = originalHandle(message);
-                    send(result, {
+                    var responseMessage = originalHandle(message);
+                    send(responseMessage, {
                         key: {requestId: envelope.address.requestId}
                     });
                 } catch (ex) {
@@ -290,8 +311,8 @@ define([
                     key: {requestId: requestId},
                     once: true,
                     timeout: address.timeout || 10000,
-                    handle: function (message) {
-                        resolve(message);
+                    handle: function (responseMessage) {
+                        resolve(responseMessage);
                     }
                 });
 
@@ -345,9 +366,14 @@ define([
          * Allows usage of the main bus but within a scope limited to the 
          * specific channel. The main bus is available through a method.
          */
-        function makeChannelBus(name) {
+        function makeChannelBus(name, description) {
             var channelName = name || new Uuid(4).format(),
-                channel = ensureChannel(channelName);
+                channelSpec = {
+                    name: channelName,
+                    description: description
+                };
+                
+            makeChannel(channelSpec);
 
             function on(type, handler) {
                 return listen({
@@ -414,7 +440,7 @@ define([
 
 
         // MAIN
-        makeChannel('default');
+        makeChannel({name: 'default', description: 'The Default Channel'});
 
         // API
         api = {

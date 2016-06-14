@@ -419,7 +419,7 @@ MethodCellController,
 
             // TODO: the code cell input widget should instantiate its state
             // from the cell!!!!
-            var cellBus = runtime.bus().makeChannelBus(),
+            var cellBus = runtime.bus().makeChannelBus(null, 'method view cell main cell bus'),
                 methodId = utils.getMeta(cell, 'methodCell', 'method').id,
                 methodTag = utils.getMeta(cell, 'methodCell', 'method').tag,
                 methodCellWidget = MethodCellWidget.make({

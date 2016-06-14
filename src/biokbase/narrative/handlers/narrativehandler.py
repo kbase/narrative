@@ -15,12 +15,16 @@ from biokbase.narrative.common.util import kbase_env
 import urllib
 import re
 import biokbase.auth
+import tornado.log
+from traitlets.config import Application
+
+app_log = tornado.log.app_log  # alias
+if Application.initialized:
+    app_log = Application.instance().log
+
 g_log = get_logger("biokbase.narrative")
 
-auth_cookie_name = "kbase_narr_session"
-backup_cookie = "kbase_session"
-all_cookies = (auth_cookie_name, backup_cookie)
-
+auth_cookie_name = "kbase_session"
 class NarrativeHandler(IPythonHandler):
     def get(self, path):
         """
@@ -33,18 +37,13 @@ class NarrativeHandler(IPythonHandler):
         http_headers = self.request.headers
         ua = http_headers.get('User-Agent', 'unknown')
 
-        found_cookies = [self.cookies[c] for c in all_cookies if c in self.cookies]
-        if found_cookies:
-            cookie_val = urllib.unquote(found_cookies[0].value)
+        auth_cookie = self.cookies.get(auth_cookie_name, None)
+        if auth_cookie:
+            cookie_val = urllib.unquote(auth_cookie.value)
             cookie_obj = {
                 k: v.replace('EQUALSSIGN', '=').replace('PIPESIGN', '|')
-                for k, v in cookie_regex.findall(cookie_val) 
+                for k, v in cookie_regex.findall(cookie_val)
             }
-        # if app_log.isEnabledFor(logging.DEBUG):
-        #     app_log.debug("kbase cookie = {}".format(cookie_val))
-        #     app_log.debug("KBaseLoginHandler.get: user_id={uid} token={tok}"
-        #         .format(uid=sess.get('token', 'none'),
-        #                 tok=sess.get('token', 'none')))
 
         biokbase.auth.set_environ_token(cookie_obj.get('token', None))
         kbase_env.session = cookie_obj.get('kbase_sessionid', '')
@@ -54,7 +53,7 @@ class NarrativeHandler(IPythonHandler):
 
 
 
-        """get renders the notebook template if a name is given, or 
+        """get renders the notebook template if a name is given, or
         redirects to the '/files/' handler if the name is not given."""
 
         path = path.strip('/')

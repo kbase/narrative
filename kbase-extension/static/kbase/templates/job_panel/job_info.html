@@ -1,0 +1,47 @@
+<div class="kb-data-list-obj-row {{#if error}}kb-jobs-error{{/if}}">
+    <div class="kb-data-list-name kb-data-list-job-name">
+        {{name}}
+        <span class="pull-right">
+            <span data-toggle="tooltip" title data-placement="left" class="btn-xs kb-data-list-more-btn pull-right fa fa-times" style="cursor: pointer;" data-original-title="Remove Job"></span>
+            {{#if hasCell}}
+            <br>
+            <span data-toggle="tooltip" title data-placement="left" class="btn-xs kb-data-list-more-btn pull-right fa fa-location-arrow" style="cursor: pointer;" data-original-title="Scroll To App"></span>
+            {{/if}}
+        </span>
+        <div style="font-size:75%">{{jobId}}</div>
+    </div>
+    <table class="kb-jobs-info-table">
+        <tbody>
+            <tr>
+                <th>Status:</th>
+                <td>
+                    {{#if error}}
+                        <div class="btn btn-danger btn-xs kb-jobs-error-btn">
+                            <span class="fa fa-warning" style="color:white"></span>{{error}}
+                        </div>
+                    {{else}}
+                        {{status}}{{#if completedTime}} {{completedTime}}{{/if}}
+                    {{/if}}
+                </td>
+            </tr>
+            {{#if runTime}}
+            <tr>
+                <th>Run Time:</th>
+                <td>{{runTime}}</td>
+            </tr>
+            {{/if}}
+            {{#if startedTime}}
+            <tr>
+                <th>Started:</th>
+                <td>{{startedTime}}</td>
+            </tr>
+            {{/if}}
+            {{#if position}}
+            <tr>
+                <th>Queue Position:</th>
+                <td>{{position}}</td>
+            </tr>
+            {{/if}}
+        </tbody>
+    </table>
+</div>

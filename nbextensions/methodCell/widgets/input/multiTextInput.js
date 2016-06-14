@@ -166,7 +166,7 @@ define([
             // CONTROL
             var preButton, postButton,
                 widgetId = html.genId(),
-                inputBus = runtime.bus().makeChannelBus(),
+                inputBus = runtime.bus().makeChannelBus(null, 'Multi text input'),
                 inputWidget = SingleTextInputWidget.make({
                     bus: inputBus,
                     // initialValue: config.initialValue,
@@ -247,7 +247,7 @@ define([
             // CONTROL
             var preButton, postButton,
                 widgetId = html.genId(),
-                inputBus = runtime.bus().makeChannelBus(),
+                inputBus = runtime.bus().makeChannelBus(null, 'New input for text input'),
                 inputWidget = SingleTextInputWidget.make({
                     bus: inputBus,
                     // initialValue: config.initialValue,

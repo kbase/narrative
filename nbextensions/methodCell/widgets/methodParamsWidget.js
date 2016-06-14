@@ -86,7 +86,7 @@ define([
         // RENDERING
 
         function makeFieldWidget(parameterSpec, value) {
-            var fieldBus = runtime.bus().makeChannelBus(),
+            var fieldBus = runtime.bus().makeChannelBus(null, 'A field widget'),
                 inputWidget = paramResolver.getInputWidgetFactory(parameterSpec);
 
             inputBusses.push(fieldBus);
@@ -132,12 +132,16 @@ define([
                     type: 'get-parameter'
                 },
                 handle: function (message) {
-                    // console.log('GOT?', message);
-                    return parentBus.request(message, {
-                        key: {
-                            type: 'get-parameter'
-                        }
-                    });
+                    console.log('GOT?', message);
+                    if (message.parameterName) {
+                        return parentBus.request(message, {
+                            key: {
+                                type: 'get-parameter'
+                            }
+                        });
+                    } else {
+                        return null;
+                    }
                 }
             });
             
@@ -298,7 +302,7 @@ define([
             return Promise.resolve()
                 .then(function () {
                     if (inputParams.length === 0) {
-                        places.inputFields.innerHTML = 'No input objects for this method';
+                        places.inputFields.innerHTML = 'No input objects for this app';
                     } else {
                         return Promise.all(inputParams.map(function (spec) {
                             try {
@@ -323,7 +327,7 @@ define([
                 })
                 .then(function () {
                     if (outputParams.length === 0) {
-                        places.outputFields.innerHTML = 'No output objects for this method';
+                        places.outputFields.innerHTML = 'No output objects for this app';
                     } else {
                         return Promise.all(outputParams.map(function (spec) {
                             try {
@@ -348,7 +352,7 @@ define([
                 })
                 .then(function () {
                     if (parameterParams.length === 0) {
-                        dom.setContent('parameter-fields', 'No parameters for this method');
+                        dom.setContent('parameter-fields', 'No parameters for this app');
                     } else {
                         return Promise.all(parameterParams.map(function (spec) {
                             try {
@@ -432,7 +436,7 @@ define([
 
         // CONSTRUCTION
 
-        bus = runtime.bus().makeChannelBus();
+        bus = runtime.bus().makeChannelBus(null, 'A method params widget');
 
 
         return {

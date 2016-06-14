@@ -24,7 +24,7 @@ define([
     function factory(config) {
         var api,
             runtime = Runtime.make(),
-            bus = runtime.bus().makeChannelBus(),
+            bus = runtime.bus().makeChannelBus(null, 'Bus for exec widget'),
             parentBus = config.bus,
             container,
             listeners = [],
@@ -1072,6 +1072,7 @@ define([
                 showToggleElement(toggle.name);
             });
             parentBus.on('job-state', function (message) {
+                console.log('EXEC got it!', message);
                 processNewJobState(message.jobState);
             });
             // not sure if this is the wisest thing to do...
@@ -1079,7 +1080,7 @@ define([
                 model.setItem('jobStateLastUpdatedTime', new Date().getTime());
             });
             parentBus.on('launch-event', function (message) {
-                processNewLaunchEvent(message.data);
+                processNewLaunchEvent(message);
             });
             bus.on('show-job-report', function (message) {
                 getJobReport(message.reportRef)
@@ -1092,6 +1093,7 @@ define([
             runtime.bus().on('clock-tick', function () {
                 // only update the ui on clock tick if we are currently running
                 // a job. TODO: the clock should be disconnected.
+                // console.log('tick');
                 var runState = model.getItem('runState');
                 if (runState && runState.executionState === 'processing') {
                     updateRunStateFromJobState();

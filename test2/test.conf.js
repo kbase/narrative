@@ -7,7 +7,6 @@ module.exports = function(config) {
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '..',
 
-
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
     frameworks: ['jasmine', 'requirejs'],
@@ -15,10 +14,11 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'test/test-main.js',
-      {pattern: 'widgets/**/*.js', included: false},
-      {pattern: '*.js', included: false},
-      {pattern: 'test/specs/active/**/*Spec.js', included: false}
+      //{pattern: 'widgets/**/*.js', included: false},
+      {pattern: 'test2/specs/active/*Spec.js', included: false},
+      {pattern: 'kbase-extension/static/kbase/js/common/*.js', included: false},
+      // {pattern: '../../kbase-extension/static/js/common/*.js', included: false}
+      'test2/test-main.js'
     ],
 
 

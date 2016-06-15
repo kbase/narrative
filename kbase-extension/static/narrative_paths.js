@@ -240,6 +240,7 @@ require.config({
         'kbaseFigureObjectHeatmap'                        : 'kbase/js/ui-common/src/widgets/kbaseFigureObjectHeatmap',
         'kbaseCummerbundPlot'                        : 'kbase/js/ui-common/src/widgets/kbaseCummerbundPlot',
         'kbaseExpressionSampleTable'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTable',
+        'kbaseExpressionSampleTableNew'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTableNew',
         'kbasePValueHistogram'                        : 'kbase/js/ui-common/src/widgets/kbasePValueHistogram',
         'kbasePMIBarchart'                        : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePMIBarchart',
         'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',

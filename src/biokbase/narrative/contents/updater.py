@@ -10,9 +10,6 @@ It should be noted here that if an update occurs, job ids will no longer be avai
 import uuid
 import json
 import re
-from narrative_test_helper import (
-    fetch_narrative
-)
 
 def update_needed(narrative):
     # simple enough - if there's a "kbase" block
@@ -27,11 +24,13 @@ def update_narrative(narrative):
     if not update_needed(narrative):
         return narrative
 
-    updated_cells = set()
+    updated_cells = list()
     for idx, cell in enumerate(narrative['cells']):
-        cell = update_cell(cell)
-        if cell.get('metadata', {}).get('kbase', {}).get('updated', False):
-            updated_cells.add(idx)
+        updated_cells.append(update_cell(cell))
+        # cell = update_cell(cell)
+        # if cell.get('metadata', {}).get('kbase', {}).get('updated', False):
+        #     updated_cells.add(idx)
+    narrative['cells'] = updated_cells
     narrative['metadata'] = update_metadata(narrative['metadata'])
     return narrative
 
@@ -72,6 +71,8 @@ def update_method_cell(cell):
     """
     # 1. Turn it into a code cell.
     cell['cell_type'] = u'code'
+    cell['execution_count'] = None
+    cell['outputs'] = []
 
     # 2. Get its metadata and update it to be new cell-ish
     meta = cell['metadata']['kb-cell']
@@ -120,10 +121,11 @@ def update_method_cell(cell):
     new_meta = {
         'type': 'method',
         'attributes': {
-            'id': uuid.uuid4(),
+            'title': method_info.get('name', 'Unnamed App'),
+            'id': unicode(uuid.uuid4()),
             'status': 'new',
-            'created': widget_state.get('time', None),          # default to last saved time
-            'lastLoaded': widget_state.get('time', None),
+            'created': 'Tue, 14 Jun 2016, 12:34:56 GMT', #widget_state.get('time', None),          # default to last saved time
+            'lastLoaded': 'Tue, 14 Jun 2016, 12:34:56 GMT', #widget_state.get('time', None),
         },
         'methodCell': {
             'method': {
@@ -143,10 +145,10 @@ def update_method_cell(cell):
             'user-settings': {
                 'showCodeInputArea': False,
                 'showDeveloperOptions': False
-            },
-            'fsm': {
-                'currentState': fsm_state
             }
+            # 'fsm': {
+            #     'currentState': fsm_state
+            # }
         }
     }
 

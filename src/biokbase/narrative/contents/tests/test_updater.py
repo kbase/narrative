@@ -100,7 +100,7 @@ class UpdaterTestCase(unittest.TestCase):
                 # test stuff
                 if 'app' in cell['metadata']['kbase']:
                     return True
-                elif 'method' in cell['metadata']['kbase']:
+                elif 'methodCell' in cell['metadata']['kbase']:
                     return True
                 if 'old_app' not in cell['metadata']['kbase'] and cell['cell_type'] != 'code':
                     raise ValueError('KBase method can no longer be Markdown cells!')

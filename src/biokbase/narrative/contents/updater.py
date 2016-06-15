@@ -10,6 +10,7 @@ It should be noted here that if an update occurs, job ids will no longer be avai
 import uuid
 import json
 import re
+import datetime
 
 def update_needed(narrative):
     # simple enough - if there's a "kbase" block
@@ -118,14 +119,18 @@ def update_method_cell(cell):
             'params': 'complete'
         }
 
+    ts = widget_state.get('time', None)
+    if ts:
+        ts = datetime.datetime.utcfromtimestamp(ts/1000.0).strftime('%a, %d %b %Y %H:%M:%S GMT')
+
     new_meta = {
         'type': 'method',
         'attributes': {
             'title': method_info.get('name', 'Unnamed App'),
             'id': unicode(uuid.uuid4()),
             'status': 'new',
-            'created': 'Tue, 14 Jun 2016, 12:34:56 GMT', #widget_state.get('time', None),          # default to last saved time
-            'lastLoaded': 'Tue, 14 Jun 2016, 12:34:56 GMT', #widget_state.get('time', None),
+            'created': ts,          # default to last saved time
+            'lastLoaded': ts,
         },
         'methodCell': {
             'method': {

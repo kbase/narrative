@@ -53,18 +53,6 @@ require.config({
         narrativeDataWidgetIFrame: 'kbase/js/widgetApi/narrativeDataWidgetIFrame',
         widgetService2: 'kbase/js/widgetApi/widgetService2',
 
-        /*
-         * From CDN
-         */
-        kb_common: 'http://cdn.kbase.us/cdn/kbase-common-js/1.5.4/',
-        kb_service: 'http://cdn.kbase.us/cdn/kbase-service-clients-js/1.4.0/',
-        uuid: 'http://cdn.kbase.us/cdn/pure-uuid/1.3.0/uuid',
-        // TODO: we need to reconcile Jupyter and KBase external deps
-        // text:  'http://cdn.kbase.us/cdn/requirejs-text/2.0.14/text',
-        css: 'http://cdn.kbase.us/cdn/require-css/0.1.8/css',
-        'font-awesome': 'http://cdn.kbase.us/cdn/font-awesome/4.3.0/css/font-awesome',
-        handlebars: 'http://cdn.kbase.us/cdn/handlebars/4.0.5/handlebars',
-        'google-code-prettify': 'http://cdn.kbase.us/cdn/google-code-prettify/1.2.0/',
         
         common: 'kbase/js/common/',
 
@@ -404,3 +392,30 @@ require.config({
         }
     }
 });
+
+
+function addCdnModules() {
+    var baseUrl = 'http://cdn.kbase.us/cdn',
+        modules = {
+            kb_common: 'kbase-common-js/1.7.0/',
+            kb_service: 'kbase-service-clients-js/1.4.0/',
+            uuid: 'pure-uuid/1.3.0/uuid',
+            // TODO: we need to reconcile Jupyter and KBase external deps
+            // text:  'requirejs-text/2.0.14/text',
+            css: 'require-css/0.1.8/css',
+            'font-awesome': 'font-awesome/4.3.0/css/font-awesome',
+            handlebars: 'handlebars/4.0.5/handlebars',
+            'google-code-prettify': 'google-code-prettify/1.2.0/'
+        },
+        paths = {};
+    
+    Object.keys(modules).forEach(function (key) {
+        paths[key] = [baseUrl, modules[key]].join('/');
+    });
+    
+    require.config({
+        paths: paths
+    });    
+}
+addCdnModules();
+

@@ -11,8 +11,9 @@ define([
     'common/events',
     'kb_common/format',
     'kb_common/html',
-    'kb_service/client/workspace'
-], function (Uuid, Props, utils, Jobs, Dom, Runtime, Events, format, html, Workspace) {
+    'kb_service/client/workspace',
+    './jobLogViewer'
+], function (Uuid, Props, utils, Jobs, Dom, Runtime, Events, format, html, Workspace, LogViewer) {
     'use strict';
 
     var t = html.tag,
@@ -30,6 +31,8 @@ define([
             listeners = [],
             model,
             dom,
+            widgets = {},
+            togglesDb,
             toggles = [
                 {
                     name: 'job-details',
@@ -39,7 +42,22 @@ define([
                 {
                     name: 'job-log',
                     label: 'Log',
-                    initialValue: false
+                    initialValue: false,
+                    onOpen: function (arg) {
+                        arg.node.innerHTML = '';
+                        var logViewer = LogViewer.make();
+                        widgets.jobLog = logViewer;
+                        logViewer.start();
+                        logViewer.bus.emit('run', {
+                            node: arg.node,
+                            jobId: model.getItem('runState.jobId')
+                        });
+                    },
+                    onClose: function (arg) {
+                        widgets.jobLog.bus.emit('stop');
+                        delete widgets.jobLog;
+                        arg.node.innerHTML = 'done';
+                    }
                 },
                 {
                     name: 'job-report',
@@ -89,7 +107,7 @@ define([
             });
         }
 
-       function renderJobError() {
+        function renderJobError() {
             return dom.buildPanel({
                 title: 'Job Error',
                 name: 'run-error',
@@ -112,9 +130,10 @@ define([
                 name: 'job-log',
                 hidden: false,
                 type: 'primary',
-                body: [
+                xbody: [
                     textarea({class: 'form-control', dataElement: 'logs'})
-                ]
+                ],
+                body: div({dataElement: 'mount'})
             });
         }
 
@@ -131,6 +150,20 @@ define([
                             span({
                                 style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
                                 dataElement: 'state'
+                            })
+                        ]),
+                        span({}, [
+                            span('Run ID:'),
+                            span({
+                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
+                                dataElement: 'run-id'
+                            })
+                        ]),
+                        span({}, [
+                            span('Job ID:'),
+                            span({
+                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
+                                dataElement: 'job-id'
                             })
                         ]),
                         span({style: {marginLeft: '5px'}}, [
@@ -234,19 +267,18 @@ define([
 
         // VIEW UPDATERS
 
-
         function showJobDetails() {
             //if (showToggleElement('job-details')) {
-                var details = model.getItem('jobDetails');
-                if (details) {
-                    Object.keys(details).forEach(function (key) {
-                        var value = details[key],
-                            el = dom.getElement(['job-details', key]);
-                        if (el) {
-                            el.innerHTML = value || '';
-                        }
-                    });
-                }
+            var details = model.getItem('jobDetails');
+            if (details) {
+                Object.keys(details).forEach(function (key) {
+                    var value = details[key],
+                        el = dom.getElement(['job-details', key]);
+                    if (el) {
+                        el.innerHTML = value || '';
+                    }
+                });
+            }
             // }
         }
 
@@ -277,13 +309,13 @@ define([
             }
             dom.getElement(['job-report', 'warnings']).innerHTML = warnings;
         }
-        
+
         function showJobResult() {
             var result = model.getItem('runState.success.result');
             if (!result) {
                 return;
             }
-            
+
             // Just spit out json ...
             var content = JSON.stringify(result, null, 2);
             dom.setContent('job-result.content', content);
@@ -297,8 +329,6 @@ define([
                 node.innerHTML = error;
             }
         }
-
-
 
         function render() {
             var events = Events.make({node: container}),
@@ -414,8 +444,8 @@ define([
                 });
         }
         function updateJobDetails() {
-            var jobState = model.getItem('jobState');
-            var details = {
+            var jobState = model.getItem('jobState'),
+                details = {
                 id: jobState.job_id,
                 status: jobState.job_state,
                 deleted: jobState.is_deleted ? 'yes' : 'no',
@@ -437,6 +467,9 @@ define([
             dom.setContent(['runStatus', 'state'], state.canonicalState);
             dom.setContent(['runStatus', 'temporalState'], state.temporalState);
             dom.setContent(['runStatus', 'executionState'], state.executionState);
+            
+            dom.setContent(['runStatus', 'run-id'], state.runId);
+            dom.setContent(['runStatus', 'job-id'], state.jobId);
 
             if (state.elapsedLaunchTime) {
                 (function () {
@@ -532,11 +565,19 @@ define([
             } else {
                 dom.hideElement(['run-error']);
             }
+            
+            // Now be more stateful here...
+            if (state.jobId) {
+                dom.enableButton('toggle-job-log');
+            } else {
+                dom.disableButton('toggle-job-log');
+            }
         }
 
         function updateRunStateFromLaunchEvent(launchEvent, launchState) {
             var temporalState, executionState, canonicalState,
-                error, now = new Date().getTime();
+                error, now = new Date().getTime(),
+                jobId = null;
             if (!launchEvent) {
                 return;
             }
@@ -561,6 +602,7 @@ define([
                     temporalState = 'launching';
                     executionState = 'processing';
                     canonicalState = 'launched-request';
+                    jobId = launchEvent.job_id;
                     break;
                 case 'error':
                     temporalState = 'launching';
@@ -581,6 +623,8 @@ define([
                 elapsed = now - launchStartTime;
 
             var newRunState = {
+                runId: launchEvent.run_id,
+                jobId: null,
                 lastUpdatedTime: new Date().getTime(),
                 temporalState: temporalState,
                 executionState: executionState,
@@ -634,41 +678,41 @@ define([
              * In the completed state as well there is a job report (not described here at the moment).
              * 
              */
-            
+
             /*
              * From the NJSWrapper spec:
              * 
-        job_id - id of job running method
-        finished - indicates whether job is done (including error cases) or not,
-            if the value is true then either of 'returned_data' or 'detailed_error'
-            should be defined;
-        ujs_url - url of UserAndJobState service used by job service
-        status - tuple returned by UserAndJobState.get_job_status method
-        result - keeps exact copy of what original server method puts
-            in result block of JSON RPC response;
-        error - keeps exact copy of what original server method puts
-            in error block of JSON RPC response;
-        job_state - 'queued', 'in-progress', 'completed', or 'suspend';
-        position - position of the job in execution waiting queue;
-        creation_time, exec_start_time and finish_time - time moments of submission, execution 
-            start and finish events in milliseconds since Unix Epoch.
- 
-    typedef structure {
-        string job_id;
-        boolean finished;
-        string ujs_url;
-        UnspecifiedObject status;
-        UnspecifiedObject result;
-        JsonRpcError error;
-        string job_state;
-        int position;
-        int creation_time;
-        int exec_start_time;
-        int finish_time;
-    } JobState;
+             job_id - id of job running method
+             finished - indicates whether job is done (including error cases) or not,
+             if the value is true then either of 'returned_data' or 'detailed_error'
+             should be defined;
+             ujs_url - url of UserAndJobState service used by job service
+             status - tuple returned by UserAndJobState.get_job_status method
+             result - keeps exact copy of what original server method puts
+             in result block of JSON RPC response;
+             error - keeps exact copy of what original server method puts
+             in error block of JSON RPC response;
+             job_state - 'queued', 'in-progress', 'completed', or 'suspend';
+             position - position of the job in execution waiting queue;
+             creation_time, exec_start_time and finish_time - time moments of submission, execution 
+             start and finish events in milliseconds since Unix Epoch.
+             
+             typedef structure {
+             string job_id;
+             boolean finished;
+             string ujs_url;
+             UnspecifiedObject status;
+             UnspecifiedObject result;
+             JsonRpcError error;
+             string job_state;
+             int position;
+             int creation_time;
+             int exec_start_time;
+             int finish_time;
+             } JobState;
              */
-            
-            
+
+
             /*
              * Determine temrporal state based on timestamps left behind.
              */
@@ -708,7 +752,7 @@ define([
                 // reportRef = getJobReportRef(jobState),
                 result = jobState.result,
                 errorInfo = jobState.error;
-                    
+
             if (errorInfo) {
                 executionState = 'error';
 //                if (errorInfo.length > 50) {
@@ -720,7 +764,7 @@ define([
 //                }
                 var errorId = new Uuid(4).format();
                 console.log('EXEC ERROR', errorId, errorInfo);
-                
+
                 var errorType, errorMessage, errorDetail;
                 if (errorInfo.error) {
                     // Classic KBase rpc error message
@@ -736,7 +780,7 @@ define([
                     errorMessage = 'Unknown error (check console for ' + errorId + ')';
                     errorDetail = 'There is no further information about this error';
                 }
-                
+
                 error = {
                     location: 'job execution',
                     type: errorType,
@@ -757,14 +801,14 @@ define([
                 success = {
                     result: result
                 };
-                
-                
-                
+
+
+
                 // hmm, try this.
                 //bus.send('show-job-report', {
                 //     reportRef: reportRef
                 // });
-               //  console.warn('OUTPUTS', outputs);
+                //  console.warn('OUTPUTS', outputs);
             } else {
                 executionState = 'processing';
             }
@@ -837,7 +881,13 @@ define([
                     break;
             }
 
-            var newRunStatus = {
+            var runState = model.getItem('runState'), runId;
+            if (runState) {
+                runId = runState.runId;
+            }
+            var newRunStatus = {                
+                runId: runId,
+                jobId: jobState.job_id,
                 lastUpdatedTime: model.getItem('jobStateLastUpdatedTime'),
                 temporalState: temporalState,
                 executionState: executionState,
@@ -1042,8 +1092,26 @@ define([
                 label = toggle.showing ? 'Hide ' + toggle.label : 'Show ' + toggle.label;
             if (toggle.showing) {
                 dom.showElement(name);
+                if (togglesDb[name].onOpen) {
+                    try {
+                        togglesDb[name].onOpen({
+                            node: dom.getElement([name, 'mount'])
+                        });
+                    } catch (ex) {
+                        console.error('Error running onOpen for ' + name, ex);
+                    }
+                }
             } else {
                 dom.hideElement(name);
+                if (togglesDb[name].onClose) {
+                    try {
+                        togglesDb[name].onClose({
+                            node: dom.getElement([name, 'mount'])
+                        });
+                    } catch (ex) {
+                        console.error('Error running onClose for ' + name, ex);
+                    }
+                }
             }
             dom.setButtonLabel('toggle-' + toggle.name, label);
             return toggle.showing;
@@ -1058,7 +1126,9 @@ define([
         // LIFECYCLE API
 
         function setup() {
+            togglesDb = {};
             toggles.forEach(function (toggle) {
+                togglesDb[toggle.name] = toggle;
                 toggle.showing = toggle.initialValue;
                 model.setItem(['user-settings.toggle-state', toggle.name].join('.'), toggle);
                 // mapping for toggle event.
@@ -1090,6 +1160,24 @@ define([
                         showJobReport();
                     });
             });
+//            parentBus.listen({
+//                key: {
+//                    type: 'job-logs'
+//                },
+//                handle: function (message) {
+//                    console.log('JOB LOGS', message);
+//                }
+//            });
+//            
+//            parentBus.listen({
+//                key: {
+//                    type: 'job-log-deleted'
+//                },
+//                handle: function (message) {
+//                    console.log('JOB LOG DELETED');
+//                }
+//            });
+
             runtime.bus().on('clock-tick', function () {
                 // only update the ui on clock tick if we are currently running
                 // a job. TODO: the clock should be disconnected.
@@ -1100,6 +1188,8 @@ define([
                     renderRunState();
                 }
             });
+            
+            // Now only start listening on the job channel when there is a job id!
 
         }
 

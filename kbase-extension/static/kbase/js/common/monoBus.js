@@ -18,8 +18,9 @@
  */
 define([
     'uuid',
-    'bluebird'
-], function (Uuid, Promise) {
+    'bluebird',
+    './unodep'
+], function (Uuid, Promise, utils) {
     'use strict';
     var instanceId = 0;
     function newInstance() {
@@ -31,7 +32,7 @@ define([
         var api,
             config = config || {},
             listenerRegistry = {},
-            sendQueue = [],
+            transientMessages = [],
             requestMap = [],
             interval = 0,
             timer,
@@ -50,7 +51,7 @@ define([
          */
 
         function makeChannel(spec) {
-            if (channels[spec.name]) {                
+            if (channels[spec.name]) {
                 throw new Error('A channel with name "' + spec.name + '" already exists');
             }
             if (!spec.description) {
@@ -60,7 +61,6 @@ define([
                     console.warn('Channel created without description');
                 }
             }
-            console.log('MAKING CHANNEL', spec);
             channels[spec.name] = {
                 name: spec.name,
                 description: spec.description,
@@ -68,7 +68,8 @@ define([
                 messageCount: 0,
                 listeners: [],
                 keyListeners: {},
-                testListeners: []
+                testListeners: [],
+                persistentMessages: {}
             };
             return channels[spec.name];
         }
@@ -80,7 +81,7 @@ define([
             }
             return channels[name];
         }
-        
+
         function getChannel(name) {
             var channel = channels[name];
             if (!channel) {
@@ -100,6 +101,7 @@ define([
                 handle(item.message, item.envelope);
             } catch (ex) {
                 console.error('Bus handle failure', ex);
+                console.error(ex.message);
             }
         }
 
@@ -147,16 +149,40 @@ define([
             return tryKey;
         }
 
+        /*
+         * basically takes care of sorting the keys before encoding.
+         * TODO: actually do that.
+         */
+        function encodeObject(tryObject) {
+            return JSON.stringify(tryObject);
+        }
+
+        function canonicalizeChannelName(channelName, defaultName) {
+            if (!channelName) {
+                return defaultName || 'default';
+            }
+            if (typeof channelName === 'object') {
+                return encodeObject(channelName);
+            }
+            if (typeof channelName === 'string') {
+                return channelName;
+            }
+            return String(channelName);
+        }
+
+
         function listen(spec) {
             var id = new Uuid(4).format(),
                 key,
+                channelName = canonicalizeChannelName(spec.channel),
+                channel = ensureChannel(channelName),
                 listener = {
                     spec: spec,
                     id: id,
-                    created: new Date()
-                },
-            channelName = spec.channel || 'default',
-                channel = ensureChannel(channelName);
+                    created: new Date(),
+                    channelName: channelName
+                };
+
             if (spec.key) {
                 key = encodeKey(spec.key);
                 if (!channel.keyListeners[key]) {
@@ -166,6 +192,14 @@ define([
                 listener.key = key;
 
                 channel.keyListeners[key].push(listener);
+
+                // If it matches a persistent message, we need to trigger the 
+                // persistent message to emit a message.
+                maybeSendPersistentMessages(channel, key);
+
+                // Just trigger a queue run in case there are any persistent
+                // messages.
+                run();
             } else if (spec.test) {
                 listener.test = spec.test;
                 listener.handle = spec.handle;
@@ -174,9 +208,39 @@ define([
                 console.warn('listen: nothing to listen on (test or key)');
             }
 
+            listenerRegistry[id] = listener;
             return id;
         }
-        
+
+        function removeListener(id) {
+            var listenerToRemove = listenerRegistry[id],
+                channel, listeners, newListeners;
+            if (!listenerToRemove) {
+                return;
+            }
+            channel = getChannel(listenerToRemove.channelName);
+            if (!channel) {
+                return;
+            }
+            if (listenerToRemove.key) {
+                listeners = channel.keyListeners[listenerToRemove.key];
+                if (!listeners) {
+                    return;
+                }
+                channel.keyListeners[listenerToRemove.key] = listeners.filter(function (listener) {
+                    return (listener.id !== listenerToRemove.id);
+                });
+            } else if (listenerToRemove.test) {
+                listeners = channel.testListeners;
+                if (!listeners) {
+                    return;
+                }
+                channel.testListeners = listeners.filter(function (listener) {
+                    return (listener.id !== listenerToRemove.id);
+                });
+            }
+        }
+
         // PROCESSING ENGINE 
 
         function processTestListeners(channel, item) {
@@ -187,34 +251,49 @@ define([
                 }
                 if (testListener(item, listener.test)) {
                     handled = true;
-                    console.log('PROCESSING TEST LISTENER!', channel, item);
+                    if (doLogMessages) {
+                        console.log('PROCESSING TEST LISTENER!', channel, item);
+                    }
                     letListenerHandle(item, listener.handle);
                 }
             });
             return handled;
         }
-        function processPending() {
-            var processingQueue = sendQueue;
-            sendQueue = [];
-            processingQueue.forEach(function (item) {
-                var channel = getChannel(item.envelope.channel),
-                    handled;
 
-                if (item.envelope.key) {
-                    if (doLogMessages) {
-                        console.log('PROCESSING KEY', channel, item);
-                    }
-                    handled = processKeyListeners(channel, item);
-                } else {
-                    if (doLogMessages) {
-                        console.log('PROCESSING TEST', channel, item);
-                    }
-                    handled = processTestListeners(channel, item);
+
+        function processQueueItem(item) {
+            var channel = getChannel(item.envelope.channel),
+                handled;
+
+            if (item.envelope.key) {
+                if (doLogMessages) {
+                    console.log('PROCESSING KEY', channel, item);
                 }
-                if (!handled) {
-                    console.warn('No listeners handled message', item, channel);
+                handled = processKeyListeners(channel, item);
+            } else {
+                if (doLogMessages) {
+                    console.log('PROCESSING TEST', channel, item);
+                }
+                handled = processTestListeners(channel, item);
+            }
+            if (!handled) {
+                console.warn('No listeners handled message', item, channel);
+            }
+        }
+
+
+        function processQueues() {
+            var processingQueue = transientMessages;
+            transientMessages = [];
+
+            processingQueue.forEach(function (item) {
+                try {
+                    processQueueItem(item);
+                } catch (ex) {
+                    console.error('ERROR processing queue item', ex);
                 }
             });
+
         }
         /*
          *
@@ -227,7 +306,7 @@ define([
             timer = window.setTimeout(function () {
                 timer = null;
                 try {
-                    processPending();
+                    processQueues();
                 } catch (ex) {
                     console.error('Bus processing error', ex);
                 }
@@ -235,6 +314,46 @@ define([
         }
 
         // SENDING
+
+        
+
+        function setPersistentMessage(message, envelope) {
+            var channel = ensureChannel(envelope.channel),
+                key = envelope.key,
+                existingMessage;
+            if (!key) {
+                throw new Error('Persistent messages require a key');
+            }
+
+            existingMessage = channel.persistentMessages[key];
+            if (existingMessage) {
+                if (utils.isEqual(existingMessage.message, message)) {
+                    return;
+                }
+            }
+
+            channel.persistentMessages[key] = {
+                message: message,
+                envelope: envelope
+            };
+            transientMessages.push({
+                message: message,
+                envelope: envelope
+            });
+            run();
+        }
+
+        function maybeSendPersistentMessages(channel, key) {
+            var persistentMessage = channel.persistentMessages[key];
+            if (!persistentMessage) {
+                return;
+            }
+            transientMessages.push({
+                message: persistentMessage.message,
+                envelope: persistentMessage.envelope
+            });
+            run();
+        }
 
         /*
          * sending places a message into the queue (bus).
@@ -252,22 +371,46 @@ define([
                 address: address
             };
 
-            if (address) {
-                if (address.key) {
-                    envelope.key = encodeKey(address.key);
-                }
+            if (address.key) {
+                envelope.key = encodeKey(address.key);
             }
 
-            envelope.channel = address.channel || 'default';
+            envelope.channel = canonicalizeChannelName(address.channel);
 
             if (doLogMessages) {
                 console.log('SEND', message, envelope);
             }
-            sendQueue.push({
+
+            transientMessages.push({
                 message: message,
                 envelope: envelope
             });
             run();
+        }
+
+        function set(message, address) {
+            // support simple message sending ...
+            address = address || {};
+
+            var envelope = {
+                created: new Date(),
+                id: new Uuid(4).format(),
+                address: address
+            };
+
+            if (!address.key) {
+                throw new Error('Setting a persistent message requires a key');
+            }
+
+            envelope.key = encodeKey(address.key);
+            envelope.channel = canonicalizeChannelName(address.channel);
+
+            if (doLogMessages) {
+                console.log('SET', message, envelope);
+            }
+
+            // Persistent messages are stored on a map by 'key' per channel.
+            setPersistentMessage(message, envelope);
         }
 
         /*
@@ -367,12 +510,12 @@ define([
          * specific channel. The main bus is available through a method.
          */
         function makeChannelBus(name, description) {
-            var channelName = name || new Uuid(4).format(),
+            var channelName = canonicalizeChannelName(name, new Uuid(4).format()),
                 channelSpec = {
                     name: channelName,
                     description: description
                 };
-                
+
             makeChannel(channelSpec);
 
             function on(type, handler) {
@@ -399,6 +542,12 @@ define([
                 return send(message, address);
             }
 
+            function channelSet(message, address) {
+                address = address || {};
+                address.channel = channelName;
+                return set(message, address);
+            }
+
             function channelListen(spec) {
                 spec.channel = channelName;
                 return listen(spec);
@@ -418,7 +567,7 @@ define([
             function bus() {
                 return api;
             }
-            
+
             function stop() {
                 removeChannel(channelName);
             }
@@ -426,6 +575,7 @@ define([
             return {
                 on: on,
                 emit: emit,
+                set: set,
                 bus: bus,
                 listen: channelListen,
                 send: channelSend,
@@ -450,10 +600,12 @@ define([
             request: request,
             on: on,
             emit: emit,
+            set: set,
             makeChannelBus: makeChannelBus,
             makeChannel: makeChannel,
             removeChannel: removeChannel,
-            logMessages: logMessages
+            logMessages: logMessages,
+            removeListener: removeListener
         };
 
         return api;

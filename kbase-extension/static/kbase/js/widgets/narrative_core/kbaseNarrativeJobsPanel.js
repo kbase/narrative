@@ -391,18 +391,8 @@ define([
                     this.removeDeletedJob(deletedId);
                     break;
                 case 'job_logs':
+                    console.log('GOT JOB LOGS', msg);
                     var jobId = msg.content.data.content.job_id;
-
-                    bus.send({
-                        jobId: jobId,
-                        logs: msg.content.data.content,
-                        latest: msg.content.data.content.latest
-                    }, {
-                        key: {
-                            type: 'job-logs',
-                            jobId: jobId
-                        }
-                    });
 
                     this.sendJobMessage('job-logs', jobId, {
                         jobId: jobId,
@@ -420,7 +410,18 @@ define([
                             case 'job_logs':
                                 this.sendJobMessage('job-log-deleted', content.job_id, {jobId: content.job_id});
                                 break;
+                            case 'job_status':
+                                this.sendJobMessage('job-status-error', content.job_id, {
+                                    jobId: content.job_id,
+                                    message: content.message
+                                });
+                                break;                                
                             default:
+                                this.sendJobMessage('job-error', content.job_id, {
+                                    jobId: content.job_id,
+                                    message: content.message,
+                                    request: content.requestType
+                                });
                                 break;
                         }
                         if (content.request_type === 'delete_job') {

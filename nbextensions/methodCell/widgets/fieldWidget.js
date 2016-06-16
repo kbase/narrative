@@ -182,74 +182,6 @@ define([
             //return mult + type;
         }
         
-        function reverse(arr) {
-            var newArray = [], i, len = arr.length;
-            for (i = len-1; i >= 0; i -= 1) {
-                newArray.push(arr[i]);
-            }
-            return newArray;
-        }
-        
-        function makeTabs(arg) {
-            var tag = html.tag,
-                ul = tag('ul'),
-                li = tag('li'),
-                a = tag('a'),
-                div = tag('div'),
-                tabsId = arg.id,
-                tabsAttribs = {},
-                tabClasses = ['nav', 'nav-tabs'],
-                tabs, tabStyle = {}, activeIndex;
-
-            if (tabsId) {
-                tabsAttribs.id = tabsId;
-            }
-            arg.tabs.forEach(function (tab) {
-                tab.id = html.genId();
-            });
-            if (arg.alignRight) {
-                tabs = reverse(arg.tabs);
-                tabStyle.float = 'right';
-                activeIndex = tabs.length - 1;
-            } else {
-                tabs = arg.tabs;
-                activeIndex = 0;
-            }
-            return div(tabsAttribs, [
-                ul({class: tabClasses.join(' '), role: 'tablist'},
-                    tabs.map(function (tab, index) {
-                        var attribs = {
-                            role: 'presentation'
-                        };
-                        if (index === activeIndex) {
-                            attribs.class = 'active';
-                        }
-                        attribs.style = tabStyle;
-                        return li(attribs, a({
-                            href: '#' + tab.id,
-                            ariaControls: 'home',
-                            role: 'tab',
-                            dataToggle: 'tab'
-                        }, tab.label));
-                    })),
-                div({class: 'tab-content'},
-                    arg.tabs.map(function (tab, index) {
-                        var attribs = {
-                            role: 'tabpanel',
-                            class: 'tab-pane',
-                            id: tab.id
-                        };
-                        if (tab.name) {
-                            attribs['data-name'] = tab.name;
-                        }
-                        if (index === 0) {
-                            attribs.class += ' active';
-                        }
-                        return div(attribs, tab.content);
-                    })
-                    )
-            ]);
-        }
         
         function renderInfoTip() {
             var infoTipText;
@@ -261,7 +193,7 @@ define([
 
             return div([
                 // div({dataElement: 'little-tip'}, parameterInfoLittleTip(spec)),
-                div({dataElement: 'big-tip', style: {display: 'none'}}, makeTabs({
+                div({dataElement: 'big-tip', style: {display: 'none'}}, html.makeTabs({
                     alignRight: true,
                     tabs: [
                         {

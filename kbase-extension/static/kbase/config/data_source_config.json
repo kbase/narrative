@@ -7,6 +7,24 @@
                 "ws": "KBasePublicGenomesV5",
                 "search": true
             },
+            "refseq_genomes": {
+                "name": "RefSeq Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "KBReferenceGenomesRefSeq",
+                "search": true
+            },
+            "phytozome_genomes": {
+                "name": "Phytozome Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "Phytozome_Genomes",
+                "search": true
+            },
+            "ensembl_genomes": {
+                "name": "Ensembl Genomes",
+                "type": "KBaseGenomes.Genome",
+                "ws": "ReferenceEnsemblPlantGenomeAnnotations",
+                "search": true
+            },
             "media": {
                 "name": "Media",
                 "type": "KBaseBiochem.Media",
@@ -41,6 +59,18 @@
                 "name": "Plant Bowtie2 Indexes",
                 "type": "KBaseRNASeq.Bowtie2Indexes",
                 "ws": "PlantCSGenomes",
+                "search": false
+            },
+            "ontology": {
+                "name": "Public ontologies",
+                "type": "KBaseOntology.OntologyDictionary",
+                "ws": "KBaseOntology",
+                "search": false
+            },
+            "ontology_translation": {
+                "name": "Ontology translations",
+                "type": "KBaseOntology.OntologyTranslation",
+                "ws": "KBaseOntology",
                 "search": false
             }
         },

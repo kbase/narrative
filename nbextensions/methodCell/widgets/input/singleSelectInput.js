@@ -30,9 +30,6 @@ define([
         // Validate configuration.
         // Nothing to do...
 
-        options.environment = config.isInSidePanel ? 'sidePanel' : 'standard';
-        options.multiple = spec.multipleItems();
-        options.required = spec.required();
         options.enabled = true;
 
         model.availableValues = spec.spec.dropdown_options.options;
@@ -115,13 +112,11 @@ define([
                         validate()
                             .then(function (result) {
                                 if (result.isValid) {
-                                    bus.send({
-                                        type: 'changed',
+                                    bus.emit('changed', {
                                         newValue: result.value
                                     });
                                 }
-                                bus.send({
-                                    type: 'validation',
+                                bus.emit('validation', {
                                     errorMessage: result.errorMessage,
                                     diagnosis: result.diagnosis
                                 });
@@ -160,8 +155,7 @@ define([
         function autoValidate() {
             validate()
                 .then(function (result) {
-                    bus.send({
-                        type: 'validation',
+                    bus.emit('validation', {
                         errorMessage: result.errorMessage,
                         diagnosis: result.diagnosis
                     });

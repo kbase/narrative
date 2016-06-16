@@ -332,13 +332,13 @@ class KBaseWSManagerMixin(object):
             elif 'kbase' in meta and 'type' in meta['kbase']:
                 kbase_type = meta['kbase']['type']
                 if kbase_type == 'method':
-                    cell_info = meta['kbase'].get('methodCell', {}).get('method', {})
-                    id = cell_info.get('id', None)
-                    commit_hash = cell_info.get('gitCommitHash', '')
+                    method = meta['kbase'].get('methodCell', {}).get('method', {})
+                    id = method.get('id', 'UnknownApp')
+                    commit_hash = method.get('gitCommitHash', 'unknown')
                     method_info[u'method.' + id + '/' + commit_hash] += 1
-                    num_method += 1
+                    num_methods += 1
             else:
-                cell_info[u'jupyter.' + cell['cell_type']] += 1
+                cell_info['jupyter.' + cell.get('cell_type', 'code')] += 1
 
         # Now we have all cell types like this:
         #

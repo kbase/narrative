@@ -204,6 +204,9 @@ define([
                         stage: 'queued'
                     },
                     {
+                        mode: 'success'
+                    },
+                    {
                         mode: 'error',
                         stage: 'queued'
                     },
@@ -400,7 +403,8 @@ define([
         widgets = {},
             inputBusses = [],
             inputBusMap = {},
-            fsm;
+            fsm,
+            saveMaxFrequency = config.saveMaxFrequency || 5000;
 
         // DATA API
 
@@ -505,7 +509,7 @@ define([
                 ]);
             }).join('  ');
 
-            dom.setContent('fsm-bar.content', content);
+            dom.setContent('fsm-display.content', content);
         }
 
 
@@ -627,15 +631,7 @@ define([
                         div({dataElement: 'notifications', style: {display: 'block', width: '100%'}}),
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
-                                dom.buildPanel({
-                                    title: 'FSM',
-                                    name: 'fsm-bar',
-                                    hidden: false,
-                                    type: 'default',
-                                    body: [
-                                        div({dataElement: 'content'})
-                                    ]
-                                }),
+                                
                                 dom.buildPanel({
                                     title: 'Available Actions',
                                     name: 'availableActions',
@@ -661,6 +657,15 @@ define([
                                         ])
                                     ]
                                 }),
+//                                dom.buildCollapsiblePanel({
+//                                    title: 'FSM',
+//                                    name: 'fsm-bar',
+//                                    hidden: false,
+//                                    type: 'default',
+//                                    body: [
+//                                        div({dataElement: 'content'})
+//                                    ]
+//                                }),
                                 dom.buildCollapsiblePanel({
                                     title: 'About',
                                     name: 'about-app',
@@ -676,9 +681,15 @@ define([
                                     hidden: true,
                                     type: 'default',
                                     body: [
-                                        dom.makeButton('Show Code', 'toggle-code-view', {events: events}),
-                                        dom.makeButton('Edit Metadata', 'edit-cell-metadata', {events: events}),
-                                        dom.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', {events: events})
+                                        div({dataElement: 'fsm-display'}, [
+                                            div('FSM'),
+                                            div({dataElement: 'content'})
+                                        ]),
+                                        div([
+                                            dom.makeButton('Show Code', 'toggle-code-view', {events: events}),
+                                            dom.makeButton('Edit Metadata', 'edit-cell-metadata', {events: events}),
+                                            dom.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', {events: events})
+                                        ])
                                     ]
                                 }),
                                 dom.buildPanel({
@@ -688,7 +699,7 @@ define([
                                     type: 'default',
                                     body: div({dataElement: 'widget'})
                                 }),
-                                dom.buildPanel({
+                                dom.buildCollapsiblePanel({
                                     title: 'Parameters Display',
                                     name: 'parameters-display-group',
                                     hidden: false,
@@ -790,6 +801,8 @@ define([
                 },
                 onNewState: function (fsm) {
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
+                    // save the narrative!
+
                 }
             });
             fsm.start(currentState);
@@ -914,6 +927,17 @@ define([
             }
         }
 
+        var saveTimer = null;
+        function saveNarrative() {
+            if (saveTimer) {
+                return;
+            }
+            saveTimer = window.setTimeout(function () {
+                saveTimer = null;
+                Jupyter.notebook.save_checkpoint();
+            }, saveMaxFrequency);
+        }
+
         function deleteJobFromNotebook(jobId) {
             var metadata = Jupyter.notebook.metadata;
             // first, wipe the metadata
@@ -931,7 +955,7 @@ define([
             // delete this.jobStates[jobId];
 
             // save the narrative!
-            Jupyter.notebook.save_checkpoint();
+            saveNarrative();
 
             return true;
         }
@@ -947,7 +971,7 @@ define([
                 runtime.bus().emit('request-job-deletion', {
                     jobId: jobId
                 });
-                return;
+                resolve();
 
 
 //                
@@ -1165,20 +1189,17 @@ define([
         }
 
         function startListeningForJobMessages(jobId) {
-            var jobChannelId = JSON.stringify({
-                    jobId: jobId
-                });
-            console.log('Starting to listen for job messages', jobChannelId);
-            
+            // console.log('Starting to listen for job messages', jobChannelId);
+
             runtime.bus().listen({
-                channel: jobChannelId,
+                channel: {
+                    jobId: jobId
+                },
                 key: {
                     type: 'job-status'
                 },
                 handle: function (message) {
-                    console.log('JOB STATUS', message);
                     // Store the most recent job status (jobInfo) in the model and thus metadata.
-                    // console.log('JOBSTATUS', message.job.state);
                     updateFromJobState(message.job.state);
 
                     var existingState = model.getItem('exec.jobState');
@@ -1299,12 +1320,13 @@ define([
 
 
                 // TODO: only turn this on when we need it!
-                var cellChannel = JSON.stringify({
-                        cell: utils.getMeta(cell, 'attributes', 'id')
-                    });
-                runtime.bus().makeChannelBus(cellChannel, 'A cell channel');
+                runtime.bus().makeChannelBus({
+                    cell: utils.getMeta(cell, 'attributes', 'id')
+                }, 'A cell channel');
                 runtime.bus().listen({
-                    channel: cellChannel,
+                    channel: {
+                        cell: utils.getMeta(cell, 'attributes', 'id')
+                    },
                     key: {
                         type: 'run-status'
                     },
@@ -1483,7 +1505,7 @@ define([
             Object.keys(params).forEach(function (key) {
                 var value = params[key],
                     paramSpec = env.parameterMap[key];
-                    
+
                 console.log('param spec', paramSpec);
                 if (paramSpec.spec.field_type === 'textsubdata') {
                     console.log('GOT ITTT', value);
@@ -1491,7 +1513,7 @@ define([
                         value = value.join(',');
                     }
                 }
-                
+
                 paramsToExport[key] = value;
             });
 
@@ -1704,6 +1726,7 @@ define([
             data: utils.getMeta(cell, 'methodCell'),
             onUpdate: function (props) {
                 utils.setMeta(cell, 'methodCell', props.getRawObject());
+                saveNarrative();
             }
         });
 

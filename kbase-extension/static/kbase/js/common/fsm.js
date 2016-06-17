@@ -9,26 +9,10 @@
  */
 
 define([
-], function () {
+    './unodep'
+], function (utils) {
     'use strict';
 
-    function objectEqual(a, b) {
-        var keysA = Object.keys(a),
-            keysB = Object.keys(b),
-            diff;
-        if (keysA.length !== keysB.length) {
-            return false;
-        }
-        diff = keysA.some(function (key) {
-            if (a[key] !== b[key]) {
-                return true;
-            }
-        });
-        if (diff) {
-            return false;
-        }
-        return true;
-    }
 
     function factory(config) {
         var allStates = config.states,
@@ -46,7 +30,6 @@ define([
             // ...
         }
         
-        var timer;
         function run() {
             if (!newStateHandler) {
                 return;
@@ -66,7 +49,7 @@ define([
         
         function findState(stateToFind) {
             var foundStates = allStates.filter(function (stateDef) {
-                if (objectEqual(stateToFind, stateDef.state)) {
+                if (utils.isEqual(stateToFind, stateDef.state)) {
                     return true;
                 }
             });
@@ -94,7 +77,7 @@ define([
         
         function findNextState(stateList, stateToFind) {
             var foundStates = stateList.filter(function (state) {
-                if (objectEqual(state, stateToFind)) {
+                if (utils.isEqual(state, stateToFind)) {
                     return true;
                 }
             });
@@ -109,13 +92,17 @@ define([
         function newState(nextState) {
             var state = findNextState(currentState.next, nextState);
             if (!state) {
-                console.error(JSON.parse(JSON.stringify(nextState)), JSON.parse(JSON.stringify(currentState)));
+                console.error('Could not find new state', nextState, currentState);
                 throw new Error('Cannot find the new state');
             }
 
             var newState = findState(state);
             if (!newState) {
                 throw new Error('Next state found, but that state does not exist');
+            }
+            
+            if (utils.isEqual(newState.state, currentState.state)) {
+                return;
             }
 
             run();
@@ -142,9 +129,6 @@ define([
     return {
         make: function (config) {
             return factory(config);
-        },
-        test: {
-            objectEqual: objectEqual
         }
     };
 });

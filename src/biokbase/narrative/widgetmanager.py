@@ -13,7 +13,7 @@ from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.narrative.common.url_config import URLS
 from biokbase.workspace.client import Workspace
 from biokbase.narrative_method_store.client import NarrativeMethodStore
-from biokbase.narrative.jobs.method_util import (
+from biokbase.narrative.jobs.app_util import (
     check_tag,
     system_variable
 )

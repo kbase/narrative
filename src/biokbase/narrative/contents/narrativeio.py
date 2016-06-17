@@ -23,6 +23,7 @@ from traitlets import (
 import re
 import json
 from collections import Counter
+from updater import update_narrative
 
 # The list_workspace_objects method has been deprecated, the
 # list_objects method is the current primary method for fetching
@@ -136,7 +137,9 @@ class KBaseWSManagerMixin(object):
             if content:
                 nar_data = self.ws_client().get_objects([{'ref':obj_ref}])
                 if nar_data:
-                    return nar_data[0]
+                    nar = nar_data[0]
+                    nar['data'] = update_narrative(nar['data'])
+                    return nar
             else:
                 nar_data = self.ws_client().get_object_info_new({
                     u'objects':[{'ref':obj_ref}],
@@ -326,8 +329,16 @@ class KBaseWSManagerMixin(object):
                     else:
                         # covers the cases we care about
                         continue
+            elif 'kbase' in meta and 'type' in meta['kbase']:
+                kbase_type = meta['kbase']['type']
+                if kbase_type == 'method':
+                    method = meta['kbase'].get('methodCell', {}).get('method', {})
+                    id = method.get('id', 'UnknownApp')
+                    commit_hash = method.get('gitCommitHash', 'unknown')
+                    method_info[u'method.' + id + '/' + commit_hash] += 1
+                    num_methods += 1
             else:
-                cell_info[u'jupyter.' + cell['cell_type']] += 1
+                cell_info['jupyter.' + cell.get('cell_type', 'code')] += 1
 
         # Now we have all cell types like this:
         #

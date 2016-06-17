@@ -3,17 +3,17 @@
 /*
  * MonoBus
  * One bus to rule them all...
- * 
+ *
  * The idea is to have a single message bus which allows natural and transparent
  * partitioning.
- * 
+ *
  * A single message bus is easier to debug, and should make more abstract bus
  * mechanisms easier to create.
- * 
+ *
  * But a single bus by itself exposes too much, provides no privacy or protection
  * for otherwise private channels.
- * 
- * 
+ *
+ *
  *
  */
 define([
@@ -45,12 +45,12 @@ define([
         /*
          * Channels are the top level method for distributing messages. Many
          * message producers and consumers will communicate solely over a channel.
-         * 
+         *
          * Channels are implemented as property of envelopes and addresses.
          */
 
         function makeChannel(spec) {
-            if (channels[spec.name]) {                
+            if (channels[spec.name]) {
                 throw new Error('A channel with name "' + spec.name + '" already exists');
             }
             if (!spec.description) {
@@ -80,7 +80,7 @@ define([
             }
             return channels[name];
         }
-        
+
         function getChannel(name) {
             var channel = channels[name];
             if (!channel) {
@@ -176,8 +176,8 @@ define([
 
             return id;
         }
-        
-        // PROCESSING ENGINE 
+
+        // PROCESSING ENGINE
 
         function processTestListeners(channel, item) {
             var handled = false;
@@ -363,7 +363,7 @@ define([
 
         /*
          * Creates and returns a mini bus wrapper around a single channel.
-         * Allows usage of the main bus but within a scope limited to the 
+         * Allows usage of the main bus but within a scope limited to the
          * specific channel. The main bus is available through a method.
          */
         function makeChannelBus(name, description) {
@@ -372,7 +372,7 @@ define([
                     name: channelName,
                     description: description
                 };
-                
+
             makeChannel(channelSpec);
 
             function on(type, handler) {
@@ -418,7 +418,7 @@ define([
             function bus() {
                 return api;
             }
-            
+
             function stop() {
                 removeChannel(channelName);
             }

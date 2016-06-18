@@ -109,6 +109,11 @@ function($,
                     ids = ['overview', 'genes', 'cds'];
                 }
 
+                if (genome.ontology_mappings.length) {
+                  names.push('Ontology');
+                  ids.push('ontology');
+                }
+
                 return {
                     names : names,
                     ids : ids
@@ -137,14 +142,26 @@ function($,
 
                     var genomeType = self.genomeType(gnm);
 
-            		var tabData = self.tabData(gnm);
-            		var tabNames = tabData.names;
-            		var tabIds = tabData.ids;
+                    var ontology_mappings = [];
+                    $.each(
+                      gnm.features,
+                      function (i,f) {
+                        if (f.ontology_terms) {
+                          ontology_mappings.push(f);
+                        }
+                      }
+                    );
 
-            		for (var i=0; i<tabIds.length; i++) {
-            			var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
-            			tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
-            		}
+                    gnm.ontology_mappings = ontology_mappings;
+
+                    var tabData = self.tabData(gnm);
+                    var tabNames = tabData.names;
+                    var tabIds = tabData.ids;
+
+                    for (var i=0; i<tabIds.length; i++) {
+                      var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
+                      tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
+                    }
 
                     var contigCount = 0;
                     if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
@@ -227,6 +244,64 @@ function($,
                         }
                     }
 
+                    ////ontology tab - should be lazily loaded, but we can't since we need to check for existence to know if we display the tab at all.
+                    if (gnm.ontology_mappings.length) {
+                      var ontologyTab = $('#' + pref + 'ontology');
+                      ontologyTab.empty();
+                      ontologyTab.append('<table cellpadding="0" cellspacing="0" border="0" id="'+pref+'ontology-table" \
+                      class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
+
+                      var ontologySettings = {
+                          "sPaginationType": "full_numbers",
+                          "iDisplayLength": 10,
+                          "aaSorting": [[ 0, "asc" ], [1, "asc"]],
+                          "aoColumns": [
+                              {sTitle: "Gene ID", mData: "id"},
+                              {sTitle: "# of ontology terms", mData: "num"},
+                              {sTitle: "Ontology term", mData: "term"},
+                              {sTitle: "Evidence count", mData: "evidence_count"},
+                          ]
+                      };
+
+                      var ontologyTable = $('#'+pref+'ontology-table').dataTable(ontologySettings);
+                      var ontologyData  = [];
+                      $.each(
+                        gnm.ontology_mappings,
+                        function(i, v) {
+                          //ick. Need to double loop to tally up number of terms in advance. There's gotta be a more efficient way to do this.
+                          v.num_terms = 0;
+                          $.each(
+                            v.ontology_terms,
+                            function (k, o) {
+                              v.num_terms += Object.keys(o).length
+                            }
+                          );
+                          $.each(
+                            v.ontology_terms,
+                            function (k, o) {
+                              $.each(
+                                v.ontology_terms[k],
+                                function (k, t) {
+                                  ontologyData.push(
+                                    {
+                                      'id' : v.id,
+                                      'num' : v.num_terms,
+                                      'term' : k,
+                                      'evidence_count' : t.evidence.length,
+                                    }
+                                  )
+                                }
+                              )
+                            }
+                          )
+                        }
+
+                      );
+
+                      ontologyTable.fnAddData(ontologyData);
+
+                    }
+
                     ///////////////////// Contigs and Genes (lazy loading) /////////////////////
                     var contigsDiv = $('#'+pref+'contigs');
                     contigsDiv.append("<div><img src=\""+self.loadingImage+"\">&nbsp;&nbsp;loading contig data...</div>");
@@ -258,6 +333,7 @@ function($,
                                 }
                             });
                         }
+
                     }
             };
 
@@ -267,8 +343,9 @@ function($,
             var included = ["/complete","/contig_ids","/contig_lengths","contigset_ref","/dna_size",
                             "/domain","/gc_content","/genetic_code","/id","/md5","num_contigs",
                             "/scientific_name","/source","/source_id","/tax_id","/taxonomy",
-                            "/features/[*]/type", "/features/[*]/unknownfield", "/features/[*]/location"];
+                            "/features/[*]/type", "/features/[*]/unknownfield", "/features/[*]/location", "/features/[*]/ontology_terms","/features/[*]/id"];
             kbws.get_object_subset([{ref: self.ws_name + "/" + self.ws_id, included: included}], function(data) {
+            //kbws.get_object([{ref: self.ws_name + "/" + self.ws_id}], function(data) {
                 var gnm = data[0].data;
                 if (gnm.contig_ids && gnm.contig_lengths && gnm.contig_ids.length == gnm.contig_lengths.length) {
                     ready(gnm, null);
@@ -479,7 +556,6 @@ function($,
                     }
                 }
                 //XXX done with plants
-
 
                 ////////////////////////////// Contigs Tab //////////////////////////////
                 var contigTab = $('#'+pref+'contigs');

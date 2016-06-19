@@ -53,7 +53,7 @@ require.config({
         narrativeDataWidgetIFrame: 'kbase/js/widgetApi/narrativeDataWidgetIFrame',
         widgetService2: 'kbase/js/widgetApi/widgetService2',
 
-        
+
         common: 'kbase/js/common/',
 
 
@@ -395,7 +395,7 @@ require.config({
 
 
 function addCdnModules() {
-    var baseUrl = 'http://cdn.kbase.us/cdn',
+    var baseUrl = 'https://narrative-dev.kbase.us/cdn',
         modules = {
             kb_common: 'kbase-common-js/1.7.0/',
             kb_service: 'kbase-service-clients-js/1.4.0/',
@@ -408,14 +408,14 @@ function addCdnModules() {
             'google-code-prettify': 'google-code-prettify/1.2.0/'
         },
         paths = {};
-    
+
     Object.keys(modules).forEach(function (key) {
         paths[key] = [baseUrl, modules[key]].join('/');
     });
-    
+
     require.config({
         paths: paths
-    });    
+    });
 }
 addCdnModules();
 

@@ -314,6 +314,12 @@ class JobManager(object):
                         self.delete_job(job_id)
                     except Exception, e:
                         pass
+            elif r_type == 'remove_job':
+                if job_id is not None:
+                    try:
+                        self.remove_job(job_id)
+                    except Exception, e:
+                        pass
 
             elif r_type == 'job_logs':
                 if job_id is not None:
@@ -365,6 +371,18 @@ class JobManager(object):
             raise ValueError('Need a job_id to delete!')
         job = self.get_job(job_id)
         job.cancel()
+        del self._running_jobs[job_id]
+        self._send_comm_message('job_deleted', {'job_id': job_id})
+        
+    def remove_job(self, job_id):
+        """
+        If the job_id doesn't exist, raises a ValueError.
+        If the deletion fails and throws an error, that just gets raised, too.
+        """
+        if job_id is None:
+            raise ValueError('Need a job_id to delete!')
+        job = self.get_job(job_id)
+        # job.cancel()
         del self._running_jobs[job_id]
         self._send_comm_message('job_deleted', {'job_id': job_id})
 

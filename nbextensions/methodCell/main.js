@@ -367,7 +367,9 @@ define([
                         code: null,
                         request: null,
                         result: null
-                    }
+                    },
+                    params: null,
+                    output: []
                 }
             };
             cell.metadata = meta;

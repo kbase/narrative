@@ -8,11 +8,10 @@ define([
     $,
     KBWidget,
     Jupyter
-) {
+    ) {
     "use strict";
     return KBWidget({
         name: 'kbaseNarrativeOutputCell',
-
         version: '1.0.0',
         options: {
             widget: 'kbaseDefaultNarrativeOutput',
@@ -41,13 +40,11 @@ define([
 
             return this;
         },
-
-        hideInputArea: function() {
+        hideInputArea: function () {
             if (!this.options.cellId)
                 return;
             $('#' + this.options.cellId).closest('.cell').find('.inner_cell .input_area').hide();
         },
-
         render: function () {
             var icon;
             switch (this.options.type) {
@@ -145,41 +142,44 @@ define([
 
             try {
                 require([widget],
-                    // If we successfully Require the widget code, render it:
-                    $.proxy(function (W) {
+                    function (W) {
+                        // If we successfully Require the widget code, render it:
                         this.$outWidget = new W($body, widgetData);
                         // this.$outWidget = $body.find('.panel-body > div')[widget](widgetData);
                         this.$elem.append($body);
-                    }, this),
-                    // If we fail, render the error widget and log the error.
-                    $.proxy(function (err) {
+                    }.bind(this),
+                    function (err) {
+                        // If we fail, render the error widget and log the error.
                         KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
                         this.options.title = 'App Error';
-                        this.options.data = {'error': {
-                                'msg': 'An error occurred while showing your output:',
-                                'method_name': 'kbaseNarrativeOutputCell.renderCell',
-                                'type': 'Output',
-                                'severity': '',
-                                'traceback': 'Failed while trying to show a "' + widget + '"\n' +
+                        this.options.data = {
+                            error: {
+                                msg: 'An error occurred while showing your output:',
+                                method_name: 'kbaseNarrativeOutputCell.renderCell',
+                                type: 'Output',
+                                severity: '',
+                                traceback: 'Failed while trying to show a "' + widget + '"\n' +
                                     'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
                                     err.message
-                            }};
+                            }
+                        };
                         this.options.widget = this.OUTPUT_ERROR_WIDGET;
                         this.renderErrorOutputCell();
-                    }, this)
-                    );
+                    }.bind(this));
             } catch (err) {
                 KBError("Output::" + this.options.title, "failed to render output widget: '" + widget);
                 this.options.title = 'App Error';
-                this.options.data = {'error': {
-                        'msg': 'An error occurred while showing your output:',
-                        'method_name': 'kbaseNarrativeOutputCell.renderCell',
-                        'type': 'Output',
-                        'severity': '',
-                        'traceback': 'Failed while trying to show a "' + widget + '"\n' +
+                this.options.data = {
+                    error: {
+                        msg: 'An error occurred while showing your output:',
+                        method_name: 'kbaseNarrativeOutputCell.renderCell',
+                        type: 'Output',
+                        severity: '',
+                        traceback: 'Failed while trying to show a "' + widget + '"\n' +
                             'With inputs ' + JSON.stringify(widgetData) + '\n\n' +
                             err.message
-                    }};
+                    }
+                };
                 this.options.widget = this.OUTPUT_ERROR_WIDGET;
                 this.renderErrorOutputCell();
 

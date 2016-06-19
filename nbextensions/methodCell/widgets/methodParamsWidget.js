@@ -228,6 +228,7 @@ define([
                     dom.makePanel('Input Objects', 'input-fields'),
                     dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 'parameter-fields'),
                     dom.makePanel('Output Objects', 'output-fields')
+                    // dom.makePanel('Output Report', 'output-report')
                 ]);
 
             return {
@@ -349,6 +350,13 @@ define([
                             }
                         }));
                     }
+                })
+                .then(function () {
+                    // Show the user that a report object will be created. Otherwise it may seem weird that there is
+                    // no way to specify the output object
+                    //if (env.methodSpec) {
+                    //    +++
+                   // }
                 })
                 .then(function () {
                     if (parameterParams.length === 0) {

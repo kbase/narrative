@@ -84,10 +84,10 @@ define([
                 // use this and not the state input.
                 this.state = cellState;
             }
-            
-            
+
+
             var bus = this.runtime.bus();
-            
+
             bus.listen({
                 channel: {
                     jobId: this.jobId
@@ -99,8 +99,8 @@ define([
                     this.handleJobStatus(message);
                 }.bind(this)
             });
-            
-          
+
+
             bus.listen({
                 channel: {
                     jobId: this.jobId
@@ -112,7 +112,7 @@ define([
                     this.handleJobLogs(message);
                 }.bind(this)
             });
-            
+
             bus.listen({
                 channel: {
                     jobId: this.jobId
@@ -124,9 +124,9 @@ define([
                     this.handleJobLogDeleted(message);
                 }.bind(this)
             });
-            
-            
-            
+
+
+
 //            this.runtime.bus().on('job-status', function (message) {
 //                this.handleJobStatus(message);
 //            }.bind(this));
@@ -147,7 +147,7 @@ define([
 //                    this.handleJobStatus(msg);
 //                }.bind(this)
 //            });
-//            
+//
             // render up the panel's view layer.
             this.initializeView();
             this.updateView();
@@ -223,20 +223,20 @@ define([
             };
             this.cell.metadata = metadata;
         },
-        
+
         handleJobStatus: function (message) {
             console.log('HANDLE JOB STATUS', message);
             this.state = message.jobState.state;
             this.setCellState();
             this.updateView();
         },
-        
+
         handleJobLogs: function (message) {
             if (this.pendingLogRequest && (this.pendingLogLine === message.logs.first || this.pendingLogLine === 'latest' && message.logs.latest)) {
                 this.updateLogs(message.logs);
             }
         },
-        
+
         handleJobLogDeleted: function (message) {
             window.alert('Job has been deleted. No log available.');
         },
@@ -305,6 +305,7 @@ define([
                     clearTimeout(this.looper);
                 $logsPanel.find('button[id!="kblog-stop"]').prop('disabled', false);
                 $logsPanel.find('#kblog-stop').prop('disabled', true);
+                this.logsView.find('#kblog-spinner').hide();
                 this.doLogLoop = false;
             }.bind(this));
             $logsPanel.find('#kblog-top').click(function() {

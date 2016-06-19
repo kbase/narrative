@@ -325,7 +325,7 @@ define([
                     // This allows widgets which are interested in the job
                     // to subscribe to just that job, and nothing else.
                     // If there is a need for a generic broadcast message, we
-                    // can either send a second message or implement key 
+                    // can either send a second message or implement key
                     // filtering.
 
                     // TODO: make sure we are catching these ... perhaps they need to be run-status...
@@ -413,6 +413,9 @@ define([
                                 alert('Job already deleted!');
                                 break;
                             case 'job_logs':
+                                this.sendJobMessage('job-log-deleted', content.job_id, {jobId: content.job_id});
+                                break;
+                            case 'job_logs_latest':
                                 this.sendJobMessage('job-log-deleted', content.job_id, {jobId: content.job_id});
                                 break;
                             case 'job_status':

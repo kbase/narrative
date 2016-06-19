@@ -3,17 +3,17 @@
 /*
  * MonoBus
  * One bus to rule them all...
- * 
+ *
  * The idea is to have a single message bus which allows natural and transparent
  * partitioning.
- * 
+ *
  * A single message bus is easier to debug, and should make more abstract bus
  * mechanisms easier to create.
- * 
+ *
  * But a single bus by itself exposes too much, provides no privacy or protection
  * for otherwise private channels.
- * 
- * 
+ *
+ *
  *
  */
 define([
@@ -46,7 +46,7 @@ define([
         /*
          * Channels are the top level method for distributing messages. Many
          * message producers and consumers will communicate solely over a channel.
-         * 
+         *
          * Channels are implemented as property of envelopes and addresses.
          */
 
@@ -242,6 +242,8 @@ define([
         }
 
         // PROCESSING ENGINE 
+
+        // PROCESSING ENGINE
 
         function processTestListeners(channel, item) {
             var handled = false;
@@ -506,7 +508,7 @@ define([
 
         /*
          * Creates and returns a mini bus wrapper around a single channel.
-         * Allows usage of the main bus but within a scope limited to the 
+         * Allows usage of the main bus but within a scope limited to the
          * specific channel. The main bus is available through a method.
          */
         function makeChannelBus(name, description) {

@@ -142,7 +142,7 @@ define([
                             padding: '3px'
                         };
                         // console.log('JOB MATCH?', output.jobId, model.currentJobState);
-                        if (output.jobId === model.currentJobState.job_id) {
+                        if (model.currentJobState && output.jobId === model.currentJobState.job_id) {
                             rowStyle.border = '2px blue solid';
                         }
                         return div({class: 'row', style: rowStyle}, [

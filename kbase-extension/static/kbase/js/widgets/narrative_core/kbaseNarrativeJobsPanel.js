@@ -215,6 +215,11 @@ define([
                 this.deleteJob(message.jobId);
             }.bind(this));
 
+            bus.on('request-job-removal', function (message) {
+                this.removeJob(message.jobId);
+            }.bind(this));
+
+
             bus.on('request-job-status', function (message) {
                 this.sendCommMessage(this.JOB_STATUS, message.jobId);
             }.bind(this));
@@ -574,6 +579,14 @@ define([
             }
             // send the comm message.
             this.sendCommMessage(this.DELETE_JOB, jobId);
+        },
+        removeJob: function (jobId) {
+            if (!jobId) {
+                return;
+            }
+            // send the comm message.
+            this.sendCommMessage(this.REMOVE_JOB, jobId);
+            this.removeDeletedJob(jobId);
         },
         removeDeletedJob: function (jobId) {
             // remove the view widget

@@ -287,7 +287,6 @@ define([
                         lineNumber: startingLine + index + 1
                     };
                 });
-                console.log('LINES', viewLines);
                 dom.setContent('panel', renderLines(viewLines));
             }
         }
@@ -334,11 +333,9 @@ define([
                 handle: function (message) {
                     // if the job is finished, we don't want to reflect
                     // this in the ui, and disable play/stop controls.
-                    // console.log('LOG JOB STATAUS', message);
                     var jobStatus = message.jobState.status,
                         mode = fsm.getCurrentState().state.mode,
                         newState;
-                    console.log('CLOVER', mode, jobStatus);
                     switch (mode) {
                         case 'new':
                             switch (jobStatus) {
@@ -479,7 +476,6 @@ define([
                 },
                 onNewState: function (fsm) {
                     // save the state?
-                    console.log('NEW STATE!', fsm.getCurrentState());
                     
                     renderFSM();
                 }

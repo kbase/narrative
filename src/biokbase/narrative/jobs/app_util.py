@@ -5,8 +5,10 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 import os
 import re
+import biokbase.narrative.clients as clients
 
 app_version_tags = ['release', 'beta', 'dev']
+_ws_clients = clients.get('workspace')
 
 def check_tag(tag, raise_exception=False):
     """
@@ -36,6 +38,12 @@ def system_variable(var):
     var = var.lower()
     if var == 'workspace':
         return os.environ.get('KB_WORKSPACE_ID', None)
+    elif var == 'workspace_id':
+        ws_name = os.environ.get('KB_WORKSPACE_ID', None)
+        if ws_name is None:
+            return None
+        ws_info = _ws_client.get_workspace_info({'workspace': ws_name})
+        return ws_info[0]
     elif var == 'token':
         return os.environ.get('KB_AUTH_TOKEN', None)
     elif var == 'user_id':
@@ -50,7 +58,7 @@ def system_variable(var):
 
 def map_inputs_from_state(state, app_spec):
     """
-    returns a dict of readable (ish) method inputs - those used for the run_method function - to the input values.
+    returns a dict of readable (ish) method inputs - those used for the run_app function - to the input values.
     narrative_system_variables are ignored, so workspace names and tokens shouldn't show up.
     """
     input_dict = dict()

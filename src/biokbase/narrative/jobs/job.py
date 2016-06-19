@@ -134,11 +134,15 @@ class Job(object):
                 elif 'constant_value' in out_param:
                     widget_params[p_id] = out_param['constant_value']
                 elif 'input_parameter' in out_param:
-                    widget_params[p_id] = self.inputs.get(out_param['input_parameter'], None)
+                    widget_params[p_id] = self.inputs[0].get(out_param['input_parameter'], None)
                 elif 'service_method_output_path' in out_param:
                     # widget_params[p_id] = get_sub_path(json.loads(state['step_outputs'][self.app_id]), out_param['service_method_output_path'], 0)
                     widget_params[p_id] = get_sub_path(state['result'], out_param['service_method_output_path'], 0)
             output_widget = app_spec.get('widgets', {}).get('output', 'kbaseDefaultNarrativeOutput')
+            # Yes, sometimes silly people put the string 'null' in their spec.
+            if (output_widget == 'null'):
+                output_widget = 'kbaseDefaultNarrativeOutput'
+            
             return WidgetManager().show_output_widget(output_widget, tag=self.tag, **widget_params)
 
         else:

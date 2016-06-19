@@ -138,97 +138,62 @@ define([
         }
 
         function renderJobStatus() {
+            var labelStyle = {
+                textAlign: 'right',
+                border: '1px transparent solid', 
+                padding: '4px', 
+            },
+                dataStyle = {
+                border: '1px silver solid', 
+                padding: '4px', 
+                display: 'inline-block', 
+                minWidth: '20px', 
+                backgroundColor: 'gray', 
+                color: '#FFF'
+            };
             return dom.buildPanel({
                 title: 'Run Status',
                 name: 'runStatus',
                 hidden: false,
                 type: 'primary',
                 body: [
-                    div({style: {lineHeight: '20px'}}, [
-                        span({}, [
-                            span('State:'),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                                dataElement: 'state'
-                            })
-                        ]),
-                        span({}, [
-                            span('Run ID:'),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                                dataElement: 'run-id'
-                            })
-                        ]),
-                        span({}, [
-                            span('Job ID:'),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                                dataElement: 'job-id'
-                            })
-                        ]),
-                        span({style: {marginLeft: '5px'}}, [
-                            span('Last update:'),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                                dataElement: 'last-updated-at'
-                            })
-                        ]),
-                        span({style: {marginLeft: '5px'}}, [
-                            span('Phase:'),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                                dataElement: 'temporalState'
-                            })
-                        ]),
-                        span({style: {marginLeft: '5px'}}, [
-                            span('Exec:'),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                                dataElement: 'executionState'
-                            })
-                        ]),
-                        span({dataElement: 'launch-time', style: {marginLeft: '5px'}}, [
-                            span({dataElement: 'label'}),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF', fontFamily: 'monospace'},
-                                dataElement: 'elapsed'
-                            })
-                        ]),
-                        span({dataElement: 'queue-time', style: {marginLeft: '5px'}}, [
-                            span({dataElement: 'label'}),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF', fontFamily: 'monospace'},
-                                dataElement: 'elapsed'
-                            })
-                        ]),
-                        span({dataElement: 'run-time', style: {marginLeft: '5px'}}, [
-                            span({dataElement: 'label'}),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF', fontFamily: 'monospace'},
-                                dataElement: 'elapsed'
-                            })
-                        ]),
-                        span({dataElement: 'completed', style: {marginLeft: '5px'}}, [
-                            span('Completed:'),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                                dataElement: 'completedAt'
-                            })
-                        ]),
-                        span({dataElement: 'success', style: {marginLeft: '5px'}}, [
-                            span('Success:'),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                                dataElement: 'flag'
-                            })
-                        ]),
-                        span({dataElement: 'error', style: {marginLeft: '5px'}}, [
-                            span('Error:'),
-                            span({
-                                style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                                dataElement: 'flag'
-                            })
-                        ])
+                    
+                    div({class: 'row'}, [
+                        div({class: 'col-md-1', style: labelStyle}, 'State'),
+                        div({class: 'col-md-2', dataElement: 'state', style: dataStyle}),
+                        div({class: 'col-md-1', style: labelStyle}, 'Run Id'),
+                        div({class: 'col-md-2', dataElement: 'run-id', style: dataStyle}),
+                        div({class: 'col-md-1', style: labelStyle}, 'Job Id'),
+                        div({class: 'col-md-2', dataElement: 'job-id', style: dataStyle}),
+                        div({class: 'col-md-1', style: labelStyle}, 'Updated'),
+                        div({class: 'col-md-2', dataElement: 'last-updated-at', style: dataStyle}),
+                    ]),
+                     div({class: 'row'}, [
+                        div({class: 'col-md-1', style: labelStyle}, 'Phase'),
+                        div({class: 'col-md-2', dataElement: 'temporalState', style: dataStyle}),
+                        div({class: 'col-md-1', style: labelStyle}, 'Exec'),
+                        div({class: 'col-md-2', dataElement: 'executionState', style: dataStyle}),
+                    ]),
+                    div({class: 'row', dataElement: 'launch-time'}, [
+                        div({class: 'col-md-1', style: labelStyle}, 'Launch'),
+                        div({class: 'col-md-2', dataElement: 'elapsed', style: dataStyle}),
+                    ]),
+                    div({class: 'row', dataElement: 'queue-time'}, [
+                        div({class: 'col-md-1', style: labelStyle}, 'Queue'),
+                        div({class: 'col-md-2', dataElement: 'elapsed', style: dataStyle})
+                    ]),
+                    div({class: 'row', dataElement: 'run-time'}, [
+                        div({class: 'col-md-1', style: labelStyle}, 'Run'),
+                        div({class: 'col-md-2', dataElement: 'elapsed', style: dataStyle})
+                    ]),
+                    div({class: 'row', dataElement: 'completed'}, [
+                        div({class: 'col-md-1', style: labelStyle}, 'Completed'),
+                        div({class: 'col-md-2', dataElement: 'completedAt', style: dataStyle}),
+                        div({class: 'col-md-1', style: labelStyle}, 'Success'),
+                        div({class: 'col-md-2', dataElement: 'success', style: dataStyle}, span({dataElement: 'flag'})),
+                        div({class: 'col-md-1', style: labelStyle}, 'Error'),
+                        div({class: 'col-md-2', dataElement: 'error', style: dataStyle}, span({dataElement: 'flag'}))
+                        
                     ]),
 //                    div({dataElement: 'error-group'}, [
 //                        dom.buildPanel({

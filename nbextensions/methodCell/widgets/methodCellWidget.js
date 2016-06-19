@@ -4,6 +4,7 @@
 define([
     'jquery',
     'bluebird',
+    'uuid',
     'base/js/namespace',
     'base/js/dialog',
     'common/parameterSpec',
@@ -12,15 +13,18 @@ define([
     'kb_common/html',
     'common/props',
     'kb_service/client/narrativeMethodStore',
+    'kb_service/client/workspace',
     'common/pythonInterop',
     'common/utils',
     'common/dom',
     'common/fsm',
     'google-code-prettify/prettify',
-    'css!google-code-prettify/prettify.css'
+    'css!google-code-prettify/prettify.css',
+    'css!font-awesome.css'
 ], function (
     $,
     Promise,
+    Uuid,
     Jupyter,
     dialog,
     ParameterSpec,
@@ -29,6 +33,7 @@ define([
     html,
     Props,
     NarrativeMethodStore,
+    Workspace,
     PythonInterop,
     utils,
     Dom,
@@ -52,7 +57,7 @@ define([
                         disabled: ['run', 'cancel', 're-run']
                     },
                     elements: {
-                        show: ['parameters-group'],
+                        show: ['parameters-group', 'output-group'],
                         hide: ['parameters-display-group', 'exec-group']
                     }
                 },
@@ -80,7 +85,7 @@ define([
                         disabled: ['cancel', 're-run']
                     },
                     elements: {
-                        show: ['parameters-group'],
+                        show: ['parameters-group', 'output-group'],
                         hide: ['parameters-display-group', 'exec-group']
                     }
                 },
@@ -138,7 +143,7 @@ define([
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group']
+                        hide: ['parameters-group', 'output-group']
                     },
                     messages: [
                         {
@@ -191,7 +196,7 @@ define([
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group']
+                        hide: ['parameters-group', 'output-group']
                     }
                 },
                 next: [
@@ -229,7 +234,7 @@ define([
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group']
+                        hide: ['parameters-group', 'output-group']
                     }
                 },
                 next: [
@@ -261,9 +266,19 @@ define([
                         disabled: ['run', 'cancel']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
                         hide: ['parameters-group']
-                    }
+                    },
+                    messages: [
+                        {
+                            message: {},
+                            address: {
+                                key: {
+                                    type: 'on-success'
+                                }
+                            }
+                        }
+                    ]
                 },
                 next: [
                     {
@@ -288,7 +303,7 @@ define([
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group']
+                        hide: ['parameters-group', 'output-group']
                     }
                 },
                 next: [
@@ -316,7 +331,7 @@ define([
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group']
+                        hide: ['parameters-group', 'output-group']
                     }
                 },
                 next: [
@@ -344,7 +359,7 @@ define([
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group']
+                        hide: ['parameters-group', 'output-group']
                     }
                 },
                 next: [
@@ -371,7 +386,7 @@ define([
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group']
+                        hide: ['parameters-group', 'output-group']
                     }
                 },
                 next: [
@@ -598,7 +613,7 @@ define([
             dom.setContent('about-app.git-commit-hash', appSpec.info.git_commit_hash || dom.na());
             dom.setContent('about-app.authors', (function () {
                 if (appSpec.info.authors && appSpec.info.authors.length > 0) {
-                    return appSpec.info.authors.join('<br>')
+                    return appSpec.info.authors.join('<br>');
                 }
                 return dom.na();
             }()));
@@ -631,7 +646,6 @@ define([
                         div({dataElement: 'notifications', style: {display: 'block', width: '100%'}}),
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
-                                
                                 dom.buildPanel({
                                     title: 'Available Actions',
                                     name: 'availableActions',
@@ -657,15 +671,15 @@ define([
                                         ])
                                     ]
                                 }),
-//                                dom.buildCollapsiblePanel({
-//                                    title: 'FSM',
-//                                    name: 'fsm-bar',
-//                                    hidden: false,
-//                                    type: 'default',
-//                                    body: [
-//                                        div({dataElement: 'content'})
-//                                    ]
-//                                }),
+                                dom.buildCollapsiblePanel({
+                                    title: 'Notifications',
+                                    name: 'notifications',
+                                    hidden: false,
+                                    type: 'default',
+                                    body: [
+                                        div({dataElement: 'content'})
+                                    ]
+                                }),
                                 dom.buildCollapsiblePanel({
                                     title: 'About',
                                     name: 'about-app',
@@ -693,7 +707,7 @@ define([
                                     ]
                                 }),
                                 dom.buildPanel({
-                                    title: 'Parameters',
+                                    title: 'Input ' + span({class: 'fa fa-arrow-right'}),
                                     name: 'parameters-group',
                                     hidden: false,
                                     type: 'default',
@@ -707,9 +721,16 @@ define([
                                     body: div({dataElement: 'widget'})
                                 }),
                                 dom.buildPanel({
-                                    title: 'Method Execution',
+                                    title: 'Method Execution ' + span({class: 'fa fa-tasks'}),
                                     name: 'exec-group',
                                     hidden: false,
+                                    type: 'default',
+                                    body: div({dataElement: 'widget'})
+                                }),
+                                dom.buildPanel({
+                                    title: 'Output ' + span({class: 'fa fa-arrow-left'}),
+                                    name: 'output-group',
+                                    hidden: true,
                                     type: 'default',
                                     body: div({dataElement: 'widget'})
                                 })
@@ -875,6 +896,84 @@ define([
             return showing;
         }
 
+        function doRemoveNotification(index) {
+            var notifications = model.getItem('notifications') || [];
+            notifications.splice(index, 1);
+            model.setItem('notifications', notifications);
+            renderNotifications();
+        }
+
+        function renderNotifications() {
+            var events = Events.make(),
+                notifications = model.getItem('notifications') || [],
+                content = notifications.map(function (notification, index) {
+                    return div({class: 'row'}, [
+                        div({class: 'col-md-10'}, notification),
+                        div({class: 'col-md-2', style: {textAlign: 'right'}}, span({}, [
+                            a({
+                                class: 'btn btn-default', 
+                                id: events.addEvent({
+                                    type: 'click',
+                                    handler: function () {
+                                        doRemoveNotification(index);
+                                    }
+                                })
+                            }, 'X')
+                        ]))
+                    ]);
+                }).join('\n');
+            dom.setContent('notifications.content', content);
+            events.attachEvents(container);
+        }
+
+        function showNotifications() {
+
+        }
+
+        function addNotification(notification) {
+            var notifications = model.getItem('notifications') || [];
+            notifications.push(notification);
+            model.setItem('notifications', notifications);
+            renderNotifications();
+        }
+
+        function clearNotifications() {
+            model.setItem('notifications', []);
+        }
+
+
+//        function showToggle(name) {
+//            
+//        }
+//        
+//        function ensureToggle(name) {
+//            var propName = 'user-settings.show-' + name,
+//                elementPath = 'toggle-' + name,
+//            
+//        }
+//        
+//        // just simple display block/none for now
+//        function renderToggle(name) {
+//            var propName = 'user-settings.show-' + name,
+//                elementPath = 'toggle-' + name,
+//                node = dom.getElement(elementPath),
+//                originalStyle = model.getItem(propName);
+//            
+//            if (orig
+//            
+//        }
+//
+//        function toggleToggle(name) {
+//            var propName = 'user-settings.show-' + name;
+//            if (model.getItem(propName)) {
+//                model.setItem(propName, false);
+//            } else {
+//                model.setItem(propName, true);
+//            }
+//            renderToggle(name);
+//            return model.getItem(propName);
+//        }
+
         // WIDGETS
 
         function showWidget(name, widgetModule, path) {
@@ -900,6 +999,7 @@ define([
          */
         function renderUI() {
             showFsmBar();
+            renderNotifications();
             var state = fsm.getCurrentState();
 
             // Button state
@@ -922,7 +1022,14 @@ define([
             // Emit messages for this state.
             if (state.ui.messages) {
                 state.ui.messages.forEach(function (message) {
-                    widgets[message.widget].bus.send(message.message, message.address);
+                    var tempBus;
+                    if (message.widget) {
+                        tempBus = widgets[message.widget].bus;
+                    } else {
+                        tempBus = inputWidgetBus;
+                    }
+                    
+                    tempBus.send(message.message, message.address);
                 });
             }
         }
@@ -938,37 +1045,18 @@ define([
             }, saveMaxFrequency);
         }
 
-        function deleteJobFromNotebook(jobId) {
-            var metadata = Jupyter.notebook.metadata;
-            // first, wipe the metadata
-            metadata.job_ids.apps = metadata.job_ids.apps.filter(function (val) {
-                return val.id !== jobId;
-            });
-
-            // ...and from the method list
-            metadata.job_ids.methods = metadata.job_ids.methods.filter(function (val) {
-                return val.id !== jobId;
-            });
-
-            // remove it from the 'cache' in this jobs panel
-            // delete this.source2Job[this.jobStates[jobId].source];
-            // delete this.jobStates[jobId];
-
-            // save the narrative!
-            saveNarrative();
-
-            return true;
-        }
-
         function deleteJob(jobId) {
             return new Promise(function (resolve, reject) {
                 // NB the narrative callback code does not pass back error
                 // through the callback -- it is just logged to the console.
                 // Gulp!
+                
+                // we don't really delete jobs here any more, just 
+                // temporarily disable for now.
 
                 // This is now fire and forget.
                 // TODO: close the loop on this.
-                runtime.bus().emit('request-job-deletion', {
+                runtime.bus().emit('request-job-removal', {
                     jobId: jobId
                 });
                 resolve();
@@ -986,47 +1074,37 @@ define([
 //                }
             });
         }
+        
+        /*
+         * NB: the jobs panel takes care of removing the job info from the
+         * narrative metadata.
+         */
+        function cancelJob(jobId) {
+            runtime.bus().emit('request-job-removal', {
+                jobId: jobId
+            });
+        }
 
         function doRerun() {
             var confirmed = dom.confirmDialog('Are you sure you want to zap the data?', 'Yes', 'No way, dude');
             if (!confirmed) {
                 return;
             }
+            
+            var jobState = model.getItem('exec.jobState');
+            if (jobState) {
+                cancelJob(jobState.job_id);
+                // the job will be deleted form the notebook when the job cancellation
+                // event is received.
+            }
 
-            // delete the job
+            // Remove all of the execution state when we reset the method.
+            model.deleteItem('exec');
 
-            // Jobs.deleteJob(jobState.job_id)
-            Promise.try(function () {
-                // If there was an error during the launching/preparation phase,
-                // there will be no job yet.
-                var jobState = model.getItem('exec.jobState');
-                if (jobState) {
-                    return Promise.all([jobState.job_id, deleteJob(jobState.job_id)]);
-                } else {
-                    return [null];
-                }
-            })
-                .spread(function (jobId) {
-                    if (jobId) {
-                        deleteJobFromNotebook(jobId);
-                    }
-                })
-                .then(function () {
-                    // We should really wait for an update to come from the parent!
+            // TODO: evaluate the params again before we do this.
+            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
 
-                    // Remove all of the execution state when we reset the method.
-                    model.deleteItem('exec');
-
-                    // TODO: evaluate the params again before we do this.
-                    fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-
-                    renderUI();
-
-                })
-                .catch(function (err) {
-                    console.error('Error Deleting Job', err);
-                });
-
+            renderUI();
         }
 
         function doRemove() {
@@ -1035,36 +1113,15 @@ define([
                 return;
             }
 
-            Promise.try(function () {
-                // If there was an error during the launching/preparation phase,
-                // there will be no job yet.
-                var jobState = model.getItem('exec.jobState');
-                if (jobState) {
-                    return deleteJob(jobState.job_id);
-                }
-            })
-                .then(function () {
-                    // deleteJobFromNotebook(jobState.job_id);
-                })
-                .then(function () {
-                    // We should really wait for an update to come from the parent!
+            var jobState = model.getItem('exec.jobState');
+            if (jobState) {
+                cancelJob(jobState.job_id);
+                // the job will be deleted form the notebook when the job cancellation
+                // event is received.
+            }
 
-                    // Remove all of the execution state when we reset the method.
-                    model.deleteItem('exec');
-
-                    // TODO: evaluate the params again before we do this.
-                    fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-                    renderUI();
-                })
-                .then(function () {
-                    $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
-                })
-                .catch(function (err) {
-                    console.error('Error Deleting Cell', err);
-                });
+            $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
         }
-
-
 
         /*
          * Cancelling a job is the same as deleting it, and the effect of cancelling the job is the same as re-running it.
@@ -1076,33 +1133,20 @@ define([
                 return;
             }
 
-            // delete the job
+            var jobState = model.getItem('exec.jobState');
+            if (jobState) {
+                cancelJob(jobState.job_id);
+                // the job will be deleted form the notebook when the job cancellation
+                // event is received.
+            }
 
-            Promise.try(function () {
-                // If there was an error during the launching/preparation phase,
-                // there will be no job yet.
-                var jobState = model.getItem('exec.jobState');
-                if (jobState) {
-                    return Promise.all([jobState.job_id, deleteJob(jobState.job_id)])
-                        .then(function () {
-                            return deleteJobFromNotebook(jobState.job_id);
-                        });
-                }
-            })
-                .then(function () {
-                    // We should really wait for an update to come from the parent!
+            // Remove all of the execution state when we reset the method.
+            model.deleteItem('exec');
 
-                    // Remove all of the execution state when we reset the method.
-                    model.deleteItem('exec');
+            // TODO: evaluate the params again before we do this.
+            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
 
-                    // TODO: evaluate the params again before we do this.
-                    fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-
-                    renderUI();
-                })
-                .catch(function (err) {
-                    console.error('Error Deleting Job', err);
-                });
+            renderUI();
         }
 
         function updateFromLaunchEvent(message) {
@@ -1213,7 +1257,37 @@ define([
                         }
                     } else {
                         if (widgets.execWidget) {
-                            console.log('SENDING job state updated to exec widget', message.job.state.job_id);
+                            widgets.execWidget.bus.emit('job-state-updated', {
+                                jobId: message.job.state.job_id
+                            });
+                        }
+                    }
+                    model.setItem('exec.jobStateUpdated', new Date().getTime());
+                }
+            });
+            
+            runtime.bus().listen({
+                channel: {
+                    jobId: jobId
+                },
+                key: {
+                    type: 'job-status'
+                },
+                handle: function (message) {
+                    // Store the most recent job status (jobInfo) in the model and thus metadata.
+                    updateFromJobState(message.job.state);
+
+                    var existingState = model.getItem('exec.jobState');
+                    if (!existingState || existingState.job_state !== message.job.state.job_state) {
+                        model.setItem('exec.jobState', message.job.state);
+                        // Forward the job info to the exec widget if it is available. (it should be!)
+                        if (widgets.execWidget) {
+                            widgets.execWidget.bus.emit('job-state', {
+                                jobState: message.job.state
+                            });
+                        }
+                    } else {
+                        if (widgets.execWidget) {
                             widgets.execWidget.bus.emit('job-state-updated', {
                                 jobId: message.job.state.job_id
                             });
@@ -1228,6 +1302,213 @@ define([
             // TODO
         }
 
+        /*
+         * This message implementation is called whenever the method cell widget 
+         * enters the "success" state.
+         * 
+         * The job here is to evaluate the output of the execution and to ensure
+         * that any output products have been made available in the narrative.
+         * 
+         * Here is what we need to handle:
+         * 
+         * 1. The canonical case of one or more objects created in this workspace, 
+         * and named in the output parameters.
+         * 
+         * 2. A job report object which should also be displayed.
+         * 
+         * After displaying the objects, we record this in the cell metadata
+         * 
+         * If the user decides to delete the output cells, this ensures that we 
+         * will not add them again.
+         * 
+         * However, we will produce user interface elements to ensure that the 
+         * user can re-insert them if they want to.
+         * 
+         * OR
+         * 
+         * I think it is supposed to work like this:
+         * 
+         * kb_service_output_mapping in the method spec provides an array 
+         * of "mappings" to produce input paramters (an argument which is a object
+         * composed of said properties) for an "output widget". The output widget 
+         * is named in info.output_types
+         * 
+         * All rather fishy and fragile looking to me.
+         * Why can't we just classify the types of output available? 
+         * Are there really going to be many use cases of outputs customized
+         * like this? I expect the vast majority will either be reports or simply
+         * the output objects.
+         * 
+         */
+        function getOutputParams() {
+            var outputParams = env.methodSpec.parameters.map(function (parameter) {
+                var textOptions = parameter.text_options;
+                if (textOptions) {
+                    if (textOptions.is_output_name === 1) {
+                        return parameter.id;
+                    }
+                }
+                return false;
+            })
+                .filter(function (paramId) {
+                    return (paramId !== false);
+                }),
+                params = model.getItem('params'),
+                outputNames = Object.keys(params).filter(function (key) {
+                return outputParams.some(function (param) {
+                    return (param === key);
+                });
+            })
+                .map(function (key) {
+                    return {
+                        param: key,
+                        objectName: params[key]
+                    };
+                });
+            return outputNames;
+        }
+        /*
+         * Given a set of object names within this workspace, get the object
+         * info for each one, and return the absolute reference (wsid, objid, ref)
+         */
+        function getOutputObjectRefs(outputs) {
+            var workspace = new Workspace(runtime.config('services.workspace.url'), {
+                token: runtime.authToken()
+            }),
+                objectIdentities = outputs.map(function (output) {
+                    return {
+                        wsid: workspaceInfo.id,
+                        name: output.objectName
+                    };
+                });
+            return workspace.get_object_info_new({
+                objects: objectIdentities,
+                ignoreErrors: 1,
+                includeMetadata: 0
+            })
+                .then(function (results) {
+                    return results.map(function (result, index) {
+                        if (result === null) {
+                            console.warn('MISSING OBJECT', outputs[index]);
+                            throw new Error('Output object ' + outputs[index].objectName + ' specified in param ' + outputs[index].param + ' was not found in this workspace');
+                        }
+                        return {
+                            param: outputs[index].param,
+                            name: outputs[index].objectName,
+                            ref: [result[6], result[0], result[4]].join('/')
+                        };
+                    });
+                });
+        }
+        function doOnSuccessx() {
+            // See if we've already done this before, if so, skip it.
+            // TODO: the fsm should have a way of invoking events on only the first 
+            // time entering a state ;)
+
+            // Save the state data for output into special model properties.
+
+            // This ensures that it survivies even if the jobState is blow away
+
+            model.setItem('output.result', model.getItem('exec.jobState.result'));
+
+            // Now ensure that the output objects exists, and if so, store their
+            // absolute reference.
+            var outputs = getOutputParams();
+            if (outputs) {
+                getOutputObjectRefs(outputs)
+                    .then(function (result) {
+                        model.setItem('output.objects', result);
+                        // Now get see if we have a report object.
+                    })
+                    .catch(function (err) {
+                        console.error('ERROR', err);
+                        alert('ERROR');
+                    });
+            }
+        }
+
+        function createOutputCell(jobId) {
+            var cellId = utils.getMeta(cell, 'attributes', 'id'),
+                // cellIndex = Jupyter.narrative.getCellByKbaseId(cellId),
+                cellIndex = Jupyter.notebook.find_cell_index(cell),
+                newCell = Jupyter.notebook.insert_cell_below('code', cellIndex),
+                newCellId = new Uuid(4).format();
+
+            newCell.metadata = {
+                kbase: {
+                    type: 'output',
+                    attributes: {
+                        id: newCellId,
+                        status: 'new',
+                        created: new Date().toGMTString(),
+                        lastLoaded: new Date().toGMTString()
+                    },
+                    output: {
+                        jobId: jobId,
+                        parentCellId: cellId
+                    }
+                }
+            };
+
+            newCell.set_text('JobManager().get_job("' + jobId + '").output_viewer()');
+
+            newCell.execute();
+
+            return newCellId;
+        }
+
+        function findCellForId(id) {
+            var matchingCells = Jupyter.notebook.get_cells().filter(function (cell) {
+                if (cell.metadata && cell.metadata.kbase) {
+                    return (cell.metadata.kbase.attributes.id === id);
+                }
+                return false;
+            });
+            if (matchingCells.length === 1) {
+                return matchingCells[0];
+            }
+            if (matchingCells.length > 1) {
+                addNotification('Too many cells matched the given id: ' + id);
+            }
+            return null;
+        }
+
+        function doOnSuccess() {
+            // have we created output yet?
+            var jobId = model.getItem('exec.jobState.job_id'),
+                outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']),
+                outputCell, notification;
+
+            // If so, is the cell still there?
+            if (outputCellId) {
+                outputCell = findCellForId(outputCellId);
+                if (outputCell) {
+                    return;
+                }
+                notification = div([
+                    div('Output cell not found: ' + outputCellId + '. Would you like to recreate it? ')
+                ]);
+                addNotification(notification);
+                return;
+            }
+
+            // If not created yet, create it.
+            outputCellId = createOutputCell(jobId);
+            model.setItem(['output', 'byJob', jobId], {
+                cell: {
+                    id: outputCellId,
+                    created: true,
+                    createdAt: new Date().toGMTString()
+                }
+            });
+            
+            widgets.outputWidget.instance.bus.emit('update', {
+                jobState: model.getItem('exec.jobState'),
+                output: model.getItem('output')
+            });
+
+        }
+
         function start() {
             return Promise.try(function () {
                 var bus = inputWidgetBus;
@@ -1240,6 +1521,9 @@ define([
                     var showing = toggleCodeInputArea(),
                         label = showing ? 'Hide Code' : 'Show Code';
                     dom.setButtonLabel('toggle-code-view', label);
+                });
+                bus.on('show-notifications', function () {
+                    doShowNotifications();
                 });
                 bus.on('edit-cell-metadata', function () {
                     doEditCellMetadata();
@@ -1263,6 +1547,10 @@ define([
                 });
                 bus.on('remove', function () {
                     doRemove();
+                });
+
+                bus.on('on-success', function () {
+                    doOnSuccess();
                 });
 
                 // Events from widgets...
@@ -1348,6 +1636,28 @@ define([
                             widgets.execWidget.bus.emit('launch-event', message);
                         }
 
+                    }
+                });
+                runtime.bus().listen({
+                    channel: {
+                        cell: utils.getMeta(cell, 'attributes', 'id')
+                    },
+                    key: {
+                        type: 'output-cell-removed'
+                    },
+                    handle: function (message) {
+                        var output = model.getItem('output');
+                        
+                        // console.log('HANDLE', message, output);
+                        if (!output.byJob[message.jobId]) {
+                            return;
+                        }
+                        delete output.byJob[message.jobId];
+                        model.setItem('output', output);
+                        widgets.outputWidget.instance.bus.emit('update', {
+                            jobState: model.getItem('exec.jobState'),
+                            output: output
+                        });                        
                     }
                 });
 
@@ -1685,7 +1995,6 @@ define([
                         instance: widget
                     };
                     widget.start();
-                    var x = model.getItem('exec.jobState');
                     bus.emit('run', {
                         node: dom.getElement('exec-group.widget'),
                         jobState: model.getItem('exec.jobState')
@@ -1694,6 +2003,31 @@ define([
                     resolve();
                 }, function (err) {
                     console.log('ERROR', err);
+                    reject(err);
+                });
+            });
+        }
+        
+        function loadOutputWidget() {
+            return new Promise(function (resolve, reject) {
+                require([
+                    'nbextensions/methodCell/widgets/methodOutputWidget'
+                ], function (Widget) {
+                    var widget = Widget.make({
+                        cellId: utils.getMeta(cell, 'attributes', 'id')
+                    });
+                    widgets.outputWidget = {
+                        path: ['output-group', 'widget'],
+                        instance: widget
+                    };
+                    widget.start();
+                    widget.bus.emit('run', {
+                        node: dom.getElement('output-group.widget'),
+                        jobState: model.getItem('exec.jobState'),
+                        output: model.getItem('output')
+                    });
+                    resolve();
+                }, function (err) {
                     reject(err);
                 });
             });
@@ -1708,7 +2042,8 @@ define([
                     return Promise.all([
                         loadInputWidget(),
                         loadInputViewWidget(),
-                        loadExecutionWidget()
+                        loadExecutionWidget(),
+                        loadOutputWidget()
                     ]);
                 })
                 .then(function () {
@@ -1717,6 +2052,10 @@ define([
                     showAppSpec();
                     PR.prettyPrint(null, container);
                     renderUI();
+                })
+                .catch(function (err) {
+                    console.error('ERROR loading main widgets', err);
+                    addNotification('Error loading main widgets: ' + err.message);
                 });
         }
 

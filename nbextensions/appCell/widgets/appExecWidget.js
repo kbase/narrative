@@ -348,7 +348,7 @@ define([
         /*
          * Okay, the job report is buried in the job state.
          * In the job state is a "step_job_ids" a holdover from the app days
-         * In it is one property, which represents the job for this method/app.
+         * In it is one property, which represents the job for this app.
          * The key matches the outputs found in the step_outputs property.
          * The value for that the step_outputs property is a string, but it is a 
          * tricky string, for it is a JSON string. We parse that to get the 
@@ -616,7 +616,7 @@ define([
              * All jobs can exist in three temporal zones which we can define
              * in the lifecycle of job execution.
              * - preparation: the job has not been processed yet, it is still being
-             *     analyzed by the method job manager.
+             *     analyzed by the app job manager.
              * - queued: the job has been prepared and is queued for execution
              * - running: the job is currently executing
              * - completed: the job has completed
@@ -647,15 +647,15 @@ define([
             /*
              * From the NJSWrapper spec:
              * 
-             job_id - id of job running method
+             job_id - id of job running app
              finished - indicates whether job is done (including error cases) or not,
              if the value is true then either of 'returned_data' or 'detailed_error'
              should be defined;
              ujs_url - url of UserAndJobState service used by job service
-             status - tuple returned by UserAndJobState.get_job_status method
-             result - keeps exact copy of what original server method puts
+             status - tuple returned by UserAndJobState.get_job_status app
+             result - keeps exact copy of what original server app puts
              in result block of JSON RPC response;
-             error - keeps exact copy of what original server method puts
+             error - keeps exact copy of what original server app puts
              in error block of JSON RPC response;
              job_state - 'queued', 'in-progress', 'completed', or 'suspend';
              position - position of the job in execution waiting queue;
@@ -739,7 +739,7 @@ define([
                 } else if (errorInfo.name) {
                     errorType = 'unknown';
                     errorMessage = errorInfo.name + ' (code: ' + String(errorInfo.code) + ')';
-                    errorDetail = 'This error occurred during execution of the method job.';
+                    errorDetail = 'This error occurred during execution of the app job.';
                 } else {
                     errorType = 'unknown';
                     errorMessage = 'Unknown error (check console for ' + errorId + ')';
@@ -884,7 +884,7 @@ define([
                 return;
             }
 
-            // These methods are guaranteed to only happen once, and we should
+            // These apps are guaranteed to only happen once, and we should
             // get every single event.
             switch (runMessage.event) {
                 case 'validating_app':

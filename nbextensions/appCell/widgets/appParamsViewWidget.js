@@ -55,7 +55,7 @@ define([
         /*
          * The input control widget is selected based on these parameters:
          * - data type - (text, int, float, workspaceObject (ref, name)
-         * - input method - input, select
+         * - input app - input, select
          */
 
 
@@ -191,7 +191,7 @@ define([
 
         function renderParameters(params) {
             var widgets = [];
-            // First get the method specs, which is stashed in the model,
+            // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             // Separate out the params into the primary groups.
             var params = model.getItem('parameters'),

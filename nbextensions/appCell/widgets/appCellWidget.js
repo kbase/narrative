@@ -157,6 +157,22 @@ define([
                         }
                     ]
                 },
+                on: {
+                    enter: {
+                        messages: [
+                            {   
+                                emit: 'sync-all-display-parameters'
+                            }
+                        ]
+                    },
+                    resume: {
+                        messages: [
+                            {   
+                                emit: 'sync-all-display-parameters'
+                            }
+                        ]
+                    }
+                },
                 next: [
                     {
                         mode: 'processing',
@@ -268,17 +284,16 @@ define([
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
                         hide: ['parameters-group']
-                    },
-                    messages: [
-                        {
-                            message: {},
-                            address: {
-                                key: {
-                                    type: 'on-success'
-                                }
+                    }
+                },
+                on: {
+                    enter: {
+                        messages: [
+                            {
+                                emit: 'on-success'
                             }
-                        }
-                    ]
+                        ]
+                    }
                 },
                 next: [
                     {
@@ -408,7 +423,7 @@ define([
             cell = config.cell,
             parentBus = config.bus,
             runtime = Runtime.make(),
-            inputWidgetBus = runtime.bus().makeChannelBus(null, 'A method cell widget'),
+            bus = runtime.bus().makeChannelBus(null, 'A app cell widget'),
             env = {},
             model,
             // HMM. Sync with metadata, or just keep everything there?
@@ -424,29 +439,29 @@ define([
         // DATA API
 
         /*
-         * Fetch the method spec for a given method and store the spec in the model.
+         * Fetch the app spec for a given app and store the spec in the model.
          * As well, process and store the parameters in the model as well.
          *
-         * @param {type} methodId
-         * @param {type} methodTag
+         * @param {type} appId
+         * @param {type} appTag
          * @returns {unresolved}
          */
-        function syncMethodSpec(methodId, methodTag) {
-            var methodRef = {
-                ids: [methodId],
-                tag: methodTag
+        function syncAppSpec(appId, appTag) {
+            var appRef = {
+                ids: [appId],
+                tag: appTag
             },
             nms = new NarrativeMethodStore(runtime.config('services.narrative_method_store.url'), {
                 token: runtime.authToken()
             });
 
-            return nms.get_method_spec(methodRef)
+            return nms.get_method_spec(appRef)
                 .then(function (data) {
                     if (!data[0]) {
-                        throw new Error('Method not found');
+                        throw new Error('App not found');
                     }
                     // TODO: really the best way to store state?
-                    env.methodSpec = data[0];
+                    env.appSpec = data[0];
                     // Get an input field widget per parameter
                     var parameterMap = {},
                         parameters = data[0].parameters.map(function (parameterSpec) {
@@ -530,10 +545,10 @@ define([
 
 
         function renderAppSpec() {
-//            if (!env.methodSpec) {
+//            if (!env.appSpec) {
 //                return;
 //            }
-//            var specText = JSON.stringify(env.methodSpec, false, 3),
+//            var specText = JSON.stringify(env.appSpec, false, 3),
 //                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return pre({
                 dataElement: 'spec',
@@ -603,7 +618,7 @@ define([
         }
 
         function showAboutApp() {
-            var appSpec = env.methodSpec;
+            var appSpec = env.appSpec;
             console.log('METHOD SPEC', appSpec);
             dom.setContent('about-app.name', appSpec.info.name);
             dom.setContent('about-app.module', appSpec.info.namespace || dom.na());
@@ -617,16 +632,16 @@ define([
                 }
                 return dom.na();
             }()));
-            var methodRef = [appSpec.info.namespace || 'l.m', appSpec.info.id].filter(toBoolean).join('/'),
-                link = a({href: '/#appcatalog/app/' + methodRef, target: '_blank'}, 'Catalog Page');
+            var appRef = [appSpec.info.namespace || 'l.m', appSpec.info.id].filter(toBoolean).join('/'),
+                link = a({href: '/#appcatalog/app/' + appRef, target: '_blank'}, 'Catalog Page');
             dom.setContent('about-app.catalog-link', link);
         }
 
         function showAppSpec() {
-            if (!env.methodSpec) {
+            if (!env.appSpec) {
                 return;
             }
-            var specText = JSON.stringify(env.methodSpec, false, 3),
+            var specText = JSON.stringify(env.appSpec, false, 3),
                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
                 content = pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedText);
             dom.setContent('about-app.spec', content);
@@ -634,7 +649,7 @@ define([
 
         function renderLayout() {
             var events = Events.make(),
-                content = div({class: 'kbase-extension kb-method-cell', style: {display: 'flex', alignItems: 'stretch'}}, [
+                content = div({class: 'kbase-extension kb-app-cell', style: {display: 'flex', alignItems: 'stretch'}}, [
                     div({class: 'prompt', dataElement: 'prompt', style: {display: 'flex', alignItems: 'stretch', width: '14ex', flexDirection: 'column'}}, [
                         div({dataElement: 'status'})
                     ]),
@@ -721,7 +736,7 @@ define([
                                     body: div({dataElement: 'widget'})
                                 }),
                                 dom.buildPanel({
-                                    title: 'Method Execution ' + span({class: 'fa fa-tasks'}),
+                                    title: 'App Execution ' + span({class: 'fa fa-tasks'}),
                                     name: 'exec-group',
                                     hidden: false,
                                     type: 'default',
@@ -791,8 +806,8 @@ define([
             };
         }
 
-        function buildPython(cell, cellId, method, params) {
-            var code = PythonInterop.buildAppRunner(cellId, method, params);
+        function buildPython(cell, cellId, app, params) {
+            var code = PythonInterop.buildAppRunner(cellId, app, params);
             cell.set_text(code);
         }
 
@@ -824,7 +839,8 @@ define([
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
 
-                }
+                },
+                bus: bus
             });
             fsm.start(currentState);
         }
@@ -911,7 +927,7 @@ define([
                         div({class: 'col-md-10'}, notification),
                         div({class: 'col-md-2', style: {textAlign: 'right'}}, span({}, [
                             a({
-                                class: 'btn btn-default', 
+                                class: 'btn btn-default',
                                 id: events.addEvent({
                                     type: 'click',
                                     handler: function () {
@@ -1020,18 +1036,18 @@ define([
             });
 
             // Emit messages for this state.
-            if (state.ui.messages) {
-                state.ui.messages.forEach(function (message) {
-                    var tempBus;
-                    if (message.widget) {
-                        tempBus = widgets[message.widget].bus;
-                    } else {
-                        tempBus = inputWidgetBus;
-                    }
-                    
-                    tempBus.send(message.message, message.address);
-                });
-            }
+//            if (state.ui.messages) {
+//                state.ui.messages.forEach(function (message) {
+//                    var tempBus;
+//                    if (message.widget) {
+//                        tempBus = widgets[message.widget].bus;
+//                    } else {
+//                        tempBus = inputWidgetBus;
+//                    }
+//
+//                    tempBus.send(message.message, message.address);
+//                });
+//            }
         }
 
         var saveTimer = null;
@@ -1050,7 +1066,7 @@ define([
                 // NB the narrative callback code does not pass back error
                 // through the callback -- it is just logged to the console.
                 // Gulp!
-                
+
                 // we don't really delete jobs here any more, just 
                 // temporarily disable for now.
 
@@ -1074,7 +1090,7 @@ define([
 //                }
             });
         }
-        
+
         /*
          * NB: the jobs panel takes care of removing the job info from the
          * narrative metadata.
@@ -1090,7 +1106,7 @@ define([
             if (!confirmed) {
                 return;
             }
-            
+
             var jobState = model.getItem('exec.jobState');
             if (jobState) {
                 cancelJob(jobState.job_id);
@@ -1098,7 +1114,7 @@ define([
                 // event is received.
             }
 
-            // Remove all of the execution state when we reset the method.
+            // Remove all of the execution state when we reset the app.
             model.deleteItem('exec');
 
             // TODO: evaluate the params again before we do this.
@@ -1108,7 +1124,7 @@ define([
         }
 
         function doRemove() {
-            var confirmed = dom.confirmDialog('Are you sure you want to remove this method cell? It will also remove any pending jobs, but will leave generated output intact', 'Yes', 'No way, dude');
+            var confirmed = dom.confirmDialog('Are you sure you want to remove this app cell? It will also remove any pending jobs, but will leave generated output intact', 'Yes', 'No way, dude');
             if (!confirmed) {
                 return;
             }
@@ -1140,7 +1156,7 @@ define([
                 // event is received.
             }
 
-            // Remove all of the execution state when we reset the method.
+            // Remove all of the execution state when we reset the app.
             model.deleteItem('exec');
 
             // TODO: evaluate the params again before we do this.
@@ -1218,7 +1234,7 @@ define([
                 container = node;
                 dom = Dom.make({
                     node: container,
-                    bus: inputWidgetBus
+                    bus: bus
                 });
                 var layout = renderLayout();
                 container.innerHTML = layout.content;
@@ -1244,7 +1260,6 @@ define([
                 },
                 handle: function (message) {
                     // Store the most recent job status (jobInfo) in the model and thus metadata.
-                    updateFromJobState(message.job.state);
 
                     var existingState = model.getItem('exec.jobState');
                     if (!existingState || existingState.job_state !== message.job.state.job_state) {
@@ -1263,39 +1278,40 @@ define([
                         }
                     }
                     model.setItem('exec.jobStateUpdated', new Date().getTime());
-                }
-            });
-            
-            runtime.bus().listen({
-                channel: {
-                    jobId: jobId
-                },
-                key: {
-                    type: 'job-status'
-                },
-                handle: function (message) {
-                    // Store the most recent job status (jobInfo) in the model and thus metadata.
                     updateFromJobState(message.job.state);
-
-                    var existingState = model.getItem('exec.jobState');
-                    if (!existingState || existingState.job_state !== message.job.state.job_state) {
-                        model.setItem('exec.jobState', message.job.state);
-                        // Forward the job info to the exec widget if it is available. (it should be!)
-                        if (widgets.execWidget) {
-                            widgets.execWidget.bus.emit('job-state', {
-                                jobState: message.job.state
-                            });
-                        }
-                    } else {
-                        if (widgets.execWidget) {
-                            widgets.execWidget.bus.emit('job-state-updated', {
-                                jobId: message.job.state.job_id
-                            });
-                        }
-                    }
-                    model.setItem('exec.jobStateUpdated', new Date().getTime());
                 }
             });
+//
+//            runtime.bus().listen({
+//                channel: {
+//                    jobId: jobId
+//                },
+//                key: {
+//                    type: 'job-status'
+//                },
+//                handle: function (message) {
+//                    // Store the most recent job status (jobInfo) in the model and thus metadata.
+//                    updateFromJobState(message.job.state);
+//
+//                    var existingState = model.getItem('exec.jobState');
+//                    if (!existingState || existingState.job_state !== message.job.state.job_state) {
+//                        model.setItem('exec.jobState', message.job.state);
+//                        // Forward the job info to the exec widget if it is available. (it should be!)
+//                        if (widgets.execWidget) {
+//                            widgets.execWidget.bus.emit('job-state', {
+//                                jobState: message.job.state
+//                            });
+//                        }
+//                    } else {
+//                        if (widgets.execWidget) {
+//                            widgets.execWidget.bus.emit('job-state-updated', {
+//                                jobId: message.job.state.job_id
+//                            });
+//                        }
+//                    }
+//                    model.setItem('exec.jobStateUpdated', new Date().getTime());
+//                }
+//            });
         }
 
         function stopListeningForJobMessages() {
@@ -1303,7 +1319,7 @@ define([
         }
 
         /*
-         * This message implementation is called whenever the method cell widget 
+         * This message implementation is called whenever the app cell widget 
          * enters the "success" state.
          * 
          * The job here is to evaluate the output of the execution and to ensure
@@ -1328,7 +1344,7 @@ define([
          * 
          * I think it is supposed to work like this:
          * 
-         * kb_service_output_mapping in the method spec provides an array 
+         * kb_service_output_mapping in the app spec provides an array 
          * of "mappings" to produce input paramters (an argument which is a object
          * composed of said properties) for an "output widget". The output widget 
          * is named in info.output_types
@@ -1341,7 +1357,7 @@ define([
          * 
          */
         function getOutputParams() {
-            var outputParams = env.methodSpec.parameters.map(function (parameter) {
+            var outputParams = env.appSpec.parameters.map(function (parameter) {
                 var textOptions = parameter.text_options;
                 if (textOptions) {
                     if (textOptions.is_output_name === 1) {
@@ -1477,7 +1493,17 @@ define([
             // have we created output yet?
             var jobId = model.getItem('exec.jobState.job_id'),
                 outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']),
-                outputCell, notification;
+                outputCell, notification,
+                outputCreated = model.getItem(['exec', 'outputCreated']);
+
+
+            // New app -- check the existing exec state, see if the 
+            // output has been created already, and if so just exit.
+            // This protects us from the condition in which a user
+            // has removed the output for the latest run.
+//            if (outputCreated) {
+//                return;
+//            }
 
             // If so, is the cell still there?
             if (outputCellId) {
@@ -1501,18 +1527,16 @@ define([
                     createdAt: new Date().toGMTString()
                 }
             });
-            
+
             widgets.outputWidget.instance.bus.emit('update', {
                 jobState: model.getItem('exec.jobState'),
                 output: model.getItem('output')
             });
-
+            bus.emit('output-created', )
         }
 
         function start() {
             return Promise.try(function () {
-                var bus = inputWidgetBus;
-
                 /*
                  * listeners for the local input cell message bus
                  */
@@ -1551,6 +1575,10 @@ define([
 
                 bus.on('on-success', function () {
                     doOnSuccess();
+                });
+                
+                bus.on('sync-all-display-parameters', function () {
+                    widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');
                 });
 
                 // Events from widgets...
@@ -1621,7 +1649,7 @@ define([
                     handle: function (message) {
                         console.log('RUN-STATUS', message);
                         updateFromLaunchEvent(message);
-                        utils.pushMeta(cell, 'methodCell.exec.log', {
+                        utils.pushMeta(cell, 'appCell.exec.log', {
                             timestamp: new Date(),
                             event: 'runstatus',
                             data: {
@@ -1647,7 +1675,7 @@ define([
                     },
                     handle: function (message) {
                         var output = model.getItem('output');
-                        
+
                         // console.log('HANDLE', message, output);
                         if (!output.byJob[message.jobId]) {
                             return;
@@ -1657,7 +1685,7 @@ define([
                         widgets.outputWidget.instance.bus.emit('update', {
                             jobState: model.getItem('exec.jobState'),
                             output: output
-                        });                        
+                        });
                     }
                 });
 
@@ -1741,7 +1769,7 @@ define([
 //                            }
 //                        }
 //
-//                        utils.pushMeta(cell, 'methodCell.exec.log', {
+//                        utils.pushMeta(cell, 'appCell.exec.log', {
 //                            timestamp: new Date(),
 //                            event: 'jobstatus',
 //                            data: {
@@ -1781,7 +1809,7 @@ define([
         }
 
         function findInputWidget(requestedInputWidget) {
-            var defaultModule = 'nbextensions/methodCell/widgets/methodParamsWidget';
+            var defaultModule = 'nbextensions/appCell/widgets/appParamsWidget';
             return defaultModule;
 
             if (requestedInputWidget === null) {
@@ -1792,7 +1820,7 @@ define([
                 return defaultModule;
             }
 
-            return 'nbextensions/methodCell/widgets/inputWidgets/' + requestedInputWidget;
+            return 'nbextensions/appCell/widgets/inputWidgets/' + requestedInputWidget;
         }
 
         function exportParams() {
@@ -1832,7 +1860,7 @@ define([
 
         function loadInputWidget() {
             return new Promise(function (resolve, reject) {
-                var inputWidget = env.methodSpec.widgets.input,
+                var inputWidget = env.appSpec.widgets.input,
                     selectedWidget = findInputWidget(inputWidget);
 
                 if (!selectedWidget) {
@@ -1897,7 +1925,7 @@ define([
                         model.setItem(['params', message.parameter], message.newValue);
                         var validationResult = validateModel();
                         if (validationResult.isValid) {
-                            buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('method'), exportParams());
+                            buildPython(cell, utils.getMeta(cell, 'attributes').id, model.getItem('app'), exportParams());
                             fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
                             renderUI();
                         } else {
@@ -1918,7 +1946,7 @@ define([
         function loadInputViewWidget() {
             return new Promise(function (resolve, reject) {
                 require([
-                    'nbextensions/methodCell/widgets/methodParamsViewWidget'
+                    'nbextensions/appCell/widgets/appParamsViewWidget'
                 ], function (Widget) {
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for load input view widget'),
                         widget = Widget.make({
@@ -1982,7 +2010,7 @@ define([
         function loadExecutionWidget() {
             return new Promise(function (resolve, reject) {
                 require([
-                    'nbextensions/methodCell/widgets/methodExecWidget'
+                    'nbextensions/appCell/widgets/appExecWidget'
                 ], function (Widget) {
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for load exec widget'),
                         widget = Widget.make({
@@ -2007,11 +2035,11 @@ define([
                 });
             });
         }
-        
+
         function loadOutputWidget() {
             return new Promise(function (resolve, reject) {
                 require([
-                    'nbextensions/methodCell/widgets/methodOutputWidget'
+                    'nbextensions/appCell/widgets/appOutputWidget'
                 ], function (Widget) {
                     var widget = Widget.make({
                         cellId: utils.getMeta(cell, 'attributes', 'id')
@@ -2034,11 +2062,11 @@ define([
         }
 
         function run(params) {
-            // First get the method specs, which is stashed in the model,
+            // First get the app specs, which is stashed in the model,
             // with the parameters returned.
-            return syncMethodSpec(params.methodId, params.methodTag)
+            return syncAppSpec(params.appId, params.appTag)
                 .then(function () {
-                    cell.setMeta('attributes', 'title', env.methodSpec.info.name);
+                    cell.setMeta('attributes', 'title', env.appSpec.info.name);
                     return Promise.all([
                         loadInputWidget(),
                         loadInputViewWidget(),
@@ -2062,9 +2090,9 @@ define([
         // INIT
 
         model = Props.make({
-            data: utils.getMeta(cell, 'methodCell'),
+            data: utils.getMeta(cell, 'appCell'),
             onUpdate: function (props) {
-                utils.setMeta(cell, 'methodCell', props.getRawObject());
+                utils.setMeta(cell, 'appCell', props.getRawObject());
                 saveNarrative();
             }
         });
@@ -2083,5 +2111,5 @@ define([
         }
     };
 }, function (err) {
-    console.log('ERROR loading methodCell methodCellWidget', err);
+    console.log('ERROR loading appCell appCellWidget', err);
 });

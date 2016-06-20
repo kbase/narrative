@@ -7,8 +7,8 @@ define([
     'kb_common/html',
     'common/events',
     'common/utils',
-    '../methodCellController'
-], function (Promise, OutputArea, html, Events, utils, MethodCellController) {
+    '../appCellController'
+], function (Promise, OutputArea, html, Events, utils, AppCellController) {
     'use strict';
 
     function factory(config) {
@@ -21,7 +21,7 @@ define([
 
         function renderLayout() {
             var events = Events.make(),
-                content = div({class: 'kbase-extension kb-method-cell', style: {display: 'flex', alignItems: 'stretch'}}, [
+                content = div({class: 'kbase-extension kb-app-cell', style: {display: 'flex', alignItems: 'stretch'}}, [
                     div({class: 'prompt', dataElement: 'prompt', style: {display: 'flex', alignItems: 'stretch', width: '14ex', flexDirection: 'column'}}, [
                         div({dataElement: 'status'})
                     ]),
@@ -100,8 +100,8 @@ define([
             // find cell
             return new Promise(function (resolve, reject) {
                 try {
-                    console.log('ARGS', args, MethodCellController);
-                    var cell = MethodCellController.getCell(args.kbaseCellId),
+                    console.log('ARGS', args, AppCellController);
+                    var cell = AppCellController.getCell(args.kbaseCellId),
                         outputArea = cell.cell.output_area,
                         content = div({dataElement: 'widget'}),
                         toAppend = {

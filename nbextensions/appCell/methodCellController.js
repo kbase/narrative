@@ -9,18 +9,18 @@ define([
     // FOR NOW: use module global state
     // TODO: use window global state
 
-    var methodCells = {},
+    var appCells = {},
         bus = Bus.make();
 
 
     function addCell(cell) {
-        methodCells[cell.getMeta('attributes', 'id')] = {
+        appCells[cell.getMeta('attributes', 'id')] = {
             cell: cell
         };
     }
 
     function getCell(kbaseCellId) {
-        return methodCells[kbaseCellId];
+        return appCells[kbaseCellId];
     }
 
 

@@ -7,9 +7,9 @@ define([
     'kb_common/html',
     'common/events',
     'common/utils',
-    '../methodCellController',
+    '../appCellController',
     'bootstrap'
-], function (Promise, OutputArea, html, Events, utils, MethodCellController) {
+], function (Promise, OutputArea, html, Events, utils, AppCellController) {
     'use strict';
 
     function factory(config) {
@@ -117,7 +117,7 @@ define([
 
         function init(config) {
             return Promise.try(function () {
-                cell = MethodCellController.getCell(config.kbaseCellId);
+                cell = AppCellController.getCell(config.kbaseCellId);
                 return null;
             });
         }

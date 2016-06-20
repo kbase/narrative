@@ -1,9 +1,9 @@
 /*global define,console*/
 /*jslint white:true,browser:true*/
 /*
- * KBase Method Cell Extension
+ * KBase App Cell Extension
  *
- * Supports kbase method cells and the kbase cell toolbar.
+ * Supports kbase app cells and the kbase cell toolbar.
  *
  * Note that, out of our control, this operates under the "module as singleton" model.
  * In this model, the execution of the module the first time per session is the same
@@ -22,7 +22,7 @@ define([
     'bluebird',
     'uuid',
     'kb_common/html',
-    './widgets/methodCellWidget',
+    './widgets/appCellWidget',
     'common/runtime',
     'common/parameterSpec',
     'common/utils',
@@ -30,7 +30,7 @@ define([
 //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
-    'css!./styles/method-widget.css',
+    'css!./styles/app-widget.css',
     'bootstrap'
 ], function (
     $,
@@ -38,7 +38,7 @@ define([
     Promise,
     Uuid,
     html,
-    MethodCellWidget,
+    AppCellWidget,
     Runtime,
     ParameterSpec,
     utils,
@@ -129,10 +129,10 @@ define([
 
 
 
-    // TODO: move into method cell widget and invoke with an event 'reset-to-default-values'
-    function setupParams(cell, methodSpec) {
+    // TODO: move into app cell widget and invoke with an event 'reset-to-default-values'
+    function setupParams(cell, appSpec) {
         var defaultParams = {};
-        methodSpec.parameters.forEach(function (parameterSpec) {
+        appSpec.parameters.forEach(function (parameterSpec) {
             var param = ParameterSpec.make({parameterSpec: parameterSpec}),
                 defaultValue = param.defaultValue();
 
@@ -141,7 +141,7 @@ define([
                 defaultParams[param.id()] = defaultValue;
             }
         });
-        utils.setMeta(cell, 'methodCell', 'params', defaultParams);
+        utils.setMeta(cell, 'appCell', 'params', defaultParams);
     }
 
     /*
@@ -344,22 +344,22 @@ define([
      * It creates the correct metadata and then sets up the cell.
      *
      */
-    function upgradeToMethodCell(cell, methodSpec, methodTag) {
+    function upgradeToAppCell(cell, appSpec, appTag) {
         return Promise.try(function () {
             var meta = cell.metadata;
             meta.kbase = {
-                type: 'method',
+                type: 'app',
                 attributes: {
                     id: new Uuid(4).format(),
                     status: 'new',
                     created: (new Date()).toUTCString()
                 },
-                methodCell: {
-                    method: {
-                        id: methodSpec.info.id,
-                        gitCommitHash: methodSpec.info.git_commit_hash,
-                        version: methodSpec.info.ver,
-                        tag: methodTag
+                appCell: {
+                    app: {
+                        id: appSpec.info.id,
+                        gitCommitHash: appSpec.info.git_commit_hash,
+                        version: appSpec.info.ver,
+                        tag: appTag
                     },
                     state: {
                         edit: 'editing',
@@ -375,7 +375,7 @@ define([
             cell.metadata = meta;
         })
             .then(function () {
-                return setupParams(cell, methodSpec);
+                return setupParams(cell, appSpec);
             })
             .then(function () {
                 return setupCell(cell);
@@ -396,8 +396,8 @@ define([
                 console.log('not a kbase code cell');
                 return;
             }
-            if (cell.metadata.kbase.type !== 'method') {
-                console.log('not a kbase method cell, ignoring');
+            if (cell.metadata.kbase.type !== 'app') {
+                console.log('not a kbase app cell, ignoring');
                 return;
             }
 
@@ -414,9 +414,9 @@ define([
             // TODO: the code cell input widget should instantiate its state
             // from the cell!!!!
             var cellBus = runtime.bus().makeChannelBus(null, 'Parent comm for The Cell Bus'),
-                methodId = utils.getMeta(cell, 'methodCell', 'method').id,
-                methodTag = utils.getMeta(cell, 'methodCell', 'method').tag,
-                methodCellWidget = MethodCellWidget.make({
+                appId = utils.getMeta(cell, 'appCell', 'app').id,
+                appTag = utils.getMeta(cell, 'appCell', 'app').tag,
+                appCellWidget = AppCellWidget.make({
                     bus: cellBus,
                     cell: cell,
                     runtime: runtime,
@@ -429,30 +429,30 @@ define([
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);
 
-            return methodCellWidget.init()
+            return appCellWidget.init()
                 .then(function () {
-                    return methodCellWidget.attach(kbaseNode);
+                    return appCellWidget.attach(kbaseNode);
                 })
                 .then(function () {
-                    return methodCellWidget.start();
+                    return appCellWidget.start();
                 })
                 .then(function () {
-                    return methodCellWidget.run({
-                        methodId: methodId,
-                        methodTag: methodTag,
+                    return appCellWidget.run({
+                        appId: appId,
+                        appTag: appTag,
                         authToken: runtime.authToken()
                     });
                 })
                 .then(function () {
-                    // MethodCellController.start();
+                    // AppCellController.start();
                     return {
-                        widget: methodCellWidget,
+                        widget: appCellWidget,
                         bus: cellBus
                     };
                 })
                 .catch(function (err) {
-                    console.error('ERROR starting method cell', err);
-                    alert('Error starting method cell');
+                    console.error('ERROR starting app cell', err);
+                    alert('Error starting app cell');
                 });
         });
     }
@@ -500,7 +500,7 @@ define([
      * The work is carried out asynchronously through an orphan promise.
      */
     function load_ipython_extension() {
-        console.log('Loading KBase Method Cell Extension...');
+        console.log('Loading KBase App Cell Extension...');
 
         // Set the notebook environment.
         // For instance, we don't want to override the toolbar in the Narrative, but we need to supply our on in a plain notebook.
@@ -526,11 +526,11 @@ define([
                 // set up event hooks
 
                 // Primary hook for new cell creation.
-                // If the cell has been set with the metadata key kbase.type === 'method'
-                // we have a method cell.
+                // If the cell has been set with the metadata key kbase.type === 'app'
+                // we have a app cell.
                 $([Jupyter.events]).on('inserted.Cell', function (event, data) {
-                    if (data.kbase && data.kbase.type === 'method') {
-                        upgradeToMethodCell(data.cell, data.kbase.methodSpec, data.kbase.methodTag)
+                    if (data.kbase && data.kbase.type === 'app') {
+                        upgradeToAppCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
                             .then(function () {
                                 console.log('Cell created?');
                             })
@@ -573,5 +573,5 @@ define([
             // These are kbase api calls
     };
 }, function (err) {
-    console.log('ERROR loading methodCell main', err);
+    console.log('ERROR loading appCell main', err);
 });

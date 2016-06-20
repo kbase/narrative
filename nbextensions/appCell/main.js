@@ -369,7 +369,9 @@ define([
                         result: null
                     },
                     params: null,
-                    output: []
+                    output: {
+                        byJob: {}
+                    }
                 }
             };
             cell.metadata = meta;
@@ -501,6 +503,24 @@ define([
      */
     function load_ipython_extension() {
         console.log('Loading KBase App Cell Extension...');
+
+        // Listen for interesting narrative jquery events...
+        // dataUpdated.Narrative is emitted by the data sidebar list
+        // after it has fetched and updated its data. Not the best of
+        // triggers that the ws has changed, not the worst.
+        $(document).on('dataUpdated.Narrative', function () {
+            // Tell each cell that the workspace has been updated.
+            // This is what is interesting, no?
+            // we can just broadcast this on the runtime bus
+//                    runtime.bus().send({
+//                        type: 'workspace-changed'
+//                    });
+            console.log('sending workspace changed event');
+            // runtime.bus().send('workspace-changed');
+            runtime.bus().emit('workspace-changed');
+            // widgets.paramsInputWidget.bus.emit('workspace-changed');
+            //widgets.paramsDisplayWidget.bus.send('workspace-changed');
+        });
 
         // Set the notebook environment.
         // For instance, we don't want to override the toolbar in the Narrative, but we need to supply our on in a plain notebook.

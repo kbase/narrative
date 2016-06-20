@@ -1532,7 +1532,7 @@ define([
                 jobState: model.getItem('exec.jobState'),
                 output: model.getItem('output')
             });
-            bus.emit('output-created', )
+            // bus.emit('output-created', )
         }
 
         function start() {
@@ -1780,29 +1780,8 @@ define([
 //                    }
 //                });
 
-                // Listen for interesting narrative jquery events...
-                // dataUpdated.Narrative is emitted by the data sidebar list
-                // after it has fetched and updated its data. Not the best of
-                // triggers that the ws has changed, not the worst.
-                $(document).on('dataUpdated.Narrative', function () {
-                    // Tell each cell that the workspace has been updated.
-                    // This is what is interesting, no?
-                    // we can just broadcast this on the runtime bus
-//                    runtime.bus().send({
-//                        type: 'workspace-changed'
-//                    });
-                    console.log('sending workspace changed event');
-                    // runtime.bus().send('workspace-changed');
-                    runtime.bus().emit('workspace-changed');
-                    // widgets.paramsInputWidget.bus.emit('workspace-changed');
-                    //widgets.paramsDisplayWidget.bus.send('workspace-changed');
-                });
-
-
-
                 // Initialize display
                 showCodeInputArea();
-
 
                 return null;
             });

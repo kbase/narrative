@@ -127,7 +127,12 @@ define([
         function doFilterItems() {
             var items = model.getItem('availableValues', []),
                 filteredItems = filterItems(items, model.getItem('filter'));
+            
+            
+            // for now we just reset the from/to range to the beginning.
             model.setItem('filteredAvailableItems', filteredItems);
+            
+            doFirstPage();
         }
 
         function didChange() {
@@ -153,20 +158,25 @@ define([
                 });
         }
 
-        function doAddItem(id) {
+        function doAddItem(item) {
             var selectedItems = model.getItem('selectedItems');
-            selectedItems.push(id);
+            if (!selectedItems) {
+                selectedItems = [];
+            }
+            selectedItems.push(item);
             model.setItem('selectedItems', selectedItems);
             didChange();
         }
 
-        function doRemoveSelectedItem(itemToRemove) {
-            var selectedItems = model.getItem('selectedItems'),
-                newSelectedItems = selectedItems.filter(function (selectedItem) {
-                    return (selectedItem !== itemToRemove);
-                });
+        function doRemoveSelectedItem(indexOfitemToRemove) {
+            var selectedItems = model.getItem('selectedItems');
+//                newSelectedItems = selectedItems.filter(function (selectedItem) {
+//                    return (selectedItem.id !== itemToRemove);
+//                });
+                
+            delete selectedItems[indexOfitemToRemove];
 
-            model.setItem('selectedItems', newSelectedItems);
+            model.setItem('selectedItems', selectedItems);
             didChange();
         }
 
@@ -188,7 +198,7 @@ define([
                                     id: events.addEvent({
                                         type: 'click',
                                         handler: function () {
-                                            doAddItem(item.id);
+                                            doAddItem(item);
                                         }
                                     })}, '&gt;')
                             ])
@@ -204,7 +214,7 @@ define([
 
         function renderSelectedItems(events) {
             var selectedItems = model.getItem('selectedItems') || [],
-                content = selectedItems.map(function (item) {
+                content = selectedItems.map(function (item, index) {
                     return div({style: {border: '1px blue dashed'}}, [
                         table({style: {width: '100%'}}, tr([
                             td({style: {width: '40px'}}, [
@@ -214,12 +224,12 @@ define([
                                     id: events.addEvent({
                                         type: 'click',
                                         handler: function () {
-                                            doRemoveSelectedItem(item);
+                                            doRemoveSelectedItem(index);
                                         }
                                     })
                                 }, '&lt;')
                             ]),
-                            td(item)
+                            td(item.label)
                         ]))
                     ]);
                 }).join('\n');

@@ -35,91 +35,10 @@ define([
          * to mirror the input rows, so we shouldn't really filter out any
          * values.
          */
-        function getInputValues() {
+        function getParameterValues() {
             return rows.map(function (row) {
                 return row.$input.val();
             });
-        }
-        
-        function getInputValue($field) {
-            return $field.find('[data-element="input-container"] [data-element="input"]').val();
-        }
-        
-        /*
-         *
-         * Text fields can occur in multiples.
-         * We have a choice, treat single-text fields as a own widget
-         * or as a special case of multiple-entry -- 
-         * with a min-items of 1 and max-items of 1.
-         *
-         */
-        
-         function validate() {
-            if (!options.enabled) {
-                return {
-                    isValid: true,
-                    validated: false,
-                    diagnosis: 'disabled'
-                };
-            }
-
-            var someErrorDetected = false,
-                errorMessage,
-                validationResult,
-                diagnosis;
-            
-            rows.forEach(function (row, index) {
-                var errorMessage,
-                    rawValue = getInputValue(row.$field);
-                    value  = rawValue.trim(),
-                    fieldType,
-                    validationResult;
-                    
-                // REQUIRED
-                if (options.required && !value) {
-                    
-                }
-                
-                // FORMAT CHECK
-                    
-                // Validate if we need to.
-                if (options.required && index === 0 && !value) {
-                    errorMessage = 'required field ' + spec.ui_name + ' missing';
-                } else if (!options.required && value === '') {
-                    // just skip it, it is ok.
-                } else {
-                    if (spec.text_options) {
-                        if (spec.text_options.validate_as) {
-                            // no specific type for text, but we should implement
-                            // regexp -- TODO that
-                        }
-                    }
-                }
-
-            // Validate if we need to.
-            if (options.required && !value) {
-                errorMessage = 'required field ' + spec.label() + ' missing';
-                diagnosis = 'required-missing';
-            } else if (!options.required && value === '') {
-                // just skip it, it is ok.
-                diagnosis = 'optional-empty';
-            } else {
-                // Truth be told, we cannot even get here unless this condition
-                // is met.
-                validationResult = Validation.validateObjectRef(value);
-                if (!validationResult.isValid) {
-                    errorMessage = validationResult.errorMessage;
-                    diagnosis = 'invalid';
-                }
-            }
-
-            return {
-                isValid: !someErrorDetected,
-                validated: true,
-                diagnosis: diagnosis || 'valid',
-                errorMessage: errorMessage,
-                value: validationResult.parsedValue
-            };
         }
 
         function validate() {
@@ -149,8 +68,38 @@ define([
                 } else {
                     if (spec.text_options) {
                         if (spec.text_options.validate_as) {
-                            // no specific type for text, but we should implement
-                            // regexp -- TODO that
+                            fieldType = spec.text_options.validate_as.toLowerCase();
+                            switch (fieldType) {
+                                case 'int':
+                                    validationResult = Validation.validateInteger(value, spec.text_options);
+                                    if (!validationResult.isValid) {
+                                        errorMessage = validationResult.errorMessage;
+                                    } else {
+                                        // Events may be configured by the widget host.
+                                        // TODO: this should be an event and not a callback.
+                                        if (config.events.change) {
+                                            try {
+                                                config.events.change(validationResult.parsedValue);
+                                            } catch (ex) {
+                                                console.error('ERROR', ex);
+                                            }
+                                        }
+                                    }
+                                    break;
+                                case 'float':
+                                    validationResult = Validation.validateFloat(value, spec.text_options);
+                                    if (!validationResult.isValid) {
+                                        errorMessage = validationResult.errorMessage;
+                                    }
+                                    break;
+                            }
+                        } else if (spec.text_options.valid_ws_types) {
+                            // Entry of workspace object names.
+                            // TODO any reason this can't be typed like int and float?         
+                            validationResult = Validation.validateWorkspaceObjectName(value);
+                            if (!validationResult.isValid) {
+                                errorMessage = validationResult.errorMessage;
+                            }
                         }
                     }
                 }
@@ -231,7 +180,7 @@ define([
             // set the correct styles...
             if (options.required && showHint) {
                 feedbackTip = span({
-                    class: 'kb-method-parameter-required-glyph fa fa-arrow-left',
+                    class: 'kb-app-parameter-required-glyph fa fa-arrow-left',
                     title: 'required field',
                     dataElement: 'feedback'
                 });
@@ -248,7 +197,7 @@ define([
                 };
             }
             nameCol = div({
-                class: [options.classes.nameColClass, 'kb-method-parameter-name'].join(' '),
+                class: [options.classes.nameColClass, 'kb-app-parameter-name'].join(' '),
                 style: style
             }, [(function () {
                     if (showHint) {
@@ -257,7 +206,7 @@ define([
                 })]);
 
             // Input column display
-            inputCol = div({class: [options.classes.inputColClass, 'kb-method-parameter-input'].join(' ')}, [
+            inputCol = div({class: [options.classes.inputColClass, 'kb-app-parameter-input'].join(' ')}, [
                 div({style: {widgth: '100%', display: 'inline-block'}}, [
                     inputControl
                 ]),
@@ -270,7 +219,7 @@ define([
                 var infoTip;
                 if (spec.description && spec.short_hint !== spec.description) {
                     infoTip = span({
-                        class: 'fa fa-info kb-method-parameter-info',
+                        class: 'fa fa-info kb-app-parameter-info',
                         dataToggle: 'tooltip',
                         dataPlacement: 'auto',
                         container: 'body',
@@ -278,11 +227,11 @@ define([
                         title: spec.description
                     });
                 }
-                hintCol = div({class: [options.classes.hintColClass, 'kb-method-parameter-hint'].join(' ')}, [
+                hintCol = div({class: [options.classes.hintColClass, 'kb-app-parameter-hint'].join(' ')}, [
                     spec.short_hint, infoTip
                 ]);
             } else {
-                hintCol = div({class: [options.classes.hintColClass, 'kb-method-parameter-hint'].join(' ')}, [
+                hintCol = div({class: [options.classes.hintColClass, 'kb-app-parameter-hint'].join(' ')}, [
                     button({class: 'kb-default-btn kb-btn-sm', id: events.addEvent({type: 'click', handler: function () {
                                 removeRow(rowId);
                             }})}, [
@@ -297,15 +246,15 @@ define([
             // put it all together.
 
             // The row itself.
-            parameterRow = div({class: 'row kb-method-parameter-row', dataElement: 'row'}, [
+            parameterRow = div({class: 'row kb-app-parameter-row', dataElement: 'row'}, [
                 nameCol, inputCol, hintCol
             ]);
             if (options.useRowHighlight) {
                 events.addEvent({type: 'mouseeneter', selector: '#' + rowId + ' [data-element="row"]', handler: function (e) {
-                        e.target.classList.add('kb-method-parameter-row-hover');
+                        e.target.classList.add('kb-app-parameter-row-hover');
                     }});
                 events.addEvent({type: 'mouseleave', selector: '#' + rowId + ' [data-element="row"]', handler: function (e) {
-                        e.target.classList.add('kb-method-parameter-row-hover');
+                        e.target.classList.add('kb-app-parameter-row-hover');
                     }});
             }
 
@@ -313,7 +262,7 @@ define([
             var errorRow = div({class: 'row', dataElement: 'error-panel'}, [
                 div({class: options.classes.nameColClass}),
                 div({
-                    class: ['kb-method-parameter-error-message', options.classes.inputColClass].join(' '),
+                    class: ['kb-app-parameter-error-message', options.classes.inputColClass].join(' '),
                     style: {display: 'none'},
                     dataElement: 'error-message'
                 })
@@ -401,19 +350,19 @@ define([
                 content;
             if (options.multiple) {
                 content = div({
-                    class: 'kb-method-parameter-row',
+                    class: 'kb-app-parameter-row',
                     dataElement: 'main-panel',
                     id: events.addEvents({events: [
                             {
                                 type: 'mouseeneter',
                                 handler: function (e) {
-                                    e.target.classList.add('kb-method-parameter-row-hover');
+                                    e.target.classList.add('kb-app-parameter-row-hover');
                                 }
                             },
                             {
                                 type: 'mouseleave',
                                 handler: function (e) {
-                                    e.target.classList.remove('kb-method-parameter-row-hover');
+                                    e.target.classList.remove('kb-app-parameter-row-hover');
                                 }
                             }
                         ]})}, [
@@ -477,7 +426,7 @@ define([
             }
 
             if (spec.text_options.valid_ws_types) {
-                return 'workspaceObjectReference';
+                return 'workspaceObjectName';
             }
 
             return 'unknown';

@@ -180,7 +180,7 @@ define([
             var jobChannelId = JSON.stringify({
                     jobId: jobId
                 });
-            console.log('sending job message', msgType, jobId, jobChannelId, message);
+            // console.log('sending job message', msgType, jobId, jobChannelId, message);
             this.runtime.bus().send(JSON.parse(JSON.stringify(message)), {
                 channel: jobChannelId,
                 key: {
@@ -197,7 +197,7 @@ define([
          * Messages sent directly to cells.
          */
         sendCellMessage: function (messageType, cellId, message) {
-            console.log('Sending cell message ', messageType, cellId);
+            // console.log('Sending cell message ', messageType, cellId);
             var channelId = JSON.stringify({
                     cell: cellId
                 });
@@ -330,7 +330,7 @@ define([
 
                     // TODO: make sure we are catching these ... perhaps they need to be run-status...
                     // this.sendJobMessage('job-status', msg.content.data.content.job_id, msg.content.data.content);
-                    console.log('have run status', msg.content.data.content);
+                    // console.log('have run status', msg.content.data.content);
                     this.sendCellMessage('run-status', msg.content.data.content.cell_id, msg.content.data.content);
                     break;
                 case 'job_err':
@@ -396,7 +396,7 @@ define([
                     this.removeDeletedJob(deletedId);
                     break;
                 case 'job_logs':
-                    console.log('GOT JOB LOGS', msg);
+                    // console.log('GOT JOB LOGS', msg);
                     var jobId = msg.content.data.content.job_id;
 
                     this.sendJobMessage('job-logs', jobId, {

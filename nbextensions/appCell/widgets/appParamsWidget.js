@@ -79,7 +79,7 @@ define([
         /*
          * The input control widget is selected based on these parameters:
          * - data type - (text, int, float, workspaceObject (ref, name)
-         * - input method - input, select
+         * - input app - input, select
          */
 
 
@@ -286,7 +286,7 @@ define([
         // LIFECYCLE API
 
         function renderParameters(params) {
-            // First get the method specs, which is stashed in the model,
+            // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             // Separate out the params into the primary groups.
             var params = model.getItem('parameters'),
@@ -354,7 +354,7 @@ define([
                 .then(function () {
                     // Show the user that a report object will be created. Otherwise it may seem weird that there is
                     // no way to specify the output object
-                    //if (env.methodSpec) {
+                    //if (env.appSpec) {
                     //    +++
                    // }
                 })
@@ -444,7 +444,7 @@ define([
 
         // CONSTRUCTION
 
-        bus = runtime.bus().makeChannelBus(null, 'A method params widget');
+        bus = runtime.bus().makeChannelBus(null, 'A app params widget');
 
 
         return {

@@ -19,7 +19,8 @@ define([
             initialState = config.initialState,
             currentState,
             api,
-            timer, newStateHandler = config.onNewState;
+            timer, newStateHandler = config.onNewState,
+            bus = config.bus;
 
         /*
          * Validate the state machine configuration 'states'.
@@ -59,7 +60,35 @@ define([
             if (foundStates.length > 1) {
                 throw new Error('state error: multiple states found');
             }            
+
         }
+        function doMessages(changeType) {
+            var state = currentState;
+            if (state.on && state.on[changeType] ) {
+                if (state.on[changeType].messages) {
+                    state.on[changeType].messages.forEach(function (msg) {
+                        if (msg.emit) {
+                            bus.emit(msg.emit, msg.message);
+                        } else if (msg.send) {
+                            bus.send(msg.send.message, msg.send.address);
+                        }
+                    });
+                }
+            }
+        }
+        
+        function doResumeState() {
+            doMessages('resume');
+        }
+        
+        function doEnterState() {
+            doMessages('enter');            
+        }
+
+        function doLeaveState() {
+            doMessages('leave');            
+        }
+
 
         function start(startingState) {
             // find initial state
@@ -73,6 +102,8 @@ define([
 
             // make it the current state
             currentState = state;
+            
+            doResumeState();
         }
         
         function findNextState(stateList, stateToFind) {
@@ -104,11 +135,16 @@ define([
             if (utils.isEqual(newState.state, currentState.state)) {
                 return;
             }
-
-            run();
-
+            
+            doMessages('exit');
+            
             // make it the current state
             currentState = newState;
+
+            doMessages('enter');
+            
+            
+            run();
         }
 
         function getCurrentState() {

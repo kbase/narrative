@@ -62,8 +62,8 @@ define([
 
         function setError(errorMessage) {
             // places.$feedback.removeClass();
-            places.$field.addClass('kb-method-parameter-row-error');
-            places.$errorPanel.addClass('kb-method-parameter-row-error');
+            places.$field.addClass('kb-app-parameter-row-error');
+            places.$errorPanel.addClass('kb-app-parameter-row-error');
             places.$error
                 .html(errorMessage);
             places.$errorPanel
@@ -71,7 +71,7 @@ define([
         }
 
         function clearError() {
-            places.$field.removeClass('kb-method-parameter-row-error');
+            places.$field.removeClass('kb-app-parameter-row-error');
             places.$error
                 .html('');
             places.$errorPanel
@@ -79,7 +79,7 @@ define([
         }
 
         function hideError() {
-            places.$field.removeClass('kb-method-parameter-row-error');
+            places.$field.removeClass('kb-app-parameter-row-error');
             places.$errorPanel.hide();
             places.$feedback.removeClass();
         }
@@ -93,7 +93,7 @@ define([
         function feedbackOk() {
             places.$feedback
                 .removeClass()
-                // .addClass('kb-method-parameter-accepted-glyph fa fa-check')
+                // .addClass('kb-app-parameter-accepted-glyph fa fa-check')
                 .prop('title', 'input is ok')
                 .show();
         }
@@ -101,7 +101,7 @@ define([
         function feedbackRequired(row) {
             places.$feedback
                 .removeClass()
-                .addClass('kb-method-parameter-required-glyph fa fa-arrow-left')
+                .addClass('kb-app-parameter-required-glyph fa fa-arrow-left')
                 .prop('title', 'required field')
                 .show();
         }
@@ -109,7 +109,7 @@ define([
         function feedbackError(row) {
             places.$feedback
                 .removeClass()
-                .addClass('kb-method-parameter-required-glyph fa fa-ban')
+                .addClass('kb-app-parameter-required-glyph fa fa-ban')
                 .show();
         }
 
@@ -238,7 +238,7 @@ define([
             // FEEDBACK
             if (spec.required()) {
                 feedbackTip = span({
-                    class: 'kb-method-parameter-required-glyph fa fa-arrow-left',
+                    class: 'kb-app-parameter-required-glyph fa fa-arrow-left',
                     title: 'required field',
                     dataElement: 'feedback'
                 });
@@ -246,7 +246,7 @@ define([
 
             // INPUT (control with feedback)
             // Note -- here is where we
-            inputCol = div({class: [options.classes.inputColClass, 'kb-method-parameter-input'].join(' ')}, [
+            inputCol = div({class: [options.classes.inputColClass, 'kb-app-parameter-input'].join(' ')}, [
                 div({style: {width: '100%', display: 'inline-block'}}, [
                     div({dataElement: 'input-control'})
                 ]),
@@ -257,7 +257,7 @@ define([
 
             // FIELD NAME
 //            nameCol = div({class: options.classes.nameColClass},
-//                class: [options.classes.nameColClass, 'kb-method-parameter-name'].join(' ')
+//                class: [options.classes.nameColClass, 'kb-app-parameter-name'].join(' ')
 //            }, spec.label());
 
             // HINT (help)
@@ -274,10 +274,10 @@ define([
 
             var content = div({class: ['xform-horizontal', advanced].join(' '), dataAdvancedParameter: spec.isAdvanced(), style: {marginTop: '8px'}, id: fieldId}, [
                 div({class: 'form-group', dataElement: 'field-panel'}, [
-                    label({class: 'xcol-md-12 xcontrol-label kb-method-parameter-name'}, [
+                    label({class: 'xcol-md-12 xcontrol-label kb-app-parameter-name'}, [
                         spec.label() || spec.id()
                     ]),
-                    div({class: 'xcol-md-12'}, div({class: 'xkb-method-parameter-input'}, [
+                    div({class: 'xcol-md-12'}, div({class: 'xkb-app-parameter-input'}, [
                         div({class: 'input-group', style: {width: '100%'}}, [
                             div({dataElement: 'input-control'}),
                             div({class: 'input-group-addon', style: {width: '30px', padding: '0'}}, [
@@ -326,7 +326,7 @@ define([
                 div({class: 'form-group', dataElement: 'error-panel', style: {display: 'none'}}, [
                     div({class: 'col-md-2'}),
                     div({class: 'col-md-5'}, div({
-                        class: ['kb-method-parameter-error-message'].join(' '),
+                        class: ['kb-app-parameter-error-message'].join(' '),
                         dataElement: 'error-message'
                     })),
                     div({class: 'col-md-5'})

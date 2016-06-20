@@ -172,7 +172,7 @@ define (
 
             $(document).on('methodClicked.Narrative',
                 function(event, method, tag) {
-                    this.buildMethodCodeCell(method, tag);
+                    this.buildAppCodeCell(method, tag);
                 }.bind(this)
             );
 
@@ -414,7 +414,7 @@ define (
             }
         },
 
-        buildMethodCodeCell: function(spec, tag) {
+        buildAppCodeCell: function(spec, tag) {
             var methodName = "Unknown method";
             if (!spec || !spec.info) {
                 console.error('ERROR build method code cell: ', spec, tag);
@@ -451,8 +451,8 @@ define (
                 cell: cell,
                 kbase: {
                     type: cellType,
-                    methodTag: tag,
-                    methodSpec: spec
+                    appTag: tag,
+                    appSpec: spec
                 }
             });
         },
@@ -460,7 +460,7 @@ define (
         determineMethodCellType: function (spec) {
             if ((spec.behavior.kb_service_method && spec.behavior.kb_service_name) ||
                 (spec.behavior.script_module && spec.behavior.script_name)) {
-                return 'method';
+                return 'app';
             }
             
             if (spec.info.categories.some(function (category) {
@@ -481,11 +481,11 @@ define (
 
 
         /**
-         * @method buildMethodCell
+         * @method buildAppCell
          * @param {Object} method -
          * @public
          */
-        buildMethodCell: function(method) {
+        buildAppCell: function(method) {
             var cell = Jupyter.narrative.insertAndSelectCellBelow('markdown');
             // cell.celltoolbar.hide();
 

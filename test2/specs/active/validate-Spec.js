@@ -2,7 +2,7 @@
 /*jslint white:true,browser:true*/
 define([
     'bluebird',
-    'validation'
+    'common/validation'
 ], function (Promise, Validation) {
     'use strict';
 

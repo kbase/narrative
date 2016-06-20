@@ -265,12 +265,13 @@ function($,
                           "columns": [
                               {title: "Gene ID", data: "id"},
                               {title: "# of ontology terms", data: "num"},
-                              {title: "Ontology term", data: "term"},
+                              {title: "Ontology term name", data: "name"},
+                              {title: "Ontology term ID", data: "term"},
                               {title: "Evidence count", data: "evidence_count"},
                           ],
                           createdRow: function (row, data, index) {
 
-                              var $linkCell = $('td', row).eq(2);
+                              var $linkCell = $('td', row).eq(3);
                               var k = $linkCell.text();
                               $linkCell.empty();
 
@@ -286,6 +287,7 @@ function($,
 
                       var ontologyTable = $('#'+pref+'ontology-table').DataTable(ontologySettings);
                       var ontologyData  = [];
+
                       $.each(
                         gnm.ontology_mappings,
                         function(i, v) {
@@ -309,6 +311,7 @@ function($,
                                       'num' : v.num_terms,
                                       'term' : k,
                                       'evidence_count' : t.evidence.length,
+                                      'name' : t.term_name,
                                     }
                                   )
                                 }
@@ -317,6 +320,7 @@ function($,
                           )
                         }
                       );
+                      console.log("OD ", ontologyData[0]);
 
                       //ontologyTable.fnAddData(ontologyData);
                       ontologyTable.rows.add(ontologyData).draw();

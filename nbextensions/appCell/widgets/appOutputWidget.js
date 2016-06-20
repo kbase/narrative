@@ -86,7 +86,7 @@ define([
             });
 
         }
-        function doDetachOutput(index) {
+        function doRemoveOutputCell(index) {
             var confirmed = dom.confirmDialog('Are you sure you want to remove the output cell? This is not reversable. (Any associated data will remain in your narrative, and may be found in the Data panel.)', 'Yes', 'No');
             if (!confirmed) {
                 return;
@@ -160,24 +160,24 @@ define([
                                 ])
                             ]),
                             div({class: 'col-md-4', style: {textAlign: 'right'}}, [
+//                                button({
+//                                    class: 'btn btn-sm btn-standard',
+//                                    type: 'button',
+//                                    id: events.addEvent({
+//                                        type: 'click',
+//                                        handler: function () {
+//                                            doRemoveOutput(index);
+//                                        }
+//                                    })}, 'delete'),
                                 button({
                                     class: 'btn btn-sm btn-standard',
                                     type: 'button',
                                     id: events.addEvent({
                                         type: 'click',
                                         handler: function () {
-                                            doRemoveOutput(index);
+                                            doRemoveOutputCell(index);
                                         }
-                                    })}, 'delete'),
-                                button({
-                                    class: 'btn btn-sm btn-standard',
-                                    type: 'button',
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: function () {
-                                            doDetachOutput(index);
-                                        }
-                                    })}, 'detach')
+                                    })}, 'Remove Ouput Cell')
 
                             ])
                         ]);

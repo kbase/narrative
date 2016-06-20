@@ -39,6 +39,7 @@ require.config({
         kbapi                                   : 'kbase/js/widgets/kbapi',
         'kbase-client-api'                      : 'kbase/js/api/kbase-client-api',
         'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
+        'kbase-generic-client-api'              : 'kbase/js/api/GenericClient',
         'catalog-client-api'                    : 'kbase/js/api/Catalog',
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
 

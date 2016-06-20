@@ -18,7 +18,8 @@ define(['jquery',
         'kbaseTabs',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap',        
-        'kbaseFeatureValues-client-api'
+        'kbaseFeatureValues-client-api',
+        'kbase-generic-client-api'
         ], function($) {
     $.KBWidget({
         name: 'kbaseExpressionGenesetBaseWidget',
@@ -33,6 +34,8 @@ define(['jquery',
 
             // Service URL: should be in window.kbconfig.urls.
             // featureValueURL: 'http://localhost:8889',
+            useDynamicService: false,
+            featureValueSrvVersion: 'dev',
             featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
             wsURL: window.kbconfig.urls.workspace,
             loadingImage: "static/kbase/images/ajax-loader.gif"
@@ -65,8 +68,14 @@ define(['jquery',
 
         loggedInCallback: function(event, auth) {
 
-           // Build a client
-            this.featureValueClient = new KBaseFeatureValues(this.options.featureValueURL, auth);   
+            // Build a client
+            if (this.options.useDynamicService) {
+                var serviceWizardURL = this.options.featureValueURL.replace("feature_values/jsonrpc", 
+                        "service_wizard");
+                this.genericClient = new GenericClient(serviceWizardURL, auth);
+            } else {
+                this.featureValueClient = new KBaseFeatureValues(this.options.featureValueURL, auth);   
+            }
             this.ws = new Workspace(this.options.wsURL, auth);         
 
             // Let's go...
@@ -110,17 +119,29 @@ define(['jquery',
                     self.clientError("No Features or FeatureSet selected.  Please include at least one Feature from the data.");
                     return;
                 }
-
-                self.featureValueClient.get_submatrix_stat(
-                    smParams,
-                    function(data){
-                        self.submatrixStat = data;
-                        self.render();
-                        self.loading(false);
-                    },
-                    function(error){
-                        self.clientError(error);
-                    });
+                if (self.options.useDynamicService) {
+                    self.genericClient.sync_call("KBaseFeatureValues.get_submatrix_stat",
+                            [smParams],
+                            function(data){
+                                self.submatrixStat = data[0];
+                                self.render();
+                                self.loading(false);
+                            },
+                            function(error){
+                                self.clientError(error);
+                            }, self.options.featureValueSrvVersion);
+                } else {
+                    self.featureValueClient.get_submatrix_stat(
+                            smParams,
+                            function(data){
+                                self.submatrixStat = data;
+                                self.render();
+                                self.loading(false);
+                            },
+                            function(error){
+                                self.clientError(error);
+                            });
+                }
             };
 
             // if a feature set is defined, use it.

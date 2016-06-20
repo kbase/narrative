@@ -7,8 +7,6 @@ define(['jquery',
     'kbaseAuthenticatedWidget',
     'kbaseTabs',
     'bootstrap',
-/*    'jquery-dataTables',
-    'jquery-tmpl',*/
     'bootstrap-slider',
     'tipsy'
   /*  'jquery-dataTables-bootstrap,'*/
@@ -21,19 +19,25 @@ define(['jquery',
           ws_id: null,
           ws_name: null,
           token: null,
+          condition_1: null,
+          condition_2: null,
           width: 800,
           wsUrl: window.kbconfig.urls.workspace,
           loading_image: window.kbconfig.loading_gif,
 
           options: {
               ws_id: null,
-              ws_name: null
+              ws_name: null,
+              condition_1: null,
+              condition_2: null
           },
 
           init: function (options) {
               this._super(options);
               this.ws_id = options.volcano_plot_object;
               this.ws_name = options.workspace;
+              this.condition_1 = options.condition_1;
+              this.condition_2 = options.condition_2;
               return this;
           },
           //tabData is used to create tabs later on in the output widget
@@ -47,7 +51,6 @@ define(['jquery',
           render: function () {
               var self = this;
               var pref = StringUtil.uuid();
-
               //login related error
               var container = this.$elem;
               if (self.token == null) {
@@ -63,16 +66,22 @@ define(['jquery',
                 text = text[0].data;
                 var tabPane = $('<div id="' + pref + 'tab-content">');
                 container.append(tabPane);
-                   ////////////////////////////// Overview Tab //////////////////////////////
+              condition_1 = 8083
+              condition_2 = 8085
 
-                //Append table to overview tab and display contents
 
-               // var parameters = data.BlastOutput_param.Parameters;
-                //var db = data.BlastOutput_db;
-                //var query_info = data.BlastOutput_iterations.Iteration[0]['Iteration_query-def'];
-                //var hits = data.BlastOutput_iterations.Iteration[0].Iteration_hits.Hit;
-
-var overviewTable = $('#' + pref + 'overview-table');
+    var overviewTable = $('#' + pref + 'overview-table');
+              counter=0
+              for (i=0; i < text.condition_pairs.length; i++){
+                 c1 = text.condition_pairs[i].condition_1
+                 c2 = text.condition_pairs[i].condition_2
+                 if (c1==condition_1 && c2==condition_2 || c1==condition_2 && c2==condition_1){
+                     counter=i
+                 }
+              }
+              
+console.log(text.condition_pairs[counter])
+              
 
  tabPane.append('<div class="container"><div class="row"><div class="row"><div class="col-md-12 text-center"><div class="box"><div class="box-content"><div>');
  tabPane.append('<center> <table><tr class="text-center">' +
@@ -198,9 +207,9 @@ tabPane.append('<div class="chart" id="p' + pref + 'divchart" style="width:100%;
 
 
 
-   var data = text.condition_pairs[0].voldata;
-    $("#" + pref + "cond1").text(text.condition_pairs[0].condition_1);
-    $("#" + pref + "cond2").text(text.condition_pairs[0].condition_2);
+   var data = text.condition_pairs[counter].voldata;
+    $("#" + pref + "cond1").text(text.condition_pairs[counter].condition_1);
+    $("#" + pref + "cond2").text(text.condition_pairs[counter].condition_2);
 
     // Filter NO_TEST data
 

@@ -10,7 +10,7 @@
             "refseq_genomes": {
                 "name": "RefSeq Genomes",
                 "type": "KBaseGenomes.GenomeAnnotation",
-                "ws": "KBReferenceGenomesRefSeq",
+                "ws": "RefSeq_Genomes",
                 "search": true
             },
             "phytozome_genomes": {

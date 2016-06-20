@@ -25,6 +25,9 @@ require.config({
         select2                                 : 'kbase/js/patched-components/select2/select2',
         bootstrap                               : 'components/bootstrap/js/bootstrap.min',
         underscore                              : 'ext_components/underscore/underscore-min',
+        'bootstrap-slider'                      : 'ext_components/bootstrap-slider/bootstrap-slider',
+        'tipsy'                                 : 'ext_components/jquery.tipsy/js/jquery.tipsy',
+        'css'                                   : 'ext_components/require-css/css.min',
 
         narrativeConfig                         : 'kbase/js/narrativeConfig',
         narrativeMain                           : 'narrativeMain',
@@ -251,6 +254,7 @@ require.config({
         'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
         'kbaseViewLiveRunLog'                   : 'kbase/js/widgets/function_output/kbaseViewLiveRunLog',
         'kbaseReportView'                       : 'kbase/js/widgets/function_output/kbaseReportView',
+        'kbaseExpressionVolcanoPlot'            : 'kbase/js/widgets/function_output/kbaseExpressionVolcanoPlot',
 
 
 

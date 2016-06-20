@@ -34,7 +34,7 @@ define(['jquery',
 
             // Service URL: should be in window.kbconfig.urls.
             // featureValueURL: 'http://localhost:8889',
-            useDynamicService: false,
+            useDynamicService: true,
             featureValueSrvVersion: 'dev',
             featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
             wsURL: window.kbconfig.urls.workspace,

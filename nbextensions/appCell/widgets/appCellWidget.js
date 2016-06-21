@@ -53,7 +53,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['toggle-developer-options', 'remove'],
+                        enabled: ['remove'],
                         disabled: ['run', 'cancel', 're-run']
                     },
                     elements: {
@@ -81,7 +81,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['run', 'toggle-developer-options', 'remove'],
+                        enabled: ['run', 'remove'],
                         disabled: ['cancel', 're-run']
                     },
                     elements: {
@@ -138,7 +138,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['cancel', 'toggle-developer-options', 'remove'],
+                        enabled: ['cancel', 'remove'],
                         disabled: ['run', 're-run']
                     },
                     elements: {
@@ -207,7 +207,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['cancel', 'toggle-developer-options', 'remove'],
+                        enabled: ['cancel', 'remove'],
                         disabled: ['run', 're-run']
                     },
                     elements: {
@@ -245,7 +245,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['cancel', 'toggle-developer-options', 'remove'],
+                        enabled: ['cancel', 'remove'],
                         disabled: ['run', 're-run']
                     },
                     elements: {
@@ -278,7 +278,7 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run', 'toggle-developer-options', 'remove'],
+                        enabled: ['re-run', 'remove'],
                         disabled: ['run', 'cancel']
                     },
                     elements: {
@@ -313,12 +313,12 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run', 'toggle-developer-options', 'remove'],
+                        enabled: ['re-run', 'remove'],
                         disabled: ['run', 'cancel']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
                     }
                 },
                 next: [
@@ -341,12 +341,12 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run', 'toggle-developer-options', 'remove'],
+                        enabled: ['re-run', 'remove'],
                         disabled: ['run', 'cancel']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
                     }
                 },
                 next: [
@@ -369,12 +369,12 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run', 'toggle-developer-options', 'remove'],
+                        enabled: ['re-run', 'remove'],
                         disabled: ['run', 'cancel']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
                     }
                 },
                 next: [
@@ -396,12 +396,12 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run', 'toggle-developer-options', 'remove'],
+                        enabled: ['re-run', 'remove'],
                         disabled: ['run', 'cancel']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
                     }
                 },
                 next: [
@@ -430,19 +430,26 @@ define([
             settings = {
                 showAdvanced: {
                     label: 'Show advanced parameters',
-                    defaultValue: false
+                    defaultValue: false,
+                    type: 'custom'
                 },
                 showNotifications: {
                     label: 'Show the notifications panel',
-                    defaultValue: false
+                    defaultValue: false,
+                    type: 'toggle',
+                    element: 'notifications'
                 },
                 showAboutApp: {
                     label: 'Show the About App panel',
-                    defaultValue: false
+                    defaultValue: true,
+                    type: 'toggle',
+                    element: 'about-app'
                 },
                 showDeveloper: {
                     label: 'Show developer features',
-                    defaultValue: false
+                    defaultValue: false,
+                    type: 'toggle',
+                    element: 'developer-options'
                 }
             },
         widgets = {},
@@ -625,20 +632,98 @@ define([
             });
         }
 
+//        function toggleElement(name) {
+//            var node = dom.getElement(name);
+//            if (!node) {
+//                return;
+//            }
+//            if (node.style.display === 'none') {
+//                node.style.display = 'block';
+//            } else {
+//                node.style.display = 'none';
+//            }
+//        }
+
+        function showElement(name) {
+            var node = dom.getElement(name);
+            if (!node) {
+                return;
+            }
+            // node.style.display = null;
+            node.classList.remove('hidden');
+        }
+        function hideElement(name) {
+            var node = dom.getElement(name);
+            if (!node) {
+                return;
+            }
+            //if (!node.getAttribute('data-original-display')) {
+            //    node.setAttribute('data-original-display', )
+            // }
+            // node.style.display = 'none';
+            node.classList.add('hidden');
+        }
+
+        
+        function renderSetting(settingName) {
+            var setting = settings[settingName],
+                value;
+
+            if (!setting) {
+                return;
+            }
+
+            value = model.getItem(['user-settings', settingName], setting.defaultValue);
+            switch (setting.type) {
+                case 'toggle':
+                    if (value) {
+                        showElement(setting.element);
+                    } else {
+                        hideElement(setting.element);
+                    }
+                    break;
+            }
+        }
+        
+        function doChangeSetting(event) {
+            var control = event.target,
+                settingName = control.value;
+            
+            model.setItem(['user-settings', settingName], control.checked);
+
+            renderSetting(settingName);
+        }
+        
+
         function renderSettings() {
-            var events = Events.make(),
+            var events = Events.make({node: container}),
                 content = Object.keys(settings).map(function (key) {
                 var setting = settings[key],
-                    settingsValue = model.getItem(['user-setting', key]);
+                    settingsValue = model.getItem(['user-settings', key]) || setting.defaultValue;
                 return div({}, [
                     input({
-                        type: 'checkbox', 
-                        checked: (settingsValue ? true : false), value: 'on'
-                        }),
+                        type: 'checkbox',
+                        checked: (settingsValue ? true : false),
+                        dataSetting: key,
+                        value: key,
+                        id: events.addEvent({
+                            type: 'change',
+                            handler: function (e) {
+                                doChangeSetting(e);
+                            }
+                        })
+                    }),
                     span({style: {marginLeft: '4px', fontStyle: 'italic'}}, setting.label)
                 ]);
             }).join('\n');
             dom.setContent('settings.content', content);
+            // console.log('REALLY', dom.getElement('settings.content'));
+            events.attachEvents();
+            
+            //Ensure that the settings are reflected in the UI.
+            Object.keys(settings).forEach(function (key) {
+                renderSetting(key);
+            });
         }
 
         function toBoolean(value) {
@@ -688,11 +773,10 @@ define([
                         dataElement: 'body',
                         style: {display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1'}
                     }, [
-                        div({dataElement: 'notifications', style: {display: 'block', width: '100%'}}),
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
                                 dom.buildPanel({
-                                    title: 'Available Actions',
+                                    title: null,
                                     name: 'availableActions',
                                     hidden: false,
                                     type: 'default',
@@ -711,16 +795,13 @@ define([
                                                 dom.makeButton('Remove', 'remove', {events: events, type: 'danger'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Show Dev Options', 'toggle-developer-options', {events: events})
-                                            ]),
-                                            div({class: 'btn-group'}, [
-                                                dom.makeButton('Show Settings', 'toggle-settings', {events: events})
+                                                dom.makeButton(span({class: 'fa fa-cog '}), 'toggle-settings', {events: events})
                                             ])
                                         ])
                                     ]
                                 }),
-                                dom.buildCollapsiblePanel({
-                                    title: 'Settings',
+                                dom.buildPanel({
+                                    title: 'App Cell Settings',
                                     name: 'settings',
                                     hidden: true,
                                     type: 'default',
@@ -738,13 +819,13 @@ define([
                                 dom.buildCollapsiblePanel({
                                     title: 'About',
                                     name: 'about-app',
-                                    hidden: true,
+                                    hidden: false,
                                     type: 'default',
                                     body: [
                                         div({dataElement: 'about-app'}, renderAboutApp())
                                     ]
                                 }),
-                                dom.buildPanel({
+                                dom.buildCollapsiblePanel({
                                     title: 'Dev',
                                     name: 'developer-options',
                                     hidden: true,
@@ -762,7 +843,7 @@ define([
                                     ]
                                 }),
                                 dom.buildPanel({
-                                    title: 'Input ' + span({class: 'fa fa-arrow-right'}),
+                                    title: 'Input ' + span({class: 'fa fa-arrow-left'}),
                                     name: 'parameters-group',
                                     hidden: false,
                                     type: 'default',
@@ -776,14 +857,14 @@ define([
                                     body: div({dataElement: 'widget'})
                                 }),
                                 dom.buildPanel({
-                                    title: 'App Execution ' + span({class: 'fa fa-tasks'}),
+                                    title: 'App Execution ' + span({class: 'fa fa-bolt'}),
                                     name: 'exec-group',
                                     hidden: false,
                                     type: 'default',
                                     body: div({dataElement: 'widget'})
                                 }),
                                 dom.buildPanel({
-                                    title: 'Output ' + span({class: 'fa fa-arrow-left'}),
+                                    title: 'Output ' + span({class: 'fa fa-arrow-right'}),
                                     name: 'output-group',
                                     hidden: true,
                                     type: 'default',
@@ -933,25 +1014,6 @@ define([
             return model.getItem('user-settings.showInputCodeArea');
         }
 
-        function toggleDeveloperOptions(cell) {
-            var name = 'showDeveloperOptions',
-                selector = 'developer-options',
-                node = dom.getElement(selector),
-                showing = model.getItem(['user-settings', name]);
-            if (showing) {
-                model.setItem(['user-settings', name], false);
-            } else {
-                model.setItem(['user-settings', name], true);
-            }
-            showing = model.getItem(['user-settings', name]);
-            if (showing) {
-                node.style.display = 'block';
-            } else {
-                node.style.display = 'none';
-            }
-            return showing;
-        }
-
         function toggleSettings(cell) {
             var name = 'showSettings',
                 selector = 'settings',
@@ -962,11 +1024,14 @@ define([
             } else {
                 model.setItem(['user-settings', name], true);
             }
+
             showing = model.getItem(['user-settings', name]);
             if (showing) {
-                node.style.display = 'block';
+                node.classList.remove('hidden');
+                //node.style.display = 'block';
             } else {
-                node.style.display = 'none';
+                //node.style.display = 'none';
+                node.classList.add('hidden');
             }
             return showing;
         }
@@ -999,10 +1064,6 @@ define([
                 }).join('\n');
             dom.setContent('notifications.content', content);
             events.attachEvents(container);
-        }
-
-        function showNotifications() {
-
         }
 
         function addNotification(notification) {
@@ -1616,15 +1677,16 @@ define([
                 bus.on('edit-notebook-metadata', function () {
                     doEditNotebookMetadata();
                 });
-                bus.on('toggle-developer-options', function () {
-                    var showing = toggleDeveloperOptions(cell),
-                        label = showing ? 'Hide Dev Options' : 'Show Dev Options';
-                    dom.setButtonLabel('toggle-developer-options', label);
-                });
                 bus.on('toggle-settings', function () {
                     var showing = toggleSettings(cell),
-                        label = showing ? 'Hide Settings' : 'Show Settings';
-                    dom.setButtonLabel('toggle-settings', label);
+                        label = span({class: 'fa fa-cog '}),
+                        buttonNode = dom.getButton('toggle-settings');
+                    buttonNode.innerHTML = label;
+                    if (showing) {
+                        buttonNode.classList.add('active');
+                    } else {
+                        buttonNode.classList.remove('active');
+                    }
                 });
                 bus.on('run', function () {
                     doRun();

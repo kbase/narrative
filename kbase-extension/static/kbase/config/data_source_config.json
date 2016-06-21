@@ -9,19 +9,19 @@
             },
             "refseq_genomes": {
                 "name": "RefSeq Genomes",
-                "type": "KBaseGenomes.GenomeAnnotation",
+                "type": "KBaseGenomeAnnotations.GenomeAnnotation",
                 "ws": "RefSeq_Genomes",
                 "search": true
             },
             "phytozome_genomes": {
                 "name": "Phytozome Genomes",
-                "type": "KBaseGenomes.GenomeAnnotation",
+                "type": "KBaseGenomeAnnotations.GenomeAnnotation",
                 "ws": "Phytozome_Genomes",
                 "search": true
             },
             "ensembl_genomes": {
                 "name": "Ensembl Genomes",
-                "type": "KBaseGenomes.GenomeAnnotation",
+                "type": "KBaseGenomeAnnotations.GenomeAnnotation",
                 "ws": "ReferenceEnsemblPlantGenomeAnnotations",
                 "search": true
             },

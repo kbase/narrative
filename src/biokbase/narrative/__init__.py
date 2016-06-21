@@ -1,6 +1,5 @@
-__all__ = ['magics', 'ws_util', 'common', 'handlers', 'contents', 'services']
+__all__ = ['magics', 'ws_util', 'common', 'handlers', 'contents', 'services', 'widgetmanager']
 
-from widgetmanager import *
 from semantic_version import Version
 __version__ = Version("2.0.8")
 version = lambda: __version__

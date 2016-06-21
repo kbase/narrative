@@ -80,8 +80,6 @@ define(['jquery',
                  }
               }
               
-console.log(text.condition_pairs[counter])
-              
 
  tabPane.append('<div class="container"><div class="row"><div class="row"><div class="col-md-12 text-center"><div class="box"><div class="box-content"><div>');
  tabPane.append('<center> <table><tr class="text-center">' +
@@ -177,7 +175,6 @@ tabPane.append('<div class="chart" id="p' + pref + 'divchart" style="width:100%;
     var padding = 100;
     //var pv1, pv2, fc1,fc2;
     divchart = "#p" + pref + "divchart"
-  //  console.log(divchart)
 
 
     var svg = d3.select(divchart)
@@ -383,7 +380,6 @@ tabPane.append('<div class="chart" id="p' + pref + 'divchart" style="width:100%;
          
            
        
-                  ////////////////////////////////Hits tab////////////////////
 
               };
 

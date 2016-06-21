@@ -96,6 +96,13 @@ define([
             }
             return temp;
         }
+        
+        function copyItem(props, defaultValue) {
+            var item = getItem(props, defaultValue);
+            if (item !== undefined) {
+                return JSON.parse(JSON.stringify(item));
+            }
+        }
 
         function hasItem(propPath) {
             if (typeof propPath === 'string') {
@@ -229,6 +236,7 @@ define([
             setItem: setItem,
             hasItem: hasItem,
             getItem: getItem,
+            copyItem: copyItem,
             incrItem: incrItem,
             deleteItem: deleteItem,
             pushItem: pushItem,

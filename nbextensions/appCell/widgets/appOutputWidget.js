@@ -86,8 +86,8 @@ define([
             });
 
         }
-        function doDetachOutput(index) {
-            var confirmed = dom.confirmDialog('Are you sure you want to remove the output cell? This is not reversable. (Any associated data will remain in your narrative, and may be found in the Data panel.)', 'Yes', 'No');
+        function doRemoveOutputCell(index) {
+            var confirmed = dom.confirmDialog('This will remove the output cell from the Narrative, as well as this output record. This action is not reversable. Any associated data will remain in your narrative, and may be found in the Data panel.\n\nAre you sure you want to remove the output cell?', 'Yes', 'No');
             if (!confirmed) {
                 return;
             }
@@ -140,10 +140,11 @@ define([
                         var rowStyle = {
                             border: '1px silver solid',
                             padding: '3px'
-                        };
+                        }, message = '';
                         // console.log('JOB MATCH?', output.jobId, model.currentJobState);
                         if (model.currentJobState && output.jobId === model.currentJobState.job_id) {
                             rowStyle.border = '2px blue solid';
+                            message = 'This is the most recently run job for this app.'
                         }
                         return div({class: 'row', style: rowStyle}, [
                             div({class: 'col-md-8'}, [
@@ -160,24 +161,26 @@ define([
                                 ])
                             ]),
                             div({class: 'col-md-4', style: {textAlign: 'right'}}, [
+//                                button({
+//                                    class: 'btn btn-sm btn-standard',
+//                                    type: 'button',
+//                                    id: events.addEvent({
+//                                        type: 'click',
+//                                        handler: function () {
+//                                            doRemoveOutput(index);
+//                                        }
+//                                    })}, 'delete'),
                                 button({
                                     class: 'btn btn-sm btn-standard',
                                     type: 'button',
                                     id: events.addEvent({
                                         type: 'click',
                                         handler: function () {
-                                            doRemoveOutput(index);
+                                            doRemoveOutputCell(index);
                                         }
-                                    })}, 'delete'),
-                                button({
-                                    class: 'btn btn-sm btn-standard',
-                                    type: 'button',
-                                    id: events.addEvent({
-                                        type: 'click',
-                                        handler: function () {
-                                            doDetachOutput(index);
-                                        }
-                                    })}, 'detach')
+                                    })}, 'Remove Ouput Cell'),
+                                
+                                div({style: {marginTop: '20px'}, dataElement: 'message'}, message)
 
                             ])
                         ]);

@@ -96,13 +96,20 @@ define([
 
         function hideElement(name) {
             var el = getElement(name);
+            if (!el) {
+                return;
+            }
             ensureOriginalDisplayStyle(el);
             el.style.display = 'none';
         }
 
         function showElement(name) {
             var el = getElement(name),
-                original = el.getAttribute('data-original-display-style');
+                original;
+            if (!el) {
+                return;
+            }
+            original = el.getAttribute('data-original-display-style');
             el.style.display = original;
         }
 

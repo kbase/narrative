@@ -216,7 +216,7 @@ define([
                     }
                     break;
             }
-            return false
+            return false;
         }
 
         function uiClass() {
@@ -302,7 +302,7 @@ define([
                             return {
                                 required: required(),
                                 types: spec.text_options.valid_ws_types,
-                                defaultValues: defaultValue(),
+                                defaultValues: defaultValue()
                             };
                         default:
                             throw new Error('Unknown []workspaceObjectName ui class');
@@ -315,7 +315,7 @@ define([
                         case 'text':
                             return {
                                 required: required()
-                            }
+                            };
                         default:
                             throw new Error('Unknown []string field type: ' + fieldType);
                     }
@@ -338,7 +338,7 @@ define([
                         selectionId: spec.subdata_selection.selection_id,
                         // Used to generate a description for each item. Becomes the "desc".
                         displayTemplate: spec.subdata_selection.description_template
-                    }
+                    };
                     break;
                 case 'xxinput_property_x':
                     return {
@@ -365,11 +365,11 @@ define([
                                     return {
                                         id: key,
                                         desc: key
-                                    }
+                                    };
                                 });
                             }
                         }
-                    }
+                    };
                     break;
                 case 'sample_property':
                     return {
@@ -398,7 +398,7 @@ define([
                                     return {
                                         id: key,
                                         desc: collected[key]
-                                    }
+                                    };
                                 })
                                     .sort(function (a, b) {
                                         if (a.desc < b.desc) {
@@ -409,7 +409,7 @@ define([
                                         return 0;
                                     });
                         }
-                    }
+                    };
                     break;
                 case 'unspecified':
                     // a bunch of field types are untyped:
@@ -448,6 +448,7 @@ define([
                             throw new Error('Unknown unspecified field type');
                     }
                 default:
+                    console.error('Unknown data type', dataType());
                     throw new Error('Unknown data type');
 
             }

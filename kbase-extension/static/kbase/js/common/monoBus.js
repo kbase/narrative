@@ -32,6 +32,8 @@ define([
         var api,
             config = config || {},
             listenerRegistry = {},
+            verbose = config.verbose || false,
+            chatty = config.chatty || false,
             transientMessages = [],
             requestMap = [],
             interval = 0,
@@ -40,6 +42,19 @@ define([
             channels = {},
             doLogMessages = false,
             strictMode = config.strict;
+
+
+        function warn(message) {
+            if (verbose) {
+                console.warn(message);
+            }
+        }
+
+        function log(message) {
+            if (chatty) {
+                console.log(message);
+            }
+        }
 
         // CHANNELS
 
@@ -58,8 +73,9 @@ define([
                 if (strictMode) {
                     throw new Error('Channel description is required');
                 } else {
-                    console.warn('Channel created without description');
+                    
                 }
+                warn('Channel created without description');
             }
             channels[spec.name] = {
                 name: spec.name,
@@ -76,7 +92,7 @@ define([
 
         function ensureChannel(name) {
             if (!channels[name]) {
-                console.warn('Channel implicitly created', name);
+                warn('Channel implicitly created', name);
                 makeChannel({name: name});
             }
             return channels[name];
@@ -85,7 +101,8 @@ define([
         function getChannel(name) {
             var channel = channels[name];
             if (!channel) {
-                throw new Error('Channel with name "' + name + '" does not exist');
+                // throw new Error('Channel with name "' + name + '" does not exist');
+                return;
             }
             return channel;
         }
@@ -113,9 +130,7 @@ define([
             }
             listeners.forEach(function (listener) {
                 handled = true;
-                if (doLogMessages) {
-                    console.log('PROCESSING KEY LISTENER', channel, item);
-                }
+                log('PROCESSING KEY LISTENER', channel, item);
                 letListenerHandle(item, listener.handle);
             });
             return handled;
@@ -205,7 +220,7 @@ define([
                 listener.handle = spec.handle;
                 channel.testListeners.push(listener);
             } else {
-                console.warn('listen: nothing to listen on (test or key)');
+                warn('listen: nothing to listen on (test or key)');
             }
 
             listenerRegistry[id] = listener;
@@ -248,14 +263,10 @@ define([
         function processTestListeners(channel, item) {
             var handled = false;
             channel.testListeners.forEach(function (listener) {
-                if (doLogMessages) {
-                    console.log('PROCESSING TEST LISTENER?', channel, item);
-                }
+                log('PROCESSING TEST LISTENER?', channel, item);
                 if (testListener(item, listener.test)) {
                     handled = true;
-                    if (doLogMessages) {
-                        console.log('PROCESSING TEST LISTENER!', channel, item);
-                    }
+                    log('PROCESSING TEST LISTENER!', channel, item);
                     letListenerHandle(item, listener.handle);
                 }
             });
@@ -266,20 +277,20 @@ define([
         function processQueueItem(item) {
             var channel = getChannel(item.envelope.channel),
                 handled;
+            
+            if (!channel) {
+                return;
+            }
 
             if (item.envelope.key) {
-                if (doLogMessages) {
-                    console.log('PROCESSING KEY', channel, item);
-                }
+                log('PROCESSING KEY', channel, item);
                 handled = processKeyListeners(channel, item);
             } else {
-                if (doLogMessages) {
-                    console.log('PROCESSING TEST', channel, item);
-                }
+                log('PROCESSING TEST', channel, item);
                 handled = processTestListeners(channel, item);
             }
             if (!handled) {
-                console.warn('No listeners handled message', item, channel);
+                warn('No listeners handled message', item, channel);
             }
         }
 
@@ -379,9 +390,7 @@ define([
 
             envelope.channel = canonicalizeChannelName(address.channel);
 
-            if (doLogMessages) {
-                console.log('SEND', message, envelope);
-            }
+            log('SEND', message, envelope);
 
             transientMessages.push({
                 message: message,
@@ -407,9 +416,7 @@ define([
             envelope.key = encodeKey(address.key);
             envelope.channel = canonicalizeChannelName(address.channel);
 
-            if (doLogMessages) {
-                console.log('SET', message, envelope);
-            }
+            log('SET', message, envelope);
 
             // Persistent messages are stored on a map by 'key' per channel.
             setPersistentMessage(message, envelope);

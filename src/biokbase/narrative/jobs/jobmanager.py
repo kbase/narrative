@@ -237,8 +237,7 @@ class JobManager(object):
                     'job_id': job_id,
                     'message': str(e)
                 })
-        if len(status_set) > 0:
-            self._send_comm_message('job_status', status_set)
+        self._send_comm_message('job_status', status_set)
 
     def _lookup_job_status_loop(self):
         """

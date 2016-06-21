@@ -99,7 +99,11 @@ define([
              * Otherwise, we rely on text options to provide type information.
              */
             if (!spec.text_options) {
-                return 'unspecified';
+                // consider it plain, unconstrained text.
+                if (spec.allow_multiple) {
+                    return '[]string';
+                }
+                return 'string';                
             }
             var validateAs = spec.text_options.validate_as;
             if (validateAs) {
@@ -243,8 +247,8 @@ define([
                             return {
                                 required: required(),
                                 defaultValue: defaultValue(),
-                                min: spec.text_options.min_length,
-                                max: spec.text_options.max_length
+                                min: spec.text_options ? spec.text_options.min_length : null,
+                                max: spec.text_options ? spec.text_options.max_length : null
                             };
                         case 'dropdown':
                             return {

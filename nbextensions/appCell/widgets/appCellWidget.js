@@ -44,7 +44,7 @@ define([
     var t = html.tag,
         div = t('div'), span = t('span'), a = t('a'),
         table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
-        pre = t('pre'),
+        pre = t('pre'), input = t('input'),
         appStates = [
             {
                 state: {
@@ -160,14 +160,14 @@ define([
                 on: {
                     enter: {
                         messages: [
-                            {   
+                            {
                                 emit: 'sync-all-display-parameters'
                             }
                         ]
                     },
                     resume: {
                         messages: [
-                            {   
+                            {
                                 emit: 'sync-all-display-parameters'
                             }
                         ]
@@ -428,7 +428,22 @@ define([
             model,
             // HMM. Sync with metadata, or just keep everything there?
             settings = {
-                showAdvanced: false
+                showAdvanced: {
+                    label: 'Show advanced parameters',
+                    defaultValue: false
+                },
+                showNotifications: {
+                    label: 'Show the notifications panel',
+                    defaultValue: false
+                },
+                showAboutApp: {
+                    label: 'Show the About App panel',
+                    defaultValue: false
+                },
+                showDeveloper: {
+                    label: 'Show developer features',
+                    defaultValue: false
+                }
             },
         widgets = {},
             inputBusses = [],
@@ -610,6 +625,22 @@ define([
             });
         }
 
+        function renderSettings() {
+            var events = Events.make(),
+                content = Object.keys(settings).map(function (key) {
+                var setting = settings[key],
+                    settingsValue = model.getItem(['user-setting', key]);
+                return div({}, [
+                    input({
+                        type: 'checkbox', 
+                        checked: (settingsValue ? true : false), value: 'on'
+                        }),
+                    span({style: {marginLeft: '4px', fontStyle: 'italic'}}, setting.label)
+                ]);
+            }).join('\n');
+            dom.setContent('settings.content', content);
+        }
+
         function toBoolean(value) {
             if (value && value !== null) {
                 return true;
@@ -619,7 +650,6 @@ define([
 
         function showAboutApp() {
             var appSpec = env.appSpec;
-            console.log('METHOD SPEC', appSpec);
             dom.setContent('about-app.name', appSpec.info.name);
             dom.setContent('about-app.module', appSpec.info.namespace || dom.na());
             dom.setContent('about-app.id', appSpec.info.id);
@@ -675,21 +705,31 @@ define([
                                                 dom.makeButton('Cancel', 'cancel', {events: events, type: 'danger'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Re-run', 're-run', {events: events, type: 'primary'})
+                                                dom.makeButton('Run Again', 're-run', {events: events, type: 'primary'})
                                             ]),
                                             div({class: 'btn-group'}, [
                                                 dom.makeButton('Remove', 'remove', {events: events, type: 'danger'})
                                             ]),
                                             div({class: 'btn-group'}, [
                                                 dom.makeButton('Show Dev Options', 'toggle-developer-options', {events: events})
+                                            ]),
+                                            div({class: 'btn-group'}, [
+                                                dom.makeButton('Show Settings', 'toggle-settings', {events: events})
                                             ])
                                         ])
                                     ]
                                 }),
                                 dom.buildCollapsiblePanel({
+                                    title: 'Settings',
+                                    name: 'settings',
+                                    hidden: true,
+                                    type: 'default',
+                                    body: div({dataElement: 'content'})
+                                }),
+                                dom.buildCollapsiblePanel({
                                     title: 'Notifications',
                                     name: 'notifications',
-                                    hidden: false,
+                                    hidden: true,
                                     type: 'default',
                                     body: [
                                         div({dataElement: 'content'})
@@ -698,7 +738,7 @@ define([
                                 dom.buildCollapsiblePanel({
                                     title: 'About',
                                     name: 'about-app',
-                                    hidden: false,
+                                    hidden: true,
                                     type: 'default',
                                     body: [
                                         div({dataElement: 'about-app'}, renderAboutApp())
@@ -710,9 +750,9 @@ define([
                                     hidden: true,
                                     type: 'default',
                                     body: [
-                                        div({dataElement: 'fsm-display'}, [
-                                            div('FSM'),
-                                            div({dataElement: 'content'})
+                                        div({dataElement: 'fsm-display', style: {marginBottom: '4px'}}, [
+                                            span({style: {marginRight: '4px'}}, 'FSM'),
+                                            span({dataElement: 'content'})
                                         ]),
                                         div([
                                             dom.makeButton('Show Code', 'toggle-code-view', {events: events}),
@@ -912,6 +952,25 @@ define([
             return showing;
         }
 
+        function toggleSettings(cell) {
+            var name = 'showSettings',
+                selector = 'settings',
+                node = dom.getElement(selector),
+                showing = model.getItem(['user-settings', name]);
+            if (showing) {
+                model.setItem(['user-settings', name], false);
+            } else {
+                model.setItem(['user-settings', name], true);
+            }
+            showing = model.getItem(['user-settings', name]);
+            if (showing) {
+                node.style.display = 'block';
+            } else {
+                node.style.display = 'none';
+            }
+            return showing;
+        }
+
         function doRemoveNotification(index) {
             var notifications = model.getItem('notifications') || [];
             notifications.splice(index, 1);
@@ -1016,6 +1075,7 @@ define([
         function renderUI() {
             showFsmBar();
             renderNotifications();
+            renderSettings();
             var state = fsm.getCurrentState();
 
             // Button state
@@ -1102,7 +1162,7 @@ define([
         }
 
         function doRerun() {
-            var confirmed = dom.confirmDialog('Are you sure you want to zap the data?', 'Yes', 'No way, dude');
+            var confirmed = dom.confirmDialog('This will clear the App Execution area, and re-display the Input parameters. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)\n\nProceed to prepare the app to Run Again?', 'Yes', 'No');
             if (!confirmed) {
                 return;
             }
@@ -1525,7 +1585,8 @@ define([
                     id: outputCellId,
                     created: true,
                     createdAt: new Date().toGMTString()
-                }
+                },
+                params: model.copyItem('params')
             });
 
             widgets.outputWidget.instance.bus.emit('update', {
@@ -1560,6 +1621,11 @@ define([
                         label = showing ? 'Hide Dev Options' : 'Show Dev Options';
                     dom.setButtonLabel('toggle-developer-options', label);
                 });
+                bus.on('toggle-settings', function () {
+                    var showing = toggleSettings(cell),
+                        label = showing ? 'Hide Settings' : 'Show Settings';
+                    dom.setButtonLabel('toggle-settings', label);
+                });
                 bus.on('run', function () {
                     doRun();
                 });
@@ -1576,7 +1642,7 @@ define([
                 bus.on('on-success', function () {
                     doOnSuccess();
                 });
-                
+
                 bus.on('sync-all-display-parameters', function () {
                     widgets.paramsDisplayWidget.bus.emit('sync-all-parameters');
                 });

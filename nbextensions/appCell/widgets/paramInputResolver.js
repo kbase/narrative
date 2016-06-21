@@ -15,7 +15,9 @@ define([
     './input/singleFloatInput',
     './input/singleSubdata',
     './input/singleCustomSubdata',
-    './input/singleTextareaInput'
+    './input/singleTextareaInput',
+    './input/multiFloatInput',
+    './input/multiSelectInput'
 ], function (
     SingleTextInputWidget,
     MultiTextInputWidget,
@@ -30,7 +32,9 @@ define([
     SingleFloatInputWidget,
     SingleSubdataWidget,
     SingleCustomSubdataWidget,
-    SingleTextareaInputWidget
+    SingleTextareaInputWidget,
+    MultiFloatInputWidget,
+    MultiSelectInputWidget
     ) {
     'use strict';
 
@@ -205,10 +209,9 @@ define([
                             return MultiIntInputWidget;
                     }
                 case 'float':
-                    if (parameterSpec.multipleItems()) {
-                        return UndefinedInputWidget;
-                    }
                     return SingleFloatInputWidget;
+                case '[]float':
+                   return  MultiFloatInputWidget;
                 case 'workspaceObjectName':
                     switch (parameterSpec.uiClass()) {
                         case 'input':
@@ -237,7 +240,7 @@ define([
                 case '[]string':
                     switch (fieldType) {
                         case 'dropdown':
-                            return UndefinedInputWidget;
+                            return MultiSelectInputWidget;
                         default:
                             return MultiTextInputWidget;
                     }

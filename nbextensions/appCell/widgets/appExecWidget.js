@@ -140,61 +140,80 @@ define([
         function renderJobStatus() {
             var labelStyle = {
                 textAlign: 'right',
-                border: '1px transparent solid', 
-                padding: '4px', 
+                border: '1px transparent solid',
+                padding: '4px',
             },
                 dataStyle = {
-                border: '1px silver solid', 
-                padding: '4px', 
-                display: 'inline-block', 
-                minWidth: '20px', 
-                backgroundColor: 'gray', 
-                color: '#FFF'
-            };
+                    border: '1px silver solid',
+                    padding: '4px',
+                    display: 'inline-block',
+                    minWidth: '20px',
+                    backgroundColor: 'gray',
+                    color: '#FFF'
+                };
             return dom.buildPanel({
                 title: 'Run Status',
                 name: 'runStatus',
                 hidden: false,
                 type: 'primary',
                 body: [
-                    
                     div({class: 'row'}, [
-                        div({class: 'col-md-1', style: labelStyle}, 'State'),
-                        div({class: 'col-md-2', dataElement: 'state', style: dataStyle}),
-                        div({class: 'col-md-1', style: labelStyle}, 'Run Id'),
-                        div({class: 'col-md-2', dataElement: 'run-id', style: dataStyle}),
-                        div({class: 'col-md-1', style: labelStyle}, 'Job Id'),
-                        div({class: 'col-md-2', dataElement: 'job-id', style: dataStyle}),
-                        div({class: 'col-md-1', style: labelStyle}, 'Updated'),
-                        div({class: 'col-md-2', dataElement: 'last-updated-at', style: dataStyle}),
-                    ]),
-                     div({class: 'row'}, [
-                        div({class: 'col-md-1', style: labelStyle}, 'Phase'),
-                        div({class: 'col-md-2', dataElement: 'temporalState', style: dataStyle}),
-                        div({class: 'col-md-1', style: labelStyle}, 'Exec'),
-                        div({class: 'col-md-2', dataElement: 'executionState', style: dataStyle}),
-                    ]),
-                    div({class: 'row', dataElement: 'launch-time'}, [
-                        div({class: 'col-md-1', style: labelStyle}, 'Launch'),
-                        div({class: 'col-md-2', dataElement: 'elapsed', style: dataStyle}),
-                    ]),
-                    div({class: 'row', dataElement: 'queue-time'}, [
-                        div({class: 'col-md-1', style: labelStyle}, 'Queue'),
-                        div({class: 'col-md-2', dataElement: 'elapsed', style: dataStyle})
-                    ]),
-                    div({class: 'row', dataElement: 'run-time'}, [
-                        div({class: 'col-md-1', style: labelStyle}, 'Run'),
-                        div({class: 'col-md-2', dataElement: 'elapsed', style: dataStyle})
-                    ]),
-                    div({class: 'row', dataElement: 'completed'}, [
-                        div({class: 'col-md-1', style: labelStyle}, 'Completed'),
-                        div({class: 'col-md-2', dataElement: 'completedAt', style: dataStyle}),
-                        div({class: 'col-md-1', style: labelStyle}, 'Success'),
-                        div({class: 'col-md-2', dataElement: 'success', style: dataStyle}, span({dataElement: 'flag'})),
-                        div({class: 'col-md-1', style: labelStyle}, 'Error'),
-                        div({class: 'col-md-2', dataElement: 'error', style: dataStyle}, span({dataElement: 'flag'}))
-                        
-                    ]),
+                        div({class: 'col-md-4'}, [
+                            div({class: 'row'}, [
+                                div({class: 'col-md-4', style: labelStyle}, 'State'),
+                                div({class: 'col-md-8', dataElement: 'state', style: dataStyle})
+                            ])
+//                            div({class: 'row'}, [
+//                                div({class: 'col-md-4', style: labelStyle}, 'Phase'),
+//                                div({class: 'col-md-8', dataElement: 'temporalState', style: dataStyle}),
+//                            ]),
+//                            div({class: 'row'}, [
+//                                div({class: 'col-md-4', style: labelStyle}, 'Exec'),
+//                                div({class: 'col-md-8', dataElement: 'executionState', style: dataStyle}),
+//                            ]),
+//                            div({class: 'row', dataElement: 'completed'}, [
+//                                div({class: 'col-md-4', style: labelStyle}, 'Success'),
+//                                div({class: 'col-md-8', dataElement: 'success', style: dataStyle}, span({dataElement: 'flag'})),
+//                            ]),
+//                            div({class: 'row', dataElement: 'completed'}, [
+//                                div({class: 'col-md-4', style: labelStyle}, 'Error'),
+//                                div({class: 'col-md-8', dataElement: 'error', style: dataStyle}, span({dataElement: 'flag'}))
+//
+//                            ]),
+                        ]),
+                        div({class: 'col-md-4'}, [
+                            div({class: 'row', dataElement: 'launch-time'}, [
+                                div({class: 'col-md-4', style: labelStyle}, 'Launch'),
+                                div({class: 'col-md-8', dataElement: 'elapsed', style: dataStyle})
+                            ]),
+                            div({class: 'row', dataElement: 'queue-time'}, [
+                                div({class: 'col-md-4', style: labelStyle}, 'Queue'),
+                                div({class: 'col-md-8', dataElement: 'elapsed', style: dataStyle})
+                            ]),
+                            div({class: 'row', dataElement: 'run-time'}, [
+                                div({class: 'col-md-4', style: labelStyle}, 'Run'),
+                                div({class: 'col-md-8', dataElement: 'elapsed', style: dataStyle})
+                            ]),
+                            div({class: 'row', dataElement: 'completed'}, [
+                                div({class: 'col-md-4', style: labelStyle}, 'Completed'),
+                                div({class: 'col-md-8', dataElement: 'completedAt', style: dataStyle})
+                            ])
+                        ]),
+                        div({class: 'col-md-4'}, [
+                            div({class: 'row'}, [
+                                div({class: 'col-md-4', style: labelStyle}, 'Updated'),
+                                div({class: 'col-md-8', dataElement: 'last-updated-at', style: dataStyle})
+                            ])
+//                            div({class: 'row'}, [
+//                                div({class: 'col-md-4', style: labelStyle}, 'Run Id'),
+//                                div({class: 'col-md-8', dataElement: 'run-id', style: dataStyle})
+//                            ]),
+//                            div({class: 'row'}, [
+//                                div({class: 'col-md-4', style: labelStyle}, 'Job Id'),
+//                                div({class: 'col-md-8', dataElement: 'job-id', style: dataStyle})
+//                            ]),
+                        ])
+                    ])
 //                    div({dataElement: 'error-group'}, [
 //                        dom.buildPanel({
 //                            title: 'Error',
@@ -411,13 +430,13 @@ define([
         function updateJobDetails() {
             var jobState = model.getItem('jobState'),
                 details = {
-                id: jobState.job_id,
-                status: jobState.job_state,
-                deleted: jobState.is_deleted ? 'yes' : 'no',
-                submitted: format.niceTime(new Date(jobState.creation_time)),
-                started: format.niceTime(new Date(jobState.exec_start_time)),
-                completed: format.niceTime(new Date(jobState.finish_time)),
-            };
+                    id: jobState.job_id,
+                    status: jobState.job_state,
+                    deleted: jobState.is_deleted ? 'yes' : 'no',
+                    submitted: format.niceTime(new Date(jobState.creation_time)),
+                    started: format.niceTime(new Date(jobState.exec_start_time)),
+                    completed: format.niceTime(new Date(jobState.finish_time)),
+                };
             model.setItem('jobDetails', details);
         }
 
@@ -432,7 +451,7 @@ define([
             dom.setContent(['runStatus', 'state'], state.canonicalState);
             dom.setContent(['runStatus', 'temporalState'], state.temporalState);
             dom.setContent(['runStatus', 'executionState'], state.executionState);
-            
+
             dom.setContent(['runStatus', 'run-id'], state.runId);
             dom.setContent(['runStatus', 'job-id'], state.jobId);
 
@@ -530,7 +549,7 @@ define([
             } else {
                 dom.hideElement(['run-error']);
             }
-            
+
             // Now be more stateful here...
             if (state.jobId) {
                 dom.enableButton('toggle-job-log');
@@ -850,7 +869,7 @@ define([
             if (runState) {
                 runId = runState.runId;
             }
-            var newRunStatus = {                
+            var newRunStatus = {
                 runId: runId,
                 jobId: jobState.job_id,
                 lastUpdatedTime: model.getItem('jobStateLastUpdatedTime'),
@@ -1150,10 +1169,10 @@ define([
                 var runState = model.getItem('runState');
                 if (runState && runState.executionState === 'processing') {
                     updateRunStateFromJobState();
-                    renderRunState();
                 }
+                renderRunState();
             });
-            
+
             // Now only start listening on the job channel when there is a job id!
 
         }

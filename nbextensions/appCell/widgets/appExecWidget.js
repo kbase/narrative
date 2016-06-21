@@ -112,7 +112,7 @@ define([
                 title: 'Job Error',
                 name: 'run-error',
                 hidden: false,
-                type: 'primary',
+                type: 'danger',
                 body: [
                     table({class: 'table table-striped', style: {tableLayout: 'fixed'}}, [
                         tr([th({style: {width: '15%'}}, 'Error in'), td({dataElement: 'location', style: {width: '85%'}})]),
@@ -141,7 +141,7 @@ define([
             var labelStyle = {
                 textAlign: 'right',
                 border: '1px transparent solid',
-                padding: '4px',
+                padding: '4px'
             },
                 dataStyle = {
                     border: '1px silver solid',
@@ -200,10 +200,10 @@ define([
                             ])
                         ]),
                         div({class: 'col-md-4'}, [
-                            div({class: 'row'}, [
-                                div({class: 'col-md-4', style: labelStyle}, 'Updated'),
-                                div({class: 'col-md-8', dataElement: 'last-updated-at', style: dataStyle})
-                            ])
+//                            div({class: 'row'}, [
+//                                div({class: 'col-md-4', style: labelStyle}, 'Updated'),
+//                                div({class: 'col-md-8', dataElement: 'last-updated-at', style: dataStyle})
+//                            ])
 //                            div({class: 'row'}, [
 //                                div({class: 'col-md-4', style: labelStyle}, 'Run Id'),
 //                                div({class: 'col-md-8', dataElement: 'run-id', style: dataStyle})
@@ -850,6 +850,9 @@ define([
                             throw new Error('Invalid execution state ' + executionState + ' for temporal state ' + temporalState);
                     }
                     break;
+                case 'suspend':
+                    canonicalState = 'runError';
+                    break;
                 case 'completed':
                     switch (executionState) {
                         case 'success':
@@ -862,7 +865,7 @@ define([
                             console.log('INVAL EXEC STATE', jobState);
                             throw new Error('Invalid execution state ' + executionState + ' for temporal state ' + temporalState);
                     }
-                    break;
+                    break;                
             }
 
             var runState = model.getItem('runState'), runId;

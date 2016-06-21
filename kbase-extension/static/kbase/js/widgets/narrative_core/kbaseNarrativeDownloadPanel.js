@@ -44,6 +44,9 @@ define (
         	'KBaseGenomes.ContigSet': [{name: 'FASTA', external_type: 'FASTA.DNA.Assembly', transform_options: {"output_file_name": "?.fasta"}}],
         	'KBaseGenomes.Genome': [{name: "GENBANK", external_type: 'Genbank.Genome', transform_options: {}}],
 
+                'KBaseGenomeAnnotations.Assembly': [{name: 'FASTA', external_type: 'FASTA.DNA.Assembly', transform_options: {}}],
+                'KBaseGenomeAnnotations.GenomeAnnotation': [{name: "GENBANK", external_type: 'Genbank.Genome', transform_options: {}}],
+
         	'KBaseAssembly.SingleEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
         	'KBaseAssembly.PairedEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],
         	'KBaseFile.SingleEndLibrary': [{name: "FASTA/FASTQ", external_type: 'SequenceReads', transform_options: {}}],

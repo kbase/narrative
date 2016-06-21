@@ -792,7 +792,7 @@ define (
                     metadataText += '<tr><th>' + key + '</th><td>' + metadata[key] + '</td></tr>';
                 }
             }
-            if (type === 'Genome') {
+            if (type === 'Genome' || type === 'GenomeAnnotation') {
                 if (metadata.hasOwnProperty('Name')) {
                     $type.text(type + ': ' + metadata['Name']);
                 }

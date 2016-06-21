@@ -19,8 +19,8 @@ define(['jquery',
           ws_id: null,
           ws_name: null,
           token: null,
-          condition_1: null,
-          condition_2: null,
+          sample1: null,
+          sample2: null,
           width: 800,
           wsUrl: window.kbconfig.urls.workspace,
           loading_image: window.kbconfig.loading_gif,
@@ -36,8 +36,8 @@ define(['jquery',
               this._super(options);
               this.ws_id = options.volcano_plot_object;
               this.ws_name = options.workspace;
-              this.condition_1 = options.condition_1;
-              this.condition_2 = options.condition_2;
+              this.sample1 = options.sample1;
+              this.sample2 = options.sample2;
               return this;
           },
           //tabData is used to create tabs later on in the output widget
@@ -66,8 +66,8 @@ define(['jquery',
                 text = text[0].data;
                 var tabPane = $('<div id="' + pref + 'tab-content">');
                 container.append(tabPane);
-              condition_1 = 8083
-              condition_2 = 8085
+              sample1 = self.sample1 
+              sample2 = self.sample2
 
 
     var overviewTable = $('#' + pref + 'overview-table');
@@ -75,7 +75,7 @@ define(['jquery',
               for (i=0; i < text.condition_pairs.length; i++){
                  c1 = text.condition_pairs[i].condition_1
                  c2 = text.condition_pairs[i].condition_2
-                 if (c1==condition_1 && c2==condition_2 || c1==condition_2 && c2==condition_1){
+                 if (c1==sample1 && c2==sample2 || c1==sample2 && c2==sample1){
                      counter=i
                  }
               }

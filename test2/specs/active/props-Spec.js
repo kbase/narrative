@@ -86,6 +86,20 @@ define([
             props.setItem('color', 'red');
         });
     });
-    
+    it('Copy a property -- it unaffected by changes to the original', function () {
+        var props = Props.make({
+            data: {
+                prop1: {
+                    propA: 42
+                }
+            }
+        }),
+            propCopy = props.copyItem('prop1');
+            
+        props.setItem('prop1.propA', 53);
+        
+        expect(propCopy.propA).toEqual(42);
+        expect(props.getItem('prop1.propA')).toEqual(53);
+    });
     
 });

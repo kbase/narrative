@@ -309,7 +309,7 @@ class AppManager(object):
         JobManager().register_new_job(new_job)
         # jobmanager.get_manager().register_new_job(new_job)
         ## EAP temporarily disabled return new_job
-        return ''
+        return
 
     def _check_parameter(self, param, value, workspace):
         """

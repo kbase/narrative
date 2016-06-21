@@ -66,7 +66,8 @@ HOME=/tmp
 console "Installing nbextensions"
 cp -r nbextensions kbase-extension/static
 cd kbase-extension/static/nbextensions
+sh install.sh
 
-jupyter nbextension install $(pwd)/methodCell --symlink --sys-prefix
-jupyter nbextension enable methodCell/main --sys-prefix
+# jupyter nbextension install $(pwd)/methodCell --symlink --sys-prefix
+# jupyter nbextension enable methodCell/main --sys-prefix
 console "Done installing nbextension"

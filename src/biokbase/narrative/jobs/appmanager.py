@@ -281,18 +281,18 @@ class AppManager(object):
         #     int wsid;
         # } RunJobParams;
 
-        job_meta = dict()
+        job_meta = {'tag': tag}
         if cell_id is not None:
-            meta['cell_id'] = cell_id
+            job_meta['cell_id'] = cell_id
         if run_id is not None:
-            meta['run_id'] = run_id
+            job_meta['run_id'] = run_id
 
         job_runner_inputs = {
             'method' : app_id_dot,
             'service_ver' : service_ver,
             'params' : [input_vals],
             'app_id' : app_id,
-            'wsid': ws_id
+            'wsid': ws_id,
             'meta': job_meta
         }
         if len(ws_input_refs) > 0:
@@ -335,9 +335,10 @@ class AppManager(object):
         # new_job = Job(app_state['job_id'], app_id, params, tag=tag, app_version=service_ver, cell_id=cell_id)
         new_job = Job(job_id, app_id, [params], tag=tag, app_version=service_ver, cell_id=cell_id)
         JobManager().register_new_job(new_job)
-        # jobmanager.get_manager().register_new_job(new_job)
-        ## EAP temporarily disabled return new_job
-        return ''
+        if cell_id is not None:
+            return
+        else:
+            return new_job
 
     def _check_parameter(self, param, value, workspace):
         """

@@ -1,6 +1,7 @@
 from biokbase.workspace.client import Workspace
 from biokbase.NarrativeJobService.Client import NarrativeJobService
 from biokbase.narrative_method_store.client import NarrativeMethodStore
+from biokbase.userandjobstate.client import UserAndJobState
 
 from biokbase.narrative.common.url_config import URLS
 __clients = dict()
@@ -19,6 +20,8 @@ def __init_client(client_name):
         c = NarrativeJobService(URLS.job_service)
     elif client_name == 'narrative_method_store':
         c = NarrativeMethodStore(URLS.narrative_method_store)
+    elif client_name == 'user_and_job_state':
+        c = UserAndJobState(URLS.user_and_job_state)
 
     else:
         raise ValueError('Unknown client name "%s"' % client_name)

@@ -8,7 +8,7 @@ import re
 import biokbase.narrative.clients as clients
 
 app_version_tags = ['release', 'beta', 'dev']
-_ws_clients = clients.get('workspace')
+_ws_client = clients.get('workspace')
 
 def check_tag(tag, raise_exception=False):
     """

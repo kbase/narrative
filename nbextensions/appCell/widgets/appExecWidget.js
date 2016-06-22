@@ -26,7 +26,7 @@ define([
         var api,
             runtime = Runtime.make(),
             bus = runtime.bus().makeChannelBus(null, 'Bus for exec widget'),
-            parentBus = config.bus,
+            cellBus = config.bus,
             container,
             listeners = [],
             model,
@@ -54,7 +54,7 @@ define([
                         });
                     },
                     onClose: function (arg) {
-                        widgets.jobLog.bus.emit('stop');
+                        widgets.logViewer.bus.emit('stop');
                         delete widgets.jobLog;
                         arg.node.innerHTML = 'done';
                     }
@@ -74,7 +74,7 @@ define([
         // Sugar
 
         function on(event, handler) {
-            listeners.push(parentBus.on(event, handler));
+            listeners.push(cellBus.on(event, handler));
         }
 
 
@@ -1113,6 +1113,8 @@ define([
         // LIFECYCLE API
 
         function setup() {
+            var ev;
+        
             togglesDb = {};
             toggles.forEach(function (toggle) {
                 togglesDb[toggle.name] = toggle;
@@ -1128,44 +1130,56 @@ define([
                 // show toggled area initial state.
                 showToggleElement(toggle.name);
             });
-            parentBus.on('job-state', function (message) {
-                console.log('EXEC got it!', message);
-                processNewJobState(message.jobState);
-            });
-            // not sure if this is the wisest thing to do...
-            parentBus.on('job-state-updated', function (message) {
-                model.setItem('jobStateLastUpdatedTime', new Date().getTime());
-            });
-            parentBus.on('launch-event', function (message) {
-                processNewLaunchEvent(message);
-            });
+            
+            // INTERNAL EVENTS
+                        
             bus.on('show-job-report', function (message) {
                 getJobReport(message.reportRef)
                     .then(function (jobReport) {
-                        console.log('JOB REPORT', jobReport);
+                        // console.log('JOB REPORT', jobReport);
                         model.setItem('jobReport', jobReport);
                         showJobReport();
                     });
             });
-//            parentBus.listen({
-//                key: {
-//                    type: 'job-logs'
-//                },
-//                handle: function (message) {
-//                    console.log('JOB LOGS', message);
-//                }
-//            });
-//            
-//            parentBus.listen({
-//                key: {
-//                    type: 'job-log-deleted'
-//                },
-//                handle: function (message) {
-//                    console.log('JOB LOG DELETED');
-//                }
-//            });
+            
 
-            runtime.bus().on('clock-tick', function () {
+
+            // CELL EVENTS
+            /*
+             * These events are trapped by the app cell, and then issued on the 
+             * cell bus. This abstracts the "cell" from subwidgets, so that
+             * subwidgets are just aware that an external bus, passed in,
+             * will potentially have these events.
+             * 
+             * Alternatively, we could pass these events through the exec
+             * bus itself...
+             */
+            ev = cellBus.on('run-state', function (message) {
+                processNewLaunchEvent(message);
+            });
+            listeners.push(ev);
+
+            
+            /*
+             * NB: The app cell listens for job updates, and issues job state
+             * changes on type: job-state.
+             * This was done, rather thanhave 
+             */
+            ev = cellBus.on('job-state', function (message) {
+                // console.log('EXEC got it!', message);
+                processNewJobState(message.jobState);
+            });
+            listeners.push(ev);
+            // not sure if this is the wisest thing to do...
+            
+            ev = cellBus.on('job-state-updated', function (message) {
+                model.setItem('jobStateLastUpdatedTime', new Date().getTime());
+            });
+            listeners.push(ev);
+
+            // GLOBAL EVENTS
+            
+            ev = runtime.bus().on('clock-tick', function () {
                 // only update the ui on clock tick if we are currently running
                 // a job. TODO: the clock should be disconnected.
                 // console.log('tick');
@@ -1175,13 +1189,11 @@ define([
                 }
                 renderRunState();
             });
-
-            // Now only start listening on the job channel when there is a job id!
-
+            listeners.push(ev);
         }
 
         function start() {
-            on('run', function (message) {
+            bus.on('run', function (message) {
                 container = message.node;
                 dom = Dom.make({
                     node: container,
@@ -1199,13 +1211,19 @@ define([
         function stop() {
             listeners.forEach(function (listener) {
                 // TODO: make this work
-                // parentBus.remove(listener);
+                runtime.bus().removeListener(listener);
             });
+            listeners = [];
+        }
+        
+        function getBus() {
+            return bus;
         }
 
         api = {
             start: start,
-            stop: stop
+            stop: stop,
+            bus: getBus
         };
 
         // MAIN

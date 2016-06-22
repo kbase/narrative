@@ -391,15 +391,15 @@ define([
         return Promise.try(function () {
             // Only handle kbase cells.
             if (cell.cell_type !== 'code') {
-                console.log('not a code cell!');
+                // console.log('not a code cell!');
                 return;
             }
             if (!cell.metadata.kbase) {
-                console.log('not a kbase code cell');
+                // console.log('not a kbase code cell');
                 return;
             }
             if (cell.metadata.kbase.type !== 'app') {
-                console.log('not a kbase app cell, ignoring');
+                // console.log('not a kbase app cell, ignoring');
                 return;
             }
 
@@ -502,7 +502,7 @@ define([
      * The work is carried out asynchronously through an orphan promise.
      */
     function load_ipython_extension() {
-        console.log('Loading KBase App Cell Extension...');
+        // console.log('Loading KBase App Cell Extension...');
 
         // Listen for interesting narrative jquery events...
         // dataUpdated.Narrative is emitted by the data sidebar list
@@ -515,7 +515,7 @@ define([
 //                    runtime.bus().send({
 //                        type: 'workspace-changed'
 //                    });
-            console.log('sending workspace changed event');
+            // console.log('sending workspace changed event');
             // runtime.bus().send('workspace-changed');
             runtime.bus().emit('workspace-changed');
             // widgets.paramsInputWidget.bus.emit('workspace-changed');
@@ -552,7 +552,7 @@ define([
                     if (data.kbase && data.kbase.type === 'app') {
                         upgradeToAppCell(data.cell, data.kbase.appSpec, data.kbase.appTag)
                             .then(function () {
-                                console.log('Cell created?');
+                                // console.log('Cell created?');
                             })
                             .catch(function (err) {
                                 console.error('ERROR creating cell', err);

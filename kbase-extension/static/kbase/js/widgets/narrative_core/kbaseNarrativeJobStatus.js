@@ -225,8 +225,8 @@ define([
         },
 
         handleJobStatus: function (message) {
-            console.log('HANDLE JOB STATUS', message);
-            this.state = message.job.state;
+            // console.log('HANDLE JOB STATUS', message);
+            this.state = message.jobState;
             this.setCellState();
             this.updateView();
         },

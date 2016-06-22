@@ -112,7 +112,9 @@ class Job(object):
         Returns a <something> stating its status. (string? enum type? different traitlet?)
         """
         try:
-            return self._njs.check_job(self.job_id)
+            state = self._njs.check_job(self.job_id)
+            state['cell_id'] = self.cell_id
+            return state
         except Exception, e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
 
@@ -142,7 +144,7 @@ class Job(object):
             # Yes, sometimes silly people put the string 'null' in their spec.
             if (output_widget == 'null'):
                 output_widget = 'kbaseDefaultNarrativeOutput'
-            
+
             return WidgetManager().show_output_widget(output_widget, tag=self.tag, **widget_params)
 
         else:

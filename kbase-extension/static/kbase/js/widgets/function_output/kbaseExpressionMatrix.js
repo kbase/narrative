@@ -36,6 +36,8 @@ define (
 
 			// Service URL: should be in window.kbconfig.urls.
 			// featureValueURL: 'http://localhost:8889',
+			useDynamicService: true,
+			featureValueSrvVersion: 'dev',
 			featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
 
 			loadingImage: "static/kbase/images/ajax-loader.gif"
@@ -46,6 +48,7 @@ define (
 
 		// KBaseFeatureValue client
 		featureValueClient: null,
+		genericClient: null,
 
 		// Matrix data to be visualized
 		matrixStat: null,
@@ -73,8 +76,14 @@ define (
 				return this;
 			}
 
-           // Build a client
-            this.featureValueClient = new KBaseFeatureValues(this.options.featureValueURL, auth);           
+            // Build a client
+			if (this.options.useDynamicService) {
+			    var serviceWizardURL = this.options.featureValueURL.replace("feature_values/jsonrpc", 
+			            "service_wizard");
+			    this.genericClient = new GenericClient(serviceWizardURL, auth);
+			} else {
+			    this.featureValueClient = new KBaseFeatureValues(this.options.featureValueURL, auth);           
+			}
 		   
 			// Let's go...
 			this.loadAndRender();           
@@ -92,17 +101,29 @@ define (
 
 			self.loading(true);
 			var expressionMatrixRef = this.options.workspaceID + "/" + this.options.expressionMatrixID;
-			self.featureValueClient.get_matrix_stat({input_data: expressionMatrixRef},
-				function(data){
-					// console.log(data);
-					self.matrixStat = data;
-					self.render();
-					self.loading(false);
-				},
-				function(error){
-					self.clientError(error);
-				}
-			);
+			if (self.options.useDynamicService) {
+			    self.genericClient.sync_call("KBaseFeatureValues.get_matrix_stat", 
+			            [{input_data: expressionMatrixRef}], function(data){
+                    // console.log(data);
+                    self.matrixStat = data[0];
+                    self.render();
+                    self.loading(false);
+                },
+                function(error){
+                    self.clientError(error);
+                }, self.options.featureValueSrvVersion);
+			} else {
+			    self.featureValueClient.get_matrix_stat({input_data: expressionMatrixRef},
+			            function(data){
+			        // console.log(data);
+			        self.matrixStat = data;
+			        self.render();
+			        self.loading(false);
+			    },
+			    function(error){
+			        self.clientError(error);
+			    });
+			}
 		},
 
 		render: function(){

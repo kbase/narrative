@@ -23,6 +23,7 @@ from IPython.display import HTML
 from jinja2 import Template
 import dateutil.parser
 import datetime
+from app_util import system_variable
 
 class JobManager(object):
     """
@@ -45,6 +46,43 @@ class JobManager(object):
             JobManager.__instance = object.__new__(cls)
         return JobManager.__instance
 
+    def initialize_jobs2(self):
+        """
+        Initializes this JobManager.
+        This is expected to be run by a running Narrative, and naturally linked to a workspace.
+        So it does the following steps.
+        1. app_util.system_variable('workspace_id')
+        2. get list of jobs with that ws id from UJS (also gets tag, cell_id, run_id)
+        3. initialize the Job objects by running NJS.get_job_params on each of those (also gets app_id)
+        4. start the status lookup loop.
+        """
+        ws_id = system_variable('workspace_id')
+        try:
+            nar_jobs = clients.get('user_and_job_state').list_jobs2({
+                'authstrat': 'kbaseworkspace',
+                'authparams': [str(ws_id)]
+            })
+        except Exception, e:
+            kblogging.log_event(self._log, 'init_error', {'err': str(e)})
+            self._send_comm_message('job_init_err', {'msg': 'Unable to get jobs list!', 'err': str(e)})
+            raise
+
+        for info in nar_jobs:
+            job_id = info[0]
+            job_meta = info[9]
+            job_info = clients.get('job_service').get_job_params(job_id)[0]
+            try:
+                self._running_jobs[job_id] = {
+                    'refresh': True,
+                    'job': Job.from_state(job_id, job_info, app_id=job_info.get('app_id'), tag=job_meta.get('tag', 'release'), cell_id=job_meta.get('cell_id', None))
+                }
+            except Exception, e:
+                kblogging.log_event(self._log, 'init_error', {'err': str(e)})
+                self._send_comm_message('job_init_lookup_err', {'msg': 'Unable to get job info!', 'job_id': job_id, 'err': str(e)})
+        # only keep one loop at a time in cause this gets called again!
+        if self._lookup_timer is not None:
+            self._lookup_timer.cancel()
+        self._lookup_job_status_loop()
 
     def initialize_jobs(self, job_tuples):
         """
@@ -199,8 +237,7 @@ class JobManager(object):
                     'job_id': job_id,
                     'message': str(e)
                 })
-        if len(status_set) > 0:
-            self._send_comm_message('job_status', status_set)
+        self._send_comm_message('job_status', status_set)
 
     def _lookup_job_status_loop(self):
         """
@@ -231,14 +268,8 @@ class JobManager(object):
         """
         self._running_jobs[job.job_id] = {'job': job, 'refresh': True}
         # push it forward! create a new_job message.
-        self._send_comm_message('new_job', {
-            'id': job.job_id,
-            'app_id': job.app_id,
-            'inputs': job.inputs,
-            'version': job.app_version,
-            'tag': job.tag,
-            'cell_id': job.cell_id
-        })
+        self._lookup_job_status(job.job_id)
+        self._send_comm_message('new_job', {})
 
     def get_job(self, job_id):
         """
@@ -373,7 +404,7 @@ class JobManager(object):
         job.cancel()
         del self._running_jobs[job_id]
         self._send_comm_message('job_deleted', {'job_id': job_id})
-        
+
     def remove_job(self, job_id):
         """
         If the job_id doesn't exist, raises a ValueError.

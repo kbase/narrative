@@ -39,6 +39,7 @@ require.config({
         kbapi                                   : 'kbase/js/widgets/kbapi',
         'kbase-client-api'                      : 'kbase/js/api/kbase-client-api',
         'kbaseFeatureValues-client-api'         : 'kbase/js/api/KBaseFeatureValues',
+        'kbase-generic-client-api'              : 'kbase/js/api/GenericClient',
         'catalog-client-api'                    : 'kbase/js/api/Catalog',
         'njs-wrapper-client-api'                : 'kbase/js/api/NarrativeJobServiceWrapper',
         kbaseNarrativeJobStatus                 : 'kbase/js/widgets/narrative_core/kbaseNarrativeJobStatus',
@@ -53,7 +54,7 @@ require.config({
         narrativeDataWidgetIFrame: 'kbase/js/widgetApi/narrativeDataWidgetIFrame',
         widgetService2: 'kbase/js/widgetApi/widgetService2',
 
-        
+
         common: 'kbase/js/common/',
 
 
@@ -244,7 +245,9 @@ require.config({
         'kbasePiechart'                         : 'kbase/js/ui-common/src/widgets/vis/kbasePiechart',
         'kbaseTreechart'                        : 'kbase/js/ui-common/src/widgets/vis/kbaseTreechart',
         'kbaseRNASeqPie'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqPie',
+        'kbaseRNASeqPieNew'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqPieNew',
         'kbaseRNASeqAnalysis'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqAnalysis',
+        'kbaseRNASeqAnalysisNew'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqAnalysisNew',
         'kbaseRNASeqSample'                        : 'kbase/js/ui-common/src/widgets/kbaseRNASeqSample',
         'kbaseButtonControls'                        : 'kbase/js/ui-common/src/widgets/kbaseButtonControls',
         'kbaseSearchControls'                        : 'kbase/js/ui-common/src/widgets/kbaseSearchControls',
@@ -253,11 +256,12 @@ require.config({
         'kbaseFigureObjectHeatmap'                        : 'kbase/js/ui-common/src/widgets/kbaseFigureObjectHeatmap',
         'kbaseCummerbundPlot'                        : 'kbase/js/ui-common/src/widgets/kbaseCummerbundPlot',
         'kbaseExpressionSampleTable'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTable',
+        'kbaseExpressionSampleTableNew'                        : 'kbase/js/ui-common/src/widgets/kbaseExpressionSampleTableNew',
         'kbasePValueHistogram'                        : 'kbase/js/ui-common/src/widgets/kbasePValueHistogram',
         'kbasePMIBarchart'                        : 'kbase/js/ui-common/src/widgets/vis/plants/kbasePMIBarchart',
         'kbaseVenndiagram'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseVenndiagram',
-        'kbaseOntologyDictionary'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseOntologyDictionary',
-        'kbaseOntologyTranslation'                      : 'kbase/js/ui-common/src/widgets/vis/kbaseOntologyTranslation',
+        'kbaseOntologyDictionary'                      : 'kbase/js/ui-common/src/widgets/kbaseOntologyDictionary',
+        'kbaseOntologyTranslation'                      : 'kbase/js/ui-common/src/widgets/kbaseOntologyTranslation',
         'kbaseBlastOutput'                      : 'kbase/js/widgets/function_output/kbaseBlastOutput',
 
         'kbaseRegisterRepoState'                : 'kbase/js/widgets/function_output/kbaseRegisterRepoState',
@@ -395,7 +399,7 @@ require.config({
 
 
 function addCdnModules() {
-    var baseUrl = 'http://cdn.kbase.us/cdn',
+    var baseUrl = 'https://narrative-dev.kbase.us/cdn',
         modules = {
             kb_common: 'kbase-common-js/1.7.0/',
             kb_service: 'kbase-service-clients-js/1.4.0/',
@@ -408,14 +412,14 @@ function addCdnModules() {
             'google-code-prettify': 'google-code-prettify/1.2.0/'
         },
         paths = {};
-    
+
     Object.keys(modules).forEach(function (key) {
         paths[key] = [baseUrl, modules[key]].join('/');
     });
-    
+
     require.config({
         paths: paths
-    });    
+    });
 }
 addCdnModules();
 

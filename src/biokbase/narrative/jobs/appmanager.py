@@ -202,6 +202,10 @@ class AppManager(object):
         # Now, validate parameter values.
         # Should also check if input (NOT OUTPUT) object variables are present in the current workspace
         workspace = system_variable('workspace')
+        ws_id = system_variable('workspace_id')
+        if workspace is None or ws_id is None:
+            raise ValueError('Unable to retrive current Narrative workspace information! workspace={}, workspace_id={}'.format(workspace, ws_id))
+
         param_errors = list()
         # If they're workspace objects, track their refs in a list we'll pass to run_job as
         # a separate param to track provenance.
@@ -258,15 +262,38 @@ class AppManager(object):
         service_ver = spec['behavior'].get('kb_service_version', None)
         #if (service_ver == None):
         #    raise ValueError('Invalid method - service version (behavior.kb_service_version) not found in spec')
-        
+
         service_url = spec['behavior']['kb_service_url']
 
         app_id_dot = service_name + '.' + service_method
         # app_id_dot = app_id.replace('/', '.')
+
+
+        # typedef structure {
+        #     string method;
+        #     list<UnspecifiedObject> params;
+        #     string service_ver;
+        #     RpcContext rpc_context;
+        #     string remote_url;
+        #     list<wsref> source_ws_objects;
+        #     string app_id;
+        #     mapping<string, string> meta;
+        #     int wsid;
+        # } RunJobParams;
+
+        job_meta = {'tag': tag}
+        if cell_id is not None:
+            job_meta['cell_id'] = cell_id
+        if run_id is not None:
+            job_meta['run_id'] = run_id
+
         job_runner_inputs = {
             'method' : app_id_dot,
             'service_ver' : service_ver,
-            'params' : [input_vals]
+            'params' : [input_vals],
+            'app_id' : app_id,
+            'wsid': ws_id,
+            'meta': job_meta
         }
         if len(ws_input_refs) > 0:
             job_runner_inputs['source_ws_objects'] = ws_input_refs
@@ -275,7 +302,8 @@ class AppManager(object):
             'app_id': app_id,
             'tag': tag,
             'version': service_ver,
-            'username': system_variable('user_id')
+            'username': system_variable('user_id'),
+            'wsid': ws_id
         }
         self._log.setLevel(logging.INFO)
         kblogging.log_event(self._log, "run_app", log_info)
@@ -292,7 +320,7 @@ class AppManager(object):
         except Exception, e:
             log_info.update({'err': str(e)})
             self._log.setLevel(logging.ERROR)
-            kblogging.log_event(self._log, "run_app", log_info)
+            kblogging.log_event(self._log, "run_app_error", log_info)
             raise
 
         self._send_comm_message('run_status', {
@@ -307,9 +335,10 @@ class AppManager(object):
         # new_job = Job(app_state['job_id'], app_id, params, tag=tag, app_version=service_ver, cell_id=cell_id)
         new_job = Job(job_id, app_id, [params], tag=tag, app_version=service_ver, cell_id=cell_id)
         JobManager().register_new_job(new_job)
-        # jobmanager.get_manager().register_new_job(new_job)
-        ## EAP temporarily disabled return new_job
-        return
+        if cell_id is not None:
+            return
+        else:
+            return new_job
 
     def _check_parameter(self, param, value, workspace):
         """

@@ -124,7 +124,7 @@ def update_method_cell(cell):
         ts = datetime.datetime.utcfromtimestamp(ts/1000.0).strftime('%a, %d %b %Y %H:%M:%S GMT')
 
     new_meta = {
-        'type': 'method',
+        'type': 'app',
         'attributes': {
             'title': method_info.get('name', 'Unnamed App'),
             'id': unicode(uuid.uuid4()),
@@ -132,8 +132,8 @@ def update_method_cell(cell):
             'created': ts,          # default to last saved time
             'lastLoaded': ts,
         },
-        'methodCell': {
-            'method': {
+        'appCell': {
+            'app': {
                 'id': method_info.get('id', 'unknown'),
                 'gitCommitHash': method_info.get('git_commit_hash', None),
                 'version': method_info.get('ver', None),

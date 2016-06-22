@@ -123,7 +123,6 @@ define([
 
         var kwargs = [];
         // now the parameters...
-        console.log('PYTHONIFY', params);
         Object.keys(params).forEach(function (pName) {
             // options - either atomic value or list. No hashes, right?
             var pVal = params[pName],

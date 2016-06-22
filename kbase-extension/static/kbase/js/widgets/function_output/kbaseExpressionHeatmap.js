@@ -218,10 +218,10 @@
                 tableData.push(
                     {
                         'id': desc.id,
-                        'min': stat.mins[ci] === null? ' ' : stat.mins[ci].toFixed(2),
-                        'max': stat.maxs[ci] === null? ' ' : stat.maxs[ci].toFixed(2),
-                        'avg': stat.avgs[ci] === null? ' ' : stat.avgs[ci].toFixed(2),
-                        'std': stat.stds[ci] === null? ' ' : stat.stds[ci].toFixed(2),
+                        'min': stat.mins[ci] === null? null : stat.mins[ci].toFixed(2),
+                        'max': stat.maxs[ci] === null? null : stat.maxs[ci].toFixed(2),
+                        'avg': stat.avgs[ci] === null? null : stat.avgs[ci].toFixed(2),
+                        'std': stat.stds[ci] === null? null : stat.stds[ci].toFixed(2),
                         'missing_values': stat.missing_values[ci],
                         'values': columnValues
                     }

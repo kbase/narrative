@@ -248,21 +248,30 @@ define([
                         info = {},
                         content = msg.content.data.content;
                     for (var jobId in content) {
-                        status[jobId] = content[jobId].state;
-                        info[jobId] = {
-                            spec: content[jobId].spec
-                        };
-                        if (status[jobId].finished === 1) {
-                            this.sendCommMessage(this.STOP_JOB_UPDATE, jobId);
-                        }
+                        
+                        this.jobStates[jobId] = content[jobId].state;
+                        
+                        // The job state includes both the job state info and the
+                        // app spec. Not sure why...
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
-                            jobInfo: info[jobId],
-                            job: content[jobId],
-                            jobState: this.jobStates[jobId]
+                            jobState: content[jobId].state
                         });
                     }
-                    this.populateJobsPanel(content); //status, info, content);
+                    var jobsToDelete = [];
+                    Object.keys(this.jobStates).forEach(function (jobId) {
+                        var jobState = this.jobStates[jobId];
+                        if (!content[jobState.job_id]) {
+                            this.sendJobMessage('job-deleted', jobState.job_id, {
+                                jobId: jobState.job_id
+                            });
+                            jobsToDelete.push(jobState.job_id);
+                        }
+                    }.bind(this));
+                    jobsToDelete.forEach(function (jobId) {
+                        delete this.jobStates[jobId];
+                    }.bind(this));
+                    this.populateJobsPanel(); //status, info, content);
                     break;
                 case 'run_status':
                     // Send job status notifications on the default channel,
@@ -373,7 +382,7 @@ define([
                 if (this.comm === null) {
                     console.info('Jobs Panel: setting up a new channel - ' + this.COMM_NAME);
                     Jupyter.notebook.kernel.comm_manager.register_target(this.COMM_NAME, function (comm, msg) {
-                        console.info('Jobs Panel: new channel set up - ', comm)
+                        console.info('Jobs Panel: new channel set up - ', comm);
                         this.comm = comm;
                         comm.on_msg(this.handleCommMessages.bind(this));
                     }.bind(this));
@@ -535,24 +544,24 @@ define([
          * case where there's more than, say, 20 job elements at once in any given Narrative.
          * We should also expire jobs in a reasonable time, at least from the Narrative.
          */
-        populateJobsPanel: function (fetchedJobs) {
+        populateJobsPanel: function () {
             // 1. Check if we have any existing jobs, or drop a message.
-            if (Object.keys(fetchedJobs).length + Object.keys(this.jobWidgets).length === 0) {
+            if (Object.keys(this.jobStates).length + Object.keys(this.jobWidgets).length === 0) {
                 this.$jobsList.empty().append($('<div class="kb-data-loading">').append('No jobs exist for this Narrative!'));
             }
             // 2. Do update with given jobs.
             else {
                 // If there are any jobs that aren't part of sortedJobs, add them in - means they're new.
                 // This will also happen on initialization.
-                for (var jobId in fetchedJobs) {
-                    if (fetchedJobs.hasOwnProperty(jobId) && !this.jobStates[jobId]) {
-                        this.jobStates[jobId] = fetchedJobs[jobId];
-                    }
-                }
+//                for (var jobId in fetchedJobs) {
+//                    if (fetchedJobs.hasOwnProperty(jobId) && !this.jobStates[jobId]) {
+//                        this.jobStates[jobId] = fetchedJobs[jobId];
+//                    }
+//                }
                 var sortedJobIds = Object.keys(this.jobStates);
                 sortedJobIds.sort(function (a, b) {
-                    var aTime = this.jobStates[a].state.creation_time;
-                    var bTime = this.jobStates[b].state.creation_time;
+                    var aTime = this.jobStates[a].creation_time;
+                    var bTime = this.jobStates[b].creation_time;
                     // if we have timestamps for both, compare them
                     return aTime - bTime;
                 }.bind(this));
@@ -562,17 +571,18 @@ define([
 
                     // if the id shows up in the "render me!" list:
                     // only those we fetched might still be running.
-                    if (fetchedJobs[jobId]) {
-                        this.jobStates[jobId] = fetchedJobs[jobId];
-                        if (this.jobIsIncomplete(this.jobStates[jobId].state.job_state))
+                    if (this.jobStates[jobId]) {
+                        if (this.jobIsIncomplete(this.jobStates[jobId].job_state))
                             stillRunning++;
 
-                        this.sendJobMessage('job-status', jobId, {
-                            jobId: jobId,
-                            jobInfo: fetchedJobs[jobId].spec,      //jobInfo[jobId],        // the spec
-                            job: fetchedJobs[jobId],               // jo
-                            jobState: fetchedJobs[jobId].state     //this.jobStates[jobId] // just the state
-                        });
+                          // this message is already sent in the core code which 
+                          // catches the jupyter job message.
+//                        this.sendJobMessage('job-status', jobId, {
+//                            jobId: jobId,
+//                            jobInfo: fetchedJobs[jobId].spec,      //jobInfo[jobId],        // the spec
+//                            job: fetchedJobs[jobId],               // jo
+//                            jobState: fetchedJobs[jobId].state     //this.jobStates[jobId] // just the state
+//                        });
 
                         // updating the given state first allows us to just pass the id and the status set to
                         // the renderer. If the status set doesn't exist (e.g. we didn't look it up in the
@@ -626,8 +636,8 @@ define([
 
             var status = "Unknown";
             // if (jobState && jobState.status) {
-            if (job.state && job.state.job_state) {
-                status = job.state.job_state;
+            if (job.job_state) {
+                status = job.job_state;
                 status = status.charAt(0).toUpperCase() +
                          status.substring(1);
             }
@@ -656,15 +666,13 @@ define([
             var completedTime = null;
             var runTime = null;
             var startedTime = null;
-            if (job.state) {
-                if (job.state.creation_time) {
-                    startedTime = TimeFormat.prettyTimestamp(job.state.creation_time);
-                }
-                if (job.state.finish_time) {
-                    completedTime = TimeFormat.prettyTimestamp(job.state.finish_time);
-                    if (job.state.creation_time) {
-                        runTime = TimeFormat.calcTimeDifference(new Date(job.state.exec_start_time), new Date(job.state.finish_time));
-                    }
+            if (job.creation_time) {
+                startedTime = TimeFormat.prettyTimestamp(job.creation_time);
+            }
+            if (job.finish_time) {
+                completedTime = TimeFormat.prettyTimestamp(job.finish_time);
+                if (job.creation_time) {
+                    runTime = TimeFormat.calcTimeDifference(new Date(job.exec_start_time), new Date(job.finish_time));
                 }
             }
 
@@ -707,11 +715,10 @@ define([
                 default:
                     break;
             }
-            if (job.state &&
-                job.state.position !== undefined &&
-                job.state.position !== null &&
-                job.state.position > 0) {
-                position = job.state.position;
+            if (job.position !== undefined &&
+                job.position !== null &&
+                job.position > 0) {
+                position = job.position;
             }
 
             var jobRenderObj = {
@@ -777,9 +784,9 @@ define([
                 errorText = "You do not have permission to view information about this job.";
             } else if (errorType === 'Network Error') {
                 errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
-            } else if (jobState.state.error) {
-                errorText = new Handlebars.SafeString('<div class="kb-jobs-error-modal">' + jobState.state.error.message + '</div>');
-                errorType = jobState.state.error.name;
+            } else if (jobState.error) {
+                errorText = new Handlebars.SafeString('<div class="kb-jobs-error-modal">' + jobState.error.message + '</div>');
+                errorType = jobState.name;
                 // if (jobState.state.error === 'awe_error')
                 //     errorType = 'AWE Error';
             }
@@ -788,14 +795,14 @@ define([
                 jobId: jobId,
                 errorType: errorType,
                 errorText: errorText,
-                hasTraceback: jobState.state.error.error ? true : false
+                hasTraceback: jobState.error.error ? true : false
             }));
 
-            if (jobState.state.error.error) {
+            if (jobState.error.error) {
                 new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
                     elements: [{
                         title: 'Detailed Error Information',
-                        body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.state.error.error)
+                        body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.error.error)
                     }]
                 });
             }

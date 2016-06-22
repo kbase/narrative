@@ -27,22 +27,23 @@ define([
             return container.querySelector(selector);
         }
 
-        function getButton(names) {
-            if (typeof names === 'string') {
-                names = [names];
+        function getButton(name) {
+            if (typeof name !== 'string') {
+                // names = names.split('.');
+                // TODO: support a path of elements up to the button.
+                throw new Error('Currently only a single string supported to get a button');
             }
-            var selector = names.map(function (name) {
-                return '[data-button="' + name + '"]';
-            }).join(' '),
+            var selector = '[data-button="' + name + '"]',
                 buttonNode = container.querySelector(selector);
+            
             if (!buttonNode) {
-                throw new Error('Button ' + names.join('/') + ' not found');
+                throw new Error('Button ' + name + ' not found');
             }
             return buttonNode;
         }
 
         function getNode(names) {
-            if (!(names instanceof Array)) {
+            if (typeof names === 'string') {
                 names = [names];
             }
             var selector = names.map(function (dataSelector) {
@@ -87,6 +88,22 @@ define([
         function setButtonLabel(name, label) {
             getButton(name).innerHTML = label;
         }
+        
+        // Hmm, something like this, but need to think it through more.
+//        function setButton(name, options) {            
+//            var buttonNode = getButton(name);
+//            if (options.label) {
+//                buttonNode.innerHTML = options.label;
+//            }
+//            if (options.classes) {
+//                // who no classList.empty()?
+//                options.className = null;
+//                options.classes.forEach(function (klass) {
+//                    buttonNode.classList.add(klass);
+//                });
+//            }
+//                
+//        }
 
         function ensureOriginalDisplayStyle(el) {
             if (el.getAttribute('data-original-display-style') === null) {
@@ -99,8 +116,9 @@ define([
             if (!el) {
                 return;
             }
-            ensureOriginalDisplayStyle(el);
-            el.style.display = 'none';
+            //ensureOriginalDisplayStyle(el);
+            //el.style.display = 'none';
+            el.classList.add('hidden');
         }
 
         function showElement(name) {
@@ -109,8 +127,9 @@ define([
             if (!el) {
                 return;
             }
-            original = el.getAttribute('data-original-display-style');
-            el.style.display = original;
+            //original = el.getAttribute('data-original-display-style');
+            //el.style.display = original;
+            el.classList.remove('hidden');
         }
 
         function makePanel(title, elementName) {
@@ -125,14 +144,20 @@ define([
         }
 
         function buildPanel(args) {
-            var style = {}, type = args.type || 'primary';
+            var type = args.type || 'primary',
+                classes = ['panel', 'panel-' + type];
             if (args.hidden) {
-                style.display = 'none';
+                classes.push('hidden');
+                // style.display = 'none';
             }
-            return  div({class: 'panel panel-' + type, dataElement: args.name, style: style}, [
-                div({class: 'panel-heading'}, [
-                    div({class: 'panel-title'}, args.title)
-                ]),
+            return  div({class: classes.join(' '), dataElement: args.name}, [
+                (function () { 
+                    if (args.title) {
+                        return div({class: 'panel-heading'}, [
+                            div({class: 'panel-title'}, args.title)
+                        ]);
+                    }                    
+                }()),
                 div({class: 'panel-body'}, [
                     args.body
                 ])
@@ -163,12 +188,14 @@ define([
 
         function buildCollapsiblePanel(args) {
             var collapseId = html.genId(),
-                style = {}, type = args.type || 'primary';
+                type = args.type || 'primary',
+                classes = ['panel', 'panel-' + type];
             if (args.hidden) {
-                style.display = 'none';
+                classes.push('hidden');
+                // style.display = 'none';
             }
 
-            return div({class: 'panel panel-' + type, dataElement: args.name, style: style}, [
+            return div({class: classes.join(' '), dataElement: args.name}, [
                 div({class: 'panel-heading'}, [
                     div({class: 'panel-title'}, span({
                         class: 'collapsed',
@@ -207,6 +234,7 @@ define([
         return {
             getElement: getElement,
             getButton: getButton,
+            // setButton: setButton,
             getNode: getNode,
             makeButton: makeButton,
             enableButton: enableButton,

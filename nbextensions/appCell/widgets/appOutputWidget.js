@@ -115,7 +115,13 @@ define([
                     type: 'output-cell-removed'
                 }
             });
-
+            bus.bus().send({
+                jobId: output.jobId
+            }, {
+                key: {
+                    type: 'request-job-deletion'
+                }
+            });
 
         }
 
@@ -144,7 +150,7 @@ define([
                         // console.log('JOB MATCH?', output.jobId, model.currentJobState);
                         if (model.currentJobState && output.jobId === model.currentJobState.job_id) {
                             rowStyle.border = '2px blue solid';
-                            message = 'This is the most recently run job for this app.'
+                            message = 'This is the most recent output for this app.'
                         }
                         return div({class: 'row', style: rowStyle}, [
                             div({class: 'col-md-8'}, [
@@ -224,10 +230,14 @@ define([
                 });
             });
         }
+        
+        function getBus() {
+            return bus;
+        }
 
         var api = Object.freeze({
             start: start,
-            bus: bus
+            bus: getBus
         });
         return api;
     }

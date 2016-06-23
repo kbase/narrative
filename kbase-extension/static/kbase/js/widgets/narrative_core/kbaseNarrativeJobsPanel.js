@@ -538,7 +538,7 @@ define([
         populateJobsPanel: function (fetchedJobs) {
             // 1. Check if we have any existing jobs, or drop a message.
             if (Object.keys(fetchedJobs).length + Object.keys(this.jobWidgets).length === 0) {
-                this.$jobsList.empty().append($('<div class="kb-data-loading">').append('No jobs exist for this Narrative!'));
+                // this.$jobsList.empty().append($('<div class="kb-data-loading">').append('No jobs exist for this Narrative!'));
             }
             // 2. Do update with given jobs.
             else {

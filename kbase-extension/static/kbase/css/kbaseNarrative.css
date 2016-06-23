@@ -2060,15 +2060,6 @@ div[class="tooltip-inner"] {
 
 #kb-ws .dataTables_filter { display: none; }
 
-.sorting { background: url('../images/sort_both.png') no-repeat center right; }
-.sorting_asc { background: url('../images/sort_asc.png') no-repeat center right; }
-.sorting_desc { background: url('../images/sort_desc.png') no-repeat center right; }
-
-.sorting_asc_disabled { background: url('../images/sort_asc_disabled.png') no-repeat center right; }
-.sorting_desc_disabled { background: url('../images/sort_desc_disabled.png') no-repeat center right; }
-
-/* end: data table */
-
 
 
 /* default blue button in the new style */

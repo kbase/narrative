@@ -19,6 +19,6 @@
     "handlebars": "^4.0.5",
     "bootstrap-slider": "*",
     "jquery.tipsy": "*",
-    "require-css": "^0.1.8"
+    "requirejs-plugins": "^1.0.3"
   }
 }

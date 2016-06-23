@@ -36,7 +36,7 @@ define (
 
 			// Service URL: should be in window.kbconfig.urls.
 			// featureValueURL: 'http://localhost:8889',
-			useDynamicService: true,
+			useDynamicService: false,
 			featureValueSrvVersion: 'dev',
 			featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
 
@@ -246,10 +246,10 @@ define (
 						'index': desc.index,
 						'id': desc.id,
 						'name': desc.name,
-						'min': stat.min ? stat.min.toFixed(2) : ' ',
-						'max': stat.max ? stat.max.toFixed(2) : ' ',
-						'avg': stat.avg ? stat.avg.toFixed(2) : ' ',
-						'std': stat.std ? stat.std.toFixed(2) : ' ',
+						'min': stat.min ? stat.min.toFixed(2) : null,
+						'max': stat.max ? stat.max.toFixed(2) : null,
+						'avg': stat.avg ? stat.avg.toFixed(2) : null,
+						'std': stat.std ? stat.std.toFixed(2) : null,
 						'missing_values': stat.missing_values ? 'Yes' : 'No'
 					}
 				);
@@ -272,10 +272,10 @@ define (
 						'id': desc.id,
 						'name': desc.name,
 						'function' : gene_function ? gene_function : ' ',
-						'min': stat.min ? stat.min.toFixed(2) : ' ',
-						'max': stat.max ? stat.max.toFixed(2) : ' ',
-						'avg': stat.avg ? stat.avg.toFixed(2) : ' ',
-						'std': stat.std ? stat.std.toFixed(2) : ' ',
+						'min': stat.min ? stat.min.toFixed(2) : null,
+						'max': stat.max ? stat.max.toFixed(2) : null,
+						'avg': stat.avg ? stat.avg.toFixed(2) : null,
+						'std': stat.std ? stat.std.toFixed(2) : null,
 						'missing_values': stat.missing_values ? 'Yes' : 'No'
 					}
 				);

@@ -53,8 +53,8 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['toggle-developer-options', 'remove'],
-                        disabled: ['run', 'cancel', 're-run']
+                        enabled: ['remove'],
+                        disabled: ['run-app', 'cancel', 're-run-app']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -81,8 +81,8 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['run', 'toggle-developer-options', 'remove'],
-                        disabled: ['cancel', 're-run']
+                        enabled: ['run-app', 'remove'],
+                        disabled: ['cancel', 're-run-app']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -138,8 +138,8 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['cancel', 'toggle-developer-options', 'remove'],
-                        disabled: ['run', 're-run']
+                        enabled: ['cancel', 'remove'],
+                        disabled: ['run-app', 're-run-app']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group'],
@@ -207,8 +207,8 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['cancel', 'toggle-developer-options', 'remove'],
-                        disabled: ['run', 're-run']
+                        enabled: ['cancel', 'remove'],
+                        disabled: ['run-app', 're-run-app']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group'],
@@ -245,8 +245,8 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['cancel', 'toggle-developer-options', 'remove'],
-                        disabled: ['run', 're-run']
+                        enabled: ['cancel', 'remove'],
+                        disabled: ['run-app', 're-run-app']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group'],
@@ -278,8 +278,8 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run', 'toggle-developer-options', 'remove'],
-                        disabled: ['run', 'cancel']
+                        enabled: ['re-run-app', 'remove'],
+                        disabled: ['run-app', 'cancel']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -313,12 +313,12 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run', 'toggle-developer-options', 'remove'],
-                        disabled: ['run', 'cancel']
+                        enabled: ['re-run-app', 'remove'],
+                        disabled: ['run-app', 'cancel']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
                     }
                 },
                 next: [
@@ -341,12 +341,12 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run', 'toggle-developer-options', 'remove'],
-                        disabled: ['run', 'cancel']
+                        enabled: ['re-run-app', 'remove'],
+                        disabled: ['run-app', 'cancel']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
                     }
                 },
                 next: [
@@ -369,12 +369,12 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run', 'toggle-developer-options', 'remove'],
-                        disabled: ['run', 'cancel']
+                        enabled: ['re-run-app', 'remove'],
+                        disabled: ['run-app', 'cancel']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
                     }
                 },
                 next: [
@@ -396,12 +396,12 @@ define([
                 },
                 ui: {
                     buttons: {
-                        enabled: ['re-run', 'toggle-developer-options', 'remove'],
-                        disabled: ['run', 'cancel']
+                        enabled: ['re-run-app', 'remove'],
+                        disabled: ['run-app', 'cancel']
                     },
                     elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
+                        show: ['parameters-display-group', 'exec-group', 'output-group'],
+                        hide: ['parameters-group']
                     }
                 },
                 next: [
@@ -420,9 +420,14 @@ define([
     function factory(config) {
         var container, places, dom,
             workspaceInfo = config.workspaceInfo,
+            runtime = Runtime.make(),
             cell = config.cell,
             parentBus = config.bus,
-            runtime = Runtime.make(),
+            // TODO: the cell bus should be created and managed through main.js,
+            // that is, the extension.
+            cellBus = runtime.bus().makeChannelBus({
+                    cell: utils.getMeta(cell, 'attributes', 'id')
+                }, 'A cell channel'),
             bus = runtime.bus().makeChannelBus(null, 'A app cell widget'),
             env = {},
             model,
@@ -430,19 +435,26 @@ define([
             settings = {
                 showAdvanced: {
                     label: 'Show advanced parameters',
-                    defaultValue: false
+                    defaultValue: false,
+                    type: 'custom'
                 },
                 showNotifications: {
                     label: 'Show the notifications panel',
-                    defaultValue: false
+                    defaultValue: false,
+                    type: 'toggle',
+                    element: 'notifications'
                 },
                 showAboutApp: {
                     label: 'Show the About App panel',
-                    defaultValue: false
+                    defaultValue: true,
+                    type: 'toggle',
+                    element: 'about-app'
                 },
                 showDeveloper: {
                     label: 'Show developer features',
-                    defaultValue: false
+                    defaultValue: false,
+                    type: 'toggle',
+                    element: 'developer-options'
                 }
             },
         widgets = {},
@@ -625,20 +637,98 @@ define([
             });
         }
 
+//        function toggleElement(name) {
+//            var node = dom.getElement(name);
+//            if (!node) {
+//                return;
+//            }
+//            if (node.style.display === 'none') {
+//                node.style.display = 'block';
+//            } else {
+//                node.style.display = 'none';
+//            }
+//        }
+
+        function showElement(name) {
+            var node = dom.getElement(name);
+            if (!node) {
+                return;
+            }
+            // node.style.display = null;
+            node.classList.remove('hidden');
+        }
+        function hideElement(name) {
+            var node = dom.getElement(name);
+            if (!node) {
+                return;
+            }
+            //if (!node.getAttribute('data-original-display')) {
+            //    node.setAttribute('data-original-display', )
+            // }
+            // node.style.display = 'none';
+            node.classList.add('hidden');
+        }
+
+        
+        function renderSetting(settingName) {
+            var setting = settings[settingName],
+                value;
+
+            if (!setting) {
+                return;
+            }
+
+            value = model.getItem(['user-settings', settingName], setting.defaultValue);
+            switch (setting.type) {
+                case 'toggle':
+                    if (value) {
+                        showElement(setting.element);
+                    } else {
+                        hideElement(setting.element);
+                    }
+                    break;
+            }
+        }
+        
+        function doChangeSetting(event) {
+            var control = event.target,
+                settingName = control.value;
+            
+            model.setItem(['user-settings', settingName], control.checked);
+
+            renderSetting(settingName);
+        }
+        
+
         function renderSettings() {
-            var events = Events.make(),
+            var events = Events.make({node: container}),
                 content = Object.keys(settings).map(function (key) {
                 var setting = settings[key],
-                    settingsValue = model.getItem(['user-setting', key]);
+                    settingsValue = model.getItem(['user-settings', key]) || setting.defaultValue;
                 return div({}, [
                     input({
-                        type: 'checkbox', 
-                        checked: (settingsValue ? true : false), value: 'on'
-                        }),
+                        type: 'checkbox',
+                        checked: (settingsValue ? true : false),
+                        dataSetting: key,
+                        value: key,
+                        id: events.addEvent({
+                            type: 'change',
+                            handler: function (e) {
+                                doChangeSetting(e);
+                            }
+                        })
+                    }),
                     span({style: {marginLeft: '4px', fontStyle: 'italic'}}, setting.label)
                 ]);
             }).join('\n');
             dom.setContent('settings.content', content);
+            // console.log('REALLY', dom.getElement('settings.content'));
+            events.attachEvents();
+            
+            //Ensure that the settings are reflected in the UI.
+            Object.keys(settings).forEach(function (key) {
+                renderSetting(key);
+            });
         }
 
         function toBoolean(value) {
@@ -688,39 +778,35 @@ define([
                         dataElement: 'body',
                         style: {display: 'flex', alignItems: 'stretch', flexDirection: 'column', flex: '1'}
                     }, [
-                        div({dataElement: 'notifications', style: {display: 'block', width: '100%'}}),
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
                                 dom.buildPanel({
-                                    title: 'Available Actions',
+                                    title: null,
                                     name: 'availableActions',
                                     hidden: false,
                                     type: 'default',
                                     body: [
                                         div({class: 'btn-toolbar'}, [
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Run', 'run', {events: events, type: 'primary'})
+                                                dom.makeButton('Run', 'run-app', {events: events, type: 'primary'})
                                             ]),
                                             div({class: 'btn-group'}, [
                                                 dom.makeButton('Cancel', 'cancel', {events: events, type: 'danger'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Run Again', 're-run', {events: events, type: 'primary'})
+                                                dom.makeButton('Run Again', 're-run-app', {events: events, type: 'primary'})
                                             ]),
                                             div({class: 'btn-group'}, [
                                                 dom.makeButton('Remove', 'remove', {events: events, type: 'danger'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Show Dev Options', 'toggle-developer-options', {events: events})
-                                            ]),
-                                            div({class: 'btn-group'}, [
-                                                dom.makeButton('Show Settings', 'toggle-settings', {events: events})
+                                                dom.makeButton(span({class: 'fa fa-cog '}), 'toggle-settings', {events: events})
                                             ])
                                         ])
                                     ]
                                 }),
-                                dom.buildCollapsiblePanel({
-                                    title: 'Settings',
+                                dom.buildPanel({
+                                    title: 'App Cell Settings',
                                     name: 'settings',
                                     hidden: true,
                                     type: 'default',
@@ -738,13 +824,13 @@ define([
                                 dom.buildCollapsiblePanel({
                                     title: 'About',
                                     name: 'about-app',
-                                    hidden: true,
+                                    hidden: false,
                                     type: 'default',
                                     body: [
                                         div({dataElement: 'about-app'}, renderAboutApp())
                                     ]
                                 }),
-                                dom.buildPanel({
+                                dom.buildCollapsiblePanel({
                                     title: 'Dev',
                                     name: 'developer-options',
                                     hidden: true,
@@ -762,7 +848,7 @@ define([
                                     ]
                                 }),
                                 dom.buildPanel({
-                                    title: 'Input ' + span({class: 'fa fa-arrow-right'}),
+                                    title: 'Input ' + span({class: 'fa fa-arrow-left'}),
                                     name: 'parameters-group',
                                     hidden: false,
                                     type: 'default',
@@ -776,14 +862,14 @@ define([
                                     body: div({dataElement: 'widget'})
                                 }),
                                 dom.buildPanel({
-                                    title: 'App Execution ' + span({class: 'fa fa-tasks'}),
+                                    title: 'App Execution ' + span({class: 'fa fa-bolt'}),
                                     name: 'exec-group',
                                     hidden: false,
                                     type: 'default',
                                     body: div({dataElement: 'widget'})
                                 }),
                                 dom.buildPanel({
-                                    title: 'Output ' + span({class: 'fa fa-arrow-left'}),
+                                    title: 'Output ' + span({class: 'fa fa-arrow-right'}),
                                     name: 'output-group',
                                     hidden: true,
                                     type: 'default',
@@ -933,25 +1019,6 @@ define([
             return model.getItem('user-settings.showInputCodeArea');
         }
 
-        function toggleDeveloperOptions(cell) {
-            var name = 'showDeveloperOptions',
-                selector = 'developer-options',
-                node = dom.getElement(selector),
-                showing = model.getItem(['user-settings', name]);
-            if (showing) {
-                model.setItem(['user-settings', name], false);
-            } else {
-                model.setItem(['user-settings', name], true);
-            }
-            showing = model.getItem(['user-settings', name]);
-            if (showing) {
-                node.style.display = 'block';
-            } else {
-                node.style.display = 'none';
-            }
-            return showing;
-        }
-
         function toggleSettings(cell) {
             var name = 'showSettings',
                 selector = 'settings',
@@ -962,11 +1029,14 @@ define([
             } else {
                 model.setItem(['user-settings', name], true);
             }
+
             showing = model.getItem(['user-settings', name]);
             if (showing) {
-                node.style.display = 'block';
+                node.classList.remove('hidden');
+                //node.style.display = 'block';
             } else {
-                node.style.display = 'none';
+                //node.style.display = 'none';
+                node.classList.add('hidden');
             }
             return showing;
         }
@@ -999,10 +1069,6 @@ define([
                 }).join('\n');
             dom.setContent('notifications.content', content);
             events.attachEvents(container);
-        }
-
-        function showNotifications() {
-
         }
 
         function addNotification(notification) {
@@ -1176,9 +1242,14 @@ define([
 
             // Remove all of the execution state when we reset the app.
             model.deleteItem('exec');
+            
+            // Also ensure that the exec widget is reset
+            // widgets.execWidget.bus.emit('reset');
 
             // TODO: evaluate the params again before we do this.
             fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
+            
+            clearOutput();
 
             renderUI();
         }
@@ -1260,9 +1331,11 @@ define([
                         case 'in-progress':
                             return {mode: 'processing', stage: 'running'};
                         case 'completed':
+                            stopListeningForJobMessages();
                             return {mode: 'success'};
                         case 'suspend':
                         case 'error':
+                            stopListeningForJobMessages();
                             if (currentState.state.stage) {
                                 return {mode: 'error', stage: currentState.state.stage};
                             }
@@ -1308,10 +1381,10 @@ define([
             });
         }
 
+        var jobListener = null;
         function startListeningForJobMessages(jobId) {
             // console.log('Starting to listen for job messages', jobChannelId);
-
-            runtime.bus().listen({
+            jobListener = runtime.bus().listen({
                 channel: {
                     jobId: jobId
                 },
@@ -1320,62 +1393,30 @@ define([
                 },
                 handle: function (message) {
                     // Store the most recent job status (jobInfo) in the model and thus metadata.
-
                     var existingState = model.getItem('exec.jobState');
-                    if (!existingState || existingState.job_state !== message.job.state.job_state) {
-                        model.setItem('exec.jobState', message.job.state);
-                        // Forward the job info to the exec widget if it is available. (it should be!)
-                        if (widgets.execWidget) {
-                            widgets.execWidget.bus.emit('job-state', {
-                                jobState: message.job.state
-                            });
-                        }
+                    if (!existingState || existingState.job_state !== message.jobState.job_state) {
+                        model.setItem('exec.jobState', message.jobState);
+                        
+                        // Now we send the job state on the cell bus, generally.
+                        // The model is that a cell can only have one job active at a time.
+                        // Thus we can just emit the state of the current job globally
+                        // on the cell bus for thos widgets interested.
+                        cellBus.emit('job-state', {
+                            jobState: message.jobState
+                        });
                     } else {
-                        if (widgets.execWidget) {
-                            widgets.execWidget.bus.emit('job-state-updated', {
-                                jobId: message.job.state.job_id
-                            });
-                        }
+                        cellBus.emit('job-state-updated', {
+                            jobId: message.jobState.job_id
+                        })
                     }
                     model.setItem('exec.jobStateUpdated', new Date().getTime());
-                    updateFromJobState(message.job.state);
+                    updateFromJobState(message.jobState);
                 }
             });
-//
-//            runtime.bus().listen({
-//                channel: {
-//                    jobId: jobId
-//                },
-//                key: {
-//                    type: 'job-status'
-//                },
-//                handle: function (message) {
-//                    // Store the most recent job status (jobInfo) in the model and thus metadata.
-//                    updateFromJobState(message.job.state);
-//
-//                    var existingState = model.getItem('exec.jobState');
-//                    if (!existingState || existingState.job_state !== message.job.state.job_state) {
-//                        model.setItem('exec.jobState', message.job.state);
-//                        // Forward the job info to the exec widget if it is available. (it should be!)
-//                        if (widgets.execWidget) {
-//                            widgets.execWidget.bus.emit('job-state', {
-//                                jobState: message.job.state
-//                            });
-//                        }
-//                    } else {
-//                        if (widgets.execWidget) {
-//                            widgets.execWidget.bus.emit('job-state-updated', {
-//                                jobId: message.job.state.job_id
-//                            });
-//                        }
-//                    }
-//                    model.setItem('exec.jobStateUpdated', new Date().getTime());
-//                }
-//            });
         }
 
         function stopListeningForJobMessages() {
-            // TODO
+            runtime.bus().removeListener(jobListener);
         }
 
         /*
@@ -1532,6 +1573,17 @@ define([
 
             return newCellId;
         }
+        
+        function clearOutput() {
+            // cell.set_text('from biokbase.narrative.jobs import AppManager\nAppManager().clear_app()');
+            // cell.execute();
+            var cellNode = cell.element.get(0),
+                textNode = document.querySelector('.output_area.output_text');
+            
+            if (textNode) {
+                textNode.innerHTML = '';
+            }
+        }
 
         function findCellForId(id) {
             var matchingCells = Jupyter.notebook.get_cells().filter(function (cell) {
@@ -1589,7 +1641,7 @@ define([
                 params: model.copyItem('params')
             });
 
-            widgets.outputWidget.instance.bus.emit('update', {
+            widgets.outputWidget.instance.bus().emit('update', {
                 jobState: model.getItem('exec.jobState'),
                 output: model.getItem('output')
             });
@@ -1616,20 +1668,21 @@ define([
                 bus.on('edit-notebook-metadata', function () {
                     doEditNotebookMetadata();
                 });
-                bus.on('toggle-developer-options', function () {
-                    var showing = toggleDeveloperOptions(cell),
-                        label = showing ? 'Hide Dev Options' : 'Show Dev Options';
-                    dom.setButtonLabel('toggle-developer-options', label);
-                });
                 bus.on('toggle-settings', function () {
                     var showing = toggleSettings(cell),
-                        label = showing ? 'Hide Settings' : 'Show Settings';
-                    dom.setButtonLabel('toggle-settings', label);
+                        label = span({class: 'fa fa-cog '}),
+                        buttonNode = dom.getButton('toggle-settings');
+                    buttonNode.innerHTML = label;
+                    if (showing) {
+                        buttonNode.classList.add('active');
+                    } else {
+                        buttonNode.classList.remove('active');
+                    }
                 });
-                bus.on('run', function () {
+                bus.on('run-app', function () {
                     doRun();
                 });
-                bus.on('re-run', function () {
+                bus.on('re-run-app', function () {
                     doRerun();
                 });
                 bus.on('cancel', function () {
@@ -1698,61 +1751,33 @@ define([
                 }
 
 
-                // console.log('INITIAL STATE IS ', state);
-
-
                 // TODO: only turn this on when we need it!
-                runtime.bus().makeChannelBus({
-                    cell: utils.getMeta(cell, 'attributes', 'id')
-                }, 'A cell channel');
-                runtime.bus().listen({
-                    channel: {
-                        cell: utils.getMeta(cell, 'attributes', 'id')
-                    },
-                    key: {
-                        type: 'run-status'
-                    },
-                    handle: function (message) {
-                        console.log('RUN-STATUS', message);
-                        updateFromLaunchEvent(message);
-                        utils.pushMeta(cell, 'appCell.exec.log', {
-                            timestamp: new Date(),
-                            event: 'runstatus',
-                            data: {
-                                jobId: message.jobId,
-                                runId: message.runId,
-                                status: message.event
-                            }
-                        });
-
-                        // Forward to the exec widget
-                        if (widgets.execWidget) {
-                            widgets.execWidget.bus.emit('launch-event', message);
+                cellBus.on('run-status', function (message) {
+                    updateFromLaunchEvent(message);
+                    utils.pushMeta(cell, 'appCell.exec.log', {
+                        timestamp: new Date(),
+                        event: 'runstatus',
+                        data: {
+                            jobId: message.jobId,
+                            runId: message.runId,
+                            status: message.event
                         }
-
-                    }
+                    });
                 });
-                runtime.bus().listen({
-                    channel: {
-                        cell: utils.getMeta(cell, 'attributes', 'id')
-                    },
-                    key: {
-                        type: 'output-cell-removed'
-                    },
-                    handle: function (message) {
-                        var output = model.getItem('output');
+                
+                cellBus.on('output-cell-removed', function (message) {
+                    var output = model.getItem('output');
 
-                        // console.log('HANDLE', message, output);
-                        if (!output.byJob[message.jobId]) {
-                            return;
-                        }
-                        delete output.byJob[message.jobId];
-                        model.setItem('output', output);
-                        widgets.outputWidget.instance.bus.emit('update', {
-                            jobState: model.getItem('exec.jobState'),
-                            output: output
-                        });
+                    // console.log('HANDLE', message, output);
+                    if (!output.byJob[message.jobId]) {
+                        return;
                     }
+                    delete output.byJob[message.jobId];
+                    model.setItem('output', output);
+                    widgets.outputWidget.instance.bus().emit('update', {
+                        jobState: model.getItem('exec.jobState'),
+                        output: output
+                    });
                 });
 
 //                runtime.bus().listen({
@@ -1913,6 +1938,7 @@ define([
                 }
 
                 require([selectedWidget], function (Widget) {
+                    // TODO: widget should make own bus.
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for input widget'),
                         widget = Widget.make({
                             bus: bus,
@@ -1993,6 +2019,7 @@ define([
                 require([
                     'nbextensions/appCell/widgets/appParamsViewWidget'
                 ], function (Widget) {
+                    // TODO: widget should make own bus
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for load input view widget'),
                         widget = Widget.make({
                             bus: bus,
@@ -2057,21 +2084,18 @@ define([
                 require([
                     'nbextensions/appCell/widgets/appExecWidget'
                 ], function (Widget) {
-                    var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for load exec widget'),
-                        widget = Widget.make({
-                            bus: bus,
+                    var widget = Widget.make({
+                            bus: cellBus,
                             workspaceInfo: workspaceInfo
                         });
                     widgets.execWidget = {
                         path: ['exec-group', 'widget'],
-                        bus: bus,
                         instance: widget
                     };
                     widget.start();
-                    bus.emit('run', {
+                    widget.bus().emit('run', {
                         node: dom.getElement('exec-group.widget'),
                         jobState: model.getItem('exec.jobState')
-                            // jobInfo:
                     });
                     resolve();
                 }, function (err) {
@@ -2094,7 +2118,7 @@ define([
                         instance: widget
                     };
                     widget.start();
-                    widget.bus.emit('run', {
+                    widget.bus().emit('run', {
                         node: dom.getElement('output-group.widget'),
                         jobState: model.getItem('exec.jobState'),
                         output: model.getItem('output')

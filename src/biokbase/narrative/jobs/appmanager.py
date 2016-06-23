@@ -396,6 +396,10 @@ class AppManager(object):
         # allow None to pass, we'll just pass it to the method and let it get rejected there.
         if value is None:
             return (ws_ref, None)
+        
+        # Also, for strings, last I heard, an empty string is the same as null/None
+        if param['type'] == 'string' and isinstance(value, basestring) and value == '':
+            return (ws_ref, '')
 
         # cases - value == list, int, float, others get rejected
         if not (isinstance(value, basestring) or
@@ -427,7 +431,7 @@ class AppManager(object):
         # if it expects a set of allowed values, check if this one matches
         if 'allowed_values' in param:
             if value not in param['allowed_values']:
-                return (ws_ref, "Given value is not permitted in the allowed set.")
+                return (ws_ref, "Given value '{}' is not permitted in the allowed set.".format(value))
 
         # if it expects a numerical value in a certain range, check that.
         if 'max_val' in param:

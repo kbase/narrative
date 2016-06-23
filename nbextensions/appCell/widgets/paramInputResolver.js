@@ -182,6 +182,8 @@ define([
                             return SingleTextInputWidget;
                         case 'dropdown':
                             return SingleSelectInputWidget;
+                        case 'textarea':
+                            return SingleTextareaInputWidget;                            
                         default:
                             return UndefinedInputWidget;
                     }

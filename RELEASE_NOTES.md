@@ -3,6 +3,11 @@ The Narrative Interface allows users to craft KBase Narratives using a combinati
 
 This is built on the Jupyter Notebook v4.1.0 (more notes will follow).
 
+### Version 2.0.9
+__Changes__
+- Small changes to viewer widgets - esp. genome viewer and expression data viewer.
+- Fixed overlapping sort icons in tables - JIRA ticket KBASE-4220.
+
 ### Version 2.0.8
 __Changes__
 - Numerous small fixes to text and layout of various widgets.

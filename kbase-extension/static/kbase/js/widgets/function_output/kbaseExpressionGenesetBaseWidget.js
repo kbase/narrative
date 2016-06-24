@@ -45,7 +45,7 @@ define (
 
             // Service URL: should be in window.kbconfig.urls.
             // featureValueURL: 'http://localhost:8889',
-            useDynamicService: true,
+            useDynamicService: false,
             featureValueSrvVersion: 'dev',
             featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
             wsURL: window.kbconfig.urls.workspace,
@@ -254,10 +254,10 @@ define (
                         'id': desc.id,
                         'name': desc.name ? desc.name : ' ',
                         'function' : gene_function ? gene_function : ' ',
-                        'min': stat.mins[i] ? stat.mins[i].toFixed(2) : ' ',
-                        'max': stat.maxs[i] ? stat.maxs[i].toFixed(2) : ' ',
-                        'avg': stat.avgs[i] ? stat.avgs[i].toFixed(2) : ' ',
-                        'std': stat.stds[i] ? stat.stds[i].toFixed(2) : ' ',
+                        'min': stat.mins[i] ? stat.mins[i].toFixed(2) : null,
+                        'max': stat.maxs[i] ? stat.maxs[i].toFixed(2) : null,
+                        'avg': stat.avgs[i] ? stat.avgs[i].toFixed(2) : null,
+                        'std': stat.stds[i] ? stat.stds[i].toFixed(2) : null,
                         'missing_values': stat.missing_values[i]
                     }
                 );

@@ -68,6 +68,20 @@ define([
             this._super(options);
             this.$jobCountBadge = $('<span>').addClass('label label-danger'),
                 this.title.append(this.$jobCountBadge);
+            Handlebars.registerHelper('colorStatus', function(status) {
+                var s = status.string.toLowerCase();
+                switch(s) {
+                    case "in-progress":
+                        return "<b>" + status + "</b>";
+                        break;
+                    case "queued":
+                        return "<b>" + status + "</b>";
+                        break;
+                    default:
+                        return status;
+                        break;
+                }
+            })
             this.jobInfoTmpl = Handlebars.compile(JobInfoTemplate);
             this.jobErrorTmpl = Handlebars.compile(JobErrorTemplate);
             this.runtime = Runtime.make();
@@ -248,11 +262,14 @@ define([
                         info = {},
                         content = msg.content.data.content;
                     for (var jobId in content) {
-                        
+
                         this.jobStates[jobId] = content[jobId].state;
-                        
+                        this.jobStates[jobId].spec = content[jobId].spec;
+
                         // The job state includes both the job state info and the
                         // app spec. Not sure why...
+                        // WJR - because the renderer needs info from the app spec
+                        // like its name and such.
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
                             jobState: content[jobId].state
@@ -396,7 +413,7 @@ define([
 
         getJobInitCode: function () {
             return ["from biokbase.narrative.jobs import JobManager",
-                    "JobManager().initialize_jobs2()"].join('\n');
+                    "JobManager().initialize_jobs()"].join('\n');
         },
 
         setJobCounter: function (numJobs) {
@@ -546,11 +563,11 @@ define([
          */
         populateJobsPanel: function () {
             // 1. Check if we have any existing jobs, or drop a message.
-            if (Object.keys(this.jobStates).length + Object.keys(this.jobWidgets).length === 0) {
-                this.$jobsList.empty().append($('<div class="kb-data-loading">').append('No jobs exist for this Narrative!'));
-            }
+            // if (Object.keys(fetchedJobs).length + Object.keys(this.jobWidgets).length === 0) {
+            //     // this.$jobsList.empty().append($('<div class="kb-data-loading">').append('No jobs exist for this Narrative!'));
+            // }
             // 2. Do update with given jobs.
-            else {
+            // else {
                 // If there are any jobs that aren't part of sortedJobs, add them in - means they're new.
                 // This will also happen on initialization.
 //                for (var jobId in fetchedJobs) {
@@ -575,7 +592,7 @@ define([
                         if (this.jobIsIncomplete(this.jobStates[jobId].job_state))
                             stillRunning++;
 
-                          // this message is already sent in the core code which 
+                          // this message is already sent in the core code which
                           // catches the jupyter job message.
 //                        this.sendJobMessage('job-status', jobId, {
 //                            jobId: jobId,
@@ -595,7 +612,7 @@ define([
                     }
                 }
                 this.setJobCounter(stillRunning);
-            }
+            // }
             // hide any showing tooltips, otherwise they just sit there stagnant forever.
             this.$jobsPanel.find('span[data-toggle="tooltip"]').tooltip('hide');
             // this.$jobsPanel.empty().append($jobsList);
@@ -786,7 +803,7 @@ define([
                 errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
             } else if (jobState.error) {
                 errorText = new Handlebars.SafeString('<div class="kb-jobs-error-modal">' + jobState.error.message + '</div>');
-                errorType = jobState.name;
+                errorType = jobState.error.name;
                 // if (jobState.state.error === 'awe_error')
                 //     errorType = 'AWE Error';
             }

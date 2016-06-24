@@ -65,7 +65,7 @@ define (
             // there are more than this number of objects
 
             max_name_length: 33,
-            refresh_interval: 30000,
+            refresh_interval: 10000,
             parentControlPanel: null,
 
             slideTime: 400
@@ -229,7 +229,7 @@ define (
                 }
                 else {
                     this.refreshTimeStrings();
-                    this.hideLoading();
+                    // this.hideLoading();
                 }
             }.bind(this))
             .catch(function(error) {

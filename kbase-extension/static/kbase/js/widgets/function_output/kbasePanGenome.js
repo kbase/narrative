@@ -410,13 +410,14 @@ function($,
         		$('.show-genomes_'+pref2).unbind('click');
         		$('.show-genomes_'+pref2).click(function() {
         			var id = $(this).data('id');
-            		var url = "/functional-site/#/dataview/" + id;
+            		var url = "/#dataview/" + id;
                     window.open(url, '_blank');
         		})
         		$('.show-genes_'+pref2).unbind('click');
         		$('.show-genes_'+pref2).click(function() {
         			var id = $(this).data('id');
-            		var url = "/functional-site/#/genes/" + id;
+        			var parts = id.split("/");
+            		var url = "/#dataview/" + parts[0] + "/" + parts[1] + "?sub=Feature&subid=" + parts[2];
                     window.open(url, '_blank');
         		})
         	}

@@ -46,7 +46,7 @@ class JobManager(object):
             JobManager.__instance = object.__new__(cls)
         return JobManager.__instance
 
-    def initialize_jobs2(self):
+    def initialize_jobs(self):
         """
         Initializes this JobManager.
         This is expected to be run by a running Narrative, and naturally linked to a workspace.
@@ -79,39 +79,6 @@ class JobManager(object):
             except Exception, e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
                 self._send_comm_message('job_init_lookup_err', {'msg': 'Unable to get job info!', 'job_id': job_id, 'err': str(e)})
-        # only keep one loop at a time in cause this gets called again!
-        if self._lookup_timer is not None:
-            self._lookup_timer.cancel()
-        self._lookup_job_status_loop()
-
-    def initialize_jobs(self, job_tuples):
-        """
-        Initializes this JobManager with a list of running jobs. These are all expected to
-        be NJS-wrapped Jobs - i.e. only those jobs made with the SDK (not earlier service-based
-        jobs, or jobs only found in the UJS).
-
-        This is expected to be run with a list of Jobs that have already been initialized.
-        For example, if the kernel is restarted and the synching needs to be redone from the
-        front end, this is the function that gets invoked.
-
-        Parameters:
-        -----------
-        job_tuples: A list of 4-tuples representing Jobs. The format is:
-            (job_id (string),
-             app_id (string, Module/method - this is the app spec id)
-             version tag (string),
-             cell id that started the job (string or None))
-        """
-        for job_tuple in job_tuples:
-            if job_tuple[0] not in self._running_jobs:
-                try:
-                    self._running_jobs[job_tuple[0]] = {'refresh': True, 'job': self._get_existing_job(job_tuple)}
-
-                except Exception, e:
-                    kblogging.log_event(self._log, "init_error", {'err': str(e)})
-                    self._send_comm_message('job_init_err', str(e))
-            else:
-                self._running_jobs[job_tuple[0]]['refresh'] = True
         # only keep one loop at a time in cause this gets called again!
         if self._lookup_timer is not None:
             self._lookup_timer.cancel()

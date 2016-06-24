@@ -68,6 +68,20 @@ define([
             this._super(options);
             this.$jobCountBadge = $('<span>').addClass('label label-danger'),
                 this.title.append(this.$jobCountBadge);
+            Handlebars.registerHelper('colorStatus', function(status) {
+                var s = status.string.toLowerCase();
+                switch(s) {
+                    case "in-progress":
+                        return "<b>" + status + "</b>";
+                        break;
+                    case "queued":
+                        return "<b>" + status + "</b>";
+                        break;
+                    default:
+                        return status;
+                        break;
+                }
+            })
             this.jobInfoTmpl = Handlebars.compile(JobInfoTemplate);
             this.jobErrorTmpl = Handlebars.compile(JobErrorTemplate);
             this.runtime = Runtime.make();
@@ -399,7 +413,7 @@ define([
 
         getJobInitCode: function () {
             return ["from biokbase.narrative.jobs import JobManager",
-                    "JobManager().initialize_jobs2()"].join('\n');
+                    "JobManager().initialize_jobs()"].join('\n');
         },
 
         setJobCounter: function (numJobs) {

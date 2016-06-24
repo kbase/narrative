@@ -113,7 +113,7 @@ class Job(object):
         """
         try:
             state = self._njs.check_job(self.job_id)
-            state['cell_id'] = self.cell_id
+            state[u'cell_id'] = self.cell_id
             return state
         except Exception, e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))

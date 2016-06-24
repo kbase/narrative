@@ -1599,7 +1599,7 @@ div#notebook_panel {
 }
 
 .kb-jobs-info-table {
-    margin-top: 5px;
+    margin: 0 2px;
     width: 95%;
 }
 
@@ -1608,6 +1608,9 @@ div#notebook_panel {
     color: #777;
     vertical-align:top;
     padding-right: 5px;
+    width: 30%;
+    max-width: 30%;
+    min-width: 30%;
 
 }
 

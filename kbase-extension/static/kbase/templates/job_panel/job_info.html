@@ -2,11 +2,10 @@
     <div class="kb-data-list-name kb-data-list-job-name">
         {{name}}
         <span class="pull-right">
-            <span data-toggle="tooltip" title data-placement="left" class="btn-xs kb-data-list-more-btn pull-right fa fa-times" style="cursor: pointer;" data-original-title="Remove Job"></span>
             {{#if hasCell}}
-            <br>
-            <span data-toggle="tooltip" title data-placement="left" class="btn-xs kb-data-list-more-btn pull-right fa fa-location-arrow" style="cursor: pointer;" data-original-title="Scroll To App"></span>
+            <span data-toggle="tooltip" title data-placement="left" class="btn-xs kb-data-list-more-btn fa fa-location-arrow" style="cursor: pointer;" data-original-title="Scroll To App"></span>
             {{/if}}
+            <span data-toggle="tooltip" title data-placement="left" class="btn-xs kb-data-list-more-btn fa fa-times" style="cursor: pointer;" data-original-title="Remove Job"></span>
         </span>
         <div style="font-size:75%">{{jobId}}</div>
     </div>
@@ -20,7 +19,7 @@
                             <span class="fa fa-warning" style="color:white"></span>{{error}}
                         </div>
                     {{else}}
-                        {{status}}{{#if completedTime}} {{completedTime}}{{/if}}
+                        {{#colorStatus status}}{{/colorStatus}}{{#if completedTime}} {{completedTime}}{{/if}}
                     {{/if}}
                 </td>
             </tr>

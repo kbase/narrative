@@ -288,7 +288,7 @@ define (
 
         // open window with gene landing page
         if (d.children === undefined || (d._children === null && d.children === null)) {
-        var winPop = window.open("/#genes/" + this.options.wsNameOrId + "/" + this.options.objNameOrId + "/" + d.name);
+        var winPop = window.open("/#dataview/" + this.options.wsNameOrId + "/" + this.options.objNameOrId + "?sub=Feature&subid=" + d.name);
         }
         
         // expand tree

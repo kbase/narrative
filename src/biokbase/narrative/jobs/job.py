@@ -103,7 +103,7 @@ class Job(object):
     def parameters(self):
         try:
             return self._njs.get_job_params(self.job_id)
-        except Exception, e:
+        except Exception as e:
             raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
 
     def state(self):
@@ -115,7 +115,7 @@ class Job(object):
             state = self._njs.check_job(self.job_id)
             state[u'cell_id'] = self.cell_id
             return state
-        except Exception, e:
+        except Exception as e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
 
     def output_viewer(self):
@@ -227,7 +227,7 @@ class Job(object):
                 'version': spec['info'].get('ver', None),
                 'name': spec['info']['name']
             }
-        except Exception, e:
+        except Exception as e:
             state = {}
             info = {
                 'app_id': None,

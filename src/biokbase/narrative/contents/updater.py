@@ -11,6 +11,7 @@ import uuid
 import json
 import re
 import datetime
+import biokbase.narrative.clients as clients
 
 def update_needed(narrative):
     # simple enough - if there's a "kbase" block
@@ -84,6 +85,7 @@ def update_method_cell(cell):
     # try to find cell_id, if not, make up a new one.
 
     method_info = meta['method'].get('info', {})
+    method_behavior = meta['method'].get('behavior', {})
     widget_state = meta.get('widget_state', [])
     if len(widget_state):
         widget_state = widget_state[0]
@@ -123,6 +125,31 @@ def update_method_cell(cell):
     if ts:
         ts = datetime.datetime.utcfromtimestamp(ts/1000.0).strftime('%a, %d %b %Y %H:%M:%S GMT')
 
+    git_hash = method_info.get('git_commit_hash', None)
+    module_name = method_behavior.get('kb_service_name', None)
+    tag = None
+    # now we get the version, if it exists.
+    print("{}/{}".format(module_name, git_hash))
+    # Suddenly, this is very complex...
+    # Need git_hash and module_name to look up the version.
+    # if lookup succeeds -
+    #   if has a release tag, use it.
+    #   if not, lookup the module's info (get_module_info), use the most released one (release > beta > dev) and change the hash
+    # if lookup fails -
+    #   try again with just the module info
+    #   if THAT fails, the cell can't be updated.
+    # if no git_hash or module_name, it's not an SDK-based cell and can't be looked up.
+    if git_hash and module_name:
+        try:
+            print('looking up ' + module_name + ' hash ' + git_hash)
+            version_info = clients.get('catalog').get_module_version({'module_name': module_name, 'version': git_hash})
+        except Exception as e:
+            tag = 'wat'
+            print(e)
+    else:
+        # it's not an SDK method! do something else!
+        pass
+
     new_meta = {
         'type': 'app',
         'attributes': {
@@ -135,9 +162,9 @@ def update_method_cell(cell):
         'appCell': {
             'app': {
                 'id': method_info.get('id', 'unknown'),
-                'gitCommitHash': method_info.get('git_commit_hash', None),
+                'gitCommitHash': git_hash,
                 'version': method_info.get('ver', None),
-                'tag': 'release'
+                'tag': tag
             },
             'state': {
                 'edit': 'editing',

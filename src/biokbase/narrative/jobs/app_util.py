@@ -42,8 +42,11 @@ def system_variable(var):
         ws_name = os.environ.get('KB_WORKSPACE_ID', None)
         if ws_name is None:
             return None
-        ws_info = _ws_client.get_workspace_info({'workspace': ws_name})
-        return ws_info[0]
+        try:
+            ws_info = _ws_client.get_workspace_info({'workspace': ws_name})
+            return ws_info[0]
+        except:
+            return None
     elif var == 'token':
         return os.environ.get('KB_AUTH_TOKEN', None)
     elif var == 'user_id':

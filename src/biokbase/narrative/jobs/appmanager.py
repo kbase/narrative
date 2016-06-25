@@ -116,7 +116,7 @@ class AppManager(object):
     def run_app(self, *args, **kwargs):
         try:
             return self._run_app_internal(*args, **kwargs)
-        except Exception, e:
+        except Exception as e:
             cell_id = kwargs.get('cell_id', None)
             run_id = kwargs.get('run_id', None)
             e_type = type(e).__name__
@@ -317,7 +317,7 @@ class AppManager(object):
 
         try:
             job_id = self.njs.run_job(job_runner_inputs)
-        except Exception, e:
+        except Exception as e:
             log_info.update({'err': str(e)})
             self._log.setLevel(logging.ERROR)
             kblogging.log_event(self._log, "run_app_error", log_info)
@@ -396,7 +396,7 @@ class AppManager(object):
         # allow None to pass, we'll just pass it to the method and let it get rejected there.
         if value is None:
             return (ws_ref, None)
-        
+
         # Also, for strings, last I heard, an empty string is the same as null/None
         if param['type'] == 'string' and isinstance(value, basestring) and value == '':
             return (ws_ref, '')

@@ -229,6 +229,50 @@ define([
                 ]
             });
         }
+        
+        function renderExecStatus() {
+            var labelStyle = {
+                textAlign: 'right',
+                border: '1px transparent solid',
+                padding: '4px'
+            },
+                dataStyle = {
+                    border: '1px silver solid',
+                    padding: '4px',
+                    display: 'inline-block',
+                    minWidth: '20px',
+                    backgroundColor: 'gray',
+                    color: '#FFF'
+                };
+            return dom.buildPanel({
+                title: 'Execution Status',
+                name: 'execStatus',
+                hidden: false,
+                type: 'primary',
+                body: [
+                    div({class: 'row', dataElement: 'launch'}, [
+                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Launch')),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed'}))
+                    ]),
+                    div({class: 'row', dataElement: 'queue'}, [
+                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Queue')),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed'})),
+                        div({class: 'col-md-2', style: labelStyle}, 'Position'),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'position'}))
+                    ]),
+                    div({class: 'row', dataElement: 'run'}, [
+                        div({class: 'col-md-2', style: labelStyle}, span({dataElement: 'label'}, 'Run')),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'elapsed'}))
+                    ]),
+                    div({class: 'row', dataElement: 'finish'}, [
+                        div({class: 'col-md-2', style: labelStyle}, 'Finish'),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'state'})),
+                        div({class: 'col-md-2', style: labelStyle}, 'When'),
+                        div({class: 'col-md-2', style: dataStyle}, span({dataElement: 'finishedAt'}))
+                    ])
+                ]
+            });
+        }
 
         function renderJobDetails() {
             return dom.buildPanel({
@@ -316,9 +360,9 @@ define([
 
         function render() {
             var events = Events.make({node: container}),
-                content = div([
+                content = div({style: {margin: '-15px -15px -15px -15px'}}, [
                     dom.buildPanel({
-                        title: 'Options',
+                        title: null,
                         type: 'default',
                         body: [
                             dom.makeButton('Show Details', 'toggle-job-details', {events: events}),
@@ -328,6 +372,7 @@ define([
                         ]
                     }),
                     renderJobStatus(),
+                    renderExecStatus(),
                     renderJobError(),
                     renderJobReport(),
                     renderJobResult(),
@@ -557,6 +602,121 @@ define([
                 dom.disableButton('toggle-job-log');
             }
         }
+        
+         function renderExecState() {
+            var state = model.getItem('runState');
+
+            if (!state) {
+                return;
+            }
+            
+            // Prepare
+//            dom.setContent(['execStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
+//            dom.setContent(['execStatus', 'state'], state.canonicalState);
+//            dom.setContent(['execStatus', 'temporalState'], state.temporalState);
+//            dom.setContent(['execStatus', 'executionState'], state.executionState);
+//
+//            dom.setContent(['execStatus', 'run-id'], state.runId);
+//            dom.setContent(['execStatus', 'job-id'], state.jobId);
+
+
+
+            // LAUNCH
+             if (state.elapsedLaunchTime) {
+                (function () {
+                    // dom.showElement(['execStatus', 'launch-time']);
+                    var label;
+                    if (state.temporalState === 'launching') {
+                        label = 'Launching';
+                    } else {
+                        label = 'Launching';
+                    }
+                    dom.setContent(['execStatus', 'launch', 'label'], label);
+                    dom.setContent(['execStatus', 'launch', 'elapsed'], utils.formatElapsedTime(state.elapsedLaunchTime) || '');
+                }());
+            } else {
+                // dom.hideElement(['execStatus', 'launch-time']);
+                dom.setContent(['execStatus', 'launch', 'elapsed'], '-');
+            }
+            
+            // QUEUE
+             if (state.elapsedQueueTime) {
+                (function () {
+                    //dom.showElement(['execStatus', 'queue']);
+                    var label;
+                    if (state.elapsedRunTime) {
+                        label = 'Was Queued';
+                    } else {
+                        label = 'In Queue';
+                    }
+                    if (state.position !== undefined) {                        
+                        dom.setContent(['execStatus', 'queue', 'position'], state.position);
+                    } else {
+                        dom.setContent(['execStatus', 'queue', 'position'], '-');
+                    }
+                    dom.setContent(['execStatus', 'queue', 'label'], label);
+                    dom.setContent(['execStatus', 'queue', 'elapsed'], utils.formatElapsedTime(state.elapsedQueueTime) || '');
+                }());
+            } else {
+                //dom.hideElement(['execStatus', 'queue']);
+                dom.setContent(['execStatus', 'queue', 'position'], '-');
+                dom.setContent(['execStatus', 'queue', 'elapsed'], '-');
+            }
+            
+            // RUN
+             if (state.elapsedRunTime) {
+                (function () {
+                    //dom.showElement(['runStatus', 'run-time']);
+                    var label;
+                    if (state.completedTime) {
+                        label = 'Ran In';
+                    } else {
+                        label = 'Running For';
+                    }
+                    dom.setContent(['execStatus', 'run', 'label'], label);
+                    dom.setContent(['execStatus', 'run', 'elapsed'], utils.formatElapsedTime(state.elapsedRunTime) || '');
+                }());
+            } else {
+                //dom.hideElement(['execStatus', 'run-time']);
+                dom.setContent(['execStatus', 'run', 'elapsed'], '-');
+            }
+            
+            if (state.completedTime) {
+                // dom.showElement(['execStatus', 'finished']);
+                dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+            } else {
+                // dom.hideElement(['execStatus', 'finished']);
+                dom.setContent(['execStatus', 'finish', 'finishedAt'], '-');
+            }
+
+            if (state.success) {
+                // dom.showElement(['execStatus', 'finish', 'success']);
+                dom.setContent(['execStatus', 'finish', 'state'], 'success');
+                // dom.showElement('job-report');
+                // showJobReport();
+                showJobResult();
+            } else if (state.error) {
+                // dom.showElement(['runStatus', 'error']);
+                dom.setContent(['execStatus', 'finish', 'state'], 'success');
+                //dom.setContent(['runStatus', 'error', 'flag'], 'yes');
+                //dom.showElement(['run-error']);
+                //dom.setContent(['run-error', 'location'], state.error.location);
+                //dom.setContent(['run-error', 'type'], state.error.type);
+                //dom.setContent(['run-error', 'message'], state.error.message);
+                //dom.setContent(['run-error', 'detail'], state.error.detail);
+                // console.log('ERROR', state.error);
+            } else {
+                //dom.hideElement(['run-error']);
+                dom.setContent(['execStatus', 'finish', 'state'], '-');
+            }
+
+            // Now be more stateful here...
+            //if (state.jobId) {
+            //    dom.enableButton('toggle-job-log');
+            //} else {
+            //    dom.disableButton('toggle-job-log');
+            // }
+        }
 
         function updateRunStateFromLaunchEvent(launchEvent, launchState) {
             var temporalState, executionState, canonicalState,
@@ -565,6 +725,8 @@ define([
             if (!launchEvent) {
                 return;
             }
+            
+            console.log('LAUNCH EVENT', launchEvent);
 
             switch (launchEvent.event) {
                 case 'validating_app':
@@ -1048,6 +1210,7 @@ define([
 
             updateRunStateFromLaunchEvent(launchEvent, launchState);
             renderRunState();
+            renderExecState();
         }
 
         function processNewJobState(jobState) {
@@ -1065,6 +1228,7 @@ define([
                 updateJobDetails();
                 showJobDetails();
                 renderRunState();
+                renderExecState();
             }
             // If any.
             // showJobError();
@@ -1155,6 +1319,7 @@ define([
              * bus itself...
              */
             ev = cellBus.on('run-state', function (message) {
+                console.log('GOT RUN STATE', message);
                 processNewLaunchEvent(message);
             });
             listeners.push(ev);
@@ -1188,6 +1353,7 @@ define([
                     updateRunStateFromJobState();
                 }
                 renderRunState();
+                renderExecState();
             });
             listeners.push(ev);
         }
@@ -1205,6 +1371,7 @@ define([
                     processNewJobState(message.jobState);
                 }
                 renderRunState();
+                renderExecState();
             });
         }
 
@@ -1214,6 +1381,12 @@ define([
                 runtime.bus().removeListener(listener);
             });
             listeners = [];
+            // reset job state...
+            model = Props.make({
+                onUpdate: function () {
+                    // render();
+                }
+            });
         }
         
         function getBus() {

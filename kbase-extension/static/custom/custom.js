@@ -586,20 +586,70 @@ define(['jquery',
         codeCell.CodeCell.prototype.renderToggleState = function () {
             cell.Cell.prototype.renderToggleState.apply(this);
             var $cellNode = $(this.element);
+            
             var elemsToToggle = [
-                $cellNode.find('.input .input_area'),
+                // Just the input area -- the cell toolbar is also in .input
+                {
+                    name: 'input',
+                    node: $cellNode.find('.input .input_area')[0]
+                },
+                // The app cell input area, if it exists.
+                // TODO: we should find a way to dispatch on toggle as well
+                // as other events based on custom cell type...
+                {
+                    name: 'app', 
+                    node:  $cellNode.find('[data-subarea-type="app-cell-input"]')[0]
+                },
                 // $cellNode.find('.widget-area'),
-                $cellNode.find('.output_wrapper')
-            ];
+                {
+                    name: 'output',
+                    node: $cellNode.find('.output_wrapper')[0]
+                }
+            ].filter(function (elem) {
+                return (elem.node ? true : false);
+            });
+            
+            // The first time we need to toggle in this session, there will be 
+            // no toggle data on the dom nodes.
+            // We need to keep track of info about cell sub-areaa. E.g. if
+            // a sub-area was closed initially, we need to keep it closed through
+            // cell toggleing. Remember, there is no wrapper around cells, or 
+            // rather, the wrapper includes the toolbar, but we want the toolbar
+            // to be persistent.
+            // TODO: it would be very nice if we could override the cell
+            // structure to be more like:
+            // cell
+            //    toolbar
+            //    closed-view
+            //    open-view
+            //       subarea1
+            //       subarea2
+            
+            var nodeToggleState = $cellNode.data('toggle-initialized');
+            if (!nodeToggleState) {
+                elemsToToggle.forEach(function (elem) {
+                    if (elem.node.classList.contains('hidden')) {
+                        elem.node.setAttribute('data-toggle-initial-state', 'hidden');
+                    } else {
+                        elem.node.setAttribute('data-toggle-initial-state', 'showing');                    
+                    }
+                });
+                $cellNode.data('toggle-initialized', true); 
+            }
+            
             switch (this.getCellState('toggleState', 'unknown')) {
                 case 'closed':
-                    $.each(elemsToToggle, function(i, elem) {
-                        elem.hide();
+                    elemsToToggle.forEach(function (elem) {
+                        if (elem.node.getAttribute('data-toggle-initial-state') === 'showing') {
+                            elem.node.classList.add('hidden');
+                        }
                     });
                     break;
                 default:
-                    $.each(elemsToToggle, function(i, elem) {
-                        elem.show();
+                    elemsToToggle.forEach(function (elem) {
+                        if (elem.node.getAttribute('data-toggle-initial-state') === 'showing') {
+                            elem.node.classList.remove('hidden');
+                        }
                     });
                     break;
             }

@@ -75,6 +75,9 @@ define([
                 Jupyter.notebook.to_markdown();
             }
         }
+        function doToggleCell(e) {
+            $(e.target).trigger('toggle.cell');
+        }
         
         function doDeleteCell(e) {
             var i = Jupyter.notebook.find_cell_index(cell);
@@ -87,7 +90,14 @@ define([
                     div({class: 'row'}, [
                         div({class: 'col-sm-8'}, [
                             div({class: 'buttons pull-left'}, [
-                                button({type: 'button', class: 'btn btn-default btn-xs', role: 'button', dataButton: 'toggle', style: {width: '20%'}}, [
+                                button({
+                                    type: 'button', 
+                                    class: 'btn btn-default btn-xs', 
+                                    role: 'button', 
+                                    dataButton: 'toggle',
+                                    style: {width: '20%'},
+                                    id: attachEvent('click', doToggleCell)
+                                }, [
                                     span({class: 'fa fa-chevron-down'})
                                 ])
                             ]),

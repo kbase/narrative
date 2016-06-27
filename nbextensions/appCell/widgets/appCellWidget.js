@@ -426,8 +426,8 @@ define([
             // TODO: the cell bus should be created and managed through main.js,
             // that is, the extension.
             cellBus = runtime.bus().makeChannelBus({
-                    cell: utils.getMeta(cell, 'attributes', 'id')
-                }, 'A cell channel'),
+            cell: utils.getMeta(cell, 'attributes', 'id')
+        }, 'A cell channel'),
             bus = runtime.bus().makeChannelBus(null, 'A app cell widget'),
             env = {},
             model,
@@ -669,7 +669,7 @@ define([
             node.classList.add('hidden');
         }
 
-        
+
         function renderSetting(settingName) {
             var setting = settings[settingName],
                 value;
@@ -689,16 +689,16 @@ define([
                     break;
             }
         }
-        
+
         function doChangeSetting(event) {
             var control = event.target,
                 settingName = control.value;
-            
+
             model.setItem(['user-settings', settingName], control.checked);
 
             renderSetting(settingName);
         }
-        
+
 
         function renderSettings() {
             var events = Events.make({node: container}),
@@ -722,9 +722,8 @@ define([
                 ]);
             }).join('\n');
             dom.setContent('settings.content', content);
-            // console.log('REALLY', dom.getElement('settings.content'));
             events.attachEvents();
-            
+
             //Ensure that the settings are reflected in the UI.
             Object.keys(settings).forEach(function (key) {
                 renderSetting(key);
@@ -1003,9 +1002,11 @@ define([
         function showCodeInputArea() {
             var codeInputArea = cell.input.find('.input_area');
             if (model.getItem('user-settings.showCodeInputArea')) {
-                codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);
+                codeInputArea.removeClass('hidden');
+                // codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);
             } else {
-                codeInputArea.css('display', 'none');
+                codeInputArea.addClass('hidden');
+                // codeInputArea.css('display', 'none');
             }
         }
 
@@ -1242,13 +1243,13 @@ define([
 
             // Remove all of the execution state when we reset the app.
             model.deleteItem('exec');
-            
+
             // Also ensure that the exec widget is reset
             // widgets.execWidget.bus.emit('reset');
 
             // TODO: evaluate the params again before we do this.
             fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-            
+
             clearOutput();
 
             renderUI();
@@ -1297,13 +1298,20 @@ define([
         }
 
         function updateFromLaunchEvent(message) {
+
+            // Update the exec state.
+            // NB we need to do this because the launch events are only 
+            // sent once from the narrative back end.
+            console.log('TODO: save the launch state', message);
+
+
+            // Update FSM
             var newFsmState = (function () {
                 switch (message.event) {
                     case 'validating_app':
                     case 'validated_app':
                     case 'launching_job':
                         return {mode: 'processing', stage: 'launching'};
-                        break;
                     case 'launched_job':
                         // NEW: start listening for jobs.
                         console.log('Starting to listen for job id', message);
@@ -1393,24 +1401,41 @@ define([
                 },
                 handle: function (message) {
                     // Store the most recent job status (jobInfo) in the model and thus metadata.
-                    var existingState = model.getItem('exec.jobState');
-                    if (!existingState || existingState.job_state !== message.jobState.job_state) {
-                        model.setItem('exec.jobState', message.jobState);
-                        
+                    console.log('DEBUG JOB STATE', message);
+                    var existingState = model.getItem('exec.jobState'),
+                        newJobState = message.jobState;
+                    if (!existingState || existingState.job_state !== newJobState.job_state) {
+                        model.setItem('exec.jobState', newJobState);
+
+                        var execLog = model.getItem('exec.log');
+                        if (!execLog) {
+                            execLog = [];
+                        }
+                        execLog.push({
+                            timestamp: new Date(),
+                            event: 'jobs-status',
+                            data: {
+                                jobState: newJobState
+                            }
+                        });
+                        model.setItem('exec.log', execLog);
+
                         // Now we send the job state on the cell bus, generally.
                         // The model is that a cell can only have one job active at a time.
                         // Thus we can just emit the state of the current job globally
                         // on the cell bus for thos widgets interested.
                         cellBus.emit('job-state', {
-                            jobState: message.jobState
+                            jobState: newJobState
                         });
                     } else {
                         cellBus.emit('job-state-updated', {
-                            jobId: message.jobState.job_id
-                        })
+                            jobId: newJobState.job_id
+                        });
                     }
                     model.setItem('exec.jobStateUpdated', new Date().getTime());
-                    updateFromJobState(message.jobState);
+
+
+                    updateFromJobState(newJobState);
                 }
             });
         }
@@ -1573,13 +1598,13 @@ define([
 
             return newCellId;
         }
-        
+
         function clearOutput() {
             // cell.set_text('from biokbase.narrative.jobs import AppManager\nAppManager().clear_app()');
             // cell.execute();
             var cellNode = cell.element.get(0),
                 textNode = document.querySelector('.output_area.output_text');
-            
+
             if (textNode) {
                 textNode.innerHTML = '';
             }
@@ -1753,18 +1778,28 @@ define([
 
                 // TODO: only turn this on when we need it!
                 cellBus.on('run-status', function (message) {
+                    // console.log('have run statusx', message);
                     updateFromLaunchEvent(message);
-                    utils.pushMeta(cell, 'appCell.exec.log', {
+
+                    model.setItem('exec.runState', message);
+
+                    // Save this to the exec state change log.
+                    var execLog = model.getItem('exec.log');
+                    if (!execLog) {
+                        execLog = [];
+                    }
+                    execLog.push({
                         timestamp: new Date(),
-                        event: 'runstatus',
+                        event: 'run-status',
                         data: {
                             jobId: message.jobId,
                             runId: message.runId,
                             status: message.event
                         }
                     });
+                    model.setItem('exec.log', execLog);
                 });
-                
+
                 cellBus.on('output-cell-removed', function (message) {
                     var output = model.getItem('output');
 
@@ -2085,9 +2120,9 @@ define([
                     'nbextensions/appCell/widgets/appExecWidget'
                 ], function (Widget) {
                     var widget = Widget.make({
-                            bus: cellBus,
-                            workspaceInfo: workspaceInfo
-                        });
+                        bus: cellBus,
+                        workspaceInfo: workspaceInfo
+                    });
                     widgets.execWidget = {
                         path: ['exec-group', 'widget'],
                         instance: widget

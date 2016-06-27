@@ -263,13 +263,22 @@ define([
                         content = msg.content.data.content;
                     for (var jobId in content) {
 
-                        this.jobStates[jobId] = content[jobId].state;
-                        this.jobStates[jobId].spec = content[jobId].spec;
+                        this.jobStates[jobId] = content[jobId];
+                        //this.jobStates[jobId].state = content[jobId].state;
+                        //this.jobStates[jobId].spec = content[jobId].spec;
 
                         // The job state includes both the job state info and the
                         // app spec. Not sure why...
                         // WJR - because the renderer needs info from the app spec
                         // like its name and such.
+                        // EAP - what i mean was why it is sent with each job state
+                        // message. I can see that given that job_status may be
+                        // issued at any arbitrary front end state, and the spec
+                        // will be useful on the first message received, it might 
+                        // be better to just bite the bullet and require that any
+                        // element which needs the app spec fetch that 
+                        // independently, or rather perhaps the appmanager could
+                        // arbitrate those requets.
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
                             jobState: content[jobId].state
@@ -277,7 +286,7 @@ define([
                     }
                     var jobsToDelete = [];
                     Object.keys(this.jobStates).forEach(function (jobId) {
-                        var jobState = this.jobStates[jobId];
+                        var jobState = this.jobStates[jobId].state;
                         if (!content[jobState.job_id]) {
                             this.sendJobMessage('job-deleted', jobState.job_id, {
                                 jobId: jobState.job_id
@@ -302,7 +311,7 @@ define([
 
                     // TODO: make sure we are catching these ... perhaps they need to be run-status...
                     // this.sendJobMessage('job-status', msg.content.data.content.job_id, msg.content.data.content);
-                    // console.log('have run status', msg.content.data.content);
+                    console.log('have run status', msg.content.data.content);
                     this.sendCellMessage('run-status', msg.content.data.content.cell_id, msg.content.data.content);
                     break;
                 case 'job_err':
@@ -577,8 +586,8 @@ define([
 //                }
                 var sortedJobIds = Object.keys(this.jobStates);
                 sortedJobIds.sort(function (a, b) {
-                    var aTime = this.jobStates[a].creation_time;
-                    var bTime = this.jobStates[b].creation_time;
+                    var aTime = this.jobStates[a].state.creation_time;
+                    var bTime = this.jobStates[b].state.creation_time;
                     // if we have timestamps for both, compare them
                     return aTime - bTime;
                 }.bind(this));
@@ -588,8 +597,8 @@ define([
 
                     // if the id shows up in the "render me!" list:
                     // only those we fetched might still be running.
-                    if (this.jobStates[jobId]) {
-                        if (this.jobIsIncomplete(this.jobStates[jobId].job_state))
+                    if (this.jobStates[jobId] && this.jobStates[jobId].state) {
+                        if (this.jobIsIncomplete(this.jobStates[jobId].state.job_state))
                             stillRunning++;
 
                           // this message is already sent in the core code which
@@ -653,8 +662,8 @@ define([
 
             var status = "Unknown";
             // if (jobState && jobState.status) {
-            if (job.job_state) {
-                status = job.job_state;
+            if (job.state.job_state) {
+                status = job.state.job_state;
                 status = status.charAt(0).toUpperCase() +
                          status.substring(1);
             }
@@ -683,13 +692,13 @@ define([
             var completedTime = null;
             var runTime = null;
             var startedTime = null;
-            if (job.creation_time) {
-                startedTime = TimeFormat.prettyTimestamp(job.creation_time);
+            if (job.state.creation_time) {
+                startedTime = TimeFormat.prettyTimestamp(job.state.creation_time);
             }
-            if (job.finish_time) {
-                completedTime = TimeFormat.prettyTimestamp(job.finish_time);
-                if (job.creation_time) {
-                    runTime = TimeFormat.calcTimeDifference(new Date(job.exec_start_time), new Date(job.finish_time));
+            if (job.state.finish_time) {
+                completedTime = TimeFormat.prettyTimestamp(job.state.finish_time);
+                if (job.state.creation_time) {
+                    runTime = TimeFormat.calcTimeDifference(new Date(job.state.exec_start_time), new Date(job.state.finish_time));
                 }
             }
 
@@ -732,15 +741,15 @@ define([
                 default:
                     break;
             }
-            if (job.position !== undefined &&
-                job.position !== null &&
-                job.position > 0) {
-                position = job.position;
+            if (job.state.position !== undefined &&
+                job.state.position !== null &&
+                job.state.position > 0) {
+                position = job.state.position;
             }
 
             var jobRenderObj = {
                 name: jobName,
-                hasCell: job.cell_id,
+                hasCell: job.state.cell_id,
                 jobId: jobId,
                 status: new Handlebars.SafeString(status),
                 runTime: runTime,
@@ -763,9 +772,9 @@ define([
                     this.triggerJobErrorButton(jobId, errorType);
                 }.bind(this));
             }
-            if (job.cell_id) {
+            if (job.state.cell_id) {
                 $jobDiv.find('span.fa-location-arrow').click(function (e) {
-                    var cell = Jupyter.narrative.getCellByKbaseId(job.cell_id);
+                    var cell = Jupyter.narrative.getCellByKbaseId(job.state.cell_id);
                     Jupyter.narrative.scrollToCell(cell, true);
                 });
             }

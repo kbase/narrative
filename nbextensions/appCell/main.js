@@ -27,6 +27,7 @@ define([
     'common/parameterSpec',
     'common/utils',
     'common/clock',
+    'common/dom',
 //    './widgets/codeCellRunWidget',
     'kb_service/utils',
     'kb_service/client/workspace',
@@ -43,11 +44,13 @@ define([
     ParameterSpec,
     utils,
     Clock,
+    Dom,
     serviceUtils,
     Workspace
     ) {
     'use strict';
     var t = html.tag,
+        div = t('div'),
         workspaceInfo,
         env,
         runtime = Runtime.make();
@@ -424,7 +427,10 @@ define([
                     runtime: runtime,
                     workspaceInfo: workspaceInfo
                 }),
-                kbaseNode = document.createElement('div');
+                dom = Dom.make({node: cell.input[0]}),
+                kbaseNode = dom.createNode(div({
+                    dataSubareaType: 'app-cell-input'
+                }));
 
             // Create (above) and place the main container for the input cell.
             cell.input.after($(kbaseNode));

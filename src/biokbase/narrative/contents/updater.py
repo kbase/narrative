@@ -126,6 +126,9 @@ def update_method_cell(cell):
         ts = datetime.datetime.utcfromtimestamp(ts/1000.0).strftime('%a, %d %b %Y %H:%M:%S GMT')
 
     git_hash = method_info.get('git_commit_hash', None)
+    app_name = method_info.get('id', '')
+    # the app_name in this case, is everything after the slash. So MegaHit/run_megahit would just be 'run_megahit'
+    app_name = app_name[app_name.find('/')+1:]
     module_name = method_behavior.get('kb_service_name', None)
     tag = None
     # now we get the version, if it exists.
@@ -140,15 +143,37 @@ def update_method_cell(cell):
     #   if THAT fails, the cell can't be updated.
     # if no git_hash or module_name, it's not an SDK-based cell and can't be looked up.
     if git_hash and module_name:
+        cat = clients.get('catalog')
+        tag_pref_order = ['release', 'beta', 'dev']
         try:
             print('looking up ' + module_name + ' hash ' + git_hash)
-            version_info = clients.get('catalog').get_module_version({'module_name': module_name, 'version': git_hash})
+            version_info = cat.get_module_version({'module_name': module_name, 'version': git_hash})
+            if 'release_tags' in version_info:
+                tags = version_info['release_tags']
+                if len(tags) > 0:
+                    tags = [t.lower() for t in tags]
+                    for tag_pref in tag_pref_order:
+                        if tag_pref in tags:
+                            tag = tag_pref
+                if tag is None:
+                    raise Exception("No release tag found!")
         except Exception as e:
-            tag = 'wat'
-            print(e)
+            print("Exception found: {}".format(str(e)))
+            try:
+                print("Searching for module info...")
+                mod_info = cat.get_module_info({'module_name': module_name})
+                # look for most recent (R > B > D) release tag with the app.
+                for tag_pref in tag_pref_order:
+                    tag_info = mod_info.get(tag_pref, None)
+                    if tag_info is not None and app_name in tag_info.get('narrative_methods', []):
+                        tag = tag_pref
+                        break
+                print("tag set to {}".format(tag))
+            except Exception as e2:
+                print("Exception found: {}".format(e2))
     else:
         # it's not an SDK method! do something else!
-        pass
+        return obsolete_method_cell(cell)
 
     new_meta = {
         'type': 'app',
@@ -187,6 +212,11 @@ def update_method_cell(cell):
     cell['metadata']['kbase'] = new_meta
     del cell['metadata']['kb-cell']
     cell['source'] = u''
+    return cell
+
+def obsolete_method_cell(cell):
+    cell['source'] = u'### Obsolete Cell!\nSorry, this cell\'s method is obsolete. Thanks for playing!'
+    del cell['metadata']['kb-cell']
     return cell
 
 def update_app_cell(cell):

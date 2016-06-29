@@ -71,12 +71,7 @@ def update_method_cell(cell):
        states are either editing or complete (default to editing)
     2. We don't know what tag the methods came from, so go with 'release'
     """
-    # 1. Turn it into a code cell.
-    cell['cell_type'] = u'code'
-    cell['execution_count'] = None
-    cell['outputs'] = []
-
-    # 2. Get its metadata and update it to be new cell-ish
+    # 1. Get its metadata and update it to be new cell-ish
     meta = cell['metadata']['kb-cell']
     if 'method' not in meta:
         # throw an error?
@@ -173,7 +168,7 @@ def update_method_cell(cell):
                 print("Exception found: {}".format(e2))
     else:
         # it's not an SDK method! do something else!
-        return obsolete_method_cell(cell)
+        return obsolete_method_cell(cell, method_info.get('name'), method_params)
 
     new_meta = {
         'type': 'app',
@@ -209,13 +204,37 @@ def update_method_cell(cell):
         }
     }
 
+    # Finally, turn it into a code cell.
+    cell['cell_type'] = u'code'
+    cell['execution_count'] = None
+    cell['outputs'] = []
     cell['metadata']['kbase'] = new_meta
     del cell['metadata']['kb-cell']
     cell['source'] = u''
     return cell
 
-def obsolete_method_cell(cell):
-    cell['source'] = u'### Obsolete Cell!\nSorry, this cell\'s method is obsolete. Thanks for playing!'
+def obsolete_method_cell(cell, app_name, params):
+    cell['cell_type'] = 'markdown'
+    format_params = '<ul>' + '\n'.join(['<li>{} - {}</li>'.format(p, params[p]) for p in params]) + '</ul>'
+    base_source = """<div style="border:1px solid #CECECE; padding: 5px">
+    <div style="font-size: 120%; font-family: 'OxygenBold', Arial, sans-serif; color:#2e618d;">Obsolete App!</div>
+    <div style="font-family: 'OxygenBold', Arial, sans-serif;">
+    {}
+    </div>
+    Sorry, this app is obsolete and can no longer function. But don't worry! Any outputs of this method have been retained.
+    <br>Parameters:
+    {}
+    </div>"""
+
+    cell['source'] = unicode(base_source.format(app_name, format_params))
+
+    # cell['source'] = unicode('\n'.join([
+    #     "### Obsolete Cell!",
+    #     "Sorry, this cell\'s app is obsolete. Any outputs of this method have been retained.  ",
+    #     "**" + app_name + "**  ",
+    #     "Parameters:  ",
+    #     format_params
+    # ]))
     del cell['metadata']['kb-cell']
     return cell
 
@@ -223,9 +242,10 @@ def update_app_cell(cell):
     """
     Updates an app cell to the new style (which is deprecated...)
     """
-    # (let the front end deal with it)
-    cell['metadata']['kbase'] = {'old_app': True, 'info': cell['metadata']['kb-cell']}
-    del cell['metadata']['kb-cell']
+    meta = cell['metadata']['kb-cell']
+    app_name = meta.get('app', {}).get('info', {}).get('name', 'Unknown app') + " (multi-step app)"
+    cell = obsolete_method_cell(cell, app_name, {})
+    cell['metadata']['kbase'] = {'old_app': True, 'info': meta}
     return cell
 
 def update_output_cell(cell):

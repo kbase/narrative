@@ -46,7 +46,7 @@ define([
                     onOpen: function (arg) {
                         arg.node.innerHTML = '';
                         var logViewer = LogViewer.make();
-                        widgets.jobLog = logViewer;
+                        widgets.logViewer = logViewer;
                         logViewer.start();
                         logViewer.bus.emit('run', {
                             node: arg.node,
@@ -54,8 +54,10 @@ define([
                         });
                     },
                     onClose: function (arg) {
-                        widgets.logViewer.bus.emit('stop');
-                        delete widgets.jobLog;
+                        if (widgets.logViewer) {
+                            widgets.logViewer.bus.emit('stop');
+                        }
+                        delete widgets.logViewer;
                         arg.node.innerHTML = 'done';
                     }
                 },
@@ -512,7 +514,7 @@ define([
                 dom.setContent(['run-error', 'type'], state.error.type);
                 dom.setContent(['run-error', 'message'], state.error.message);
                 dom.setContent(['run-error', 'detail'], state.error.detail);
-                // console.log('ERROR', state.error);
+                console.log('ERROR', state.error);
             } else {
                 dom.hideElement(['run-error']);
             }
@@ -629,7 +631,7 @@ define([
                 dom.setContent(['run-error', 'type'], state.error.type);
                 dom.setContent(['run-error', 'message'], state.error.message);
                 dom.setContent(['run-error', 'detail'], state.error.detail);
-                // console.log('ERROR', state.error);
+                console.log('ERROR', state.error);
             } else {
                 dom.hideElement(['run-error']);
             }
@@ -720,6 +722,7 @@ define([
                 dom.setContent(['execStatus', 'run', 'elapsed'], '-');
             }
             
+            console.error('WHAT?', state);
             if (state.success) {
                 // dom.showElement(['execStatus', 'finish', 'success']);
                 dom.setContent(['execStatus', 'finish', 'state'], 'success');
@@ -735,6 +738,7 @@ define([
                 dom.setContent(['run-error', 'type'], state.error.type);
                 dom.setContent(['run-error', 'message'], state.error.message);
                 dom.setContent(['run-error', 'detail'], state.error.detail);
+                console.error('ERROR', state.error);
             } else {
                 //dom.hideElement(['run-error']);
                 dom.setContent(['execStatus', 'finish', 'state'], '-');
@@ -1397,6 +1401,9 @@ define([
                 });
                 render();
                 setup();
+                if (message.runState) {
+                    processNewLaunchEvent(message.runState);
+                }
                 if (message.jobState) {
                     processNewJobState(message.jobState);
                 }

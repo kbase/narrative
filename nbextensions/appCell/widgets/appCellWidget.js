@@ -2134,6 +2134,7 @@ define([
                     widget.start();
                     widget.bus().emit('run', {
                         node: dom.getElement('exec-group.widget'),
+                        runState: model.getItem('exec.runState'),
                         jobState: model.getItem('exec.jobState')
                     });
                     resolve();

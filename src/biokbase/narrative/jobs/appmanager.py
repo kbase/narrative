@@ -4,6 +4,7 @@ A module for managing apps, specs, requirements, and for starting jobs.
 __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 
 from .job import Job
+from .viewer_job import ViewerJob
 import biokbase.narrative.clients as clients
 from .jobmanager import JobManager
 from .specmanager import SpecManager
@@ -48,7 +49,7 @@ class AppManager(object):
     _log = kblogging.get_logger(__name__)
     _log.setLevel(logging.INFO)
     _comm = None
-
+    viewer_count=1
 
     def __new__(cls):
         if AppManager.__instance is None:
@@ -116,7 +117,7 @@ class AppManager(object):
     def run_app(self, *args, **kwargs):
         try:
             return self._run_app_internal(*args, **kwargs)
-        except Exception, e:
+        except Exception as e:
             cell_id = kwargs.get('cell_id', None)
             run_id = kwargs.get('run_id', None)
             e_type = type(e).__name__
@@ -163,6 +164,8 @@ class AppManager(object):
             'run_id': run_id
         })
 
+        viewer_app = False
+
         ### TODO: this needs restructuring so that we can send back validation failure
         ### messages. Perhaps a separate function and catch the errors, or return an
         ### error structure.
@@ -175,12 +178,23 @@ class AppManager(object):
 
         # Get the spec & params
         spec = self.spec_manager.get_spec(app_id, tag)
-        if not 'behavior' in spec or not 'kb_service_input_mapping' in spec['behavior']:
-            raise Exception("This app is not SDK-compatible!")
-        spec_params = self.spec_manager.app_params(spec)
 
+        # There's some branching to do here.
+        # Cases:
+        # app has behavior.kb_service_input_mapping -- is a valid long-running app.
+        # app only has behavior.output_mapping - not kb_service_input_mapping or script_module - it's a viewer and should return immediately
+        # app has other things besides kb_service_input_mapping -- not a valid app.
+        if not 'behavior' in spec:
+            raise Exception("This app appears invalid - it has no defined behavior")
+
+        if not 'kb_service_input_mapping' in spec['behavior']:
+            if 'output_mapping' in spec['behavior']:
+                viewer_app = True
+            else:
+                raise Exception("This app is not SDK-compatible!")
 
         # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
+        spec_params = self.spec_manager.app_params(spec)
         spec_param_ids = [ p['id'] for p in spec_params ]
 
         # First, test for presence.
@@ -238,7 +252,6 @@ class AppManager(object):
             if p['default'] and p['id'] not in params:
                 params[p['id']] = p['default']
 
-
         self._send_comm_message('run_status', {
             'event': 'validated_app',
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
@@ -246,82 +259,95 @@ class AppManager(object):
             'run_id': run_id
         })
 
-        # Okay, NOW we can start the show
-        input_vals = dict()
-        for param in spec['behavior']['kb_service_input_mapping']:
-            p_value = None
-            p_id = param.get('target_property', 'invalid_mapping')
-            if 'input_parameter' in param:
-                p_value = params.get(param['input_parameter'], None)
-            elif 'narrative_system_variable' in param:
-                p_value = system_variable(param['narrative_system_variable'])
-            input_vals[p_id] = p_value
 
-        service_method = spec['behavior']['kb_service_method']
-        service_name = spec['behavior']['kb_service_name']
-        service_ver = spec['behavior'].get('kb_service_version', None)
-        #if (service_ver == None):
-        #    raise ValueError('Invalid method - service version (behavior.kb_service_version) not found in spec')
+        # Now we branch. If it's a viewer, make and register a transient 'ViewerJob' that'll handle the rest.
+        # Otherwise, make a real Job
+        if viewer_app:
+            log_info = {
+                'app_id': app_id,
+                'tag': tag,
+                'version': 'old_viewer',
+                'username': system_variable('user_id'),
+                'wsid': ws_id
+            }
+            self._log.setLevel(logging.INFO)
+            kblogging.log_event(self._log, "run_app", log_info)
+            self._send_comm_message('run_status', {
+                'event': 'launching_job',
+                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+                'cell_id': cell_id,
+                'run_id': run_id
+            })
+            new_job = ViewerJob(self.viewer_count, app_id, [params], tag=tag, cell_id=cell_id)
+            self.viewer_count += 1
 
-        service_url = spec['behavior']['kb_service_url']
+        else:
+            # Okay, NOW we can start the show
+            input_vals = dict()
+            for param in spec['behavior']['kb_service_input_mapping']:
+                p_value = None
+                p_id = param.get('target_property', 'invalid_mapping')
+                if 'input_parameter' in param:
+                    p_value = params.get(param['input_parameter'], None)
+                elif 'narrative_system_variable' in param:
+                    p_value = system_variable(param['narrative_system_variable'])
+                input_vals[p_id] = p_value
 
-        app_id_dot = service_name + '.' + service_method
-        # app_id_dot = app_id.replace('/', '.')
+            service_method = spec['behavior']['kb_service_method']
+            service_name = spec['behavior']['kb_service_name']
+            service_ver = spec['behavior'].get('kb_service_version', None)
+            #if (service_ver == None):
+            #    raise ValueError('Invalid method - service version (behavior.kb_service_version) not found in spec')
 
+            service_url = spec['behavior']['kb_service_url']
 
-        # typedef structure {
-        #     string method;
-        #     list<UnspecifiedObject> params;
-        #     string service_ver;
-        #     RpcContext rpc_context;
-        #     string remote_url;
-        #     list<wsref> source_ws_objects;
-        #     string app_id;
-        #     mapping<string, string> meta;
-        #     int wsid;
-        # } RunJobParams;
+            # This is what calls the function in the back end - Module.method
+            # This isn't the same as the app spec id.
+            function_name = service_name + '.' + service_method
+            job_meta = {'tag': tag}
+            if cell_id is not None:
+                job_meta['cell_id'] = cell_id
+            if run_id is not None:
+                job_meta['run_id'] = run_id
 
-        job_meta = {'tag': tag}
-        if cell_id is not None:
-            job_meta['cell_id'] = cell_id
-        if run_id is not None:
-            job_meta['run_id'] = run_id
+            job_runner_inputs = {
+                'method' : function_name,
+                'service_ver' : service_ver,
+                'params' : [input_vals],
+                'app_id' : app_id,
+                'wsid': ws_id,
+                'meta': job_meta
+            }
+            if len(ws_input_refs) > 0:
+                job_runner_inputs['source_ws_objects'] = ws_input_refs
 
-        job_runner_inputs = {
-            'method' : app_id_dot,
-            'service_ver' : service_ver,
-            'params' : [input_vals],
-            'app_id' : app_id,
-            'wsid': ws_id,
-            'meta': job_meta
-        }
-        if len(ws_input_refs) > 0:
-            job_runner_inputs['source_ws_objects'] = ws_input_refs
+            log_info = {
+                'app_id': app_id,
+                'tag': tag,
+                'version': service_ver,
+                'username': system_variable('user_id'),
+                'wsid': ws_id
+            }
+            self._log.setLevel(logging.INFO)
+            kblogging.log_event(self._log, "run_app", log_info)
 
-        log_info = {
-            'app_id': app_id,
-            'tag': tag,
-            'version': service_ver,
-            'username': system_variable('user_id'),
-            'wsid': ws_id
-        }
-        self._log.setLevel(logging.INFO)
-        kblogging.log_event(self._log, "run_app", log_info)
+            self._send_comm_message('run_status', {
+                'event': 'launching_job',
+                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+                'cell_id': cell_id,
+                'run_id': run_id
+            })
 
-        self._send_comm_message('run_status', {
-            'event': 'launching_job',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
+            try:
+                job_id = self.njs.run_job(job_runner_inputs)
+            except Exception as e:
+                log_info.update({'err': str(e)})
+                self._log.setLevel(logging.ERROR)
+                kblogging.log_event(self._log, "run_app_error", log_info)
+                raise
 
-        try:
-            job_id = self.njs.run_job(job_runner_inputs)
-        except Exception, e:
-            log_info.update({'err': str(e)})
-            self._log.setLevel(logging.ERROR)
-            kblogging.log_event(self._log, "run_app_error", log_info)
-            raise
+            new_job = Job(job_id, app_id, [params], tag=tag, app_version=service_ver, cell_id=cell_id)
+
 
         self._send_comm_message('run_status', {
             'event': 'launched_job',
@@ -330,10 +356,6 @@ class AppManager(object):
             'run_id': run_id,
             'job_id': job_id
         })
-
-
-        # new_job = Job(app_state['job_id'], app_id, params, tag=tag, app_version=service_ver, cell_id=cell_id)
-        new_job = Job(job_id, app_id, [params], tag=tag, app_version=service_ver, cell_id=cell_id)
         JobManager().register_new_job(new_job)
         if cell_id is not None:
             return
@@ -396,7 +418,7 @@ class AppManager(object):
         # allow None to pass, we'll just pass it to the method and let it get rejected there.
         if value is None:
             return (ws_ref, None)
-        
+
         # Also, for strings, last I heard, an empty string is the same as null/None
         if param['type'] == 'string' and isinstance(value, basestring) and value == '':
             return (ws_ref, '')

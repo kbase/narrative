@@ -265,6 +265,7 @@ define([
 
                         this.jobStates[jobId] = content[jobId].state;
                         this.jobStates[jobId].spec = content[jobId].spec;
+                        this.jobStates[jobId].widgetParameters = content[jobId].widget_info;
 
                         // The job state includes both the job state info and the
                         // app spec. Not sure why...
@@ -272,13 +273,14 @@ define([
                         // like its name and such.
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
-                            jobState: content[jobId].state
+                            jobState: content[jobId].state,
+                            widgetParameters: content[jobId].widget_info
                         });
                     }
                     var jobsToDelete = [];
                     Object.keys(this.jobStates).forEach(function (jobId) {
                         var jobState = this.jobStates[jobId];
-                        if (!content[jobState.job_id]) {
+                        if (!jobState || !content[jobState.job_id]) {
                             this.sendJobMessage('job-deleted', jobState.job_id, {
                                 jobId: jobState.job_id
                             });
@@ -482,6 +484,7 @@ define([
             // remove the view widget
             if (this.jobWidgets[jobId]) {
                 this.jobWidgets[jobId].remove();
+                delete this.jobWidgets[jobId];
             }
 
             // clean the metadata storage
@@ -493,8 +496,9 @@ define([
 
             // clean this widget's internal state
             if (this.jobStates[jobId]) {
+                console.log('REMOVING JOB STATE', this.jobStates[jobId]);
                 // if it wasn't complete, we likely have an invalid number in the badge.
-                if (this.jobIsIncomplete(this.jobStates[jobId].status)) {
+                if (this.jobIsIncomplete(this.jobStates[jobId].job_state)) {
                     this.setJobCounter(Number(this.$jobCountBadge.html()) - 1);
                 }
                 // delete this.source2Job[this.jobStates[jobId].source];
@@ -539,8 +543,12 @@ define([
          * @private
          */
         jobIsIncomplete: function (status) {
-            status = status.toLowerCase();
-            return (status === 'in-progress' || status === 'queued');
+            if (status) {
+                status = status.toLowerCase();
+                return (status === 'in-progress' || status === 'queued');
+            }
+            else
+                return true;
         },
         /**
          * @method
@@ -688,8 +696,11 @@ define([
             }
             if (job.finish_time) {
                 completedTime = TimeFormat.prettyTimestamp(job.finish_time);
-                if (job.creation_time) {
+                if (job.exec_start_time) {
                     runTime = TimeFormat.calcTimeDifference(new Date(job.exec_start_time), new Date(job.finish_time));
+                }
+                else if (job.creation_time) {
+                    runTime = TimeFormat.calcTimeDifference(new Date(job.creation_time), new Date(job.finish_time));
                 }
             }
 

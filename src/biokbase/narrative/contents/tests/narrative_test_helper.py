@@ -105,5 +105,5 @@ if __name__ == '__main__':
     password = getpass('Password for {}: '.format(test_user_id))
     t = biokbase.auth.Token(user_id=test_user_id, password=password)
 
-    fetch_narrative('2795/1', t.token, file_name='updater_test_big_nar.json')
+    fetch_narrative('8245/32', t.token, file_name='updater_test_poplar.json')
 

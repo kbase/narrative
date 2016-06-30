@@ -101,7 +101,7 @@ define([
                 default:
                     toggleIcon.classList.remove(closedIcon);
                     toggleIcon.classList.add(openIcon);
-                    console.warn('INVALID TOGGLE STATE, ASSUMING OPEN', toggleState);
+                    // console.warn('INVALID TOGGLE STATE, ASSUMING OPEN', toggleState);
             }
         }
 

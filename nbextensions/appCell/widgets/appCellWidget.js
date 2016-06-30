@@ -1087,24 +1087,24 @@ define([
 
 
 //        function showToggle(name) {
-//            
+//
 //        }
-//        
+//
 //        function ensureToggle(name) {
 //            var propName = 'user-settings.show-' + name,
 //                elementPath = 'toggle-' + name,
-//            
+//
 //        }
-//        
+//
 //        // just simple display block/none for now
 //        function renderToggle(name) {
 //            var propName = 'user-settings.show-' + name,
 //                elementPath = 'toggle-' + name,
 //                node = dom.getElement(elementPath),
 //                originalStyle = model.getItem(propName);
-//            
+//
 //            if (orig
-//            
+//
 //        }
 //
 //        function toggleToggle(name) {
@@ -1196,7 +1196,7 @@ define([
                 // through the callback -- it is just logged to the console.
                 // Gulp!
 
-                // we don't really delete jobs here any more, just 
+                // we don't really delete jobs here any more, just
                 // temporarily disable for now.
 
                 // This is now fire and forget.
@@ -1207,8 +1207,8 @@ define([
                 resolve();
 
 
-//                
-//                
+//
+//
 //                function callback(value) {
 //                    resolve(value);
 //                }
@@ -1402,8 +1402,6 @@ define([
                     type: 'job-status'
                 },
                 handle: function (message) {
-                    // Store the most recent job status (jobInfo) in the model and thus metadata.
-                    console.log('DEBUG JOB STATE', message);
                     var existingState = model.getItem('exec.jobState'),
                         newJobState = message.jobState;
                     if (!existingState || existingState.job_state !== newJobState.job_state) {
@@ -1447,42 +1445,42 @@ define([
         }
 
         /*
-         * This message implementation is called whenever the app cell widget 
+         * This message implementation is called whenever the app cell widget
          * enters the "success" state.
-         * 
+         *
          * The job here is to evaluate the output of the execution and to ensure
          * that any output products have been made available in the narrative.
-         * 
+         *
          * Here is what we need to handle:
-         * 
-         * 1. The canonical case of one or more objects created in this workspace, 
+         *
+         * 1. The canonical case of one or more objects created in this workspace,
          * and named in the output parameters.
-         * 
+         *
          * 2. A job report object which should also be displayed.
-         * 
+         *
          * After displaying the objects, we record this in the cell metadata
-         * 
-         * If the user decides to delete the output cells, this ensures that we 
+         *
+         * If the user decides to delete the output cells, this ensures that we
          * will not add them again.
-         * 
-         * However, we will produce user interface elements to ensure that the 
+         *
+         * However, we will produce user interface elements to ensure that the
          * user can re-insert them if they want to.
-         * 
+         *
          * OR
-         * 
+         *
          * I think it is supposed to work like this:
-         * 
-         * kb_service_output_mapping in the app spec provides an array 
+         *
+         * kb_service_output_mapping in the app spec provides an array
          * of "mappings" to produce input paramters (an argument which is a object
-         * composed of said properties) for an "output widget". The output widget 
+         * composed of said properties) for an "output widget". The output widget
          * is named in info.output_types
-         * 
+         *
          * All rather fishy and fragile looking to me.
-         * Why can't we just classify the types of output available? 
+         * Why can't we just classify the types of output available?
          * Are there really going to be many use cases of outputs customized
          * like this? I expect the vast majority will either be reports or simply
          * the output objects.
-         * 
+         *
          */
         function getOutputParams() {
             var outputParams = env.appSpec.parameters.map(function (parameter) {
@@ -1546,7 +1544,7 @@ define([
         }
         function doOnSuccessx() {
             // See if we've already done this before, if so, skip it.
-            // TODO: the fsm should have a way of invoking events on only the first 
+            // TODO: the fsm should have a way of invoking events on only the first
             // time entering a state ;)
 
             // Save the state data for output into special model properties.
@@ -1578,6 +1576,8 @@ define([
                 newCell = Jupyter.notebook.insert_cell_below('code', cellIndex),
                 newCellId = new Uuid(4).format();
 
+            var widgetParams = model.getItem('exec.jobState.widgetParameters');
+
             newCell.metadata = {
                 kbase: {
                     type: 'output',
@@ -1596,7 +1596,15 @@ define([
                 }
             };
 
-            newCell.set_text('JobManager().get_job("' + jobId + '").output_viewer()');
+            var outputCode = 'WidgetManager().show_output_widget(\n    "' + widgetParams.name + '",\n    tag="' + widgetParams.tag + '",\n';
+            var paramsList = [];
+            Object.keys(widgetParams.params).map(function(p) {
+                paramsList.push('    ' + p + '="' + widgetParams.params[p] + '"');
+            });
+            outputCode += paramsList.join(',\n') + '\n)';
+            newCell.set_text(outputCode);
+
+            // newCell.set_text('JobManager().get_job("' + jobId + '").output_viewer()');
 
             newCell.execute();
 
@@ -1638,7 +1646,7 @@ define([
                 outputCreated = model.getItem(['exec', 'outputCreated']);
 
 
-            // New app -- check the existing exec state, see if the 
+            // New app -- check the existing exec state, see if the
             // output has been created already, and if so just exit.
             // This protects us from the condition in which a user
             // has removed the output for the latest run.
@@ -1750,7 +1758,7 @@ define([
                 // But this is a race condition -- and it is probably better
                 // if the cell invokes this response and then can receive either
                 // the start of the job-status message stream or a response indicating
-                // that the job has completed, after which we don't need to 
+                // that the job has completed, after which we don't need to
                 // listen any further.
 
                 // get the status
@@ -1825,7 +1833,7 @@ define([
 //                    },
 //                    key: {
 //                        type: 'job-status',
-//                        jobId: 
+//                        jobId:
 //                    },
 //                    handle: function (message) {
 //
@@ -1943,7 +1951,7 @@ define([
             // to something more suitable for the app params.
 
             // This is necessary because some params, like subdata, have a
-            // natural storage as array, but are supposed to be provided as 
+            // natural storage as array, but are supposed to be provided as
             // a string with comma separators
             var params = model.getItem('params'),
                 paramSpecs = env.parameters,
@@ -2202,7 +2210,7 @@ define([
             data: utils.getMeta(cell, 'appCell'),
             onUpdate: function (props) {
                 utils.setMeta(cell, 'appCell', props.getRawObject());
-                saveNarrative();
+                // saveNarrative();
             }
         });
 

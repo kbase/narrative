@@ -172,6 +172,8 @@ define([
                 body: body
             };
             this.logsView = this.makeLogsPanel();
+            this.reportView = this.makeReportPanel();
+            this.newDataView = this.makeNewDataView();
             var $tabDiv = $('<div>');
             var tabs = new KBaseTabs($tabDiv, {
                 tabs: [
@@ -182,6 +184,14 @@ define([
                     {
                         tab: 'Logs',
                         content: this.logsView
+                    },
+                    {
+                        tab: 'Report',
+                        content: this.reportView
+                    },
+                    {
+                        tab: 'New Data Objects',
+                        content: this.newDataView
                     }
                 ]
             });
@@ -193,6 +203,14 @@ define([
             this.view.statusPanel.remove();
             this.view.statusPanel = this.updateJobStatusPanel();
             this.view.body.append($(this.view.statusPanel));
+        },
+
+        makeNewDataView: function() {
+            return $('<div>');
+        },
+
+        makeReportPanel: function() {
+            return $('<div>');
         },
 
         makeBody: function() {

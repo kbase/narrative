@@ -62,7 +62,7 @@ class JobManager(object):
                 'authstrat': 'kbaseworkspace',
                 'authparams': [str(ws_id)]
             })
-        except Exception, e:
+        except Exception as e:
             kblogging.log_event(self._log, 'init_error', {'err': str(e)})
             self._send_comm_message('job_init_err', {'msg': 'Unable to get jobs list!', 'err': str(e)})
             raise
@@ -76,7 +76,7 @@ class JobManager(object):
                     'refresh': True,
                     'job': Job.from_state(job_id, job_info, app_id=job_info.get('app_id'), tag=job_meta.get('tag', 'release'), cell_id=job_meta.get('cell_id', None))
                 }
-            except Exception, e:
+            except Exception as e:
                 kblogging.log_event(self._log, 'init_error', {'err': str(e)})
                 self._send_comm_message('job_init_lookup_err', {'msg': 'Unable to get job info!', 'job_id': job_id, 'err': str(e)})
         # only keep one loop at a time in cause this gets called again!
@@ -139,7 +139,7 @@ class JobManager(object):
             """
             return HTML(Template(tmpl).render(jobs=status_set))
 
-        except Exception, e:
+        except Exception as e:
             kblogging.log_event(self._log, "list_jobs.error", {'err': str(e)})
             raise
 
@@ -165,7 +165,7 @@ class JobManager(object):
         try:
             job_info = clients.get('job_service').get_job_params(job_id)[0]
             return Job.from_state(job_id, job_info, app_id=job_tuple[1], tag=job_tuple[2], cell_id=job_tuple[3])
-        except Exception, e:
+        except Exception as e:
             kblogging.log_event(self._log, "get_existing_job.error", {'job_id': job_id, 'err': str(e)})
             raise
 
@@ -177,9 +177,11 @@ class JobManager(object):
         job = self.get_job(job_id)
         if job is None:
             raise ValueError('job "{}" not found!'.format(job_id))
+        state = job.state()
         status = {job_id: {
-                     'state': job.state(),
-                     'spec': job.app_spec()
+                     'state': state,
+                     'spec': job.app_spec(),
+                     'widget_info': job.get_viewer_params(state)
                  }}
         self._send_comm_message('job_status', status)
 
@@ -191,13 +193,17 @@ class JobManager(object):
         'KBaseJobs' channel.
         """
         status_set = dict()
-        for job_id in self._running_jobs:
+        # grab the list of running job ids, so we don't run into update-while-iterating problems.
+        running_job_ids = self._running_jobs.keys()
+        for job_id in running_job_ids:
             try:
                 job = self._running_jobs[job_id]
                 if job['refresh'] or ignore_refresh_flag:
-                    status_set[job_id] = {'state': job['job'].state(),
-                                          'spec': job['job'].app_spec()}
-            except Exception, e:
+                    state = job['job'].state()
+                    status_set[job_id] = {'state': state,
+                                          'spec': job['job'].app_spec(),
+                                          'widget_info': job['job'].get_viewer_params(state)}
+            except Exception as e:
                 self._log.setLevel(logging.ERROR)
                 kblogging.log_event(self._log, "lookup_job_status.error", {'err': str(e)})
                 self._send_comm_message('job_err', {
@@ -275,7 +281,6 @@ class JobManager(object):
 
         if 'request_type' in msg['content']['data']:
             self._log.setLevel(logging.INFO)
-            kblogging.log_event(self._log, "handle_message", msg['content']['data'])
             r_type = msg['content']['data']['request_type']
             job_id = msg['content']['data'].get('job_id', None)
             if job_id is not None and job_id not in self._running_jobs:
@@ -310,13 +315,13 @@ class JobManager(object):
                 if job_id is not None:
                     try:
                         self.delete_job(job_id)
-                    except Exception, e:
+                    except Exception as e:
                         pass
             elif r_type == 'remove_job':
                 if job_id is not None:
                     try:
                         self.remove_job(job_id)
-                    except Exception, e:
+                    except Exception as e:
                         pass
 
             elif r_type == 'job_logs':
@@ -347,7 +352,6 @@ class JobManager(object):
         if num_lines is not None and max_lines > num_lines:
             first_line = max_lines - num_lines + 1
             logs = logs[first_line-1:]
-        kblogging.log_event(self._log, "get_recent_job_logs", {'job_id': job_id, 'first_line': first_line, 'num_lines':num_lines if num_lines is not None else 'None', 'max_lines': max_lines})
         self._send_comm_message('job_logs', {'job_id': job_id, 'first': first_line, 'max_lines': max_lines, 'lines': logs, 'latest': True})
 
 
@@ -357,7 +361,6 @@ class JobManager(object):
             raise ValueError('job "{}" not found!'.format(job_id))
 
         (max_lines, log_slice) = job.log(first_line=first_line, num_lines=num_lines)
-        kblogging.log_event(self._log, "get_job_logs", {'job_id':job_id, 'first_line':first_line, 'num_lines':num_lines if num_lines is not None else "None", 'max_lines':max_lines})
         self._send_comm_message('job_logs', {'job_id': job_id, 'first': first_line, 'max_lines': max_lines, 'lines': log_slice, 'latest': False})
 
     def delete_job(self, job_id):

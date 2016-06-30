@@ -22,6 +22,9 @@ class UpdaterTestCase(unittest.TestCase):
         f = open(config.get('narratives', 'updater_file_big'), 'r')
         self.test_nar_big = json.loads(f.read())['data']
         f.close()
+        f = open(config.get('narratives', 'updater_file_poplar'), 'r')
+        self.test_nar_poplar = json.loads(f.read())['data']
+        f.close()
 
     def validate_narrative(self, nar):
         """
@@ -101,6 +104,7 @@ class UpdaterTestCase(unittest.TestCase):
                 if 'app' in cell['metadata']['kbase']:
                     return True
                 elif 'appCell' in cell['metadata']['kbase']:
+                    print(cell['metadata']['kbase']['appCell']['app']['tag'])
                     return True
                 if 'old_app' not in cell['metadata']['kbase'] and cell['cell_type'] != 'code':
                     raise ValueError('KBase method can no longer be Markdown cells!')
@@ -113,6 +117,10 @@ class UpdaterTestCase(unittest.TestCase):
 
     def test_update_narrative_big(self):
         nar_update = update_narrative(self.test_nar_big)
+        self.assertTrue(self.validate_narrative(nar_update))
+
+    def test_update_narrative_poplar(self):
+        nar_update = update_narrative(self.test_nar_poplar)
         self.assertTrue(self.validate_narrative(nar_update))
 
 if __name__ == "__main__":

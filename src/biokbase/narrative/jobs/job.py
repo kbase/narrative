@@ -103,7 +103,7 @@ class Job(object):
     def parameters(self):
         try:
             return self._njs.get_job_params(self.job_id)
-        except Exception, e:
+        except Exception as e:
             raise Exception("Unable to fetch parameters for job {} - {}".format(self.job_id, e))
 
     def state(self):
@@ -115,40 +115,56 @@ class Job(object):
             state = self._njs.check_job(self.job_id)
             state[u'cell_id'] = self.cell_id
             return state
-        except Exception, e:
+        except Exception as e:
             raise Exception("Unable to fetch info for job {} - {}".format(self.job_id, e))
 
-    def output_viewer(self):
+    def output_viewer(self, state=None):
         """
         For a complete job, returns the job results.
         An incomplete job throws an exception
         """
         from biokbase.narrative.widgetmanager import WidgetManager
-        state = self.state()
+        if state is None:
+            state = self.state()
         if state['job_state'] == 'completed' and 'result' in state:
-            # prep the output widget params
-            widget_params = dict()
-            app_spec = self.app_spec()
-            for out_param in app_spec['behavior'].get('kb_service_output_mapping', []):
-                p_id = out_param['target_property']
-                if 'narrative_system_variable' in out_param:
-                    widget_params[p_id] = system_variable(out_param['narrative_system_variable'])
-                elif 'constant_value' in out_param:
-                    widget_params[p_id] = out_param['constant_value']
-                elif 'input_parameter' in out_param:
-                    widget_params[p_id] = self.inputs[0].get(out_param['input_parameter'], None)
-                elif 'service_method_output_path' in out_param:
-                    # widget_params[p_id] = get_sub_path(json.loads(state['step_outputs'][self.app_id]), out_param['service_method_output_path'], 0)
-                    widget_params[p_id] = get_sub_path(state['result'], out_param['service_method_output_path'], 0)
-            output_widget = app_spec.get('widgets', {}).get('output', 'kbaseDefaultNarrativeOutput')
-            # Yes, sometimes silly people put the string 'null' in their spec.
-            if (output_widget == 'null'):
-                output_widget = 'kbaseDefaultNarrativeOutput'
-
+            (output_widget, widget_params) = self._get_output_info(state)
             return WidgetManager().show_output_widget(output_widget, tag=self.tag, **widget_params)
-
         else:
             return "Job is incomplete! It has status '{}'".format(state['job_state'])
+
+    def get_viewer_params(self, state):
+        if state is None or state['job_state'] != 'completed':
+            return None
+        (output_widget, widget_params) = self._get_output_info(state)
+        return {
+            'name': output_widget,
+            'tag': self.tag,
+            'params': widget_params
+        }
+
+    def _get_output_info(self, state):
+        widget_params = dict()
+        app_spec = self.app_spec()
+        out_mapping_key = 'kb_service_output_mapping'
+        if out_mapping_key not in app_spec['behavior']:
+            out_mapping_key = 'output_mapping' # for viewers
+        for out_param in app_spec['behavior'].get(out_mapping_key, []):
+            p_id = out_param['target_property']
+            if 'narrative_system_variable' in out_param:
+                widget_params[p_id] = system_variable(out_param['narrative_system_variable'])
+            elif 'constant_value' in out_param:
+                widget_params[p_id] = out_param['constant_value']
+            elif 'input_parameter' in out_param:
+                widget_params[p_id] = self.inputs[0].get(out_param['input_parameter'], None)
+            elif 'service_method_output_path' in out_param:
+                # widget_params[p_id] = get_sub_path(json.loads(state['step_outputs'][self.app_id]), out_param['service_method_output_path'], 0)
+                widget_params[p_id] = get_sub_path(state['result'], out_param['service_method_output_path'], 0)
+        output_widget = app_spec.get('widgets', {}).get('output', 'kbaseDefaultNarrativeOutput')
+        # Yes, sometimes silly people put the string 'null' in their spec.
+        if (output_widget == 'null'):
+            output_widget = 'kbaseDefaultNarrativeOutput'
+        return (output_widget, widget_params)
+
 
     def log(self, first_line=0, num_lines=None):
         """
@@ -227,7 +243,7 @@ class Job(object):
                 'version': spec['info'].get('ver', None),
                 'name': spec['info']['name']
             }
-        except Exception, e:
+        except Exception as e:
             state = {}
             info = {
                 'app_id': None,

@@ -11,6 +11,7 @@ import uuid
 import json
 import re
 import datetime
+import biokbase.narrative.clients as clients
 
 def update_needed(narrative):
     # simple enough - if there's a "kbase" block
@@ -70,12 +71,7 @@ def update_method_cell(cell):
        states are either editing or complete (default to editing)
     2. We don't know what tag the methods came from, so go with 'release'
     """
-    # 1. Turn it into a code cell.
-    cell['cell_type'] = u'code'
-    cell['execution_count'] = None
-    cell['outputs'] = []
-
-    # 2. Get its metadata and update it to be new cell-ish
+    # 1. Get its metadata and update it to be new cell-ish
     meta = cell['metadata']['kb-cell']
     if 'method' not in meta:
         # throw an error?
@@ -84,6 +80,7 @@ def update_method_cell(cell):
     # try to find cell_id, if not, make up a new one.
 
     method_info = meta['method'].get('info', {})
+    method_behavior = meta['method'].get('behavior', {})
     widget_state = meta.get('widget_state', [])
     if len(widget_state):
         widget_state = widget_state[0]
@@ -123,6 +120,56 @@ def update_method_cell(cell):
     if ts:
         ts = datetime.datetime.utcfromtimestamp(ts/1000.0).strftime('%a, %d %b %Y %H:%M:%S GMT')
 
+    git_hash = method_info.get('git_commit_hash', None)
+    app_name = method_info.get('id', '')
+    # the app_name in this case, is everything after the slash. So MegaHit/run_megahit would just be 'run_megahit'
+    app_name = app_name[app_name.find('/')+1:]
+    module_name = method_behavior.get('kb_service_name', None)
+    tag = None
+    # now we get the version, if it exists.
+    print("{}/{}".format(module_name, git_hash))
+    # Suddenly, this is very complex...
+    # Need git_hash and module_name to look up the version.
+    # if lookup succeeds -
+    #   if has a release tag, use it.
+    #   if not, lookup the module's info (get_module_info), use the most released one (release > beta > dev) and change the hash
+    # if lookup fails -
+    #   try again with just the module info
+    #   if THAT fails, the cell can't be updated.
+    # if no git_hash or module_name, it's not an SDK-based cell and can't be looked up.
+    if git_hash and module_name:
+        cat = clients.get('catalog')
+        tag_pref_order = ['release', 'beta', 'dev']
+        try:
+            print('looking up ' + module_name + ' hash ' + git_hash)
+            version_info = cat.get_module_version({'module_name': module_name, 'version': git_hash})
+            if 'release_tags' in version_info:
+                tags = version_info['release_tags']
+                if len(tags) > 0:
+                    tags = [t.lower() for t in tags]
+                    for tag_pref in tag_pref_order:
+                        if tag_pref in tags:
+                            tag = tag_pref
+                if tag is None:
+                    raise Exception("No release tag found!")
+        except Exception as e:
+            print("Exception found: {}".format(str(e)))
+            try:
+                print("Searching for module info...")
+                mod_info = cat.get_module_info({'module_name': module_name})
+                # look for most recent (R > B > D) release tag with the app.
+                for tag_pref in tag_pref_order:
+                    tag_info = mod_info.get(tag_pref, None)
+                    if tag_info is not None and app_name in tag_info.get('narrative_methods', []):
+                        tag = tag_pref
+                        break
+                print("tag set to {}".format(tag))
+            except Exception as e2:
+                print("Exception found: {}".format(e2))
+    else:
+        # it's not an SDK method! do something else!
+        return obsolete_method_cell(cell, method_info.get('name'), method_params)
+
     new_meta = {
         'type': 'app',
         'attributes': {
@@ -135,9 +182,9 @@ def update_method_cell(cell):
         'appCell': {
             'app': {
                 'id': method_info.get('id', 'unknown'),
-                'gitCommitHash': method_info.get('git_commit_hash', None),
+                'gitCommitHash': git_hash,
                 'version': method_info.get('ver', None),
-                'tag': 'release'
+                'tag': tag
             },
             'state': {
                 'edit': 'editing',
@@ -157,18 +204,48 @@ def update_method_cell(cell):
         }
     }
 
+    # Finally, turn it into a code cell.
+    cell['cell_type'] = u'code'
+    cell['execution_count'] = None
+    cell['outputs'] = []
     cell['metadata']['kbase'] = new_meta
     del cell['metadata']['kb-cell']
     cell['source'] = u''
+    return cell
+
+def obsolete_method_cell(cell, app_name, params):
+    cell['cell_type'] = 'markdown'
+    format_params = '<ul>' + '\n'.join(['<li>{} - {}</li>'.format(p, params[p]) for p in params]) + '</ul>'
+    base_source = """<div style="border:1px solid #CECECE; padding: 5px">
+    <div style="font-size: 120%; font-family: 'OxygenBold', Arial, sans-serif; color:#2e618d;">Obsolete App!</div>
+    <div style="font-family: 'OxygenBold', Arial, sans-serif;">
+    {}
+    </div>
+    Sorry, this app is obsolete and can no longer function. But don't worry! Any outputs of this method have been retained.
+    <br>Parameters:
+    {}
+    </div>"""
+
+    cell['source'] = unicode(base_source.format(app_name, format_params))
+
+    # cell['source'] = unicode('\n'.join([
+    #     "### Obsolete Cell!",
+    #     "Sorry, this cell\'s app is obsolete. Any outputs of this method have been retained.  ",
+    #     "**" + app_name + "**  ",
+    #     "Parameters:  ",
+    #     format_params
+    # ]))
+    del cell['metadata']['kb-cell']
     return cell
 
 def update_app_cell(cell):
     """
     Updates an app cell to the new style (which is deprecated...)
     """
-    # (let the front end deal with it)
-    cell['metadata']['kbase'] = {'old_app': True, 'info': cell['metadata']['kb-cell']}
-    del cell['metadata']['kb-cell']
+    meta = cell['metadata']['kb-cell']
+    app_name = meta.get('app', {}).get('info', {}).get('name', 'Unknown app') + " (multi-step app)"
+    cell = obsolete_method_cell(cell, app_name, {})
+    cell['metadata']['kbase'] = {'old_app': True, 'info': meta}
     return cell
 
 def update_output_cell(cell):

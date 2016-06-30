@@ -35,6 +35,9 @@ JUPYTER_NOTEBOOK_INSTALL_DIR=jupyter_notebook
 JUPYTER_NOTEBOOK_REPO=https://github.com/eapearson/notebook
 JUPYTER_NOTEBOOK_TAG=4.2.0-kbase
 
+#JUPYTER_NOTEBOOK_REPO=https://github.com/jupyter/notebook
+#JUPYTER_NOTEBOOK_TAG=4.2.0
+
 IPYWIDGETS_INSTALL_DIR=ipywidgets
 IPYWIDGETS_TAG=5.0.0
 

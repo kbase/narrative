@@ -311,7 +311,7 @@ define([
 
                     // TODO: make sure we are catching these ... perhaps they need to be run-status...
                     // this.sendJobMessage('job-status', msg.content.data.content.job_id, msg.content.data.content);
-                    console.log('have run status', msg.content.data.content);
+                    // console.log('have run status', msg.content.data.content);
                     this.sendCellMessage('run-status', msg.content.data.content.cell_id, msg.content.data.content);
                     break;
                 case 'job_err':
@@ -326,7 +326,7 @@ define([
                 case 'job_deleted':
                     var deletedId = msg.content.data.content.job_id;
                     this.sendJobMessage('job-deleted', deletedId, {jobId: deletedId});
-                    console.info('Deleted job ' + deletedId);
+                    // console.info('Deleted job ' + deletedId);
                     this.removeDeletedJob(deletedId);
                     break;
                 case 'job_logs':
@@ -389,16 +389,16 @@ define([
             // if (this.jobStates === null)
             //     this.initJobStates();
 
-            console.info('Jobs Panel: looking up comm info');
+            // console.info('Jobs Panel: looking up comm info');
             Jupyter.notebook.kernel.comm_info(this.COMM_NAME, function (msg) {
-                console.info('Jobs Panel: got info');
+                // console.info('Jobs Panel: got info');
                 // console.info(msg);
                 if (msg.content && msg.content.comms) {
                     // skim the reply for the right id
                     for (var id in msg.content.comms) {
                         if (msg.content.comms[id].target_name === this.COMM_NAME) {
-                            console.info('Jobs Panel: Found an existing channel!');
-                            console.info(msg);
+                            //console.info('Jobs Panel: Found an existing channel!');
+                            //console.info(msg);
                             this.comm = new JupyterComm.Comm(this.COMM_NAME, id);
                             Jupyter.notebook.kernel.comm_manager.register_comm(this.comm);
                             this.comm.on_msg(this.handleCommMessages.bind(this));
@@ -406,9 +406,9 @@ define([
                     }
                 }
                 if (this.comm === null) {
-                    console.info('Jobs Panel: setting up a new channel - ' + this.COMM_NAME);
+                    // console.info('Jobs Panel: setting up a new channel - ' + this.COMM_NAME);
                     Jupyter.notebook.kernel.comm_manager.register_target(this.COMM_NAME, function (comm, msg) {
-                        console.info('Jobs Panel: new channel set up - ', comm);
+                        // console.info('Jobs Panel: new channel set up - ', comm);
                         this.comm = comm;
                         comm.on_msg(this.handleCommMessages.bind(this));
                     }.bind(this));

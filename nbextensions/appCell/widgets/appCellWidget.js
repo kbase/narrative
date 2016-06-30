@@ -1551,6 +1551,8 @@ define([
                 newCell = Jupyter.notebook.insert_cell_below('code', cellIndex),
                 newCellId = new Uuid(4).format();
 
+            var widgetParams = model.getItem('exec.jobState.widgetParameters');
+
             newCell.metadata = {
                 kbase: {
                     type: 'output',
@@ -1567,7 +1569,15 @@ define([
                 }
             };
 
-            newCell.set_text('JobManager().get_job("' + jobId + '").output_viewer()');
+            var outputCode = 'WidgetManager().show_output_widget(\n    "' + widgetParams.name + '",\n    tag="' + widgetParams.tag + '",\n';
+            var paramsList = [];
+            Object.keys(widgetParams.params).map(function(p) {
+                paramsList.push('    ' + p + '="' + widgetParams.params[p] + '"');
+            });
+            outputCode += paramsList.join(',\n') + '\n)';
+            newCell.set_text(outputCode);
+
+            // newCell.set_text('JobManager().get_job("' + jobId + '").output_viewer()');
 
             newCell.execute();
 

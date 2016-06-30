@@ -265,6 +265,7 @@ define([
 
                         this.jobStates[jobId] = content[jobId].state;
                         this.jobStates[jobId].spec = content[jobId].spec;
+                        this.jobStates[jobId].widgetParameters = content[jobId].widget_info;
 
                         // The job state includes both the job state info and the
                         // app spec. Not sure why...
@@ -272,7 +273,8 @@ define([
                         // like its name and such.
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
-                            jobState: content[jobId].state
+                            jobState: content[jobId].state,
+                            widgetParameters: content[jobId].widget_info
                         });
                     }
                     var jobsToDelete = [];
@@ -688,8 +690,11 @@ define([
             }
             if (job.finish_time) {
                 completedTime = TimeFormat.prettyTimestamp(job.finish_time);
-                if (job.creation_time) {
+                if (job.exec_start_time) {
                     runTime = TimeFormat.calcTimeDifference(new Date(job.exec_start_time), new Date(job.finish_time));
+                }
+                else if (job.creation_time) {
+                    runTime = TimeFormat.calcTimeDifference(new Date(job.creation_time), new Date(job.finish_time));
                 }
             }
 

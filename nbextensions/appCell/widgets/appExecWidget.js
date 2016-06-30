@@ -514,7 +514,7 @@ define([
                 dom.setContent(['run-error', 'type'], state.error.type);
                 dom.setContent(['run-error', 'message'], state.error.message);
                 dom.setContent(['run-error', 'detail'], state.error.detail);
-                console.log('ERROR', state.error);
+                // console.log('ERROR', state.error);
             } else {
                 dom.hideElement(['run-error']);
             }
@@ -631,7 +631,7 @@ define([
                 dom.setContent(['run-error', 'type'], state.error.type);
                 dom.setContent(['run-error', 'message'], state.error.message);
                 dom.setContent(['run-error', 'detail'], state.error.detail);
-                console.log('ERROR', state.error);
+                // console.log('ERROR', state.error);
             } else {
                 dom.hideElement(['run-error']);
             }
@@ -722,23 +722,23 @@ define([
                 dom.setContent(['execStatus', 'run', 'elapsed'], '-');
             }
             
-            console.error('WHAT?', state);
+            // console.error('WHAT?', state);
             if (state.success) {
                 // dom.showElement(['execStatus', 'finish', 'success']);
-                dom.setContent(['execStatus', 'finish', 'state'], 'success');
+                // dom.setContent(['execStatus', 'finish', 'state'], 'success');
                 dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
                 // dom.showElement('job-report');
                 // showJobReport();
                 showJobResult();
             } else if (state.error) {
-                dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                // dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
                 dom.setContent(['execStatus', 'finish', 'state'], 'error');
                 dom.showElement(['run-error']);
                 dom.setContent(['run-error', 'location'], state.error.location);
                 dom.setContent(['run-error', 'type'], state.error.type);
                 dom.setContent(['run-error', 'message'], state.error.message);
                 dom.setContent(['run-error', 'detail'], state.error.detail);
-                console.error('ERROR', state.error);
+                // console.error('ERROR', state.error);
             } else {
                 //dom.hideElement(['run-error']);
                 dom.setContent(['execStatus', 'finish', 'state'], '-');
@@ -760,7 +760,7 @@ define([
                 return;
             }
             
-            console.log('LAUNCH EVENT', launchEvent);
+            // console.log('LAUNCH EVENT', launchEvent);
 
             switch (launchEvent.event) {
                 case 'validating_app':
@@ -943,7 +943,7 @@ define([
 //                    errorDetail = '';
 //                }
                 var errorId = new Uuid(4).format();
-                console.log('EXEC ERROR', errorId, errorInfo);
+                // console.log('EXEC ERROR', errorId, errorInfo);
 
                 var errorType, errorMessage, errorDetail;
                 if (errorInfo.error) {
@@ -1353,7 +1353,6 @@ define([
              * bus itself...
              */
             ev = cellBus.on('run-state', function (message) {
-                console.log('GOT RUN STATE', message);
                 processNewLaunchEvent(message);
             });
             listeners.push(ev);
@@ -1365,7 +1364,6 @@ define([
              * This was done, rather thanhave 
              */
             ev = cellBus.on('job-state', function (message) {
-                // console.log('EXEC got it!', message);
                 processNewJobState(message.jobState);
             });
             listeners.push(ev);
@@ -1382,6 +1380,8 @@ define([
                 // only update the ui on clock tick if we are currently running
                 // a job. TODO: the clock should be disconnected.
                 // console.log('tick');
+                // disable for now ... need to find a better way of processing clock ticks...
+                // return;
                 var runState = model.getItem('runState');
                 if (runState && runState.executionState === 'processing') {
                     updateRunStateFromJobState();

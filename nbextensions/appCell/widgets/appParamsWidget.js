@@ -106,13 +106,13 @@ define([
                     parameter: parameterSpec.id()
                 });
             });
-            
+
             /*
              * Or in fact any parameter value at any time...
              */
             fieldBus.on('get-parameter-value', function (message) {
                 parentBus.request({
-                   parameter: message.parameter 
+                    parameter: message.parameter
                 }, {
                     key: 'get-parameter-value'
                 })
@@ -122,11 +122,11 @@ define([
                         });
                     });
             });
-            
+
             //bus.on('parameter-value', function (message) {
             //    bus.emit('parameter-value', message);
             //});
-            
+
             fieldBus.respond({
                 key: {
                     type: 'get-parameter'
@@ -144,7 +144,7 @@ define([
                     }
                 }
             });
-            
+
             // Just pass the update along to the input widget.
             parentBus.listen({
                 key: {
@@ -228,7 +228,7 @@ define([
                     dom.makePanel('Input Objects', 'input-fields'),
                     dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 'parameter-fields'),
                     dom.makePanel('Output Objects', 'output-fields')
-                    // dom.makePanel('Output Report', 'output-report')
+                        // dom.makePanel('Output Report', 'output-report')
                 ]);
 
             return {
@@ -282,6 +282,25 @@ define([
                 });
             });
         }
+        
+        // Maybe
+        function validateParameterSpec(spec) {
+            // ensure that inputs are consistent with inputs
+            
+            // and outputs with output
+            
+            // and params with param
+            
+            // validate type
+            
+            return spec;
+        }
+
+        function validateParameterSpecs(params) {
+            return params.map(function (spec) {
+                return validateParameterSpec(spec);
+            });
+        }
 
         // LIFECYCLE API
 
@@ -289,113 +308,120 @@ define([
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
             // Separate out the params into the primary groups.
-            var params = model.getItem('parameters'),
-                inputParams = params.filter(function (spec) {
-                    return (spec.spec.ui_class === 'input');
-                }),
-                outputParams = params.filter(function (spec) {
-                    return (spec.spec.ui_class === 'output');
-                }),
-                parameterParams = params.filter(function (spec) {
-                    return (spec.spec.ui_class === 'parameter');
-                });
 
-            return Promise.resolve()
-                .then(function () {
-                    if (inputParams.length === 0) {
-                        places.inputFields.innerHTML = 'No input objects for this app';
-                    } else {
-                        return Promise.all(inputParams.map(function (spec) {
-                            try {
-                                var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
-                                    rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
-                                    rowNode = document.createElement('div');
-                                places.inputFields.appendChild(rowNode);
-                                widgets.push({
-                                    widget: rowWidget,
-                                    bus: result.bus
-                                });
-                                rowWidget.attach(rowNode);
-                            } catch (ex) {
-                                console.error('Error making input field widget', ex);
-                                var errorDisplay = div({style: {border: '1px red solid'}}, [
-                                    ex.message
-                                ]);
-                                places.inputFields.appendChild(dom.createNode(errorDisplay));
-                            }
+
+            return Promise.try(function () {
+                var params = validateParameterSpecs(model.getItem('parameters')),
+                    inputParams = params.filter(function (spec) {
+                        return (spec.spec.ui_class === 'input');
+                    }),
+                    outputParams = params.filter(function (spec) {
+                        return (spec.spec.ui_class === 'output');
+                    }),
+                    parameterParams = params.filter(function (spec) {
+                        return (spec.spec.ui_class === 'parameter');
+                    });
+
+                return Promise.resolve()
+                    .then(function () {
+                        if (inputParams.length === 0) {
+                            places.inputFields.innerHTML = 'No input objects for this app';
+                        } else {
+                            return Promise.all(inputParams.map(function (spec) {
+                                try {
+                                    var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
+                                        rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
+                                        rowNode = document.createElement('div');
+                                    places.inputFields.appendChild(rowNode);
+                                    widgets.push({
+                                        widget: rowWidget,
+                                        bus: result.bus
+                                    });
+                                    rowWidget.attach(rowNode);
+                                } catch (ex) {
+                                    console.error('Error making input field widget', ex);
+                                    // TRY Throwing up
+                                    // or not: throw new Error('Error making input field widget: ' + ex.message);
+                                    var errorDisplay = div({style: {border: '1px red solid'}}, [
+                                        ex.message
+                                    ]);
+                                    places.inputFields.appendChild(dom.createNode(errorDisplay));
+                                }
+                            }));
+                        }
+                    })
+                    .then(function () {
+                        if (outputParams.length === 0) {
+                            places.outputFields.innerHTML = 'No output objects for this app';
+                        } else {
+                            return Promise.all(outputParams.map(function (spec) {
+                                try {
+                                    var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
+                                        rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
+                                        rowNode = document.createElement('div');
+                                    places.outputFields.appendChild(rowNode);
+                                    widgets.push({
+                                        widget: rowWidget,
+                                        bus: result.bus
+                                    });
+                                    rowWidget.attach(rowNode);
+                                } catch (ex) {
+                                    console.error('Error making output field widget', ex);
+                                    // throw new Error('Error making output field widget: ' + ex.message);
+                                    var errorDisplay = div({style: {border: '1px red solid'}}, [
+                                        ex.message
+                                    ]);
+                                    places.outputFields.appendChild(dom.createNode(errorDisplay));
+                                }
+                            }));
+                        }
+                    })
+                    .then(function () {
+                        // Show the user that a report object will be created. Otherwise it may seem weird that there is
+                        // no way to specify the output object
+                        //if (env.appSpec) {
+                        //    +++
+                        // }
+                    })
+                    .then(function () {
+                        if (parameterParams.length === 0) {
+                            dom.setContent('parameter-fields', 'No parameters for this app');
+                        } else {
+                            return Promise.all(parameterParams.map(function (spec) {
+                                try {
+                                    var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
+                                        rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
+                                        rowNode = document.createElement('div');
+                                    places.parameterFields.appendChild(rowNode);
+                                    widgets.push({
+                                        widget: rowWidget,
+                                        bus: result.bus
+                                    });
+                                    rowWidget.attach(rowNode);
+                                } catch (ex) {
+                                    console.error('Error making parameter field widget', ex);
+                                    var errorDisplay = div({style: {border: '1px red solid'}}, [
+                                        ex.message
+                                    ]);
+                                    places.parameterFields.appendChild(dom.createNode(errorDisplay));
+                                }
+                            }));
+                        }
+                    })
+                    .then(function () {
+                        return Promise.all(widgets.map(function (widget) {
+                            return widget.widget.start();
                         }));
-                    }
-                })
-                .then(function () {
-                    if (outputParams.length === 0) {
-                        places.outputFields.innerHTML = 'No output objects for this app';
-                    } else {
-                        return Promise.all(outputParams.map(function (spec) {
-                            try {
-                                var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
-                                    rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
-                                    rowNode = document.createElement('div');
-                                places.outputFields.appendChild(rowNode);
-                                widgets.push({
-                                    widget: rowWidget,
-                                    bus: result.bus
-                                });
-                                rowWidget.attach(rowNode);
-                            } catch (ex) {
-                                console.error('Error making output field widget', ex);
-                                var errorDisplay = div({style: {border: '1px red solid'}}, [
-                                    ex.message
-                                ]);
-                                places.outputFields.appendChild(dom.createNode(errorDisplay));
-                            }
+                    })
+                    .then(function () {
+                        return Promise.all(widgets.map(function (widget) {
+                            return widget.widget.run(params);
                         }));
-                    }
-                })
-                .then(function () {
-                    // Show the user that a report object will be created. Otherwise it may seem weird that there is
-                    // no way to specify the output object
-                    //if (env.appSpec) {
-                    //    +++
-                   // }
-                })
-                .then(function () {
-                    if (parameterParams.length === 0) {
-                        dom.setContent('parameter-fields', 'No parameters for this app');
-                    } else {
-                        return Promise.all(parameterParams.map(function (spec) {
-                            try {
-                                var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
-                                    rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
-                                    rowNode = document.createElement('div');
-                                places.parameterFields.appendChild(rowNode);
-                                widgets.push({
-                                    widget: rowWidget,
-                                    bus: result.bus
-                                });
-                                rowWidget.attach(rowNode);
-                            } catch (ex) {
-                                console.error('Error making parameter field widget', ex);
-                                var errorDisplay = div({style: {border: '1px red solid'}}, [
-                                    ex.message
-                                ]);
-                                places.parameterFields.appendChild(dom.createNode(errorDisplay));
-                            }
-                        }));
-                    }
-                })
-                .then(function () {
-                    return Promise.all(widgets.map(function (widget) {
-                        return widget.widget.start();
-                    }));
-                })
-                .then(function () {
-                    return Promise.all(widgets.map(function (widget) {
-                        return widget.widget.run(params);
-                    }));
-                })
-                .then(function () {
-                    renderAdvanced();
-                });
+                    })
+                    .then(function () {
+                        renderAdvanced();
+                    });
+            });
         }
 
         function start() {

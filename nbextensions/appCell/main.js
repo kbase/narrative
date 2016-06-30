@@ -349,6 +349,7 @@ define([
      */
     function upgradeToAppCell(cell, appSpec, appTag) {
         return Promise.try(function () {
+            // Create base app cell
             var meta = cell.metadata;
             meta.kbase = {
                 type: 'app',
@@ -380,12 +381,15 @@ define([
             cell.metadata = meta;
         })
             .then(function () {
+                // Add the params
                 return setupParams(cell, appSpec);
             })
             .then(function () {
+                // Complete the cell setup.
                 return setupCell(cell);
             })
             .then(function (cellStuff) {
+                // Initialize the cell to its default state.
                 cellStuff.bus.emit('reset-to-defaults');
             });
     }
@@ -562,6 +566,9 @@ define([
                             })
                             .catch(function (err) {
                                 console.error('ERROR creating cell', err);
+                                // delete cell.
+                                $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(data.cell));
+                                alert('Could not insert cell due to errors.\n' + err.message);
                             });
                     }
                 });

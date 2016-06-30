@@ -48,6 +48,47 @@ define([
         appStates = [
             {
                 state: {
+                    mode: 'new'
+                },
+                ui: {
+                    buttons: {
+                        enabled: [],
+                        disabled: ['run-app', 'remove', 'cancel', 're-run-app']
+                    },
+                    elements: {
+                        show: [],
+                        hide: ['fatal-error', 'parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
+                    }
+                },                
+                next: [
+                    {
+                        mode: 'fatal-error'
+                    },
+                    {
+                        mode: 'editing',
+                        params: 'incomplete'
+                    }
+                ]
+            },
+            {
+                state: {
+                    mode: 'fatal-error',                
+                },
+                ui: {
+                    buttons: {
+                        enabled: [],
+                        disabled: ['run-app', 'remove', 'cancel', 're-run-app']
+                    },
+                    elements: {
+                        show: ['fatal-error'],
+                        hide: ['parameters-group', 'output-group', 'parameters-display-group', 'exec-group']
+                    }
+                },
+                next: []
+
+            },
+            {
+                state: {
                     mode: 'editing',
                     params: 'incomplete'
                 },
@@ -58,7 +99,7 @@ define([
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
-                        hide: ['parameters-display-group', 'exec-group']
+                        hide: ['fatal-error', 'parameters-display-group', 'exec-group']
                     }
                 },
                 next: [
@@ -86,7 +127,7 @@ define([
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
-                        hide: ['parameters-display-group', 'exec-group']
+                        hide: ['fatal-error', 'parameters-display-group', 'exec-group']
                     }
                 },
                 next: [
@@ -555,6 +596,15 @@ define([
                 ])
             ]);
         }
+        
+        function syncFatalError() {
+            dom.setContent('fatal-error.title', model.getItem('fatalError.title'));
+            dom.setContent('fatal-error.message', model.getItem('fatalError.message'));
+        }
+        
+        function showFatalError(arg) {
+            dom.showElement('fatal-error');
+        }
 
         function showFsmBar() {
             var currentState = fsm.getCurrentState(),
@@ -805,6 +855,20 @@ define([
                                     ]
                                 }),
                                 dom.buildPanel({
+                                    title: 'Error',
+                                    name: 'fatal-error',
+                                    hidden: true,
+                                    type: 'default',
+                                    body: div([
+                                        table({class: 'table table-striped'}, [
+                                            tr([
+                                                th('Title'), td({dataElement: 'title'}),
+                                                td('Message', td({dataElement: 'message'}))
+                                            ])
+                                        ])
+                                    ])
+                                }),
+                                dom.buildPanel({
                                     title: 'App Cell Settings',
                                     name: 'settings',
                                     hidden: true,
@@ -953,13 +1017,17 @@ define([
             if (!currentState) {
                 // TODO: evaluate the state of things to try to guess the state?
                 // Or is this just an error unless it is a new cell?
-                currentState = {mode: 'editing', params: 'incomplete'};
+                // currentState = {mode: 'editing', params: 'incomplete'};
+                currentState = {mode: 'new'};
             }
             fsm = Fsm.make({
                 states: appStates,
                 initialState: {
-                    mode: 'editing', params: 'incomplete'
+                    mode: 'new'
                 },
+                //xinitialState: {
+                //    mode: 'editing', params: 'incomplete'
+                //},
                 onNewState: function (fsm) {
                     model.setItem('fsm.currentState', fsm.getCurrentState().state);
                     // save the narrative!
@@ -2040,6 +2108,7 @@ define([
 //                        });
 //                    });
                     bus.on('parameter-changed', function (message) {
+                        console.log('got parameter changed...', message);
                         model.setItem(['params', message.parameter], message.newValue);
                         var validationResult = validateModel();
                         if (validationResult.isValid) {
@@ -2198,9 +2267,24 @@ define([
                     PR.prettyPrint(null, container);
                     renderUI();
                 })
+                .then(function () {
+                    // if we start out in 'new' state, then we need to promote to
+                    // editing...
+                    if (fsm.getCurrentState().state.mode === 'new') {
+                        fsm.newState({mode: 'editing', params: 'incomplete'});
+                    }
+                    renderUI();
+                })
                 .catch(function (err) {
                     console.error('ERROR loading main widgets', err);
                     addNotification('Error loading main widgets: ' + err.message);
+                    model.setItem('fatalError', {
+                        title: 'Error loading main widgets',
+                        message: err.message
+                    });
+                    syncFatalError();
+                    fsm.newState({mode: 'fatal-error'});
+                    renderUI();                    
                 });
         }
 

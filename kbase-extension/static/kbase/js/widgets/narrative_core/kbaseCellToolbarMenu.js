@@ -4,8 +4,9 @@ define([
     'jquery',
     'kb_common/html',
     'kb_common/domEvent',
-    'base/js/namespace'
-], function ($, html, DomEvent, Jupyter) {
+    'base/js/namespace',
+    'common/utils'
+], function ($, html, DomEvent, Jupyter, utils) {
     'use strict';
 
     var t = html.tag,
@@ -28,7 +29,7 @@ define([
     function factory(config) {
         var container,
             cell;
-        
+
         function attachEvent(event, fun) {
             var id = html.genId(),
                 selector = '#' + id + ', ' + '#' + id + ' *';
@@ -76,33 +77,79 @@ define([
             }
         }
         function doToggleCell(e) {
+            // Tell the associated cell to toggle.
+            // the toolbar should be re-rendered when the cell metadata changes,
+            // so it will naturally pick up the toggle state...
             $(e.target).trigger('toggle.cell');
         }
-        
+
+        function renderToggleState() {
+            var toggleState = utils.getMeta(cell, 'cellState', 'toggleState'),
+                toggleIcon = container.querySelector('[data-button="toggle"] > span'),
+                openIcon = 'fa-chevron-down',
+                closedIcon = 'fa-chevron-right';
+            
+            switch (toggleState) {
+                case 'open':
+                    toggleIcon.classList.remove(closedIcon);
+                    toggleIcon.classList.add(openIcon);
+                    break;
+                case 'closed':
+                    toggleIcon.classList.remove(openIcon);
+                    toggleIcon.classList.add(closedIcon);
+                    break;
+                default:
+                    toggleIcon.classList.remove(closedIcon);
+                    toggleIcon.classList.add(openIcon);
+                    console.warn('INVALID TOGGLE STATE, ASSUMING OPEN', toggleState);
+            }
+        }
+
         function doDeleteCell(e) {
             var i = Jupyter.notebook.find_cell_index(cell);
             $(cell.element).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
         }
         
+        function getCellTitle(cell) {
+            var attributeTitle = getMeta(cell, 'attributes', 'title'),
+                cellStateTitle = getMeta(cell, 'cellState', 'title');
+            
+            return cellStateTitle || attributeTitle;
+        }
+        
+        function getIconClass(cell) {
+            var iconClass = getMeta(cell, 'cellState', 'icon') || getMeta(cell, 'attributes', 'icon') || 'file';
+            return iconClass
+        }
+
         function render() {
             var events = DomEvent.make(),
                 content = div({class: 'kb-cell-toolbar container-fluid'}, [
                     div({class: 'row'}, [
                         div({class: 'col-sm-8'}, [
-                            div({class: 'buttons pull-left'}, [
-                                button({
-                                    type: 'button', 
-                                    class: 'btn btn-default btn-xs', 
-                                    role: 'button', 
-                                    dataButton: 'toggle',
-                                    style: {width: '20%'},
-                                    id: attachEvent('click', doToggleCell)
+                            div({
+                                class: 'buttons pull-left',
+                                id: attachEvent('click', doToggleCell)
+                            }, [
+                                span({
+                                    style: {padding: '4px'}
                                 }, [
-                                    span({class: 'fa fa-chevron-down'})
+                                    span({
+                                        class: ['fa', 'fa-' + getIconClass(cell), 'fa-2x'].join(' ')
+                                    })
+                                ]),
+                                button({
+                                    type: 'button',
+                                    class: 'btn btn-default btn-xs',
+                                    role: 'button',
+                                    dataButton: 'toggle',
+                                    style: {width: '20%'}
+                                }, [
+                                    span({class: 'fa fa-chevron-down', style: {width: '25px'}})
                                 ])
                             ]),
                             div({class: 'title', style: {display: 'inline-block'}}, [
-                                div({dataElement: 'title', class: 'title'}, [getMeta(cell, 'attributes', 'title')]),
+                                div({dataElement: 'title', class: 'title'}, [getCellTitle(cell)]),
                                 div({dataElement: 'subtitle', class: 'subtitle', style: {display: 'none'}})
                             ])
                         ]),
@@ -147,12 +194,17 @@ define([
             };
         }
 
-        function register_callback(toolbarDiv, parentCell) {
-            container = toolbarDiv[0];
-            cell = parentCell;
-            var rendered = render();
-            container.innerHTML = rendered.content;
-            rendered.events.attachEvents(container);
+        function callback(toolbarDiv, parentCell) {
+            try {
+                container = toolbarDiv[0];
+                cell = parentCell;
+                var rendered = render();
+                container.innerHTML = rendered.content;
+                rendered.events.attachEvents(container);
+                renderToggleState();
+            } catch (ex) {
+                console.error('ERROR in cell toolbar callback', ex);
+            }
         }
 
         //function info(toolbarDiv, cell) {
@@ -162,7 +214,7 @@ define([
         // }
 
         return {
-            register_callback: register_callback
+            register_callback: callback
         };
     }
 

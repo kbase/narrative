@@ -992,15 +992,17 @@ define([
         }
 
         function initCodeInputArea() {
-            var codeInputArea = cell.input.find('.input_area');
-            if (!cell.kbase.inputAreaDisplayStyle) {
-                cell.kbase.inputAreaDisplayStyle = codeInputArea.css('display');
-            }
+            // var codeInputArea = cell.input[0];
+            //if (!cell.kbase.inputAreaDisplayStyle) {
+            //    cell.kbase.inputAreaDisplayStyle = codeInputArea.css('display');
+            // }
+            // try this hack to reset the initial state for the input subarea...
+            //codeInputArea[0].setAttribute('data-toggle-initial-state', 'hidden');
             model.setItem('user-settings.showCodeInputArea', false);
         }
 
         function showCodeInputArea() {
-            var codeInputArea = cell.input.find('.input_area');
+            var codeInputArea = cell.input;
             if (model.getItem('user-settings.showCodeInputArea')) {
                 codeInputArea.removeClass('hidden');
                 // codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);
@@ -1017,7 +1019,7 @@ define([
                 model.setItem('user-settings.showCodeInputArea', true);
             }
             showCodeInputArea();
-            return model.getItem('user-settings.showInputCodeArea');
+            return model.getItem('user-settings.showCodeInputArea');
         }
 
         function toggleSettings(cell) {
@@ -1583,7 +1585,9 @@ define([
                         id: newCellId,
                         status: 'new',
                         created: new Date().toGMTString(),
-                        lastLoaded: new Date().toGMTString()
+                        lastLoaded: new Date().toGMTString(),
+                        icon: 'arrow-right',
+                        title: 'Output Cell'
                     },
                     output: {
                         jobId: jobId,

@@ -371,7 +371,8 @@ define([
                             dom.makeButton('Show Log', 'toggle-job-log', {events: events})
                         ]
                     }),
-                    renderJobStatus(),
+                    // replaced with 
+                    // renderJobStatus(),
                     renderExecStatus(),
                     renderJobError(),
                     renderJobReport(),
@@ -500,6 +501,44 @@ define([
             dom.setContent(['runStatus', 'run-id'], state.runId);
             dom.setContent(['runStatus', 'job-id'], state.jobId);
 
+            if (state.success) {
+                showJobResult();
+                // dom.hideElement('job-report');
+            }
+
+            if (state.error) {
+                dom.showElement(['run-error']);
+                dom.setContent(['run-error', 'location'], state.error.location);
+                dom.setContent(['run-error', 'type'], state.error.type);
+                dom.setContent(['run-error', 'message'], state.error.message);
+                dom.setContent(['run-error', 'detail'], state.error.detail);
+                // console.log('ERROR', state.error);
+            } else {
+                dom.hideElement(['run-error']);
+            }
+
+            // Now be more stateful here...
+            if (state.jobId) {
+                dom.enableButton('toggle-job-log');
+            } else {
+                dom.disableButton('toggle-job-log');
+            }
+        }
+        function renderRunStatex() {
+            var state = model.getItem('runState');
+
+            if (!state) {
+                return;
+            }
+
+            dom.setContent(['runStatus', 'last-updated-at'], utils.formatTime(state.lastUpdatedTime));
+            dom.setContent(['runStatus', 'state'], state.canonicalState);
+            dom.setContent(['runStatus', 'temporalState'], state.temporalState);
+            dom.setContent(['runStatus', 'executionState'], state.executionState);
+
+            dom.setContent(['runStatus', 'run-id'], state.runId);
+            dom.setContent(['runStatus', 'job-id'], state.jobId);
+
             if (state.elapsedLaunchTime) {
                 (function () {
                     dom.showElement(['runStatus', 'launch-time']);
@@ -602,7 +641,6 @@ define([
                 dom.disableButton('toggle-job-log');
             }
         }
-        
          function renderExecState() {
             var state = model.getItem('runState');
 
@@ -645,12 +683,13 @@ define([
                     //dom.showElement(['execStatus', 'queue']);
                     var label;
                     if (state.elapsedRunTime) {
-                        label = 'Was Queued';
+                        label = 'Was Queued for';
                     } else {
                         label = 'In Queue';
                     }
-                    if (state.position !== undefined) {                        
-                        dom.setContent(['execStatus', 'queue', 'position'], state.position);
+                    // console.log('POSITION', JSON.parse(JSON.stringify(state)));
+                    if (state.jobState.position !== undefined) {                        
+                        dom.setContent(['execStatus', 'queue', 'position'], state.jobState.position);
                     } else {
                         dom.setContent(['execStatus', 'queue', 'position'], '-');
                     }
@@ -681,30 +720,21 @@ define([
                 dom.setContent(['execStatus', 'run', 'elapsed'], '-');
             }
             
-            if (state.completedTime) {
-                // dom.showElement(['execStatus', 'finished']);
-                dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
-            } else {
-                // dom.hideElement(['execStatus', 'finished']);
-                dom.setContent(['execStatus', 'finish', 'finishedAt'], '-');
-            }
-
             if (state.success) {
                 // dom.showElement(['execStatus', 'finish', 'success']);
                 dom.setContent(['execStatus', 'finish', 'state'], 'success');
+                dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
                 // dom.showElement('job-report');
                 // showJobReport();
                 showJobResult();
             } else if (state.error) {
-                // dom.showElement(['runStatus', 'error']);
-                dom.setContent(['execStatus', 'finish', 'state'], 'success');
-                //dom.setContent(['runStatus', 'error', 'flag'], 'yes');
-                //dom.showElement(['run-error']);
-                //dom.setContent(['run-error', 'location'], state.error.location);
-                //dom.setContent(['run-error', 'type'], state.error.type);
-                //dom.setContent(['run-error', 'message'], state.error.message);
-                //dom.setContent(['run-error', 'detail'], state.error.detail);
-                // console.log('ERROR', state.error);
+                dom.setContent(['execStatus', 'finish', 'finishedAt'], format.niceElapsedTime(state.completedTime));
+                dom.setContent(['execStatus', 'finish', 'state'], 'error');
+                dom.showElement(['run-error']);
+                dom.setContent(['run-error', 'location'], state.error.location);
+                dom.setContent(['run-error', 'type'], state.error.type);
+                dom.setContent(['run-error', 'message'], state.error.message);
+                dom.setContent(['run-error', 'detail'], state.error.detail);
             } else {
                 //dom.hideElement(['run-error']);
                 dom.setContent(['execStatus', 'finish', 'state'], '-');
@@ -1209,7 +1239,7 @@ define([
             model.setItem('launchState');
 
             updateRunStateFromLaunchEvent(launchEvent, launchState);
-            renderRunState();
+            // renderRunState();
             renderExecState();
         }
 

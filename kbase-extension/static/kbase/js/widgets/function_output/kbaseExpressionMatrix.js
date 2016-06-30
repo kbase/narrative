@@ -10,7 +10,8 @@ define(['jquery',
 		'kbaseTabs',
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap',
-		'kbaseFeatureValues-client-api'
+		'kbaseFeatureValues-client-api',
+		'kbase-generic-client-api'
 //        ,'jquery-dataScroller'
 		], function($) {
 	$.KBWidget({
@@ -23,6 +24,8 @@ define(['jquery',
 
 			// Service URL: should be in window.kbconfig.urls.
 			// featureValueURL: 'http://localhost:8889',
+			useDynamicService: false,
+			featureValueSrvVersion: 'dev',
 			featureValueURL: 'https://ci.kbase.us/services/feature_values/jsonrpc',
 
 			loadingImage: "static/kbase/images/ajax-loader.gif"
@@ -33,6 +36,7 @@ define(['jquery',
 
 		// KBaseFeatureValue client
 		featureValueClient: null,
+		genericClient: null,
 
 		// Matrix data to be visualized
 		matrixStat: null,
@@ -60,8 +64,14 @@ define(['jquery',
 				return this;
 			}
 
-           // Build a client
-            this.featureValueClient = new KBaseFeatureValues(this.options.featureValueURL, auth);           
+            // Build a client
+			if (this.options.useDynamicService) {
+			    var serviceWizardURL = this.options.featureValueURL.replace("feature_values/jsonrpc", 
+			            "service_wizard");
+			    this.genericClient = new GenericClient(serviceWizardURL, auth);
+			} else {
+			    this.featureValueClient = new KBaseFeatureValues(this.options.featureValueURL, auth);           
+			}
 		   
 			// Let's go...
 			this.loadAndRender();           
@@ -79,17 +89,29 @@ define(['jquery',
 
 			self.loading(true);
 			var expressionMatrixRef = this.options.workspaceID + "/" + this.options.expressionMatrixID;
-			self.featureValueClient.get_matrix_stat({input_data: expressionMatrixRef},
-				function(data){
-					// console.log(data);
-					self.matrixStat = data;
-					self.render();
-					self.loading(false);
-				},
-				function(error){
-					self.clientError(error);
-				}
-			);
+			if (self.options.useDynamicService) {
+			    self.genericClient.sync_call("KBaseFeatureValues.get_matrix_stat", 
+			            [{input_data: expressionMatrixRef}], function(data){
+                    // console.log(data);
+                    self.matrixStat = data[0];
+                    self.render();
+                    self.loading(false);
+                },
+                function(error){
+                    self.clientError(error);
+                }, self.options.featureValueSrvVersion);
+			} else {
+			    self.featureValueClient.get_matrix_stat({input_data: expressionMatrixRef},
+			            function(data){
+			        // console.log(data);
+			        self.matrixStat = data;
+			        self.render();
+			        self.loading(false);
+			    },
+			    function(error){
+			        self.clientError(error);
+			    });
+			}
 		},
 
 		render: function(){
@@ -212,10 +234,10 @@ define(['jquery',
 						'index': desc.index,
 						'id': desc.id,
 						'name': desc.name,
-						'min': stat.min ? stat.min.toFixed(2) : ' ',
-						'max': stat.max ? stat.max.toFixed(2) : ' ',
-						'avg': stat.avg ? stat.avg.toFixed(2) : ' ',
-						'std': stat.std ? stat.std.toFixed(2) : ' ',
+						'min': stat.min ? stat.min.toFixed(2) : null,
+						'max': stat.max ? stat.max.toFixed(2) : null,
+						'avg': stat.avg ? stat.avg.toFixed(2) : null,
+						'std': stat.std ? stat.std.toFixed(2) : null,
 						'missing_values': stat.missing_values ? 'Yes' : 'No'
 					}
 				);
@@ -238,10 +260,10 @@ define(['jquery',
 						'id': desc.id,
 						'name': desc.name,
 						'function' : gene_function ? gene_function : ' ',
-						'min': stat.min ? stat.min.toFixed(2) : ' ',
-						'max': stat.max ? stat.max.toFixed(2) : ' ',
-						'avg': stat.avg ? stat.avg.toFixed(2) : ' ',
-						'std': stat.std ? stat.std.toFixed(2) : ' ',
+						'min': stat.min ? stat.min.toFixed(2) : null,
+						'max': stat.max ? stat.max.toFixed(2) : null,
+						'avg': stat.avg ? stat.avg.toFixed(2) : null,
+						'std': stat.std ? stat.std.toFixed(2) : null,
 						'missing_values': stat.missing_values ? 'Yes' : 'No'
 					}
 				);

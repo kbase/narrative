@@ -12,6 +12,8 @@ define(['jquery',
         'kbwidget',
         'kbaseAuthenticatedWidget',
         'kbaseTabs',
+        'kbaseOntologyDictionary',
+        'kbaseOntologyTranslation',
         'jquery-dataTables',
         'jquery-dataTables-bootstrap'],
 function($,
@@ -90,6 +92,11 @@ function($,
                 if (genome.domain == 'Plant' || genome.domain == 'Eukaryota') {
                     names.push('CDS');
                     ids.push('cds');
+                }
+
+                if (genome.ontology_mappings.length) {
+                  names.push('Ontology');
+                  ids.push('ontology');
                 }
 
                 return {
@@ -252,19 +259,35 @@ function($,
                       class="table table-bordered table-striped" style="width: 100%; margin-left: 0px; margin-right: 0px;"/>');
 
                       var ontologySettings = {
-                          "sPaginationType": "full_numbers",
-                          "iDisplayLength": 10,
-                          "aaSorting": [[ 0, "asc" ], [1, "asc"]],
-                          "aoColumns": [
-                              {sTitle: "Gene ID", mData: "id"},
-                              {sTitle: "# of ontology terms", mData: "num"},
-                              {sTitle: "Ontology term", mData: "term"},
-                              {sTitle: "Evidence count", mData: "evidence_count"},
-                          ]
+                          "paginationType": "full_numbers",
+                          "displayLength": 10,
+                          "sorting": [[ 0, "asc" ], [1, "asc"]],
+                          "columns": [
+                              {title: "Gene ID", data: "id"},
+                              {title: "# of ontology terms", data: "num"},
+                              {title: "Ontology term name", data: "name"},
+                              {title: "Ontology term ID", data: "term"},
+                              {title: "Evidence count", data: "evidence_count"},
+                          ],
+                          createdRow: function (row, data, index) {
+
+                              var $linkCell = $('td', row).eq(3);
+                              var k = $linkCell.text();
+                              $linkCell.empty();
+
+                              $linkCell.append($.jqElem('a')
+                                        .on('click', function(e) {
+                                          var $tabDiv = $.jqElem('div').kbaseOntologyDictionary({ term_id : k});
+                                          tabPane.kbaseTabs('addTab', {tab: k, content: $tabDiv.$elem, canDelete : true, show: true});
+                                        })
+                                        .append(k));
+
+                          }
                       };
 
-                      var ontologyTable = $('#'+pref+'ontology-table').dataTable(ontologySettings);
+                      var ontologyTable = $('#'+pref+'ontology-table').DataTable(ontologySettings);
                       var ontologyData  = [];
+
                       $.each(
                         gnm.ontology_mappings,
                         function(i, v) {
@@ -288,6 +311,7 @@ function($,
                                       'num' : v.num_terms,
                                       'term' : k,
                                       'evidence_count' : t.evidence.length,
+                                      'name' : t.term_name,
                                     }
                                   )
                                 }
@@ -295,10 +319,11 @@ function($,
                             }
                           )
                         }
-
                       );
+                      console.log("OD ", ontologyData[0]);
 
-                      ontologyTable.fnAddData(ontologyData);
+                      //ontologyTable.fnAddData(ontologyData);
+                      ontologyTable.rows.add(ontologyData).draw();
 
                     }
 
@@ -713,6 +738,10 @@ function($,
                 container.empty();
                 container.append('<p>[Error] ' + data.error.message + '</p>');
             });
+        },
+
+        showOntology : function(ontologyID) {
+
         },
 
         loggedInCallback: function(event, auth) {

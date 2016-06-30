@@ -132,29 +132,6 @@ class Job(object):
         else:
             return "Job is incomplete! It has status '{}'".format(state['job_state'])
 
-    def output_viewer_code(self, state=None):
-        """
-        For a complete job, returns the job results.
-        An incomplete job throws an exception
-        """
-        if state is None:
-            state = self.state()
-        if state['job_state'] == 'completed' and 'result' in state:
-            (output_widget, widget_params) = self._get_output_info(state)
-            code = "\n".join([
-                       "from biokbase.narrative.widgetmanager import WidgetManager",
-                       "WidgetManager().show_output_widget(",
-                       "    '" + output_widget + "',",
-                       "    tag='" + self.tag + "'"
-                   ])
-            if len(widget_params):
-                param_lines = ",\n".join(["    {}='{}'".format(p, widget_params[p]) for p in widget_params])
-                code = code + ",\n" + param_lines
-            code = code + "\n)"
-            return code
-        else:
-            return None
-
     def get_viewer_params(self, state):
         if state is None or state['job_state'] != 'completed':
             return None
@@ -168,7 +145,10 @@ class Job(object):
     def _get_output_info(self, state):
         widget_params = dict()
         app_spec = self.app_spec()
-        for out_param in app_spec['behavior'].get('kb_service_output_mapping', []):
+        out_mapping_key = 'kb_service_output_mapping'
+        if out_mapping_key not in app_spec['behavior']:
+            out_mapping_key = 'output_mapping' # for viewers
+        for out_param in app_spec['behavior'].get(out_mapping_key, []):
             p_id = out_param['target_property']
             if 'narrative_system_variable' in out_param:
                 widget_params[p_id] = system_variable(out_param['narrative_system_variable'])

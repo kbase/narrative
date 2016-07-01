@@ -9,6 +9,7 @@ define (
 		'kbwidget',
 		'bootstrap',
 		'jquery',
+        'narrativeConfig',
 		'kbaseAuthenticatedWidget',
 		'kbaseTabs',
 		'jquery-dataTables',
@@ -17,6 +18,7 @@ define (
 		KBWidget,
 		bootstrap,
 		$,
+        Config,
 		kbaseAuthenticatedWidget,
 		kbaseTabs,
 		jquery_dataTables,
@@ -31,8 +33,8 @@ define (
             workspaceID: null,
             domainAnnotationVer: null,
             kbCache: null,
-            workspaceURL: window.kbconfig.urls.workspace,
-            loadingImage: window.kbconfig.loading_gif,
+            workspaceURL: Config.url('workspace'),
+            loadingImage: Config.get('loading_gif'),
             height: null,
 	    maxDescriptionLength: 200
         },
@@ -46,8 +48,8 @@ define (
         domainModelSetName: null,
         accessionToShortDescription: {},
         accessionToLongDescription: {},
-	accessionToPrefix: {},
-	prefixToURL: {},
+        accessionToPrefix: {},
+        prefixToURL: {},
         annotatedGenesCount: 0,
         annotatedDomainsCount: 0,
 
@@ -57,23 +59,23 @@ define (
             // Create a message pane
             this.$messagePane = $("<div/>").addClass("kbwidget-message-pane kbwidget-hide-message");
             this.$elem.append(this.$messagePane);
-	    
+
             return this;
         },
 
         loggedInCallback: function(event, auth) {
-	    // error if not properly initialized
+        // error if not properly initialized
             if (this.options.domainAnnotationID == null) {
-		this.showMessage("[Error] Couldn't retrieve domain annotation data.");
-		return this;
+                this.showMessage("[Error] Couldn't retrieve domain annotation data.");
+                return this;
             }
 
             // Create a new workspace client
             this.ws = new Workspace(this.options.workspaceURL, auth);
-           
+
             // Let's go...
-            this.render();           
-           
+            this.render();
+
             return this;
         },
 
@@ -82,7 +84,7 @@ define (
             this.isLoggedIn = false;
             return this;
         },
-  
+
         render: function(){
             var self = this;
             self.pref = this.uuid();
@@ -103,35 +105,35 @@ define (
                     [
                         { 'ref':self.genomeRef, 'included':['/id'] },
                         { 'ref':self.genomeRef, 'included':['/scientific_name'] }
-                    ], 
+                    ],
                     function(data){
                         self.genomeID = data[0].data.id;
                         self.genomeName = data[1].data.scientific_name;
-                    }, 
+                    },
                     function(error){
                         self.clientError(error);
-                    }                    
+                    }
                 );
 
                 var jobGetDomainModelSet =  kbws.get_objects(
-                    [{ref: self.domainModelSetRef}], 
+                    [{ref: self.domainModelSetRef}],
                     function(data) {
                         self.accessionToShortDescription = data[0].data.domain_accession_to_description;
-			// make regex for each prefix to map to external URLs
-			$.each(data[0].data.domain_prefix_to_dbxref_url, function(prefix,url) {
-			    self.prefixToURL['^'+prefix] = url;
-			});
-			// make short & long descriptions for ones that are too long
-			$.each(self.accessionToShortDescription, function(domainID,description) {
-			    self.accessionToLongDescription[domainID] = "";
-			    if (description.length > self.options.maxDescriptionLength) {
-				var pos = description.indexOf(" ",self.options.maxDescriptionLength);
-				if (pos > -1) {
-				    self.accessionToLongDescription[domainID] = description + ' <small><a class="show-less' + self.pref  + '" data-id="' + domainID + '">show&nbsp;less</a></small>';
-				    self.accessionToShortDescription[domainID] = description.substring(0,pos) + ' <small><a class="show-more' + self.pref  + '" data-id="' + domainID + '">more&#8230;</a></small>';
-				}
-			    }
-			});
+                        // make regex for each prefix to map to external URLs
+                        $.each(data[0].data.domain_prefix_to_dbxref_url, function(prefix,url) {
+                            self.prefixToURL['^'+prefix] = url;
+                        });
+                        // make short & long descriptions for ones that are too long
+                        $.each(self.accessionToShortDescription, function(domainID,description) {
+                            self.accessionToLongDescription[domainID] = "";
+                            if (description.length > self.options.maxDescriptionLength) {
+                                var pos = description.indexOf(" ",self.options.maxDescriptionLength);
+                                if (pos > -1) {
+                                    self.accessionToLongDescription[domainID] = description + ' <small><a class="show-less' + self.pref  + '" data-id="' + domainID + '">show&nbsp;less</a></small>';
+                                    self.accessionToShortDescription[domainID] = description.substring(0,pos) + ' <small><a class="show-more' + self.pref  + '" data-id="' + domainID + '">more&#8230;</a></small>';
+                                }
+                            }
+                        });
                     },
                     function(error){
                         self.clientError(error);
@@ -147,30 +149,30 @@ define (
                     container.empty();
                     var tabPane = $('<div id="'+self.pref+'tab-content">');
                     container.append(tabPane);
-                     new kbaseTabs(tabPane, {canDelete : true, tabs : []});                    
-                    ///////////////////////////////////// Overview table ////////////////////////////////////////////           
+                    var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+                    ///////////////////////////////////// Overview table ////////////////////////////////////////////
                     var tabOverview = $("<div/>");
-                    tabPane.kbaseTabs('addTab', {tab: 'Overview', content: tabOverview, canDelete : false, show: true});
+                    tabWidget.addTab({tab: 'Overview', content: tabOverview, canDelete : false, show: true});
                     var tableOver = $('<table class="table table-striped table-bordered" '+
                         'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+self.pref+'overview-table"/>');
                     tabOverview.append(tableOver);
                     tableOver
-                        .append( self.makeRow( 
-                            'Annotated genome', 
+                        .append( self.makeRow(
+                            'Annotated genome',
                             $('<span />').append(self.genomeName).css('font-style', 'italic') ) )
-                        .append( self.makeRow( 
-                            'Domain model set', 
+                        .append( self.makeRow(
+                            'Domain model set',
                             self.domainSetName ) )
-                        .append( self.makeRow( 
-                            'Annotated genes', 
+                        .append( self.makeRow(
+                            'Annotated genes',
                             self.annotatedGenesCount ) )
-                        .append( self.makeRow( 
-                            'Annotated domains', 
+                        .append( self.makeRow(
+                            'Annotated domains',
                             self.annotatedDomainsCount) );
 
-                    ///////////////////////////////////// Domains table ////////////////////////////////////////////          
+                    ///////////////////////////////////// Domains table ////////////////////////////////////////////
                     var tabDomains = $("<div/>");
-                    tabPane.kbaseTabs('addTab', {tab: 'Domains', content: tabDomains, canDelete : false, show: false});
+                    tabWidget.addTab({tab: 'Domains', content: tabDomains, canDelete : false, show: false});
                     var tableDomains = $('<table class="table table-striped table-bordered" '+
                         'style="width: 100%; margin-left: 0px; margin-right: 0px;" id="'+self.pref+'domain-table"/>');
                     tabDomains.append(tableDomains);
@@ -216,18 +218,18 @@ define (
                             gene = domain.genes[i];
                             if( i > 0 ) {
                                 geneRefs += '<br />';
-                            }                            
+                            }
                             geneRefs += '<a class="show-gene' + self.pref  + '"'
                                 + ' data-id="' + gene['geneID'] + '"'
                                 + ' data-contigID="' + gene['contigID']  + '"'
                                 + ' data-geneIndex="' + gene['geneIndex']  + '"'
                                 + '>' + gene['geneID'] + '</a>';
                         }
- 
-                        // add table data row            
+
+                        // add table data row
                         domainsTableData.push(
                             {
-                                'id': domainRef, 
+                                'id': domainRef,
                                 'domainDescription' : self.accessionToShortDescription[domainID],
                                 'longDomainDescription' : self.accessionToLongDescription[domainID],
                                 'geneCount': domain.genes.length,
@@ -238,7 +240,7 @@ define (
                     domainTableSettings.aaData = domainsTableData;
                     tableDomains = tableDomains.dataTable(domainTableSettings);
 
-                    ///////////////////////////////////// Domains Tab Events ////////////////////////////////////////////          
+                    ///////////////////////////////////// Domains Tab Events ////////////////////////////////////////////
                     function eventsDomainsTab() {
                         $('.show-gene'+self.pref).unbind('click');
                         $('.show-gene'+self.pref).click(function() {
@@ -246,8 +248,8 @@ define (
                             var contigID = $(this).attr('data-contigID');
                             var geneIndex = $(this).attr('data-geneIndex');
 
-                            if (tabPane.kbaseTabs('hasTab', id)) {
-                                tabPane.kbaseTabs('showTab', id);
+                            if (tabWidget.hasTab(id)) {
+                                tabWidget.showTab(id);
                                 return;
                             }
 
@@ -295,7 +297,7 @@ define (
 					geneLength = domainEnd;
 				}
 			    }
-			    
+
                             for(var domainID in domainsInfo){
                                 var domainsArray = domainsInfo[domainID];
                                 for(var i = 0 ; i < domainsArray.length; i++){
@@ -316,38 +318,38 @@ define (
                                         'domainID' : domainRef,
                                         'domainDescription' : self.accessionToShortDescription[domainID],
                                         'longDomainDescription' : self.accessionToLongDescription[domainID],
-                                        'domainStart': domainStart, 
-                                        'domainEnd' : domainEnd, 
+                                        'domainStart': domainStart,
+                                        'domainEnd' : domainEnd,
                                         'eValue' : eValue,
-                                        'image' : 
+                                        'image' :
                                                 '<div style="width: 100%; height:100%; vertical-align: middle; margin-top: 1em; margin-bottom: 1em;">'
-                                                + '<div style="position:relative; border: 1px solid gray; width:100%; height:2px;">' 
-                                                + '<div style="position:relative; left: ' + domainImgleftShift +'%;' 
+                                                + '<div style="position:relative; border: 1px solid gray; width:100%; height:2px;">'
+                                                + '<div style="position:relative; left: ' + domainImgleftShift +'%;'
                                                 + ' width:' + domainImgWidth + '%;'
                                                 + ' top: -5px; height:10px; background-color:red;"/></div>'
                                                 + '</div>'
                                     });
                                 }
-                            }                            
+                            }
                             geneDomainTableSettings.aaData = geneDomainsTableData;
-                            tabPane.kbaseTabs('addTab', {tab: id, content: tabContent, canDelete : true, show: true});
+                            tabWidget.addTab({tab: id, content: tabContent, canDelete : true, show: true});
                             tableGeneDomains.dataTable(geneDomainTableSettings);
                         });
 			eventsMoreDescription();
 		    };
 
-                    ///////////////////////////////////// Gene Tab Events ////////////////////////////////////////////          
+                    ///////////////////////////////////// Gene Tab Events ////////////////////////////////////////////
                     function eventsGeneTab() {
                         $('.show-domain'+self.pref).unbind('click');
                         $('.show-domain'+self.pref).click(function() {
                             var domainID = $(this).attr('data-id');
 			    tableDomains.fnFilter(domainID);
-                            tabPane.kbaseTabs('showTab', 'Domains');
+                            tabWidget.showTab('Domains');
 			});
 			eventsMoreDescription();
                     };
 
-                    //////////////////// Events for Show More/less Description  ////////////////////////////////////////////          
+                    //////////////////// Events for Show More/less Description  ////////////////////////////////////////////
                     function eventsMoreDescription() {
                         $('.show-more'+self.pref).unbind('click');
                         $('.show-more'+self.pref).click(function() {
@@ -364,10 +366,10 @@ define (
 			    eventsMoreDescription();
 			});
 		    }
-                });                
+                });
             });
         },
-       
+
         prepareVizData: function(){
             var self = this;
 
@@ -403,14 +405,14 @@ define (
                         domainData.genes.push(
                             {
                                 'geneID': geneID,
-                                'contigID': contigID, 
+                                'contigID': contigID,
                                 'geneIndex': i
                             }
                         );
                     }
                 }
                 self.domains = domains;
-                self.annotatedDomainsCount = domainsCount; 
+                self.annotatedDomainsCount = domainsCount;
                 self.annotatedGenesCount = genesCount;
             }
         },
@@ -435,7 +437,7 @@ define (
             if (isLoading)
                 this.showMessage("<img src='" + this.options.loadingImage + "'/>");
             else
-                this.hideMessage();                
+                this.hideMessage();
         },
 
         showMessage: function(message) {
@@ -451,7 +453,7 @@ define (
         },
 
         uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
                 function(c) {
                     var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                     return v.toString(16);
@@ -473,17 +475,17 @@ define (
                     obj['objid'] = objectID;
                 else
                     obj['name'] = objectID;
-                
+
                 if (objectVer)
                     obj['ver'] = objectVer;
             }
             return obj;
-        },        
+        },
 
         clientError: function(error){
             this.loading(false);
             this.showMessage(error.error.error);
-        }        
+        }
 
     });
 });

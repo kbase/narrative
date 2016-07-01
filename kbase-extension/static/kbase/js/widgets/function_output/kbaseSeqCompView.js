@@ -87,12 +87,12 @@ define (
             	    console.log(data);
             	    var tabPane = $('<div id="'+pref+'tab-content">');
             	    container.append(tabPane);
-            	     new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+            	    var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             	    var tabNames = ['Legend', 'DNAdiff Comparisons'];
             	    var tabIds = ['legend', 'comparisons'];
             	    for (var i=0; i<tabIds.length; i++) {
             		var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
-            		tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
+            		    tabWidget.addTab({tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
             	    }
 
             	    ////////////////////////////// Legend Tab //////////////////////////////

@@ -4,6 +4,7 @@ define (
 		'bootstrap',
 		'jquery',
 		'kbaseAuthenticatedWidget',
+        'kbaseTabs',
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap'
 	], function(
@@ -11,16 +12,17 @@ define (
 		bootstrap,
 		$,
 		kbaseAuthenticatedWidget,
+        kbaseTabs,
 		jquery_dataTables,
 		bootstrap
 	) {
 return KBWidget({
-    name: "FbaModelComparisonWidget",     
+    name: "FbaModelComparisonWidget",
     parent : kbaseAuthenticatedWidget,
     version: "1.0.0",
 	token: null,
 	ws_name: null,
-	fba_model1_id: null, 
+	fba_model1_id: null,
 	fba_model1: null,
 	fba_model2_id: null,
 	fba_model2: null,
@@ -34,7 +36,7 @@ return KBWidget({
 	gene_translation: {},
     options: {
     	ws_name: null,
-    	fba_model1_id: null, 
+    	fba_model1_id: null,
     	fba_model2_id: null,
     	proteome_cmp_id: null
     },
@@ -50,10 +52,10 @@ return KBWidget({
         this.gene_translation = {};
         if (options.proteome_cmp) {
         	this.proteome_cmp = options.proteome_cmp;
-        }	
+        }
         return this;
     },
-    
+
     render: function() {
         var self = this;
         var container = this.$elem;
@@ -80,7 +82,7 @@ return KBWidget({
         	self.genome2_ref = self.fba_model2.genome_ref;
         	if (data[2]) {
         		var ftrs = data[2].data.proteome1names;
-        		for (var i=0; i< ftrs.length; i++) { 
+        		for (var i=0; i< ftrs.length; i++) {
         			var hits = data[2].data.data1[i];
         			for (var j=0; j < hits.length; j++) {
         				//if (hits[j][2] == 100) {
@@ -92,7 +94,7 @@ return KBWidget({
         			}
         		}
         		ftrs = data[2].data.proteome2names;
-        		for (var i=0; i< ftrs.length; i++) { 
+        		for (var i=0; i< ftrs.length; i++) {
         			var hits = data[2].data.data2[i];
         			for (var j=0; j < hits.length; j++) {
         				//if (hits[j][2] == 100) {
@@ -103,9 +105,9 @@ return KBWidget({
         				//}
         			}
         		}
-        	}		
+        	}
         	kbws.get_object_subset([
-        		{ref: self.genome1_ref, included: ["scientific_name"]}, 
+        		{ref: self.genome1_ref, included: ["scientific_name"]},
 				{ref: self.genome2_ref, included: ["scientific_name"]}
 			], function(data) {
 				self.genome1_id = data[0].info[1];
@@ -125,7 +127,7 @@ return KBWidget({
         	error = true;
     		container.append('<p>[Error] ' + data.error.message + '</p>');
         });
-        
+
         var prepare_model = function(model) {
         	model.cpdhash = {};
         	model.rxnhash = {};
@@ -214,7 +216,7 @@ return KBWidget({
         		rxn.equation = reactants+" "+sign+" "+products;
         	}
         }
-        
+
         var compare_models = function() {
         	model1 = self.fba_model1;
         	model2 = self.fba_model2;
@@ -241,7 +243,7 @@ return KBWidget({
 									if (rxn2.ftrhash[transftrs[n]]) {
 										model1ftrs += gene;
 										found = 1;
-										break;					
+										break;
 									}
 								}
 								if (found == 0) {
@@ -267,7 +269,7 @@ return KBWidget({
 									if (rxn.ftrhash[transftrs[n]]) {
 										model2ftrs += gene;
 										found = 1;
-										break;					
+										break;
 									}
 								}
 								if (found == 0) {
@@ -310,7 +312,7 @@ return KBWidget({
         						if (rxn2.ftrhash[transftrs[n]]) {
         							model1ftrs += gene;
         							found = 1;
-        							break;					
+        							break;
         						}
         					}
         					if (found == 0) {
@@ -336,7 +338,7 @@ return KBWidget({
         						if (rxn.ftrhash[transftrs[n]]) {
         							model2ftrs += gene;
         							found = 1;
-        							break;					
+        							break;
         						}
         					}
         					if (found == 0) {
@@ -375,17 +377,17 @@ return KBWidget({
         		}
         	}
         }
-		
+
         var dataIsReady = function() {
         	compare_models();
             ///////////////////////////////////// Instantiating Tabs ////////////////////////////////////////////
 			container.empty();
 			var tabPane = $('<div id="'+self.pref+'tab-content">');
 			container.append(tabPane);
-			 new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+			var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             //////////////////////////////////////////// Statistics tab /////////////////////////////////////////////
         	var tabStats = $("<div/>");
-			tabPane.kbaseTabs('addTab', {tab: 'Statistics', content: tabStats, canDelete : false, show: true});
+			tabWidget.addTab({tab: 'Statistics', content: tabStats, canDelete : false, show: true});
 			var tableStats = $('<table class="table table-striped table-bordered" '+
 					'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-stats"/>');
 			tabStats.append(tableStats);
@@ -396,10 +398,10 @@ return KBWidget({
 			tableStats.append('<tr><td>Common reactions</td><td>'+self.overlap_rxns.length+'</td></tr>');
 			tableStats.append('<tr><td>Reactions with same features</td><td>'+self.exact_matches+'</td></tr>');
 			tableStats.append('<tr><td>Unique reactions in <b>'+self.fba_model1_id+'</b></td><td>'+self.fba_model1.unique_rxn.length+'</td></tr>');
-			tableStats.append('<tr><td>Unique reactions in <b>'+self.fba_model2_id+'</b></td><td>'+self.fba_model2.unique_rxn.length+'</td></tr>');        	
+			tableStats.append('<tr><td>Unique reactions in <b>'+self.fba_model2_id+'</b></td><td>'+self.fba_model2.unique_rxn.length+'</td></tr>');
         	//////////////////////////////////////////// Common tab /////////////////////////////////////////////
         	var tabCommon = $("<div/>");
-    		tabPane.kbaseTabs('addTab', {tab: 'Common reactions', content: tabCommon, canDelete : false, show: false});
+    		tabWidget.addTab({tab: 'Common reactions', content: tabCommon, canDelete : false, show: false});
         	var tableCommon = $('<table class="table table-striped table-bordered" '+
         			'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-common"/>');
         	tabCommon.append(tableCommon);
@@ -426,7 +428,7 @@ return KBWidget({
             		'orphan features are marked by <font color="red">red</font>.</td></tr></table>'));
         	//////////////////////////////////////////// Model1 only tab /////////////////////////////////////////////
         	var tabModel1 = $("<div/>");
-    		tabPane.kbaseTabs('addTab', {tab: self.fba_model1_id+" only", content: tabModel1, canDelete : false, show: false});
+    		tabWidget.addTab({tab: self.fba_model1_id+" only", content: tabModel1, canDelete : false, show: false});
         	var tableModel1 = $('<table class="table table-striped table-bordered" '+
         			'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-model1"/>');
         	tabModel1.append(tableModel1);
@@ -449,7 +451,7 @@ return KBWidget({
 			});
         	//////////////////////////////////////////// Model2 only tab /////////////////////////////////////////////
         	var tabModel2 = $("<div/>");
-    		tabPane.kbaseTabs('addTab', {tab: self.fba_model2_id+" only", content: tabModel2, canDelete : false, show: false});
+    		tabWidget.addTab({tab: self.fba_model2_id+" only", content: tabModel2, canDelete : false, show: false});
         	var tableModel2 = $('<table class="table table-striped table-bordered" '+
         			'style="margin-left: auto; margin-right: auto;" id="'+self.pref+'modelcomp-model2"/>');
         	tabModel2.append(tableModel2);
@@ -476,20 +478,20 @@ return KBWidget({
 				$('.show-reaction'+self.pref).unbind('click');
 				$('.show-reaction'+self.pref).click(function() {
 					var id = $(this).data('id');
-					if (tabPane.kbaseTabs('hasTab', id)) {
-						tabPane.kbaseTabs('showTab', id);
-						return;
-					}			
-					tabPane.kbaseTabs('addTab', {tab: id, content: "Coming soon!", canDelete : true, show: true});
+                    if (tabWidget.hasTab(id)) {
+                        tabWidget.showTab(id);
+                        return;
+                    }
+					tabWidget.addTab({tab: id, content: "Coming soon!", canDelete : true, show: true});
 				});
 				$('.show-gene'+self.pref).unbind('click');
 				$('.show-gene'+self.pref).click(function() {
 					var id = $(this).data('id');
-					if (tabPane.kbaseTabs('hasTab', id)) {
-						tabPane.kbaseTabs('showTab', id);
-						return;
-					}
-					tabPane.kbaseTabs('addTab', {tab: id, content: "Coming soon!", canDelete : true, show: true});
+                    if (tabWidget.hasTab(id)) {
+                        tabWidget.showTab(id);
+                        return;
+                    }
+					tabWidget.addTab({tab: id, content: "Coming soon!", canDelete : true, show: true});
 				});
 			}
     	};
@@ -509,7 +511,7 @@ return KBWidget({
     },
 
     uuid: function() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, 
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,
             function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);

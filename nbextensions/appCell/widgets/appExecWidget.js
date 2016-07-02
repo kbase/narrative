@@ -1403,6 +1403,12 @@ define([
             });
             listeners.push(ev);
         }
+        
+        function teardown() {
+            listeners.forEach(function (listener) {
+                runtime.bus().removeListener(listener);
+            });
+        }
 
         function start() {
             bus.on('run', function (message) {
@@ -1423,6 +1429,12 @@ define([
                 }
                 renderRunState();
                 renderExecState();
+            });
+            bus.on('stop', function (message) {
+                teardown();
+            });
+            bus.on('reset', function (message) {
+                console.log('I should reset right about now.');
             });
         }
 

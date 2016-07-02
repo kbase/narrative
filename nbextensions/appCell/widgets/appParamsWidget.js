@@ -475,7 +475,10 @@ define([
 
         return {
             start: start,
-            stop: stop
+            stop: stop,
+            bus: function () {
+                return bus;
+            }
         };
     }
 

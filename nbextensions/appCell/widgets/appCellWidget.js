@@ -994,11 +994,40 @@ define([
                 errors: errors
             };
         }
+        
+        // TODO: we need to determine the proper forms for a app identifier, and
+        // who creates this canonical identifier. E.g. the method panel supplies
+        // the app id to the cell, but it gets it from the kernel, which gets it
+        // directly from the nms/catalog. If the catalog provides the version
+        // for a beta or release tag ...
+        function fixApp(app) {
+            switch (app.tag) {
+                case 'release': {
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.version
+                    };
+                }
+                case 'beta':
+                case 'dev':
+                    return {
+                        id: app.id,
+                        tag: app.tag
+                    }
+                default: 
+                    throw new Error('Invalid tag for app ' + app.id);
+            }
+        }
 
         function buildPython(cell, cellId, app, params) {
-            var code = PythonInterop.buildAppRunner(cellId, app, params);
+            var runId = new Uuid(4).format(),
+                fixedApp = fixApp(app),
+                code = PythonInterop.buildAppRunner(cellId, runId, fixedApp, params);
+            // TODO: do something with the runId
             cell.set_text(code);
         }
+
 
         function resetPython(cell) {
             cell.set_text('');

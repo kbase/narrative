@@ -618,7 +618,7 @@ define([
                                         ])
                                     ]
                                 }),
-                                dom.buildPanel({
+                                dom.buildCollapsiblePanel({
                                     title: 'Input ' + span({class: 'fa fa-arrow-left'}),
                                     name: 'parameters-group',
                                     hidden: false,
@@ -688,9 +688,37 @@ define([
                 errors: errors
             };
         }
+        
+        // TODO: we need to determine the proper forms for a app identifier, and
+        // who creates this canonical identifier. E.g. the method panel supplies
+        // the app id to the cell, but it gets it from the kernel, which gets it
+        // directly from the nms/catalog. If the catalog provides the version
+        // for a beta or release tag ...
+        function fixApp(app) {
+            switch (app.tag) {
+                case 'release': {
+                    return {
+                        id: app.id,
+                        tag: app.tag,
+                        version: app.version
+                    };
+                }
+                case 'beta':
+                case 'dev':
+                    return {
+                        id: app.id,
+                        tag: app.tag
+                    }
+                default: 
+                    throw new Error('Invalid tag for app ' + app.id);
+            }
+        }
 
         function buildPython(cell, cellId, app, params) {
-            var code = PythonInterop.buildViewRunner(cellId, app, params);
+            var runId = new Uuid(4).format(),
+                app = fixApp(app),
+                code = PythonInterop.buildViewRunner(cellId, runId, app, params);
+            // TODO: do something with the runId
             cell.set_text(code);
         }
 
@@ -1329,7 +1357,7 @@ define([
 //                        });
 //                    });
                     bus.on('parameter-changed', function (message) {
-                        console.log('got parameter changed...', message);
+                        // We simply store the new value for the parameter.
                         model.setItem(['params', message.parameter], message.newValue);
                         var validationResult = validateModel();
                         if (validationResult.isValid) {

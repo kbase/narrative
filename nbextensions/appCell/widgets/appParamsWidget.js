@@ -219,7 +219,6 @@ define([
             var events = Events.make(),
                 content = form({dataElement: 'input-widget-form'}, [
                     dom.buildPanel({
-                        title: 'Options',
                         type: 'default',
                         body: [
                             dom.makeButton('Show Advanced', 'toggle-advanced', {events: events}),

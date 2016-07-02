@@ -63,7 +63,7 @@ define([
 
     function buildNiceArgsList(args) {
         var indent = '    ';
-        return '\n' + indent + args.join(',\n') + indent + '\n';
+        return '\n' + indent + args.join(',\n' + indent) + '\n';
     }
 
     function buildAppRunner(cellId, runId, app, params) {

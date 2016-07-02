@@ -178,19 +178,38 @@ class AppManager(object):
         # First, validate.
         # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
         spec_params = self.spec_manager.app_params(spec)
+        (params, ws_refs) = self._validate_parameters(app_id, tag, spec_params, kwargs)
+
+        # now just map onto outputs.
+        (output_widget, widget_params) = map_outputs_from_state([], params, spec)
+        return WidgetManager().show_output_widget(output_widget, tag=tag, **widget_params)
+
+    def _validate_parameters(self, app_id, tag, spec_params, params):
+        """
+        Validates the dict of params against the spec_params. If all is good, it updates a few
+        parameters that need it - checkboxes go from True/False to 1/0, and sets default values
+        where necessary.
+        Then it returns a tuple like this:
+        (dict_of_params, list_of_ws_refs)
+        where list_of_ws_refs is the list of workspace references for objects being passed into
+        the app.
+
+        If it fails, this will raise a ValueError with a description of the problem and a
+        (hopefully useful!) hint for the user as to what went wrong.
+        """
         spec_param_ids = [ p['id'] for p in spec_params ]
 
         # First, test for presence.
         missing_params = list()
         for p in spec_params:
-            if not p['optional'] and not p['default'] and not kwargs.get(p['id'], None):
+            if not p['optional'] and not p['default'] and not params.get(p['id'], None):
                 missing_params.append(p['id'])
         if len(missing_params):
             raise ValueError('Missing required parameters {} - try executing app_usage("{}", tag="{}") for more information'.format(json.dumps(missing_params), app_id, tag))
 
         # Next, test for extra params that don't make sense
         extra_params = list()
-        for p in kwargs.keys():
+        for p in params.keys():
             if p not in spec_param_ids:
                 extra_params.append(p)
         if len(extra_params):
@@ -208,8 +227,8 @@ class AppManager(object):
         # a separate param to track provenance.
         ws_input_refs = list()
         for p in spec_params:
-            if p['id'] in kwargs:
-                (wsref, err) = self._check_parameter(p, kwargs[p['id']], workspace)
+            if p['id'] in params:
+                (wsref, err) = self._check_parameter(p, params[p['id']], workspace)
                 if err is not None:
                     param_errors.append("{} - {}".format(p['id'], err))
                 if wsref is not None:
@@ -220,10 +239,9 @@ class AppManager(object):
                     else:
                         ws_input_refs.append(wsref)
         if len(param_errors):
-            raise ValueError('Parameter value errors found! {}'.format(json.dumps(param_errors)))
+            raise ValueError('Parameter value errors found!\n{}'.format("\n".join(param_errors)))
 
         # Hooray, parameters are validated. Set them up for transfer.
-        params = kwargs
         for p in spec_params:
             # If any param is a checkbox, need to map from boolean to actual expected value in p['checkbox_map']
             # note that True = 0th elem, False = 1st
@@ -235,10 +253,7 @@ class AppManager(object):
             if p['default'] and p['id'] not in params:
                 params[p['id']] = p['default']
 
-        # now just map onto outputs.
-        (output_widget, widget_params) = map_outputs_from_state([], params, spec)
-        return WidgetManager().show_output_widget(output_widget, tag=tag, **widget_params)
-
+        return (params, ws_input_refs)
 
     def run_app(self, *args, **kwargs):
         """
@@ -279,7 +294,8 @@ class AppManager(object):
                 'error_type': e_type,
                 'error_stacktrace': e_trace
             })
-            raise
+            # raise
+            print("Error while trying to start your app!\n-------------------------------------\n" + str(e))
 
     def _run_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
@@ -337,62 +353,8 @@ class AppManager(object):
 
         # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
         spec_params = self.spec_manager.app_params(spec)
-        spec_param_ids = [ p['id'] for p in spec_params ]
 
-        # First, test for presence.
-        missing_params = list()
-        for p in spec_params:
-            if not p['optional'] and not p['default'] and not kwargs.get(p['id'], None):
-                missing_params.append(p['id'])
-        if len(missing_params):
-            raise ValueError('Missing required parameters {} - try executing app_usage("{}", tag="{}") for more information'.format(json.dumps(missing_params), app_id, tag))
-
-        # Next, test for extra params that don't make sense
-        extra_params = list()
-        for p in kwargs.keys():
-            if p not in spec_param_ids:
-                extra_params.append(p)
-        if len(extra_params):
-            raise ValueError('Unknown parameters {} - maybe something was misspelled?\nexecute app_usage("{}", tag="{}") for more information'.format(json.dumps(extra_params), app_id, tag))
-
-        # Now, validate parameter values.
-        # Should also check if input (NOT OUTPUT) object variables are present in the current workspace
-        workspace = system_variable('workspace')
-        ws_id = system_variable('workspace_id')
-        if workspace is None or ws_id is None:
-            raise ValueError('Unable to retrive current Narrative workspace information! workspace={}, workspace_id={}'.format(workspace, ws_id))
-
-        param_errors = list()
-        # If they're workspace objects, track their refs in a list we'll pass to run_job as
-        # a separate param to track provenance.
-        ws_input_refs = list()
-        for p in spec_params:
-            if p['id'] in kwargs:
-                (wsref, err) = self._check_parameter(p, kwargs[p['id']], workspace)
-                if err is not None:
-                    param_errors.append("{} - {}".format(p['id'], err))
-                if wsref is not None:
-                    if isinstance(wsref, list):
-                        for ref in wsref:
-                            if ref is not None:
-                                ws_input_refs.append(ref)
-                    else:
-                        ws_input_refs.append(wsref)
-        if len(param_errors):
-            raise ValueError('Parameter value errors found! {}'.format(json.dumps(param_errors)))
-
-        # Hooray, parameters are validated. Set them up for transfer.
-        params = kwargs
-        for p in spec_params:
-            # If any param is a checkbox, need to map from boolean to actual expected value in p['checkbox_map']
-            # note that True = 0th elem, False = 1st
-            if p['type'] == 'checkbox':
-                if p['id'] in params:
-                    checkbox_idx = 0 if params[p['id']] else 1
-                    params[p['id']] = p['checkbox_map'][checkbox_idx]
-            # While we're at it, set the default values for any unset parameters that have them
-            if p['default'] and p['id'] not in params:
-                params[p['id']] = p['default']
+        (params, ws_input_refs) = self._validate_parameters(app_id, tag, spec_params, kwargs)
 
         self._send_comm_message('run_status', {
             'event': 'validated_app',
@@ -400,6 +362,10 @@ class AppManager(object):
             'cell_id': cell_id,
             'run_id': run_id
         })
+
+        ws_id = system_variable('workspace_id')
+        if ws_id is None:
+            raise ValueError('Unable to retrive current Narrative workspace information!')
 
         input_vals = self._map_inputs(spec['behavior']['kb_service_input_mapping'], params)
 
@@ -417,6 +383,7 @@ class AppManager(object):
         if run_id is not None:
             job_meta['run_id'] = run_id
 
+        # This is the input set for NJSW.run_job. Now we need the worksapce id and whatever fits in the metadata.
         job_runner_inputs = {
             'method' : function_name,
             'service_ver' : service_ver,
@@ -428,6 +395,7 @@ class AppManager(object):
         if len(ws_input_refs) > 0:
             job_runner_inputs['source_ws_objects'] = ws_input_refs
 
+        # Log that we're trying to run a job...
         log_info = {
             'app_id': app_id,
             'tag': tag,
@@ -600,7 +568,7 @@ class AppManager(object):
                 if ref:
                     ws_refs.append(ref)
             if len(error_list):
-                return ", ".join(error_list)
+                return (None, "\n\t".join(error_list))
             else:
                 return (ws_refs, None)
         return self._validate_param_value(param, value, workspace)
@@ -658,7 +626,7 @@ class AppManager(object):
                 if not type_ok:
                     return (ws_ref, 'Type of data object, {}, does not match allowed types'.format(info[2]))
             except Exception as e:
-                return (ws_ref, 'Data object named {} not found with this Narrative.')
+                return (ws_ref, 'Data object named {} not found with this Narrative.'.format(value))
 
         # if it expects a set of allowed values, check if this one matches
         if 'allowed_values' in param:

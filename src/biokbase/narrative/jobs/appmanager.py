@@ -406,6 +406,12 @@ class AppManager(object):
 
     def _map_inputs(self, input_mapping, params):
         """
+        Maps the dictionary of parameters and inputs based on rules provided in the input_mapping.
+        This iterates over the list of input_mappings, and uses them as a filter to apply to each
+        parameter.
+
+        Returns a list of inputs that can be passed directly to NJSW.run_job
+
         input_mapping is a list of dicts, as defined by NarrativeMethodStore.ServiceMethodInputMapping.
         params is a dict of key-value-pairs, each key is the input_parameter field of some parameter.
         """
@@ -423,7 +429,7 @@ class AppManager(object):
             if 'generated_value' in p and p_value is None:
                 p_value = self._generate_input(generated_value)
             if 'target_type_transform' in p:
-                p_value = self._transform_input(transform_type, p_value)
+                p_value = self._transform_input(p['target_type_transform'], p_value)
 
             # get position!
             arg_position = p.get('target_argument_position', 0)
@@ -442,6 +448,16 @@ class AppManager(object):
         return inputs_list
 
     def _transform_input(self, transform_type, value):
+        """
+        Transforms an input according to the rules given in NarrativeMethodStore.ServiceMethodInputMapping
+        Really, there are three types of transforms possible:
+          1. ref - turns the input string into a workspace ref.
+          2. int - tries to coerce the input string into an int.
+          3. list<type> - turns the given list into a list of the given type.
+          (4.) none or None - doesn't transform.
+
+        Returns a transformed (or not) value.
+        """
         if transform_type == "none" or transform_type is None:
             return value
 

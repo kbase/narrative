@@ -7,17 +7,6 @@ import unittest
 import mock
 from traitlets import Instance
 
-class DummyComm(object):
-    def __init__(self, **kwargs):
-        pass
-    def __new__(self, **kwargs):
-        pass
-    def send(self):
-        pass
-    def on_msg(self):
-        pass
-
-
 class AppManagerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -61,29 +50,34 @@ class AppManagerTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             self.mm.available_apps(self.bad_tag)
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.Comm', spec=DummyComm)
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_good_inputs(self, m):
+        m.return_value._send_comm_message.return_value = None
         pass
         # self.assertFalse("TODO: this test and code with mocking")
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.Comm', spec=DummyComm)
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_id(self, m):
+        m.return_value._send_comm_message.return_value = None
         with self.assertRaises(ValueError) as err:
             self.mm.run_app(self.bad_app_id)
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.Comm', spec=DummyComm)
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_tag(self, m):
+        m.return_value._send_comm_message.return_value = None
         with self.assertRaises(ValueError) as err:
             self.mm.run_app(self.good_app_id, tag=self.bad_tag)
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.Comm', spec=DummyComm)
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_bad_version_match(self, m):
         # fails because a non-release tag can't be versioned
+        m.return_value._send_comm_message.return_value = None
         with self.assertRaises(ValueError) as err:
             self.mm.run_app(self.good_app_id, tag=self.good_tag, version=">0.0.1")
 
-    @mock.patch('biokbase.narrative.jobs.appmanager.Comm', spec=DummyComm)
+    @mock.patch('biokbase.narrative.jobs.appmanager.JobManager')
     def test_run_app_missing_inputs(self, m):
+        m.return_value._send_comm_message.return_value = None
         with self.assertRaises(ValueError) as err:
             self.mm.run_app(self.good_app_id, tag=self.good_tag)
 

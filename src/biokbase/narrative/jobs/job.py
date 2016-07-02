@@ -7,10 +7,8 @@ import biokbase.narrative.clients as clients
 from .specmanager import SpecManager
 from .app_util import (
     system_variable,
-    map_inputs_from_state
-)
-from biokbase.narrative.common.generic_service_calls import (
-    get_sub_path
+    map_inputs_from_job,
+    map_outputs_from_state
 )
 import json
 import uuid
@@ -143,28 +141,8 @@ class Job(object):
         }
 
     def _get_output_info(self, state):
-        widget_params = dict()
-        app_spec = self.app_spec()
-        out_mapping_key = 'kb_service_output_mapping'
-        if out_mapping_key not in app_spec['behavior']:
-            out_mapping_key = 'output_mapping' # for viewers
-        for out_param in app_spec['behavior'].get(out_mapping_key, []):
-            p_id = out_param['target_property']
-            if 'narrative_system_variable' in out_param:
-                widget_params[p_id] = system_variable(out_param['narrative_system_variable'])
-            elif 'constant_value' in out_param:
-                widget_params[p_id] = out_param['constant_value']
-            elif 'input_parameter' in out_param:
-                widget_params[p_id] = self.inputs[0].get(out_param['input_parameter'], None)
-            elif 'service_method_output_path' in out_param:
-                # widget_params[p_id] = get_sub_path(json.loads(state['step_outputs'][self.app_id]), out_param['service_method_output_path'], 0)
-                widget_params[p_id] = get_sub_path(state['result'], out_param['service_method_output_path'], 0)
-        output_widget = app_spec.get('widgets', {}).get('output', 'kbaseDefaultNarrativeOutput')
-        # Yes, sometimes silly people put the string 'null' in their spec.
-        if (output_widget == 'null'):
-            output_widget = 'kbaseDefaultNarrativeOutput'
-        return (output_widget, widget_params)
-
+        spec = self.app_spec()
+        return map_outputs_from_state(state, map_inputs_from_job(self.parameters()[0]['params'], spec), spec)
 
     def log(self, first_line=0, num_lines=None):
         """

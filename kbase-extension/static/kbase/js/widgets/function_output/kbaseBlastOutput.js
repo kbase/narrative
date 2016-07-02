@@ -71,7 +71,7 @@ define (
                 data = data[0].data;
                 var tabPane = $('<div id="' + pref + 'tab-content">');
                 container.append(tabPane);
-                 new kbaseTabs(tabPane, {canDelete: true, tabs: []});
+                var tabWidget = new kbaseTabs(tabPane, {canDelete: true, tabs: []});
 
                 var tabData = self.tabData();
                 var tabNames = tabData.names;
@@ -79,7 +79,7 @@ define (
 
                 tabIds.forEach(function (tabId, i) {
                     var tabDiv = $('<div id="' + pref + tabId + '"> ');
-                    tabPane.kbaseTabs('addTab', {
+                    tabWidget.addTab({
                         tab: tabNames[i],
                         content: tabDiv,
                         canDelete: false,

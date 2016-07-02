@@ -7,6 +7,7 @@ define (
 		'bluebird',
 		'util/string',
 		'kbaseAuthenticatedWidget',
+        'kbaseTabs',
 		'jquery-dataTables',
 		'jquery-dataTables-bootstrap'
 	], function(
@@ -17,11 +18,12 @@ define (
 		Promise,
 		StringUtil,
 		kbaseAuthenticatedWidget,
+        kbaseTabs,
 		jquery_dataTables,
 		bootstrap
 	) {
 return KBWidget({
-    name: "kbaseFbaModelComparisonNew",     
+    name: "kbaseFbaModelComparisonNew",
     parent : kbaseAuthenticatedWidget,
     version: "1.0.0",
     ws_name: null,
@@ -40,7 +42,7 @@ return KBWidget({
         this.mc_id = options.mc_id;
         return this;
     },
-    
+
     render: function() {
         var self = this;
         var container = this.$elem;
@@ -67,10 +69,10 @@ return KBWidget({
             container.empty();
             var tabPane = $('<div id="'+pref+'tab-content">');
             container.append(tabPane);
-             new kbaseTabs(tabPane, {canDelete : true, tabs : []});
+            var tabWidget = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
             //////////////////////////////////////////// Statistics tab /////////////////////////////////////////////
             var tabStats = $("<div/>");
-            tabPane.kbaseTabs('addTab', {tab: 'Statistics', content: tabStats, canDelete : false, show: true});
+            tabWidget.addTab({tab: 'Statistics', content: tabStats, canDelete : false, show: true});
             var tableStats = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-stats"/>');
             tabStats.append(tableStats);
@@ -78,10 +80,10 @@ return KBWidget({
 		tableStats.append('<tr><td><b>'+modelComp.models[i].id+'</b> genome</td><td>'+modelComp.models[i].name+'</td></tr>');
 	    }
 	    if (modelComp.pangenome_ref) {
-		tableStats.append('<tr><td>Pangenome</td><td>'+modelComp.pangenome_ref+'</td></tr>');		
+		tableStats.append('<tr><td>Pangenome</td><td>'+modelComp.pangenome_ref+'</td></tr>');
 	    }
 	    if (modelComp.protcomp_ref) {
-		tableStats.append('<tr><td>Proteome Comparison</td><td>'+modelComp.protcomp_ref+'</td></tr>');		
+		tableStats.append('<tr><td>Proteome Comparison</td><td>'+modelComp.protcomp_ref+'</td></tr>');
 	    }
             tableStats.append('<tr><td>Conserved reactions</td><td>'+modelComp.core_reactions+'</td></tr>');
             tableStats.append('<tr><td>Conserved compounds</td><td>'+modelComp.core_compounds+'</td></tr>');
@@ -89,7 +91,7 @@ return KBWidget({
             tableStats.append('<tr><td>Conserved protein families</td><td>'+modelComp.core_families+'</td></tr>');
             //////////////////////////////////////////// Reactions tab /////////////////////////////////////////////
             var tabReactions = $("<div/>");
-            tabPane.kbaseTabs('addTab', {tab: 'Reactions', content: tabReactions, canDelete : false, show: false});
+            tabWidget.addTab({tab: 'Reactions', content: tabReactions, canDelete : false, show: false});
             var tableReactions = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabReactions.append(tableReactions);
@@ -135,7 +137,7 @@ return KBWidget({
             });
             //////////////////////////////////////////// Compounds tab /////////////////////////////////////////////
             var tabCompounds = $("<div/>");
-            tabPane.kbaseTabs('addTab', {tab: 'Compounds', content: tabCompounds, canDelete : false, show: false});
+            tabWidget.addTab({tab: 'Compounds', content: tabCompounds, canDelete : false, show: false});
             var tableCompounds = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabCompounds.append(tableCompounds);
@@ -178,7 +180,7 @@ return KBWidget({
             });
             //////////////////////////////////////////// Biomass tab /////////////////////////////////////////////
             var tabBiomass = $("<div/>");
-            tabPane.kbaseTabs('addTab', {tab: 'Biomass compounds', content: tabBiomass, canDelete : false, show: false});
+            tabWidget.addTab({tab: 'Biomass compounds', content: tabBiomass, canDelete : false, show: false});
             var tableBiomass = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabBiomass.append(tableBiomass);
@@ -221,7 +223,7 @@ return KBWidget({
             });
             //////////////////////////////////////////// Families tab /////////////////////////////////////////////
             var tabFamilies = $("<div/>");
-            tabPane.kbaseTabs('addTab', {tab: 'Families', content: tabFamilies, canDelete : false, show: false});
+            tabWidget.addTab({tab: 'Families', content: tabFamilies, canDelete : false, show: false});
             var tableFamilies = $('<table class="table table-striped table-bordered" '+
                     'style="margin-left: auto; margin-right: auto;" id="'+pref+'modelcomp-common"/>');
             tabFamilies.append(tableFamilies);
@@ -268,20 +270,20 @@ return KBWidget({
                 $('.show-reaction'+pref).unbind('click');
                 $('.show-reaction'+pref).click(function() {
                     var id = $(this).data('id');
-                    if (tabPane.kbaseTabs('hasTab', id)) {
-                        tabPane.kbaseTabs('showTab', id);
+                    if (tabWidget.hasTab(id)) {
+                        tabWidget.showTab(id);
                         return;
-                    }           
-                    tabPane.kbaseTabs('addTab', {tab: id, content: "Coming soon!", canDelete : true, show: true});
+                    }
+                    tabWidget.addTab({tab: id, content: "Coming soon!", canDelete : true, show: true});
                 });
                 $('.show-gene'+pref).unbind('click');
                 $('.show-gene'+pref).click(function() {
                     var id = $(this).data('id');
-                    if (tabPane.kbaseTabs('hasTab', id)) {
-                        tabPane.kbaseTabs('showTab', id);
+                    if (tabWidget.hasTab(id)) {
+                        tabWidget.showTab(id);
                         return;
                     }
-                    tabPane.kbaseTabs('addTab', {tab: id, content: "Coming soon!", canDelete : true, show: true});
+                    tabWidget.addTab({tab: id, content: "Coming soon!", canDelete : true, show: true});
                 });
             }
 

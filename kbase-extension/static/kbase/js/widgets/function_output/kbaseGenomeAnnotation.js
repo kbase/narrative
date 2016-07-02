@@ -5,31 +5,31 @@
  */
 
 define (
-	[
-		'kbwidget',
-		'bootstrap',
-		'jquery',
-		'bluebird',
-		'narrativeConfig',
-		'ContigBrowserPanel',
-		'util/string',
-		'kbaseAuthenticatedWidget',
-		'kbaseTabs',
-		'jquery-dataTables',
-		'jquery-dataTables-bootstrap'
-	], function(
-		KBWidget,
-		bootstrap,
-		$,
-		Promise,
-		Config,
-		ContigBrowserPanel,
-		StringUtil,
-		kbaseAuthenticatedWidget,
-		kbaseTabs,
-		jquery_dataTables,
-		bootstrap
-	) {
+    [
+        'kbwidget',
+        'bootstrap',
+        'jquery',
+        'bluebird',
+        'narrativeConfig',
+        'ContigBrowserPanel',
+        'util/string',
+        'kbaseAuthenticatedWidget',
+        'kbaseTabs',
+        'jquery-dataTables',
+        'jquery-dataTables-bootstrap'
+    ], function(
+        KBWidget,
+        bootstrap,
+        $,
+        Promise,
+        Config,
+        ContigBrowserPanel,
+        StringUtil,
+        kbaseAuthenticatedWidget,
+        kbaseTabs,
+        jquery_dataTables,
+        bootstrap
+    ) {
     return KBWidget({
         name: "kbaseGenomeView",
         parent : kbaseAuthenticatedWidget,
@@ -139,21 +139,21 @@ define (
 
         render: function() {
             var self = this;
-        	var pref = StringUtil.uuid();
+            var pref = StringUtil.uuid();
 
             var container = this.$elem;
             if (self.token == null) {
-            	container.empty();
-            	container.append("<div>[Error] You're not logged in</div>");
-            	return;
+                container.empty();
+                container.append("<div>[Error] You're not logged in</div>");
+                return;
             }
 
             var kbws = new Workspace(self.wsUrl, {'token': self.token});
 
             var ready = function(gnm, ctg) {
-            		container.empty();
-            		var tabPane = $('<div id="'+pref+'tab-content">');
-            		container.append(tabPane);
+                    container.empty();
+                    var tabPane = $('<div id="'+pref+'tab-content">');
+                    container.append(tabPane);
                     var tabObj = new kbaseTabs(tabPane, {canDelete : true, tabs : []});
 
                     var genomeType = self.genomeType(gnm);
@@ -176,7 +176,7 @@ define (
 
                     for (var i=0; i<tabIds.length; i++) {
                       var tabDiv = $('<div id="'+pref+tabIds[i]+'"> ');
-                      tabPane.kbaseTabs('addTab', {tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
+                      tabObj.addTab({tab: tabNames[i], content: tabDiv, canDelete : false, show: (i == 0)});
                     }
 
                     var contigCount = 0;
@@ -287,7 +287,7 @@ define (
                               $linkCell.append($.jqElem('a')
                                         .on('click', function(e) {
                                           var $tabDiv = $.jqElem('div').kbaseOntologyDictionary({ term_id : k});
-                                          tabPane.kbaseTabs('addTab', {tab: k, content: $tabDiv.$elem, canDelete : true, show: true});
+                                          tabObj.addTab({tab: k, content: $tabDiv.$elem, canDelete : true, show: true});
                                         })
                                         .append(k));
 

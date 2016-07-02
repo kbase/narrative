@@ -1,8 +1,7 @@
 from .job import Job
 from .specmanager import SpecManager
 from .app_util import (
-    system_variable,
-    map_inputs_from_state
+    system_variable
 )
 from biokbase.narrative.common.generic_service_calls import (
     get_sub_path

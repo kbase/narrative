@@ -188,17 +188,21 @@ define([
 
         function buildCollapsiblePanel(args) {
             var collapseId = html.genId(),
-                type = args.type || 'primary',
-                classes = ['panel', 'panel-' + type];
+                type = args.type || 'primary',                
+                classes = ['panel', 'panel-' + type],
+                collapseClasses = ['panel-collapse collapse'];
             if (args.hidden) {
                 classes.push('hidden');
                 // style.display = 'none';
+            }
+            if (!args.collapsed) {
+                collapseClasses.push('in');
             }
 
             return div({class: classes.join(' '), dataElement: args.name}, [
                 div({class: 'panel-heading'}, [
                     div({class: 'panel-title'}, span({
-                        class: 'collapsed',
+                        xclass: 'collapsed',
                         dataToggle: 'collapse',
                         dataTarget: '#' + collapseId,
                         style: {cursor: 'pointer'}
@@ -206,12 +210,41 @@ define([
                         args.title
                         ))
                 ]),
-                div({id: collapseId, class: 'panel-collapse collapse'},
+                div({id: collapseId, class: collapseClasses.join(' ')},
                     div({class: 'panel-body'}, [
                         args.body
                     ])
                     )
             ]);
+        }
+        
+        function collapsePanel(path) {
+            var node = getElement(path);
+            if (!node) {
+                return;
+            }
+            var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
+                targetSelector = collapseToggle.getAttribute('data-target'),
+                collapseTarget = node.querySelector(targetSelector);
+            
+            collapseToggle.classList.add('collapsed');
+            collapseToggle.setAttribute('aria-expanded', 'false');
+            collapseTarget.classList.remove('in');
+            collapseTarget.setAttribute('aria-expanded', 'false');
+        }
+        function expandPanel(path) {
+            var node = getElement(path);
+            if (!node) {
+                return;
+            }
+            var collapseToggle = node.querySelector('[data-toggle="collapse"]'),
+                targetSelector = collapseToggle.getAttribute('data-target'),
+                collapseTarget = node.querySelector(targetSelector);
+            
+            collapseToggle.classList.remove('collapsed');
+            collapseToggle.setAttribute('aria-expanded', 'true');
+            collapseTarget.classList.add('in');
+            collapseTarget.setAttribute('aria-expanded', 'true');
         }
 
         function createNode(markup) {
@@ -247,6 +280,8 @@ define([
             buildPanel: buildPanel,
             makeCollapsiblePanel: makeCollapsiblePanel,
             buildCollapsiblePanel: buildCollapsiblePanel,
+            collapsePanel: collapsePanel,
+            expandPanel: expandPanel,
             createNode: createNode,
             setContent: setContent,
             na: na

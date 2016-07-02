@@ -180,6 +180,33 @@ class AppManager(object):
         spec_params = self.spec_manager.app_params(spec)
         (params, ws_refs) = self._validate_parameters(app_id, tag, spec_params, kwargs)
 
+
+        self._send_comm_message('run_status', {
+            'event': 'validated_app',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            'cell_id': cell_id,
+            'run_id': run_id
+        })
+
+
+        # Log that we're trying to run a job...
+        log_info = {
+            'app_id': app_id,
+            'tag': tag,
+            'version': service_ver,
+            'username': system_variable('user_id'),
+            'wsid': ws_id
+        }
+        self._log.setLevel(logging.INFO)
+        kblogging.log_event(self._log, "run_local_app", log_info)
+
+        self._send_comm_message('run_status', {
+            'event': 'completed_app',
+            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+            'cell_id': cell_id,
+            'run_id': run_id
+        })
+
         # now just map onto outputs.
         (output_widget, widget_params) = map_outputs_from_state([], params, spec)
         return WidgetManager().show_output_widget(output_widget, tag=tag, **widget_params)

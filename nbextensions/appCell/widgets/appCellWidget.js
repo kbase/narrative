@@ -1366,6 +1366,13 @@ define([
                 // the job will be deleted form the notebook when the job cancellation
                 // event is received.
             }
+            
+            // tear down all the sub widgets.
+            Object.keys(widgets).forEach(function (widgetId) {
+                var widget = widgets[widgetId];
+                console.log('WIDGET?', widget);
+                widget.instance.bus().send('stop');
+            });
 
             $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
         }
@@ -2239,6 +2246,7 @@ define([
                     });
                     widgets.execWidget = {
                         path: ['exec-group', 'widget'],
+                        
                         instance: widget
                     };
                     widget.start();

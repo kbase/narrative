@@ -132,7 +132,7 @@ define([
                                 id: attachEvent('click', doToggleCell)
                             }, [
                                 span({
-                                    style: {padding: '4px'}
+                                    style: {padding: '4px', display: 'inline-block', width: '30px'},                                    
                                 }, [
                                     span({
                                         class: ['fa', 'fa-' + getIconClass(cell), 'fa-2x'].join(' ')

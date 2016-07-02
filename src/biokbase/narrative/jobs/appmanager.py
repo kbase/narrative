@@ -113,6 +113,7 @@ class AppManager(object):
         """
         return self.spec_manager.available_apps(tag)
 
+
     def run_local_app(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         """
         Attempts to run a local app. These do not return a Job object, but just the result of the app.
@@ -136,7 +137,25 @@ class AppManager(object):
         Example:
         run_local_app('NarrativeViewers/view_expression_profile', version='0.0.1', input_expression_matrix="MyMatrix", input_gene_ids="1234")
         """
+        try:
+            return self._run_local_app_internal(app_id, tag, version, cell_id, run_id, **kwargs)
+        except Exception as e:
+            e_type = type(e).__name__
+            e_message = str(e).replace('<', '&lt;').replace('>', '&gt;')
+            e_trace = traceback.format_exc().replace('<', '&lt;').replace('>', '&gt;')
+            self._send_comm_message('run_status', {
+                'event': 'error',
+                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+                'cell_id': cell_id,
+                'run_id': run_id,
+                'error_message': e_message,
+                'error_type': e_type,
+                'error_stacktrace': e_trace
+            })
+            # raise
+            print("Error while trying to start your app!\n-------------------------------------\n" + str(e))
 
+    def _run_local_app_internal(self, app_id, tag="release", version=None, cell_id=None, run_id=None, **kwargs):
         self._send_comm_message('run_status', {
             'event': 'validating_app',
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
@@ -180,28 +199,18 @@ class AppManager(object):
         spec_params = self.spec_manager.app_params(spec)
         (params, ws_refs) = self._validate_parameters(app_id, tag, spec_params, kwargs)
 
-
-        self._send_comm_message('run_status', {
-            'event': 'validated_app',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id
-        })
-
-
         # Log that we're trying to run a job...
         log_info = {
             'app_id': app_id,
             'tag': tag,
-            'version': service_ver,
             'username': system_variable('user_id'),
-            'wsid': ws_id
+            'ws': system_variable('workspace')
         }
         self._log.setLevel(logging.INFO)
         kblogging.log_event(self._log, "run_local_app", log_info)
 
         self._send_comm_message('run_status', {
-            'event': 'completed_app',
+            'event': 'success',
             'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
             'cell_id': cell_id,
             'run_id': run_id

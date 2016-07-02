@@ -158,18 +158,15 @@ define([
                 });
         }
 
-        function doAddItem(item) {
-            var selectedItems = model.getItem('selectedItems');
-            if (!selectedItems) {
-                selectedItems = [];
-            }
-            selectedItems.push(item);
+        function doAddItem(itemId) {
+            var selectedItems = model.getItem('selectedItems', []);
+            selectedItems.push(itemId);
             model.setItem('selectedItems', selectedItems);
             didChange();
         }
 
         function doRemoveSelectedItem(indexOfitemToRemove) {
-            var selectedItems = model.getItem('selectedItems');
+            var selectedItems = model.getItem('selectedItems', []);
 //                newSelectedItems = selectedItems.filter(function (selectedItem) {
 //                    return (selectedItem.id !== itemToRemove);
 //                });
@@ -198,7 +195,7 @@ define([
                                     id: events.addEvent({
                                         type: 'click',
                                         handler: function () {
-                                            doAddItem(item);
+                                            doAddItem(item.id);
                                         }
                                     })}, '&gt;')
                             ])
@@ -213,8 +210,10 @@ define([
         }
 
         function renderSelectedItems(events) {
-            var selectedItems = model.getItem('selectedItems') || [],
-                content = selectedItems.map(function (item, index) {
+            var selectedItems = model.getItem('selectedItems', []),
+                valuesMap = model.getItem('availableValuesMap', {}),
+                content = selectedItems.map(function (itemId, index) {
+                    var item = valuesMap[itemId];
                     return div({style: {border: '1px blue dashed'}}, [
                         table({style: {width: '100%'}}, tr([
                             td({style: {width: '40px'}}, [
@@ -307,7 +306,15 @@ define([
                 multiple = true;
             }
             if (!availableValues) {
-                return p({class: 'form-control-static', style: {fontStyle: 'italic', whiteSpace: 'normal', padding: '3px', border: '1px silver solid'}}, 'Items will be available after selecting a value for ' + subdataOptions.subdata_selection.parameter_id);
+                return p({
+                    class: 'form-control-static', 
+                    style: {
+                        fontStyle: 'italic', 
+                        whiteSpace: 'normal', 
+                        padding: '3px', 
+                        border: '1px silver solid'
+                    }
+                }, 'Items will be available after selecting a value for ' + subdataOptions.subdata_selection.parameter_id);
             }
             //if (availableValues.length === 0) {
             //    return 'No items found';
@@ -395,7 +402,7 @@ define([
                                     }
                                 })
                             }, 'bottom')
-                        ]),
+                        ])
                     ]),
                     div({class: 'col-md-6'}, [
                     ])
@@ -681,7 +688,27 @@ define([
                 return fetchData();
             })
                 .then(function (data) {
+                    // The data represents the total available subdata, with all
+                    // necessary fields for display. We build from that three 
+                    // additional structures
+                    // - a map of id to object
+                    // - a set of available ids
+                    // - a set of selected ids
+                    // - a set of filtered ids
                     model.setItem('availableValues', data);
+                    
+                    // TODO: generate all of this in the fetchData -- it will be a bit faster.
+                    var map = {};
+                    data.forEach(function (datum) {
+                        map[datum.id] = datum;
+                    });
+                    
+                    //var availableIds = data.map(function (datum) {
+                    //    return datum.id;
+                    //});
+                    
+                    model.setItem('availableValuesMap', map);
+                    
                     doFilterItems();
                 });
         }
@@ -923,7 +950,15 @@ define([
                     ])
                         .spread(function (paramValue, referencedParamValue) {
                             console.log('Got them!', paramValue.value, referencedParamValue.value);
-                            model.setItem('selectedItems', paramValue.value);
+                            // hmm, the default value of a subdata is null, but that does 
+                            // not play nice with the model props defaulting mechanism which 
+                            // works with absent or undefined (null being considered an actual value, which
+                            // it is of course!)
+                            if (paramValue.value === null) {
+                                model.setItem('selectedItems', []);
+                            } else {
+                                model.setItem('selectedItems', paramValue.value);
+                            }
                             updateInputControl('value');
 
                             model.setItem('referenceObjectName', referencedParamValue.value);

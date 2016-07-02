@@ -36,7 +36,7 @@ define([
     Workspace,
     PythonInterop,
     utils,
-    Dom,
+    Ui,
     Fsm,
     PR
     ) {
@@ -234,7 +234,7 @@ define([
         ];
 
     function factory(config) {
-        var container, places, dom,
+        var container, places, ui,
             workspaceInfo = config.workspaceInfo,
             runtime = Runtime.make(),
             cell = config.cell,
@@ -323,12 +323,12 @@ define([
 
 
         function syncFatalError() {
-            dom.setContent('fatal-error.title', model.getItem('fatalError.title'));
-            dom.setContent('fatal-error.message', model.getItem('fatalError.message'));
+            ui.setContent('fatal-error.title', model.getItem('fatalError.title'));
+            ui.setContent('fatal-error.message', model.getItem('fatalError.message'));
         }
         
         function showFatalError(arg) {
-            dom.showElement('fatal-error');
+            ui.showElement('fatal-error');
         }
 
         function showFsmBar() {
@@ -341,7 +341,7 @@ define([
                 ]);
             }).join('  ');
 
-            dom.setContent('fsm-display.content', content);
+            ui.setContent('fsm-display.content', content);
         }
 
 
@@ -413,7 +413,7 @@ define([
         }
 
         function showElement(name) {
-            var node = dom.getElement(name);
+            var node = ui.getElement(name);
             if (!node) {
                 return;
             }
@@ -421,7 +421,7 @@ define([
             node.classList.remove('hidden');
         }
         function hideElement(name) {
-            var node = dom.getElement(name);
+            var node = ui.getElement(name);
             if (!node) {
                 return;
             }
@@ -482,7 +482,7 @@ define([
                     span({style: {marginLeft: '4px', fontStyle: 'italic'}}, setting.label)
                 ]);
             }).join('\n');
-            dom.setContent('settings.content', content);
+            ui.setContent('settings.content', content);
             events.attachEvents();
 
             //Ensure that the settings are reflected in the UI.
@@ -500,21 +500,21 @@ define([
 
         function showAboutApp() {
             var appSpec = env.appSpec;
-            dom.setContent('about-app.name', appSpec.info.name);
-            dom.setContent('about-app.module', appSpec.info.namespace || dom.na());
-            dom.setContent('about-app.id', appSpec.info.id);
-            dom.setContent('about-app.summary', appSpec.info.subtitle);
-            dom.setContent('about-app.version', appSpec.info.ver);
-            dom.setContent('about-app.git-commit-hash', appSpec.info.git_commit_hash || dom.na());
-            dom.setContent('about-app.authors', (function () {
+            ui.setContent('about-app.name', appSpec.info.name);
+            ui.setContent('about-app.module', appSpec.info.namespace || ui.na());
+            ui.setContent('about-app.id', appSpec.info.id);
+            ui.setContent('about-app.summary', appSpec.info.subtitle);
+            ui.setContent('about-app.version', appSpec.info.ver);
+            ui.setContent('about-app.git-commit-hash', appSpec.info.git_commit_hash || ui.na());
+            ui.setContent('about-app.authors', (function () {
                 if (appSpec.info.authors && appSpec.info.authors.length > 0) {
                     return appSpec.info.authors.join('<br>');
                 }
-                return dom.na();
+                return ui.na();
             }()));
             var appRef = [appSpec.info.namespace || 'l.m', appSpec.info.id].filter(toBoolean).join('/'),
                 link = a({href: '/#appcatalog/app/' + appRef, target: '_blank'}, 'Catalog Page');
-            dom.setContent('about-app.catalog-link', link);
+            ui.setContent('about-app.catalog-link', link);
         }
 
         function showAppSpec() {
@@ -524,7 +524,7 @@ define([
             var specText = JSON.stringify(env.appSpec, false, 3),
                 fixedText = specText.replace(/</g, '&lt;').replace(/>/g, '&gt;'),
                 content = pre({class: 'prettyprint lang-json', style: {fontSize: '80%'}}, fixedText);
-            dom.setContent('about-app.spec', content);
+            ui.setContent('about-app.spec', content);
         }
 
         function renderLayout() {
@@ -540,7 +540,7 @@ define([
                     }, [
                         div({dataElement: 'widget', style: {display: 'block', width: '100%'}}, [
                             div({class: 'container-fluid'}, [
-                                dom.buildPanel({
+                                ui.buildPanel({
                                     title: null,
                                     name: 'availableActions',
                                     hidden: false,
@@ -548,21 +548,21 @@ define([
                                     body: [
                                         div({class: 'btn-toolbar'}, [
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('View', 'run-app', {events: events, type: 'primary'})
+                                                ui.makeButton('View', 'run-app', {events: events, type: 'primary'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('View Again', 're-run-app', {events: events, type: 'primary'})
+                                                ui.makeButton('View Again', 're-run-app', {events: events, type: 'primary'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Remove', 'remove', {events: events, type: 'danger'})
+                                                ui.makeButton('Remove', 'remove', {events: events, type: 'danger'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton(span({class: 'fa fa-cog '}), 'toggle-settings', {events: events})
+                                                ui.makeButton(span({class: 'fa fa-cog '}), 'toggle-settings', {events: events})
                                             ])
                                         ])
                                     ]
                                 }),
-                                dom.buildPanel({
+                                ui.buildPanel({
                                     title: 'Error',
                                     name: 'fatal-error',
                                     hidden: true,
@@ -576,14 +576,14 @@ define([
                                         ])
                                     ])
                                 }),
-                                dom.buildPanel({
+                                ui.buildPanel({
                                     title: 'App Cell Settings',
                                     name: 'settings',
                                     hidden: true,
                                     type: 'default',
                                     body: div({dataElement: 'content'})
                                 }),
-                                dom.buildCollapsiblePanel({
+                                ui.buildCollapsiblePanel({
                                     title: 'Notifications',
                                     name: 'notifications',
                                     hidden: true,
@@ -592,16 +592,17 @@ define([
                                         div({dataElement: 'content'})
                                     ]
                                 }),
-                                dom.buildCollapsiblePanel({
+                                ui.buildCollapsiblePanel({
                                     title: 'About',
                                     name: 'about-app',
                                     hidden: false,
+                                    collapsed: true,
                                     type: 'default',
                                     body: [
                                         div({dataElement: 'about-app'}, renderAboutApp())
                                     ]
                                 }),
-                                dom.buildCollapsiblePanel({
+                                ui.buildCollapsiblePanel({
                                     title: 'Dev',
                                     name: 'developer-options',
                                     hidden: true,
@@ -612,20 +613,20 @@ define([
                                             span({dataElement: 'content'})
                                         ]),
                                         div([
-                                            dom.makeButton('Show Code', 'toggle-code-view', {events: events}),
-                                            dom.makeButton('Edit Metadata', 'edit-cell-metadata', {events: events}),
-                                            dom.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', {events: events})
+                                            ui.makeButton('Show Code', 'toggle-code-view', {events: events}),
+                                            ui.makeButton('Edit Metadata', 'edit-cell-metadata', {events: events}),
+                                            ui.makeButton('Edit Notebook Metadata', 'edit-notebook-metadata', {events: events})
                                         ])
                                     ]
                                 }),
-                                dom.buildCollapsiblePanel({
+                                ui.buildCollapsiblePanel({
                                     title: 'Input ' + span({class: 'fa fa-arrow-left'}),
                                     name: 'parameters-group',
                                     hidden: false,
                                     type: 'default',
                                     body: div({dataElement: 'widget'})
                                 }),
-                                dom.buildCollapsiblePanel({
+                                ui.buildCollapsiblePanel({
                                     title: 'Parameters Display',
                                     name: 'parameters-display-group',
                                     hidden: false,
@@ -815,7 +816,7 @@ define([
         function toggleSettings(cell) {
             var name = 'showSettings',
                 selector = 'settings',
-                node = dom.getElement(selector),
+                node = ui.getElement(selector),
                 showing = model.getItem(['user-settings', name]);
             if (showing) {
                 model.setItem(['user-settings', name], false);
@@ -860,7 +861,7 @@ define([
                         ]))
                     ]);
                 }).join('\n');
-            dom.setContent('notifications.content', content);
+            ui.setContent('notifications.content', content);
             events.attachEvents(container);
         }
 
@@ -890,7 +891,7 @@ define([
             };
             widget.start();
             bus.emit('attach', {
-                node: dom.getElement(path)
+                node: ui.getElement(path)
             });
         }
 
@@ -906,19 +907,19 @@ define([
 
             // Button state
             state.ui.buttons.enabled.forEach(function (button) {
-                dom.enableButton(button);
+                ui.enableButton(button);
             });
             state.ui.buttons.disabled.forEach(function (button) {
-                dom.disableButton(button);
+                ui.disableButton(button);
             });
 
 
             // Element state
             state.ui.elements.show.forEach(function (element) {
-                dom.showElement(element);
+                ui.showElement(element);
             });
             state.ui.elements.hide.forEach(function (element) {
-                dom.hideElement(element);
+                ui.hideElement(element);
             });
 
         }
@@ -935,7 +936,7 @@ define([
         }
 
         function doRerun() {
-            var confirmed = dom.confirmDialog('This will clear the App Execution area, and re-display the Input parameters. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)\n\nProceed to prepare the app to Run Again?', 'Yes', 'No');
+            var confirmed = ui.confirmDialog('This will clear the App Execution area, and re-display the Input parameters. You may then change inputs and run the app again. (Any output you have already produced will be left intact.)\n\nProceed to prepare the app to Run Again?', 'Yes', 'No');
             if (!confirmed) {
                 return;
             }
@@ -962,7 +963,7 @@ define([
         }
 
         function doRemove() {
-            var confirmed = dom.confirmDialog('Are you sure you want to remove this app cell? It will also remove any pending jobs, but will leave generated output intact', 'Yes', 'No way, dude');
+            var confirmed = ui.confirmDialog('Are you sure you want to remove this app cell? It will also remove any pending jobs, but will leave generated output intact', 'Yes', 'No way, dude');
             if (!confirmed) {
                 return;
             }
@@ -978,6 +979,7 @@ define([
         }
 
         function doRun() {
+            ui.collapsePanel('parameters-group');
             cell.execute();
         }
 
@@ -994,7 +996,7 @@ define([
         function attach(node) {
             return Promise.try(function () {
                 container = node;
-                dom = Dom.make({
+                ui = Ui.make({
                     node: container,
                     bus: bus
                 });
@@ -1145,7 +1147,7 @@ define([
                 bus.on('toggle-code-view', function () {
                     var showing = toggleCodeInputArea(),
                         label = showing ? 'Hide Code' : 'Show Code';
-                    dom.setButtonLabel('toggle-code-view', label);
+                    ui.setButtonLabel('toggle-code-view', label);
                 });
                 bus.on('show-notifications', function () {
                     doShowNotifications();
@@ -1159,7 +1161,7 @@ define([
                 bus.on('toggle-settings', function () {
                     var showing = toggleSettings(cell),
                         label = span({class: 'fa fa-cog '}),
-                        buttonNode = dom.getButton('toggle-settings');
+                        buttonNode = ui.getButton('toggle-settings');
                     buttonNode.innerHTML = label;
                     if (showing) {
                         buttonNode.classList.add('active');
@@ -1315,7 +1317,7 @@ define([
                         instance: widget
                     };
                     bus.emit('run', {
-                        node: dom.getElement(['parameters-group', 'widget']),
+                        node: ui.getElement(['parameters-group', 'widget']),
                         parameters: env.parameters
                     });
                     bus.on('parameter-sync', function (message) {
@@ -1432,7 +1434,7 @@ define([
                     });
                     widget.start();
                     bus.emit('run', {
-                        node: dom.getElement(['parameters-display-group', 'widget']),
+                        node: ui.getElement(['parameters-display-group', 'widget']),
                         parameters: env.parameters
                     });
 

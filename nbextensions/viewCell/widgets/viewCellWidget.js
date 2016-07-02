@@ -53,7 +53,7 @@ define([
                 ui: {
                     buttons: {
                         enabled: [],
-                        disabled: ['run-app', 'remove', 'cancel', 're-run-app']
+                        disabled: ['run-app', 'remove', 're-run-app']
                     },
                     elements: {
                         show: [],
@@ -77,7 +77,7 @@ define([
                 ui: {
                     buttons: {
                         enabled: [],
-                        disabled: ['run-app', 'remove', 'cancel', 're-run-app']
+                        disabled: ['run-app', 'remove', 're-run-app']
                     },
                     elements: {
                         show: ['fatal-error'],
@@ -95,7 +95,7 @@ define([
                 ui: {
                     buttons: {
                         enabled: ['remove'],
-                        disabled: ['run-app', 'cancel', 're-run-app']
+                        disabled: ['run-app', 're-run-app']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -123,7 +123,7 @@ define([
                 ui: {
                     buttons: {
                         enabled: ['run-app', 'remove'],
-                        disabled: ['cancel', 're-run-app']
+                        disabled: ['re-run-app']
                     },
                     elements: {
                         show: ['parameters-group', 'output-group'],
@@ -174,153 +174,12 @@ define([
             },
             {
                 state: {
-                    mode: 'processing',
-                    stage: 'launching'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['cancel', 'remove'],
-                        disabled: ['run-app', 're-run-app']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
-                    },
-                    messages: [
-                        {
-                            widget: 'paramsDisplayWidget',
-                            message: {},
-                            address: {
-                                key: {
-                                    type: 'sync-all-parameters'
-                                }
-                            }
-                        }
-                    ]
-                },
-                on: {
-                    enter: {
-                        messages: [
-                            {
-                                emit: 'sync-all-display-parameters'
-                            }
-                        ]
-                    },
-                    resume: {
-                        messages: [
-                            {
-                                emit: 'sync-all-display-parameters'
-                            }
-                        ]
-                    }
-                },
-                next: [
-                    {
-                        mode: 'processing',
-                        stage: 'launching'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'success'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'launching'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'processing',
-                    stage: 'queued'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['cancel', 'remove'],
-                        disabled: ['run-app', 're-run-app']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'processing',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'processing',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'success'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-            },
-            {
-                state: {
-                    mode: 'processing',
-                    stage: 'running'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['cancel', 'remove'],
-                        disabled: ['run-app', 're-run-app']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group'],
-                        hide: ['parameters-group', 'output-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'processing',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'success'
-                    },
-                    {
-                        mode: 'error',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-            },
-            {
-                state: {
                     mode: 'success'
                 },
                 ui: {
                     buttons: {
                         enabled: ['re-run-app', 'remove'],
-                        disabled: ['run-app', 'cancel']
+                        disabled: ['run-app']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -349,96 +208,12 @@ define([
             },
             {
                 state: {
-                    mode: 'error',
-                    stage: 'launching'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['re-run-app', 'remove'],
-                        disabled: ['run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'error',
-                        stage: 'launching'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-
-            },
-            {
-                state: {
-                    mode: 'error',
-                    stage: 'queued'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['re-run-app', 'remove'],
-                        disabled: ['run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'error',
-                        stage: 'queued'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-
-            },
-            {
-                state: {
-                    mode: 'error',
-                    stage: 'running'
-                },
-                ui: {
-                    buttons: {
-                        enabled: ['re-run-app', 'remove'],
-                        disabled: ['run-app', 'cancel']
-                    },
-                    elements: {
-                        show: ['parameters-display-group', 'exec-group', 'output-group'],
-                        hide: ['parameters-group']
-                    }
-                },
-                next: [
-                    {
-                        mode: 'error',
-                        stage: 'running'
-                    },
-                    {
-                        mode: 'editing',
-                        params: 'complete',
-                        code: 'built'
-                    }
-                ]
-            },
-            // Just a plain error state ... not sure how we get here...
-            {
-                state: {
                     mode: 'error'
                 },
                 ui: {
                     buttons: {
                         enabled: ['re-run-app', 'remove'],
-                        disabled: ['run-app', 'cancel']
+                        disabled: ['run-app']
                     },
                     elements: {
                         show: ['parameters-display-group', 'exec-group', 'output-group'],
@@ -469,7 +244,7 @@ define([
             cellBus = runtime.bus().makeChannelBus({
             cell: utils.getMeta(cell, 'attributes', 'id')
         }, 'A cell channel'),
-            bus = runtime.bus().makeChannelBus(null, 'A app cell widget'),
+            bus = runtime.bus().makeChannelBus(null, 'A view cell widget'),
             env = {},
             model,
             // HMM. Sync with metadata, or just keep everything there?
@@ -546,57 +321,7 @@ define([
 
         // RENDER API
 
-        function buildStatusBar() {
-            return div({style: {lineHeight: '20px'}}, [
-                span({
-                }, [
-                    span('Edit:'),
-                    span({
-                        style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                        dataElement: 'edit'
-                    })
-                ]),
-                span({
-                }, [
-                    span('Params:'),
-                    span({
-                        style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                        dataElement: 'params'
-                    })
-                ]),
-                span({
-                }, [
-                    span('Code:'),
-                    span({
-                        style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                        dataElement: 'code'
-                    })
-                ]),
-                span({
-                }, [
-                    span('Request:'),
-                    span({
-                        style: {border: '1px silver solid', padding: '4px', display: 'inline-block', minWidth: '20px', backgroundColor: 'gray', color: '#FFF'},
-                        dataElement: 'request'
-                    })
-                ]),
-                span({
-                }, [
-                    span('Result:'),
-                    span({
-                        style: {
-                            border: '1px silver solid',
-                            padding: '4px',
-                            display: 'inline-block',
-                            minWidth: '20px',
-                            backgroundColor: 'gray', color: '#FFF'
-                        },
-                        dataElement: 'result'
-                    })
-                ])
-            ]);
-        }
-        
+
         function syncFatalError() {
             dom.setContent('fatal-error.title', model.getItem('fatalError.title'));
             dom.setContent('fatal-error.message', model.getItem('fatalError.message'));
@@ -687,18 +412,6 @@ define([
             });
         }
 
-//        function toggleElement(name) {
-//            var node = dom.getElement(name);
-//            if (!node) {
-//                return;
-//            }
-//            if (node.style.display === 'none') {
-//                node.style.display = 'block';
-//            } else {
-//                node.style.display = 'none';
-//            }
-//        }
-
         function showElement(name) {
             var node = dom.getElement(name);
             if (!node) {
@@ -718,7 +431,6 @@ define([
             // node.style.display = 'none';
             node.classList.add('hidden');
         }
-
 
         function renderSetting(settingName) {
             var setting = settings[settingName],
@@ -748,7 +460,6 @@ define([
 
             renderSetting(settingName);
         }
-
 
         function renderSettings() {
             var events = Events.make({node: container}),
@@ -837,13 +548,10 @@ define([
                                     body: [
                                         div({class: 'btn-toolbar'}, [
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Run', 'run-app', {events: events, type: 'primary'})
+                                                dom.makeButton('View', 'run-app', {events: events, type: 'primary'})
                                             ]),
                                             div({class: 'btn-group'}, [
-                                                dom.makeButton('Cancel', 'cancel', {events: events, type: 'danger'})
-                                            ]),
-                                            div({class: 'btn-group'}, [
-                                                dom.makeButton('Run Again', 're-run-app', {events: events, type: 'primary'})
+                                                dom.makeButton('View Again', 're-run-app', {events: events, type: 'primary'})
                                             ]),
                                             div({class: 'btn-group'}, [
                                                 dom.makeButton('Remove', 'remove', {events: events, type: 'danger'})
@@ -923,20 +631,6 @@ define([
                                     hidden: false,
                                     type: 'default',
                                     body: div({dataElement: 'widget'})
-                                }),
-                                dom.buildPanel({
-                                    title: 'App Execution ' + span({class: 'fa fa-bolt'}),
-                                    name: 'exec-group',
-                                    hidden: false,
-                                    type: 'default',
-                                    body: div({dataElement: 'widget'})
-                                }),
-                                dom.buildPanel({
-                                    title: 'Output ' + span({class: 'fa fa-arrow-right'}),
-                                    name: 'output-group',
-                                    hidden: true,
-                                    type: 'default',
-                                    body: div({dataElement: 'widget'})
                                 })
                             ])
                         ])
@@ -996,7 +690,7 @@ define([
         }
 
         function buildPython(cell, cellId, app, params) {
-            var code = PythonInterop.buildAppRunner(cellId, app, params);
+            var code = PythonInterop.buildViewRunner(cellId, app, params);
             cell.set_text(code);
         }
 
@@ -1153,39 +847,6 @@ define([
             model.setItem('notifications', []);
         }
 
-
-//        function showToggle(name) {
-//
-//        }
-//
-//        function ensureToggle(name) {
-//            var propName = 'user-settings.show-' + name,
-//                elementPath = 'toggle-' + name,
-//
-//        }
-//
-//        // just simple display block/none for now
-//        function renderToggle(name) {
-//            var propName = 'user-settings.show-' + name,
-//                elementPath = 'toggle-' + name,
-//                node = dom.getElement(elementPath),
-//                originalStyle = model.getItem(propName);
-//
-//            if (orig
-//
-//        }
-//
-//        function toggleToggle(name) {
-//            var propName = 'user-settings.show-' + name;
-//            if (model.getItem(propName)) {
-//                model.setItem(propName, false);
-//            } else {
-//                model.setItem(propName, true);
-//            }
-//            renderToggle(name);
-//            return model.getItem(propName);
-//        }
-
         // WIDGETS
 
         function showWidget(name, widgetModule, path) {
@@ -1232,19 +893,6 @@ define([
                 dom.hideElement(element);
             });
 
-            // Emit messages for this state.
-//            if (state.ui.messages) {
-//                state.ui.messages.forEach(function (message) {
-//                    var tempBus;
-//                    if (message.widget) {
-//                        tempBus = widgets[message.widget].bus;
-//                    } else {
-//                        tempBus = inputWidgetBus;
-//                    }
-//
-//                    tempBus.send(message.message, message.address);
-//                });
-//            }
         }
 
         var saveTimer = null;
@@ -1256,46 +904,6 @@ define([
                 saveTimer = null;
                 Jupyter.notebook.save_checkpoint();
             }, saveMaxFrequency);
-        }
-
-        function deleteJob(jobId) {
-            return new Promise(function (resolve, reject) {
-                // NB the narrative callback code does not pass back error
-                // through the callback -- it is just logged to the console.
-                // Gulp!
-
-                // we don't really delete jobs here any more, just
-                // temporarily disable for now.
-
-                // This is now fire and forget.
-                // TODO: close the loop on this.
-                runtime.bus().emit('request-job-removal', {
-                    jobId: jobId
-                });
-                resolve();
-
-
-//
-//
-//                function callback(value) {
-//                    resolve(value);
-//                }
-//                try {
-//                    $(document).trigger('cancelJob.Narrative', [jobId, callback]);
-//                } catch (err) {
-//                    reject(err);
-//                }
-            });
-        }
-
-        /*
-         * NB: the jobs panel takes care of removing the job info from the
-         * narrative metadata.
-         */
-        function cancelJob(jobId) {
-            runtime.bus().emit('request-job-removal', {
-                jobId: jobId
-            });
         }
 
         function doRerun() {
@@ -1341,89 +949,6 @@ define([
             $(document).trigger('deleteCell.Narrative', Jupyter.notebook.find_cell_index(cell));
         }
 
-        /*
-         * Cancelling a job is the same as deleting it, and the effect of cancelling the job is the same as re-running it.
-         *
-         */
-        function doCancel() {
-            var confirmed = dom.confirmDialog('Are you sure you want to Cancel the running job?', 'Yes', 'No way, dude');
-            if (!confirmed) {
-                return;
-            }
-
-            var jobState = model.getItem('exec.jobState');
-            if (jobState) {
-                cancelJob(jobState.job_id);
-                // the job will be deleted form the notebook when the job cancellation
-                // event is received.
-            }
-
-            // Remove all of the execution state when we reset the app.
-            model.deleteItem('exec');
-
-            // TODO: evaluate the params again before we do this.
-            fsm.newState({mode: 'editing', params: 'complete', code: 'built'});
-
-            renderUI();
-        }
-
-        function updateFromLaunchEvent(message) {
-
-            // Update the exec state.
-            // NB we need to do this because the launch events are only 
-            // sent once from the narrative back end.
-
-            // Update FSM
-            var newFsmState = (function () {
-                switch (message.event) {
-                    case 'validating_app':
-                    case 'validated_app':
-                    case 'launching_job':
-                        return {mode: 'processing', stage: 'launching'};
-                    case 'launched_job':
-                        // NEW: start listening for jobs.
-                        console.log('Starting to listen for job id', message);
-                        startListeningForJobMessages(message.job_id);
-                        return {mode: 'processing', stage: 'launching'};
-                    case 'error':
-                        return {mode: 'error', stage: 'launching'};
-                    default:
-                        throw new Error('Invalid launch state ' + message.event);
-                }
-            }());
-            fsm.newState(newFsmState);
-            renderUI();
-        }
-
-        function updateFromJobState(jobState) {
-
-            var currentState = fsm.getCurrentState(),
-                newFsmState = (function () {
-                    switch (jobState.job_state) {
-                        case 'queued':
-                            return {mode: 'processing', stage: 'queued'};
-                        case 'job_started':
-                            return {mode: 'processing', stage: 'running'};
-                        case 'in-progress':
-                            return {mode: 'processing', stage: 'running'};
-                        case 'completed':
-                            stopListeningForJobMessages();
-                            return {mode: 'success'};
-                        case 'suspend':
-                        case 'error':
-                            stopListeningForJobMessages();
-                            if (currentState.state.stage) {
-                                return {mode: 'error', stage: currentState.state.stage};
-                            }
-                            return {mode: 'error'};
-                        default:
-                            throw new Error('Invalid job state ' + jobState.job_state);
-                    }
-                }());
-            fsm.newState(newFsmState);
-            renderUI();
-        }
-
         function doRun() {
             cell.execute();
         }
@@ -1455,63 +980,6 @@ define([
                 };
                 return null;
             });
-        }
-
-        var jobListener = null;
-        function startListeningForJobMessages(jobId) {
-            // console.log('Starting to listen for job messages', jobChannelId);
-            jobListener = runtime.bus().listen({
-                channel: {
-                    jobId: jobId
-                },
-                key: {
-                    type: 'job-status'
-                },
-                handle: function (message) {
-                    var existingState = model.getItem('exec.jobState'),
-                        newJobState = message.jobState,
-                        outputWidgetInfo = message.outputWidgetInfo;
-                    if (!existingState || existingState.job_state !== newJobState.job_state) {
-                        model.setItem('exec.jobState', newJobState);
-                        if (outputWidgetInfo) {
-                            model.setItem('exec.outputWidgetInfo', outputWidgetInfo);
-                        }
-
-                        var execLog = model.getItem('exec.log');
-                        if (!execLog) {
-                            execLog = [];
-                        }
-                        execLog.push({
-                            timestamp: new Date(),
-                            event: 'jobs-status',
-                            data: {
-                                jobState: newJobState
-                            }
-                        });
-                        model.setItem('exec.log', execLog);
-
-                        // Now we send the job state on the cell bus, generally.
-                        // The model is that a cell can only have one job active at a time.
-                        // Thus we can just emit the state of the current job globally
-                        // on the cell bus for thos widgets interested.
-                        cellBus.emit('job-state', {
-                            jobState: newJobState
-                        });
-                    } else {
-                        cellBus.emit('job-state-updated', {
-                            jobId: newJobState.job_id
-                        });
-                    }
-                    model.setItem('exec.jobStateUpdated', new Date().getTime());
-
-
-                    updateFromJobState(newJobState);
-                }
-            });
-        }
-
-        function stopListeningForJobMessages() {
-            runtime.bus().removeListener(jobListener);
         }
 
         /*
@@ -1612,72 +1080,6 @@ define([
                     });
                 });
         }
-        function doOnSuccessx() {
-            // See if we've already done this before, if so, skip it.
-            // TODO: the fsm should have a way of invoking events on only the first
-            // time entering a state ;)
-
-            // Save the state data for output into special model properties.
-
-            // This ensures that it survivies even if the jobState is blow away
-
-            model.setItem('output.result', model.getItem('exec.jobState.result'));
-
-            // Now ensure that the output objects exists, and if so, store their
-            // absolute reference.
-            var outputs = getOutputParams();
-            if (outputs) {
-                getOutputObjectRefs(outputs)
-                    .then(function (result) {
-                        model.setItem('output.objects', result);
-                        // Now get see if we have a report object.
-                    })
-                    .catch(function (err) {
-                        console.error('ERROR', err);
-                        alert('ERROR');
-                    });
-            }
-        }
-
-        function createOutputCell(jobId) {
-            var cellId = utils.getMeta(cell, 'attributes', 'id'),
-                // cellIndex = Jupyter.narrative.getCellByKbaseId(cellId),
-                cellIndex = Jupyter.notebook.find_cell_index(cell),
-                newCell = Jupyter.notebook.insert_cell_below('code', cellIndex),
-                newCellId = new Uuid(4).format(),
-                widgetName = model.getItem('exec.outputWidgetInfo.name'),
-                widgetTag = model.getItem('exec.outputWidgetInfo.tag'),
-                widgetParams = model.getItem('exec.outputWidgetInfo.params'),
-                outputCode = PythonInterop.buildOutputRunner(widgetName, widgetTag, widgetParams);
-
-            newCell.metadata = {
-                kbase: {
-                    type: 'output',
-                    attributes: {
-                        id: newCellId,
-                        status: 'new',
-                        created: new Date().toGMTString(),
-                        lastLoaded: new Date().toGMTString(),
-                        icon: 'arrow-right',
-                        title: 'Output Cell'
-                    },
-                    output: {
-                        jobId: jobId,
-                        parentCellId: cellId
-                    }
-                }
-            };
-                            
-            var params = 
-                            
-            newCell.set_text(outputCode);
-
-            // newCell.set_text('JobManager().get_job("' + jobId + '").output_viewer()');
-
-            newCell.execute();
-
-            return newCellId;
-        }
 
         function clearOutput() {
             // cell.set_text('from biokbase.narrative.jobs import AppManager\nAppManager().clear_app()');
@@ -1704,53 +1106,6 @@ define([
                 addNotification('Too many cells matched the given id: ' + id);
             }
             return null;
-        }
-
-        function doOnSuccess() {
-            // have we created output yet?
-            var jobId = model.getItem('exec.jobState.job_id'),
-                outputCellId = model.getItem(['output', 'byJob', jobId, 'cell', 'id']),
-                outputCell, notification,
-                outputCreated = model.getItem(['exec', 'outputCreated']);
-
-
-            // New app -- check the existing exec state, see if the
-            // output has been created already, and if so just exit.
-            // This protects us from the condition in which a user
-            // has removed the output for the latest run.
-//            if (outputCreated) {
-//                return;
-//            }
-
-            // If so, is the cell still there?
-            if (outputCellId) {
-                outputCell = findCellForId(outputCellId);
-                if (outputCell) {
-                    return;
-                }
-                notification = div([
-                    div('Output cell not found: ' + outputCellId + '. Would you like to recreate it? ')
-                ]);
-                addNotification(notification);
-                return;
-            }
-
-            // If not created yet, create it.
-            outputCellId = createOutputCell(jobId);
-            model.setItem(['output', 'byJob', jobId], {
-                cell: {
-                    id: outputCellId,
-                    created: true,
-                    createdAt: new Date().toGMTString()
-                },
-                params: model.copyItem('params')
-            });
-
-            widgets.outputWidget.instance.bus().emit('update', {
-                jobState: model.getItem('exec.jobState'),
-                output: model.getItem('output')
-            });
-            // bus.emit('output-created', )
         }
 
         function start() {
@@ -1789,9 +1144,6 @@ define([
                 });
                 bus.on('re-run-app', function () {
                     doRerun();
-                });
-                bus.on('cancel', function () {
-                    doCancel();
                 });
                 bus.on('remove', function () {
                     doRemove();
@@ -1856,141 +1208,6 @@ define([
                 }
 
 
-                // TODO: only turn this on when we need it!
-                cellBus.on('run-status', function (message) {
-                    // console.log('have run statusx', message);
-                    updateFromLaunchEvent(message);
-
-                    model.setItem('exec.launchState', message);
-
-                    // Save this to the exec state change log.
-                    var execLog = model.getItem('exec.log');
-                    if (!execLog) {
-                        execLog = [];
-                    }
-                    execLog.push({
-                        timestamp: new Date(),
-                        event: 'launch-status',
-                        data: {
-                            jobId: message.jobId,
-                            runId: message.runId,
-                            status: message.event
-                        }
-                    });
-                    model.setItem('exec.log', execLog);
-                    
-                    cellBus.emit('launch-status', {
-                        launchState: message
-                    });
-                });
-
-                cellBus.on('output-cell-removed', function (message) {
-                    var output = model.getItem('output');
-
-                    // console.log('HANDLE', message, output);
-                    if (!output.byJob[message.jobId]) {
-                        return;
-                    }
-                    delete output.byJob[message.jobId];
-                    model.setItem('output', output);
-                    widgets.outputWidget.instance.bus().emit('update', {
-                        jobState: model.getItem('exec.jobState'),
-                        output: output
-                    });
-                });
-
-//                runtime.bus().listen({
-//                    channel: {
-//                        cell: utils.getMeta(cell, 'attributes', 'id')
-//                    },
-//                    key: {
-//                        type: 'job-status',
-//                        jobId:
-//                    },
-//                    handle: function (message) {
-//
-//                        // Store the most recent job status (jobInfo) in the model and thus metadata.
-//                        // console.log('JOBSTATUS', message.job.state);
-//                        updateFromJobState(message.job.state);
-//
-//                        var existingState = model.getItem('exec.jobState');
-//                        if (!existingState || existingState.job_state !== message.job.state.job_state) {
-//                            model.setItem('exec.jobState', message.job.state);
-//                            // Forward the job info to the exec widget if it is available. (it should be!)
-//                            if (widgets.execWidget) {
-//                                widgets.execWidget.bus.emit('job-state', {
-//                                    jobState: message.job.state
-//                                });
-//                            }
-//                        } else {
-//                            if (widgets.execWidget) {
-//                                widgets.execWidget.bus.emit('job-state-updated', {
-//                                    jobId: message.job.state.job_id
-//                                });
-//                            }
-//                        }
-//                        model.setItem('exec.jobStateUpdated', new Date().getTime());
-//
-//
-//
-//                        // Evaluate the job state to generate our derived "quickStatus" used to control
-//                        // the ui...
-//
-//
-//                        // SKIP for now
-//                        return;
-//
-//                        model.setItem('job', {
-//                            updatedAt: new Date().getTime(),
-//                            info: message.job
-//                        });
-//
-//                        var jobStatus = message.job.state.job_state;
-//
-//                        // Update current status
-//                        updateRunJobStatus();
-//
-//                        renderRunStatus();
-//
-//                        updateJobDetails(message);
-//                        // updateJobLog(message);
-//
-//                        updateJobReport(message.job);
-//
-//                        // and yet another job state thing. This one takes care
-//                        // the general state of the job state communication
-//
-//                        // Update status history.
-//
-//                        // Okay, don't store multiples of the last event.
-//                        var log = cell.metadata.kbase.log;
-//                        if (!log) {
-//                            log = [];
-//                            cell.metadata.kbase.log = log;
-//                        }
-//                        if (log.length > 0) {
-//                            var lastLog = log[log.length - 1];
-//                            if (lastLog.data.status === jobStatus) {
-//                                if (lastLog.count === undefined) {
-//                                    lastLog.count = 0;
-//                                }
-//                                lastLog.count += 1;
-//                                return;
-//                            }
-//                        }
-//
-//                        utils.pushMeta(cell, 'appCell.exec.log', {
-//                            timestamp: new Date(),
-//                            event: 'jobstatus',
-//                            data: {
-//                                jobId: message.jobId,
-//                                status: jobStatus
-//                            }
-//                        });
-//                    }
-//                });
-
-                // Initialize display
                 showCodeInputArea();
 
                 return null;
@@ -1998,7 +1215,7 @@ define([
         }
 
         function findInputWidget(requestedInputWidget) {
-            var defaultModule = 'nbextensions/appCell/widgets/appParamsWidget';
+            var defaultModule = 'nbextensions/viewCell/widgets/appParamsWidget';
             return defaultModule;
 
             if (requestedInputWidget === null) {
@@ -2009,7 +1226,7 @@ define([
                 return defaultModule;
             }
 
-            return 'nbextensions/appCell/widgets/inputWidgets/' + requestedInputWidget;
+            return 'nbextensions/viewCell/widgets/inputWidgets/' + requestedInputWidget;
         }
 
         function exportParams() {
@@ -2137,7 +1354,7 @@ define([
         function loadInputViewWidget() {
             return new Promise(function (resolve, reject) {
                 require([
-                    'nbextensions/appCell/widgets/appParamsViewWidget'
+                    'nbextensions/viewCell/widgets/appParamsViewWidget'
                 ], function (Widget) {
                     // TODO: widget should make own bus
                     var bus = runtime.bus().makeChannelBus(null, 'Parent comm bus for load input view widget'),
@@ -2199,57 +1416,7 @@ define([
             });
         }
 
-        function loadExecutionWidget() {
-            return new Promise(function (resolve, reject) {
-                require([
-                    'nbextensions/appCell/widgets/appExecWidget'
-                ], function (Widget) {
-                    var widget = Widget.make({
-                        bus: cellBus,
-                        workspaceInfo: workspaceInfo
-                    });
-                    widgets.execWidget = {
-                        path: ['exec-group', 'widget'],
-                        instance: widget
-                    };
-                    widget.start();
-                    widget.bus().emit('run', {
-                        node: dom.getElement('exec-group.widget'),
-                        launchState: model.getItem('exec.launchState'),
-                        jobState: model.getItem('exec.jobState')
-                    });
-                    resolve();
-                }, function (err) {
-                    console.log('ERROR', err);
-                    reject(err);
-                });
-            });
-        }
 
-        function loadOutputWidget() {
-            return new Promise(function (resolve, reject) {
-                require([
-                    'nbextensions/appCell/widgets/appOutputWidget'
-                ], function (Widget) {
-                    var widget = Widget.make({
-                        cellId: utils.getMeta(cell, 'attributes', 'id')
-                    });
-                    widgets.outputWidget = {
-                        path: ['output-group', 'widget'],
-                        instance: widget
-                    };
-                    widget.start();
-                    widget.bus().emit('run', {
-                        node: dom.getElement('output-group.widget'),
-                        jobState: model.getItem('exec.jobState'),
-                        output: model.getItem('output')
-                    });
-                    resolve();
-                }, function (err) {
-                    reject(err);
-                });
-            });
-        }
 
         function run(params) {
             // First get the app specs, which is stashed in the model,
@@ -2259,9 +1426,7 @@ define([
                     cell.setMeta('attributes', 'title', env.appSpec.info.name);
                     return Promise.all([
                         loadInputWidget(),
-                        loadInputViewWidget(),
-                        loadExecutionWidget(),
-                        loadOutputWidget()
+                        loadInputViewWidget()
                     ]);
                 })
                 .then(function () {
@@ -2295,9 +1460,9 @@ define([
         // INIT
 
         model = Props.make({
-            data: utils.getMeta(cell, 'appCell'),
+            data: utils.getMeta(cell, 'viewCell'),
             onUpdate: function (props) {
-                utils.setMeta(cell, 'appCell', props.getRawObject());
+                utils.setMeta(cell, 'viewCell', props.getRawObject());
                 // saveNarrative();
             }
         });
@@ -2316,5 +1481,5 @@ define([
         }
     };
 }, function (err) {
-    console.log('ERROR loading appCell appCellWidget', err);
+    console.log('ERROR loading viewCell viewCellWidget', err);
 });

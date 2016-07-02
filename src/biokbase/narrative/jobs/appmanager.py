@@ -279,6 +279,9 @@ class AppManager(object):
                 'run_id': run_id
             })
             new_job = ViewerJob(self.viewer_count, app_id, [params], tag=tag, cell_id=cell_id)
+            
+            # How about just sending the viewer info 
+            
             self.viewer_count += 1
 
         else:
@@ -348,15 +351,14 @@ class AppManager(object):
 
             new_job = Job(job_id, app_id, [params], tag=tag, app_version=service_ver, cell_id=cell_id)
 
-
-        self._send_comm_message('run_status', {
-            'event': 'launched_job',
-            'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
-            'cell_id': cell_id,
-            'run_id': run_id,
-            'job_id': job_id
-        })
-        JobManager().register_new_job(new_job)
+            self._send_comm_message('run_status', {
+                'event': 'launched_job',
+                'event_at': datetime.datetime.utcnow().isoformat() + 'Z',
+                'cell_id': cell_id,
+                'run_id': run_id,
+                'job_id': job_id
+            })
+            JobManager().register_new_job(new_job)
         if cell_id is not None:
             return
         else:

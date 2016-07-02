@@ -287,7 +287,7 @@ define([
                         this.sendJobMessage('job-status', jobId, {
                             jobId: jobId,
                             jobState: jobStateMessage.state,
-                            widgetParameters: jobStateMessage.widget_info
+                            outputWidgetInfo: jobStateMessage.widget_info
                         });
                     }
                     

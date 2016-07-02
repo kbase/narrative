@@ -18,5 +18,5 @@ jupyter nbextension enable appCell/main --sys-prefix
 
 #jupyter nbextension disable methodViewCell/main --sys-prefix
 #jupyter nbextension uninstall ${dir}/methodViewCell --sys-prefix
-#jupyter nbextension install ${dir}/methodViewCell --symlink --sys-prefix
-#jupyter nbextension enable methodViewCell/main --sys-prefix
+jupyter nbextension install ${dir}/viewCell --symlink --sys-prefix
+jupyter nbextension enable viewCell/main --sys-prefix

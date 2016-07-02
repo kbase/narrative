@@ -13,7 +13,6 @@ define([
     './inputWrapperWidget',
     './fieldWidget',
     'widgets/appWidgets/paramInputResolver',
-
     'common/runtime'
         // All the input widgets
 
@@ -219,7 +218,6 @@ define([
             var events = Events.make(),
                 content = form({dataElement: 'input-widget-form'}, [
                     dom.buildPanel({
-                        title: 'Options',
                         type: 'default',
                         body: [
                             dom.makeButton('Show Advanced', 'toggle-advanced', {events: events}),
@@ -227,9 +225,7 @@ define([
                         ]
                     }),
                     dom.makePanel('Input Objects', 'input-fields'),
-                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 'parameter-fields'),
-                    dom.makePanel('Output Objects', 'output-fields')
-                        // dom.makePanel('Output Report', 'output-report')
+                    dom.makePanel(span(['Parameters', span({dataElement: 'advanced-hidden-message', style: {marginLeft: '6px', fontStyle: 'italic'}})]), 'parameter-fields')
                 ]);
 
             return {
@@ -251,7 +247,6 @@ define([
             layout.events.attachEvents(container);
             places = {
                 inputFields: dom.getElement('input-fields'),
-                outputFields: dom.getElement('output-fields'),
                 parameterFields: dom.getElement('parameter-fields'),
                 advancedParameterFields: dom.getElement('advanced-parameter-fields')
             };
@@ -350,33 +345,7 @@ define([
                                 }
                             }));
                         }
-                    })
-                    .then(function () {
-                        if (outputParams.length === 0) {
-                            places.outputFields.innerHTML = 'No output objects for this app';
-                        } else {
-                            return Promise.all(outputParams.map(function (spec) {
-                                try {
-                                    var result = makeFieldWidget(spec, model.getItem(['params', spec.name()])),
-                                        rowWidget = RowWidget.make({widget: result.widget, spec: spec}),
-                                        rowNode = document.createElement('div');
-                                    places.outputFields.appendChild(rowNode);
-                                    widgets.push({
-                                        widget: rowWidget,
-                                        bus: result.bus
-                                    });
-                                    rowWidget.attach(rowNode);
-                                } catch (ex) {
-                                    console.error('Error making output field widget', ex);
-                                    // throw new Error('Error making output field widget: ' + ex.message);
-                                    var errorDisplay = div({style: {border: '1px red solid'}}, [
-                                        ex.message
-                                    ]);
-                                    places.outputFields.appendChild(dom.createNode(errorDisplay));
-                                }
-                            }));
-                        }
-                    })
+                    })                   
                     .then(function () {
                         // Show the user that a report object will be created. Otherwise it may seem weird that there is
                         // no way to specify the output object

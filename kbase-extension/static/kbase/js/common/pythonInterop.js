@@ -2,7 +2,7 @@
 /*jslint white:true,browser:true*/
 
 define([
-    './utils',
+    './cellUtils',
     'uuid'
 ], function (utils, Uuid) {
     'use strict';
@@ -49,6 +49,7 @@ define([
         setStatus(cell, 'code built');
         return true;
     }
+
 
     /**
      * method {object} properties = [tag, name, module, gitCommitHash, version]
@@ -171,59 +172,48 @@ define([
         pythonString += kwargs.join(',\n');
         return pythonString;
     }
-
-    function pythonifyArgs(params) {
-        var pythonString = '';
-
-        var kwargs = [];
-        // now the parameters...
-        Object.keys(params).forEach(function (pName) {
-            // options - either atomic value or list. No hashes, right?
-            var pVal = params[pName],
-                arg = '    ' + pName + '=';
-
-            switch (typeof pVal) {
+    
+    function pythonifyValue(value) {
+            switch (typeof value) {
                 case 'number':
-                    if (pVal === null) {
-                        arg += 'None';
+                    if (value === null) {
+                        return 'None';
                     } else {
-                        arg += String(pVal);
+                        return String(value);
                     }
                     break;
                 case 'string':
-                    arg += '"' + pVal + '"';
+                    return '"' + value + '"';
                     break;
                 case 'object':
-                    if (pVal instanceof Array) {
-                        arg += '[';
-
-                        arg += pVal.map(function (value) {
-                            switch (typeof value) {
-                                case 'number':
-                                    return String(value);
-                                case 'string':
-                                    return escapeString(value, '"');
-                                default:
-                                    throw new Error('Invalid array element of type ' + (typeof value));
-                            }
-                        }).join(', ');
-
-                        // assume they're all the same type, either number or string. Because they should be.
-                        arg += ']';
-                    } else if (pVal === null) {
-                        arg += 'None';
+                    if (value instanceof Array) {
+                        return '[' + value.map(function (value) {
+                                    return pythonifyValue(value);
+                                }).join(', ') + ']';                                
+                    } else if (value === null) {
+                        value += 'None';
                     } else {
-                        throw new Error('Objects (dicts) are not supported in paramters');
-                        // arg += '{"huh": "it is a dict."}';
+                        return '{' +
+                            Object.keys(value).map(function (key) {
+                                return pythonifyValue(key) + ': ' + pythonifyValue(value[key]);
+                            }).join(', ') + 
+                            '}'
                     }
                     break;
                 default:
-                    throw new Error('Unsupported parameter type ' + (typeof pVal));
+                    throw new Error('Unsupported parameter type ' + (typeof value));
             }
-            kwargs.push(arg);
+    }
+
+    function pythonifyParams(params) {
+        // now the parameters...
+        // console.log('PYTHONIFYING', params);
+        return Object.keys(params).map(function (pName) {
+            // options - either atomic value or list. No hashes, right?
+            var pVal = params[pName],
+                arg = pName + '=' + pythonifyValue(pVal);
+            return arg;
         });
-        pythonString += kwargs.join(',\n');
-        return pythonString;
     }
 
     function buildAppRunner(cellId, method, params) {
@@ -235,6 +225,30 @@ define([
 
         return pythonCode;
     }
+
+    function buildOutputRunner(jqueryWidgetName, widgetTag, params) {
+        var runId = new Uuid(4).format(),
+            args = [pythonifyValue(jqueryWidgetName), pythonifyValue(widgetTag)].concat(pythonifyParams(params)),
+            pythonCode = [
+                'from biokbase.narrative.widgetmanager import WidgetManager',
+                'WidgetManager().show_output_widget(\n    '+
+                args.join(',\n    ')+
+                '\n)'
+            ].join('\n');
+
+        return pythonCode;
+    }
+
+    function buildViewRunner(jqueryWidgetName, widgetTag, params) {
+        var runId = new Uuid(4).format(),
+            args = [pythonifyValue(jqueryWidgetName), pythonifyValue(widgetTag)].concat(pythonifyParams(params)),
+            pythonCode = [
+                'print "Hello, I will be a viewer real soon now"'
+            ].join('\n');
+
+        return pythonCode;
+    }
+
 
     function buildMethodRunnerWithOutput(cell) {
         var method = utils.getMeta(cell, 'methodCell', 'method'),
@@ -260,6 +274,10 @@ define([
 
 
     return {
-        buildAppRunner: buildAppRunner
+        buildAppRunner: buildAppRunner,
+        buildOutputRunner: buildOutputRunner,
+        buildViewRunner: buildViewRunner,
+        pythonifyParams: pythonifyParams,
+        pythonifyValue: pythonifyValue
     };
 });

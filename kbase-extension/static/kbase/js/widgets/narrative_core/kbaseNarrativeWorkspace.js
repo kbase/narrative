@@ -458,25 +458,36 @@ define (
         },
 
         determineMethodCellType: function (spec) {
+            // An app will execute via the method described in the behavior. If 
+            // such a method is not described, it is by definition not an
+            // executing app.
             if ((spec.behavior.kb_service_method && spec.behavior.kb_service_name) ||
                 (spec.behavior.script_module && spec.behavior.script_name)) {
                 return 'app';
             }
 
+            // The category property is supposedly used to indicate that the app
+            // is a viewer, but this is not used very reliably. 
+            // Still, we look at that here...
             if (spec.info.categories.some(function (category) {
                 return (category === 'viewers');
             })) {
-                return 'app';
+                return 'view';
             }
 
-            if (!spec.parameters.some(function (parameter) {
-                return (parameter.ui_class === 'output');
-            })) {
-                return 'app';
-            };
-
-            console.error('ERROR - could not determine cell type', spec);
-            throw new Error('Could not determine cell type');
+            // ... while in reality, ANY app which does not execute is for now 
+            // considered a viewer. 
+            
+            return 'view';
+            
+//            if (!spec.parameters.some(function (parameter) {
+//                return (parameter.ui_class === 'output');
+//            })) {
+//                return 'app';
+//            };
+//
+//            console.error('ERROR - could not determine cell type', spec);
+//            throw new Error('Could not determine cell type');
         },
 
 

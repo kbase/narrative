@@ -6,6 +6,7 @@ __author__ = "Bill Riehl <wjriehl@lbl.gov>"
 from .job import Job
 from .viewer_job import ViewerJob
 import biokbase.narrative.clients as clients
+from biokbase.narrative.widgetmanager import WidgetManager
 from .jobmanager import JobManager
 from .specmanager import SpecManager
 import os
@@ -13,7 +14,8 @@ import biokbase.auth
 from .app_util import (
     app_version_tags,
     check_tag,
-    system_variable
+    system_variable,
+    map_outputs_from_state
 )
 from IPython.display import HTML
 from jinja2 import Template
@@ -170,10 +172,72 @@ class AppManager(object):
 
         # Here, we just deal with two behaviors:
         # 1. None of the above - it's a viewer.
-        # 2. python_class / python_function. Import and exec the python code.
+        # 2. ***TODO*** python_class / python_function. Import and exec the python code.
 
+        # for now, just map the inputs to outputs.
+        # First, validate.
+        # Preflight check the params - all required ones are present, all values are the right type, all numerical values are in given ranges
+        spec_params = self.spec_manager.app_params(spec)
+        spec_param_ids = [ p['id'] for p in spec_params ]
 
+        # First, test for presence.
+        missing_params = list()
+        for p in spec_params:
+            if not p['optional'] and not p['default'] and not kwargs.get(p['id'], None):
+                missing_params.append(p['id'])
+        if len(missing_params):
+            raise ValueError('Missing required parameters {} - try executing app_usage("{}", tag="{}") for more information'.format(json.dumps(missing_params), app_id, tag))
 
+        # Next, test for extra params that don't make sense
+        extra_params = list()
+        for p in kwargs.keys():
+            if p not in spec_param_ids:
+                extra_params.append(p)
+        if len(extra_params):
+            raise ValueError('Unknown parameters {} - maybe something was misspelled?\nexecute app_usage("{}", tag="{}") for more information'.format(json.dumps(extra_params), app_id, tag))
+
+        # Now, validate parameter values.
+        # Should also check if input (NOT OUTPUT) object variables are present in the current workspace
+        workspace = system_variable('workspace')
+        ws_id = system_variable('workspace_id')
+        if workspace is None or ws_id is None:
+            raise ValueError('Unable to retrive current Narrative workspace information! workspace={}, workspace_id={}'.format(workspace, ws_id))
+
+        param_errors = list()
+        # If they're workspace objects, track their refs in a list we'll pass to run_job as
+        # a separate param to track provenance.
+        ws_input_refs = list()
+        for p in spec_params:
+            if p['id'] in kwargs:
+                (wsref, err) = self._check_parameter(p, kwargs[p['id']], workspace)
+                if err is not None:
+                    param_errors.append("{} - {}".format(p['id'], err))
+                if wsref is not None:
+                    if isinstance(wsref, list):
+                        for ref in wsref:
+                            if ref is not None:
+                                ws_input_refs.append(ref)
+                    else:
+                        ws_input_refs.append(wsref)
+        if len(param_errors):
+            raise ValueError('Parameter value errors found! {}'.format(json.dumps(param_errors)))
+
+        # Hooray, parameters are validated. Set them up for transfer.
+        params = kwargs
+        for p in spec_params:
+            # If any param is a checkbox, need to map from boolean to actual expected value in p['checkbox_map']
+            # note that True = 0th elem, False = 1st
+            if p['type'] == 'checkbox':
+                if p['id'] in params:
+                    checkbox_idx = 0 if params[p['id']] else 1
+                    params[p['id']] = p['checkbox_map'][checkbox_idx]
+            # While we're at it, set the default values for any unset parameters that have them
+            if p['default'] and p['id'] not in params:
+                params[p['id']] = p['default']
+
+        # now just map onto outputs.
+        (output_widget, widget_params) = map_outputs_from_state([], params, spec)
+        return WidgetManager().show_output_widget(output_widget, tag=tag, **widget_params)
 
 
     def run_app(self, *args, **kwargs):

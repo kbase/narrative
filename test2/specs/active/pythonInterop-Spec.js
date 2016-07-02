@@ -15,6 +15,13 @@ define([
             }
             expect(alive).toBeTruthy();
         });
+        it('Pythonify a null value', function() {
+            var jsValue = null,
+                pyValue = 'None';
+
+            expect(PythonInterop.pythonifyValue(jsValue)).toEqual(pyValue);
+        });
+
         it('Pythonify an integer value', function() {
             var jsValue = 1,
                 pyValue = '1';

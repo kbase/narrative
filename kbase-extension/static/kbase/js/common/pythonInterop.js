@@ -2,9 +2,7 @@
 /*jslint white:true,browser:true*/
 
 define([
-    './cellUtils',
-    'uuid'
-], function (utils, Uuid) {
+], function () {
     'use strict';
 
     function pythonString(string, singleQuote) {
@@ -14,270 +12,120 @@ define([
         return '"' + string + '"';
     }
 
-    function buildPythonx(cell) {
-        var method = cell.metadata.kbase.method,
-            params = cell.metadata.kbase.params,
-            cellId = cell.metadata.kbase.attributes.id,
-            runParams = JSON.stringify({
-                cell_id: cell.cell_id,
-                kbase_cell_id: utils.getMeta(cell, 'attributes', 'id')
-            }),
-            pythonCode = [
-                'from biokbase.narrative.jobs import AppManager',
-                'AppManager.run_app(\n' + pythonifyInputs(method, params, cellId) + '\n)'
-            ].join('\n');
-        cell.set_text(pythonCode);
-
-        return true;
-    }
-
-
-    function buildOutputCellPython(cell) {
-        var params = JSON.stringify({
-            cell_id: cell.cell_id,
-            kbase_cell_id: utils.getMeta(cell, 'attributes', 'id')
-        }),
-            pythonCode = [
-                'import json',
-                'from_javascript = ' + pythonString(params, true),
-                'incoming_data = json.loads(from_javascript)',
-                'insert_run_widget(incoming_data)'
-            ],
-            pythonCodeString = pythonCode.join('\n');
-
-        cell.set_text(pythonCodeString);
-        setStatus(cell, 'code built');
-        return true;
-    }
-
-
-    /**
-     * method {object} properties = [tag, name, module, gitCommitHash, version]
-     * params {object} properties = semi-random list of names
-     * cellId {string}
-     *
-     * returns the inputs to biokbase.narrative.jobs.methodmanager.MethodManger.run_method() (whew)
-     * which looks like this:
-     * run_method(method_id, tag='release', version=None, cell_id=None, **kwargs)
-     * where each kwarg is a param input of the form foo="bar", or foo={"bar":"baz"}, or foo=["bar","baz"], etc.
-     * So, return everything but the encapsulating function call.
-     */
-    function xpythonifyInputs(method, params, cellId) {
-        var methodId = method.module + '/' + method.name,
-            tag = method.tag,
-            version = method.version;
-
-        var pythonString = '    "' + methodId + '",\n';
-        if (tag) {
-            pythonString += '    tag="' + tag + '",\n';
-        }
-        if (version) {
-            pythonString += '    version="' + version + '",\n';
-        }
-        if (cellId) {
-            pythonString += '    cell_id="' + cellId + '",\n';
-        }
-
-        var kwargs = [];
-        // now the parameters...
-        $.each(params, function (pName, pVal) {
-            // options - either atomic value or list. No hashes, right?
-            var arg = '    ' + pName + '=';
-            if (typeof pVal !== 'object') {
-                if (typeof pVal === 'number') {
-                    arg += pVal;
-                } else {
-                    arg += '"' + pVal + '"';
-                }
-            } else if (pVal instanceof Array) {
-                arg += '[';
-                // assume they're all the same type, either number or string. Because they should be.
-                if (typeof pVal === 'number') {
-                    arg += pVal.join(', ');
-                } else {
-                    arg += '"' + pVal.join('", "') + '"';
-                }
-                arg += ']';
-            } else {
-                arg += '{"huh": "it is a dict."}';
-            }
-            kwargs.push(arg);
-        });
-        pythonString += kwargs.join(',\n');
-        return pythonString;
-    }
-
     function escapeString(stringValue, delimiter) {
         return stringValue.replace(delimiter, '\\"').replace(/\n/, '\\n');
     }
 
-    function pythonifyInputs(method, params, cellId, runId) {
-        var pythonString = '    "' + method.id + '",\n';
-
-        pythonString += '    tag="' + method.tag + '",\n';
-        if (method.tag === 'release') {
-            pythonString += '    version="' + method.version + '",\n';
-        }
-        pythonString += '    cell_id="' + cellId + '",\n';
-
-        pythonString += '    run_id="' + runId + '",\n';
-
-        var kwargs = [];
-        // now the parameters...
-        Object.keys(params).forEach(function (pName) {
-            // options - either atomic value or list. No hashes, right?
-            var pVal = params[pName],
-                arg = '    ' + pName + '=';
-
-            switch (typeof pVal) {
-                case 'number':
-                    if (pVal === null) {
-                        arg += 'None';
-                    } else {
-                        arg += String(pVal);
-                    }
-                    break;
-                case 'string':
-                    arg += '"' + pVal + '"';
-                    break;
-                case 'object':
-                    if (pVal instanceof Array) {
-                        arg += '[';
-
-                        arg += pVal.map(function (value) {
-                            switch (typeof value) {
-                                case 'number':
-                                    return String(value);
-                                case 'string':
-                                    return '"' + escapeString(value, '"') + '"';
-                                default:
-                                    throw new Error('Invalid array element of type ' + (typeof value));
-                            }
-                        }).join(', ');
-
-                        // assume they're all the same type, either number or string. Because they should be.
-                        arg += ']';
-                    } else if (pVal === null) {
-                        arg += 'None';
-                    } else {
-                        throw new Error('Objects (dicts) are not supported in parameters');
-                        // arg += '{"huh": "it is a dict."}';
-                    }
-                    break;
-                default:
-                    throw new Error('Unsupported parameter type ' + (typeof pVal) + ' for param ' + pName);
-            }
-            kwargs.push(arg);
-        });
-        pythonString += kwargs.join(',\n');
-        return pythonString;
-    }
-    
     function pythonifyValue(value) {
-            switch (typeof value) {
-                case 'number':
-                    if (value === null) {
-                        return 'None';
-                    } else {
-                        return String(value);
-                    }
-                    break;
-                case 'string':
-                    return '"' + value + '"';
-                    break;
-                case 'object':
-                    if (value instanceof Array) {
-                        return '[' + value.map(function (value) {
-                                    return pythonifyValue(value);
-                                }).join(', ') + ']';                                
-                    } else if (value === null) {
-                        value += 'None';
-                    } else {
-                        return '{' +
-                            Object.keys(value).map(function (key) {
-                                return pythonifyValue(key) + ': ' + pythonifyValue(value[key]);
-                            }).join(', ') + 
-                            '}'
-                    }
-                    break;
-                default:
-                    throw new Error('Unsupported parameter type ' + (typeof value));
-            }
+        switch (typeof value) {
+            case 'number':
+                if (value === null) {
+                    return 'None';
+                }
+                return String(value);
+            case 'string':
+                return '"' + escapeString(value) + '"';
+            case 'object':
+                if (value instanceof Array) {
+                    return '[' + value.map(function (value) {
+                        return pythonifyValue(value);
+                    }).join(', ') + ']';
+                }
+                if (value === null) {
+                    return 'None';
+                }
+                return '{' +
+                    Object.keys(value).map(function (key) {
+                    return pythonifyValue(key) + ': ' + pythonifyValue(value[key]);
+                }).join(', ') +
+                    '}';
+            default:
+                console.error('Unsupported parameter type ' + (typeof value), value);
+                throw new Error('Unsupported parameter type ' + (typeof value));
+        }
     }
 
     function pythonifyParams(params) {
-        // now the parameters...
-        // console.log('PYTHONIFYING', params);
-        return Object.keys(params).map(function (pName) {
-            // options - either atomic value or list. No hashes, right?
-            var pVal = params[pName],
-                arg = pName + '=' + pythonifyValue(pVal);
-            return arg;
-        });
+        return Object.keys(params).map(function (name) {
+            var value = params[name];
+            // This allows a non-sparse map of params, in which a param key may
+            // be set as undefined, e.g. in the case of an optional param which
+            // simply has not been set. This simplifies calling code because it 
+            // does not have to filter these out.
+            if (value !== undefined) {
+                return name + '=' + pythonifyValue(value);
+            }
+        })
+            .filter(function (param) {
+                return (param !== undefined);
+            });
     }
 
-    function buildAppRunner(cellId, method, params) {
-        var runId = new Uuid(4).format(),
+    function buildNiceArgsList(args) {
+        var indent = '    ';
+        return '\n' + indent + args.join(',\n') + indent + '\n';
+    }
+
+    function buildAppRunner(cellId, runId, app, params) {
+        var paramArgs = pythonifyParams(params),
+            positionalArgs = [
+                pythonifyValue(app.id)
+            ],
+            namedArgs = pythonifyParams({
+                tag: app.tag,
+                version: app.version,
+                cell_id: cellId,
+                run_id: runId
+            }),
+            args = positionalArgs.concat(namedArgs).concat(paramArgs),
             pythonCode = [
                 'from biokbase.narrative.jobs import AppManager',
-                'AppManager().run_app(\n' + pythonifyInputs(method, params, cellId, runId) + '\n)'
+                'AppManager().run_app(' + buildNiceArgsList(args) + ')'
+            ].join('\n');
+
+        return pythonCode;
+    }
+
+    function buildViewRunner(cellId, runId, app, params) {
+        var paramArgs = pythonifyParams(params),
+            positionalArgs = [
+                pythonifyValue(app.id)
+            ],
+            namedArgs = pythonifyParams({
+                tag: app.tag,
+                version: app.version,
+                cell_id: cellId,
+                run_id: runId
+            }),
+            args = positionalArgs.concat(namedArgs).concat(paramArgs),
+            pythonCode = [
+                'from biokbase.narrative.jobs import AppManager',
+                'AppManager().run_local_app(' + buildNiceArgsList(args) + ')'
             ].join('\n');
 
         return pythonCode;
     }
 
     function buildOutputRunner(jqueryWidgetName, widgetTag, params) {
-        var runId = new Uuid(4).format(),
-            args = [pythonifyValue(jqueryWidgetName), pythonifyValue(widgetTag)].concat(pythonifyParams(params)),
+        var paramArgs = pythonifyParams(params),
+            positionalArgs = [
+                pythonifyValue(jqueryWidgetName),
+                pythonifyValue(widgetTag)
+            ],
+            args = positionalArgs.concat(paramArgs),
             pythonCode = [
                 'from biokbase.narrative.widgetmanager import WidgetManager',
-                'WidgetManager().show_output_widget(\n    '+
-                args.join(',\n    ')+
-                '\n)'
+                'WidgetManager().show_output_widget(' + buildNiceArgsList(args) + ')'
             ].join('\n');
 
         return pythonCode;
     }
-
-    function buildViewRunner(jqueryWidgetName, widgetTag, params) {
-        var runId = new Uuid(4).format(),
-            args = [pythonifyValue(jqueryWidgetName), pythonifyValue(widgetTag)].concat(pythonifyParams(params)),
-            pythonCode = [
-                'print "Hello, I will be a viewer real soon now"'
-            ].join('\n');
-
-        return pythonCode;
-    }
-
-
-    function buildMethodRunnerWithOutput(cell) {
-        var method = utils.getMeta(cell, 'methodCell', 'method'),
-            params = utils.getMeta(cell, 'methodCell', 'params'),
-            cellId = utils.getMeta(cell, 'attributes').id,
-            runId = new Uuid(4).format(),
-            runParams = JSON.stringify({
-                cell_id: cell.cell_id,
-                kbase_cell_id: cellId
-            }),
-            pythonCode = [
-                'from biokbase.narrative.jobs import AppManager',
-                'import json',
-                'mm = MethodManager()',
-                'from_javascript = ' + pythonString(runParams, true),
-                'incoming_data = json.loads(from_javascript)',
-                'AppManager.run_app(\n' + pythonifyInputs(method, params, cellId, runId) + '\n)',
-                'insert_run_widget(incoming_data[u"cell_id"], incoming_data[u"kbase_cell_id"])'
-            ].join('\n');
-
-        return pythonCode;
-    }
-
 
     return {
-        buildAppRunner: buildAppRunner,
-        buildOutputRunner: buildOutputRunner,
-        buildViewRunner: buildViewRunner,
         pythonifyParams: pythonifyParams,
-        pythonifyValue: pythonifyValue
+        pythonifyValue: pythonifyValue,
+        buildAppRunner: buildAppRunner,
+        buildViewRunner: buildViewRunner,
+        buildOutputRunner: buildOutputRunner
     };
 });

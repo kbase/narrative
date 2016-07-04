@@ -132,7 +132,6 @@ define([
                     type: 'get-parameter'
                 },
                 handle: function (message) {
-                    console.log('GOT?', message);
                     if (message.parameterName) {
                         return parentBus.request(message, {
                             key: {

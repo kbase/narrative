@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,require*/
 /*jslint white: true*/
 // leave at least 2 line with only a star on it below, or doc generation fails
 /**
@@ -107,411 +107,198 @@ define(['jquery',
     'services/config',
     'notebook/js/mathjaxutils',
     'components/marked/lib/marked',
+    'common/utils',
     'components/requirejs/require',
-    'narrative_paths',
-    'kbaseNarrativeCellMenu'
-],
-    function ($,
-        Jupyter,
-        security,
-        utils,
-        page,
-        codeCell,
-        notebook,
-        textCell,
-        saveWidget,
-        cellToolbar,
-        dialog,
-        keyboard,
-        cell,
-        config,
-        mathjaxutils,
-        marked
-        ) {
-        'use strict';
+    'narrative_paths'
+], function ($,
+    Jupyter,
+    security,
+    nbUtils,
+    page,
+    codeCell,
+    notebook,
+    textCell,
+    saveWidget,
+    cellToolbar,
+    dialog,
+    keyboard,
+    cell,
+    config,
+    mathjaxutils,
+    marked,
+    utils
+    ) {
+    'use strict';
 
-        // GLOBAL EVENTS AND OVERRIDES
+    // GLOBAL EVENTS AND OVERRIDES
 
-        // inject necessary environment vars into the kernel as soon as it's ready.
-        $([Jupyter.events]).on('kernel_ready.Kernel',
-            function () {
-                Jupyter.notebook.kernel.execute(
-                    'import os;' +
-                    'os.environ["KB_AUTH_TOKEN"]="' + Jupyter.narrative.authToken + '";' +
-                    'os.environ["KB_WORKSPACE_ID"]="' + Jupyter.notebook.metadata.ws_name + '"'
-                    );
-            }
-        );
-    
-        // Kickstart the Narrative loading routine once the notebook is loaded.
-        $([Jupyter.events]).on('app_initialized.NotebookApp', function () {
-            require(['kbaseNarrative'], function (Narrative) {
+    // inject necessary environment vars into the kernel as soon as it's ready.
+    $([Jupyter.events]).on('kernel_ready.Kernel', function () {
+        Jupyter.notebook.kernel.execute(
+            'import os;' +
+            'os.environ["KB_AUTH_TOKEN"]="' + Jupyter.narrative.authToken + '";' +
+            'os.environ["KB_WORKSPACE_ID"]="' + Jupyter.notebook.metadata.ws_name + '"'
+            );
+    }
+    );
 
-                Jupyter.narrative = new Narrative();
-                Jupyter.narrative.init();
+    // Kickstart the Narrative loading routine once the notebook is loaded.
+    $([Jupyter.events]).on('app_initialized.NotebookApp', function () {
+        require(['kbaseNarrative'], function (Narrative) {
 
-                /*
-                 * Override the move-cursor-down-or-next-cell and
-                 * move-cursor-up-or-previous-cell actions.
-                 *
-                 * When editing a textcell (markdown or code), if a user uses
-                 * the arrow keys to move to another cell, it normally lands
-                 * there in edit mode.
-                 *
-                 * This is bad for KBase-ified markdown cells, since it shows
-                 * the div and script tags that are used to render them, and
-                 * screws up the state management. These overrides just
-                 * check if the next cell is a KBase cell, and doesn't enable
-                 * edit mode if so.
-                 */
-                Jupyter.keyboard_manager.actions.register({
-                        handler: function (env, event) {
-                            var index = env.notebook.get_selected_index();
-                            var cell = env.notebook.get_cell(index);
-                            if (cell.at_bottom() && index !== (env.notebook.ncells() - 1)) {
-                                if (event) {
-                                    event.preventDefault();
-                                }
-                                env.notebook.command_mode();
-                                env.notebook.select_next(true);
-                                if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
-                                    env.notebook.edit_mode();
-                                    var cm = env.notebook.get_selected_cell().code_mirror;
-                                    cm.setCursor(0, 0);
-                                }
-                            }
-                            return false;
+            Jupyter.narrative = new Narrative();
+            Jupyter.narrative.init();
+
+            /*
+             * Override the move-cursor-down-or-next-cell and
+             * move-cursor-up-or-previous-cell actions.
+             *
+             * When editing a textcell (markdown or code), if a user uses
+             * the arrow keys to move to another cell, it normally lands
+             * there in edit mode.
+             *
+             * This is bad for KBase-ified markdown cells, since it shows
+             * the div and script tags that are used to render them, and
+             * screws up the state management. These overrides just
+             * check if the next cell is a KBase cell, and doesn't enable
+             * edit mode if so.
+             */
+            Jupyter.keyboard_manager.actions.register({
+                handler: function (env, event) {
+                    var index = env.notebook.get_selected_index();
+                    var cell = env.notebook.get_cell(index);
+                    if (cell.at_bottom() && index !== (env.notebook.ncells() - 1)) {
+                        if (event) {
+                            event.preventDefault();
                         }
-                    },
-                    'move-cursor-down',
-                    'jupyter-notebook');
-
-                Jupyter.keyboard_manager.actions.register({
-                        handler: function (env, event) {
-                            var index = env.notebook.get_selected_index();
-                            var cell = env.notebook.get_cell(index);
+                        env.notebook.command_mode();
+                        env.notebook.select_next(true);
+                        if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
+                            env.notebook.edit_mode();
                             var cm = env.notebook.get_selected_cell().code_mirror;
-                            var cur = cm.getCursor();
-                            if (cell && cell.at_top() && index !== 0 && cur.ch === 0) {
-                                if (event) {
-                                    event.preventDefault();
-                                }
-                                env.notebook.command_mode();
-                                env.notebook.select_prev(true);
-                                if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
-                                    env.notebook.edit_mode();
-                                    cm = env.notebook.get_selected_cell().code_mirror;
-                                    cm.setCursor(cm.lastLine(), 0);
-                                }
-                            }
-                            return false;
+                            cm.setCursor(0, 0);
                         }
-                    },
-                    'move-cursor-up',
-                    'jupyter-notebook');
-            });
+                    }
+                    return false;
+                }
+            },
+                'move-cursor-down',
+                'jupyter-notebook');
+
+            Jupyter.keyboard_manager.actions.register({
+                handler: function (env, event) {
+                    var index = env.notebook.get_selected_index(),
+                        cell = env.notebook.get_cell(index),
+                        cm = env.notebook.get_selected_cell().code_mirror,
+                        cur = cm.getCursor();
+                    if (cell && cell.at_top() && index !== 0 && cur.ch === 0) {
+                        if (event) {
+                            event.preventDefault();
+                        }
+                        env.notebook.command_mode();
+                        env.notebook.select_prev(true);
+                        if (!env.notebook.get_selected_cell().metadata['kb-cell']) {
+                            env.notebook.edit_mode();
+                            cm = env.notebook.get_selected_cell().code_mirror;
+                            cm.setCursor(cm.lastLine(), 0);
+                        }
+                    }
+                    return false;
+                }
+            },
+                'move-cursor-up',
+                'jupyter-notebook');
         });
+    });
 
-        /*
-         * We override this method because jupyter uses .height() rather than
-         * css('height'). In the former just the internal height is returned,
-         * although later versions of jquery (should be the one we are using,
-         * but it didn't appear to be so) should have fixed this behavior when
-         * box-sizing: border-box is used. I tried that, but it didn't seem to
-         * work. Using css('height'), however, works.
-         * This bug was manifested in a permanent scrollbar for the main content
-         * area, since its size was set too tall.
-         */
-        page.Page.prototype._resize_site = function () {
-            // Update the site's size.
-            $('div#site').height($(window).height() - $('#header').css('height'));
-        };
+    /*
+     * We override this method because jupyter uses .height() rather than
+     * css('height'). In the former just the internal height is returned,
+     * although later versions of jquery (should be the one we are using,
+     * but it didn't appear to be so) should have fixed this behavior when
+     * box-sizing: border-box is used. I tried that, but it didn't seem to
+     * work. Using css('height'), however, works.
+     * This bug was manifested in a permanent scrollbar for the main content
+     * area, since its size was set too tall.
+     */
+    page.Page.prototype._resize_site = function () {
+        // Update the site's size.
+        $('div#site').height($(window).height() - $('#header').css('height'));
+    };
 
 
-        // Patch the security mechanisms to allow any JavaScript to run for now.
-        // TODO: update this so only the few KBase commands run.
-        security.sanitize_html = function (html, allow_css) {
-            return html;
-        };
-        security.sanitize_css = function (css, tagPolicy) {
-            return css;
-        };
-        security.sanitize_stylesheets = function (html, tagPolicy) {
-            return html;
-        };
-        
-         // TODO: refactor
-        function cellType(cell) {
-            // Cells are (currently) rendered twice. The first time the kb metadata
-            // is not available, but we can rely on future renders.
-            if (cell.renderCount > 1) {
-                return;
-            }
+    // Patch the security mechanisms to allow any JavaScript to run for now.
+    // TODO: update this so only the few KBase commands run.
 
-            var type = cell.metadata &&
-                cell.metadata['kb-cell'] &&
-                cell.metadata['kb-cell']['type'];
-
-            // Markdown cells don't of course have a kb cell type.
-            if (type === undefined) {
-                return;
-            }
-
-            switch (type) {
-                case 'function_input':
-                    return 'method';
-                    break;
-                case 'kb_app':
-                    return 'app';
-                    break;
-                case 'function_output':
-                    return 'output';
-                    break;
-                default:
-                    return 'unknown';
-            }
-
+    // TODO: refactor
+    function cellType(cell) {
+        // Cells are (currently) rendered twice. The first time the kb metadata
+        // is not available, but we can rely on future renders.
+        if (cell.renderCount > 1) {
+            return;
         }
 
-        // CELLTOOLBAR
+        var type = cell.metadata &&
+            cell.metadata['kb-cell'] &&
+            cell.metadata['kb-cell']['type'];
 
-        cellToolbar.CellToolbar.prototype.renderToggleState = function () {
-            var toggleState = this.cell.getCellState('toggleState', 'unknown');
-            // Test to see if the kbaseNarrativeCellMenu is attached to this toolbar.
-            // 
-            //var elemData = $(this.inner_element).find('.button_container').data();
-            //if (elemData && elemData['kbaseNarrativeCellMenu'])
-            //   $(this.inner_element).find('.button_container').kbaseNarrativeCellMenu('toggleState', toggleState);
-            //   
-            // TODO: rewire the rendering of togglestate to just go through the
-            // natural cell toolbar refresh which occurs when the cell metadata
-            // is updated (cell.metadata = {what:'ever'};).
-        };
-
-        // disable hiding of the toolbar
-        cellToolbar.CellToolbar.prototype.hide = function () {
+        // Markdown cells don't of course have a kb cell type.
+        if (type === undefined) {
             return;
-        };
+        }
 
-        textCell.MarkdownCell.prototype.renderToggleState = function () {
-            cell.Cell.prototype.renderToggleState.apply(this);
-            var $cellNode = $(this.element),
-                type = cellType(this) || 'unknown';
-            switch (this.getCellState('toggleState', 'unknown')) {
-                case 'closed':
-                    $cellNode.removeClass('opened');
-                    // $cellNode.trigger('show-title.cell');
-                    //this.setCellState('title', '');
-                    $cellNode.find('.inner_cell > div:nth-child(2)').css('display', 'none');
-                    $cellNode.find('.inner_cell > div:nth-child(3)').css('display', 'none');
-                    break;
-                case 'open':
-                    $cellNode.addClass('opened');
-                    if (type === 'unknown') {
-                        // $cellNode.trigger('hide-title.cell');
-                        this.setCellState('title', '');
-                    }
-                    $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
-                    $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
-                    break;
-                case 'unknown':
-                    $cellNode.addClass('opened');
-                    if (type === 'unknown') {
-                        this.setCellState('title', '');
-                        // $cellNode.trigger('hide-title.cell');
-                    }
-                    $cellNode.find('.inner_cell > div:nth-child(2)').css('display', '');
-                    $cellNode.find('.inner_cell > div:nth-child(3)').css('display', '');
-                    break;
-            }
-        };
+        switch (type) {
+            case 'function_input':
+                return 'method';
+            case 'kb_app':
+                return 'app';
+            case 'function_output':
+                return 'output';
+            default:
+                return 'unknown';
+        }
 
-        // Patch the MarkdownCell renderer to run the Javascript we need.
-        textCell.MarkdownCell.options_default = {
-            cm_config: {
-                mode: 'ipythongfm'
-            },
-            placeholder: "_Markdown_ and LaTeX cell - double click here to edit."
-                // "Type _Markdown_ and LaTeX: $\\alpha^2$" +
-                //     "<!-- " +
-                //     "The above text is Markdown and LaTeX markup.\n" +
-                //     "It is provided as a quick sample of what you can do in a Markdown cell.\n" +
-                //     "Markdown cells are marked with the paragraph icon.\n" +
-                //     "This is a comment, so it does not appear when rendered.\n" +
-                //     "Also note that the first item in the cell or the first first-level" +
-                //     "header will appear as the cell title." +
-                //     "-->"
-        };
+    }
 
-        (function () {
-            var originalMethod = cell.Cell.prototype.unselect;
-            cell.Cell.prototype.unselect = function (leave_selected) {
-                var wasSelected = originalMethod.apply(this, [leave_selected]);
-                $(this.element).trigger('unselected.cell');
-                return wasSelected;
-            };
-        }());
+    // CELLTOOLBAR
 
-        (function () {
-            var originalMethod = cell.Cell.prototype.select;
-            cell.Cell.prototype.select = function () {
-                var wasSelected = originalMethod.apply(this);
-                if (wasSelected) {
-                    $(this.element).trigger('selected.cell');
-                }
-                return wasSelected;
-            };
-        }());
-
-        cell.Cell.prototype.getCellState = function (name, defaultValue) {
-            if (!this.metadata.kbase) {
-                this.metadata.kbase = {
-                    cellState: {}
-                };
-            } else if (!this.metadata.kbase.cellState) {
-                this.metadata.kbase.cellState = {};
-            }
-            var value = this.metadata.kbase.cellState[name];
-            if (value === undefined) {
-                return defaultValue;
-            }
-            return value;
-        };
-
-        cell.Cell.prototype.setCellState = function (name, value) {
-            if (!this.metadata.kbase) {
-                this.metadata.kbase = {
-                    cellState: {}
-                };
-            } else if (!this.metadata.kbase.cellState) {
-                this.metadata.kbase.cellState = {};
-            }
-            var metadata = this.metadata;
-            metadata.kbase.cellState[name] = value;
-            this.metadata = metadata;
-        };
-
-        cell.Cell.prototype.toggle = function () {
-            switch (this.getCellState('toggleState', 'unknown')) {
-                case 'closed':
-                    this.setCellState('toggleState', 'open');
-                    break;
-                case 'open':
-                    this.setCellState('toggleState', 'closed');
-                    break;
-                case 'unknown':
-                    this.setCellState('toggleState', 'closed');
-                    break;
-            }
-            this.renderToggleState();
-        };
-
-        cell.Cell.prototype.renderToggleState = function () {
-            this.celltoolbar.renderToggleState();
-        };
-//
-//        (function () {
-//            var originalMethod = cell.Cell.prototype.render;
-//            cell.Cell.prototype.render = function () {
-//                originalMethod.apply(this);
-//                $(this.element).trigger("rendered.cell", {cell: this});
-//            };
-//        }());
-
-       
-
-
-        // DISABLE
-        // TODO: remove
-//        textCell.MarkdownCell.prototype.render = function () {
-//            /*
-//             * Ahem, these silly javascript method overriding or extensions.
-//             * First, you need to know what the parent object prototype
-//             * does, in order for this to make any sense. For rendering, what
-//             * does it mean to extend or override the rendering? Does the parent
-//             * class actually do any rendering, i.e. create display elements based
-//             * on data? In this case, no. TextCell has no base render method, but
-//             * above that Cell does, but it only checks to see if the rendering
-//             * flags mean that rendering is required and returns that value. It
-//             * is that return value which is used here to determine whether
-//             * rendering should be done or not.
-//             * I would argue that there should just be a method "needRender".
-//             */
-//            var needsToRender = textCell.TextCell.prototype.render.apply(this);
-//
-//            // which cell type is it? KBase hosts apps, methods, and output cells
-//            // within markdown cells.
-//            if (cell.renderCount === undefined) {
-//                cell.renderCount = 0;
-//            }
-//            cell.renderCount += 1;
-//            var kbCellType = cellType(this);
-//
-//            if (kbCellType) {
-//                $(this.element).addClass('kb-cell');
-//                this.set_rendered(this.get_text());
-//                this.typeset();
-//                return needsToRender;
-//            }
-//
-//            if (needsToRender) {
-//                var that = this,
-//                    text = this.get_text(),
-//                    math = null,
-//                    $html;
-//
-//                if (text === "") {
-//                    text = this.placeholder;
-//                }
-//                var text_and_math = mathjaxutils.remove_math(text);
-//                text = text_and_math[0];
-//                math = text_and_math[1];
-//
-//                marked(text, function (err, html) {
-//                    html = mathjaxutils.replace_math(html, math);
-//                    html = security.sanitize_html(html);
-//                    try {
-//                        $html = $($.parseHTML(html, undefined, true));
-//
-//                        // Extract title from h1, if any. otheriwse, first 50 characters
-//                        var title = $html.filter('h1').first().first().text();
-//                        if (!title && $html.first().html()) {
-//                            title = $html.first().html().substr(0, 50) || '';
-//                        }
-//
-//                        // add anchors to headings
-//                        $html.find(":header").addBack(":header").each(function (i, h) {
-//                            h = $(h);
-//                            var hash = h.text().replace(/ /g, '-');
-//                            h.attr('id', hash);
-//                            h.append(
-//                                $('<a/>')
-//                                .addClass('anchor-link')
-//                                .attr('href', '#' + hash)
-//                                .text('¶')
-//                                );
-//                        });
-//                        // links in markdown cells should open in new tabs
-//                        $html.find("a[href]").not('[href^="#"]').attr("target", "_blank");
-//
-//
-//                    } catch (error) {
-//                        title = 'Markdown Error';
-//                        $html = "Error while parsing markdown cell: " + error;
-//                    }
-//
-//                    that.setCellState('title', title || '');
-//                    // that.setCellState('icon', '<i class="fa fa-2x fa-paragraph markdown-icon"></i>');
-//                    that.set_rendered($html);
-//                    that.typeset();
-//                    that.events.trigger("rendered.MarkdownCell", {cell: that});
-//                });
-//            }
-//            return needsToRender;
+//        cellToolbar.CellToolbar.prototype.renderToggleState = function () {
+//            var toggleState = this.cell.getCellState('toggleState', 'unknown');
+//            // Test to see if the kbaseNarrativeCellMenu is attached to this toolbar.
+//            // 
+//            //var elemData = $(this.inner_element).find('.button_container').data();
+//            //if (elemData && elemData['kbaseNarrativeCellMenu'])
+//            //   $(this.inner_element).find('.button_container').kbaseNarrativeCellMenu('toggleState', toggleState);
+//            //   
+//            // TODO: rewire the rendering of togglestate to just go through the
+//            // natural cell toolbar refresh which occurs when the cell metadata
+//            // is updated (cell.metadata = {what:'ever'};).
 //        };
 
+    // disable hiding of the toolbar
+    cellToolbar.CellToolbar.prototype.hide = function () {
+        return;
+    };
+
+    // MARKDOWN CELL
+
+    (function () {
+        var p = textCell.MarkdownCell.prototype;
+
+        p.minimize = function () {
+            var $cellNode = $(this.element);
+            $cellNode.find('.inner_cell > div:nth-child(2)').addClass('hidden');
+            $cellNode.find('.inner_cell > div:nth-child(3)').addClass('hidden');
+        };
+
+        p.maximize = function () {
+            var $cellNode = $(this.element);
+            $cellNode.find('.inner_cell > div:nth-child(2)').removeClass('hidden');
+            $cellNode.find('.inner_cell > div:nth-child(3)').removeClass('hidden');
+        };
+
         /** @method bind_events **/
-        textCell.MarkdownCell.prototype.bind_events = function () {
+        p.bind_events = function () {
             textCell.TextCell.prototype.bind_events.apply(this);
 
             var cell = this,
@@ -544,7 +331,8 @@ define(['jquery',
                 if (title === undefined) {
                     return;
                 }
-                cell.setCellState('title', title);
+                // cell.setCellState('title', title);
+                utils.setCellMeta(cell, 'kbase.cellState.title', title);
                 var $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('set-title.toolbar', [title || '']);
                 if (cellType(cell) !== undefined) {
@@ -563,7 +351,8 @@ define(['jquery',
             });
 
             $cellNode.on('set-icon.cell', function (e, icon) {
-                cell.setCellState('icon', icon);
+                // cell.setCellState('icon', icon);
+                utils.setCellMeta(cell, 'kbase.cellState.icon', icon);
                 var $menu = $(cell.celltoolbar.element).find('.button_container');
                 $menu.trigger('set-icon.toolbar', [icon]);
             });
@@ -584,43 +373,52 @@ define(['jquery',
              *   to control inside the celltoolbar
              */
             // this.events
-            $cellNode.on('unselected.cell', function (e) {
+            $cellNode.on('unselected.cell', function () {
                 var $menu = $(cell.celltoolbar.element).find('.button_container');
-                cell.setCellState('selected', false);
+                // cell.setCellState('selected', false);
+                utils.setCellMeta(cell, 'kbase.cellState.selected', false);
                 $menu.trigger('unselected.toolbar');
             });
 
             // this.events
-            $cellNode.on('selected.cell', function (e) {
+            $cellNode.on('selected.cell', function () {
                 var $menu = $(cell.celltoolbar.element).find('.button_container');
-                cell.setCellState('selected', true);
+                utils.setCellMeta(cell, 'kbase.cellState.selected', true);
+                // cell.setCellState('selected', true);
                 $menu.trigger('selected.toolbar');
             });
 
             this.events.on('rendered.MarkdownCell', function (e, data) {
-                cell.setCellState('icon', 'paragraph');
-                cell.renderToggleState();
-                
+                // cell.setCellState('icon', 'paragraph');
+                utils.setCellMeta(cell, 'kbase.cellState.icon', 'paragraph');
+
+                // DISABLED toggleing
+                // TODO: re-enable!
+                // cell.renderToggleState();
+
                 // get the h1 if it exists.
                 var title,
                     h1 = cell.element.find('h1');
                 if (h1.length > 0) {
                     title = h1[0].innerText;
-                } else {
-                    title = 'huh?';
                 }
-                
+
                 if (title) {
                     title = title.substr(0, 50) || '';
+                } else {
+                    title = '<i>empty markdown cell - add a title with # </i>';
                 }
-                cell.setCellState('title', title);
-                
+
+                // if (title) {
+                // cell.setCellState('title', title);
+                utils.setCellMeta(cell, 'kbase.cellState.title', title);
+
                 // Extract title from h1, if any. otheriwse, first 50 characters
                 //var title = $html.filter('h1').first().first().text();
                 //if (!title && $html.first().html()) {
                 //    title = $html.first().html().substr(0, 50) || '';
                 //}
-                
+
                 // $(cell.element).trigger('set-title.cell', cell.getCellState('title'));
                 //$(cell.element).trigger('set-icon.cell', ['<i class="fa fa-2x fa-paragraph markdown-icon"></i>']);
             });
@@ -634,156 +432,276 @@ define(['jquery',
                 if (data.name === 'KBase') {
                     // Set up the toolbar based on the state.
                     // TODO: refactor in general -- reconcile cellState and attributes
-                    
+
                     //$cellNode.trigger('set-title.cell', [cell.getCellState('title', '')]);
                     //$cellNode.trigger('set-icon.cell', [cell.getCellState('icon', '')]);
-                    
-                    cell.renderToggleState();
+
+                    // DISABLED: toggling
+                    // TODO: re-enable!
+                    // cell.renderToggleState();
                 }
             });
         };
+    }());
 
-        // Patch the MarkdownCell renderer to throw an error when failing to render Javascript we need.
-//        textCell.TextCell.prototype.set_rendered = function (text) {
-//            try {
-//                this.element.find('div.text_cell_render').html(text);
-//            } catch (error) {
-//                this.element.find('div.text_cell_render').html("Error while parsing markdown cell: " + error);
-//            }
-//        };
+    // Patch the MarkdownCell renderer to run the Javascript we need.
+    textCell.MarkdownCell.options_default = {
+        cm_config: {
+            mode: 'ipythongfm'
+        },
+        placeholder: "_Markdown_ and LaTeX cell - double click here to edit."
+            // "Type _Markdown_ and LaTeX: $\\alpha^2$" +
+            //     "<!-- " +
+            //     "The above text is Markdown and LaTeX markup.\n" +
+            //     "It is provided as a quick sample of what you can do in a Markdown cell.\n" +
+            //     "Markdown cells are marked with the paragraph icon.\n" +
+            //     "This is a comment, so it does not appear when rendered.\n" +
+            //     "Also note that the first item in the cell or the first first-level" +
+            //     "header will appear as the cell title." +
+            //     "-->"
+    };
 
-        /*
-         * NEW:
-         *
-         * Extend the Cell bind_events.
-         *
-         * Adds cell toggling.
-         */
+
+    // CELL
+
+    (function () {
+        var p = cell.Cell.prototype;
+
+        // This is how we extend methods.
         (function () {
-            var originalMethod = cell.Cell.prototype.bind_events;
-            cell.Cell.prototype.bind_events = function () {
-                var thisCell = this,
-                    $el = $(this.element);
-                originalMethod.apply(this);
-                $el.on('toggle.cell', function () {
-                    // Alas, it has no discriminating attributes!
-                    thisCell.toggle();
-                });
-//                $el.on('rendered.cell', function () {
-//                    thisCell.renderToggleState();
-//                    $(thisCell.element).trigger('set-title.cell', thisCell.getCellState('title'));
-//                });
+            var originalMethod = p.select;
+            p.select = function () {
+                var wasSelected = originalMethod.apply(this);
+                if (wasSelected) {
+                    $(this.element).trigger('selected.cell');
+                }
+                return wasSelected;
+            };
+        }());
+
+        // Extend
+        (function () {
+            var originalMethod = cell.Cell.prototype.unselect;
+            cell.Cell.prototype.unselect = function (leave_selected) {
+                var wasSelected = originalMethod.apply(this, [leave_selected]);
+                $(this.element).trigger('unselected.cell');
+                return wasSelected;
             };
         }());
         
-        // CODE CELL
-
-        /*
-         * NEW:
-         *
-         * Extend the CodeCell bind_events method to add handling of toolbar
-         * events.
-         *
-         *  A note on "extension" of a function object's function prototype:
-         *  We first save the existing function, and then replace it with a new
-         *  one which in its first statement executes the original one.
-         *  This represents the existing behavior.
-         *  Code following this represents the additional or extended behavior.
-         *
-         */
-        (function () {
-            var originalMethod = codeCell.CodeCell.prototype.bind_events;
-            codeCell.CodeCell.prototype.bind_events = function () {
-                originalMethod.apply(this);
-                var $cellNode = $(this.element),
-                    thisCell = this;
-
-                // TODO: toggle state on the cell object so we can be sure about this.
-
-                $cellNode.on('unselected.cell', function () {
-                    var $menu = $(thisCell.celltoolbar.element).find('.button_container');
-                    thisCell.setCellState('selected', false);
-                    $menu.trigger('unselected.toolbar');
-                });
-
-                // this.events
-                $cellNode.on('selected.cell', function () {
-                    var $menu = $(thisCell.celltoolbar.element).find('.button_container');
-                    thisCell.setCellState('selected', true);
-                    $menu.trigger('selected.toolbar');
-                });
-                
-                this.events.on('preset_activated.CellToolbar', function (e, data) {
-                    if (data.name === 'KBase') {
-//                        // Set up the toolbar based on the state.
-//                        // TODO: refactor in general -- reconcile cellState and attributes
-//                        $cellNode.trigger('set-title.cell', [thisCell.getCellState('title', '')]);
-//                        $cellNode.trigger('set-icon.cell', [thisCell.getCellState('icon', '')]);
-//                        // console.log('PRESET', JSON.parse(JSON.stringify(thisCell.metadata)));
-//                        // This should cause the cell to render into its open or closed
-//                        // state based on the stored state in the metadata.
-                        thisCell.renderToggleState();
-                    }
-                });
-
-            };
-        }());
-
-        /*
-         * NEW:
-         *
-         * Hides and shows code cell components based on the current toggle
-         * state of the cell, as reflected in the cell metadata
-         * (via getCellState).
-         */
-        codeCell.CodeCell.prototype.renderToggleState = function () {
-            cell.Cell.prototype.renderToggleState.apply(this);
+        p.renderMinMax = function () {
             var $cellNode = $(this.element),
-                contentArea = $cellNode.find('.cell_content')[0];
-            
-            console.log('TOGGLE in code cell', this.getCellState('toggleState', 'unknown'));
-
-            switch (this.getCellState('toggleState', 'unknown')) {
-                case 'closed':
-                    // reflect the closed state.
-                    if (!contentArea.classList.contains('hidden')) {
-                        contentArea.classList.add('hidden');
-                    }
+                metaToggleMode = utils.getCellMeta(this, 'kbase.cellState.toggleMinMax'),
+                toggleMode = $cellNode.data('toggleMinMax') || metaToggleMode || 'maximized';
+            switch (toggleMode) {
+                case 'maximized':
+                    this.maximize();
                     break;
-                default:
-                    // relect the open (also default) state.
-                    if (contentArea.classList.contains('hidden')) {
-                        contentArea.classList.remove('hidden');
-                    }
+                case 'minimized':
+                    this.minimize();
                     break;
             }
         };
         
-        codeCell.CodeCell.prototype.renderToggleStatex = function () {
-            cell.Cell.prototype.renderToggleState.apply(this);
+        p.toggleMinMax = function () {
             var $cellNode = $(this.element),
-                toggleStateInitialized = $cellNode.data('toggle-initialized'),
-                elemsToToggle = [
-                    // Just the input area -- the cell toolbar is also in .input
-                    {
-                        name: 'input',
-                        node: $cellNode.find('.input .input_area')[0]
-                    },
-                    // The app cell input area, if it exists.
-                    // TODO: we should find a way to dispatch on toggle as well
-                    // as other events based on custom cell type...
-                    {
-                        name: 'app',
-                        node: $cellNode.find('[data-subarea-type="app-cell-input"]')[0]
-                    },
-                    // $cellNode.find('.widget-area'),
-                    {
-                        name: 'output',
-                        node: $cellNode.find('.output_wrapper')[0]
+                toggleMode = $cellNode.data('toggleMinMax') || 'maximized';
+
+            switch (toggleMode) {
+                case 'maximized':
+                    toggleMode = 'minimized';
+                    break;
+                case 'minimized':
+                    toggleMode = 'maximized';
+                    break;
+            }
+
+            // NB namespacing is important with jquery messages because they 
+            // propagate through nodes like DOM messages (i.e. the toolbar, being 
+            // contained within the cell, propagates the event upwards, after
+            // which it continues to the cell (and perhaps beyond). So using
+            // the same event name will lead to an infinite loop.
+            // this.celltoolbar.element.trigger('toggleMinMax.toolbar');
+
+            $cellNode.data('toggleMinMax', toggleMode);
+            
+            this.renderMinMax();
+            
+            utils.setCellMeta(this, 'kbase.cellState.toggleMinMax', toggleMode);
+        };
+
+        (function () {
+            var originalMethod = p.bind_events;
+            p.bind_events = function () {
+                var $el = $(this.element);
+                originalMethod.apply(this);
+
+                //                $el.on('toggle.cell', function () {
+                //                    // Alas, it has no discriminating attributes!
+                //                    thisCell.toggle();
+                //                });
+                //                $el.on('rendered.cell', function () {
+                //                    thisCell.renderToggleState();
+                //                    $(thisCell.element).trigger('set-title.cell', thisCell.getCellState('title'));
+                //                });
+
+                // Universal invocation of cell min max
+                $el.on('toggleMinMax.cell', function () {
+                    this.toggleMinMax();
+                }.bind(this));
+                
+                this.events.on('preset_activated.CellToolbar', function (e, data) {
+                    if (data.name === 'KBase') {
+                        this.renderMinMax();
                     }
-                ].filter(function (elem) {
-                    return (elem.node ? true : false);
-                });
+                }.bind(this));                
+            };
+        }());
+
+//        p.getCellState = function (name, defaultValue) {
+//            if (!this.metadata.kbase) {
+//                this.metadata.kbase = {
+//                    cellState: {}
+//                };
+//            } else if (!this.metadata.kbase.cellState) {
+//                this.metadata.kbase.cellState = {};
+//            }
+//            var value = this.metadata.kbase.cellState[name];
+//            if (value === undefined) {
+//                return defaultValue;
+//            }
+//            return value;
+//        };
+//
+//        p.setCellState = function (name, value) {
+//            if (!this.metadata.kbase) {
+//                this.metadata.kbase = {
+//                    cellState: {}
+//                };
+//            } else if (!this.metadata.kbase.cellState) {
+//                this.metadata.kbase.cellState = {};
+//            }
+//            var metadata = this.metadata;
+//            metadata.kbase.cellState[name] = value;
+//            this.metadata = metadata;
+//        };
+
+
+    }());
+
+
+    // CODE CELL
+
+    /*
+     * NEW:
+     *
+     * Extend the CodeCell bind_events method to add handling of toolbar
+     * events.
+     *
+     *  A note on "extension" of a function object's function prototype:
+     *  We first save the existing function, and then replace it with a new
+     *  one which in its first statement executes the original one.
+     *  This represents the existing behavior.
+     *  Code following this represents the additional or extended behavior.
+     *
+     */
+    (function () {
+        var p = codeCell.CodeCell.prototype,
+            originalMethod;
+            
+        p.minimize = function () {
+            var $cellNode = $(this.element),
+                inputArea = this.input.find('.input_area'),
+                outputArea = this.element.find('.output_wrapper');
+            
+            inputArea.addClass('hidden');
+            outputArea.addClass('hidden');
+        };
+
+        p.maximize = function () {
+            var $cellNode = $(this.element),
+                inputArea = this.input.find('.input_area'),
+                outputArea = this.element.find('.output_wrapper');
+            
+            inputArea.removeClass('hidden');
+            outputArea.removeClass('hidden');
+        };
+
+
+
+        originalMethod = codeCell.CodeCell.prototype.bind_events;
+        p.bind_events = function () {
+            originalMethod.apply(this);
+            var $cellNode = $(this.element),
+                thisCell = this;
+
+            // TODO: toggle state on the cell object so we can be sure about this.
+
+            $cellNode.on('unselected.cell', function () {
+                var $menu = $(thisCell.celltoolbar.element).find('.button_container');
+                utils.setCellMeta(cell, 'kbase.cellState.selected', false);
+                // thisCell.setCellState('selected', false);
+                $menu.trigger('unselected.toolbar');
+            });
+
+            // this.events
+            $cellNode.on('selected.cell', function () {
+                var $menu = $(thisCell.celltoolbar.element).find('.button_container');
+                // thisCell.setCellState('selected', true);
+                utils.setCellMeta(cell, 'kbase.cellState.selected', true);
+                $menu.trigger('selected.toolbar');
+            });
+
+        };
+
+//        p.renderToggleState = function () {
+//            cell.Cell.prototype.renderToggleState.apply(this);
+//            var $cellNode = $(this.element),
+//                contentArea = $cellNode.find('.cell_content')[0];
+//
+//            console.log('TOGGLE in code cell', this.getCellState('toggleState', 'unknown'));
+//
+//            switch (this.getCellState('toggleState', 'unknown')) {
+//                case 'closed':
+//                    // reflect the closed state.
+//                    if (!contentArea.classList.contains('hidden')) {
+//                        contentArea.classList.add('hidden');
+//                    }
+//                    break;
+//                default:
+//                    // relect the open (also default) state.
+//                    if (contentArea.classList.contains('hidden')) {
+//                        contentArea.classList.remove('hidden');
+//                    }
+//                    break;
+//            }
+//        };
+//
+//        p.renderToggleStatex = function () {
+//            cell.Cell.prototype.renderToggleState.apply(this);
+//            var $cellNode = $(this.element),
+//                toggleStateInitialized = $cellNode.data('toggle-initialized'),
+//                elemsToToggle = [
+//                    // Just the input area -- the cell toolbar is also in .input
+//                    {
+//                        name: 'input',
+//                        node: $cellNode.find('.input .input_area')[0]
+//                    },
+//                    // The app cell input area, if it exists.
+//                    // TODO: we should find a way to dispatch on toggle as well
+//                    // as other events based on custom cell type...
+//                    {
+//                        name: 'app',
+//                        node: $cellNode.find('[data-subarea-type="app-cell-input"]')[0]
+//                    },
+//                    // $cellNode.find('.widget-area'),
+//                    {
+//                        name: 'output',
+//                        node: $cellNode.find('.output_wrapper')[0]
+//                    }
+//                ].filter(function (elem) {
+//                return (elem.node ? true : false);
+//            });
 
             // The first time we need to toggle in this session, there will be 
             // no toggle data on the dom nodes.
@@ -801,134 +719,141 @@ define(['jquery',
             //       subarea1
             //       subarea2
 
-            if (!toggleStateInitialized) {
-                elemsToToggle.forEach(function (elem) {
-                    console.log('CODE CELL TOGGLING MADNESS', elem.name, elem.node.className);
-                    if (elem.node.classList.contains('hidden')) {
-                        console.log('CODE CELL TOGGLING MADNESS', 'ah, initially hidden...');
-                        elem.node.setAttribute('data-toggle-initial-state', 'hidden');
-                    } else {
-                        elem.node.setAttribute('data-toggle-initial-state', 'showing');
+//            if (!toggleStateInitialized) {
+//                elemsToToggle.forEach(function (elem) {
+//                    console.log('CODE CELL TOGGLING MADNESS', elem.name, elem.node.className);
+//                    if (elem.node.classList.contains('hidden')) {
+//                        console.log('CODE CELL TOGGLING MADNESS', 'ah, initially hidden...');
+//                        elem.node.setAttribute('data-toggle-initial-state', 'hidden');
+//                    } else {
+//                        elem.node.setAttribute('data-toggle-initial-state', 'showing');
+//                    }
+//                });
+//                $cellNode.data('toggle-initialized', true);
+//            }
+//
+//            console.log('CODE CELL TOGGLING MADNESS', toggleStateInitialized, this.getCellState('toggleState', 'unknown'));
+//
+//            switch (this.getCellState('toggleState', 'unknown')) {
+//                case 'closed':
+//                    elemsToToggle.forEach(function (elem) {
+//                        console.log('CODE CELL TOGGLING MADNESS', 'closing', elem.name, elem.node.getAttribute('data-toggle-initial-state'));
+//
+//                        if (elem.node.getAttribute('data-toggle-initial-state') === 'showing') {
+//                            elem.node.classList.add('hidden');
+//                            console.log('CODE CELL TOGGLING MADNESS', 'hiding', elem.name);
+//                        }
+//                    });
+//                    break;
+//                default:
+//                    elemsToToggle.forEach(function (elem) {
+//                        console.log('CODE CELL TOGGLING MADNESS', 'opening', elem.name, elem.node.getAttribute('data-toggle-initial-state'));
+//                        if (elem.node.getAttribute('data-toggle-initial-state') === 'showing') {
+//                            console.log('CODE CELL TOGGLING MADNESS', 'subarea showing, showing if hidden...');
+//                            elem.node.classList.remove('hidden');
+//                        } else {
+//                            console.log('CODE CELL TOGGLING MADNESS', 'subarea hidden, nothing to do ')
+//                        }
+//                    });
+//                    break;
+//            }
+//        };
+    }());
+
+    /*
+     * NEW:
+     *
+     * Hides and shows code cell components based on the current toggle
+     * state of the cell, as reflected in the cell metadata
+     * (via getCellState).
+     */
+    notebook.Notebook.prototype.eachCell = function (fun) {
+        var cells = this.get_cells();
+        cells.forEach(function (cell) {
+            fun(cell);
+        });
+    };
+
+
+    // Patch the Notebook to return the right name
+    notebook.Notebook.prototype.get_notebook_name = function () {
+        if (!this.metadata.name) {
+            this.metadata.name = this.notebook_name;
+        }
+        return this.metadata.name;
+    };
+
+    // Patch the Notebook to not wedge a file extension on a new Narrative name
+    notebook.Notebook.prototype.rename = function (new_name) {
+        var that = this;
+        var parent = nbUtils.url_path_split(this.notebook_path)[0];
+        var new_path = nbUtils.url_path_join(parent, new_name);
+        return this.contents.rename(this.notebook_path, new_path).then(
+            function (json) {
+                that.notebook_name = json.name;
+                that.notebook_path = json.path;
+                that.last_modified = new Date(json.last_modified);
+                that.session.rename_notebook(json.path);
+                that.events.trigger('notebook_renamed.Notebook', json);
+            }
+        );
+    };
+
+    // Patch the save widget to take in options at save time
+    saveWidget.SaveWidget.prototype.rename_notebook = function (options) {
+        options = options || {};
+        var that = this;
+        var dialog_body = $('<div/>').append(
+            $("<p/>").addClass("rename-message")
+            .text('Enter a new Narrative name:')
+            ).append(
+            $("<br/>")
+            ).append(
+            $('<input/>').attr('type', 'text').attr('size', '25').addClass('form-control')
+            .val(options.notebook.get_notebook_name())
+            );
+        var d = dialog.modal({
+            title: "Rename Narrative",
+            body: dialog_body,
+            notebook: options.notebook,
+            keyboard_manager: this.keyboard_manager,
+            buttons: {
+                "OK": {
+                    class: "btn-primary",
+                    click: function () {
+                        var new_name = d.find('input').val();
+                        d.find('.rename-message').text("Renaming and saving...");
+                        d.find('input[type="text"]').prop('disabled', true);
+                        that.notebook.rename(new_name).then(
+                            function () {
+                                d.modal('hide');
+                                that.notebook.metadata.name = new_name;
+                                that.element.find('span.filename').text(new_name);
+                                Jupyter.narrative.saveNarrative();
+                            }, function (error) {
+                            d.find('.rename-message').text(error.message || 'Unknown error');
+                            d.find('input[type="text"]').prop('disabled', false).focus().select();
+                        }
+                        );
+                        return false;
+                    }
+                },
+                "Cancel": {}
+            },
+            open: function () {
+                /**
+                 * Upon ENTER, click the OK button.
+                 */
+                d.find('input[type="text"]').keydown(function (event) {
+                    if (event.which === keyboard.keycodes.enter) {
+                        d.find('.btn-primary').first().click();
+                        return false;
                     }
                 });
-                $cellNode.data('toggle-initialized', true);
+                d.find('input[type="text"]').focus().select();
             }
-            
-            console.log('CODE CELL TOGGLING MADNESS', toggleStateInitialized, this.getCellState('toggleState', 'unknown'));
-
-            switch (this.getCellState('toggleState', 'unknown')) {
-                case 'closed':
-                    elemsToToggle.forEach(function (elem) {
-                        console.log('CODE CELL TOGGLING MADNESS', 'closing', elem.name,  elem.node.getAttribute('data-toggle-initial-state'));
-
-                        if (elem.node.getAttribute('data-toggle-initial-state') === 'showing') {
-                            elem.node.classList.add('hidden');
-                            console.log('CODE CELL TOGGLING MADNESS', 'hiding', elem.name);
-                        }
-                    });
-                    break;
-                default:
-                    elemsToToggle.forEach(function (elem) {
-                        console.log('CODE CELL TOGGLING MADNESS', 'opening', elem.name,  elem.node.getAttribute('data-toggle-initial-state'));
-                        if (elem.node.getAttribute('data-toggle-initial-state') === 'showing') {
-                            console.log('CODE CELL TOGGLING MADNESS', 'subarea showing, showing if hidden...');
-                            elem.node.classList.remove('hidden');
-                        } else {
-                            console.log('CODE CELL TOGGLING MADNESS', 'subarea hidden, nothing to do ')
-                        }
-                    });
-                    break;
-            }
-        };
-
-        notebook.Notebook.prototype.eachCell = function (fun) {
-            var cells = this.get_cells();
-            cells.forEach(function (cell) {
-                fun(cell);
-            });
-        };
+        });
+    };
 
 
-        // Patch the Notebook to return the right name
-        notebook.Notebook.prototype.get_notebook_name = function () {
-            if (!this.metadata.name) {
-                this.metadata.name = this.notebook_name;
-            }
-            return this.metadata.name;
-        };
-
-        // Patch the Notebook to not wedge a file extension on a new Narrative name
-        notebook.Notebook.prototype.rename = function (new_name) {
-            var that = this;
-            var parent = utils.url_path_split(this.notebook_path)[0];
-            var new_path = utils.url_path_join(parent, new_name);
-            return this.contents.rename(this.notebook_path, new_path).then(
-                function (json) {
-                    that.notebook_name = json.name;
-                    that.notebook_path = json.path;
-                    that.last_modified = new Date(json.last_modified);
-                    that.session.rename_notebook(json.path);
-                    that.events.trigger('notebook_renamed.Notebook', json);
-                }
-            );
-        };
-
-        // Patch the save widget to take in options at save time
-        saveWidget.SaveWidget.prototype.rename_notebook = function (options) {
-            options = options || {};
-            var that = this;
-            var dialog_body = $('<div/>').append(
-                $("<p/>").addClass("rename-message")
-                .text('Enter a new Narrative name:')
-                ).append(
-                $("<br/>")
-                ).append(
-                $('<input/>').attr('type', 'text').attr('size', '25').addClass('form-control')
-                .val(options.notebook.get_notebook_name())
-                );
-            var d = dialog.modal({
-                title: "Rename Narrative",
-                body: dialog_body,
-                notebook: options.notebook,
-                keyboard_manager: this.keyboard_manager,
-                buttons: {
-                    "OK": {
-                        class: "btn-primary",
-                        click: function () {
-                            var new_name = d.find('input').val();
-                            d.find('.rename-message').text("Renaming and saving...");
-                            d.find('input[type="text"]').prop('disabled', true);
-                            that.notebook.rename(new_name).then(
-                                function () {
-                                    d.modal('hide');
-                                    that.notebook.metadata.name = new_name;
-                                    that.element.find('span.filename').text(new_name);
-                                    Jupyter.narrative.saveNarrative();
-                                }, function (error) {
-                                d.find('.rename-message').text(error.message || 'Unknown error');
-                                d.find('input[type="text"]').prop('disabled', false).focus().select();
-                            }
-                            );
-                            return false;
-                        }
-                    },
-                    "Cancel": {}
-                },
-                open: function () {
-                    /**
-                     * Upon ENTER, click the OK button.
-                     */
-                    d.find('input[type="text"]').keydown(function (event) {
-                        if (event.which === keyboard.keycodes.enter) {
-                            d.find('.btn-primary').first().click();
-                            return false;
-                        }
-                    });
-                    d.find('input[type="text"]').focus().select();
-                }
-            });
-        };
-
-       
-    }
-);
+});

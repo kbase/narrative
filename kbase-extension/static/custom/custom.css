@@ -290,3 +290,9 @@ span#notebook_name:hover {
     color: #CCC;
 }
 
+.cell.unselected  .kb-cell-toolbar .title-container {
+    opacity: 0.5;
+}
+.cell.unselected  .kb-cell-toolbar .buttons-container {
+    opacity: 0.2;
+}

@@ -793,7 +793,7 @@ define([
         }
 
         function showCodeInputArea() {
-            var codeInputArea = cell.input;
+            var codeInputArea = cell.input.find('.input_area'); // cell.input;
             if (model.getItem('user-settings.showCodeInputArea')) {
                 codeInputArea.removeClass('hidden');
                 // codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);
@@ -1282,7 +1282,6 @@ define([
 
                 console.log('param spec', paramSpec);
                 if (paramSpec.spec.field_type === 'textsubdata') {
-                    console.log('GOT ITTT', value);
                     if (value) {
                         value = value.join(',');
                     }
@@ -1339,7 +1338,6 @@ define([
                             type: 'get-parameter'
                         },
                         handle: function (message) {
-                            console.log('Getting?', message, model.getItem('params'));
                             return {
                                 value: model.getItem(['params', message.parameterName])
                             };
@@ -1453,7 +1451,7 @@ define([
             // with the parameters returned.
             return syncAppSpec(params.appId, params.appTag)
                 .then(function () {
-                    cell.setMeta('attributes', 'title', env.appSpec.info.name);
+                    utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
                     return Promise.all([
                         loadInputWidget(),
                         loadInputViewWidget()

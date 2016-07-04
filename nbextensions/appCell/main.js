@@ -59,78 +59,13 @@ define([
      * Dealing with metadata
      */
 
-
-    function extendCell(cell) {
-        var prototype = Object.getPrototypeOf(cell);
-        prototype.createMeta = function (initial) {
-            var meta = this.metadata;
-            meta.kbase = initial;
-            this.metadata = meta;
-        };
-        prototype.getMeta = function (group, name) {
-            if (!this.metadata.kbase) {
-                return;
-            }
-            if (name === undefined) {
-                return this.metadata.kbase[group];
-            }
-            if (!this.metadata.kbase[group]) {
-                return;
-            }
-            return this.metadata.kbase[group][name];
-        };
-        prototype.setMeta = function (group, name, value) {
-            /*
-             * This funny business is because the trigger on setting the metadata
-             * property (via setter and getter in core Cell object) is only invoked
-             * when the metadata preoperty is actually set -- doesn't count if
-             * properties of it are.
-             */
-            var temp = this.metadata;
-            if (!temp.kbase) {
-                temp.kbase = {};
-            }
-            if (!temp.kbase[group]) {
-                temp.kbase[group] = {};
-            }
-            if (value === undefined) {
-                temp.kbase[group] = name;
-            } else {
-                temp.kbase[group][name] = value;
-            }
-            this.metadata = temp;
-        };
-        prototype.pushMeta = function (group, value) {
-            /*
-             * This funny business is because the trigger on setting the metadata
-             * property (via setter and getter in core Cell object) is only invoked
-             * when the metadata preoperty is actually set -- doesn't count if
-             * properties of it are.
-             */
-            var temp = this.metadata;
-            if (!temp.kbase) {
-                temp.kbase = {};
-            }
-            if (!temp.kbase[group]) {
-                temp.kbase[group] = [];
-            }
-            temp.kbase[group].push(value);
-            this.metadata = temp;
-        };
-
-    }
-
-
-
-    // This is copied out of jupyter code.
+   // This is copied out of jupyter code.
     function activateToolbar() {
         var toolbarName = 'KBase';
         Jupyter.CellToolbar.global_show();
         Jupyter.CellToolbar.activate_preset(toolbarName, Jupyter.events);
         Jupyter.notebook.metadata.celltoolbar = toolbarName;
     }
-
-
 
     // TODO: move into app cell widget and invoke with an event 'reset-to-default-values'
     function setupParams(cell, appSpec) {
@@ -144,7 +79,7 @@ define([
                 defaultParams[param.id()] = defaultValue;
             }
         });
-        utils.setMeta(cell, 'appCell', 'params', defaultParams);
+        utils.setCellMeta(cell, 'kbase.appCell.params', defaultParams);
     }
 
     /*
@@ -393,6 +328,30 @@ define([
                 cellStuff.bus.emit('reset-to-defaults');
             });
     }
+    
+ function specializeCell(cell) {
+        cell.minimize = function () {
+            var $cellNode = $(this.element),
+                inputArea = this.input.find('.input_area'),
+                outputArea = this.element.find('.output_wrapper'),
+                viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]');
+            inputArea.addClass('hidden');
+            outputArea.addClass('hidden');
+            viewInputArea.addClass('hidden');
+        };
+
+        cell.maximize = function () {
+            var $cellNode = $(this.element),
+                inputArea = this.input.find('.input_area'),
+                outputArea = this.element.find('.output_wrapper'),
+                viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]');
+            
+            inputArea.removeClass('hidden');
+            outputArea.removeClass('hidden');
+            viewInputArea.removeClass('hidden');
+        };
+
+    }
 
     function setupCell(cell) {
         return Promise.try(function () {
@@ -410,7 +369,7 @@ define([
                 return;
             }
 
-            extendCell(cell);
+            specializeCell(cell);
 
             // The kbase property is only used for managing runtime state of the cell
             // for kbase. Anything to be persistent should be on the metadata.
@@ -457,6 +416,7 @@ define([
                 })
                 .then(function () {
                     // AppCellController.start();
+                    cell.renderMinMax();
                     return {
                         widget: appCellWidget,
                         bus: cellBus

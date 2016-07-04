@@ -80,6 +80,14 @@ define([
         }
         cell.metadata = temp;
     }
+    function setCellMeta(cell, path, value) {
+        var meta = cell.metadata || {};
+        Props.setDataItem(meta, path, value);
+        cell.metadata = meta;
+    }
+    function getCellMeta(cell, path, defaultValue) {
+        return Props.getDataItem(cell.metadata, path, defaultValue);
+    }
     function pushMeta(cell, props, value) {
         var meta = Props.make(cell.metadata.kbase);
         meta.incrItem(props, value);
@@ -135,6 +143,8 @@ define([
         createMeta: createMeta,
         getMeta: getMeta,
         setMeta: setMeta,
+        getCellMeta: getCellMeta,
+        setCellMeta: setCellMeta,
         pushMeta: pushMeta,
         formatElapsedTime: formatElapsedTime,
         formatTime: formatTime

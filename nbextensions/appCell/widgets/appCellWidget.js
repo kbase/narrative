@@ -1099,7 +1099,7 @@ define([
         }
 
         function showCodeInputArea() {
-            var codeInputArea = cell.input;
+            var codeInputArea = cell.input.find('.input_area');
             if (model.getItem('user-settings.showCodeInputArea')) {
                 codeInputArea.removeClass('hidden');
                 // codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);
@@ -2293,7 +2293,7 @@ define([
             // with the parameters returned.
             return syncAppSpec(params.appId, params.appTag)
                 .then(function () {
-                    cell.setMeta('attributes', 'title', env.appSpec.info.name);
+                    utils.setCellMeta(cell, 'kbase.attributes.title', env.appSpec.info.name);
                     return Promise.all([
                         loadInputWidget(),
                         loadInputViewWidget(),

@@ -470,8 +470,6 @@ define([
             // The primary flag for the param class is the ui_class property.
             // Perhaps not the best name for this property.
             
-            console.log('setup param class');
-            
             var paramClassName = spec.ui_class;
             if (!paramClassName) {
                 throw new Error('Parameter ' + spec.id + ' has no ui_class set');

@@ -72,7 +72,7 @@ define([
             },
             {
                 state: {
-                    mode: 'fatal-error',                
+                    mode: 'fatal-error'           
                 },
                 ui: {
                     buttons: {
@@ -530,7 +530,7 @@ define([
         function renderLayout() {
             var events = Events.make(),
                 content = div({class: 'kbase-extension kb-app-cell', style: {display: 'flex', alignItems: 'stretch'}}, [
-                    div({class: 'prompt', dataElement: 'prompt', style: {display: 'flex', alignItems: 'stretch', width: '14ex', flexDirection: 'column'}}, [
+                    div({class: 'prompt', dataElement: 'prompt', style: {display: 'flex', alignItems: 'stretch',  flexDirection: 'column'}}, [
                         div({dataElement: 'status'})
                     ]),
                     div({
@@ -577,7 +577,7 @@ define([
                                     ])
                                 }),
                                 ui.buildPanel({
-                                    title: 'App Cell Settings',
+                                    title: 'View Cell Settings',
                                     name: 'settings',
                                     hidden: true,
                                     type: 'default',
@@ -782,7 +782,7 @@ define([
             });
         }
 
-        function initCodeInputArea() {
+       function initCodeInputArea() {
             // var codeInputArea = cell.input[0];
             //if (!cell.kbase.inputAreaDisplayStyle) {
             //    cell.kbase.inputAreaDisplayStyle = codeInputArea.css('display');
@@ -793,7 +793,7 @@ define([
         }
 
         function showCodeInputArea() {
-            var codeInputArea = cell.input.find('.input_area'); // cell.input;
+            var codeInputArea = cell.input.find('.input_area');
             if (model.getItem('user-settings.showCodeInputArea')) {
                 codeInputArea.removeClass('hidden');
                 // codeInputArea.css('display', cell.kbase.inputAreaDisplayStyle);

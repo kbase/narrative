@@ -341,8 +341,12 @@ define([
             var $cellNode = $(this.element),
                 inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
-                viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]');
-            inputArea.addClass('hidden');
+                viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
+                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+            
+            if (showCode) {
+                inputArea.addClass('hidden');
+            }
             outputArea.addClass('hidden');
             viewInputArea.addClass('hidden');
         };
@@ -351,9 +355,42 @@ define([
             var $cellNode = $(this.element),
                 inputArea = this.input.find('.input_area'),
                 outputArea = this.element.find('.output_wrapper'),
-                viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]');
+                viewInputArea = this.element.find('[data-subarea-type="app-cell-input"]'),
+                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
             
-            inputArea.removeClass('hidden');
+            if (showCode) {
+                inputArea.removeClass('hidden');
+            }
+            outputArea.removeClass('hidden');
+            viewInputArea.removeClass('hidden');
+        };
+    }
+    
+    function specializeCell(cell) {
+        cell.minimize = function () {
+            var $cellNode = $(this.element),
+                inputArea = this.input.find('.input_area'),
+                outputArea = this.element.find('.output_wrapper'),
+                viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
+                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+            
+            if (showCode) {
+                inputArea.addClass('hidden');
+            }
+            outputArea.addClass('hidden');
+            viewInputArea.addClass('hidden');
+        };
+
+        cell.maximize = function () {
+            var $cellNode = $(this.element),
+                inputArea = this.input.find('.input_area'),
+                outputArea = this.element.find('.output_wrapper'),
+                viewInputArea = this.element.find('[data-subarea-type="view-cell-input"]'),
+                showCode = utils.getCellMeta(cell, 'kbase.appCell.user-settings.showCodeInputArea');
+            
+            if (showCode) {
+                inputArea.removeClass('hidden');
+            }
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
         };

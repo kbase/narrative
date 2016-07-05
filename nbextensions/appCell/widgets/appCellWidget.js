@@ -888,6 +888,7 @@ define([
                                     title: 'About',
                                     name: 'about-app',
                                     hidden: false,
+                                    collapsed: true,
                                     type: 'default',
                                     body: [
                                         div({dataElement: 'about-app'}, renderAboutApp())
@@ -1370,7 +1371,6 @@ define([
             // tear down all the sub widgets.
             Object.keys(widgets).forEach(function (widgetId) {
                 var widget = widgets[widgetId];
-                console.log('WIDGET?', widget);
                 widget.instance.bus().send('stop');
             });
 

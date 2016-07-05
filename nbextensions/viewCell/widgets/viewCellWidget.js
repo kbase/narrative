@@ -1445,7 +1445,39 @@ define([
         }
 
 
+        function makeIcon() {
+            // icon is in the spec ...
+            var appSpec = env.appSpec,
+                nmsBase = runtime.config('services.narrative_method_store.image_url'),
+                iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
+            
+            if (iconUrl) {
+                return span({class: 'fa-stack fa-2x', style: {padding: '2px'}}, [
+                    img({src: nmsBase + iconUrl, style: {maxWidth: '46px', maxHeight: '46px', margin: '2px'}})
+                ]);
+            }
+                
+            return span({style: ''}, [
+                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
+                    span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
+                    span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
+                ])
+            ]);
+        }
 
+        function renderIcon() {
+            var prompt = cell.element[0].querySelector('.input_prompt');
+                
+            if (!prompt) {
+                return;
+            }
+
+            prompt.innerHTML = div({
+                style: {textAlign: 'center'}                
+            }, [
+                makeIcon()
+            ]);
+        }
         function run(params) {
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
@@ -1463,6 +1495,7 @@ define([
                     showAppSpec();
                     PR.prettyPrint(null, container);
                     renderUI();
+                    renderIcon();
                 })
                 .then(function () {
                     // if we start out in 'new' state, then we need to promote to

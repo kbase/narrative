@@ -357,6 +357,8 @@ define([
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
         };
+        
+        
 
     }
 

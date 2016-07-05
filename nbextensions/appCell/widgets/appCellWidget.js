@@ -44,7 +44,7 @@ define([
     var t = html.tag,
         div = t('div'), span = t('span'), a = t('a'),
         table = t('table'), tr = t('tr'), th = t('th'), td = t('td'),
-        pre = t('pre'), input = t('input'),
+        pre = t('pre'), input = t('input'), img = t('img'),
         appStates = [
             {
                 state: {
@@ -2287,7 +2287,41 @@ define([
                 });
             });
         }
+        
+        function makeIcon() {
+            // icon is in the spec ...
+            var appSpec = env.appSpec,
+                nmsBase = runtime.config('services.narrative_method_store.image_url'),
+                iconUrl = Props.getDataItem(appSpec, 'info.icon.url');
+            
+            if (iconUrl) {
+                return span({class: 'fa-stack fa-2x', style: {padding: '0 3px 3px 3px'}}, [
+                    img({src: nmsBase + iconUrl, style: {maxWidth: '50px', maxHeight: '50px', margin: '0x'}})
+                ]);
+            }
+                
+            return span({style: ''}, [
+                span({class: 'fa-stack fa-2x', style: {textAlign: 'center', color: 'rgb(103,58,183)'}}, [
+                    span({class: 'fa fa-square fa-stack-2x', style: {color: 'rgb(103,58,183)'}}),
+                    span({class: 'fa fa-inverse fa-stack-1x fa-cube'})
+                ])
+            ]);
+        }
 
+        function renderIcon() {
+            var prompt = cell.element[0].querySelector('.input_prompt');
+                
+            if (!prompt) {
+                return;
+            }
+
+            prompt.innerHTML = div({
+                style: {textAlign: 'center'}                
+            }, [
+                makeIcon()
+            ]);
+        }
+        
         function run(params) {
             // First get the app specs, which is stashed in the model,
             // with the parameters returned.
@@ -2307,6 +2341,7 @@ define([
                     showAppSpec();
                     PR.prettyPrint(null, container);
                     renderUI();
+                    renderIcon();
                 })
                 .then(function () {
                     // if we start out in 'new' state, then we need to promote to

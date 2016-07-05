@@ -190,7 +190,8 @@ span#notebook_name:hover {
 }
 
 .notebook_app .prompt {
-    font-size: 12px;
+    /* font-size: 12px; */
+    padding-top: 0px;
     color: silver;
     width: 75px;
 }

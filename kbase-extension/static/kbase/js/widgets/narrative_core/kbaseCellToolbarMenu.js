@@ -112,10 +112,14 @@ define([
         }
 
         function getCellTitle(cell) {
-            var attributeTitle = getMeta(cell, 'attributes', 'title'),
-                cellStateTitle = getMeta(cell, 'cellState', 'title');
-
-            return cellStateTitle || attributeTitle;
+            var title = getMeta(cell, 'attributes', 'title'),
+                showTitle = utils.getCellMeta(cell, 'kbase.cellState.showTitle', true);
+            
+            if (showTitle) {
+                return title;
+            } else {
+                return '';
+            }
         }
 
         function doToggleMinMaxCell() {

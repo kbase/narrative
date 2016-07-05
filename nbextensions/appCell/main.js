@@ -350,7 +350,6 @@ define([
             outputArea.removeClass('hidden');
             viewInputArea.removeClass('hidden');
         };
-
     }
 
     function setupCell(cell) {
@@ -377,7 +376,7 @@ define([
             };
 
             // Update metadata.
-            utils.setMeta(cell, 'attributes', 'lastLoaded', (new Date()).toUTCString());
+            utils.setCellMeta(cell, 'kbase.attributes.lastLoaded', (new Date()).toUTCString());
 
             // TODO: the code cell input widget should instantiate its state
             // from the cell!!!!
@@ -399,7 +398,7 @@ define([
             cell.input.after($(kbaseNode));
             cell.kbase.node = kbaseNode;
             cell.kbase.$node = $(kbaseNode);
-
+            
             return appCellWidget.init()
                 .then(function () {
                     return appCellWidget.attach(kbaseNode);

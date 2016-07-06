@@ -200,7 +200,7 @@ define([
             }.bind(this));
 
             bus.on('request-job-removal', function (message) {
-                this.removeJob(message.jobId);
+                this.deleteJob(message.jobId);
             }.bind(this));
 
             bus.on('request-job-status', function (message) {
@@ -279,9 +279,9 @@ define([
                         // EAP - what i mean was why it is sent with each job state
                         // message. I can see that given that job_status may be
                         // issued at any arbitrary front end state, and the spec
-                        // will be useful on the first message received, it might 
+                        // will be useful on the first message received, it might
                         // be better to just bite the bullet and require that any
-                        // element which needs the app spec fetch that 
+                        // element which needs the app spec fetch that
                         // independently, or rather perhaps the appmanager could
                         // arbitrate those requets.
                         this.sendJobMessage('job-status', jobId, {
@@ -290,14 +290,14 @@ define([
                             outputWidgetInfo: jobStateMessage.widget_info
                         });
                     }
-                    
-                    // Remove jobs which are in the local cache but not in the 
+
+                    // Remove jobs which are in the local cache but not in the
                     // job_status message.
                     Object.keys(this.jobStates).forEach(function (jobId) {
                         var jobState = this.jobStates[jobId];
                         // HMM the first condition covers jobs in the cache
                         // which have been set to falsy? Not sure how that
-                        // is possible. But if so, they could not be in the 
+                        // is possible. But if so, they could not be in the
                         // message anyway, since we just synced the cache
                         // from the messages...
                         //if (!jobState || !content[jobState.state.job_id]) {
@@ -491,14 +491,7 @@ define([
             // send the comm message.
             this.sendCommMessage(this.DELETE_JOB, jobId);
         },
-        removeJob: function (jobId) {
-            if (!jobId) {
-                return;
-            }
-            // send the comm message.
-            this.sendCommMessage(this.REMOVE_JOB, jobId);
-            this.removeDeletedJob(jobId);
-        },
+
         removeDeletedJob: function (jobId) {
             // remove the view widget
             if (this.jobWidgets[jobId]) {
@@ -815,6 +808,8 @@ define([
          */
         triggerJobErrorButton: function (jobId, errorType) {
             var jobState = this.jobStates[jobId];
+            var error = jobState.state.error;
+
             var removeText = "Deleting this job will remove it from your Narrative. Any generated data will be retained. Continue?";
             var headText = "An error has been detected in this job!";
             var errorText = "The KBase servers are reporting an error for this job:";
@@ -831,9 +826,9 @@ define([
                 errorText = "You do not have permission to view information about this job.";
             } else if (errorType === 'Network Error') {
                 errorText = "An error occurred while looking up job information. Please refresh the jobs panel to try again.";
-            } else if (jobState.error) {
-                errorText = new Handlebars.SafeString('<div class="kb-jobs-error-modal">' + jobState.error.message + '</div>');
-                errorType = jobState.error.name;
+            } else if (error) {
+                errorText = new Handlebars.SafeString('<div class="kb-jobs-error-modal">' + error.message + '</div>');
+                errorType = error.name;
                 // if (jobState.state.error === 'awe_error')
                 //     errorType = 'AWE Error';
             }
@@ -842,14 +837,14 @@ define([
                 jobId: jobId,
                 errorType: errorType,
                 errorText: errorText,
-                hasTraceback: jobState.error.error ? true : false
+                hasTraceback: error.error ? true : false
             }));
 
-            if (jobState.error.error) {
+            if (error && error.error) {
                 new kbaseAccordion($modalBody.find('div#kb-job-err-trace'), {
                     elements: [{
                         title: 'Detailed Error Information',
-                        body: $('<pre style="max-height:300px; overflow-y: auto">').append(jobState.error.error)
+                        body: $('<pre style="max-height:300px; overflow-y: auto">').append(error.error)
                     }]
                 });
             }
